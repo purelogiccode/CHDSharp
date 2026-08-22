@@ -1307,7 +1307,7 @@ public static class ChdEncoder
     private static int ReadCdHunk(uint hunkIndex, byte[] buffer, CdToc toc, int framesPerHunk, ulong totalFrames,
         Dictionary<string, FileStream> files)
     {
-        var hunkStartFrame = (long)hunkIndex * framesPerHunk;
+        var hunkStartFrame = hunkIndex * framesPerHunk;
         for (var f = 0; f < framesPerHunk; f++)
         {
             var frame = hunkStartFrame + f;

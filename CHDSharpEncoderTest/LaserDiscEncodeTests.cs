@@ -412,7 +412,6 @@ public class LaserDiscEncodeTests : IDisposable
     }
 }
 
-
 /// <summary>
 /// Writes minimal but well-formed AVI files for tests: RIFF/'AVI ' with a 'hdrl' describing
 /// one YUY-family video stream and one PCM audio stream, a 'movi' list holding one video chunk

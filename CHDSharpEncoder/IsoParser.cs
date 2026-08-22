@@ -44,6 +44,7 @@ public class IsoParser
             var frames = size / 2048;
             if (frames > int.MaxValue)
                 throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+
             track.Frames = (int)frames;
         }
         else if (size % 2336 == 0)
@@ -54,6 +55,7 @@ public class IsoParser
             var frames = size / 2336;
             if (frames > int.MaxValue)
                 throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+
             track.Frames = (int)frames;
         }
         else if (size % 2352 == 0)
@@ -64,6 +66,7 @@ public class IsoParser
             var frames = size / 2352;
             if (frames > int.MaxValue)
                 throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+
             track.Frames = (int)frames;
         }
         else

@@ -21,6 +21,7 @@ public static class RawDeflate
         var initStatus = zlib.DeflateInit(ref zs, ZBestCompression, ZDeflated, -15, 8, ZDefaultStrategy);
         if (initStatus != ZOk)
             throw new InvalidOperationException($"zlib DeflateInit failed with status {initStatus}");
+
         int status;
         do
         {

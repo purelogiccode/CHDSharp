@@ -100,6 +100,7 @@ public class GdiParser
             var frames = fileLength / trksize;
             if (frames > int.MaxValue)
                 throw new InvalidDataException($"Track frame count ({frames}) exceeds the maximum supported value");
+
             track.Frames = (int)frames;
             track.PadFrames = 0;
 
