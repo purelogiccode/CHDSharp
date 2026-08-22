@@ -3,12 +3,12 @@
 namespace CHDSharp.Utils;
 
 /// <summary>General-purpose utility methods for byte array comparisons, hashing, and ASCII detection used throughout the CHD reader.</summary>
-internal static class Util
+public static class Util
 {
     /// <summary>Determines whether every byte in the array is zero (or the array is null).</summary>
     /// <param name="b">The byte array to check.</param>
     /// <returns><c>true</c> if the array is null or all bytes are zero; otherwise <c>false</c>.</returns>
-    internal static bool IsAllZeroArray([NotNullWhen(false)] byte[]? b)
+    public static bool IsAllZeroArray([NotNullWhen(false)] byte[]? b)
     {
         if (b is null)
             return true;
@@ -18,6 +18,16 @@ internal static class Util
                 return false;
 
         return true;
+    }
+
+    /// <summary>Converts a byte array to a lowercase hexadecimal string.</summary>
+    /// <param name="a">The byte array to convert, or null.</param>
+    /// <returns>A lowercase hex string, or "(none)" if the array is null.</returns>
+    public static string ToHex(byte[]? a)
+    {
+        if (a == null) return "(none)";
+
+        return Convert.ToHexString(a).ToLowerInvariant();
     }
 
     /// <summary>Compares two byte arrays for exact equality.</summary>

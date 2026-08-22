@@ -1,19 +1,15 @@
+using CHDSharp.Utils;
 using CHDSharpEncoder;
 
 namespace CHDSharpEncoderTest;
 
 public class Sha1Tests
 {
-    private static string ToHex(byte[] bytes)
-    {
-        return Convert.ToHexString(bytes).ToLowerInvariant();
-    }
-
     [Fact]
     public void Empty()
     {
         var result = Sha1.Compute(Array.Empty<byte>());
-        Assert.Equal("da39a3ee5e6b4b0d3255bfef95601890afd80709", ToHex(result));
+        Assert.Equal("da39a3ee5e6b4b0d3255bfef95601890afd80709", Util.ToHex(result));
     }
 
     [Fact]
@@ -21,7 +17,7 @@ public class Sha1Tests
     {
         var data = "abc"u8.ToArray();
         var result = Sha1.Compute(data);
-        Assert.Equal("a9993e364706816aba3e25717850c26c9cd0d89d", ToHex(result));
+        Assert.Equal("a9993e364706816aba3e25717850c26c9cd0d89d", Util.ToHex(result));
     }
 
     [Fact]
@@ -29,7 +25,7 @@ public class Sha1Tests
     {
         var data = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"u8.ToArray();
         var result = Sha1.Compute(data);
-        Assert.Equal("84983e441c3bd26ebaae4aa1f95129e5e54670f1", ToHex(result));
+        Assert.Equal("84983e441c3bd26ebaae4aa1f95129e5e54670f1", Util.ToHex(result));
     }
 
     [Fact]
@@ -38,7 +34,7 @@ public class Sha1Tests
         var data = new byte[1_000_000];
         Array.Fill(data, (byte)'a');
         var result = Sha1.Compute(data);
-        Assert.Equal("34aa973cd4c4daa4f61eeb2bdbad27316534016f", ToHex(result));
+        Assert.Equal("34aa973cd4c4daa4f61eeb2bdbad27316534016f", Util.ToHex(result));
     }
 
     [Fact]

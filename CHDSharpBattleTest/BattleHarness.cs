@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using CHDSharp;
 using CHDSharp.Models;
+using CHDSharp.Utils;
 using CHDSharpEncoder;
 using CHDSharpEncoder.Models;
 
@@ -1053,35 +1054,21 @@ public sealed class BattleHarness
 
         if (info.Sha1 != null)
         {
-            var sha1 = header.Sha1 != null && !IsAllZero(header.Sha1) ? ToHex(header.Sha1) : null;
+            var sha1 = header.Sha1 != null && !Util.IsAllZeroArray(header.Sha1) ? Util.ToHex(header.Sha1) : null;
             Assert(sha1 != null && string.Equals(sha1, info.Sha1, StringComparison.Ordinal), $"combined SHA1 {sha1 ?? "(none)"} != chdman {info.Sha1}");
         }
 
         if (info.DataSha1 != null)
         {
-            var rawSha1 = header.RawSha1 != null && !IsAllZero(header.RawSha1) ? ToHex(header.RawSha1) : null;
+            var rawSha1 = header.RawSha1 != null && !Util.IsAllZeroArray(header.RawSha1) ? Util.ToHex(header.RawSha1) : null;
             Assert(rawSha1 != null && string.Equals(rawSha1, info.DataSha1, StringComparison.Ordinal), $"raw SHA1 {rawSha1 ?? "(none)"} != chdman {info.DataSha1}");
         }
 
         if (info.ParentSha1 != null)
         {
-            var parentSha1 = header.ParentSha1 != null && !IsAllZero(header.ParentSha1) ? ToHex(header.ParentSha1) : null;
+            var parentSha1 = header.ParentSha1 != null && !Util.IsAllZeroArray(header.ParentSha1) ? Util.ToHex(header.ParentSha1) : null;
             Assert(parentSha1 != null && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal), $"parent SHA1 {parentSha1 ?? "(none)"} != chdman {info.ParentSha1}");
         }
-    }
-
-    private static string ToHex(byte[] a)
-    {
-        return Convert.ToHexString(a).ToLowerInvariant();
-    }
-
-    private static bool IsAllZero(byte[] a)
-    {
-        foreach (var b in a)
-            if (b != 0)
-                return false;
-
-        return true;
     }
 
     /// <summary>Maps our codec tag names to chdman's info names: chdman prints the tag itself

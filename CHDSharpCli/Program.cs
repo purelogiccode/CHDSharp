@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using CHDSharp.Models;
+using CHDSharp.Utils;
 using CHDSharpEncoder;
 using CHDSharpEncoder.Models;
 using Serilog;
@@ -398,8 +399,8 @@ internal static class Program
 
             var expectedSha1 = chd.RawSha1;
             var expectedMd5 = chd.Md5;
-            var haveSha1 = !IsAllZero(expectedSha1);
-            var haveMd5 = !IsAllZero(expectedMd5);
+            var haveSha1 = !Util.IsAllZeroArray(expectedSha1);
+            var haveMd5 = !Util.IsAllZeroArray(expectedMd5);
 
             if (!haveSha1 && !haveMd5)
             {
@@ -435,8 +436,8 @@ internal static class Program
             {
                 var match = sha1 is { Hash: not null } && ByteEquals(sha1.Hash, expectedSha1);
                 log.Information("  Full-image raw SHA1 {Result} header raw SHA1", match ? "MATCHES" : "DIFFERS from");
-                if (sha1 is { Hash: not null }) log.Information("    computed: {Hash}", ToHex(sha1.Hash));
-                log.Information("    header:   {Hash}", ToHex(expectedSha1));
+                if (sha1 is { Hash: not null }) log.Information("    computed: {Hash}", Util.ToHex(sha1.Hash));
+                log.Information("    header:   {Hash}", Util.ToHex(expectedSha1));
             }
 
             if (haveMd5)
@@ -444,26 +445,10 @@ internal static class Program
                 var match = md5 is { Hash: not null } && ByteEquals(md5.Hash, expectedMd5);
                 log.Information("  Full-image MD5 {Result} header MD5", match ? "MATCHES" : "DIFFERS from");
                 if (md5 is { Hash: not null })
-                    log.Information("    computed: {Hash}", ToHex(md5.Hash));
-                log.Information("    header:   {Hash}", ToHex(expectedMd5));
+                    log.Information("    computed: {Hash}", Util.ToHex(md5.Hash));
+                log.Information("    header:   {Hash}", Util.ToHex(expectedMd5));
             }
         }
-    }
-
-    /// <summary>
-    /// Checks whether every byte in the specified array is zero.
-    /// </summary>
-    /// <param name="a">The byte array to check.</param>
-    /// <returns><c>true</c> if all bytes are zero; otherwise <c>false</c>.</returns>
-    private static bool IsAllZero(byte[]? a)
-    {
-        if (a == null) return true;
-
-        foreach (var b in a)
-            if (b != 0)
-                return false;
-
-        return true;
     }
 
     /// <summary>
@@ -483,16 +468,6 @@ internal static class Program
                 return false;
 
         return true;
-    }
-
-    /// <summary>
-    /// Converts a byte array to a lowercase hexadecimal string.
-    /// </summary>
-    /// <param name="a">The byte array to convert.</param>
-    /// <returns>The lowercase hexadecimal representation of the byte array.</returns>
-    private static string ToHex(byte[] a)
-    {
-        return Convert.ToHexString(a).ToLowerInvariant();
     }
 
     /// <summary>
@@ -1498,11 +1473,11 @@ internal static class Program
             foreach (var c in codecs)
                 log.Information("    {Codec}", CodecTagName(c));
         log.Information("  Meta offset: {MetaOffset}  Map offset: {MapOffset}", header.MetaOffset, header.MapOffset);
-        log.Information("  Raw SHA-1: {Hash}", ToHexOrNone(header.RawSha1));
-        log.Information("  Combined SHA-1: {Hash}", ToHexOrNone(header.Sha1));
-        log.Information("  Parent SHA-1: {Hash}  Parent MD5: {Hash2}", ToHexOrNone(header.ParentSha1), ToHexOrNone(header.ParentMd5));
-        log.Information("  MD5: {Hash}", ToHexOrNone(header.Md5));
-        log.Information("  Is child (requires parent): {IsChild}", !IsAllZero(header.ParentSha1) || !IsAllZero(header.ParentMd5));
+        log.Information("  Raw SHA-1: {Hash}", Util.ToHex(header.RawSha1));
+        log.Information("  Combined SHA-1: {Hash}", Util.ToHex(header.Sha1));
+        log.Information("  Parent SHA-1: {Hash}  Parent MD5: {Hash2}", Util.ToHex(header.ParentSha1), Util.ToHex(header.ParentMd5));
+        log.Information("  MD5: {Hash}", Util.ToHex(header.Md5));
+        log.Information("  Is child (requires parent): {IsChild}", !Util.IsAllZeroArray(header.ParentSha1) || !Util.IsAllZeroArray(header.ParentMd5));
 
         if (header.MetaOffset == 0)
             return;
@@ -1535,11 +1510,6 @@ internal static class Program
         chars[2] = (char)((value >> 8) & 0xFF);
         chars[3] = (char)(value & 0xFF);
         return new string(chars);
-    }
-
-    private static string ToHexOrNone(byte[]? hash)
-    {
-        return hash is null || IsAllZero(hash) ? "(none)" : ToHex(hash);
     }
 
     /// <summary>Dumps a metadata entry (chdman <c>dumpmeta</c> parity): prints text entries to the
