@@ -201,8 +201,14 @@ public static class VbiParse
 
                 // look for a match that is off by an amount up to the maximum
                 for (offBy = 0; offBy <= MaxClockDiff; offBy++)
-                    if (srcAbs[curBit + offBy + 0] != srcAbs[curBit + offBy + 1] || srcAbs[curBit - offBy + 0] != srcAbs[curBit - offBy + 1])
+                {
+                    var hi = curBit + offBy + 1;
+                    var lo = curBit - offBy;
+                    if (hi >= sourceWidth || lo < 0)
                         break;
+                    if (srcAbs[curBit + offBy] != srcAbs[hi] || srcAbs[lo] != srcAbs[lo + 1])
+                        break;
+                }
 
                 // if we never found the edge, fail immediately
                 if (offBy > MaxClockDiff)

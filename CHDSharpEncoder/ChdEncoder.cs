@@ -301,6 +301,7 @@ public static class ChdEncoder
             var captureVbi = height is 524 / 2 or 624 / 2;
             if (captureVbi && frames > int.MaxValue / VbiParse.PackedBytes)
                 throw new InvalidDataException($"Frame count ({frames}) exceeds the VBI metadata limit");
+
             var ldFrameData = captureVbi ? new byte[frames * VbiParse.PackedBytes] : null;
 
             // metadata written before compression ('AVAV', checksummed), like chdman createld
@@ -575,6 +576,9 @@ public static class ChdEncoder
                     err = chd.ReadHunk((uint)hunkIdx - 1, prevBuf);
                     if (err != ChdError.Chderrnone)
                         throw new InvalidDataException($"Failed to read hunk {hunkIdx - 1}: {err}");
+
+                    if (prevBuf.Length < 12 || prevBuf[0] != 'c' || prevBuf[1] != 'h' || prevBuf[2] != 'a' || prevBuf[3] != 'v')
+                        throw new InvalidDataException($"Hunk {hunkIdx - 1}: not a 'chav' block");
 
                     uint prevMetaLen = prevBuf[4];
                     uint prevAvCh = prevBuf[5];
@@ -1303,7 +1307,7 @@ public static class ChdEncoder
     private static int ReadCdHunk(uint hunkIndex, byte[] buffer, CdToc toc, int framesPerHunk, ulong totalFrames,
         Dictionary<string, FileStream> files)
     {
-        var hunkStartFrame = hunkIndex * framesPerHunk;
+        var hunkStartFrame = (long)hunkIndex * framesPerHunk;
         for (var f = 0; f < framesPerHunk; f++)
         {
             var frame = hunkStartFrame + f;

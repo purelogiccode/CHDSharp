@@ -207,7 +207,7 @@ public static class MapCompressor
     /// <c>[RLE_LARGE, hi, lo]</c> with no leading type symbol.
     /// </summary>
     private static List<byte> RleEncode(MapEntry[] entries, uint hunkCount, uint hunkBytes, uint unitBytes,
-        out uint maxSelf, out uint maxParent)
+        out uint maxSelf, out ulong maxParent)
     {
         var rleList = new List<byte>((int)hunkCount + 4);
         byte lastcomp = 0;
@@ -263,7 +263,7 @@ public static class MapCompressor
                     }
                     else
                     {
-                        maxParent = (uint)Math.Max(maxParent, refUnit);
+                        maxParent = Math.Max(maxParent, refUnit);
                     }
 
                     lastParent = refUnit;
@@ -317,6 +317,18 @@ public static class MapCompressor
     }
 
     private static byte BitsForValue(uint value)
+    {
+        byte result = 0;
+        while (value != 0)
+        {
+            value >>= 1;
+            result++;
+        }
+
+        return result;
+    }
+
+    private static byte BitsForValue(ulong value)
     {
         byte result = 0;
         while (value != 0)
