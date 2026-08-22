@@ -994,7 +994,7 @@ public static class ChdEncoder
                     {
                         // Byte-swap the 2352-byte sector-data portion of each 2448-byte frame
                         // for CDDA audio tracks (matching MAME's cdrom.cpp:402 behavior)
-                        SwapCdda16(buffer, valid, CdMaxSectorData, CdFrameSize);
+                        SwapCdda16(buffer, valid, CdConstants.MaxSectorData, CdConstants.FrameSize);
                     }
 
                     return valid;
@@ -1470,15 +1470,6 @@ public static class ChdEncoder
             (buffer[offset + i], buffer[offset + i + 1]) = (buffer[offset + i + 1], buffer[offset + i]);
         }
     }
-
-    /// <summary>CD sector data bytes per frame (2352).</summary>
-    private const int CdMaxSectorData = 2352;
-
-    /// <summary>CD subcode bytes per frame (96).</summary>
-    private const int CdMaxSubcodeData = 96;
-
-    /// <summary>Full CD frame size including subcode (2448).</summary>
-    private const int CdFrameSize = CdMaxSectorData + CdMaxSubcodeData;
 
     /// <summary>
     /// Byte-swaps (little-endian) the 16-bit CDDA audio samples of a data chunk. For legacy
