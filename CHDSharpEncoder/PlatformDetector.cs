@@ -166,15 +166,6 @@ public static class PlatformDetector
         fs.Position = 0;
         if (fs.Read(header) == header.Length && header[..12].SequenceEqual(CdSync))
         {
-            if (length >= 2 * 2352)
-            {
-                fs.Position = 2352;
-                Span<byte> sync2 = stackalloc byte[12];
-                if (fs.Read(sync2) == 12 && sync2.SequenceEqual(CdSync))
-                {
-                }
-            }
-
             return 2352;
         }
 

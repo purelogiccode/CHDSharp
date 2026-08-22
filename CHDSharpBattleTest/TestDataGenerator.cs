@@ -133,7 +133,6 @@ public static class TestDataGenerator
             rng.NextBytes(r);
             Array.Copy(r, 0, buf, o, n);
         });
-        Fill(size, (buf, o, n) => Array.Clear(buf, o, n));
 
         return b;
 

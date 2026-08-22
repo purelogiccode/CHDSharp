@@ -9,7 +9,7 @@ namespace CHDSharpEncoder;
 /// The parsing logic mirrors MAME's <c>cdrom_file::parse_cue</c> (src/lib/util/cdrom.cpp),
 /// including track length and file offset resolution.
 /// </summary>
-public abstract class CueParser
+public static class CueParser
 {
     /// <summary>
     /// Parses a CUE sheet file into a table of contents.

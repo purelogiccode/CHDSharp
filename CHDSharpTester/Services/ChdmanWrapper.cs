@@ -88,7 +88,7 @@ public class ChdmanWrapper
         return new Result { ExitCode = p.ExitCode, StdOut = tOut.Result, StdErr = tErr.Result };
     }
 
-    /// <summary>Runs chmman info on a CHD file and parses key header fields. Returns null on failure.</summary>
+    /// <summary>Runs chdman info on a CHD file and parses key header fields. Returns null on failure.</summary>
     /// <param name="file">The path to the CHD file.</param>
     /// <returns>An <see cref="Info"/> instance with parsed fields, or null if chdman failed.</returns>
     public Info? GetInfo(string file)
@@ -110,7 +110,7 @@ public class ChdmanWrapper
         };
     }
 
-    /// <summary>Runs chmman verify on a CHD file, optionally with a parent file.</summary>
+    /// <summary>Runs chdman verify on a CHD file, optionally with a parent file.</summary>
     /// <param name="file">The path to the CHD file to verify.</param>
     /// <param name="parent">An optional parent CHD file for delta-CHD verification.</param>
     /// <returns><c>true</c> if chdman exits with code 0; otherwise <c>false</c>.</returns>

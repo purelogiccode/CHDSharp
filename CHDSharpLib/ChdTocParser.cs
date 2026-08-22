@@ -317,6 +317,6 @@ internal static partial class ChdTocParser
         return metadata.Any(m => string.Equals(m.Tag, HardDiskMetadataTag, StringComparison.Ordinal));
     }
 
-    [GeneratedRegex(@"(?<key>\w+) *: *(?<value>[^ ]+)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture)]
+    [GeneratedRegex(@"(?<key>\w+) *: *(?<value>[^ ]+)", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture)]
     private static partial Regex MyRegex();
 }

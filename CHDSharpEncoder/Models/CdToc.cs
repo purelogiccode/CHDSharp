@@ -71,12 +71,6 @@ public static class CdTocFlags
 {
     /// <summary>The disc is a GD-ROM; tracks use CHGD metadata and physical (LBA) offsets.</summary>
     public const uint GdRom = 0x00000001;
-
-    /// <summary>Legacy GD-ROM with little-endian CDDA data.</summary>
-    public const uint GdRomLe = 0x00000002;
-
-    /// <summary>Multisession CD.</summary>
-    public const uint MultiSession = 0x00000004;
 }
 
 /// <summary>Describes a single track of a CD, as parsed from a CUE/GDI/ISO/TOC sheet.</summary>
