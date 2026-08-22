@@ -299,6 +299,8 @@ public static class ChdEncoder
 
             // laserdisc VBI metadata is captured only for NTSC/PAL field heights (524/2, 624/2)
             var captureVbi = height is 524 / 2 or 624 / 2;
+            if (captureVbi && frames > int.MaxValue / VbiParse.PackedBytes)
+                throw new InvalidDataException($"Frame count ({frames}) exceeds the VBI metadata limit");
             var ldFrameData = captureVbi ? new byte[frames * VbiParse.PackedBytes] : null;
 
             // metadata written before compression ('AVAV', checksummed), like chdman createld
@@ -311,8 +313,8 @@ public static class ChdEncoder
 
             var interlaceFactor = interlaced ? 2 : 1;
             var frameStride = hunkBytes / bytesPerFrame;
-            var fullFrame = new byte[(int)(width * height * interlaceFactor * 2)];
-            var fieldFrame = new byte[(int)(width * height * 2)];
+            var fullFrame = new byte[(int)((ulong)width * height * (uint)interlaceFactor * 2)];
+            var fieldFrame = new byte[(int)((ulong)width * height * 2)];
             var rawFrame = new byte[bytesPerFrame];
             var audioPlanes = new short[channels][];
             for (var ch = 0; ch < channels; ch++)
