@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharpEncoder;
 using CHDSharpEncoder.Models;
 
@@ -11,8 +10,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class NewCodecChdmanValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _testDataDir;
 
     public NewCodecChdmanValidationTests()
@@ -38,7 +35,7 @@ public class NewCodecChdmanValidationTests : IDisposable
     [InlineData("flac", "FLAC")]
     public void RawCodec_PassesChdmanVerify_AndExtractsByteIdentically(string codecName, string chdmanCodecName)
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // 16-bit stereo sample data: FLAC-compressible, and huff handles the raw bytes
         var source = new byte[4096 * 32];
@@ -56,16 +53,16 @@ public class NewCodecChdmanValidationTests : IDisposable
         File.WriteAllBytes(srcPath, source);
         ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512, [CodecTags.FromName(codecName)]);
 
-        var (infoExit, infoOut, infoErr) = RunChdman("info", "-i", chdPath);
+        var (infoExit, infoOut, infoErr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         var info = infoOut + infoErr;
         Assert.True(infoExit == 0, $"chdman info failed (exit={infoExit})\n{info}");
         Assert.Contains(chdmanCodecName, info, StringComparison.Ordinal);
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         var extractPath = Path.Combine(_testDataDir, $"{codecName}_extracted.raw");
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         Assert.Equal(source, File.ReadAllBytes(extractPath));
@@ -77,7 +74,7 @@ public class NewCodecChdmanValidationTests : IDisposable
     [InlineData("cdzs", "CD Zstandard")]
     public void CdCodec_PassesChdmanVerify_AndExtractsByteIdentically(string codecName, string chdmanCodecName)
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         const string cue = """
                            FILE "game.bin" BINARY
@@ -119,16 +116,16 @@ public class NewCodecChdmanValidationTests : IDisposable
         ChdEncoder.EncodeCd(cuePath, chdPath, hunkBytes: CdConstants.FramesPerHunk * CdConstants.FrameSize,
             unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.FromName(codecName)]);
 
-        var (infoExit, infoOut, infoErr) = RunChdman("info", "-i", chdPath);
+        var (infoExit, infoOut, infoErr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         var info = infoOut + infoErr;
         Assert.True(infoExit == 0, $"chdman info failed (exit={infoExit})\n{info}");
         Assert.Contains(chdmanCodecName, info, StringComparison.Ordinal);
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         var extractPath = Path.Combine(_testDataDir, $"{codecName}_extracted.raw");
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         // expected logical image: 20 data frames + 20 audio frames (byte-swapped) + zero padding
@@ -153,48 +150,5 @@ public class NewCodecChdmanValidationTests : IDisposable
                 }
             }
         }
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var repoRoot = FindRepoRoot();
-        foreach (var candidate in new[] { "chdman.exe", "chdman" })
-        {
-            var path = Path.Combine(repoRoot, candidate);
-            if (File.Exists(path))
-                return path;
-        }
-
-        return null;
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "chdman.exe")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? AppContext.BaseDirectory;
-    }
-
-    private static (int exit, string stdout, string stderr) RunChdman(params string[] args)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = ChdmanPath!,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        foreach (var arg in args)
-            psi.ArgumentList.Add(arg);
-
-        using var process = Process.Start(psi)!;
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-        return (process.ExitCode, stdout, stderr);
     }
 }

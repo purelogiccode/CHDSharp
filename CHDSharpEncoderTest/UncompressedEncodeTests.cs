@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharp;
 using CHDSharp.Models;
 using CHDSharpEncoder;
@@ -16,8 +15,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class UncompressedEncodeTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _dir;
 
     public UncompressedEncodeTests()
@@ -41,7 +38,7 @@ public class UncompressedEncodeTests : IDisposable
     [Fact]
     public void NoneCodec_ProducesChdmanIdenticalFile()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // mixed corpus: random + all-zero + compressible hunks exercises the zero-skip path
         var source = new byte[4096 * 9];
@@ -66,7 +63,7 @@ public class UncompressedEncodeTests : IDisposable
         var oursPath = Path.Combine(_dir, "ours_none.chd");
         File.WriteAllBytes(srcPath, source);
 
-        var (exit, stdout, stderr) = RunChdman("createraw", "-i", srcPath, "-o", chdmanPath,
+        var (exit, stdout, stderr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", chdmanPath,
             "-c", "none", "-hs", "4096", "-us", "512", "-f");
         Assert.True(exit == 0, $"chdman createraw -c none failed (exit={exit})\n{stdout}{stderr}");
 
@@ -324,7 +321,7 @@ public class UncompressedEncodeTests : IDisposable
     [Fact]
     public void NoneCodec_ChdmanVerify_AndExtractRaw()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = new byte[4096 * 10];
         new Random(39).NextBytes(source);
@@ -339,10 +336,10 @@ public class UncompressedEncodeTests : IDisposable
         }
 
         // chdman verify on an uncompressed CHD prints "no verification to be done" and exits 0
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}");
         Assert.Equal(source, File.ReadAllBytes(extractPath));
     }
@@ -350,7 +347,7 @@ public class UncompressedEncodeTests : IDisposable
     [Fact]
     public void NoneCodec_ChdmanInfo_ReportsUncompressed()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = new byte[4096 * 4];
         new Random(40).NextBytes(source);
@@ -361,7 +358,7 @@ public class UncompressedEncodeTests : IDisposable
             ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, [CodecTags.None]);
         }
 
-        var (exit, stdout, stderr) = RunChdman("info", "-i", chdPath);
+        var (exit, stdout, stderr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         Assert.True(exit == 0, $"chdman info failed (exit={exit})\n{stdout}{stderr}");
         Assert.Contains("Compression:  none", stdout, StringComparison.Ordinal);
     }
@@ -374,44 +371,5 @@ public class UncompressedEncodeTests : IDisposable
         var rng = new Random(seed);
         rng.NextBytes(data);
         return data;
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

@@ -1,5 +1,4 @@
 using System.Buffers.Binary;
-using System.Diagnostics;
 using System.Text;
 using CHDSharp;
 using CHDSharp.Models;
@@ -230,7 +229,7 @@ public class LaserDiscEncodeTests : IDisposable
     [Fact]
     public void Createld_OutputMatchesChdman_ByteForByte()
     {
-        var chdmanPath = ResolveChdmanPath();
+        var chdmanPath = ChdmanHelper.ChdmanPath;
         if (chdmanPath == null)
             return; // chdman.exe unavailable
 
@@ -239,7 +238,7 @@ public class LaserDiscEncodeTests : IDisposable
             var name = Path.GetFileNameWithoutExtension(aviPath);
 
             var refPath = Path.Combine(_testDataDir, name + "_ref.chd");
-            var (exit, stdout, stderr) = RunChdman(chdmanPath, "createld", "-i", aviPath, "-o", refPath, "-f");
+            var (exit, stdout, stderr) = ChdmanHelper.RunChdman("createld", "-i", aviPath, "-o", refPath, "-f");
             Assert.True(exit == 0, $"chdman createld failed (exit={exit})\n{stdout}{stderr}");
 
             var ourPath = Path.Combine(_testDataDir, name + "_ours.chd");
@@ -257,7 +256,7 @@ public class LaserDiscEncodeTests : IDisposable
             }
 
             // and chdman verifies our file too
-            var (verifyExit, vOut, vErr) = RunChdman(chdmanPath, "verify", "-i", ourPath);
+            var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", ourPath);
             Assert.True(verifyExit == 0, $"chdman verify failed on our file (exit={verifyExit})\n{vOut}{vErr}");
         }
     }
@@ -411,41 +410,8 @@ public class LaserDiscEncodeTests : IDisposable
         Assert.Equal(10ul, info.Frames);
         Assert.True(File.Exists(reEncodedPath));
     }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(string chdmanPath, params string[] args)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        return File.Exists(candidate) ? candidate : null;
-    }
 }
+
 
 /// <summary>
 /// Writes minimal but well-formed AVI files for tests: RIFF/'AVI ' with a 'hdrl' describing

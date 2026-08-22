@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharp;
 using CHDSharp.Models;
 using CHDSharpEncoder;
@@ -19,7 +18,6 @@ namespace CHDSharpEncoderTest;
 /// </remarks>
 public class FlacPcm16Debug : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "flac_dbg_" + Guid.NewGuid().ToString("N"));
 
     public FlacPcm16Debug()
@@ -51,7 +49,7 @@ public class FlacPcm16Debug : IDisposable
         File.WriteAllBytes(srcPath, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, 4096, 512, [CodecTags.Flac]);
-        var (createExit, cOut, cErr) = RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "flac", "-hs", "4096", "-us", "512", "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "flac", "-hs", "4096", "-us", "512", "-f");
         Assert.True(createExit == 0, $"chdman createraw failed\n{cOut}{cErr}");
 
         var ours = ChdFile.Open(oursPath, out var oFile);
@@ -97,37 +95,5 @@ public class FlacPcm16Debug : IDisposable
         }
 
         return b;
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args) psi.ArgumentList.Add(a);
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate)) return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate)) return candidate;
-
-        return null;
     }
 }

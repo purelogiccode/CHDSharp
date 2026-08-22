@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharpEncoder;
 using CHDSharpEncoder.Models;
 
@@ -10,8 +9,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class CdflChdmanValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _testDataDir;
 
     public CdflChdmanValidationTests()
@@ -36,7 +33,7 @@ public class CdflChdmanValidationTests : IDisposable
     [Fact]
     public void CdflChd_PassesChdmanVerify_AndExtractsByteIdentically()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // data track with pattern + audio track with sine samples
         const string cue = """
@@ -80,16 +77,16 @@ public class CdflChdmanValidationTests : IDisposable
         ChdEncoder.EncodeCd(cuePath, chdPath, hunkBytes: CdConstants.FramesPerHunk * CdConstants.FrameSize,
             unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.Cdfl]);
 
-        var (infoExit, infoOut, infoErr) = RunChdman("info", "-i", chdPath);
+        var (infoExit, infoOut, infoErr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         var info = infoOut + infoErr;
         Assert.True(infoExit == 0, $"chdman info failed (exit={infoExit})\n{info}");
         Assert.Contains("CD FLAC", info, StringComparison.Ordinal);
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         var extractPath = Path.Combine(_testDataDir, "extracted.raw");
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         // expected logical image: 20 data frames (raw) + 20 audio frames (byte-swapped to BE)
@@ -114,44 +111,5 @@ public class CdflChdmanValidationTests : IDisposable
                 }
             }
         }
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

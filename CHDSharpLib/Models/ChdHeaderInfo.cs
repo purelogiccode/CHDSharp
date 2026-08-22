@@ -1,3 +1,5 @@
+using CHDSharp.Utils;
+
 namespace CHDSharp.Models;
 
 /// <summary>
@@ -70,7 +72,7 @@ public sealed record ChdHeaderInfo
     /// <c>true</c> if this CHD is a differential child that requires a parent CHD to read
     /// (derived from the parent MD5/SHA1 hashes).
     /// </summary>
-    public bool HasParent => !IsAllZero(ParentMd5) || !IsAllZero(ParentSha1);
+    public bool HasParent => !Util.IsAllZeroArray(ParentMd5) || !Util.IsAllZeroArray(ParentSha1);
 
     /// <summary>Obsolete hard-disk geometry: cylinders. Only populated for V1/V2 headers.</summary>
     public uint ObsoleteCylinders { get; init; }
@@ -83,20 +85,6 @@ public sealed record ChdHeaderInfo
 
     /// <summary>Obsolete hunk size in sectors. Only populated for V1/V2 headers.</summary>
     public uint ObsoleteHunksize { get; init; }
-
-    private static bool IsAllZero(byte[]? bytes)
-    {
-        if (bytes == null)
-            return true;
-
-        foreach (var b in bytes)
-        {
-            if (b != 0)
-                return false;
-        }
-
-        return true;
-    }
 
     /// <summary>Returns a string representation of the header including version, size, and hunk count.</summary>
     public override string ToString()

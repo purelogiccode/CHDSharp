@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharpEncoder;
 
 namespace CHDSharpEncoderTest;
@@ -9,8 +8,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class SelfDedupChdmanValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _testDataDir;
 
     public SelfDedupChdmanValidationTests()
@@ -35,7 +32,7 @@ public class SelfDedupChdmanValidationTests : IDisposable
     [Fact]
     public void RepeatedHunks_PassChdmanVerify_AndExtract()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // 1 MiB made of 256 identical 4 KiB hunks
         var source = new byte[4096 * 256];
@@ -58,10 +55,10 @@ public class SelfDedupChdmanValidationTests : IDisposable
         Assert.True(new FileInfo(chdPath).Length < 4096 * 4,
             $"expected a deduplicated CHD, got {new FileInfo(chdPath).Length} bytes");
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         Assert.Equal(source, File.ReadAllBytes(extractPath));
@@ -70,7 +67,7 @@ public class SelfDedupChdmanValidationTests : IDisposable
     [Fact]
     public void RepeatedHunks_MatchChdmanExtraction()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var patternA = new byte[4096];
         var patternB = new byte[4096];
@@ -91,7 +88,7 @@ public class SelfDedupChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, ourChd, 4096, 512);
 
-        var (createExit, cOut, cErr) = RunChdman("createraw", "-i", srcPath, "-o", chdmanChd, "-c", "zlib", "-hs", "4096", "-us", "512", "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", chdmanChd, "-c", "zlib", "-hs", "4096", "-us", "512", "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         // strongest check: byte-for-byte identical CHD files (dedup + map encoding parity)
@@ -99,51 +96,12 @@ public class SelfDedupChdmanValidationTests : IDisposable
 
         var ourExtract = Path.Combine(_testDataDir, "our.raw");
         var chdmanExtract = Path.Combine(_testDataDir, "chdman.raw");
-        var (e1, o1, e1R) = RunChdman("extractraw", "-i", ourChd, "-o", ourExtract, "-f");
+        var (e1, o1, e1R) = ChdmanHelper.RunChdman("extractraw", "-i", ourChd, "-o", ourExtract, "-f");
         Assert.True(e1 == 0, $"extractraw our failed (exit={e1})\n{o1}{e1R}");
-        var (e2, o2, e2R) = RunChdman("extractraw", "-i", chdmanChd, "-o", chdmanExtract, "-f");
+        var (e2, o2, e2R) = ChdmanHelper.RunChdman("extractraw", "-i", chdmanChd, "-o", chdmanExtract, "-f");
         Assert.True(e2 == 0, $"extractraw chdman failed (exit={e2})\n{o2}{e2R}");
 
         Assert.Equal(File.ReadAllBytes(chdmanExtract), File.ReadAllBytes(ourExtract));
         Assert.Equal(source, File.ReadAllBytes(ourExtract));
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

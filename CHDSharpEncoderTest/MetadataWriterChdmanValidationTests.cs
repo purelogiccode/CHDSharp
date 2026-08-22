@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharp;
 using CHDSharp.Models;
 using CHDSharpEncoder;
@@ -13,8 +12,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class MetadataWriterChdmanValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _testDataDir;
 
     public MetadataWriterChdmanValidationTests()
@@ -39,7 +36,7 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     [Fact]
     public void MetadataChain_MatchesChdman_ByteForByte()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // Saturn-style: MODE1/2352 data track + AUDIO tracks with pregaps, single BIN
         const string cue = """
@@ -67,7 +64,7 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             fs.SetLength(2352L * 54550);
         }
 
-        var (exitCode, stdout, stderr) = RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
         Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
 
         // our metadata chain, from the same CUE through CueParser + MetadataWriter
@@ -100,7 +97,7 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     [Fact]
     public void Metadata_ReadBack_MatchesChdsharpReader()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         const string cue = """
                            FILE "game.bin" BINARY
@@ -121,7 +118,7 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             fs.SetLength(2352L * (4500 + 4650 + 8));
         }
 
-        var (exitCode, stdout, stderr) = RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
         Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
 
         // build the expected entries from our parser + writer
@@ -225,44 +222,5 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     private static ulong ReadU64Be(byte[] data, int offset)
     {
         return ((ulong)ReadU32Be(data, offset) << 32) | ReadU32Be(data, offset + 4);
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

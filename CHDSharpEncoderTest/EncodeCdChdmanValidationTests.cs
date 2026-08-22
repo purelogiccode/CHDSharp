@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharpEncoder;
 using CHDSharpEncoder.Models;
 
@@ -10,8 +9,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class EncodeCdChdmanValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _testDataDir;
 
     public EncodeCdChdmanValidationTests()
@@ -36,7 +33,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
     [Fact]
     public void EncodeCd_ExtractRaw_MatchesChdman()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // data track + 2 audio tracks with pregaps, single BIN (10 + 12 + 8 = 30 sectors)
         const string cue = """
@@ -57,14 +54,14 @@ public class EncodeCdChdmanValidationTests : IDisposable
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         ChdEncoder.EncodeCd(cuePath, ourChd);
 
-        var (createExit, cstdout, cstderr) = RunChdman("createcd", "-i", cuePath, "-o", chdmanChd, "-c", "zlib", "-f");
+        var (createExit, cstdout, cstderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdmanChd, "-c", "zlib", "-f");
         Assert.True(createExit == 0, $"chdman createcd failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
 
         var ourExtract = Path.Combine(_testDataDir, "our.raw");
         var chdmanExtract = Path.Combine(_testDataDir, "chdman.raw");
-        var (e1, o1, e1R) = RunChdman("extractraw", "-i", ourChd, "-o", ourExtract, "-f");
+        var (e1, o1, e1R) = ChdmanHelper.RunChdman("extractraw", "-i", ourChd, "-o", ourExtract, "-f");
         Assert.True(e1 == 0, $"extractraw our failed (exit={e1})\nstdout: {o1}\nstderr: {e1R}");
-        var (e2, o2, e2R) = RunChdman("extractraw", "-i", chdmanChd, "-o", chdmanExtract, "-f");
+        var (e2, o2, e2R) = ChdmanHelper.RunChdman("extractraw", "-i", chdmanChd, "-o", chdmanExtract, "-f");
         Assert.True(e2 == 0, $"extractraw chdman failed (exit={e2})\nstdout: {o2}\nstderr: {e2R}");
 
         // byte-identical logical images (audio swapped, tracks padded to 4-frame boundaries)
@@ -74,7 +71,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
     [Fact]
     public void EncodeCd_PassesChdmanVerify()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         const string cue = """
                            FILE "game.bin" BINARY
@@ -92,14 +89,14 @@ public class EncodeCdChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
-        var (exitCode, stdout, stderr) = RunChdman("verify", "-i", chdPath);
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(exitCode == 0, $"chdman verify failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
     }
 
     [Fact]
     public void EncodeCd_ChdmanInfo_ShowsMetadata()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         const string cue = """
                            FILE "game.bin" BINARY
@@ -114,7 +111,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
-        var (exitCode, stdout, stderr) = RunChdman("info", "-i", chdPath);
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         var output = stdout + stderr;
         Assert.True(exitCode == 0, $"chdman info failed (exit={exitCode})\n{output}");
         Assert.Contains("File Version: 5", output, StringComparison.Ordinal);
@@ -127,7 +124,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
     [Fact]
     public void SaturnStyle_ChdmanRoundTrip()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // 1 data track (75 frames) + 7 audio tracks (75,75,75,75,75,75,50) with 2-frame pregaps
         const int dataFrames = 75;
@@ -153,14 +150,14 @@ public class EncodeCdChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
-        var (infoExit, infoOut, infoErr) = RunChdman("info", "-i", chdPath);
+        var (infoExit, infoOut, infoErr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         Assert.True(infoExit == 0, $"chdman info failed (exit={infoExit})\n{infoOut}{infoErr}");
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         var extractPath = Path.Combine(_testDataDir, "saturn.raw");
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         // 75→76 and 50→52 padded frames per track = 584 total
@@ -259,44 +256,5 @@ public class EncodeCdChdmanValidationTests : IDisposable
                 }
             }
         }
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

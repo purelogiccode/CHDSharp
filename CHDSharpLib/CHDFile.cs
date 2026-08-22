@@ -2155,7 +2155,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
     /// <summary>Per-thread codec state for <see cref="ReadHunkConcurrent"/>: each calling thread
     /// decompresses with its own scratch buffers, so concurrent readers never share codec state.</summary>
-    private readonly ThreadLocal<ChdCodecState> _concurrentCodec = new(() => new ChdCodecState());
+    private readonly ThreadLocal<ChdCodecState> _concurrentCodec = new(() => new ChdCodecState(), trackAllValues: true);
 
     /// <summary>Reads <paramref name="buffer"/>'s full length at <paramref name="offset"/> without touching
     /// the shared stream position: <c>RandomAccess</c> for file-backed instances, otherwise the
@@ -2710,6 +2710,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     {
         _readAhead?.Dispose();
         _codec.Dispose();
+        foreach (var state in _concurrentCodec.Values)
+            state.Dispose();
         _concurrentCodec.Dispose();
         _mmfView?.Dispose();
         _mmf?.Dispose();

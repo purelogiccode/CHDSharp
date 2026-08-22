@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharp;
 using CHDSharp.Models;
 using CHDSharpEncoder;
@@ -15,8 +14,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class ChdCopyTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _dir;
 
     public ChdCopyTests()
@@ -425,7 +422,7 @@ public class ChdCopyTests : IDisposable
     [Fact]
     public void Copy_Chdman_VerifiesAndExtracts()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = CreateTestFile(4096 * 24, 50);
         var srcChd = Path.Combine(_dir, "cm_src.chd");
@@ -438,10 +435,10 @@ public class ChdCopyTests : IDisposable
 
         ChdEncoder.Copy(srcChd, dstChd, [CodecTags.Zstd, CodecTags.Zlib]);
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", dstChd);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", dstChd);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", dstChd, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", dstChd, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}");
         Assert.Equal(source, File.ReadAllBytes(extractPath));
     }
@@ -449,7 +446,7 @@ public class ChdCopyTests : IDisposable
     [Fact]
     public void Copy_ChildSource_Chdman_VerifiesAndExtracts()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var parentData = CreateTestFile(4096 * 16, 51);
         var childData = (byte[])parentData.Clone();
@@ -475,10 +472,10 @@ public class ChdCopyTests : IDisposable
 
         ChdEncoder.Copy(childPath, copyPath, [CodecTags.Zstd], new ChdEncodeOptions { SourceParentPath = parentPath });
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", copyPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", copyPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", copyPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", copyPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}");
         Assert.Equal(childData, File.ReadAllBytes(extractPath));
     }
@@ -491,44 +488,5 @@ public class ChdCopyTests : IDisposable
         var rng = new Random(seed);
         rng.NextBytes(data);
         return data;
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

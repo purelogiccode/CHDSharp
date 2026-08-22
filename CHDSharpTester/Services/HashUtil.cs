@@ -16,8 +16,9 @@ public static class HashUtil
     /// <summary>Checks whether every byte in the array is zero.</summary>
     /// <param name="a">The byte array to inspect.</param>
     /// <returns><c>true</c> if all bytes are zero; otherwise <c>false</c>.</returns>
-    public static bool IsAllZero(byte[] a)
+    public static bool IsAllZero(byte[]? a)
     {
+        if (a == null) return true;
         foreach (var b in a)
             if (b != 0)
                 return false;

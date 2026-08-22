@@ -1,12 +1,9 @@
-using System.Diagnostics;
 using CHDSharpEncoder;
 
 namespace CHDSharpEncoderTest;
 
 public class ChdmanValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _testDataDir;
 
     public ChdmanValidationTests()
@@ -31,7 +28,7 @@ public class ChdmanValidationTests : IDisposable
     [Fact]
     public void Chdman_Info_ReportsCorrectly()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = CreateTestFile(8192, 42);
         var srcPath = Path.Combine(_testDataDir, "info_src.bin");
@@ -40,7 +37,7 @@ public class ChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
 
-        var (exitCode, stdout, stderr) = RunChdman("info", "-i", chdPath);
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         Assert.True(exitCode == 0, $"chdman info exit code: {exitCode}\nstdout: {stdout}\nstderr: {stderr}");
 
         var output = stdout + stderr;
@@ -52,7 +49,7 @@ public class ChdmanValidationTests : IDisposable
     [Fact]
     public void Chdman_Verify_Passes()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = CreateTestFile(65536, 123);
         var srcPath = Path.Combine(_testDataDir, "verify_src.bin");
@@ -61,14 +58,14 @@ public class ChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
 
-        var (verifyExit, vstdout, vstderr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vstdout, vstderr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"verify failed (exit={verifyExit})\nstdout: {vstdout}\nstderr: {vstderr}");
     }
 
     [Fact]
     public void Chdman_Extract_ProducesIdenticalData()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = CreateTestFile(65536, 456);
         var srcPath = Path.Combine(_testDataDir, "extract_src.bin");
@@ -78,7 +75,7 @@ public class ChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
 
-        var (exitCode, estdout, estderr) = RunChdman("extractraw", "-i", chdPath, "-o", extractedPath, "-f");
+        var (exitCode, estdout, estderr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractedPath, "-f");
         Assert.True(exitCode == 0, $"extractraw failed (exit={exitCode})\nstdout: {estdout}\nstderr: {estderr}");
 
         var extracted = File.ReadAllBytes(extractedPath);
@@ -88,7 +85,7 @@ public class ChdmanValidationTests : IDisposable
     [Fact]
     public void OurOutput_MatchesChdmanOutput()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = CreateTestFile(65536, 789);
         var srcPath = Path.Combine(_testDataDir, "cross_src.bin");
@@ -100,14 +97,14 @@ public class ChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, ourChd, 4096, 512);
 
-        var (createExit, cstdout, cstderr) = RunChdman(
+        var (createExit, cstdout, cstderr) = ChdmanHelper.RunChdman(
             "createraw", "-i", srcPath, "-o", chdmanChd, "-c", "zlib", "-hs", "4096", "-us", "512", "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
 
-        var (ext1Exit, e1Stdout, e1Stderr) = RunChdman("extractraw", "-i", ourChd, "-o", ourExtract, "-f");
+        var (ext1Exit, e1Stdout, e1Stderr) = ChdmanHelper.RunChdman("extractraw", "-i", ourChd, "-o", ourExtract, "-f");
         Assert.True(ext1Exit == 0, $"extractraw our failed (exit={ext1Exit})\nstdout: {e1Stdout}\nstderr: {e1Stderr}");
 
-        var (ext2Exit, e2Stdout, e2Stderr) = RunChdman("extractraw", "-i", chdmanChd, "-o", chdmanExtract, "-f");
+        var (ext2Exit, e2Stdout, e2Stderr) = ChdmanHelper.RunChdman("extractraw", "-i", chdmanChd, "-o", chdmanExtract, "-f");
         Assert.True(ext2Exit == 0, $"extractraw chdman failed (exit={ext2Exit})\nstdout: {e2Stdout}\nstderr: {e2Stderr}");
 
         var ourExtracted = File.ReadAllBytes(ourExtract);
@@ -117,14 +114,14 @@ public class ChdmanValidationTests : IDisposable
         Assert.Equal(source, chdmanExtracted);
         Assert.Equal(ourExtracted, chdmanExtracted);
 
-        var (verifyExit, vstdout, vstderr) = RunChdman("verify", "-i", ourChd);
+        var (verifyExit, vstdout, vstderr) = ChdmanHelper.RunChdman("verify", "-i", ourChd);
         Assert.True(verifyExit == 0, $"verify our failed (exit={verifyExit})\nstdout: {vstdout}\nstderr: {vstderr}");
     }
 
     [Fact]
     public void NonAlignedSize_ChdmanExtractWorks()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = CreateTestFile(10000, 42);
         var srcPath = Path.Combine(_testDataDir, "na_src.bin");
@@ -134,7 +131,7 @@ public class ChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
 
-        var (exitCode, nastdout, nastderr) = RunChdman("extractraw", "-i", chdPath, "-o", extractedPath, "-f");
+        var (exitCode, nastdout, nastderr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractedPath, "-f");
         Assert.True(exitCode == 0, $"extractraw failed (exit={exitCode})\nstdout: {nastdout}\nstderr: {nastderr}");
 
         var extracted = File.ReadAllBytes(extractedPath);
@@ -142,7 +139,7 @@ public class ChdmanValidationTests : IDisposable
 
         // non-aligned sizes must also pass chdman verify (SHA1 covers source bytes only,
         // not the zero-padded final hunk)
-        var (verifyExit, vstdout, vstderr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vstdout, vstderr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"non-aligned verify failed (exit={verifyExit})\nstdout: {vstdout}\nstderr: {vstderr}");
     }
 
@@ -154,46 +151,5 @@ public class ChdmanValidationTests : IDisposable
         var rng = new Random(seed);
         rng.NextBytes(data);
         return data;
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        // check alongside the test assembly
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        // check Tester project dir (for IDE Test Explorer runs)
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

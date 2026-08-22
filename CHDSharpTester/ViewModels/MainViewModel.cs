@@ -630,7 +630,7 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         var about = new Views.AboutWindow
         {
-            Owner = Application.Current.MainWindow
+            Owner = Application.Current?.MainWindow
         };
         about.ShowDialog();
     }

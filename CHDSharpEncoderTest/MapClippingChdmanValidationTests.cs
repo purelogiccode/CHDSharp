@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharp;
 using CHDSharp.Models;
 using CHDSharpEncoder;
@@ -28,8 +27,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class MapClippingChdmanValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _testDataDir;
 
     public MapClippingChdmanValidationTests()
@@ -124,7 +121,7 @@ public class MapClippingChdmanValidationTests : IDisposable
     [InlineData(65536u, 512u)]
     public void SingleHunk_benignClip_byteIdenticalToChdmanAndReadable(uint hunkBytes, uint unitBytes)
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = new byte[hunkBytes];
         new Random(SeedFor(hunkBytes, oddCrc: false)).NextBytes(source);
@@ -132,7 +129,7 @@ public class MapClippingChdmanValidationTests : IDisposable
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, hunkBytes, unitBytes, [CodecTags.Zlib]);
-        var (createExit, cOut, cErr) = RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
             "-hs", hunkBytes.ToString(), "-us", unitBytes.ToString(), "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
@@ -150,7 +147,7 @@ public class MapClippingChdmanValidationTests : IDisposable
     [InlineData(65536u, 512u)]
     public void SingleHunk_corruptClip_oursStaysVerifiableWhileChdmanBreaks(uint hunkBytes, uint unitBytes)
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = new byte[hunkBytes];
         new Random(SeedFor(hunkBytes, oddCrc: true)).NextBytes(source);
@@ -158,18 +155,18 @@ public class MapClippingChdmanValidationTests : IDisposable
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, hunkBytes, unitBytes, [CodecTags.Zlib]);
-        var (createExit, cOut, cErr) = RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
             "-hs", hunkBytes.ToString(), "-us", unitBytes.ToString(), "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         // our output remains fully valid: chdman verifies it and it round-trips
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", oursPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", oursPath);
         Assert.True(verifyExit == 0, $"chdman verify failed on OUR output (exit={verifyExit})\n{vOut}{vErr}");
         AssertDecodesTo(oursPath, source);
 
         // chdman 0.289 cannot re-open its own output for these inputs (upstream
         // compress_v5_map clipping bug); pin that so a behavior change is noticed
-        var (refInfoExit, _, _) = RunChdman("info", "-i", refPath);
+        var (refInfoExit, _, _) = ChdmanHelper.RunChdman("info", "-i", refPath);
         Assert.True(refInfoExit != 0,
             "chdman can now read its own single-hunk output - the upstream clipping bug appears to be fixed; " +
             "this divergence should be revisited and byte parity restored");
@@ -184,7 +181,7 @@ public class MapClippingChdmanValidationTests : IDisposable
     [InlineData(19584u, 2448u)]
     public void Type0EntryInsideCompressedMap_multiHunk_byteIdenticalToChdman(uint hunkBytes, uint unitBytes)
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // The exact scenario from the sixth-run notes, at a realistic hunk count: mostly
         // incompressible hunks (stored COMPRESSION_NONE) with individual compressible hunks
@@ -213,13 +210,13 @@ public class MapClippingChdmanValidationTests : IDisposable
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, hunkBytes, unitBytes, [CodecTags.Zlib]);
-        var (createExit, cOut, cErr) = RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
             "-hs", hunkBytes.ToString(), "-us", unitBytes.ToString(), "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         Assert.Equal(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", oursPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", oursPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
         AssertDecodesTo(oursPath, source);
     }
@@ -252,44 +249,6 @@ public class MapClippingChdmanValidationTests : IDisposable
         }
     }
 
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
-    }
 
     private static uint ReadU32Be(byte[] data, int offset)
     {

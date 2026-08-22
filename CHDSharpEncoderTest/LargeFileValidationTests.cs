@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Security.Cryptography;
 using CHDSharp;
 using CHDSharp.Models;
@@ -14,8 +13,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class LargeFileValidationTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _dir;
 
     public LargeFileValidationTests()
@@ -40,7 +37,7 @@ public class LargeFileValidationTests : IDisposable
     [Fact]
     public void Raw_100Mb_RoundTrip_PassesChdman()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         const int hunkBytes = 65536;
         const long size = 100L * 1024 * 1024; // 100 MB
@@ -57,10 +54,10 @@ public class LargeFileValidationTests : IDisposable
         // two thirds of the data is a repeating pattern, so the CHD must be well under half the source size
         Assert.True(chdSize < size / 2, $"expected significant compression, CHD is {chdSize:N0} bytes");
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         Assert.Equal(srcSha1, Sha1Hex(extractPath));
@@ -75,7 +72,7 @@ public class LargeFileValidationTests : IDisposable
     [Fact]
     public void Cd_100Mb_RoundTrip_PassesChdman()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         // 16 data frames + 44600 audio frames: BIN is (16 + 44600) * 2352 ≈ 100 MB;
         // 44616 % 4 == 0, so no track padding is needed
@@ -97,10 +94,10 @@ public class LargeFileValidationTests : IDisposable
 
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
-        var (verifyExit, vOut, vErr) = RunChdman("verify", "-i", chdPath);
+        var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         // extractraw returns the big-endian logical image (audio byte-swapped, zero subcode)
@@ -218,46 +215,5 @@ public class LargeFileValidationTests : IDisposable
             sha.TransformBlock(buffer, 0, read, null, 0);
         sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
         return Convert.ToHexString(sha.Hash ?? []).ToLowerInvariant();
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        // check alongside the test assembly
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        // check Tester project dir (for IDE Test Explorer runs)
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }

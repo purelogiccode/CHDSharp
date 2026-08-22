@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CHDSharp;
 using CHDSharp.Models;
 using CHDSharpEncoder;
@@ -15,8 +14,6 @@ namespace CHDSharpEncoderTest;
 /// </summary>
 public class DeltaEncodeTests : IDisposable
 {
-    private static readonly string? ChdmanPath = ResolveChdmanPath();
-
     private readonly string _dir;
 
     public DeltaEncodeTests()
@@ -358,7 +355,7 @@ public class DeltaEncodeTests : IDisposable
     [Fact]
     public void Chdman_VerifiesAndExtractsChild_WithParent()
     {
-        if (ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null) return;
 
         var parentData = CreateTestFile(4096 * 32, 111);
         var childData = (byte[])parentData.Clone();
@@ -374,7 +371,7 @@ public class DeltaEncodeTests : IDisposable
         var extractedPath = Path.Combine(_dir, "chdman_extracted.raw");
         File.WriteAllBytes(srcPath, childData);
 
-        var (createExit, cstdout, cstderr) = RunChdman("createraw", "-i", srcPath, "-o", parentPath,
+        var (createExit, cstdout, cstderr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", parentPath,
             "-c", "zlib", "-hs", "4096", "-us", "512", "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
 
@@ -384,11 +381,11 @@ public class DeltaEncodeTests : IDisposable
         }
 
         // chdman verify with -ip parent must pass
-        var (verifyExit, vstdout, vstderr) = RunChdman("verify", "-i", childPath, "-ip", parentPath);
+        var (verifyExit, vstdout, vstderr) = ChdmanHelper.RunChdman("verify", "-i", childPath, "-ip", parentPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\nstdout: {vstdout}\nstderr: {vstderr}");
 
         // chdman must extract the child back to the exact source bytes
-        var (extractExit, estdout, estderr) = RunChdman("extractraw", "-i", childPath, "-ip", parentPath, "-o", extractedPath, "-f");
+        var (extractExit, estdout, estderr) = ChdmanHelper.RunChdman("extractraw", "-i", childPath, "-ip", parentPath, "-o", extractedPath, "-f");
         Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\nstdout: {estdout}\nstderr: {estderr}");
         Assert.Equal(childData, File.ReadAllBytes(extractedPath));
 
@@ -420,44 +417,5 @@ public class DeltaEncodeTests : IDisposable
         var rng = new Random(seed);
         rng.NextBytes(result);
         return result;
-    }
-
-    private static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
-    {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var p = Process.Start(psi)!;
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-
-        return (p.ExitCode, tOut.Result, tErr.Result);
-    }
-
-    private static string? ResolveChdmanPath()
-    {
-        var exeName = OperatingSystem.IsWindows() ? "chdman.exe" : "chdman";
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidate = Path.Combine(baseDir, exeName);
-        if (File.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
-        if (File.Exists(candidate))
-            return candidate;
-
-        return null;
     }
 }
