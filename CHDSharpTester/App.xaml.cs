@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using CHDSharp;
+using CHDSharp.BugReporting;
 using Serilog;
 using Serilog.Extensions.Logging;
 
@@ -16,29 +17,45 @@ public partial class App
     {
         base.OnStartup(e);
 
-        var logPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "CHDSharpTester", "logs", "chdsharp-tester-.log");
+        try
+        {
+            var logPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "CHDSharpTester", "logs", "chdsharp-tester-.log");
 
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
-            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
-                formatProvider: CultureInfo.InvariantCulture)
-            .CreateLogger();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+                    formatProvider: CultureInfo.InvariantCulture)
+                .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharpTester")))
+                .CreateLogger();
 
-        Chd.LoggerFactory = new SerilogLoggerFactory(Log.Logger);
+            Chd.LoggerFactory = new SerilogLoggerFactory(Log.Logger);
 
-        Log.Information("CHDSharpTester started");
+            Log.Information("CHDSharpTester started");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"App.OnStartup failed: {ex}");
+        }
     }
 
     /// <summary>Flushes and closes the Serilog logger when the application exits.</summary>
     /// <param name="e">The exit event arguments.</param>
     protected override void OnExit(ExitEventArgs e)
     {
-        Log.Information("CHDSharpTester exiting");
-        Log.CloseAndFlush();
+        try
+        {
+            Log.Information("CHDSharpTester exiting");
+            Log.CloseAndFlush();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"App.OnExit failed: {ex}");
+        }
+
         base.OnExit(e);
     }
 }

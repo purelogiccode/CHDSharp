@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
+using CHDSharp.BugReporting;
 using CHDSharp.Models;
 using CHDSharp.Utils;
 using CHDSharpEncoder;
@@ -29,203 +30,215 @@ internal static class Program
         var serilogLogger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(formatProvider: null, outputTemplate: "{Message:lj}{NewLine}{Exception}")
+            .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharpCli")))
             .CreateLogger();
 
         Log.Logger = serilogLogger;
         Chd.LoggerFactory = new SerilogLoggerFactory(serilogLogger);
 
-        var sw = new Stopwatch();
-        sw.Start();
-
-        if (args.Length == 0 || args[0] is "--help" or "-h" or "-?")
+        try
         {
-            serilogLogger.Information("Usage:");
-            serilogLogger.Information("  CHDSharpCli <directory> [<directory> ...]      Verify all .chd files in directories");
-            serilogLogger.Information("  CHDSharpCli --random <file.chd>                Random-access read test on a single CHD");
-            serilogLogger.Information("  CHDSharpCli --list <listfile.txt>              Verify every .chd path listed in a text file");
-            serilogLogger.Information("  CHDSharpCli --parent <child.chd> <parent.chd>  Verify a child (differential) CHD against its parent");
-            serilogLogger.Information("  CHDSharpCli --toc <file.chd>                   Print table-of-contents for CD/GD-ROM CHD");
-            serilogLogger.Information("  CHDSharpCli --cue <file.chd> [<binfile>]       Generate CUE sheet for CD CHD");
-            serilogLogger.Information("  CHDSharpCli --classify <file.chd>              Classify CHD type (cd/dvd/hdd/gd-rom)");
-            serilogLogger.Information("  CHDSharpCli --create <in.bin> <out.chd>        Create CHD from raw binary [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t N] [-ip parent.chd] [-d] [-tp id] [-v]");
-            serilogLogger.Information("  CHDSharpCli --createcd <in.cue> <out.chd>      Create CD CHD from CUE/BIN [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t N] [-ip parent.chd] [-v]");
-            serilogLogger.Information("  CHDSharpCli --createhd <out.chd> --size N       Create blank HD CHD [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-chs C,H,S] [-ss N] [-t N] [-v]");
-            serilogLogger.Information("  CHDSharpCli --createld <in.avi> <out.chd>      Create laserdisc CHD from AVI [-c avhu] [-isf N] [-if N] [-t N] [-v]");
-            serilogLogger.Information("  CHDSharpCli --extractld <in.chd> <out.avi>     Extract laserdisc CHD to AVI [-isf N] [-if N]");
-            serilogLogger.Information("  CHDSharpCli --listtemplates                    List built-in hard disk geometry templates");
-            serilogLogger.Information("  CHDSharpCli --copy <in.chd> <out.chd>          Re-compress a CHD [-c zlib,zstd,lzma,none] [-t N] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]");
-            serilogLogger.Information("  CHDSharpCli --verify <file.chd> [--fix]        Verify a CHD; --fix repairs mismatched SHA-1 header fields");
-            serilogLogger.Information("  CHDSharpCli --info <file.chd>                  Print full header/map info (codecs, CRC-16, parent)");
-            serilogLogger.Information("  CHDSharpCli --detect <file>                    Detect game platform (.chd/.iso/.bin/.cue/.gdi/.nrg)");
-            serilogLogger.Information("  CHDSharpCli --dumpmeta <file.chd> [-t tag] [-ix N] [-o outfile]");
-            serilogLogger.Information("  CHDSharpCli --hash <file.chd> [--hashes sha1,sha256,crc32,xxh3] [--result text|json|sfv] [--tracks]");
-            serilogLogger.Information("  CHDSharpCli --batch <in-dir> <out-dir> --action extract|create [--codecs ...]");
-            serilogLogger.Information("  CHDSharpCli --addmeta <file.chd> -t TAG [-ix N] (-v text | -f file)");
-            serilogLogger.Information("  CHDSharpCli --delmeta <file.chd> -t TAG [-ix N]");
-            return;
-        }
+            var sw = new Stopwatch();
+            sw.Start();
 
-        switch (args[0])
-        {
-            case "--random" when args.Length < 2:
-                serilogLogger.Warning("--random requires a .chd file path");
-                return;
-            case "--random":
-                RandomAccessTest(args[1].Replace("\"", ""));
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--list" when args.Length < 2:
-                serilogLogger.Warning("--list requires a text file of .chd paths");
-                return;
-            case "--list":
-                VerifyList(args[1].Replace("\"", ""));
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--parent" when args.Length < 3:
-                serilogLogger.Warning("--parent requires <child.chd> <parent.chd>");
-                return;
-            case "--parent":
-                ParentTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""));
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--toc" when args.Length < 2:
-                serilogLogger.Warning("--toc requires a .chd file path");
-                return;
-            case "--toc":
-                TocTest(args[1].Replace("\"", ""));
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--cue" when args.Length < 2:
-                serilogLogger.Warning("--cue requires a .chd file path");
-                return;
-            case "--cue":
-                CueTest(args[1].Replace("\"", ""), args.Length >= 3 ? args[2].Replace("\"", "") : null);
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--classify" when args.Length < 2:
-                serilogLogger.Warning("--classify requires a .chd file path");
-                return;
-            case "--classify":
-                ClassifyTest(args[1].Replace("\"", ""));
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--create" when args.Length < 3:
-                serilogLogger.Warning("--create requires <input.bin> <output.chd>");
-                return;
-            case "--create":
-                CreateRawTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--createcd" when args.Length < 3:
-                serilogLogger.Warning("--createcd requires <input.cue> <output.chd>");
-                return;
-            case "--createcd":
-                CreateCdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--createhd" when args.Length < 2:
-                serilogLogger.Warning("--createhd requires <output.chd> --size N");
-                return;
-            case "--createhd":
-                CreateHdTest(args[1].Replace("\"", ""), args.Skip(2).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--createld" when args.Length < 3:
-                serilogLogger.Warning("--createld requires <input.avi> <output.chd>");
-                return;
-            case "--createld":
-                CreateLdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--extractld" when args.Length < 3:
-                serilogLogger.Warning("--extractld requires <input.chd> <output.avi>");
-                return;
-            case "--extractld":
-                ExtractLdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--listtemplates":
-                ListTemplates();
-                return;
-            case "--copy" when args.Length < 3:
-                serilogLogger.Warning("--copy requires <input.chd> <output.chd>");
-                return;
-            case "--copy":
-                CopyTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--verify" when args.Length < 2:
-                serilogLogger.Warning("--verify requires a .chd file path");
-                return;
-            case "--verify":
-                VerifyTest(args[1].Replace("\"", ""), args.Skip(2).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--info" when args.Length < 2:
-                serilogLogger.Warning("--info requires a .chd file path");
-                return;
-            case "--info":
-                InfoTest(args[1].Replace("\"", ""));
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--detect" when args.Length < 2:
-                serilogLogger.Warning("--detect requires a file path");
-                return;
-            case "--detect":
-                DetectTest(args[1].Replace("\"", ""));
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--dumpmeta" when args.Length < 2:
-                serilogLogger.Warning("--dumpmeta requires a .chd file path");
-                return;
-            case "--dumpmeta":
-                DumpMetaTest(args.Skip(1).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--hash" when args.Length < 2:
-                serilogLogger.Warning("--hash requires a .chd file path");
-                return;
-            case "--hash":
-                HashTest(args.Skip(1).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--batch" when args.Length < 3:
-                serilogLogger.Warning("--batch requires <input-dir> <output-dir>");
-                return;
-            case "--batch":
-                BatchTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--addmeta" when args.Length < 2:
-                serilogLogger.Warning("--addmeta requires a .chd file path");
-                return;
-            case "--addmeta":
-                AddMetaTest(args.Skip(1).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-            case "--delmeta" when args.Length < 2:
-                serilogLogger.Warning("--delmeta requires a .chd file path");
-                return;
-            case "--delmeta":
-                DeleteMetaTest(args.Skip(1).ToArray());
-                serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                return;
-        }
-
-        foreach (var arg in args)
-        {
-            var sDir = arg.Replace("\"", "");
-            if (!Directory.Exists(sDir))
+            if (args.Length == 0 || args[0] is "--help" or "-h" or "-?")
             {
-                serilogLogger.Warning("Directory not found: {Path}", sDir);
-                continue;
+                serilogLogger.Information("Usage:");
+                serilogLogger.Information("  CHDSharpCli <directory> [<directory> ...]      Verify all .chd files in directories");
+                serilogLogger.Information("  CHDSharpCli --random <file.chd>                Random-access read test on a single CHD");
+                serilogLogger.Information("  CHDSharpCli --list <listfile.txt>              Verify every .chd path listed in a text file");
+                serilogLogger.Information("  CHDSharpCli --parent <child.chd> <parent.chd>  Verify a child (differential) CHD against its parent");
+                serilogLogger.Information("  CHDSharpCli --toc <file.chd>                   Print table-of-contents for CD/GD-ROM CHD");
+                serilogLogger.Information("  CHDSharpCli --cue <file.chd> [<binfile>]       Generate CUE sheet for CD CHD");
+                serilogLogger.Information("  CHDSharpCli --classify <file.chd>              Classify CHD type (cd/dvd/hdd/gd-rom)");
+                serilogLogger.Information("  CHDSharpCli --create <in.bin> <out.chd>        Create CHD from raw binary [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t N] [-ip parent.chd] [-d] [-tp id] [-v]");
+                serilogLogger.Information("  CHDSharpCli --createcd <in.cue> <out.chd>      Create CD CHD from CUE/BIN [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t N] [-ip parent.chd] [-v]");
+                serilogLogger.Information("  CHDSharpCli --createhd <out.chd> --size N       Create blank HD CHD [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-chs C,H,S] [-ss N] [-t N] [-v]");
+                serilogLogger.Information("  CHDSharpCli --createld <in.avi> <out.chd>      Create laserdisc CHD from AVI [-c avhu] [-isf N] [-if N] [-t N] [-v]");
+                serilogLogger.Information("  CHDSharpCli --extractld <in.chd> <out.avi>     Extract laserdisc CHD to AVI [-isf N] [-if N]");
+                serilogLogger.Information("  CHDSharpCli --listtemplates                    List built-in hard disk geometry templates");
+                serilogLogger.Information("  CHDSharpCli --copy <in.chd> <out.chd>          Re-compress a CHD [-c zlib,zstd,lzma,none] [-t N] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]");
+                serilogLogger.Information("  CHDSharpCli --verify <file.chd> [--fix]        Verify a CHD; --fix repairs mismatched SHA-1 header fields");
+                serilogLogger.Information("  CHDSharpCli --info <file.chd>                  Print full header/map info (codecs, CRC-16, parent)");
+                serilogLogger.Information("  CHDSharpCli --detect <file>                    Detect game platform (.chd/.iso/.bin/.cue/.gdi/.nrg)");
+                serilogLogger.Information("  CHDSharpCli --dumpmeta <file.chd> [-t tag] [-ix N] [-o outfile]");
+                serilogLogger.Information("  CHDSharpCli --hash <file.chd> [--hashes sha1,sha256,crc32,xxh3] [--result text|json|sfv] [--tracks]");
+                serilogLogger.Information("  CHDSharpCli --batch <in-dir> <out-dir> --action extract|create [--codecs ...]");
+                serilogLogger.Information("  CHDSharpCli --addmeta <file.chd> -t TAG [-ix N] (-v text | -f file)");
+                serilogLogger.Information("  CHDSharpCli --delmeta <file.chd> -t TAG [-ix N]");
+                return;
             }
 
-            var di = new DirectoryInfo(sDir);
-            Checkdir(di);
-        }
+            switch (args[0])
+            {
+                case "--random" when args.Length < 2:
+                    serilogLogger.Warning("--random requires a .chd file path");
+                    return;
+                case "--random":
+                    RandomAccessTest(args[1].Replace("\"", ""));
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--list" when args.Length < 2:
+                    serilogLogger.Warning("--list requires a text file of .chd paths");
+                    return;
+                case "--list":
+                    VerifyList(args[1].Replace("\"", ""));
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--parent" when args.Length < 3:
+                    serilogLogger.Warning("--parent requires <child.chd> <parent.chd>");
+                    return;
+                case "--parent":
+                    ParentTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""));
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--toc" when args.Length < 2:
+                    serilogLogger.Warning("--toc requires a .chd file path");
+                    return;
+                case "--toc":
+                    TocTest(args[1].Replace("\"", ""));
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--cue" when args.Length < 2:
+                    serilogLogger.Warning("--cue requires a .chd file path");
+                    return;
+                case "--cue":
+                    CueTest(args[1].Replace("\"", ""), args.Length >= 3 ? args[2].Replace("\"", "") : null);
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--classify" when args.Length < 2:
+                    serilogLogger.Warning("--classify requires a .chd file path");
+                    return;
+                case "--classify":
+                    ClassifyTest(args[1].Replace("\"", ""));
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--create" when args.Length < 3:
+                    serilogLogger.Warning("--create requires <input.bin> <output.chd>");
+                    return;
+                case "--create":
+                    CreateRawTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--createcd" when args.Length < 3:
+                    serilogLogger.Warning("--createcd requires <input.cue> <output.chd>");
+                    return;
+                case "--createcd":
+                    CreateCdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--createhd" when args.Length < 2:
+                    serilogLogger.Warning("--createhd requires <output.chd> --size N");
+                    return;
+                case "--createhd":
+                    CreateHdTest(args[1].Replace("\"", ""), args.Skip(2).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--createld" when args.Length < 3:
+                    serilogLogger.Warning("--createld requires <input.avi> <output.chd>");
+                    return;
+                case "--createld":
+                    CreateLdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--extractld" when args.Length < 3:
+                    serilogLogger.Warning("--extractld requires <input.chd> <output.avi>");
+                    return;
+                case "--extractld":
+                    ExtractLdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--listtemplates":
+                    ListTemplates();
+                    return;
+                case "--copy" when args.Length < 3:
+                    serilogLogger.Warning("--copy requires <input.chd> <output.chd>");
+                    return;
+                case "--copy":
+                    CopyTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--verify" when args.Length < 2:
+                    serilogLogger.Warning("--verify requires a .chd file path");
+                    return;
+                case "--verify":
+                    VerifyTest(args[1].Replace("\"", ""), args.Skip(2).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--info" when args.Length < 2:
+                    serilogLogger.Warning("--info requires a .chd file path");
+                    return;
+                case "--info":
+                    InfoTest(args[1].Replace("\"", ""));
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--detect" when args.Length < 2:
+                    serilogLogger.Warning("--detect requires a file path");
+                    return;
+                case "--detect":
+                    DetectTest(args[1].Replace("\"", ""));
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--dumpmeta" when args.Length < 2:
+                    serilogLogger.Warning("--dumpmeta requires a .chd file path");
+                    return;
+                case "--dumpmeta":
+                    DumpMetaTest(args.Skip(1).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--hash" when args.Length < 2:
+                    serilogLogger.Warning("--hash requires a .chd file path");
+                    return;
+                case "--hash":
+                    HashTest(args.Skip(1).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--batch" when args.Length < 3:
+                    serilogLogger.Warning("--batch requires <input-dir> <output-dir>");
+                    return;
+                case "--batch":
+                    BatchTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--addmeta" when args.Length < 2:
+                    serilogLogger.Warning("--addmeta requires a .chd file path");
+                    return;
+                case "--addmeta":
+                    AddMetaTest(args.Skip(1).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+                case "--delmeta" when args.Length < 2:
+                    serilogLogger.Warning("--delmeta requires a .chd file path");
+                    return;
+                case "--delmeta":
+                    DeleteMetaTest(args.Skip(1).ToArray());
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return;
+            }
 
-        serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+            foreach (var arg in args)
+            {
+                var sDir = arg.Replace("\"", "");
+                if (!Directory.Exists(sDir))
+                {
+                    serilogLogger.Warning("Directory not found: {Path}", sDir);
+                    continue;
+                }
+
+                var di = new DirectoryInfo(sDir);
+                Checkdir(di);
+            }
+
+            serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Unhandled exception in CHDSharpCli");
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
     }
 
     /// <summary>
@@ -1161,13 +1174,13 @@ internal static class Program
     /// </summary>
     private static void ListTemplates()
     {
-        Console.WriteLine();
-        Console.WriteLine("ID  Manufacturer  Model           Cylinders  Heads  Sectors  Sector Size  Total Size");
-        Console.WriteLine("------------------------------------------------------------------------------------");
+        Log.Logger.Information("");
+        Log.Logger.Information("ID  Manufacturer  Model           Cylinders  Heads  Sectors  Sector Size  Total Size");
+        Log.Logger.Information("------------------------------------------------------------------------------------");
         for (var id = 0; id < HardDiskTemplates.Templates.Length; id++)
         {
             var t = HardDiskTemplates.Templates[id];
-            Console.WriteLine("{0,2}  {1,-13} {2,-15} {3,9}  {4,5}  {5,7}  {6,11}  {7,7} MB",
+            Log.Logger.Information("{Id,2}  {Manufacturer,-13} {Model,-15} {Cylinders,9}  {Heads,5}  {Sectors,7}  {SectorSize,11}  {TotalMb,7} MB",
                 id, t.Manufacturer, t.Model, t.Cylinders, t.Heads, t.Sectors, t.SectorSize, t.TotalMb);
         }
     }
@@ -1362,7 +1375,7 @@ internal static class Program
     }
 
     /// <summary>Runs a deep CHDSharpLib check on a created CHD file (raw + combined SHA1);
-/// for differential children the parent CHD is supplied so parent references resolve.</summary>
+    /// for differential children the parent CHD is supplied so parent references resolve.</summary>
     private static void VerifyResultChd(string path, string? parentPath = null)
     {
         if (parentPath != null)

@@ -26,57 +26,65 @@ public class ChdTestRunner
         IProgress<TestProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        var session = new TestSessionResult();
-        var chdmanAvailable = File.Exists(chdmanPath);
-
-        var chdman = chdmanAvailable ? new ChdmanWrapper(chdmanPath) : null;
-
-        if (chdman != null)
+        try
         {
-            try
+            var session = new TestSessionResult();
+            var chdmanAvailable = File.Exists(chdmanPath);
+
+            var chdman = chdmanAvailable ? new ChdmanWrapper(chdmanPath) : null;
+
+            if (chdman != null)
             {
-                var r = chdman.Run("info");
-                if (r.ExitCode == 0)
+                try
                 {
-                    var lines = r.StdOut.Split('\n');
-                    ChdmanVersion = lines.FirstOrDefault()?.Trim();
+                    var r = chdman.Run("info");
+                    if (r.ExitCode == 0)
+                    {
+                        var lines = r.StdOut.Split('\n');
+                        ChdmanVersion = lines.FirstOrDefault()?.Trim();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "chdman version detection failed");
                 }
             }
-            catch
+
+            for (var i = 0; i < files.Count; i++)
             {
-                // ignored
+                cancellationToken.ThrowIfCancellationRequested();
+                var file = files[i];
+                progress?.Report(new TestProgress(file.FileName, i + 1, files.Count,
+                    "Starting", $"Testing {file.FileName}..."));
+
+                var result = await Task.Run(() => TestSingleFile(file, chdman, progress, i, files.Count), cancellationToken);
+                session.FileResults.Add(result);
             }
-        }
 
-        for (var i = 0; i < files.Count; i++)
+            // Session-level tests: Zstd codec
+            if (chdman is { Available: true })
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Run(() => RunZstdCodecTests(files, chdman, progress, session), cancellationToken);
+            }
+
+            // Session-level tests: Parent chain
+            if (chdman is { Available: true })
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Run(() => RunParentChainTests(files, chdman, progress, session), cancellationToken);
+            }
+
+            progress?.Report(new TestProgress("Done", files.Count, files.Count,
+                "Complete", "All tests finished.", true));
+
+            return session;
+        }
+        catch (Exception ex)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var file = files[i];
-            progress?.Report(new TestProgress(file.FileName, i + 1, files.Count,
-                "Starting", $"Testing {file.FileName}..."));
-
-            var result = await Task.Run(() => TestSingleFile(file, chdman, progress, i, files.Count), cancellationToken);
-            session.FileResults.Add(result);
+            Log.Error(ex, "Test run failed");
+            throw;
         }
-
-        // Session-level tests: Zstd codec
-        if (chdman is { Available: true })
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Run(() => RunZstdCodecTests(files, chdman, progress, session), cancellationToken);
-        }
-
-        // Session-level tests: Parent chain
-        if (chdman is { Available: true })
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Run(() => RunParentChainTests(files, chdman, progress, session), cancellationToken);
-        }
-
-        progress?.Report(new TestProgress("Done", files.Count, files.Count,
-            "Complete", "All tests finished.", true));
-
-        return session;
     }
 
     private PerFileResult TestSingleFile(

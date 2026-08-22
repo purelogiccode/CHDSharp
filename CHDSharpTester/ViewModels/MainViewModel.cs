@@ -667,7 +667,14 @@ public class RelayCommand : ICommand
     /// <param name="parameter">Data used by the command, or null.</param>
     public void Execute(object? parameter)
     {
-        _execute(parameter);
+        try
+        {
+            _execute(parameter);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Command execution failed");
+        }
     }
 
     /// <summary>Occurs when changes occur that affect whether the command can execute.</summary>

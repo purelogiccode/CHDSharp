@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+        <ProjectReference Include="..\CHDSharp.BugReporting\CHDSharp.BugReporting.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using Serilog;
 
 namespace CHDSharpTester.Services;
 
@@ -67,25 +68,33 @@ public class ChdmanWrapper
     /// <returns>A <see cref="Result"/> containing the exit code and output streams.</returns>
     public Result Run(params string[] args)
     {
-        var psi = new ProcessStartInfo
+        try
         {
-            FileName = _chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
+            var psi = new ProcessStartInfo
+            {
+                FileName = _chdmanPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
+            foreach (var a in args)
+                psi.ArgumentList.Add(a);
 
-        using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-        Task.WaitAll(tOut, tErr);
-        return new Result { ExitCode = p.ExitCode, StdOut = tOut.Result, StdErr = tErr.Result };
+            using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+            var tOut = p.StandardOutput.ReadToEndAsync();
+            var tErr = p.StandardError.ReadToEndAsync();
+            p.WaitForExit();
+            Task.WaitAll(tOut, tErr);
+            return new Result { ExitCode = p.ExitCode, StdOut = tOut.Result, StdErr = tErr.Result };
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "chdman execution failed: {Args}", string.Join(" ", args));
+            throw;
+        }
     }
 
     /// <summary>Runs chdman info on a CHD file and parses key header fields. Returns null on failure.</summary>

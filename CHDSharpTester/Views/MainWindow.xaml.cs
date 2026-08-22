@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using CHDSharpTester.ViewModels;
+using Serilog;
 
 namespace CHDSharpTester.Views;
 
@@ -50,7 +51,7 @@ internal partial class MainWindow
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"MainWindow.OnClosing failed: {ex}");
+            Log.Error(ex, "MainWindow.OnClosing failed");
         }
     }
 }
