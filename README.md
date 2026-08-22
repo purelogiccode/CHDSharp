@@ -5,22 +5,23 @@
 
 # CHDSharp
 
-**Pure C# CHD (Compressed Hunks of Data) reader — V1–V5, all 10 codecs, parent/child chaining, 100% byte-for-byte match with MAME `chdman`.**
+**Pure C# CHD (Compressed Hunks of Data) reader and writer — V1–V5, all 10 codecs, parent/child chaining, 100% byte-for-byte match with MAME `chdman`.**
 
-> Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes) — extended with Zstd, AVHuff, parallel verification, async APIs, metadata support, and a comprehensive test suite.
+> Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes) — extended with Zstd, AVHuff, parallel verification, async APIs, metadata support, seekable stream, span reads, read-ahead decompression, lazy parent resolution, and a comprehensive test suite.
 
 ---
 
-## What's New in v1.2.0
+## What's New in v1.3.0
 
-- **CD/GD-ROM track (TOC) parsing** — Full track layout, sector types, pregap/postgap, GD-ROM support (incl. legacy `CHGT` little-endian CDDA) via `Tracks` / `IsLittleEndianAudio` / `GenerateCueSheet()` / `ExportToc()`
-- **`UnitBytes` property** — Derives sector size from metadata for all CHD versions (HDD 512B, CD 2448B, V5 header)
-- **New enums** — `ChdTrackType` (Mode1, Mode2, Audio, etc.) and `ChdSubType` (None, Normal, Raw)
-- **Centralized versioning** — All 7 projects share version `1.2.0` via `Directory.Build.props`
-- **Deterministic builds** — Reproducible byte-for-byte builds with embedded SourceLink
-- **Embedded debug symbols** — Easier NuGet debugging with `<DebugType>embedded</DebugType>`
-- **Companion library** — `CHDSharpEncoder` with CRC16, SHA1, and Deflate support
-- **Code refactoring** — Consistent code style across the entire codebase
+- **Hard disk ident metadata (`IDNT`)** — Read/write `IDNT` metadata (ATA IDENTIFY DEVICE response, 512 bytes) preserving original drive model, serial, CHS geometry, and firmware revision. Access via `ChdFile.IdentData` property. `--ident <path>` flag on `createhd` CLI. Automatically preserved during `ChdEncoder.Copy()`.
+- **Hard disk encryption key metadata** — Read/write `KEY ` metadata (encryption key) used by OG Xbox and other platforms with encrypted HDD contents. Access via `ChdFile.KeyData` property. Automatically preserved during `ChdEncoder.Copy()`.
+- **PCMCIA CIS metadata** — Read/write `CIS ` metadata (Card Information Structure) used by PC Engine CD and other PCMCIA platforms. Access via `ChdFile.PcmciaCisData` property. Automatically preserved during `ChdEncoder.Copy()`.
+- **`ChdImageStream` — seekable `Stream` over decompressed image** — `ChdFile.OpenAsStream()` returns a read-only, seekable `Stream` wrapping the decompressed CHD. Supports `Read`, `ReadAsync`, `Seek`, `Position`, and `Length`.
+- **`Span<byte>` read overloads** — `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` enable callers to use `stackalloc`, `ArrayPool`, or pinned memory without allocating a temporary `byte[]`.
+- **Threaded read-ahead decompression** — `ChdFile.ConfigureReadAhead(int lookAhead)` enables background pre-decompression of upcoming hunks for sequential streaming workloads.
+- **Lazy parent resolution (`ParentResolver`)** — Open child CHDs without providing the parent path upfront. Supply a `ParentResolver` callback that resolves the parent by SHA1/MD5 hash on first read.
+- **Bounded metadata string parsing** — Hardened track metadata parsing against crafted payloads (libchdr #165). TYPE/SUBTYPE/PGTYPE/PGSUB fields capped at 15 characters. Metadata entries > 64 KiB rejected.
+- **Deflate decoder infinite-loop guard** — Added guards in the inflate state machine matching miniz 3.1.2 fix parity (libchdr #168).
 - **Metadata upgrade during copy** — Legacy CD/GD-ROM metadata (`CHCD`, `CHTR`, `CHGT`) is automatically upgraded to modern equivalents (`CHT2`, `CHGD`) during `Copy`, matching MAME chdman behavior. Use `--no-upgrade` to preserve legacy tags.
 
 ---
@@ -128,10 +129,14 @@ CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.ch
 - **Random-access API** — `ReadHunk()` and `Read()` with hunk-caching; `EnumerateHunks()` for sequential streaming
 - **LBA/MSF sector reads** — `ReadSector()`, `ReadSectorMsf()`, and `ReadFrame()` read CD/GD-ROM sectors or full 2448-byte frames by logical block address; `CdRomAddress` converts between BCD MSF and LBA (with or without the 150-frame lead-in)
 - **Async API** — `OpenAsync`, `ReadHunkAsync`, `ReadAsync`, `IAsyncDisposable`
+- **Seekable stream** — `OpenAsStream()` returns a read-only, seekable `Stream` over the decompressed image
+- **Span\<byte\> reads** — `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` for zero-copy paths
+- **Read-ahead decompression** — `ConfigureReadAhead(int)` enables background pre-decompression of upcoming hunks
+- **Lazy parent resolution** — `ParentResolver` callback resolves parents by SHA1/MD5 hash on first read
 - **Parallel verification** — multi-threaded `CheckFile` with bounded memory, configurable thread count
 - **Parent/child chaining** — transparent differential CHD support with wrong-parent detection
 - **Track info** — parse CD/GD-ROM table of contents (track types, sector sizes, pregap/postgap, frame offsets)
-- **Metadata** — expose game name, disc labels, and other CHD header metadata
+- **Metadata** — expose game name, disc labels, and other CHD header metadata. IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support.
 - **CHD creation** — companion [`CHDSharpEncoder`](CHDSharpEncoder/README.md) writes V5 CHDs from raw binaries, CD images (CUE/GDI/ISO/TOC/NRG), and AVI laserdisc sources (`createld`) with `chdman`-matched output; re-compresses existing CHDs (`Copy`), creates delta children (`-ip parent`), and writes uncompressed CHDs (`-c none`)
 - **100% chdman match** — cross-checked against `chdman info`, `verify`, `copy`, and `extractraw` (MAME 0.288)
 - **Pluggable logging** — `Microsoft.Extensions.Logging` integration; silent by default

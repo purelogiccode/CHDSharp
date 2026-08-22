@@ -58,7 +58,7 @@ All projects share versioning and analyzer settings via `Directory.Build.props`.
 
 **`Chd` (static)** — verification entry points (`CheckFile`, `CheckFileWithParent`), header sniffing (`CheckHeader`, `IsChdFile`), full header DTO reads (`ReadHeader`, `ReadHeaderAsync`), classification (`Classify`), plus global settings (`LoggerFactory`, `TaskCount`).
 
-**`ChdFile` (instance)** — random access. Owns the stream (optionally), the parsed `ChdHeader`, a `ChdCodecState`, an optional parent `ChdFile`, and lazy metadata/tracks caches. All `Read*`/`Extract*`/`Generate*` operations live here.
+**`ChdFile` (instance)** — random access. Owns the stream (optionally), the parsed `ChdHeader`, a `ChdCodecState`, an optional parent `ChdFile`, and lazy metadata/tracks caches. All `Read*`/`Extract*`/`Generate*` operations live here. Also supports `OpenAsStream()` for seekable stream access, `ConfigureReadAhead()` for background pre-decompression, and `ParentResolver` for lazy parent resolution.
 
 **`ChdHeaders`** — reads and validates each version's header, then parses the map:
 

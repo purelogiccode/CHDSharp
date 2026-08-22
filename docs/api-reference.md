@@ -70,6 +70,9 @@ All overloads seek from the start. Failure codes: `Chderrfilenotfound`, `Chderrc
 | `ExportToc` | `string ExportToc()` | Human-readable TOC dump. |
 | `ExtractToDirectory` | `List<string> ExtractToDirectory(string outputDir, string baseFileName, IProgress<ChdProgress>? progress = null, CancellationToken ct = default)` | Extract to files; returns created paths. Throws `InvalidDataException` on track failures. Reports per hunk when `progress` is supplied; throws `OperationCanceledException` when cancelled. |
 | `ExtractToDirectoryWithReporting` | `ExtractResult ExtractToDirectoryWithReporting(string outputDir, string baseFileName, IProgress<ChdProgress>? progress = null, CancellationToken ct = default)` | Reporting variant (per-track results, no exceptions). Cancellation still throws `OperationCanceledException`. |
+| `OpenAsStream` | `ChdImageStream OpenAsStream(bool leaveOpen = false)` | Returns a read-only, seekable `Stream` wrapping the decompressed CHD. Supports `Read`, `ReadAsync`, `Seek`, `Position`, `Length`. |
+| `ConfigureReadAhead` | `void ConfigureReadAhead(int lookAhead)` | Enable background pre-decompression of the next N hunks. Uses `ThreadLocal<ChdCodecState>` for thread-safe codec access. |
+| `FlushReadAhead` | `void FlushReadAhead()` | Clear stale read-ahead cache entries after seeks. |
 | `Dispose` / `DisposeAsync` | — | Release the stream (unless `leaveOpen`) and any internally-owned parent. |
 
 ### Properties
@@ -94,6 +97,9 @@ All overloads seek from the start. Failure codes: `Chderrfilenotfound`, `Chderrc
 | `IsLittleEndianAudio` | `bool` | True for legacy GD-ROMs (detected by the `CHGT` tag / `CD_FLAG_GDROMLE`) whose CDDA audio tracks are stored little-endian. AUDIO tracks are byte-swapped to big-endian order when extracted. |
 | `IsDvd` | `bool` | DVD metadata present. |
 | `IsHdd` | `bool` | Hard-disk geometry metadata present (V1/V2: via synthesized GDDD). |
+| `IdentData` | `byte[]?` | ATA IDENTIFY DEVICE data (512 bytes) from `IDNT` metadata. `null` if not present. |
+| `KeyData` | `byte[]?` | Encryption key data from `KEY ` metadata. `null` if not present. |
+| `PcmciaCisData` | `byte[]?` | PCMCIA Card Information Structure from `CIS ` metadata. `null` if not present. |
 | `Metadata` | `IReadOnlyList<ChdMetadataEntry>` | All metadata entries, lazy-loaded. V1/V2 include a synthesized `GDDD` entry. |
 
 ---

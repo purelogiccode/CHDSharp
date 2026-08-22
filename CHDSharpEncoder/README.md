@@ -24,7 +24,7 @@ a parent, and write **uncompressed CHDs** (`-c none`).
 | SELF-hunk deduplication (COMPRESSION_SELF, with SELF_0/SELF_1 map promotion) | ✅ |
 | Parent CHD / delta creation (COMPRESSION_PARENT, unit-split refs, `-ip`) | ✅ |
 | Uncompressed CHD (`-c none`, V5 raw map, chdman byte-identical) | ✅ |
-| CHT2 / CHGD / GDDD / DVD metadata (linked list, checksummed, combined SHA-1) | ✅ |
+| CHT2 / CHGD / GDDD / DVD / IDNT / KEY / CIS metadata (linked list, checksummed, combined SHA-1) | ✅ |
 | Metadata cloning on copy (all source entries preserved) | ✅ |
 | Metadata upgrade on copy (legacy CHCD/CHTR/CHGT → modern CHT2/CHGD, matching chdman) | ✅ |
 | Audio byte-swap (little-endian BIN → big-endian CHD, like chdman) | ✅ |
@@ -166,7 +166,7 @@ CHDSharpEncoder/
 ├── HunkProcessor.cs     Producer→worker→consumer compression pipeline + map entries
 ├── MapCompressor.cs     V5 compressed map (RLE + Huffman, SELF/PARENT promotion)
 ├── ParentMap.cs         Parent walk + unit-window hash map for delta children
-├── MetadataWriter.cs    CHT2/CHGD/GDDD/DVD metadata, combined SHA-1
+├── MetadataWriter.cs    CHT2/CHGD/GDDD/DVD/IDNT/KEY/CIS metadata, combined SHA-1
 ├── CdImageParser.cs     CUE / GDI / ISO / TOC dispatch
 ├── CueParser.cs, GdiParser.cs, IsoParser.cs, TocParser.cs, CdToc.cs
 ├── BigEndianWriter.cs, Crc16.cs, Sha1.cs, RawDeflate.cs, BitStream.cs,
@@ -247,7 +247,7 @@ buffer pools sized by the worker count, so multi-GB sources encode in constant m
 
 ## Known limitations
 
-- No NRG (Nero) input parsing.
+- `cdzs` encode output is valid and chdman-verifiable but not always bit-identical to chdman's own file (managed zstd trailing byte).
 
 ## License
 

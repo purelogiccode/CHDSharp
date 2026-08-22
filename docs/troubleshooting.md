@@ -80,8 +80,8 @@ Possible causes:
 
 | Limitation | Detail |
 |------------|--------|
-| **Read-only** | The library cannot create, modify, or repack CHDs. For writing, see `CHDSharpEncoder` (companion project). |
-| **Not thread-safe per instance** | One `ChdFile` = one thread. Use separate instances for parallel work. |
+| **Reader library** | The library reads and verifies CHDs. For writing, see `CHDSharpEncoder` (companion project). |
+| **Not thread-safe per instance** | One `ChdFile` = one thread. Use `ReadHunkConcurrent` or separate instances for parallel work. |
 | **Seekable streams only** | `Open(Stream, ...)` requires `CanSeek`. |
 | **V6+ not supported** | MAME has not released a V6 format; if it ever does, a new header parser will be needed. |
 | **No lossy AVHuff video** | See above. |

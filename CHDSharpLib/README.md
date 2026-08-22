@@ -4,13 +4,13 @@
 
 # CHDSharpLib
 
-**Pure C# read-only CHD (Compressed Hunks of Data) library — V1–V5, all 10 codecs, parent/child chaining, parallel verification, 100% match with MAME chdman.**
+**Pure C# CHD (Compressed Hunks of Data) library — V1–V5, all 10 codecs, parent/child chaining, parallel verification, 100% match with MAME chdman.**
 
-> Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes), extended with Zstd, AVHuff, V5 compressed map, random-access API, parent/child chaining, and parallel verification.
+> Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes), extended with Zstd, AVHuff, V5 compressed map, random-access API, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, and lazy parent resolution.
 
 ---
 
-## What's New in v1.2.0
+## What's New in v1.3.0
 
 - **Hard disk ident metadata (`IDNT`)** — Read/write `IDNT` metadata (ATA IDENTIFY DEVICE response, 512 bytes) preserving original drive model, serial, CHS geometry, and firmware revision. Access via `ChdFile.IdentData` property. `--ident <path>` flag on `createhd` CLI. Automatically preserved during `ChdEncoder.Copy()`.
 - **Hard disk encryption key metadata** — Read/write `KEY ` metadata (encryption key) used by OG Xbox and other platforms with encrypted HDD contents. Access via `ChdFile.KeyData` property. Automatically preserved during `ChdEncoder.Copy()`.
@@ -350,6 +350,9 @@ All `Open` overloads seek from the start. The reader is **not thread-safe** — 
 | **GenerateGdiDescriptor** | `string GenerateGdiDescriptor(string[])` | Generate GDI descriptor for GD-ROM CHDs. |
 | **ExportToc** | `string ExportToc()` | Export TOC as human-readable text. |
 | **ExtractToDirectory** | `List<string> ExtractToDirectory(string, string, IProgress<ChdProgress>? = null, CancellationToken = default)` | Extract CHD tracks to directory. Returns file paths. Reports progress per hunk; cancellable. |
+| **OpenAsStream** | `ChdImageStream OpenAsStream(bool leaveOpen = false)` | Returns a read-only, seekable `Stream` wrapping the decompressed CHD. Supports `Read`, `ReadAsync`, `Seek`, `Position`, `Length`. |
+| **ConfigureReadAhead** | `void ConfigureReadAhead(int lookAhead)` | Enable background pre-decompression of the next N hunks. Uses `ThreadLocal<ChdCodecState>` for thread-safe codec access. |
+| **FlushReadAhead** | `void FlushReadAhead()` | Clear stale read-ahead cache entries after seeks. |
 | **Dispose** / **DisposeAsync** | `void Dispose()` / `ValueTask DisposeAsync()` | Release stream and parent. |
 
 #### Properties
@@ -374,6 +377,9 @@ All `Open` overloads seek from the start. The reader is **not thread-safe** — 
 | `IsLittleEndianAudio` | `bool` | True for legacy GD-ROMs (`CHGT` tag / `CD_FLAG_GDROMLE`) whose CDDA audio tracks are stored little-endian. AUDIO tracks are byte-swapped during extraction. |
 | `IsDvd` | `bool` | True if DVD metadata present. |
 | `IsHdd` | `bool` | True if hard disk geometry metadata present. |
+| `IdentData` | `byte[]?` | ATA IDENTIFY DEVICE data (512 bytes) from `IDNT` metadata. `null` if not present. |
+| `KeyData` | `byte[]?` | Encryption key data from `KEY ` metadata. `null` if not present. |
+| `PcmciaCisData` | `byte[]?` | PCMCIA Card Information Structure from `CIS ` metadata. `null` if not present. |
 | `Metadata` | `IReadOnlyList<ChdMetadataEntry>` | CHD metadata entries (game name, disc type, etc.). Lazy-loaded. V1/V2 files include a synthesized `GDDD` entry. |
 
 ### `ChdMetadataEntry` — Metadata record
@@ -602,8 +608,8 @@ dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ## Limits
 
-- **Read-only** — This library cannot create, modify, or repack CHD files. For *creation* (raw and CD images, re-compression via `Copy`, delta children, uncompressed `-c none` — all `chdman`-matched), use the companion [`CHDSharpEncoder`](../CHDSharpEncoder/README.md).
-- **Not thread-safe** — `ChdFile` instances must be used from a single thread
+- **Reader library** — This library reads and verifies CHD files. For *creation* (raw and CD images, re-compression via `Copy`, delta children, uncompressed `-c none` — all `chdman`-matched), use the companion [`CHDSharpEncoder`](../CHDSharpEncoder/README.md).
+- **Not thread-safe per instance** — `ChdFile` instances must be used from a single thread. Use `ReadHunkConcurrent` or separate instances for parallel work.
 - **No lossy video** — Lossy AVHuff video variants are not supported
 - **Stream must be seekable** — for `ChdFile.Open` stream overloads
 - **V6+ not supported** — MAME has not released a V6 format

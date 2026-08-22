@@ -36,6 +36,7 @@ CHDSharp vs the two other independent CHD implementations ([chd-rs 0.3.4](../Ref
 | Delta/parent CHD creation (`-ip`) | ✅ | ❌ | ✅ | ✅ | ❌ |
 | CHD→CHD copy / re-compress | ✅ | ❌ | ✅ | ✅ | ❌ |
 | Metadata write (addmeta/delmeta) | ✅ | ❌ | ✅ | ✅ | ❌ |
+| IDNT/KEY/CIS metadata read/write | ✅ | ❌ | ✅ | ✅ | ❌ |
 | **Input formats** | | | | | |
 | CUE / GDI / ISO / TOC / NRG parsing | ✅ all five | — | ✅ all five | ✅ all five | ❌ |
 | CUE style conversion / Redump match | ✅ | ❌ | ✅ | ✅ `convertcue` | ❌ |

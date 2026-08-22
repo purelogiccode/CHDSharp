@@ -2,9 +2,9 @@
 
 Welcome to the **CHDSharp** documentation wiki.
 
-CHDSharp is a **pure C# read-only CHD (Compressed Hunks of Data) reader** — the disk-image format used by [MAME](https://www.mamedev.org/) for arcade hard disks, CD/GD-ROMs, DVDs, and laserdisc A/V content. It supports every CHD format version (V1–V5), every compression codec ever shipped in a CHD (including Zstd and AVHuff), parent/child differential chains, parallel verification, metadata, TOC parsing, and extraction — with **zero native dependencies** and a **100% byte-for-byte match with MAME `chdman`**.
+CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — the disk-image format used by [MAME](https://www.mamedev.org/) for arcade hard disks, CD/GD-ROMs, DVDs, and laserdisc A/V content. It supports every CHD format version (V1–V5), every compression codec ever shipped in a CHD (including Zstd and AVHuff), parent/child differential chains, parallel verification, metadata, TOC parsing, extraction, and CHD creation — with **zero native dependencies** and a **100% byte-for-byte match with MAME `chdman`**.
 
-> This project is a fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by Gordon Jefferyes, extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, and a comprehensive test suite. The C reference implementation ([libchdr 0.3.0](https://github.com/rtissera/libchdr)) and the MAME 0.288 sources are kept in [`References/`](../References) as the authoritative format references.
+> This project is a fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by Gordon Jefferyes, extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, lazy parent resolution, and a comprehensive test suite. The C reference implementation ([libchdr 0.3.0](https://github.com/rtissera/libchdr)) and the MAME 0.288 sources are kept in [`References/`](../References) as the authoritative format references.
 
 ---
 
@@ -81,11 +81,15 @@ CHDSharp is a **pure C# read-only CHD (Compressed Hunks of Data) reader** — th
 - **Random access** — `ReadHunk()`, `Read()` (byte ranges across hunk boundaries), `EnumerateHunks()`, `ReadAllBytes()`.
 - **LBA/MSF sector reads** — `ReadSector()`, `ReadSectorMsf()`, and `ReadFrame()` address CD/GD-ROM sectors or full 2448-byte frames by logical block address (pregap-aware mapping through the track table); `CdRomAddress` converts between BCD MSF and LBA.
 - **Async API** — `OpenAsync`, `ReadHunkAsync`, `ReadAsync`, `IAsyncDisposable`.
+- **Seekable stream** — `OpenAsStream()` returns a read-only, seekable `Stream` over the decompressed image.
+- **Span\<byte\> reads** — `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` for zero-copy paths.
+- **Read-ahead decompression** — `ConfigureReadAhead(int)` enables background pre-decompression of upcoming hunks.
+- **Lazy parent resolution** — `ParentResolver` callback resolves parents by SHA1/MD5 hash on first read.
 - **Progress reporting** — optional `IProgress<ChdProgress>` on `CheckFile`, `CheckFileWithParent`, `ReadAllBytes`, `EnumerateHunks`, and `ExtractToDirectory`, reported after every decompressed hunk.
 - **Cancellation** — optional `CancellationToken` on every long-running API (`Open`/`OpenAsync`, `Read`/`ReadAsync`, `ReadHunk`/`ReadHunkAsync`, `ReadAllBytes`, `CheckFile`, `CheckFileWithParent`, `ExtractToDirectory`), linked into the parallel verification pipeline; throws `OperationCanceledException`.
 - **Parallel verification** — multi-threaded `CheckFile()` with bounded memory and configurable worker count.
 - **Parent/child chains** — transparent differential CHD support with wrong-parent detection.
-- **Metadata** — tag/index query API (`GetMetadata`) plus the full entry list; checksum-flag aware.
+- **Metadata** — tag/index query API (`GetMetadata`) plus the full entry list; checksum-flag aware. IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support.
 - **Track info & extraction** — CD/GD-ROM TOC parsing (`ChdTrackInfo`), CUE/GDI descriptor generation, legacy `CHGT` little-endian CDDA handling (`IsLittleEndianAudio`), and whole-image extraction (`.bin`/`.cue`, `.iso`, `.img`, `.raw`, `.gdi`).
 - **Pluggable logging** — `Microsoft.Extensions.Logging` integration, silent by default.
 - **100% chdman match** — cross-checked against `chdman info`, `verify`, and `extractraw` (MAME 0.288).

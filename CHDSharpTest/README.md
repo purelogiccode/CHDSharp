@@ -18,6 +18,13 @@
 | `TrackInfoTests` | Unit | CD/GD-ROM TOC parsing across all metadata formats (CHTR, CHT2, CHCD, CHGD, CHGT) |
 | `TrackInfoEdgeCaseTests` | Unit | Edge cases: missing/invalid metadata, GD-ROM pad frames, binary track parsing |
 | `CliIntegrationTests` | Integration | End-to-end CLI tool tests (directory scan, --random, --list, --parent) |
+| `ReadAheadTests` | Unit | `ChdFile.ConfigureReadAhead` threaded read-ahead decompression |
+| `ChdImageStreamTests` | Unit | `ChdFile.OpenAsStream()` seekable `Stream` over decompressed image |
+| `SpanReadTests` | Unit | `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` span-based overloads |
+| `ParentResolverTests` | Unit | Lazy parent resolution via `ParentResolver` callback |
+| `IdentMetadataTests` | Unit | `IDNT` metadata read/write and `ChdFile.IdentData` property |
+| `KeyMetadataTests` | Unit | `KEY ` metadata read/write and `ChdFile.KeyData` property |
+| `PcmciaCisMetadataTests` | Unit | `CIS ` metadata read/write and `ChdFile.PcmciaCisData` property |
 | `CorpusTests` | Corpus | Runs `CheckFile` and reads metadata from all 30 corpus CHD files in `TestData/`, validates expected version, handles expected-failure entries |
 
 ### Test Corpus

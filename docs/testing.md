@@ -17,7 +17,8 @@ CHDSharp ships a **558-test** xUnit suite plus a deterministic 30-file corpus co
 | Integration | `CHDSharpTest` | End-to-end CLI tests (`CliIntegrationTests`): directory scan, `--random`, `--list`, `--parent`. |
 | Interactive | `CHDSharpTester` | WPF app that batch-verifies folders and **cross-checks against `chdman`** (header info, deep verify, SHA1, random-access extraction, codec decode, parent chains). |
 | Encoder unit | `CHDSharpEncoderTest` | Tests for the `CHDSharpEncoder` creation library: endian/CRC/SHA1/deflate primitives, Huffman + V5 map compression, header, CUE/GDI/ISO/TOC/NRG parsers, metadata writer, per-hunk ratio logging. |
-| Encoder validation | `CHDSharpEncoderTest` | Cross-validation of encoder output against `chdman.exe` v0.288 (`info`, `verify`, `extractraw`, `createcd`, `createraw`) and the CHDSharpLib reader — including **100 MB+ raw/CD round-trips** and byte-for-byte file comparison with `chdman createraw` (validity-checked for `cdzs`; see [Encoder](encoder.md#validation)). |
+| Encoder validation | `CHDSharpEncoderTest` | Cross-validation of encoder output against `chdman.exe` v0.288 (`info`, `verify`, `extractraw`, `createcd`, `createraw`, `copy`) and the CHDSharpLib reader — including **100 MB+ raw/CD round-trips** and byte-for-byte file comparison with `chdman createraw` (validity-checked for `cdzs`; see [Encoder](encoder.md#validation)). |
+| Battle | `CHDSharpBattleTest` | Head-to-head comparison harness between CHDSharp and chdman on real-world CHD files. |
 
 ---
 
@@ -39,6 +40,13 @@ CHDSharp ships a **558-test** xUnit suite plus a deterministic 30-file corpus co
 | `ParityFeaturesTests` | `GetMetadata`, `Precache`, V1/V2 synthesized GDDD, `OpenAsync` overloads |
 | `LargeFileTests` | Synthetic uncompressed V5 CHD with a 20 GiB declared image: open, random access past 4 GiB (stored hunk + zero hunks), `ReadAllBytes` 2 GiB guard. Verifies libchdr #147 (sources > 10 GB). |
 | `LruCacheTests` | `ChdFile.CacheSize` / `ConfigureCache` multi-hunk LRU cache (libchdr #36): default size, lower-bounding, cross-hunk correctness, eviction/promotion, cache reconfiguration, parent-referenced hunk caching. |
+| `ReadAheadTests` | `ChdFile.ConfigureReadAhead` threaded read-ahead decompression: background pre-decompression, `ConcurrentDictionary` L2 cache, `FlushReadAhead` after seeks. |
+| `ChdImageStreamTests` | `ChdFile.OpenAsStream()` seekable `Stream` over decompressed image: `Read`, `ReadAsync`, `Seek`, `Position`, `Length`, dispose behavior. |
+| `SpanReadTests` | `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` span-based overloads: zero-copy paths, `stackalloc` compatibility. |
+| `ParentResolverTests` | Lazy parent resolution via `ParentResolver` callback: SHA1/MD5 hash-based lookup, caching, error handling. |
+| `IdentMetadataTests` | `IDNT` metadata read/write: ATA IDENTIFY DEVICE data, `ChdFile.IdentData` property, preservation during Copy. |
+| `KeyMetadataTests` | `KEY ` metadata read/write: encryption key data, `ChdFile.KeyData` property, preservation during Copy. |
+| `PcmciaCisMetadataTests` | `CIS ` metadata read/write: PCMCIA Card Information Structure, `ChdFile.PcmciaCisData` property, preservation during Copy. |
 | `ChdApiTests`, `ChdFileTests`, `ChdTocParserTests`, `ChdCommonTests`, `ModelTests`, `UtilityTests`, `BigEndianTests`, `BoundsValidationTests`, `ExceptionHandlingTests`, `HuffmanDecoderTests`, `EccVerifyTests`, `CliAdditionalTests` | Remaining units |
 
 ---
@@ -124,4 +132,4 @@ It requires the `chdman` binaries in `CHDSharpTest/chdman/` for cross-checks.
 1. **Every new feature needs a test** — corpus fixture for format-level behavior, unit test for API-level behavior.
 2. **Corpus fixtures must be deterministic** — regenerate via `CHDSharpTestGen`, never hand-edit binaries.
 3. **New fixtures must be registered in `manifest.json`** with the correct expected version and pass/fail status.
-4. All 468 tests must pass on **all three TFMs** before merging.
+4. All 558 tests must pass on **all three TFMs** before merging.

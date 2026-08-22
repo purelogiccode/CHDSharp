@@ -200,3 +200,4 @@ Run `CHDSharpCli --help` for the full usage text.
 - Learn how the format works in the [CHD Format Reference](chd-format.md).
 - Understand verification semantics in [Verification](verification.md).
 - Handle differential CHDs with [Parent/Child CHDs](parent-child-chds.md).
+- Create CHDs with the [Encoder](encoder.md).

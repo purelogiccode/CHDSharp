@@ -33,7 +33,7 @@ Implementation plan and validation history: [`References/EncoderPlan.md`](../Ref
 | Deduplication | SELF references (CRC/SHA-1 keyed), with SELF_0/SELF_1 map promotion |
 | Delta (parent) CHDs | `ChdEncodeOptions.ParentPath` — COMPRESSION_PARENT refs, unit-split windows, chdman `-op` parity |
 | Uncompressed CHD | `-c none` — V5 raw map, hunk-aligned raw data, zero hunks skipped, chdman byte-identical |
-| Metadata | CHT2 (CD), CHGD (GD-ROM), GDDD (HDD), DVD entries, AVAV/AVLD (laserdisc), checksummed, combined SHA-1 |
+| Metadata | CHT2 (CD), CHGD (GD-ROM), GDDD (HDD), DVD entries, AVAV/AVLD (laserdisc), IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA), checksummed, combined SHA-1 |
 | CD audio | byte-swapped to big-endian (as stored on disc), tracks padded to 4-frame boundaries |
 | Ratio logging | per-hunk callback (`ChdEncodeOptions.HunkCompleted`) — never changes output |
 
@@ -60,7 +60,7 @@ produces byte-identical output to encoding without one.
 ## Validation
 
 The encoder is validated against `chdman.exe` v0.288 and the CHDSharpLib reader
-(371 tests per target framework in `CHDSharpEncoderTest`):
+(350 tests per target framework in `CHDSharpEncoderTest`):
 
 - `chdman info` reports the file without errors; `chdman verify` passes (raw + overall SHA-1).
 - `chdman extractraw` of encoder output is byte-identical to the source (raw) and to
@@ -112,10 +112,11 @@ For tuning and measurement today:
 ```bash
 CHDSharpCli --create in.bin out.chd [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-t 8] [-ip parent.chd] [-tp id] [-d] [-v]
 CHDSharpCli --createcd in.cue out.chd [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t 8] [-ip parent.chd] [-v]
+CHDSharpCli --createhd out.chd --size N [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-chs C,H,S] [-ss N] [--ident ident.bin] [-t 8] [-v]
 CHDSharpCli --createld in.avi out.chd [-c avhu] [-isf N] [-if N] [-hs N] [-v]
 CHDSharpCli --extractld in.chd out.avi [-isf N] [-if N]
 CHDSharpCli --listtemplates
-CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-op parent.chd] [-v]
+CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]
 ```
 
 All commands deep-verify the result with CHDSharpLib before exiting.
@@ -125,9 +126,9 @@ All commands deep-verify the result with CHDSharpLib before exiting.
 All chdman-reachable features are implemented: all 10 writable codecs (including `avhu`
 via `createld`/`extractld`), NRG/GDI/ISO/TOC/CUE input, AVI input/output for laserdisc,
 predefined HDD geometry templates (`--listtemplates`, `-tp <id>`), metadata editing
-(`SetMetadata`/`DeleteMetadata` + CLI `addmeta`/`delmeta`), CUE style conversion /
-Redump matching (`CueConverter`), platform detection with smart codec presets (`-c auto`),
-and byte-exact map clipping parity. `createld` produces valid, `chdman verify`-passing
+(`SetMetadata`/`DeleteMetadata` + CLI `addmeta`/`delmeta`), IDNT/KEY/CIS metadata,
+CUE style conversion / Redump matching (`CueConverter`), platform detection with smart
+codec presets (`-c auto`), and byte-exact map clipping parity. `createld` produces valid, `chdman verify`-passing
 laserdisc CHDs from AVI files (YUY2/VYUY/UYVY, interlaced or progressive, with VBI
 metadata); `extractld` decodes laserdisc CHDs back to playable AVI files. The only gaps
 are encoding-level byte-parity with chdman's `createld` output (ours is smaller due to

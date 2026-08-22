@@ -26,6 +26,8 @@ CSharp_CHDSharp.sln
 ├── CHDSharpTest/         xUnit unit + corpus tests
 ├── CHDSharpTestGen/      Deterministic corpus generator
 ├── CHDSharpTester/       WPF interactive tester
+├── CHDSharpEncoderTest/  xUnit encoder tests (350 tests)
+├── CHDSharpBattleTest/   Battle test harness (chdman vs CHDSharp)
 ├── References/           libchdr-0.3.0 (C) + mame-mame0288 sources + format notes
 └── Directory.Build.props Centralized versioning (1.3.0) and analyzer setup
 ```
@@ -76,9 +78,9 @@ dotnet test --filter "FullyQualifiedName~CorpusTests"
 dotnet test -v detailed
 ```
 
-The suite contains **468 tests** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
+The suite contains **558 tests** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
 
-The companion **encoder suite** (`CHDSharpEncoderTest`, 258 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
+The companion **encoder suite** (`CHDSharpEncoderTest`, 350 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
 
 ```bash
 dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
