@@ -26,7 +26,7 @@ internal class HuffmanDecoderRle : HuffmanDecoder
 
     /// <summary>Decodes the next Huffman symbol, handling RLE expansion if a run is in progress.</summary>
     /// <returns>The decoded symbol value.</returns>
-    public new uint DecodeOne()
+    public override uint DecodeOne()
     {
         // return RLE data if we still have some
         if (_rlecount != 0)

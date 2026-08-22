@@ -1642,24 +1642,23 @@ internal static class Program
         {
             case "json":
             {
-                var sb = new System.Text.StringBuilder();
-                sb.Append('[');
-                for (var i = 0; i < results.Count; i++)
+                var jsonArray = new System.Text.Json.Nodes.JsonArray();
+                foreach (var r in results)
                 {
-                    var r = results[i];
-                    if (i > 0) sb.Append(',');
-                    sb.Append("{ \"track\": ").Append(r.TrackNumber?.ToString() ?? "null");
-                    sb.Append(", \"offset\": ").Append(r.StartOffset);
-                    sb.Append(", \"length\": ").Append(r.Length);
-                    if (r.Sha1 != null) sb.Append(", \"sha1\": \"").Append(r.ToHex(ChdHashType.Sha1)).Append('"');
-                    if (r.Sha256 != null) sb.Append(", \"sha256\": \"").Append(r.ToHex(ChdHashType.Sha256)).Append('"');
-                    if (r.Crc32 != null) sb.Append(", \"crc32\": \"").Append(r.ToHex(ChdHashType.Crc32)).Append('"');
-                    if (r.Xxh3 != null) sb.Append(", \"xxh3\": \"").Append(r.ToHex(ChdHashType.Xxh3)).Append('"');
-                    sb.Append(" }");
+                    var obj = new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["track"] = r.TrackNumber,
+                        ["offset"] = r.StartOffset,
+                        ["length"] = r.Length
+                    };
+                    if (r.Sha1 != null) obj["sha1"] = r.ToHex(ChdHashType.Sha1);
+                    if (r.Sha256 != null) obj["sha256"] = r.ToHex(ChdHashType.Sha256);
+                    if (r.Crc32 != null) obj["crc32"] = r.ToHex(ChdHashType.Crc32);
+                    if (r.Xxh3 != null) obj["xxh3"] = r.ToHex(ChdHashType.Xxh3);
+                    jsonArray.Add(obj);
                 }
 
-                sb.Append(']');
-                log.Information("{Json}", sb);
+                log.Information("{Json}", jsonArray.ToJsonString());
                 break;
             }
             case "sfv":

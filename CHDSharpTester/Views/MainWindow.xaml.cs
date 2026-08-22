@@ -48,9 +48,9 @@ internal partial class MainWindow
 
             base.OnClosing(e);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // ignore
+            System.Diagnostics.Debug.WriteLine($"MainWindow.OnClosing failed: {ex}");
         }
     }
 }

@@ -8,6 +8,7 @@ namespace CHDSharpTester.Models;
 public class ChdFileEntry : INotifyPropertyChanged
 {
     private string _filePath = string.Empty;
+    private string _fileSize = "N/A";
 
     /// <summary>Gets or sets the full path to the CHD file on disk.</summary>
     public string FilePath
@@ -20,7 +21,7 @@ public class ChdFileEntry : INotifyPropertyChanged
                 _filePath = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(FileName));
-                OnPropertyChanged(nameof(FileSize));
+                RefreshFileSize();
             }
         }
     }
@@ -31,27 +32,38 @@ public class ChdFileEntry : INotifyPropertyChanged
     /// <summary>Gets a human-readable file size string derived from the file's length on disk.</summary>
     public string FileSize
     {
-        get
+        get => _fileSize;
+        private set
         {
-            try
+            if (!string.Equals(_fileSize, value, StringComparison.Ordinal))
             {
-                var fi = new FileInfo(FilePath);
-                return fi.Length switch
-                {
-                    < 1024 => $"{fi.Length} B",
-                    < 1024 * 1024 => $"{fi.Length / 1024.0:F1} KB",
-                    < 1024L * 1024 * 1024 => $"{fi.Length / (1024.0 * 1024):F1} MB",
-                    _ => $"{fi.Length / (1024.0 * 1024 * 1024):F2} GB"
-                };
+                _fileSize = value;
+                OnPropertyChanged();
             }
-            catch (FileNotFoundException)
+        }
+    }
+
+    /// <summary>Re-reads the file size from disk and updates the <see cref="FileSize"/> property.</summary>
+    public void RefreshFileSize()
+    {
+        try
+        {
+            var fi = new FileInfo(FilePath);
+            FileSize = fi.Length switch
             {
-                return "N/A";
-            }
-            catch (IOException)
-            {
-                return "N/A";
-            }
+                < 1024 => $"{fi.Length} B",
+                < 1024 * 1024 => $"{fi.Length / 1024.0:F1} KB",
+                < 1024L * 1024 * 1024 => $"{fi.Length / (1024.0 * 1024):F1} MB",
+                _ => $"{fi.Length / (1024.0 * 1024 * 1024):F2} GB"
+            };
+        }
+        catch (FileNotFoundException)
+        {
+            FileSize = "N/A";
+        }
+        catch (IOException)
+        {
+            FileSize = "N/A";
         }
     }
 

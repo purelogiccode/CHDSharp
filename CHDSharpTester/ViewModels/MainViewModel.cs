@@ -531,26 +531,15 @@ internal class MainViewModel : INotifyPropertyChanged
             };
             if (dlg.ShowDialog() == true)
             {
-                try
-                {
-                    StatusText = "Generating PDF...";
-                    var session = SessionResult;
-                    var version = _runner.ChdmanVersion;
-                    var path = dlg.FileName;
-                    await Task.Run(() => PdfExporter.Export(session, version, path));
-                    AddLog($"PDF exported: {path}");
-                    StatusText = "Ready.";
-                    MessageBox.Show($"Results exported successfully to:\n{path}",
-                        "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"PDF export failed: {ex.Message}");
-                    StatusText = "Ready.";
-                    Log.Error(ex, "PDF export failed");
-                    MessageBox.Show($"Export failed: {ex.Message}", "Export Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                StatusText = "Generating PDF...";
+                var session = SessionResult;
+                var version = _runner.ChdmanVersion;
+                var path = dlg.FileName;
+                await Task.Run(() => PdfExporter.Export(session, version, path));
+                AddLog($"PDF exported: {path}");
+                StatusText = "Ready.";
+                MessageBox.Show($"Results exported successfully to:\n{path}",
+                    "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         catch (Exception ex)

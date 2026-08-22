@@ -10,21 +10,21 @@ internal static class BigEndian
         /// <returns>The unsigned 16-bit value read in big-endian order.</returns>
         public ushort ReadUInt16Be()
         {
-            return BitConverter.ToUInt16(binRdr.ReadBytesRequired(sizeof(ushort)).Reverse(), 0);
+            return BitConverter.ToUInt16(binRdr.ReadBytesRequired(sizeof(ushort)).ReverseInPlace(), 0);
         }
 
         /// <summary>Reads a big-endian <see cref="Int16"/> from the stream.</summary>
         /// <returns>The signed 16-bit value read in big-endian order.</returns>
         public short ReadInt16Be()
         {
-            return BitConverter.ToInt16(binRdr.ReadBytesRequired(sizeof(short)).Reverse(), 0);
+            return BitConverter.ToInt16(binRdr.ReadBytesRequired(sizeof(short)).ReverseInPlace(), 0);
         }
 
         /// <summary>Reads a big-endian <see cref="UInt32"/> from the stream.</summary>
         /// <returns>The unsigned 32-bit value read in big-endian order.</returns>
         public uint ReadUInt32Be()
         {
-            return BitConverter.ToUInt32(binRdr.ReadBytesRequired(sizeof(uint)).Reverse(), 0);
+            return BitConverter.ToUInt32(binRdr.ReadBytesRequired(sizeof(uint)).ReverseInPlace(), 0);
         }
 
         /// <summary>Reads a big-endian 48-bit unsigned integer from the stream into a <see cref="UInt64"/>.</summary>
@@ -38,14 +38,14 @@ internal static class BigEndian
         /// <returns>The unsigned 64-bit value read in big-endian order.</returns>
         public ulong ReadUInt64Be()
         {
-            return BitConverter.ToUInt64(binRdr.ReadBytesRequired(sizeof(ulong)).Reverse(), 0);
+            return BitConverter.ToUInt64(binRdr.ReadBytesRequired(sizeof(ulong)).ReverseInPlace(), 0);
         }
 
         /// <summary>Reads a big-endian <see cref="Int32"/> from the stream.</summary>
         /// <returns>The signed 32-bit value read in big-endian order.</returns>
         public int ReadInt32Be()
         {
-            return BitConverter.ToInt32(binRdr.ReadBytesRequired(sizeof(int)).Reverse(), 0);
+            return BitConverter.ToInt32(binRdr.ReadBytesRequired(sizeof(int)).ReverseInPlace(), 0);
         }
 
         /// <summary>Reads the exact number of bytes requested from the stream, throwing if fewer bytes are available.</summary>
@@ -134,7 +134,7 @@ internal static class BigEndian
 
         /// <summary>Reverses the byte order of the array in-place and returns the same array.</summary>
         /// <returns>A reference to <paramref name="arr"/> after reversal.</returns>
-        private byte[] Reverse()
+        private byte[] ReverseInPlace()
         {
             Array.Reverse((Array)arr);
             return arr;

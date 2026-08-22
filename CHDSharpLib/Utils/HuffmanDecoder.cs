@@ -76,7 +76,7 @@ internal class HuffmanDecoder
     /// Decodes a single code from the Huffman stream using the lookup table.
     /// </summary>
     /// <returns>The decoded value.</returns>
-    public uint DecodeOne()
+    public virtual uint DecodeOne()
     {
         /* peek ahead to get maxbits worth of data */
         var bits = _bitbuf.Peek(_maxbits);
