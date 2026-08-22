@@ -7,7 +7,7 @@ namespace CHDSharpBattleTest;
 /// <summary>
 /// Thin wrapper around chdman.exe (MAME): runs commands, captures output, and parses
 /// <c>chdman info</c> output into strongly typed fields for cross-checking against
-/// CHDSharpLib's <see cref="CHDSharp.Chd.ReadHeader"/>.
+/// CHDSharpLib's <see cref="CHDSharp.Chd.ReadHeader(string, out CHDSharp.Models.ChdHeaderInfo?)"/>.
 /// </summary>
 public sealed class ChdmanRunner
 {

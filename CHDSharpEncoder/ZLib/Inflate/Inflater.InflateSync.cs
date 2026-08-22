@@ -42,14 +42,14 @@ internal static partial class Inflater
         // search available input
         var @in = SyncSearch(ref state.Have, ref
 #if NET7_0_OR_GREATER
-            Unsafe.Add(ref strm.InputPtr, strm.next_in),
+            Unsafe.Add(ref strm.InputPtr, strm.NextInput),
 #else
-            MemoryMarshal.GetReference(strm._input.Slice((int)strm.next_in)),
+            MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput)),
 #endif
             strm.AvailIn);
         strm.AvailIn -= @in;
-        strm.next_in += @in;
-        strm.total_in += @in;
+        strm.NextInput += @in;
+        strm.TotalInput += @in;
 
         // return no joy or set up to restart Inflate on a new block
         if (state.Have != 4)
@@ -66,10 +66,10 @@ internal static partial class Inflater
 
         var flags = state.Flags; // temporary to save header status
 
-        @in = strm.total_in;
+        @in = strm.TotalInput;
         var @out = strm.total_out; // temporary to total_out
         _ = InflateReset(ref strm);
-        strm.total_in = @in;
+        strm.TotalInput = @in;
         strm.total_out = @out;
         state.Flags = flags;
         state.Mode = InflateMode.Type;

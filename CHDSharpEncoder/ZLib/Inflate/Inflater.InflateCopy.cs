@@ -47,15 +47,15 @@ internal static partial class Inflater
 
         // copy state
         dest.AvailIn = source.AvailIn;
-        dest.total_in = source.total_in;
+        dest.TotalInput = source.TotalInput;
         dest.AvailOut = source.AvailOut;
         dest.total_out = source.total_out;
         dest.Msg = source.Msg;
         dest.InflateState = copy;
         dest.DeflateState = null;
-        dest.next_in = source.next_in;
-        dest.next_out = source.next_out;
-        dest.data_type = source.data_type;
+        dest.NextInput = source.NextInput;
+        dest.NextOutput = source.NextOutput;
+        dest.DataType2 = source.DataType2;
         dest.Adler = source.Adler;
 
         copy.Mode = state.Mode;
@@ -161,8 +161,8 @@ internal static partial class Inflater
         copy.Diststart = state.Diststart;
 
         if (window != null)
-            netUnsafe.CopyBlock(ref MemoryMarshal.GetReference<byte>(window),
-                ref MemoryMarshal.GetReference<byte>(state.Window), (uint)wsize);
+            netUnsafe.CopyBlock(ref MemoryMarshal.GetReference(window),
+                ref MemoryMarshal.GetReference(state.Window), (uint)wsize);
 
         copy.Window = window;
         return ZOk;
@@ -173,13 +173,13 @@ internal static partial class Inflater
     {
         if (netUnsafe.IsNullRef(ref refs.Lens))
         {
-            refs.Lens = ref MemoryMarshal.GetReference<ushort>(s.Lens);
+            refs.Lens = ref MemoryMarshal.GetReference(s.Lens);
         }
 
         if (netUnsafe.IsNullRef(ref refs.Codes))
         {
-            refs.Codes = ref MemoryMarshal.GetReference<Code>(s.Codes);
-            refs.Work = ref MemoryMarshal.GetReference<ushort>(s.Work);
+            refs.Codes = ref MemoryMarshal.GetReference(s.Codes);
+            refs.Work = ref MemoryMarshal.GetReference(s.Work);
         }
     }
 #endif

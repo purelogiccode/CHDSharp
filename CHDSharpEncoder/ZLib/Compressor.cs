@@ -107,9 +107,9 @@ internal static class Compressor
 
         _ = Inflater.InflateEnd(ref stream);
         return err == ZStreamEnd ? ZOk :
-               err == ZNeedDict ? ZDataError :
-               err == ZBufError && left + stream.AvailOut != 0 ? ZDataError :
-               err;
+            err == ZNeedDict ? ZDataError :
+            err == ZBufError && left + stream.AvailOut != 0 ? ZDataError :
+            err;
     }
 
     internal static uint CompressBound(uint sourceLen)

@@ -47,26 +47,26 @@ internal static partial class Deflater
 
         // insert dictionary into window and hash
         var avail = strm.AvailIn;
-        var next = strm.next_in;
-        var input = strm._input;
+        var next = strm.NextInput;
+        var input = strm.Input2;
 #if NET7_0_OR_GREATER
         ref var inputPtr = ref strm.InputPtr;
         strm.Input = dictionary;
         ref var refs = ref strm.DeflateRefs;
         if (netUnsafe.IsNullRef(ref refs.Window))
         {
-            refs.Window = ref MemoryMarshal.GetReference<byte>(s.Window);
+            refs.Window = ref MemoryMarshal.GetReference(s.Window);
         }
 
         if (netUnsafe.IsNullRef(ref refs.Prev))
         {
-            refs.Prev = ref MemoryMarshal.GetReference<ushort>(s.Prev);
+            refs.Prev = ref MemoryMarshal.GetReference(s.Prev);
         }
 #else
         strm.avail_in = dictLength;
-        strm._input = dictionary;
+        strm.Input2 = dictionary;
 #endif
-        strm.next_in = nextIn;
+        strm.NextInput = nextIn;
 
         ref var window = ref
 #if NET7_0_OR_GREATER
@@ -111,11 +111,11 @@ internal static partial class Deflater
         s.Lookahead = 0;
         s.MatchLength = s.PrevLength = MinMatch - 1;
         s.MatchAvailable = false;
-        strm._input = input;
+        strm.Input2 = input;
 #if NET7_0_OR_GREATER
         strm.InputPtr = ref inputPtr;
 #endif
-        strm.next_in = next;
+        strm.NextInput = next;
         strm.AvailIn = avail;
         s.Wrap = wrap;
         return ZOk;

@@ -42,7 +42,7 @@ public partial class ZLib
     public const int ZFixed = 4;
     public const int ZDefaultStrategy = 0;
 
-    // Possible values of the data_type field for deflate().
+    // Possible values of the DataType2 field for deflate().
     public const int ZBinary = 0;
     public const int ZText = 1;
     public const int ZAscii = ZText;

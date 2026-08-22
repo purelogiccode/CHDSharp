@@ -13,14 +13,14 @@ public class AvHuffDebugTests
         const int width = 64, height = 64, channels = 2, maxSamples = 1920;
         var video = new byte[width * height * 2];
         for (var y = 0; y < height; y++)
-            for (var x = 0; x < width; x += 2)
-            {
-                var off = (y * width + x) * 2;
-                video[off] = (byte)(x * 4);
-                video[off + 1] = (byte)(y * 3);
-                video[off + 2] = (byte)((x + y) * 2);
-                video[off + 3] = (byte)(y * 3 + ((x / 2) % 8));
-            }
+        for (var x = 0; x < width; x += 2)
+        {
+            var off = (y * width + x) * 2;
+            video[off] = (byte)(x * 4);
+            video[off + 1] = (byte)(y * 3);
+            video[off + 2] = (byte)((x + y) * 2);
+            video[off + 3] = (byte)(y * 3 + ((x / 2) % 8));
+        }
 
         var planes = new short[channels][];
         for (var ch = 0; ch < channels; ch++)
@@ -81,14 +81,14 @@ public class AvHuffDebugTests
         const int width = 32, height = 32;
         var video = new byte[width * height * 2];
         for (var y = 0; y < height; y++)
-            for (var x = 0; x < width; x += 2)
-            {
-                var off = (y * width + x) * 2;
-                video[off] = (byte)(x * 4);
-                video[off + 1] = (byte)(y * 3);
-                video[off + 2] = (byte)((x + y) * 2);
-                video[off + 3] = (byte)(y * 3 + ((x / 2) % 8));
-            }
+        for (var x = 0; x < width; x += 2)
+        {
+            var off = (y * width + x) * 2;
+            video[off] = (byte)(x * 4);
+            video[off + 1] = (byte)(y * 3);
+            video[off + 2] = (byte)((x + y) * 2);
+            video[off + 3] = (byte)(y * 3 + ((x / 2) % 8));
+        }
 
         var rawBytes = AvHuffEncoder.RawDataSize(width, height, 0, 0);
         var raw = new byte[rawBytes];

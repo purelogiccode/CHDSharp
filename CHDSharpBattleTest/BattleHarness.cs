@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Security.Cryptography;
 using CHDSharp;
 using CHDSharp.Models;
 using CHDSharpEncoder;
@@ -52,7 +51,6 @@ public sealed class BattleHarness
     private readonly List<CheckResult> _checks = [];
     private readonly List<Asset> _assets = [];
 
-    private static readonly string[] CodecMatrix = ["zlib", "zstd", "lzma", "huff", "flac", "zlib,zstd,lzma", "none"];
     private static readonly string[] CdCodecMatrix = ["cdzl", "cdlz", "cdzs", "cdfl", "zlib", "none"];
 
     public BattleHarness(string chdmanPath, string? outDir, int seed, bool quick)
@@ -126,11 +124,6 @@ public sealed class BattleHarness
             if (expected[i] != actual[i])
                 throw new CheckFailedException($"{what}: first diff at byte {i} (0x{expected[i]:X2} != 0x{actual[i]:X2})");
         }
-    }
-
-    private static string Sha1Hex(byte[] data)
-    {
-        return Convert.ToHexString(SHA1.HashData(data)).ToLowerInvariant();
     }
 
     // ----- entry point -----

@@ -190,7 +190,7 @@ internal sealed class LibFlacEncoder
     {
         var w0 = GetWastedBits(_signal0, _blockSize);
         var bps0 = BitsPerSample - Math.Min(w0, BitsPerSample);
-        ProcessSubframe(_signal0, bps0, w0, maxPo, _sfW0, _rice0, 0, out var bi0, out var bb0);
+        ProcessSubframe(_signal0, bps0, w0, maxPo, _sfW0, _rice0, out var bi0, out _);
 
         _bw.Reset();
         WriteFrameHeader(frameIndex, 0);
@@ -230,20 +230,29 @@ internal sealed class LibFlacEncoder
         var bpsm = BitsPerSample - Math.Min(wm, BitsPerSample);
         var bpss = BitsPerSample - Math.Min(ws, BitsPerSample) + 1;
 
-        ProcessSubframe(_signal0, bps0, w0, maxPo, _sfW0, _rice0, 0, out var bi0, out var bb0);
-        ProcessSubframe(_signal1, bps1, w1, maxPo, _sfW1, _rice1, 1, out var bi1, out var bb1);
-        ProcessSubframe(_mid, bpsm, wm, maxPo, _sfMs0, _riceM0, 0, out var bmi0, out var bmb0);
-        ProcessSubframe(_side, bpss, ws, maxPo, _sfMs1, _rice1B, 1, out var bmi1, out var bmb1);
+        ProcessSubframe(_signal0, bps0, w0, maxPo, _sfW0, _rice0, out var bi0, out var bb0);
+        ProcessSubframe(_signal1, bps1, w1, maxPo, _sfW1, _rice1, out var bi1, out var bb1);
+        ProcessSubframe(_mid, bpsm, wm, maxPo, _sfMs0, _riceM0, out var bmi0, out var bmb0);
+        ProcessSubframe(_side, bpss, ws, maxPo, _sfMs1, _rice1B, out var bmi1, out var bmb1);
 
         var ca = 0;
         var minB = bb0 + bb1;
-        if (bb0 + bmb1 < minB) { minB = bb0 + bmb1;
-            ca = 1; }
+        if (bb0 + bmb1 < minB)
+        {
+            minB = bb0 + bmb1;
+            ca = 1;
+        }
 
-        if (bb1 + bmb1 < minB) { minB = bb1 + bmb1;
-            ca = 2; }
+        if (bb1 + bmb1 < minB)
+        {
+            minB = bb1 + bmb1;
+            ca = 2;
+        }
 
-        if (bmb0 + bmb1 < minB) { ca = 3; }
+        if (bmb0 + bmb1 < minB)
+        {
+            ca = 3;
+        }
 
         _bw.Reset();
         WriteFrameHeader(frameIndex, ca);
@@ -291,7 +300,7 @@ internal sealed class LibFlacEncoder
     }
 
     private void ProcessSubframe(int[] sig, int bps, int wasted, int maxPo,
-        Subframe[] sf, PartitionedRiceContents[] rice, int ch, out uint bestIdx, out uint bestBits)
+        Subframe[] sf, PartitionedRiceContents[] rice, out uint bestIdx, out uint bestBits)
     {
         const uint riceLimit = 15; // RICE escape parameter for 16-bit
         bestIdx = 0;
@@ -303,18 +312,24 @@ internal sealed class LibFlacEncoder
         if (rbps[1] == 0f && IsConstant(sig, _blockSize))
         {
             var c = ConstantBits(sf[1], sig[4], bps, wasted);
-            if (c < bestBits) { bestIdx = 1;
-                bestBits = c; }
+            if (c < bestBits)
+            {
+                bestIdx = 1;
+                bestBits = c;
+            }
         }
         else
         {
-            if (rbps[(int)guessFixed] < (float)bps && guessFixed < (uint)_blockSize)
+            if (rbps[(int)guessFixed] < bps && guessFixed < (uint)_blockSize)
             {
                 var ci = bestIdx ^ 1;
                 FlacLpcMath.FixedComputeResidual(sig, 4 + (int)guessFixed, (uint)_blockSize - guessFixed, guessFixed, sf[ci].Residual.AsSpan(0, _blockSize - (int)guessFixed));
-                var c = FixedBits(sf[ci], sig, bps, wasted, guessFixed, riceLimit, maxPo, rice[ci]);
-                if (c < bestBits) { bestIdx = ci;
-                    bestBits = c; }
+                var c = FixedBits(sf[ci], bps, wasted, guessFixed, riceLimit, maxPo, rice[ci]);
+                if (c < bestBits)
+                {
+                    bestIdx = ci;
+                    bestBits = c;
+                }
             }
 
             if (MaxLpcOrd > 0)
@@ -378,7 +393,7 @@ internal sealed class LibFlacEncoder
                         var guessLpc = FlacLpcMath.ComputeBestOrder(_lpcError, maxOrd, (uint)_blockSize, (uint)(bps + _qlpCoeffPrec));
 
                         var lrbps = FlacLpcMath.ComputeExpectedBitsPerResidualSample(_lpcError[guessLpc - 1], (uint)_blockSize - guessLpc);
-                        if (lrbps >= (double)bps)
+                        if (lrbps >= bps)
                             continue;
 
                         var qlp = new int[32];
@@ -398,7 +413,7 @@ internal sealed class LibFlacEncoder
 
                         if (!ok) continue;
 
-                        var c = LpcBits(sf[ci], sig, bps, wasted, guessLpc, quant, riceLimit, maxPo, rice[ci]);
+                        var c = LpcBits(sf[ci], bps, wasted, guessLpc, quant, riceLimit, maxPo, rice[ci]);
                         if (c > 0 && c < bestBits)
                         {
                             bestIdx = ci;
@@ -438,7 +453,7 @@ internal sealed class LibFlacEncoder
         return (uint)(8 + wasted + bps);
     }
 
-    private uint FixedBits(Subframe sf, int[] sig, int bps, int wasted, uint order, uint riceLimit, int maxPo, PartitionedRiceContents rice)
+    private uint FixedBits(Subframe sf, int bps, int wasted, uint order, uint riceLimit, int maxPo, PartitionedRiceContents rice)
     {
         sf.Type = SubframeType.Fixed;
         sf.Order = (int)order;
@@ -446,7 +461,7 @@ internal sealed class LibFlacEncoder
         return (uint)(8 + wasted + order * bps) + sf.EntropyCodingMethod.Bits;
     }
 
-    private uint LpcBits(Subframe sf, int[] sig, int bps, int wasted, uint order, int quant, uint riceLimit, int maxPo, PartitionedRiceContents rice)
+    private uint LpcBits(Subframe sf, int bps, int wasted, uint order, int quant, uint riceLimit, int maxPo, PartitionedRiceContents rice)
     {
         sf.Type = SubframeType.Lpc;
         sf.Order = (int)order;
@@ -548,16 +563,21 @@ internal sealed class LibFlacEncoder
         var fpDiv = 0x40000 / psBase;
         parms = new uint[1 << (int)po];
 
-        uint s = 0;
         for (uint part = 0; part < (1u << (int)po); part++)
         {
             var ps = psBase;
             uint fpd;
-            if (part > 0) { fpd = fpDiv; }
+            if (part > 0)
+            {
+                fpd = fpDiv;
+            }
             else
             {
-                if (ps <= predOrder) { bits = 0;
-                    return false; }
+                if (ps <= predOrder)
+                {
+                    bits = 0;
+                    return false;
+                }
 
                 ps -= predOrder;
                 fpd = 0x40000 / ps;
@@ -582,7 +602,6 @@ internal sealed class LibFlacEncoder
             var pb = 4 + (1 + rp) * ps + (rp != 0 ? (uint)(mean >> (int)(rp - 1)) : (uint)(mean << 1)) - (ps >> 1);
             parms[part] = rp;
             totalBits += pb;
-            s += ps;
         }
 
         bits = totalBits;
@@ -597,8 +616,11 @@ internal sealed class LibFlacEncoder
             {
                 c = 2;
             }
-            else { c = 0;
-                b++; }
+            else
+            {
+                c = 0;
+                b++;
+            }
         }
         else if (c < 2 * b - 1)
         {
@@ -621,7 +643,8 @@ internal sealed class LibFlacEncoder
     private static bool IsConstant(int[] sig, int count)
     {
         for (var i = 1; i < count; i++)
-            if (sig[i + 4] != sig[4]) return false;
+            if (sig[i + 4] != sig[4])
+                return false;
 
         return true;
     }
@@ -635,13 +658,20 @@ internal sealed class LibFlacEncoder
         }
 
         var shift = 0;
-        if (x != 0) { while ((x & 1) == 0) { shift++;
-            x >>= 1; } }
-
-        if (shift > 0) for (i = 0; i < count; i++)
+        if (x != 0)
         {
-            sig[i + 4] >>= shift;
+            while ((x & 1) == 0)
+            {
+                shift++;
+                x >>= 1;
+            }
         }
+
+        if (shift > 0)
+            for (i = 0; i < count; i++)
+            {
+                sig[i + 4] >>= shift;
+            }
 
         return shift;
     }

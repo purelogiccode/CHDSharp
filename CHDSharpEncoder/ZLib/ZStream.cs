@@ -15,12 +15,14 @@ namespace CHDSharpEncoder.ZLib;
 public ref struct ZStream
 #pragma warning restore CA1711
 {
-    internal uint next_in; // the index of next input byte in the input buffer
-    internal uint AvailIn; // number of bytes available at next_in
-    internal uint total_in; // total number of input bytes read so far
+    internal uint NextInput; // the index of next input byte in the input buffer
+    internal uint AvailIn; // number of bytes available at NextInput
+    internal uint TotalInput; // total number of input bytes read so far
 
-    internal uint next_out; // the index of next output byte in the output buffer
-    internal uint AvailOut; // remaining free space at next_out
+    internal uint NextOutput; // the index of next output byte in the output buffer
+    internal uint AvailOut; // remaining free space at NextOutput
+
+    // ReSharper disable once InconsistentNaming
     internal uint total_out; // total number of bytes output so far
 
     internal string Msg; // last error message
@@ -28,10 +30,10 @@ public ref struct ZStream
     internal InflateState InflateState;
     internal DeflateState DeflateState;
 
-    internal int data_type; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
+    internal int DataType2; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
 
-    internal ReadOnlySpan<byte> _input;
-    internal Span<byte> _output;
+    internal ReadOnlySpan<byte> Input2;
+    internal Span<byte> Output2;
 
 #if NET7_0_OR_GREATER
     internal ref byte InputPtr;
@@ -46,14 +48,14 @@ public ref struct ZStream
     /// <remarks>Setting the <see cref="Input"/> property resets the <see cref="AvailableIn"/> and <see cref="NextIn"/> properties to their default values.</remarks>
     public ReadOnlySpan<byte> Input
     {
-        readonly get => _input;
+        readonly get => Input2;
         set
         {
-            _input = value;
-            next_in = 0;
+            Input2 = value;
+            NextInput = 0;
             AvailIn = (uint)value.Length;
 #if NET7_0_OR_GREATER
-            InputPtr = ref MemoryMarshal.GetReference(_input);
+            InputPtr = ref MemoryMarshal.GetReference(Input2);
 #endif
         }
     }
@@ -69,7 +71,7 @@ public ref struct ZStream
         readonly get => (int)AvailIn;
         set
         {
-            ValidateAvailableBytes(value, next_in, _input, nameof(Input), nameof(NextIn));
+            ValidateAvailableBytes(value, NextInput, Input2, nameof(Input), nameof(NextIn));
             AvailIn = (uint)value;
         }
     }
@@ -83,18 +85,18 @@ public ref struct ZStream
     /// <remarks>If you choose to set this optional property, you should set it after you have set the <see cref="Input"/> property.</remarks>
     public int NextIn
     {
-        readonly get => (int)next_in;
+        readonly get => (int)NextInput;
         set
         {
-            ValidateOffset(value, AvailableIn, _input, nameof(Input));
-            next_in = (uint)value;
+            ValidateOffset(value, AvailableIn, Input2, nameof(Input));
+            NextInput = (uint)value;
         }
     }
 
     /// <summary>
     /// Gets the total number of input bytes read so far.
     /// </summary>
-    public readonly uint TotalIn => total_in;
+    public readonly uint TotalIn => TotalInput;
 
     /// <summary>
     /// Gets or sets the output buffer.
@@ -104,14 +106,14 @@ public ref struct ZStream
     public Span<byte> Output
 #pragma warning restore CA1819
     {
-        readonly get => _output;
+        readonly get => Output2;
         set
         {
-            _output = value;
-            next_out = 0;
+            Output2 = value;
+            NextOutput = 0;
             AvailOut = (uint)value.Length;
 #if NET7_0_OR_GREATER
-            OutputPtr = ref MemoryMarshal.GetReference(_output);
+            OutputPtr = ref MemoryMarshal.GetReference(Output2);
 #endif
         }
     }
@@ -127,7 +129,7 @@ public ref struct ZStream
         readonly get => (int)AvailOut;
         set
         {
-            ValidateAvailableBytes(value, next_out, _output, nameof(Output), nameof(NextOut));
+            ValidateAvailableBytes(value, NextOutput, Output2, nameof(Output), nameof(NextOut));
             AvailOut = (uint)value;
         }
     }
@@ -141,11 +143,11 @@ public ref struct ZStream
     /// <remarks>If you choose to set this optional property, you should set it after you have set the <see cref="Output"/> property.</remarks>
     public int NextOut
     {
-        readonly get => (int)next_out;
+        readonly get => (int)NextOutput;
         set
         {
-            ValidateOffset(value, AvailableOut, _output, nameof(Output));
-            next_out = (uint)value;
+            ValidateOffset(value, AvailableOut, Output2, nameof(Output));
+            NextOutput = (uint)value;
         }
     }
 
@@ -162,7 +164,7 @@ public ref struct ZStream
     /// <summary>
     /// Gets a value that represents a best guess about the data type: binary or text for deflate, or the decoding state for inflate.
     /// </summary>
-    public readonly int DataType => data_type;
+    public readonly int DataType => DataType2;
 
     /// <summary>
     /// Gets the Adler-32 value of the uncompressed data.

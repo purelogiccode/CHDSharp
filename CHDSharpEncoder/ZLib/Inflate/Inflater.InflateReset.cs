@@ -63,7 +63,7 @@ internal static partial class Inflater
             return ZStreamError;
 
         var state = strm.InflateState;
-        strm.total_in = strm.total_out = state.Total = 0;
+        strm.TotalInput = strm.total_out = state.Total = 0;
         strm.Msg = null;
         if (state.Wrap != 0)
         {

@@ -188,7 +188,7 @@ public static class VbiParse
         // now scan to find a clock that has a nearby transition on each beat
         double bestClock = 0;
         var bestErr = 1000;
-        for (var clock = (double)sourceWidth / (double)expectedBits; clock >= 2.0; clock -= 1.0 / (double)expectedBits)
+        for (var clock = sourceWidth / (double)expectedBits; clock >= 2.0; clock -= 1.0 / expectedBits)
         {
             var error = 0;
 
@@ -196,7 +196,7 @@ public static class VbiParse
             int x2;
             for (x2 = 1; x2 < expectedBits; x2++)
             {
-                var curBit = firstEdge + (int)((double)x2 * clock);
+                var curBit = firstEdge + (int)(x2 * clock);
                 int offBy;
 
                 // look for a match that is off by an amount up to the maximum
@@ -229,10 +229,10 @@ public static class VbiParse
         // now extract the bits
         for (var x = 0; x < expectedBits; x++)
         {
-            var leftStart = firstEdge + (int)Math.Ceiling(((double)x - 0.5) * bestClock);
-            var leftEnd = firstEdge + (int)Math.Floor((double)x * bestClock);
-            var rightStart = firstEdge + (int)Math.Ceiling((double)x * bestClock);
-            var rightEnd = firstEdge + (int)Math.Floor(((double)x + 0.5) * bestClock);
+            var leftStart = firstEdge + (int)Math.Ceiling((x - 0.5) * bestClock);
+            var leftEnd = firstEdge + (int)Math.Floor(x * bestClock);
+            var rightStart = firstEdge + (int)Math.Ceiling(x * bestClock);
+            var rightEnd = firstEdge + (int)Math.Floor((x + 0.5) * bestClock);
 
             // compute left and right average values
             var leftAvg = 0;

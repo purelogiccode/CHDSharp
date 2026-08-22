@@ -90,7 +90,7 @@ public class DecodeBenchmarks
         return bytes;
     }
 
-    /// <summary>Sequential full-image read through <see cref="ChdFile.Read"/> (byte-granular,
+    /// <summary>Sequential full-image read through <see cref="ChdFile.Read(ulong, byte[], int, int, System.Threading.CancellationToken)"/> (byte-granular,
     /// the path used by extraction/verification tools).</summary>
     private static ChdHeaderInfo ReadHeader(string file)
     {

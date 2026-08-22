@@ -164,7 +164,7 @@ public sealed class ChdImageStream : Stream
                 ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek offset cannot be negative from beginning.")
                 : (ulong)offset,
             SeekOrigin.Current => offset < 0
-                ? (ulong)(-(long)_position < offset ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek before beginning of stream.") : _position + (ulong)offset)
+                ? -(long)_position < offset ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek before beginning of stream.") : _position - (ulong)(-offset)
                 : _position + (ulong)offset,
             SeekOrigin.End => offset > 0
                 ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek offset cannot be positive from end.")

@@ -100,7 +100,7 @@ public class ChdCopyTests : IDisposable
     public void Copy_UpgradesLegacyChtrToCht2()
     {
         // Create a CHD with legacy CHTR metadata (simulating an old chdman output)
-        var source = CreateTestFile(4096 * 8, 200);
+        _ = CreateTestFile(4096 * 8, 200);
 
         var srcChd = Path.Combine(_dir, "legacy_chtr_src.chd");
         var dstChd = Path.Combine(_dir, "legacy_chtr_dst.chd");
@@ -160,7 +160,7 @@ public class ChdCopyTests : IDisposable
     [Fact]
     public void Copy_PreservesNonCdMetadata()
     {
-        var source = CreateTestFile(4096 * 8, 201);
+        _ = CreateTestFile(4096 * 8, 201);
 
         var srcChd = Path.Combine(_dir, "mixed_meta_src.chd");
         var dstChd = Path.Combine(_dir, "mixed_meta_dst.chd");
@@ -210,7 +210,7 @@ public class ChdCopyTests : IDisposable
     public void Copy_NoUpgradeFlag_PreservesLegacyMetadata()
     {
         // This test verifies the --no-upgrade flag behavior
-        var source = CreateTestFile(4096 * 8, 202);
+        _ = CreateTestFile(4096 * 8, 202);
 
         var srcChd = Path.Combine(_dir, "no_upgrade_src.chd");
         var dstChd = Path.Combine(_dir, "no_upgrade_dst.chd");

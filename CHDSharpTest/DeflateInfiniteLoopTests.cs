@@ -33,7 +33,6 @@ public class DeflateInfiniteLoopTests
         ms.Write(new byte[20], 0, 20); // parentsha1
 
         // Map entry: offset=256, crc=0, length, flags=compressed
-        var mapStart = ms.Position;
         ms.Write(EndianHelpers.Be64(256)); // offset
         ms.Write(EndianHelpers.Be(0u)); // crc
         ms.WriteByte((byte)((length >> 8) & 0xFF));
@@ -74,12 +73,11 @@ public class DeflateInfiniteLoopTests
     /// Attempts to open a CHD and read hunk 0 with a timeout.
     /// Returns true if the operation completed (success or error), false if it hung.
     /// </summary>
-    private static (ChdError openErr, ChdError readErr, bool completed) TryReadHunkWithTimeout(
+    private static (ChdError openErr, bool completed) TryReadHunkWithTimeout(
         MemoryStream chdStream, int timeoutMs = 5000)
     {
         var cts = new CancellationTokenSource(timeoutMs);
         var openErr = ChdError.Chderrinvaliddata;
-        var readErr = ChdError.Chderrinvaliddata;
         var completed = false;
 
         var thread = new Thread(() =>
@@ -91,7 +89,7 @@ public class DeflateInfiniteLoopTests
                 if (openErr == ChdError.Chderrnone && chd != null)
                 {
                     var buf = new byte[chd.HunkBytes];
-                    readErr = chd.ReadHunk(0, buf, cts.Token);
+                    chd.ReadHunk(0, buf, cts.Token);
                     chd.Dispose();
                 }
 
@@ -113,10 +111,10 @@ public class DeflateInfiniteLoopTests
         if (!thread.Join(timeoutMs))
         {
             thread.Interrupt();
-            return (openErr, readErr, false);
+            return (openErr, false);
         }
 
-        return (openErr, readErr, completed);
+        return (openErr, completed);
     }
 
     [Fact]
@@ -127,7 +125,7 @@ public class DeflateInfiniteLoopTests
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
 
-        var (openErr, readErr, completed) = TryReadHunkWithTimeout(chd);
+        var (_, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on empty deflate stream");
     }
 
@@ -143,7 +141,7 @@ public class DeflateInfiniteLoopTests
             var zlib = WrapInZlib(data);
             var chd = MakeV3WithCompressedHunk(zlib);
 
-            var (_, _, completed) = TryReadHunkWithTimeout(chd);
+            var (_, completed) = TryReadHunkWithTimeout(chd);
             Assert.True(completed, $"ReadHunk must not hang on random deflate data (iteration {i})");
         }
     }
@@ -155,7 +153,7 @@ public class DeflateInfiniteLoopTests
         var zlib = WrapInZlib(new byte[] { 0x00 });
         var chd = MakeV3WithCompressedHunk(zlib);
 
-        var (_, _, completed) = TryReadHunkWithTimeout(chd);
+        var (_, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on single-byte deflate data");
     }
 
@@ -167,7 +165,7 @@ public class DeflateInfiniteLoopTests
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
 
-        var (_, _, completed) = TryReadHunkWithTimeout(chd);
+        var (_, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on truncated deflate data");
     }
 
@@ -179,7 +177,7 @@ public class DeflateInfiniteLoopTests
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
 
-        var (_, _, completed) = TryReadHunkWithTimeout(chd);
+        var (_, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on all-zero deflate data");
     }
 
@@ -199,7 +197,7 @@ public class DeflateInfiniteLoopTests
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
 
-        var (_, _, completed) = TryReadHunkWithTimeout(chd);
+        var (_, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on dynamic block with zero lengths");
     }
 
@@ -225,7 +223,7 @@ public class DeflateInfiniteLoopTests
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
 
-        var (_, _, completed) = TryReadHunkWithTimeout(chd);
+        var (_, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on single code length dynamic block");
     }
 
@@ -252,7 +250,7 @@ public class DeflateInfiniteLoopTests
         }
 
         var chd = MakeV3WithCompressedHunk(compressed);
-        var (openErr, _, completed) = TryReadHunkWithTimeout(chd);
+        var (openErr, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on valid deflate stream");
         Assert.Equal(ChdError.Chderrnone, openErr);
     }
@@ -278,7 +276,7 @@ public class DeflateInfiniteLoopTests
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
 
-        var (_, _, completed) = TryReadHunkWithTimeout(chd);
+        var (_, completed) = TryReadHunkWithTimeout(chd);
         Assert.True(completed, "ReadHunk must not hang on repeated literal zeros");
     }
 }

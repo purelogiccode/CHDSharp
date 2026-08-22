@@ -1801,7 +1801,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     {
         // Open without a parent at open time. If the CHD needs a parent, we defer resolution
         // to ReadHunk via the resolver callback.
-        var err = Open(stream, leaveOpen, (ChdFile?)null, parentResolver, out chdFile, cancellationToken);
+        var err = Open(stream, leaveOpen, null, parentResolver, out chdFile, cancellationToken);
         return err;
     }
 
@@ -3179,8 +3179,6 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 _semaphore.Release();
             }
         }
-
-        internal int CacheCount => _cache.Count;
 
         internal void Clear()
         {

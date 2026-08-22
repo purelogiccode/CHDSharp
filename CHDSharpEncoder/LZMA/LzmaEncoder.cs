@@ -27,7 +27,6 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
     private const uint KNumOpts = 1 << 11;
     private const int KRepLenCount = 64;
     private const uint KMarkLit = 0xFFFFFFFF;
-    private const uint KStateStart = 0;
     private const uint KStateLitAfterMatch = 4;
     private const uint KStateLitAfterRep = 5;
     private const uint KStateMatchAfterLit = 7;
@@ -344,13 +343,10 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         }
     }
 
-    private const uint KNumLenSpecSymbols = Base.KNumLowLenSymbols + Base.KNumMidLenSymbols;
-
     private class LenPriceTableEncoder : LenEncoder
     {
         private readonly uint[] _prices = new uint[Base.KNumLenSymbols << Base.KNumPosStatesBitsEncodingMax];
         private uint _tableSize;
-        private readonly uint[] _counters = new uint[Base.KNumPosStatesEncodingMax];
 
         internal void SetTableSize(uint tableSize)
         {

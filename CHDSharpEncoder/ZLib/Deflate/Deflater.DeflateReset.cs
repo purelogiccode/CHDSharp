@@ -21,9 +21,9 @@ internal static partial class Deflater
         if (DeflateStateCheck(ref strm))
             return ZStreamError;
 
-        strm.total_in = strm.total_out = 0;
+        strm.TotalInput = strm.total_out = 0;
         strm.Msg = null;
-        strm.data_type = zUnknown;
+        strm.DataType2 = zUnknown;
 
         var s = strm.DeflateState;
         s.Pending = 0;

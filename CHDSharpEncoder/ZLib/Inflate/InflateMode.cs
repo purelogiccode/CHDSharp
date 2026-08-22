@@ -23,12 +23,12 @@ internal enum InflateMode : ushort
     Type, // i: waiting for type bits, including last-flag bit
     Typedo, // i: same, but skip check to exit inflate on new block
     Stored, // i: waiting for stored size (length and complement)
-    Copy_, // i/o: same as COPY below, but only first time in
+    Copy2, // i/o: same as COPY below, but only first time in
     Copy, // i/o: waiting for input or output to copy stored block
     Table, // i: waiting for dynamic block table lengths
     LenLens, // i: waiting for code length code lengths
     CodeLens, // i: waiting for length/lit and distance code lengths
-    Len_, // i: same as LEN below, but only first time in
+    Len2, // i: same as LEN below, but only first time in
     Len, // i: waiting for length/lit/eob code
     LenExt, // i: waiting for length extra bits
     Dist, // i: waiting for distance code

@@ -8,7 +8,7 @@ internal ref struct DeflateRefs
 {
     public DeflateRefs()
     {
-        ConfigurationTable = ref MemoryMarshal.GetReference<Config>(Deflater.SConfigurationTable);
+        ConfigurationTable = ref MemoryMarshal.GetReference(Deflater.SConfigurationTable);
     }
 
     internal ref byte PendingBuf;

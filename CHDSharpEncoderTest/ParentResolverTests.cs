@@ -17,7 +17,10 @@ public class ParentResolverTests : IDisposable
 
     public void Dispose()
     {
-        try { Directory.Delete(_dir, recursive: true); }
+        try
+        {
+            Directory.Delete(_dir, recursive: true);
+        }
         catch
         {
             // ignored

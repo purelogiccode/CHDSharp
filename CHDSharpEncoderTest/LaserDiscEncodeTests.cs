@@ -278,7 +278,7 @@ public class LaserDiscEncodeTests : IDisposable
         ulong fpsTimes1Million, uint maxSamplesPerFrame)
     {
         using var avi = AviReader.Open(aviPath);
-        var fullFrame = new byte[(int)(avi.Info.Width * avi.Info.Height * 2)];
+        var fullFrame = new byte[avi.Info.Width * avi.Info.Height * 2];
         avi.ReadVideoFrame((uint)frameInImage, fullFrame);
 
         var firstSample = rate > 0 ? (rate * frameInImage * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million : 0;

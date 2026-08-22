@@ -5,7 +5,7 @@ using CHDSharp.Models;
 namespace CHDSharpBench.Benchmarks;
 
 /// <summary>
-/// Byte-granular <see cref="ChdFile.Read"/> throughput (the random-access path emulators use):
+/// Byte-granular <see cref="ChdFile.Read(ulong, byte[], int, int, System.Threading.CancellationToken)"/> throughput (the random-access path emulators use):
 /// sequential full-image reads and uniformly random 4 KiB reads over the largest corpus CHD.
 /// The hunk cache is configured per-benchmark to show its effect on repeated-access workloads.
 /// Bytes read per op is returned; MB/s = value ÷ Mean.

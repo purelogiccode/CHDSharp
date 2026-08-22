@@ -23,7 +23,6 @@ public sealed class AviReader : IDisposable
 
     private const uint FormatVyuy = 0x59555956; // 'VYUY'
     private const uint FormatYuy2 = 0x32595559; // 'YUY2'
-    private const uint FormatHfyu = 0x55594648; // 'HFYU'
 
     private const uint ChunkTypeRiff = 0x46464952; // 'RIFF'
     private const uint ChunkTypeList = 0x5453494C; // 'LIST'
@@ -181,7 +180,7 @@ public sealed class AviReader : IDisposable
     public void ReadSoundSamples(int channel, uint firstSample, uint numSamples, Span<short> output)
     {
         var stream = GetAudioStream(channel, out var offset)
-            ?? throw new ArgumentOutOfRangeException(nameof(channel), $"AVI file has no audio channel {channel}");
+                     ?? throw new ArgumentOutOfRangeException(nameof(channel), $"AVI file has no audio channel {channel}");
         if (stream.Format != 0 || (stream.SampleBits != 8 && stream.SampleBits != 16))
             throw new NotSupportedException($"Unsupported AVI audio format (PCM 8/16-bit required, got {stream.SampleBits}-bit)");
 

@@ -40,11 +40,11 @@ internal static partial class Deflater
         }
 
         if (memLevel < 1 || memLevel > maxMemLevel
-            || method != ZDeflated
-            || windowBits < 8 || windowBits > 15
-            || level < 0 || level > 9
-            || strategy < 0 || strategy > ZFixed
-            || (windowBits == 8 && wrap != 1))
+                         || method != ZDeflated
+                         || windowBits < 8 || windowBits > 15
+                         || level < 0 || level > 9
+                         || strategy < 0 || strategy > ZFixed
+                         || (windowBits == 8 && wrap != 1))
             return ZStreamError;
 
         if (windowBits == 8)
@@ -86,8 +86,8 @@ internal static partial class Deflater
             s.PendingBuf = ArrayPool<byte>.Shared.Rent((int)s.PendingBufSize);
 #if NET7_0_OR_GREATER
             ref var refs = ref strm.DeflateRefs;
-            refs.Head = ref MemoryMarshal.GetReference<ushort>(s.Head);
-            refs.PendingBuf = ref MemoryMarshal.GetReference<byte>(s.PendingBuf);
+            refs.Head = ref MemoryMarshal.GetReference(s.Head);
+            refs.PendingBuf = ref MemoryMarshal.GetReference(s.PendingBuf);
 #endif
         }
         catch (OutOfMemoryException)

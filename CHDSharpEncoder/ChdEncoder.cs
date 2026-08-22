@@ -7,9 +7,9 @@ using MapEntry = CHDSharpEncoder.Models.MapEntry;
 namespace CHDSharpEncoder;
 
 /// <summary>
-/// Creates CHD v5 files from raw binary data (<see cref="EncodeRaw(Stream, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, System.Threading.CancellationToken)"/>), from CD
-/// CUE/BIN sources (<see cref="EncodeCd"/>), or by re-compressing an existing CHD
-/// (<see cref="Copy"/>). Uses the zlib codec by default, matching chdman's
+/// Creates CHD v5 files from raw binary data (<see cref="EncodeRaw(Stream, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, CancellationToken)"/>), from CD
+/// CUE/BIN sources (<see cref="EncodeCd(string, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, CancellationToken)"/>), or by re-compressing an existing CHD
+/// (<see cref="Copy(string, string, IReadOnlyList{uint}?, ChdEncodeOptions?, CancellationToken)"/>). Uses the zlib codec by default, matching chdman's
 /// <c>--compression zlib</c> output; produced files pass <c>chdman verify</c> and
 /// extract byte-identically via <c>chdman extractraw</c>.
 /// </summary>
@@ -107,7 +107,7 @@ public static class ChdEncoder
     /// <summary>
     /// Creates a blank, zero-filled CHD v5 file without reading from an input stream.
     /// Equivalent to chdman <c>createhd --size</c>. All hunks are written as zero-filled
-    /// data, and the file is verifiable by <c>chdman verify</c> or <see cref="ChdFile.Verify"/>.
+    /// data, and the file is verifiable by <c>chdman verify</c>.
     /// </summary>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
     /// <param name="totalBytes">Total size of the blank disk in bytes.</param>
@@ -135,7 +135,7 @@ public static class ChdEncoder
             metadataEntries.AddRange(userMetadata);
 
         // Auto-generate GDDD metadata if not explicitly provided
-        if (!metadataEntries.Any(e => e.Tag == MetadataWriter.HardDiskMetadataTag))
+        if (metadataEntries.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
         {
             metadataEntries.Add(MetadataWriter.BuildHardDiskMetadata(totalBytes, unitBytes));
         }
@@ -341,13 +341,8 @@ public static class ChdEncoder
             // it before compressing any hunks); the header's metaoffset is patched below
             var metaOffset = MetadataWriter.WriteCdMetadata(fs, metadataEntries);
 
-            var currentOffset = fs.Position;
-            processor.CompressAll(
-                hunkCount,
-                ReadLdHunk,
-                sha1,
-                result => ConsumeHunk(result, entries, selfMap, fs, ref currentOffset, codecs, options, hunkCount, hunkBytes, parentMap),
-                cancellationToken);
+            var currentOffset = RunCompressionPipeline(processor, hunkCount, ReadLdHunk, sha1, entries, selfMap, fs,
+                codecs, options, hunkBytes, parentMap, cancellationToken);
 
             var rawSha1 = sha1.Finish();
             var compressedMap = MapCompressor.Compress(entries, hunkCount, hunkBytes, bytesPerFrame);
@@ -388,7 +383,9 @@ public static class ChdEncoder
             maxSamplesPerFrame, bytesPerFrame, hunkBytes, start, frames);
 
         // producer: assemble each hunk from whole frames of the AVI
+#pragma warning disable CA2000 // Dispose objects before losing scope — avi is captured but CompressAll is synchronous
         int ReadLdHunk(uint hunkIndex, byte[] buffer)
+#pragma warning restore CA2000
         {
             Array.Clear(buffer);
             for (uint slot = 0; slot < frameStride; slot++)
@@ -527,7 +524,7 @@ public static class ChdEncoder
             uint vidW = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(8));
             uint vidH = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(10));
 
-            var dataOffset = (uint)(12 + metaLen);
+            var dataOffset = 12 + metaLen;
 
             // audio planes: ch * samplesPerBlock * 2 bytes each, big-endian, planar
             // convert to little-endian, interleaved for AVI
@@ -572,7 +569,7 @@ public static class ChdEncoder
                     uint prevMetaLen = prevBuf[4];
                     uint prevAvCh = prevBuf[5];
                     uint prevSamplesPerBlock = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(prevBuf.AsSpan(6));
-                    var prevVideoOff = (uint)(12 + prevMetaLen + prevAvCh * prevSamplesPerBlock * 2);
+                    var prevVideoOff = 12 + prevMetaLen + prevAvCh * prevSamplesPerBlock * 2;
 
                     var fullFrame = new byte[vidW * vidH * 4]; // full interlaced frame (2x field height)
                     var fieldRowBytes = vidW * 2;

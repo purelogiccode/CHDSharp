@@ -13,9 +13,9 @@ internal static partial class Inflater
     private static void InflateFast(ref ZStream strm, uint start, ref byte window, ref Code lcode, ref Code dcode)
     {
         var state = strm.InflateState;
-        var last = strm.next_in + (strm.AvailIn - 5); // have enough input while in < last
-        var beg = strm.next_out - (start - strm.AvailOut); // inflate()'s initial strm.next_out
-        var end = strm.next_out + (strm.AvailOut - 257); // while out < end, enough space available
+        var last = strm.NextInput + (strm.AvailIn - 5); // have enough input while in < last
+        var beg = strm.NextOutput - (start - strm.AvailOut); // inflate()'s initial strm.NextOutput
+        var end = strm.NextOutput + (strm.AvailOut - 257); // while out < end, enough space available
         var wsize = state.Wsize;
         var whave = state.Whave;
         var wnext = state.Wnext;
@@ -27,15 +27,15 @@ internal static partial class Inflater
 
         ref var @in = ref
 #if NET7_0_OR_GREATER
-            Unsafe.Add(ref strm.InputPtr, strm.next_in);
+            Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
-            MemoryMarshal.GetReference(strm._input.Slice((int)strm.next_in));
+            MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
         ref var @out = ref
 #if NET7_0_OR_GREATER
-            Unsafe.Add(ref strm.OutputPtr, strm.next_out);
+            Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
 #else
-            MemoryMarshal.GetReference(strm._output.Slice((int)strm.next_out));
+            MemoryMarshal.GetReference(strm.Output2.Slice((int)strm.NextOutput));
 #endif
 
         // decode literals and length/distances until end-of-block or not enough input data or output space
@@ -49,11 +49,11 @@ internal static partial class Inflater
                 hold += (uint)@in << (int)bits;
                 @in = ref Unsafe.Add(ref @in, 1U);
                 bits += 8;
-                strm.next_in += 2;
+                strm.NextInput += 2;
             }
 
             ref var here = ref Unsafe.Add(ref lcode, hold & lmask); // retrieved table entry
-        dolen:
+            dolen:
             uint op = here.bits; // code bits, operation, extra bits, or window position, window bytes to copy
             if (op == 0)
             {
@@ -70,7 +70,7 @@ internal static partial class Inflater
                 Trace.Tracevv(here.val is >= 0x20 and < 0x7f ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n" : $"inflate:         literal 0x{here.val:X2}\n");
                 @out = (byte)here.val;
                 @out = ref Unsafe.Add(ref @out, 1U);
-                strm.next_out++;
+                strm.NextOutput++;
             }
             else if ((op & 16) != 0) // length base
             {
@@ -83,7 +83,7 @@ internal static partial class Inflater
                         hold += (uint)(@in << (int)bits);
                         @in = ref Unsafe.Add(ref @in, 1U);
                         bits += 8;
-                        strm.next_in++;
+                        strm.NextInput++;
                     }
 
                     len += hold & ((1U << (int)op) - 1);
@@ -100,11 +100,11 @@ internal static partial class Inflater
                     hold += (uint)@in << (int)bits;
                     @in = ref Unsafe.Add(ref @in, 1U);
                     bits += 8;
-                    strm.next_in += 2;
+                    strm.NextInput += 2;
                 }
 
                 here = ref Unsafe.Add(ref dcode, hold & dmask);
-            dodist:
+                dodist:
                 op = here.bits;
                 if (op == 0)
                 {
@@ -125,13 +125,13 @@ internal static partial class Inflater
                         hold += (uint)(@in << (int)bits);
                         @in = ref Unsafe.Add(ref @in, 1U);
                         bits += 8;
-                        strm.next_in++;
+                        strm.NextInput++;
                         if (bits < op)
                         {
                             hold += (uint)(@in << (int)bits);
                             @in = ref Unsafe.Add(ref @in, 1U);
                             bits += 8;
-                            strm.next_in++;
+                            strm.NextInput++;
                         }
                     }
 
@@ -139,7 +139,7 @@ internal static partial class Inflater
                     hold >>= (int)op;
                     bits -= op;
                     Trace.Tracevv($"inflate:         distance {dist}\n");
-                    op = strm.next_out - beg; // max distance in output
+                    op = strm.NextOutput - beg; // max distance in output
                     if (dist > op)
                     {
                         op = dist - op; // distance back in window
@@ -165,7 +165,7 @@ internal static partial class Inflater
                                     @out = from;
                                     @out = ref Unsafe.Add(ref @out, 1U);
                                     from = ref Unsafe.Add(ref from, 1U);
-                                    strm.next_out++;
+                                    strm.NextOutput++;
                                 } while (--op != 0);
 
                                 from = ref Unsafe.Subtract(ref @out, dist); // rest from output
@@ -183,7 +183,7 @@ internal static partial class Inflater
                                     @out = from;
                                     @out = ref Unsafe.Add(ref @out, 1U);
                                     from = ref Unsafe.Add(ref from, 1U);
-                                    strm.next_out++;
+                                    strm.NextOutput++;
                                 } while (--op != 0);
 
                                 from = ref window;
@@ -196,7 +196,7 @@ internal static partial class Inflater
                                         @out = from;
                                         @out = ref Unsafe.Add(ref @out, 1U);
                                         from = ref Unsafe.Add(ref from, 1U);
-                                        strm.next_out++;
+                                        strm.NextOutput++;
                                     } while (--op != 0);
 
                                     from = ref Unsafe.Subtract(ref @out, dist); // rest from output
@@ -214,7 +214,7 @@ internal static partial class Inflater
                                     @out = from;
                                     @out = ref Unsafe.Add(ref @out, 1U);
                                     from = ref Unsafe.Add(ref from, 1U);
-                                    strm.next_out++;
+                                    strm.NextOutput++;
                                 } while (--op != 0);
 
                                 from = ref Unsafe.Subtract(ref @out, dist); // rest from output
@@ -234,7 +234,7 @@ internal static partial class Inflater
                             @out = from;
                             @out = ref Unsafe.Add(ref @out, 1U);
                             from = ref Unsafe.Add(ref from, 1U);
-                            strm.next_out += 3;
+                            strm.NextOutput += 3;
                             len -= 3;
                         }
 
@@ -243,13 +243,13 @@ internal static partial class Inflater
                             @out = from;
                             @out = ref Unsafe.Add(ref @out, 1U);
                             from = ref Unsafe.Add(ref from, 1U);
-                            strm.next_out++;
+                            strm.NextOutput++;
                             if (len > 1)
                             {
                                 @out = from;
                                 @out = ref Unsafe.Add(ref @out, 1U);
                                 from = ref Unsafe.Add(ref from, 1U);
-                                strm.next_out++;
+                                strm.NextOutput++;
                             }
                         }
                     }
@@ -271,7 +271,7 @@ internal static partial class Inflater
                             from = ref Unsafe.Add(ref from, 1U);
 
                             len -= 3;
-                            strm.next_out += 3;
+                            strm.NextOutput += 3;
                         } while (len > 2);
 
                         if (len != 0)
@@ -279,13 +279,13 @@ internal static partial class Inflater
                             @out = from;
                             @out = ref Unsafe.Add(ref @out, 1U);
                             from = ref Unsafe.Add(ref from, 1U);
-                            strm.next_out++;
+                            strm.NextOutput++;
                             if (len > 1)
                             {
                                 @out = from;
                                 @out = ref Unsafe.Add(ref @out, 1U);
                                 from = ref Unsafe.Add(ref from, 1U);
-                                strm.next_out++;
+                                strm.NextOutput++;
                             }
                         }
                     }
@@ -319,18 +319,18 @@ internal static partial class Inflater
                 state.Mode = InflateMode.Bad;
                 break;
             }
-        } while (strm.next_in < last && strm.next_out < end);
+        } while (strm.NextInput < last && strm.NextOutput < end);
 
         // return unused bytes (on entry, bits < 8, so in won't go too far back)
         len = bits >> 3;
         @in = ref Unsafe.Subtract(ref @in, len);
-        strm.next_in -= len;
+        strm.NextInput -= len;
         bits -= len << 3;
         hold &= (1U << (int)bits) - 1;
 
         // update state and return
-        strm.AvailIn = strm.next_in < last ? 5 + (last - strm.next_in) : 5 - (strm.next_in - last);
-        strm.AvailOut = strm.next_out < end ? 257 + (end - strm.next_out) : 257 - (strm.next_out - end);
+        strm.AvailIn = strm.NextInput < last ? 5 + (last - strm.NextInput) : 5 - (strm.NextInput - last);
+        strm.AvailOut = strm.NextOutput < end ? 257 + (end - strm.NextOutput) : 257 - (strm.NextOutput - end);
 
         state.Hold = hold;
         state.Bits = bits;

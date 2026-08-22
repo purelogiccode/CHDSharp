@@ -52,7 +52,7 @@ internal static partial class Deflater
                     ref var refs = ref strm.DeflateRefs;
                     if (netUnsafe.IsNullRef(ref refs.Prev))
                     {
-                        refs.Prev = ref MemoryMarshal.GetReference<ushort>(s.Prev);
+                        refs.Prev = ref MemoryMarshal.GetReference(s.Prev);
                     }
 #endif
                     ref var prev = ref

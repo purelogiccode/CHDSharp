@@ -165,7 +165,7 @@ public class ChdCodecChdmanValidationTests : IDisposable
         {
             for (var i = 0; i < CdConstants.MaxSectorData / 2; i++)
             {
-                var v = (short)(12000 * Math.Sin((f * CdConstants.MaxSectorData / 2 + i) * 0.02));
+                var v = (short)Math.Round(12000 * Math.Sin((f * CdConstants.MaxSectorData / 2 + i) * 0.02));
                 bin[pos++] = (byte)(v & 0xFF);
                 bin[pos++] = (byte)((v >> 8) & 0xFF);
             }
@@ -175,7 +175,7 @@ public class ChdCodecChdmanValidationTests : IDisposable
 
         const uint hunkBytes = CdConstants.FramesPerHunk * (uint)CdConstants.FrameSize;
         ChdEncoder.EncodeCd(cuePath, oursPath, hunkBytes: hunkBytes,
-            unitBytes: (uint)CdConstants.FrameSize, codecTags: [CodecTags.Cdzs]);
+            unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.Cdzs]);
 
         var (createExit, cOut, cErr) = RunChdman("createcd", "-i", cuePath, "-o", refPath, "-c", "cdzs",
             "-hs", hunkBytes.ToString(), "-f");

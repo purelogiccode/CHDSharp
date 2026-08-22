@@ -29,7 +29,14 @@ public class FlacPcm16Debug : IDisposable
 
     public void Dispose()
     {
-        try { Directory.Delete(_dir, recursive: true); } catch { /* ignore */ }
+        try
+        {
+            Directory.Delete(_dir, recursive: true);
+        }
+        catch
+        {
+            /* ignore */
+        }
     }
 
     [Fact]

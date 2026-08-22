@@ -17,11 +17,11 @@ internal static partial class Inflater
         if (state.Window == null)
         {
             state.Window = ArrayPool<byte>.Shared.Rent(1 << (int)state.Wbits);
-            window = ref MemoryMarshal.GetReference<byte>(state.Window);
+            window = ref MemoryMarshal.GetReference(state.Window);
         }
         else if (netUnsafe.IsNullRef(ref window))
         {
-            window = ref MemoryMarshal.GetReference<byte>(state.Window);
+            window = ref MemoryMarshal.GetReference(state.Window);
         }
 
         // if window not in use yet, initialize

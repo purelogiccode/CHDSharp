@@ -102,9 +102,9 @@ internal static class Tree
         s.CompressedLen = 0;
         s.BitsSent = 0;
 #endif
-        ref var dynLtree = ref MemoryMarshal.GetReference<TreeNode>(s.DynLtree);
-        ref var dynDtree = ref MemoryMarshal.GetReference<TreeNode>(s.DynDtree);
-        ref var blTree = ref MemoryMarshal.GetReference<TreeNode>(s.BlTree);
+        ref var dynLtree = ref MemoryMarshal.GetReference(s.DynLtree);
+        ref var dynDtree = ref MemoryMarshal.GetReference(s.DynDtree);
+        ref var blTree = ref MemoryMarshal.GetReference(s.BlTree);
 #if NET7_0_OR_GREATER
         ref var refs = ref strm.DeflateRefs;
         refs.DynLtree = ref dynLtree;
@@ -165,9 +165,9 @@ internal static class Tree
         if (s.Level > 0)
         {
             // Check if the file is binary or text
-            if (strm.data_type == ZUnknown)
+            if (strm.DataType2 == ZUnknown)
             {
-                strm.data_type = DetectDataType(ref dynLtree);
+                strm.DataType2 = DetectDataType(ref dynLtree);
             }
 
             // Construct the literal and distance trees
@@ -257,8 +257,7 @@ internal static class Tree
     /// </summary>
     internal static void StoredBlock(DeflateState s, ref byte buf, uint storedLen, uint last, ref byte pendingBuf)
     {
-        const int storedBlock = 0;
-        SendBits(s, (storedBlock << 1) + last, 3, ref pendingBuf); // send block type
+        SendBits(s, last, 3, ref pendingBuf); // send block type (STORED=0, last in bit 0)
         Windup(s, ref pendingBuf); // align on byte boundary
         PutShort(s, (ushort)storedLen, ref pendingBuf);
         PutShort(s, (ushort)~storedLen, ref pendingBuf);
@@ -394,7 +393,7 @@ internal static class Tree
 
         // Check for textual ("white-listed") bytes.
         if (Unsafe.Add(ref dynLtree, 9U).fc != 0 || Unsafe.Add(ref dynLtree, 10U).fc != 0
-                || Unsafe.Add(ref dynLtree, 13U).fc != 0)
+                                                 || Unsafe.Add(ref dynLtree, 13U).fc != 0)
             return ZText;
 
         for (n = 32; n < Literals; n++)
@@ -447,7 +446,7 @@ internal static class Tree
             Unsafe.Add(ref tree, node).fc = 1;
             Unsafe.Add(ref depth, node) = 0;
             s.OptLen--;
-            if (desc.StatDesc.static_tree != null)
+            if (desc.StatDesc.StaticTree2 != null)
             {
                 s.StaticLen -= Unsafe.Add(ref stree, node).dl;
             }
@@ -596,7 +595,7 @@ internal static class Tree
 
             var f = Unsafe.Add(ref tree, n).fc; // frequency
             s.OptLen += f * (uint)(bits + xbits);
-            if (desc.StatDesc.static_tree != null)
+            if (desc.StatDesc.StaticTree2 != null)
             {
                 s.StaticLen += f * (uint)(Unsafe.Add(ref stree, n).dl + xbits);
             }
@@ -684,7 +683,7 @@ internal static class Tree
             // Now reverse the bits
             Unsafe.Add(ref tree, n).fc = (ushort)BiReverse(Unsafe.Add(ref nextCode, len)++, len);
 #if DEBUG
-            Trace.Tracecv(!netUnsafe.AreSame(ref tree, ref MemoryMarshal.GetReference<TreeNode>(SLtree)),
+            Trace.Tracecv(!netUnsafe.AreSame(ref tree, ref MemoryMarshal.GetReference(SLtree)),
                 $"\nn {n,3} {(IsGraph(n) ? Convert.ToChar(n) : ' ')} l {len,2} c {Unsafe.Add(ref tree, n).dl,4:x} ({Unsafe.Add(ref nextCode, len) - 1:x)}) ");
 #endif
         }
@@ -829,8 +828,8 @@ internal static class Tree
             // Here, lc is the match length - MinMatch
             dist--; // dist = match distance - 1
             Debug.Assert(dist < Deflater.MaxDist(s)
-                && lc <= MaxMatch - MinMatch
-                && DCode(dist, ref distCode) < DCodes, "_tr_tally: bad match");
+                         && lc <= MaxMatch - MinMatch
+                         && DCode(dist, ref distCode) < DCodes, "_tr_tally: bad match");
 
             Unsafe.Add(ref dynLtree, (uint)Unsafe.Add(ref lengthCode, lc) + Literals + 1).fc++;
             Unsafe.Add(ref dynDtree, DCode(dist, ref distCode)).fc++;

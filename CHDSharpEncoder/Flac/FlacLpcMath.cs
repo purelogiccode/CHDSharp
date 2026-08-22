@@ -48,11 +48,11 @@ internal static class FlacLpcMath
             order = 4;
         }
 
-        residualBitsPerSample[0] = e0 > 0 ? (float)(Math.Log(MLn2 * (double)e0 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[1] = e1 > 0 ? (float)(Math.Log(MLn2 * (double)e1 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[2] = e2 > 0 ? (float)(Math.Log(MLn2 * (double)e2 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[3] = e3 > 0 ? (float)(Math.Log(MLn2 * (double)e3 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[4] = e4 > 0 ? (float)(Math.Log(MLn2 * (double)e4 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[0] = e0 > 0 ? (float)(Math.Log(MLn2 * e0 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[1] = e1 > 0 ? (float)(Math.Log(MLn2 * e1 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[2] = e2 > 0 ? (float)(Math.Log(MLn2 * e2 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[3] = e3 > 0 ? (float)(Math.Log(MLn2 * e3 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[4] = e4 > 0 ? (float)(Math.Log(MLn2 * e4 / dataLen) / MLn2) : 0f;
 
         return order;
     }
@@ -66,9 +66,9 @@ internal static class FlacLpcMath
             var d = data[i];
             e0 += (ulong)Math.Abs((long)d);
             e1 += (ulong)Math.Abs((long)d - data[i - 1]);
-            e2 += (ulong)Math.Abs((long)d - 2L * data[i - 1] + data[i - 2]);
-            e3 += (ulong)Math.Abs((long)d - 3L * data[i - 1] + 3L * data[i - 2] - data[i - 3]);
-            e4 += (ulong)Math.Abs((long)d - 4L * data[i - 1] + 6L * data[i - 2] - 4L * data[i - 3] + data[i - 4]);
+            e2 += (ulong)Math.Abs(d - 2L * data[i - 1] + data[i - 2]);
+            e3 += (ulong)Math.Abs(d - 3L * data[i - 1] + 3L * data[i - 2] - data[i - 3]);
+            e4 += (ulong)Math.Abs(d - 4L * data[i - 1] + 6L * data[i - 2] - 4L * data[i - 3] + data[i - 4]);
         }
 
         uint order;
@@ -93,11 +93,11 @@ internal static class FlacLpcMath
             order = 4;
         }
 
-        residualBitsPerSample[0] = e0 > 0 ? (float)(Math.Log(MLn2 * (double)e0 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[1] = e1 > 0 ? (float)(Math.Log(MLn2 * (double)e1 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[2] = e2 > 0 ? (float)(Math.Log(MLn2 * (double)e2 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[3] = e3 > 0 ? (float)(Math.Log(MLn2 * (double)e3 / dataLen) / MLn2) : 0f;
-        residualBitsPerSample[4] = e4 > 0 ? (float)(Math.Log(MLn2 * (double)e4 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[0] = e0 > 0 ? (float)(Math.Log(MLn2 * e0 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[1] = e1 > 0 ? (float)(Math.Log(MLn2 * e1 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[2] = e2 > 0 ? (float)(Math.Log(MLn2 * e2 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[3] = e3 > 0 ? (float)(Math.Log(MLn2 * e3 / dataLen) / MLn2) : 0f;
+        residualBitsPerSample[4] = e4 > 0 ? (float)(Math.Log(MLn2 * e4 / dataLen) / MLn2) : 0f;
 
         return order;
     }
@@ -220,14 +220,14 @@ internal static class FlacLpcMath
         // head: samples 0..15 with the triangular j<=i access pattern
         var head = Math.Min(maxLag, n);
         for (var i = 0; i < head; i++)
-            for (var j = 0; j <= i; j++)
+        for (var j = 0; j <= i; j++)
         {
             autoc[j] += (double)data[i] * data[i - j];
         }
 
         // tail: every remaining sample contributes to all 16 coefficients
         for (var i = maxLag; i < n; i++)
-            for (var j = 0; j < maxLag; j++)
+        for (var j = 0; j < maxLag; j++)
         {
             autoc[j] += (double)data[i] * data[i - j];
         }
@@ -291,7 +291,7 @@ internal static class FlacLpcMath
         var bestBits = double.MaxValue;
         for (uint order = 1; order <= maxOrder; order++)
         {
-            var bits = ComputeExpectedBitsPerResidualSampleWithErrorScale(lpcError[(int)(order - 1)], errorScale) * (totalSamples - order) + (double)order * (double)overheadBitsPerOrder;
+            var bits = ComputeExpectedBitsPerResidualSampleWithErrorScale(lpcError[(int)(order - 1)], errorScale) * (totalSamples - order) + order * (double)overheadBitsPerOrder;
             if (bits < bestBits)
             {
                 bestBits = bits;
@@ -389,7 +389,7 @@ internal static class FlacLpcMath
             var error = 0.0;
             for (var i = 0; i < (int)order; i++)
             {
-                error += lpCoeff[i] / (double)(1 << nshift);
+                error += lpCoeff[i] / (1 << nshift);
                 var q = (int)Math.Round(error, MidpointRounding.AwayFromZero);
                 if (q > qmax)
                 {
