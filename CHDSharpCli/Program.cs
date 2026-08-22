@@ -1651,10 +1651,26 @@ internal static class Program
                         ["offset"] = r.StartOffset,
                         ["length"] = r.Length
                     };
-                    if (r.Sha1 != null) obj["sha1"] = r.ToHex(ChdHashType.Sha1);
-                    if (r.Sha256 != null) obj["sha256"] = r.ToHex(ChdHashType.Sha256);
-                    if (r.Crc32 != null) obj["crc32"] = r.ToHex(ChdHashType.Crc32);
-                    if (r.Xxh3 != null) obj["xxh3"] = r.ToHex(ChdHashType.Xxh3);
+                    if (r.Sha1 != null)
+                    {
+                        obj["sha1"] = r.ToHex(ChdHashType.Sha1);
+                    }
+
+                    if (r.Sha256 != null)
+                    {
+                        obj["sha256"] = r.ToHex(ChdHashType.Sha256);
+                    }
+
+                    if (r.Crc32 != null)
+                    {
+                        obj["crc32"] = r.ToHex(ChdHashType.Crc32);
+                    }
+
+                    if (r.Xxh3 != null)
+                    {
+                        obj["xxh3"] = r.ToHex(ChdHashType.Xxh3);
+                    }
+
                     jsonArray.Add(obj);
                 }
 

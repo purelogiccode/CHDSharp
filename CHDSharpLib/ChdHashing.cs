@@ -140,51 +140,6 @@ public static partial class Chd
         return result.Results;
     }
 
-    private static ChdHashResult HashRegion(ChdFile chd, ulong offset, ulong length, ChdHashType types,
-        int? trackNumber, IProgress<ChdProgress>? progress, CancellationToken cancellationToken)
-    {
-        using var sha1 = (types & ChdHashType.Sha1) != ChdHashType.None ? IncrementalHash.CreateHash(HashAlgorithmName.SHA1) : null;
-        using var sha256 = (types & ChdHashType.Sha256) != ChdHashType.None ? IncrementalHash.CreateHash(HashAlgorithmName.SHA256) : null;
-        var crc32 = (types & ChdHashType.Crc32) != ChdHashType.None ? new Crc32() : null;
-        var xxh3 = (types & ChdHashType.Xxh3) != ChdHashType.None ? new XxHash3() : null;
-
-        var sw = progress != null ? Stopwatch.StartNew() : null;
-        var buffer = new byte[chd.HunkBytes];
-        var remaining = length;
-        while (remaining > 0)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var chunk = (int)Math.Min((ulong)buffer.Length, remaining);
-            var err = chd.Read(offset, buffer, 0, chunk, cancellationToken);
-            if (err != ChdError.Chderrnone)
-                throw new InvalidDataException($"Failed to read CHD content at offset {offset}: {err.GetMessage()} ({err})");
-
-            sha1?.AppendData(buffer, 0, chunk);
-            sha256?.AppendData(buffer, 0, chunk);
-            crc32?.Append(buffer.AsSpan(0, chunk));
-            xxh3?.Append(buffer.AsSpan(0, chunk));
-
-            offset += (ulong)chunk;
-            remaining -= (ulong)chunk;
-
-            progress?.Report(new ChdProgress(
-                (uint)((offset - (length - remaining)) / chd.HunkBytes),
-                (uint)((length + chd.HunkBytes - 1) / chd.HunkBytes),
-                (long)(length - remaining),
-                (long)length,
-                sw!.Elapsed));
-        }
-
-        return new ChdHashResult(
-            trackNumber,
-            offset - length,
-            (long)length,
-            types.HasFlag(ChdHashType.Sha1) ? sha1!.GetHashAndReset() : null,
-            types.HasFlag(ChdHashType.Sha256) ? sha256!.GetHashAndReset() : null,
-            types.HasFlag(ChdHashType.Crc32) ? crc32!.GetCurrentHashAsUInt32() : null,
-            types.HasFlag(ChdHashType.Xxh3) ? xxh3!.GetCurrentHashAsUInt64() : null);
-    }
-
     private static (ChdError Error, ChdHashResult? Result) HashRegionWithReporting(ChdFile chd, ulong offset, ulong length, ChdHashType types,
         int? trackNumber, IProgress<ChdProgress>? progress, CancellationToken cancellationToken)
     {

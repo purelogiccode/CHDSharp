@@ -3178,7 +3178,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ReadAheadManager.DecompressHunk failed for hunk {hunknum}: {ex}");
+                Debug.WriteLine($"ReadAheadManager.DecompressHunk failed for hunk {hunknum}: {ex}");
                 _semaphore.Release();
             }
         }
