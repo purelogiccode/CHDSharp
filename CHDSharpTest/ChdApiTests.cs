@@ -89,7 +89,7 @@ public class ChdApiTests
     {
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var path = Path.Combine(testDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         Assert.True(Chd.IsChdFile(path, out var ver));
         Assert.Equal(5u, ver);
@@ -100,7 +100,7 @@ public class ChdApiTests
     {
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var path = Path.Combine(testDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         Assert.True(Chd.IsChdFile(path));
     }
@@ -159,7 +159,7 @@ public class ChdApiTests
     {
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var path = Path.Combine(testDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = Chd.Classify(path, out var classification);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -171,7 +171,7 @@ public class ChdApiTests
     {
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var path = Path.Combine(testDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = Chd.Classify(path, out var classification);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -185,7 +185,7 @@ public class ChdApiTests
     {
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var path = Path.Combine(testDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         using var fs = File.OpenRead(path);
         var result = Chd.CheckFile(fs, "v5_zlib.chd", false);
@@ -198,7 +198,7 @@ public class ChdApiTests
     {
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var path = Path.Combine(testDataDir, "v5_child.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         using var fs = File.OpenRead(path);
         var result = Chd.CheckFile(fs, "v5_child.chd", false);

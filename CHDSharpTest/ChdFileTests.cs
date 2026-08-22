@@ -12,7 +12,7 @@ public class ChdFileTests
     public void Open_valid_chd_returns_none()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -24,7 +24,7 @@ public class ChdFileTests
     public void Open_valid_chd_has_correct_version()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -36,7 +36,7 @@ public class ChdFileTests
     public void Open_valid_chd_has_nonzero_properties()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -59,7 +59,7 @@ public class ChdFileTests
     {
         var child = Path.Combine(TestDataDir, "v5_child.chd");
         var parent = Path.Combine(TestDataDir, "v5_parent.chd");
-        if (!File.Exists(child) || !File.Exists(parent)) return;
+        if (!File.Exists(child) || !File.Exists(parent)) Assert.Skip("Test data missing");
 
         var err = ChdFile.Open(child, parent, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -71,7 +71,7 @@ public class ChdFileTests
     public void Open_child_without_parent_returns_requires_parent()
     {
         var child = Path.Combine(TestDataDir, "v5_child.chd");
-        if (!File.Exists(child)) return;
+        if (!File.Exists(child)) Assert.Skip("Test data missing: " + child);
 
         var err = ChdFile.Open(child, out var chd);
         Assert.Equal(ChdError.Chderrrequiresparent, err);
@@ -84,7 +84,7 @@ public class ChdFileTests
     public void ReadHunk_first_hunk_returns_none()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -99,7 +99,7 @@ public class ChdFileTests
     public void ReadHunk_last_hunk_returns_none()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -116,7 +116,7 @@ public class ChdFileTests
     public void Read_at_offset_zero_returns_none()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -133,7 +133,7 @@ public class ChdFileTests
     public void ReadAllBytes_returns_nonempty_data()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -151,7 +151,7 @@ public class ChdFileTests
     public void EnumerateHunks_yields_all_hunks()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -174,7 +174,7 @@ public class ChdFileTests
     public void ToString_returns_nonempty()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -190,7 +190,7 @@ public class ChdFileTests
     public void Metadata_returns_collection()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -206,7 +206,7 @@ public class ChdFileTests
     public void Tracks_returns_for_cd()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -224,7 +224,7 @@ public class ChdFileTests
     public void GenerateCueSheet_for_cd_returns_nonempty()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -240,7 +240,7 @@ public class ChdFileTests
     public void GenerateCueSheet_for_non_cd_throws()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -255,7 +255,7 @@ public class ChdFileTests
     public void ExportToc_for_cd_returns_nonempty()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -269,7 +269,7 @@ public class ChdFileTests
     public void ExportToc_for_non_cd_returns_no_tracks()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -285,7 +285,7 @@ public class ChdFileTests
     public void Dispose_twice_does_not_throw()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -300,7 +300,7 @@ public class ChdFileTests
     public async Task OpenAsync_returns_same_as_sync()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var (err, chd) = await ChdFile.OpenAsync(path);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -313,7 +313,7 @@ public class ChdFileTests
     public async Task ReadHunkAsync_returns_none()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var (err, chd) = await ChdFile.OpenAsync(path);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -330,7 +330,7 @@ public class ChdFileTests
     public void ExtractToDirectory_for_non_cd()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -356,7 +356,7 @@ public class ChdFileTests
     public void ExtractToDirectoryWithReporting_for_non_cd()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);

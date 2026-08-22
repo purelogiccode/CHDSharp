@@ -41,21 +41,30 @@ public class IsoParser
         {
             track.TrackType = CdTrackType.Mode1;
             track.DataSize = 2048;
-            track.Frames = (int)(size / 2048);
+            var frames = size / 2048;
+            if (frames > int.MaxValue)
+                throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+            track.Frames = (int)frames;
         }
         else if (size % 2336 == 0)
         {
             // 2336-byte mode 2
             track.TrackType = CdTrackType.Mode2;
             track.DataSize = 2336;
-            track.Frames = (int)(size / 2336);
+            var frames = size / 2336;
+            if (frames > int.MaxValue)
+                throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+            track.Frames = (int)frames;
         }
         else if (size % 2352 == 0)
         {
             // 2352-byte mode 2 raw
             track.TrackType = CdTrackType.Mode2Raw;
             track.DataSize = 2352;
-            track.Frames = (int)(size / 2352);
+            var frames = size / 2352;
+            if (frames > int.MaxValue)
+                throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+            track.Frames = (int)frames;
         }
         else
         {

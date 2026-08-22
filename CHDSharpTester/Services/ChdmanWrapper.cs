@@ -80,7 +80,7 @@ public class ChdmanWrapper
         foreach (var a in args)
             psi.ArgumentList.Add(a);
 
-        using var p = Process.Start(psi)!;
+        using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
         p.WaitForExit();
@@ -133,7 +133,7 @@ public class ChdmanWrapper
             psi.ArgumentList.Add(parent);
         }
 
-        using var p = Process.Start(psi)!;
+        using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
         p.WaitForExit();
@@ -170,7 +170,7 @@ public class ChdmanWrapper
             psi.ArgumentList.Add(length.ToString(CultureInfo.InvariantCulture));
             psi.ArgumentList.Add("-f");
 
-            using var p = Process.Start(psi)!;
+            using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
             var tOut = p.StandardOutput.ReadToEndAsync();
             var tErr = p.StandardError.ReadToEndAsync();
             p.WaitForExit();

@@ -183,7 +183,7 @@ public class LruCacheTests
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var childPath = Path.Combine(testDataDir, "v5_child.chd");
         var parentPath = Path.Combine(testDataDir, "v5_parent.chd");
-        if (!File.Exists(childPath) || !File.Exists(parentPath)) return;
+        if (!File.Exists(childPath) || !File.Exists(parentPath)) Assert.Skip("Test data missing");
 
         var pErr = ChdFile.Open(parentPath, out var parent);
         Assert.Equal(ChdError.Chderrnone, pErr);

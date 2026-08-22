@@ -388,7 +388,7 @@ public static partial class Chd
 
             ChdBlockRead.FindBlockReaders(chd);
             ChdBlockRead.FindRepeatedBlocks(chd);
-            var blocksToKeep = 1024 * 1024 * 512 / (int)chd.Blocksize;
+            var blocksToKeep = chd.Blocksize > 0 ? 1024 * 1024 * 512 / (int)chd.Blocksize : 0;
             ChdBlockRead.KeepMostRepeatedBlocks(chd, blocksToKeep);
 
             valid = DecompressDataParallel(s, chd, out _, progress, cancellationToken);

@@ -17,7 +17,7 @@ public class ParityFeaturesTests
     public void GetMetadata_by_tag_returns_first_match()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -35,7 +35,7 @@ public class ParityFeaturesTests
     public void GetMetadata_by_index_returns_nth_match()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -53,7 +53,7 @@ public class ParityFeaturesTests
     public void GetMetadata_wildcard_returns_any_tag()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -73,7 +73,7 @@ public class ParityFeaturesTests
     public void GetMetadata_missing_tag_returns_metadatanotfound()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -89,7 +89,7 @@ public class ParityFeaturesTests
     public void GetMetadata_index_out_of_range_returns_metadatanotfound()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -105,7 +105,7 @@ public class ParityFeaturesTests
     public void GetMetadata_on_file_without_metadata_returns_metadatanotfound()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -122,7 +122,7 @@ public class ParityFeaturesTests
     public void GetMetadata_matches_metadata_collection()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -148,7 +148,7 @@ public class ParityFeaturesTests
     public void Metadata_entries_expose_flags()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -169,7 +169,7 @@ public class ParityFeaturesTests
     public void Precache_then_read_returns_same_bytes()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         // reference: plain read
         var err = ChdFile.Open(path, out var chd);
@@ -203,7 +203,7 @@ public class ParityFeaturesTests
     public void Precache_is_idempotent()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -219,7 +219,7 @@ public class ParityFeaturesTests
     public void Open_with_failing_read_stream_returns_readerror()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         using var fs = File.OpenRead(path);
         using var failing = new ReadThrowingStream(fs);
@@ -232,7 +232,7 @@ public class ParityFeaturesTests
     public void Precache_on_failing_read_stream_returns_readerror()
     {
         var path = Path.Combine(TestDataDir, "v5_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         using var fs = File.OpenRead(path);
         using var failing = new PartialReadFailingStream(fs, 16384); // header+map reads OK, bulk read fails
@@ -250,7 +250,7 @@ public class ParityFeaturesTests
     public void V1_chd_has_synthesized_gddd_metadata()
     {
         var path = Path.Combine(TestDataDir, "v1_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -270,7 +270,7 @@ public class ParityFeaturesTests
     public void V2_chd_has_synthesized_gddd_metadata()
     {
         var path = Path.Combine(TestDataDir, "v2_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -290,7 +290,7 @@ public class ParityFeaturesTests
     public void V1_synthesized_gddd_uses_header_geometry()
     {
         var path = Path.Combine(TestDataDir, "v1_zlib.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
         var err = ChdFile.Open(path, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -325,7 +325,7 @@ public class ParityFeaturesTests
     {
         var childPath = Path.Combine(TestDataDir, "v5_child.chd");
         var parentPath = Path.Combine(TestDataDir, "v5_parent.chd");
-        if (!File.Exists(childPath) || !File.Exists(parentPath)) return;
+        if (!File.Exists(childPath) || !File.Exists(parentPath)) Assert.Skip("Test data missing");
 
         // standalone stream open of a child must demand a parent
         await using var fs = File.OpenRead(childPath);

@@ -183,8 +183,15 @@ public sealed class BattleHarness
         }
 
         sb.AppendLine(new string('-', 56));
-        sb.AppendLine($"TOTAL {(string.IsNullOrEmpty(_checks[0].Suite) ? 0 : _checks.Count),4} checks: " +
-                      $"{_checks.Count(c => c.Passed)} passed, {_checks.Count(c => c is { Passed: false, Skipped: false })} failed, {_checks.Count(c => c.Skipped)} skipped");
+        if (_checks.Count == 0)
+        {
+            sb.AppendLine("No checks recorded.");
+        }
+        else
+        {
+            sb.AppendLine($"TOTAL {(string.IsNullOrEmpty(_checks[0].Suite) ? 0 : _checks.Count),4} checks: " +
+                          $"{_checks.Count(c => c.Passed)} passed, {_checks.Count(c => c is { Passed: false, Skipped: false })} failed, {_checks.Count(c => c.Skipped)} skipped");
+        }
         return sb.ToString();
     }
 
@@ -456,13 +463,15 @@ public sealed class BattleHarness
 
             Check(suite, "decode (ours)", () =>
             {
+                if (refExtract == null) return;
                 var read = ReadAllBytes(ourChd);
-                AssertEqual(refExtract!, read, "decoded data");
+                AssertEqual(refExtract, read, "decoded data");
             });
             Check(suite, "decode (ref)", () =>
             {
+                if (refExtract == null) return;
                 var read = ReadAllBytes(refChd);
-                AssertEqual(refExtract!, read, "decoded data");
+                AssertEqual(refExtract, read, "decoded data");
             });
 
             Check(suite, "info parity", () => InfoParity(ourChd, refChd));

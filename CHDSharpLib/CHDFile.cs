@@ -3183,7 +3183,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         internal void Clear()
         {
             _cache.Clear();
-            _semaphore.Release(LookAhead - _semaphore.CurrentCount);
+            var currentCount = _semaphore.CurrentCount;
+            if (currentCount < LookAhead)
+                _semaphore.Release(LookAhead - currentCount);
         }
 
         public void Dispose()

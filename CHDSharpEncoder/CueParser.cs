@@ -97,7 +97,10 @@ public static class CueParser
 
                     if (wavLength != 0)
                     {
-                        track.Frames = (int)(wavLength / CdConstants.MaxSectorData);
+                        var frames = wavLength / CdConstants.MaxSectorData;
+                        if (frames > int.MaxValue)
+                            throw new InvalidDataException($"WAV file frame count ({frames}) exceeds the maximum supported value");
+                        track.Frames = (int)frames;
                         track.FileOffset = wavOffset;
                         wavLength = 0;
                         wavOffset = 0;

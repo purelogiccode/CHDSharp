@@ -611,7 +611,7 @@ internal static class ChdHeaders
             rawmap[rawmapIndex] = (byte)map[blockIndex].Comptype;
             rawmap.PutUInt24Be(rawmapIndex + 1, map[blockIndex].Length);
             rawmap.PutUInt48Be(rawmapIndex + 4, map[blockIndex].Offset);
-            rawmap.PutUInt16Be(rawmapIndex + 10, map[blockIndex].Crc16!.Value);
+            rawmap.PutUInt16Be(rawmapIndex + 10, map[blockIndex].Crc16 ?? 0);
         }
 
         if (Crc16.Calc(rawmap, (int)totalBlocks * 12) != mapcrc)

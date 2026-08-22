@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 namespace CHDSharp.Tests;
 
+[Collection("CLI")]
 public class CliAdditionalTests
 {
     private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
@@ -17,7 +18,8 @@ public class CliAdditionalTests
             if (testBinIdx >= 0)
             {
                 var slnRoot = baseDir[..testBinIdx];
-                return Path.Combine(slnRoot, "CHDSharpCli", "bin", "Debug",
+                var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ?? "Debug";
+                return Path.Combine(slnRoot, "CHDSharpCli", "bin", config,
                     "net10.0", "CHDSharpCli.dll");
             }
 
@@ -91,9 +93,9 @@ public class CliAdditionalTests
     public void Toc_output_contains_track_info()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
-        var (exitCode, output) = RunCli("--toc", $"\"{path}\"");
+        var (exitCode, output) = RunCli("--toc", path);
         Assert.Equal(0, exitCode);
         Assert.Contains("Track", output, StringComparison.Ordinal);
     }
@@ -102,9 +104,9 @@ public class CliAdditionalTests
     public void Cue_output_contains_index()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
-        var (exitCode, output) = RunCli("--cue", $"\"{path}\"");
+        var (exitCode, output) = RunCli("--cue", path);
         Assert.Equal(0, exitCode);
         Assert.Contains("INDEX 01", output, StringComparison.Ordinal);
     }
@@ -113,9 +115,9 @@ public class CliAdditionalTests
     public void Classify_for_cd_returns_cd()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
 
-        var (exitCode, output) = RunCli("--classify", $"\"{path}\"");
+        var (exitCode, output) = RunCli("--classify", path);
         Assert.Equal(0, exitCode);
         Assert.Contains("cd", output, StringComparison.OrdinalIgnoreCase);
     }

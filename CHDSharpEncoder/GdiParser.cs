@@ -96,7 +96,11 @@ public class GdiParser
             if (!File.Exists(fileName))
                 throw new FileNotFoundException($"Couldn't find data file [{fileName}]", fileName);
 
-            track.Frames = (int)(new FileInfo(fileName).Length / trksize);
+            var fileLength = new FileInfo(fileName).Length;
+            var frames = fileLength / trksize;
+            if (frames > int.MaxValue)
+                throw new InvalidDataException($"Track frame count ({frames}) exceeds the maximum supported value");
+            track.Frames = (int)frames;
             track.PadFrames = 0;
 
             // the gap between this track's LBA and the end of the previous track becomes

@@ -106,7 +106,6 @@ public class DeflateInfiniteLoopTests
             }
         });
         thread.Start();
-        thread.Join(timeoutMs + 1000);
 
         if (!thread.Join(timeoutMs))
         {
