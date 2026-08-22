@@ -7,22 +7,6 @@ using MapEntry = CHDSharpEncoder.Models.MapEntry;
 namespace CHDSharpEncoder;
 
 /// <summary>
-/// Creates CHD v5 files from raw binary data (<see cref="EncodeRaw(Stream, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, CancellationToken)"/>), from CD
-/// CUE/BIN sources (<see cref="EncodeCd(string, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, CancellationToken)"/>), or by re-compressing an existing CHD
-/// (<see cref="Copy(string, string, IReadOnlyList{uint}?, ChdEncodeOptions?, CancellationToken)"/>). Uses the zlib codec by default, matching chdman's
-/// <c>--compression zlib</c> output; produced files pass <c>chdman verify</c> and
-/// extract byte-identically via <c>chdman extractraw</c>.
-/// </summary>
-/// <remarks>
-/// Encoding runs a producer→worker→consumer pipeline (<see cref="HunkProcessor.CompressAll"/>):
-/// hunks are read and hashed on one thread, compressed in parallel by <c>TaskCount</c> workers
-/// (each with private, persistent codec instances), and written back strictly in hunk order by a
-/// single consumer. The output is byte-identical to a single-threaded encode regardless of the
-/// worker count, because codec outputs are deterministic and dedup/offset assignment stays
-/// sequential. <c>-c none</c> (uncompressed CHD) uses a dedicated sequential path that writes the
-/// V5 raw map (4-byte hunk-index entries, chdman-parity layout).
-/// </remarks>
-/// <summary>
 /// Summary of a completed <see cref="ChdEncoder.EncodeLaserDisc"/> run: the derived A/V
 /// parameters and output geometry (mirrors chdman <c>createld</c>'s console report).
 /// </summary>
@@ -39,6 +23,22 @@ public sealed record LaserDiscEncodingInfo(
     ulong FirstFrame,
     ulong Frames);
 
+/// <summary>
+/// Creates CHD v5 files from raw binary data (<see cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>), from CD
+/// CUE/BIN sources (<see cref="EncodeCd(string, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>), or by re-compressing an existing CHD
+/// (<see cref="Copy(string, string, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>). Uses the zlib codec by default, matching chdman's
+/// <c>--compression zlib</c> output; produced files pass <c>chdman verify</c> and
+/// extract byte-identically via <c>chdman extractraw</c>.
+/// </summary>
+/// <remarks>
+/// Encoding runs a producer→worker→consumer pipeline (<see cref="HunkProcessor.CompressAll"/>):
+/// hunks are read and hashed on one thread, compressed in parallel by <c>TaskCount</c> workers
+/// (each with private, persistent codec instances), and written back strictly in hunk order by a
+/// single consumer. The output is byte-identical to a single-threaded encode regardless of the
+/// worker count, because codec outputs are deterministic and dedup/offset assignment stays
+/// sequential. <c>-c none</c> (uncompressed CHD) uses a dedicated sequential path that writes the
+/// V5 raw map (4-byte hunk-index entries, chdman-parity layout).
+/// </remarks>
 public static class ChdEncoder
 {
     private const uint DefaultHunkBytes = 4096;
@@ -228,186 +228,194 @@ public static class ChdEncoder
         if (codecTags is [CodecTags.None])
             throw new ArgumentException("Uncompressed is not supported for laserdisc CHDs", nameof(codecTags));
 
-        using var avi = AviReader.Open(aviPath);
-        var aviInfo = avi.Info;
-        if (aviInfo.VideoSampletime == 0 || aviInfo.VideoTimescale == 0)
-            throw new InvalidDataException("AVI file has no valid video timing");
-
-        // determine parameters of the incoming video stream (do_create_ld)
-        var fpsTimes1Million = (ulong)aviInfo.VideoTimescale * 1000000 / aviInfo.VideoSampletime;
-        var width = (uint)aviInfo.Width;
-        var height = (uint)aviInfo.Height;
-        var interlaced = fpsTimes1Million / 1000000 <= 30 && height % 2 == 0 && height > 288;
-
-        // process input start/end in source frames, then adjust for interlacing
-        ulong totalFrames = aviInfo.VideoNumsamples;
-        if (totalFrames == 0)
-            throw new InvalidDataException("AVI file contains no video frames");
-
-        var start = (ulong)Math.Max(0, inputStartFrame);
-        var end = inputLengthFrames is { } len ? start + (ulong)Math.Max(0, len) : totalFrames;
-        if (start >= totalFrames)
-            throw new InvalidDataException($"Input start frame ({start}) is beyond end of input ({totalFrames})");
-        if (end > totalFrames)
-            throw new InvalidDataException($"Input length is larger than available input from start offset ({totalFrames - start} frames)");
-
-        if (interlaced)
+        var avi = AviReader.Open(aviPath);
+        try
         {
-            fpsTimes1Million *= 2;
-            height /= 2;
-            start *= 2;
-            end *= 2;
-        }
+            var aviInfo = avi.Info;
+            if (aviInfo.VideoSampletime == 0 || aviInfo.VideoTimescale == 0)
+                throw new InvalidDataException("AVI file has no valid video timing");
 
-        var channels = Math.Min(aviInfo.AudioChannels, 8u);
-        var rate = aviInfo.AudioSamplerate;
+            // determine parameters of the incoming video stream (do_create_ld)
+            var fpsTimes1Million = (ulong)aviInfo.VideoTimescale * 1000000 / aviInfo.VideoSampletime;
+            var width = (uint)aviInfo.Width;
+            var height = (uint)aviInfo.Height;
+            var interlaced = fpsTimes1Million / 1000000 <= 30 && height % 2 == 0 && height > 288;
 
-        // bytes per frame: worst-case raw 'chav' block (max samples via ceil-div)
-        var maxSamplesPerFrameLong = rate > 0 ? ((ulong)rate * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million : 0;
-        if (maxSamplesPerFrameLong > ushort.MaxValue)
-            throw new InvalidDataException($"Audio samples per frame ({maxSamplesPerFrameLong}) exceeds the AVHuff limit (65535)");
+            // process input start/end in source frames, then adjust for interlacing
+            ulong totalFrames = aviInfo.VideoNumsamples;
+            if (totalFrames == 0)
+                throw new InvalidDataException("AVI file contains no video frames");
 
-        var maxSamplesPerFrame = (uint)maxSamplesPerFrameLong;
-        if (width == 0 || height == 0 || width > ushort.MaxValue || height > ushort.MaxValue)
-            throw new InvalidDataException($"Video geometry {width}x{height} is out of range");
-        if (width % 2 != 0)
-            throw new InvalidDataException($"Video width {width} must be even for YUY2 video");
-        if (channels > 0 && maxSamplesPerFrame < 16)
-            throw new InvalidDataException($"Audio samples per frame ({maxSamplesPerFrame}) is below the FLAC minimum (16)");
+            var start = (ulong)Math.Max(0, inputStartFrame);
+            var end = inputLengthFrames is { } len ? start + (ulong)Math.Max(0, len) : totalFrames;
+            if (start >= totalFrames)
+                throw new InvalidDataException($"Input start frame ({start}) is beyond end of input ({totalFrames})");
+            if (end > totalFrames)
+                throw new InvalidDataException($"Input length is larger than available input from start offset ({totalFrames - start} frames)");
 
-        var bytesPerFrame = AvHuffEncoder.RawDataSize(width, height, channels, maxSamplesPerFrame);
-
-        // process hunk size (parse_hunk_size granularity: whole multiples of the frame size)
-        if (hunkBytes == 0)
-        {
-            hunkBytes = bytesPerFrame;
-        }
-
-        if (hunkBytes % bytesPerFrame != 0)
-            throw new ArgumentException(
-                $"Hunk size ({hunkBytes}) must be a whole multiple of the frame size ({bytesPerFrame})", nameof(hunkBytes));
-
-        var frames = end - start;
-        var logicalBytes = frames * hunkBytes;
-        var hunkCount = (uint)(logicalBytes / hunkBytes);
-        if (hunkCount == 0)
-        {
-            hunkCount = 1;
-        }
-
-        // laserdisc VBI metadata is captured only for NTSC/PAL field heights (524/2, 624/2)
-        var captureVbi = height is 524 / 2 or 624 / 2;
-        var ldFrameData = captureVbi ? new byte[frames * VbiParse.PackedBytes] : null;
-
-        // metadata written before compression ('AVAV', checksummed), like chdman createld
-        var metadataEntries = new List<MetadataEntry>
-        {
-            MetadataWriter.BuildAvMetadata(fpsTimes1Million, width, height, interlaced, channels, rate)
-        };
-        if (options?.Metadata is { Count: > 0 } userMetadata)
-            metadataEntries.AddRange(userMetadata);
-
-        var interlaceFactor = interlaced ? 2 : 1;
-        var frameStride = hunkBytes / bytesPerFrame;
-        var fullFrame = new byte[(int)(width * height * interlaceFactor * 2)];
-        var fieldFrame = new byte[(int)(width * height * 2)];
-        var rawFrame = new byte[bytesPerFrame];
-        var audioPlanes = new short[channels][];
-        for (var ch = 0; ch < channels; ch++)
-        {
-            audioPlanes[ch] = new short[maxSamplesPerFrame];
-        }
-
-        var codecs = ChdCodecs.CreateAll(codecTags, hunkBytes);
-        var entries = new MapEntry[hunkCount];
-        using var sha1 = new Sha1();
-        var selfMap = new Dictionary<string, uint>((int)hunkCount, StringComparer.Ordinal);
-        using var parentMap = options?.ParentPath is { Length: > 0 } parentPath
-            ? new ParentMap(parentPath, hunkBytes, bytesPerFrame)
-            : null;
-        var processor = new HunkProcessor(hunkBytes, codecTags, options?.TaskCount ?? Chd.TaskCount);
-
-        using (var fs = new FileStream(chdPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
-        {
-            var header = ChdHeaderV5.CreateRaw(codecTags.ToArray(), logicalBytes, hunkBytes, bytesPerFrame);
-            if (parentMap != null)
+            if (interlaced)
             {
-                header.ParentSha1 = parentMap.ParentSha1;
+                fpsTimes1Million *= 2;
+                height /= 2;
+                start *= 2;
+                end *= 2;
             }
 
-            header.WriteToStream(fs);
+            var channels = Math.Min(aviInfo.AudioChannels, 8u);
+            var rate = aviInfo.AudioSamplerate;
 
-            // 'AVAV' lives right after the header, before the compressed data (chdman appends
-            // it before compressing any hunks); the header's metaoffset is patched below
-            var metaOffset = MetadataWriter.WriteCdMetadata(fs, metadataEntries);
+            // bytes per frame: worst-case raw 'chav' block (max samples via ceil-div)
+            var maxSamplesPerFrameLong = rate > 0 ? ((ulong)rate * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million : 0;
+            if (maxSamplesPerFrameLong > ushort.MaxValue)
+                throw new InvalidDataException($"Audio samples per frame ({maxSamplesPerFrameLong}) exceeds the AVHuff limit (65535)");
 
-            var currentOffset = RunCompressionPipeline(processor, hunkCount, ReadLdHunk, sha1, entries, selfMap, fs,
-                codecs, options, hunkBytes, parentMap, cancellationToken);
+            var maxSamplesPerFrame = (uint)maxSamplesPerFrameLong;
+            if (width == 0 || height == 0 || width > ushort.MaxValue || height > ushort.MaxValue)
+                throw new InvalidDataException($"Video geometry {width}x{height} is out of range");
+            if (width % 2 != 0)
+                throw new InvalidDataException($"Video width {width} must be even for YUY2 video");
+            if (channels > 0 && maxSamplesPerFrame < 16)
+                throw new InvalidDataException($"Audio samples per frame ({maxSamplesPerFrame}) is below the FLAC minimum (16)");
 
-            var rawSha1 = sha1.Finish();
-            var compressedMap = MapCompressor.Compress(entries, hunkCount, hunkBytes, bytesPerFrame);
-            var mapOffset = (ulong)currentOffset;
-            fs.Write(compressedMap, 0, compressedMap.Length);
+            var bytesPerFrame = AvHuffEncoder.RawDataSize(width, height, channels, maxSamplesPerFrame);
 
-            // 'AVLD' VBI metadata is appended AFTER the map (chdman writes it once compression
-            // finished), linked as the successor of the 'AVAV' entry, flags 0 (not hashed)
-            if (ldFrameData != null)
+            // process hunk size (parse_hunk_size granularity: whole multiples of the frame size)
+            if (hunkBytes == 0)
             {
-                var avldOffset = MetadataWriter.WriteCdMetadata(fs, [MetadataWriter.BuildAvLdMetadata(ldFrameData)]);
-                var patchNext = new BigEndianWriter();
-                patchNext.WriteU64((ulong)avldOffset);
-                fs.Position = metaOffset + 8;
-                fs.Write(patchNext.ToArray(), 0, 8);
+                hunkBytes = bytesPerFrame;
             }
 
-            // patch header fields (mapoffset@40, metaoffset@48, rawsha1@64, sha1@84)
-            var patchW = new BigEndianWriter();
-            patchW.WriteU64(mapOffset);
-            fs.Position = 40;
-            fs.Write(patchW.ToArray(), 0, 8);
+            if (hunkBytes % bytesPerFrame != 0)
+                throw new ArgumentException(
+                    $"Hunk size ({hunkBytes}) must be a whole multiple of the frame size ({bytesPerFrame})", nameof(hunkBytes));
 
-            patchW = new BigEndianWriter();
-            patchW.WriteU64((ulong)metaOffset);
-            fs.Position = 48;
-            fs.Write(patchW.ToArray(), 0, 8);
+            var frames = end - start;
+            var logicalBytes = frames * hunkBytes;
+            var hunkCount = (uint)(logicalBytes / hunkBytes);
+            if (hunkCount == 0)
+            {
+                hunkCount = 1;
+            }
 
-            fs.Position = 64;
-            fs.Write(rawSha1, 0, 20);
+            // laserdisc VBI metadata is captured only for NTSC/PAL field heights (524/2, 624/2)
+            var captureVbi = height is 524 / 2 or 624 / 2;
+            var ldFrameData = captureVbi ? new byte[frames * VbiParse.PackedBytes] : null;
 
-            var combinedSha1 = MetadataWriter.ComputeCombinedSha1(rawSha1, metadataEntries);
-            fs.Position = 84;
-            fs.Write(combinedSha1, 0, 20);
-        }
+            // metadata written before compression ('AVAV', checksummed), like chdman createld
+            var metadataEntries = new List<MetadataEntry>
+            {
+                MetadataWriter.BuildAvMetadata(fpsTimes1Million, width, height, interlaced, channels, rate)
+            };
+            if (options?.Metadata is { Count: > 0 } userMetadata)
+                metadataEntries.AddRange(userMetadata);
 
-        return new LaserDiscEncodingInfo(fpsTimes1Million, width, height, interlaced, channels, rate,
-            maxSamplesPerFrame, bytesPerFrame, hunkBytes, start, frames);
+            var interlaceFactor = interlaced ? 2 : 1;
+            var frameStride = hunkBytes / bytesPerFrame;
+            var fullFrame = new byte[(int)(width * height * interlaceFactor * 2)];
+            var fieldFrame = new byte[(int)(width * height * 2)];
+            var rawFrame = new byte[bytesPerFrame];
+            var audioPlanes = new short[channels][];
+            for (var ch = 0; ch < channels; ch++)
+            {
+                audioPlanes[ch] = new short[maxSamplesPerFrame];
+            }
 
-        // producer: assemble each hunk from whole frames of the AVI
+            var codecs = ChdCodecs.CreateAll(codecTags, hunkBytes);
+            var entries = new MapEntry[hunkCount];
+            using var sha1 = new Sha1();
+            var selfMap = new Dictionary<string, uint>((int)hunkCount, StringComparer.Ordinal);
+            using var parentMap = options?.ParentPath is { Length: > 0 } parentPath
+                ? new ParentMap(parentPath, hunkBytes, bytesPerFrame)
+                : null;
+            var processor = new HunkProcessor(hunkBytes, codecTags, options?.TaskCount ?? Chd.TaskCount);
+
+            using (var fs = new FileStream(chdPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            {
+                var header = ChdHeaderV5.CreateRaw(codecTags.ToArray(), logicalBytes, hunkBytes, bytesPerFrame);
+                if (parentMap != null)
+                {
+                    header.ParentSha1 = parentMap.ParentSha1;
+                }
+
+                header.WriteToStream(fs);
+
+                // 'AVAV' lives right after the header, before the compressed data (chdman appends
+                // it before compressing any hunks); the header's metaoffset is patched below
+                var metaOffset = MetadataWriter.WriteCdMetadata(fs, metadataEntries);
+
+                var currentOffset = RunCompressionPipeline(processor, hunkCount, ReadLdHunk, sha1, entries, selfMap, fs,
+                    codecs, options, hunkBytes, parentMap, cancellationToken);
+
+                var rawSha1 = sha1.Finish();
+                var compressedMap = MapCompressor.Compress(entries, hunkCount, hunkBytes, bytesPerFrame);
+                var mapOffset = (ulong)currentOffset;
+                fs.Write(compressedMap, 0, compressedMap.Length);
+
+                // 'AVLD' VBI metadata is appended AFTER the map (chdman writes it once compression
+                // finished), linked as the successor of the 'AVAV' entry, flags 0 (not hashed)
+                if (ldFrameData != null)
+                {
+                    var avldOffset = MetadataWriter.WriteCdMetadata(fs, [MetadataWriter.BuildAvLdMetadata(ldFrameData)]);
+                    var patchNext = new BigEndianWriter();
+                    patchNext.WriteU64((ulong)avldOffset);
+                    fs.Position = metaOffset + 8;
+                    fs.Write(patchNext.ToArray(), 0, 8);
+                }
+
+                // patch header fields (mapoffset@40, metaoffset@48, rawsha1@64, sha1@84)
+                var patchW = new BigEndianWriter();
+                patchW.WriteU64(mapOffset);
+                fs.Position = 40;
+                fs.Write(patchW.ToArray(), 0, 8);
+
+                patchW = new BigEndianWriter();
+                patchW.WriteU64((ulong)metaOffset);
+                fs.Position = 48;
+                fs.Write(patchW.ToArray(), 0, 8);
+
+                fs.Position = 64;
+                fs.Write(rawSha1, 0, 20);
+
+                var combinedSha1 = MetadataWriter.ComputeCombinedSha1(rawSha1, metadataEntries);
+                fs.Position = 84;
+                fs.Write(combinedSha1, 0, 20);
+            }
+
+            return new LaserDiscEncodingInfo(fpsTimes1Million, width, height, interlaced, channels, rate,
+                maxSamplesPerFrame, bytesPerFrame, hunkBytes, start, frames);
+
+            // producer: assemble each hunk from whole frames of the AVI
 #pragma warning disable CA2000 // Dispose objects before losing scope — avi is captured but CompressAll is synchronous
-        int ReadLdHunk(uint hunkIndex, byte[] buffer)
+            int ReadLdHunk(uint hunkIndex, byte[] buffer)
 #pragma warning restore CA2000
-        {
-            Array.Clear(buffer);
-            for (uint slot = 0; slot < frameStride; slot++)
             {
-                var frameNum = (ulong)hunkIndex * frameStride + slot;
-                if (frameNum >= frames)
-                    break;
+                Array.Clear(buffer);
+                for (uint slot = 0; slot < frameStride; slot++)
+                {
+                    var frameNum = (ulong)hunkIndex * frameStride + slot;
+                    if (frameNum >= frames)
+                        break;
 
-                var frameSamples = AssembleAvFrame(avi, frameNum + start, interlaceFactor, width, height, channels,
-                    rate, fpsTimes1Million, maxSamplesPerFrame, fullFrame, fieldFrame, audioPlanes,
-                    ldFrameData, frameNum);
+                    // ReSharper disable once AccessToDisposedClosure
+                    var frameSamples = AssembleAvFrame(avi, frameNum + start, interlaceFactor, width, height, channels,
+                        rate, fpsTimes1Million, maxSamplesPerFrame, fullFrame, fieldFrame, audioPlanes,
+                        ldFrameData, frameNum);
 
-                // assemble into an exact-size region (the frame's own sample count), then copy
-                // into the zero-filled hunk slot — MAME's read_data pads the tail with zeroes
-                var needed = 12 + (int)(channels * frameSamples * 2) + (int)(width * height * 2);
-                var target = buffer.AsSpan((int)(slot * bytesPerFrame), (int)bytesPerFrame);
-                AvHuffEncoder.AssembleData(rawFrame.AsSpan(0, needed), fieldFrame, (int)width, (int)height,
-                    (int)channels, frameSamples, audioPlanes);
-                rawFrame.AsSpan(0, needed).CopyTo(target);
+                    // assemble into an exact-size region (the frame's own sample count), then copy
+                    // into the zero-filled hunk slot — MAME's read_data pads the tail with zeroes
+                    var needed = 12 + (int)(channels * frameSamples * 2) + (int)(width * height * 2);
+                    var target = buffer.AsSpan((int)(slot * bytesPerFrame), (int)bytesPerFrame);
+                    AvHuffEncoder.AssembleData(rawFrame.AsSpan(0, needed), fieldFrame, (int)width, (int)height,
+                        (int)channels, frameSamples, audioPlanes);
+                    rawFrame.AsSpan(0, needed).CopyTo(target);
+                }
+
+                return (int)Math.Min(hunkBytes, logicalBytes - (ulong)hunkIndex * hunkBytes);
             }
-
-            return (int)Math.Min(hunkBytes, logicalBytes - (ulong)hunkIndex * hunkBytes);
+        }
+        finally
+        {
+            avi.Dispose();
         }
     }
 
@@ -893,7 +901,7 @@ public static class ChdEncoder
     /// when the source is a child) and re-encoded with the target codec list. All metadata
     /// entries of the source are cloned into the output. The output uses the source's hunk and
     /// unit sizes. Runs through the same parallel producer→worker→consumer pipeline as
-    /// <see cref="EncodeRaw(Stream, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, System.Threading.CancellationToken)"/>,
+    /// <see cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>,
     /// so output is byte-identical regardless of the worker count.
     /// </summary>
     /// <remarks>
@@ -1046,7 +1054,7 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Shared encoding core used by <see cref="EncodeRaw(Stream, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, System.Threading.CancellationToken)"/>,
+    /// Shared encoding core used by <see cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>,
     /// <see cref="EncodeCd"/> and <see cref="Copy"/>: writes the header, runs the parallel
     /// hunk pipeline over <paramref name="readHunk"/>, then writes metadata and the compressed
     /// map and patches the header hashes. The single tag <see cref="CodecTags.None"/> diverts to

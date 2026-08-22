@@ -1341,7 +1341,7 @@ internal static partial class Deflater
             if (s.MatchLength >= MinMatch)
             {
                 TreeTallyDist(s, 1, s.MatchLength - MinMatch, out bflush,
-                    ref pendingBuf, ref dynLtree, ref dynDtree, ref distCode, ref lengthCode);
+                    ref pendingBuf, ref dynLtree, ref dynDtree, ref distCode);
 
                 s.Lookahead -= s.MatchLength;
                 s.Strstart += s.MatchLength;
@@ -1388,8 +1388,7 @@ internal static partial class Deflater
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void TreeTallyDist(DeflateState s, uint distance, uint length, out bool flush,
-        ref byte pendingBuf, ref TreeNode dynLtree, ref TreeNode dynDtree, ref byte distCode,
-        ref byte lengthCode)
+        ref byte pendingBuf, ref TreeNode dynLtree, ref TreeNode dynDtree, ref byte distCode)
 #if DEBUG
     {
         var len = (byte)length;
@@ -1571,7 +1570,7 @@ internal static partial class Deflater
             if (s.MatchLength >= MinMatch)
             {
                 TreeTallyDist(s, s.Strstart - s.MatchStart, s.MatchLength - MinMatch, out bflush, ref pendingBuf,
-                    ref dynLtree, ref dynDtree, ref distCode, ref lengthCode);
+                    ref dynLtree, ref dynDtree, ref distCode);
 
                 s.Lookahead -= s.MatchLength;
 
@@ -1949,7 +1948,7 @@ internal static partial class Deflater
                 // Do not insert strings in hash table beyond this.
 
                 TreeTallyDist(s, s.Strstart - 1 - s.PrevMatch, s.PrevLength - MinMatch, out bflush, ref pendingBuf,
-                    ref dynLtree, ref dynDtree, ref distCode, ref lengthCode);
+                    ref dynLtree, ref dynDtree, ref distCode);
 
                 /* Insert in hash table all strings up to the end of the match.
                  * strstart-1 and strstart are already inserted. If there is not

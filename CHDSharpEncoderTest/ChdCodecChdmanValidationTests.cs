@@ -165,7 +165,7 @@ public class ChdCodecChdmanValidationTests : IDisposable
         {
             for (var i = 0; i < CdConstants.MaxSectorData / 2; i++)
             {
-                var v = (short)Math.Round(12000 * Math.Sin((f * CdConstants.MaxSectorData / 2 + i) * 0.02));
+                var v = (short)Math.Round(12000 * Math.Sin((f * CdConstants.MaxSectorData / 2.0 + i) * 0.02));
                 bin[pos++] = (byte)(v & 0xFF);
                 bin[pos++] = (byte)((v >> 8) & 0xFF);
             }
