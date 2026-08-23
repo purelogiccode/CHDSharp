@@ -7,8 +7,7 @@ same codec, and parallel compression across up to 64 workers. It can also
 **re-compress existing CHDs** (`Copy`), create **differential (delta) children** against
 a parent, and write **uncompressed CHDs** (`-c none`).
 
-> Implementation plan and validation history: [`References/EncoderPlan.md`](../References/EncoderPlan.md).
-> Format references: MAME 0.288 (`References/mame-mame0288`), chd-rs (`References/chd-rs-master`), CHDlite (`References/CHDlite-main`).
+> Format references: MAME 0.288, chd-rs, CHDlite.
 
 ---
 

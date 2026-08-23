@@ -191,9 +191,9 @@ See [docs/libchdr-comparison.md](docs/libchdr-comparison.md) for the full parity
 
 ## Library comparison: CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr
 
-CHDSharp vs the two other independent CHD implementations (compared against their checked-in sources in [`References/`](References)), MAME's reference `chdman` (0.288), and the C reference library [libchdr 0.3.0](References/libchdr-0.3.0). The CHDSharp column covers the whole repo (reader + `CHDSharpEncoder` + CLI). ✅ = supported, 🟡 = partial, ❌ = not supported, — = not applicable (CLI).
+CHDSharp vs the two other independent CHD implementations (chd-rs 0.3.4 and CHDlite 0.2.1), MAME's reference `chdman` (0.288), and the C reference library libchdr 0.3.0. The CHDSharp column covers the whole repo (reader + `CHDSharpEncoder` + CLI). ✅ = supported, 🟡 = partial, ❌ = not supported, — = not applicable (CLI).
 
-| Capability | CHDSharp (this repo) | [chd-rs](References/chd-rs-master) 0.3.4 (Rust) | [CHDlite](References/CHDlite-main) 0.2.1 (C++) | `chdman` (MAME 0.288) | [libchdr](References/libchdr-0.3.0) 0.3.0 (C) |
+| Capability | CHDSharp (this repo) | chd-rs 0.3.4 (Rust) | CHDlite 0.2.1 (C++) | `chdman` (MAME 0.288) | libchdr 0.3.0 (C) |
 |---|:---:|:---:|:---:|:---:|:---:|
 | **Reading** | | | | | |
 | Read V1–V5 | ✅ | ✅ | 🟡 V3–V5 only (rejects V1/V2) | ✅ | ✅ |
@@ -235,7 +235,7 @@ CHDSharp vs the two other independent CHD implementations (compared against thei
 | Native dependencies | **none** (pure C#) | none (pure-Rust crates) | zlib-ng / zstd / lzma / flac | zlib / lzma / flac | zlib (miniz) / LZMA SDK / zstd / dr_flac |
 | Language | C# (.NET 8/9/10) | Rust | C++ | C++ (MAME) | C |
 
-See [`docs/libchdr-comparison.md`](docs/libchdr-comparison.md) for the detailed parity analysis against libchdr, and [`References/ProposedFixes.md`](References/ProposedFixes.md) for the feature-by-feature roadmap that closed each gap vs chd-rs and CHDlite.
+See [`docs/libchdr-comparison.md`](docs/libchdr-comparison.md) for the detailed parity analysis against libchdr.
 
 ---
 

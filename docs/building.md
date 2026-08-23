@@ -28,7 +28,6 @@ CSharp_CHDSharp.sln
 ├── CHDSharpTester/       WPF interactive tester
 ├── CHDSharpEncoderTest/  xUnit encoder tests (350 tests)
 ├── CHDSharpBattleTest/   Battle test harness (chdman vs CHDSharp)
-├── References/           libchdr-0.3.0 (C) + mame-mame0288 sources + format notes
 └── Directory.Build.props Centralized versioning (1.3.0) and analyzer setup
 ```
 

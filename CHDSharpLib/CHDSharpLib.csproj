@@ -5,7 +5,6 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <IsPackable>true</IsPackable>
     <RootNamespace>CHDSharp</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>CHDSharp</PackageId>
@@ -36,10 +35,6 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.400" PrivateAssets="All" />
     <PackageReference Include="System.IO.Hashing" Version="10.0.11" />
     <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
-    <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CHDSharpTest" />

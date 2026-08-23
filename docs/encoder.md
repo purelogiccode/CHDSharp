@@ -15,7 +15,7 @@ valid and chdman-verifiable but not always bit-identical to chdman's own file (t
 zstd port finalizes frames differently on some buffer sizes); every other codec is bit-exact.
 
 Full API docs and project layout: [`CHDSharpEncoder/README.md`](../CHDSharpEncoder/README.md).
-Implementation plan and validation history: [`References/EncoderPlan.md`](../References/EncoderPlan.md).
+
 
 ---
 
@@ -133,4 +133,3 @@ laserdisc CHDs from AVI files (YUY2/VYUY/UYVY, interlaced or progressive, with V
 metadata); `extractld` decodes laserdisc CHDs back to playable AVI files. The only gaps
 are encoding-level byte-parity with chdman's `createld` output (ours is smaller due to
 more compact encoding) and `cdzs` bit-exactness (managed zstd trailing byte). Future ideas
-live in [`References/ProposedFixes.md`](../References/ProposedFixes.md).

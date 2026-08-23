@@ -18,7 +18,7 @@ This page describes the solution layout and the internal design of the library.
 | `CHDSharpTest` | xUnit | Unit + corpus tests (468 tests, 30 CHD fixtures). |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator driving vintage `chdman`/`hdcomp` binaries. |
 | `CHDSharpTester` | WPF | Interactive batch verification, cross-checked against `chdman`. |
-| `References/` | — | `libchdr-0.3.0` (C reference), `mame-mame0288` (MAME sources), format notes (`CHDInfo.md`, `EncoderPlan.md`). |
+
 
 All projects share versioning and analyzer settings via `Directory.Build.props`.
 

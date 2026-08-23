@@ -6,7 +6,6 @@
     <!-- LZMA encoding is implemented with Igor Pavlov's official LZMA SDK C# source
              (public domain), ported into LZMA/; it produces the raw headerless LZMA that
              CHD stores, matching MAME's chdman (validated by the chdman LZMA suites). -->
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CHDSharpEncoderTest" />
@@ -19,10 +18,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
-    <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
   <!-- 100% pure C#: all codecs are managed (vendored zlib port, ZstdSharp, LZMA SDK,
          from-scratch FLAC/Huffman). No native DLLs are shipped or loaded. -->

@@ -2,7 +2,7 @@ CHDSharpTester
 Copyright (c) 2026 Peterson Fernandes
 
 Original developer:
-- Peterson Fernandes (@drpetersonfernandes)
+- Peterson Fernandes (@purelogiccode)
 
 ATTRIBUTION REQUIREMENT:
 Any use of this software, whether in commercial or open source projects,

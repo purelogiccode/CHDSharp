@@ -4,7 +4,7 @@ Welcome to the **CHDSharp** documentation wiki.
 
 CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — the disk-image format used by [MAME](https://www.mamedev.org/) for arcade hard disks, CD/GD-ROMs, DVDs, and laserdisc A/V content. It supports every CHD format version (V1–V5), every compression codec ever shipped in a CHD (including Zstd and AVHuff), parent/child differential chains, parallel verification, metadata, TOC parsing, extraction, and CHD creation — with **zero native dependencies** and a **100% byte-for-byte match with MAME `chdman`**.
 
-> This project is a fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by Gordon Jefferyes, extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, lazy parent resolution, and a comprehensive test suite. The C reference implementation ([libchdr 0.3.0](https://github.com/rtissera/libchdr)) and the MAME 0.288 sources are kept in [`References/`](../References) as the authoritative format references.
+> This project is a fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by Gordon Jefferyes, extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, lazy parent resolution, and a comprehensive test suite. The C reference implementation ([libchdr 0.3.0](https://github.com/rtissera/libchdr)) and the MAME 0.288 sources are used as the authoritative format references.
 
 ---
 

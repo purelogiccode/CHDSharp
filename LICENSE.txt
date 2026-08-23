@@ -16,7 +16,7 @@ ATTRIBUTION REQUIREMENT:
 Any use of this software, whether in commercial or open source projects,
 must include the following attribution in a visible location (such as
 documentation, about dialog, or credits page):
-- Original developers: Peterson Fernandes (@drpetersonfernandes) and
+- Original developers: Peterson Fernandes (@purelogiccode) and
   Gordon Jefferyes (@gjefferyes)
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR

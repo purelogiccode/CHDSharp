@@ -4,7 +4,7 @@ layout: default
 
 # Comparison with libchdr
 
-This page compares CHDSharp against the C reference library [libchdr 0.3.0](https://github.com/rtissera/libchdr) (kept in [`References/libchdr-0.3.0`](../References/libchdr-0.3.0)), which CHDSharp uses as a parity baseline.
+This page compares CHDSharp against the C reference library [libchdr 0.3.0](https://github.com/rtissera/libchdr), which CHDSharp uses as a parity baseline.
 
 ---
 
@@ -16,9 +16,9 @@ This page compares CHDSharp against the C reference library [libchdr 0.3.0](http
 
 ## Five-way comparison: CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr
 
-CHDSharp vs the two other independent CHD implementations ([chd-rs 0.3.4](../References/chd-rs-master) and [CHDlite 0.2.1](../References/CHDlite-main), compared against their checked-in sources), MAME's reference `chdman` (0.288), and libchdr 0.3.0. The CHDSharp column covers the whole repo (reader + `CHDSharpEncoder` + CLI). ✅ = supported, 🟡 = partial, ❌ = not supported, — = not applicable (CLI).
+CHDSharp vs the two other independent CHD implementations (chd-rs 0.3.4 and CHDlite 0.2.1), MAME's reference `chdman` (0.288), and libchdr 0.3.0. The CHDSharp column covers the whole repo (reader + `CHDSharpEncoder` + CLI). ✅ = supported, 🟡 = partial, ❌ = not supported, — = not applicable (CLI).
 
-| Capability | CHDSharp (this repo) | [chd-rs](../References/chd-rs-master) 0.3.4 (Rust) | [CHDlite](../References/CHDlite-main) 0.2.1 (C++) | `chdman` (MAME 0.288) | [libchdr](../References/libchdr-0.3.0) 0.3.0 (C) |
+| Capability | CHDSharp (this repo) | chd-rs 0.3.4 (Rust) | CHDlite 0.2.1 (C++) | `chdman` (MAME 0.288) | libchdr 0.3.0 (C) |
 |---|:---:|:---:|:---:|:---:|:---:|
 | **Reading** | | | | | |
 | Read V1–V5 | ✅ | ✅ | 🟡 V3–V5 only (rejects V1/V2) | ✅ | ✅ |

@@ -6,7 +6,6 @@
     <RootNamespace>CHDSharpTester</RootNamespace>
     <ApplicationIcon>Icon\chd.ico</ApplicationIcon>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
@@ -18,10 +17,6 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="WPF-UI" Version="4.3.0" />
     <PackageReference Include="QuestPDF" Version="2026.7.3" />
-    <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Update="chdman.exe">
