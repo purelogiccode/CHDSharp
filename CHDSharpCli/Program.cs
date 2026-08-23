@@ -34,6 +34,7 @@ internal static class Program
         Chd.LoggerFactory = new SerilogLoggerFactory(serilogLogger);
 
         ApplicationStatsService.TrackLaunch("chdsharpcli");
+        VersionCheckService.CheckAndNotify();
 
         try
         {

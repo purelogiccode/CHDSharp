@@ -1,7 +1,7 @@
 ﻿namespace CHDSharp.Utils;
 
 /// <summary>A CCITT-style CRC-16 calculator used by the CHD format.</summary>
-internal static class Crc16
+public static class Crc16
 {
     private static readonly ushort[] STable =
     [
@@ -55,5 +55,29 @@ internal static class Crc16
         }
 
         return crc;
+    }
+
+    /// <summary>Computes the CRC-16 checksum of a byte span.</summary>
+    /// <param name="data">The data to checksum.</param>
+    /// <returns>The 16-bit CRC value.</returns>
+    public static ushort Compute(ReadOnlySpan<byte> data)
+    {
+        ushort crc = 0xFFFF;
+        for (var i = 0; i < data.Length; i++)
+        {
+            crc = (ushort)((crc << 8) ^ STable[(crc >> 8) ^ data[i]]);
+        }
+
+        return crc;
+    }
+
+    /// <summary>Computes the CRC-16 checksum of a byte array segment.</summary>
+    /// <param name="data">The source byte array.</param>
+    /// <param name="offset">The starting offset within the array.</param>
+    /// <param name="length">The number of bytes to include.</param>
+    /// <returns>The 16-bit CRC value.</returns>
+    public static ushort Compute(byte[] data, int offset, int length)
+    {
+        return Compute(data.AsSpan(offset, length));
     }
 }

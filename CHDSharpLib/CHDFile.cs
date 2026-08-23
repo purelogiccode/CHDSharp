@@ -25,13 +25,13 @@ public delegate ChdFile? ParentResolver(byte[]? parentSha1, byte[]? parentMd5);
 /// <remarks>
 /// <para>
 /// Open a standalone CHD with <see cref="Open(string, out ChdFile, System.Threading.CancellationToken)"/>. For a
-    /// child (differential) CHD, supply its parent with
-    /// <see cref="Open(string, string, out ChdFile, System.Threading.CancellationToken)"/> or
-    /// <see cref="Open(string, ChdFile, out ChdFile, System.Threading.CancellationToken)"/>. Then decompress individual
-    /// hunks with <see cref="ReadHunk(uint, byte[], CancellationToken)"/>, read arbitrary byte ranges with
-    /// <see cref="Read(ulong, byte[], int, int, CancellationToken)"/>, or iterate the whole image with <see cref="EnumerateHunks"/>.
-    /// Async variants of every operation are available (<see cref="OpenAsync(string, System.Threading.CancellationToken)"/>,
-    /// <see cref="ReadHunkAsync"/>, <see cref="ReadAsync"/>).
+/// child (differential) CHD, supply its parent with
+/// <see cref="Open(string, string, out ChdFile, System.Threading.CancellationToken)"/> or
+/// <see cref="Open(string, ChdFile, out ChdFile, System.Threading.CancellationToken)"/>. Then decompress individual
+/// hunks with <see cref="ReadHunk(uint, byte[], CancellationToken)"/>, read arbitrary byte ranges with
+/// <see cref="Read(ulong, byte[], int, int, CancellationToken)"/>, or iterate the whole image with <see cref="EnumerateHunks"/>.
+/// Async variants of every operation are available (<see cref="OpenAsync(string, System.Threading.CancellationToken)"/>,
+/// <see cref="ReadHunkAsync"/>, <see cref="ReadAsync"/>).
 /// </para>
 /// <para>
 /// Always dispose the instance (<c>using</c> / <c>await using</c>); this closes the

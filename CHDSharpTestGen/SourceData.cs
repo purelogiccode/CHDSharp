@@ -80,7 +80,7 @@ internal static class SourceData
                 case 0: FillText(sec, rng); break;
                 case 1: FillStructured(sec, rng, s); break;
                 case 2: rng.Fill(sec); break;
-                // case 3: zeros
+                    // case 3: zeros
             }
         }
 

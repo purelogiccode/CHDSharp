@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
+using CHDSharp.Utils;
 
 namespace CHDSharpEncoder;
 

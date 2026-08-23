@@ -319,12 +319,12 @@ internal static partial class Deflater
 
                     return ZOk;
                     /* If flush != Z_NO_FLUSH && avail_out == 0, the next call
-                 * of deflate should use the same flush parameter to make sure
-                 * that the flush is complete. So we don't have to output an
-                 * empty block here, this will be done at next call. This also
-                 * ensures that for a very small output buffer, we emit at most
-                 * one empty block.
-                 */
+                     * of deflate should use the same flush parameter to make sure
+                     * that the flush is complete. So we don't have to output an
+                     * empty block here, this will be done at next call. This also
+                     * ensures that for a very small output buffer, we emit at most
+                     * one empty block.
+                     */
                 }
                 case BlockState.BlockDone:
                 {
@@ -348,8 +348,8 @@ internal static partial class Deflater
                     {
                         Tree.StoredBlock(s, ref netUnsafe.NullRef<byte>(), 0, 0, ref pendingBuf);
                         /* For a full flush, this empty block will be recognized
-                     * as a special marker by InflateSync().
-                     */
+                         * as a special marker by InflateSync().
+                         */
                         if (flush == ZFullFlush)
                         {
                             ClearHash(ref strm);

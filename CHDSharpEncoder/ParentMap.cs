@@ -1,5 +1,6 @@
 using CHDSharp;
 using CHDSharp.Models;
+using CHDSharp.Utils;
 
 namespace CHDSharpEncoder;
 

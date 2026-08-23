@@ -1,4 +1,4 @@
-using CHDSharpEncoder;
+using CHDSharp.Utils;
 
 namespace CHDSharpEncoderTest;
 

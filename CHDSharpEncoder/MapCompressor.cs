@@ -1,3 +1,5 @@
+using CHDSharp.Utils;
+
 namespace CHDSharpEncoder;
 
 /// <summary>Compresses a CHD v5 hunk map using RLE and Huffman encoding.</summary>

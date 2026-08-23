@@ -15,7 +15,7 @@ namespace CHDSharp;
 /// </summary>
 /// <remarks>
 /// Use <see cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/> for full (parallel) verification of a standalone CHD,
-    /// <see cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/> for child (differential) CHDs,
+/// <see cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/> for child (differential) CHDs,
 /// <see cref="IsChdFile(string)"/> / <see cref="CheckHeader"/> for fast header-only checks, and
 /// <see cref="ReadHeader(string,out CHDSharp.Models.ChdHeaderInfo?)"/> for the full parsed header without
 /// opening the file for reads.

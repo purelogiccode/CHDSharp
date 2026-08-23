@@ -37,6 +37,19 @@ public partial class App
             ApplicationStatsService.TrackLaunch("chdsharptester");
 
             Log.Information("CHDSharpTester started");
+
+            _ = Task.Run(async () =>
+            {
+                var message = await VersionCheckService.CheckAsync().ConfigureAwait(false);
+                if (message != null)
+                {
+                    Log.Information("Version check: {Message}", message);
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        MessageBox.Show(message, "Update Available", MessageBoxButton.OK, MessageBoxImage.Information);
+                    });
+                }
+            });
         }
         catch (Exception ex)
         {

@@ -93,11 +93,11 @@ internal class HuffmanDecoder
     /// Imports a Huffman tree from an RLE-encoded bitstream.
     /// </summary>
     /// <returns>
-        /// <c>HufferrNone</c> on success;
-        /// <c>HufferrInvalidData</c> if the data is malformed;
-        /// <c>HufferrInputBufferTooSmall</c> on overflow.
-        /// </returns>
-        public HuffmanError ImportTreeRle()
+    /// <c>HufferrNone</c> on success;
+    /// <c>HufferrInvalidData</c> if the data is malformed;
+    /// <c>HufferrInputBufferTooSmall</c> on overflow.
+    /// </returns>
+    public HuffmanError ImportTreeRle()
     {
         int curnode;
 
@@ -162,11 +162,11 @@ internal class HuffmanDecoder
     /// Imports a Huffman tree that is itself Huffman-encoded from the bitstream.
     /// </summary>
     /// <returns>
-        /// <c>HufferrNone</c> on success;
-        /// <c>HufferrInvalidData</c> if the data is malformed;
-        /// <c>HufferrInputBufferTooSmall</c> on overflow.
-        /// </returns>
-        public HuffmanError ImportTreeHuffman()
+    /// <c>HufferrNone</c> on success;
+    /// <c>HufferrInvalidData</c> if the data is malformed;
+    /// <c>HufferrInputBufferTooSmall</c> on overflow.
+    /// </returns>
+    public HuffmanError ImportTreeHuffman()
     {
         var last = 0;
         var count = 0;
