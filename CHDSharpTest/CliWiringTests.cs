@@ -135,10 +135,10 @@ public sealed class CliWiringTests : IDisposable
         var path = GetTestChd("v5_zlib.chd");
         var (exitCode, output) = RunCli("info", "--input", path);
         Assert.Equal(0, exitCode);
-        Assert.Contains("CHD information for", output, StringComparison.Ordinal);
-        Assert.Contains("Version:", output, StringComparison.Ordinal);
+        Assert.Contains("Input file:", output, StringComparison.Ordinal);
+        Assert.Contains("File Version:", output, StringComparison.Ordinal);
         Assert.Contains("Logical size:", output, StringComparison.Ordinal);
-        Assert.Contains("Hunk size:", output, StringComparison.Ordinal);
+        Assert.Contains("Hunk Size:", output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -147,7 +147,8 @@ public sealed class CliWiringTests : IDisposable
         var path = GetTestChd("v5_zlib.chd");
         var (exitCode, output) = RunCli("--info", path);
         Assert.Equal(0, exitCode);
-        Assert.Contains("CHD information for", output, StringComparison.Ordinal);
+        Assert.Contains("Input file:", output, StringComparison.Ordinal);
+        Assert.Contains("File Version:", output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -156,7 +157,8 @@ public sealed class CliWiringTests : IDisposable
         var path = GetTestChd("v5_zlib.chd");
         var (exitCode, output) = RunCli("info", "-i", path);
         Assert.Equal(0, exitCode);
-        Assert.Contains("CHD information for", output, StringComparison.Ordinal);
+        Assert.Contains("Input file:", output, StringComparison.Ordinal);
+        Assert.Contains("File Version:", output, StringComparison.Ordinal);
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -624,7 +626,8 @@ public sealed class CliWiringTests : IDisposable
     public void Verify_missing_file_reports_error()
     {
         var (exitCode, output) = RunCli("verify", "--input", @"Z:\no\such\file.chd");
-        Assert.Equal(0, exitCode);
+        // chdman exits 1 when the input CHD cannot be opened
+        Assert.Equal(1, exitCode);
         Assert.Contains("FAILED", output, StringComparison.OrdinalIgnoreCase);
     }
 
