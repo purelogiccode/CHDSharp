@@ -321,7 +321,7 @@ internal class LzmaStream : Stream
             sizeToGo -= read;
         }
 
-        return offset;
+        return _position;
     }
 
     /// <summary>

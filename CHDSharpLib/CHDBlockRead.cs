@@ -41,6 +41,9 @@ internal static class ChdBlockRead
                 return;
             }
 
+            if (me.Offset >= (ulong)chd.Map.Length)
+                return;
+
             var self = chd.Map[me.Offset];
             me.SelfMapEntry = self;
             switch (self.Comptype)

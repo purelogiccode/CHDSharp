@@ -1,4 +1,3 @@
-using CHDSharp.Encoder.Models;
 using CHDSharp.Utils;
 
 namespace CHDSharp.Encoder;
@@ -7,7 +6,7 @@ namespace CHDSharp.Encoder;
 /// Builds the parent-hunk hash map used to create differential (delta) CHDs. The parent CHD
 /// is decompressed once, and every unit-aligned window of its data (one hunk's worth of bytes
 /// starting at each unit boundary) is hashed; during encoding, a child hunk whose full-hunk
-/// (CRC-16, SHA-1) matches a window is emitted as a <see cref="MapEntry.CompressionParent"/>
+/// (CRC-16, SHA-1) matches a window is emitted as a <c>CompressionParent</c>
 /// reference to that parent unit — mirroring MAME's <c>chd_file_compressor</c> parent walk
 /// (<c>chd.cpp</c>: hashes every parent unit window, then matches child hunks against it).
 /// </summary>

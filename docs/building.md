@@ -21,7 +21,7 @@ How to build, test, pack, and publish every component of the repository.
 ```
 CSharp_CHDSharp.sln
 ├── CHDSharpLib/          The library (NuGet package: CHDSharp)
-├── CHDSharpCli/          Command-line verification + CHD creation tool
+├── CHDSharpCli/          Command-line CHD manager (binary: CHDSharp)
 ├── CHDSharpLib/Encoder/  Encoder subsystem (V5 CHD creation; see [Encoder](encoder.md))
 ├── CHDSharpTest/         xUnit unit + corpus tests
 ├── CHDSharpTestGen/      Deterministic corpus generator
@@ -130,7 +130,7 @@ dotnet publish CHDSharpCli/CHDSharpCli.csproj -c Release -r win-x64 --self-conta
 dotnet publish CHDSharpCli/CHDSharpCli.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-The repository ships ready-made zip bundles under `CHDSharpLib/bin/Release/` (e.g. `CHDSharpCli_win-x64_v1.2.0.zip`).
+The repository ships ready-made zip bundles under `CHDSharpLib/bin/Release/` (e.g. `CHDSharp_win-x64_v1.3.0.zip`). The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows).
 
 ---
 

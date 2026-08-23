@@ -16,7 +16,14 @@ internal sealed class BugReportSink : ILogEventSink
     private static readonly HttpClient Client = new();
 
     private const string Endpoint = "https://www.purelogiccode.com/bugreport/api/send-bug-report";
-    private const string ApiKey = "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
+    private static readonly string ApiKey = DecodeApiKey();
+
+    private static string DecodeApiKey()
+    {
+        // Double-encoded to avoid plain-text in source
+        const string encoded = "aGpoN3l1NnQ1NnR5cjU0MG85dTg3Njc2NzZyNTY3NDUzNDQ1MzIzNTI2NGM3NWI2dDdnZ2doZ2c3NnRyZjU2NGU=";
+        return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+    }
 
     private readonly EnvironmentSnapshot _env;
     private readonly string _environmentLabel;
@@ -38,7 +45,7 @@ internal sealed class BugReportSink : ILogEventSink
     public void Emit(LogEvent logEvent)
     {
         if (logEvent == null) return;
-        if (logEvent.Level < LogEventLevel.Warning) return;
+        if (logEvent.Level < LogEventLevel.Error) return;
         if (logEvent.Exception is OperationCanceledException or TaskCanceledException) return;
 
         var message = BuildMessage(logEvent);
@@ -59,8 +66,8 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine($"Bitness: {_env.Bitness}");
         sb.AppendLine($"Windows Version: {_env.WindowsVersion}");
         sb.AppendLine($"Processor Count: {_env.ProcessorCount}");
-        sb.AppendLine($"Base Directory: {_env.BaseDirectory}");
-        sb.AppendLine($"Temp Path: {_env.TempPath}");
+        sb.AppendLine("Base Directory: [redacted]");
+        sb.AppendLine("Temp Path: [redacted]");
 
         sb.AppendLine();
         sb.AppendLine("=== Error Details ===");

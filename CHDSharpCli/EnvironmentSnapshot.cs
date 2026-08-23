@@ -11,7 +11,7 @@ namespace CHDSharp;
 internal sealed class EnvironmentSnapshot
 {
     /// <summary>Local timestamp when the snapshot was created.</summary>
-    public string Date => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    public string Date { get; }
 
     /// <summary>The friendly application name (e.g. <c>CHDSharpCli</c>).</summary>
     public string ApplicationName { get; }
@@ -25,8 +25,8 @@ internal sealed class EnvironmentSnapshot
     /// <summary>The processor architecture of the operating system (e.g. <c>X64</c>).</summary>
     public string Architecture => RuntimeInformation.OSArchitecture.ToString();
 
-    /// <summary>Whether the OS process is 64-bit or 32-bit.</summary>
-    public string Bitness => Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
+    /// <summary>Whether the process is 64-bit or 32-bit.</summary>
+    public string Bitness { get; }
 
     /// <summary>A human-readable Windows version description.</summary>
     public string WindowsVersion { get; }
@@ -47,6 +47,8 @@ internal sealed class EnvironmentSnapshot
         ApplicationName = applicationName;
         ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
         WindowsVersion = GetWindowsVersion();
+        Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        Bitness = Environment.Is64BitProcess ? "64-bit" : "32-bit";
     }
 
     [SuppressMessage("ReSharper", "CA1031", Justification = "Best-effort environment detection; fall back to OS version.")]

@@ -59,14 +59,14 @@ dotnet add package CHDSharp --version 1.3.0
 
 ## CLI Binaries
 
-Pre-built self-contained single-file executables:
+Pre-built self-contained single-file executables (binary renamed from `CHDSharpCli` to `CHDSharp`):
 
 | Binary | Platform | Architecture |
 |--------|----------|-------------|
-| `CHDSharpCli_win-x64_v1.3.0.zip` | Windows | x64 |
-| `CHDSharpCli_win-arm64_v1.3.0.zip` | Windows | ARM64 |
-| `CHDSharpCli_linux-x64_v1.3.0.zip` | Linux | x64 |
-| `CHDSharpCli_linux-arm64_v1.3.0.zip` | Linux | ARM64 |
+| `CHDSharp_win-x64_v1.3.0.zip` | Windows | x64 |
+| `CHDSharp_win-arm64_v1.3.0.zip` | Windows | ARM64 |
+| `CHDSharp_linux-x64_v1.3.0.zip` | Linux | x64 |
+| `CHDSharp_linux-arm64_v1.3.0.zip` | Linux | ARM64 |
 | `CHDSharpTester_win-x64_v1.3.0.zip` | Windows | x64 |
 | `CHDSharpTester_win-arm64_v1.3.0.zip` | Windows | ARM64 |
 

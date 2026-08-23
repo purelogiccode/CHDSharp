@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using CHDSharp.Utils;
 using Microsoft.Extensions.Logging;
@@ -307,8 +308,16 @@ public static partial class Chd
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (!CheckHeader(s, out _, out var version))
-            return ChdError.Chderrinvalidfile;
+        uint version;
+        try
+        {
+            if (!CheckHeader(s, out _, out version))
+                return ChdError.Chderrinvalidfile;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return ChdError.Chderrreaderror;
+        }
 
         LogChdVersion(Log, version, null);
         ChdError valid;
@@ -991,6 +1000,10 @@ public static partial class Chd
     private static ChdError DecompressDataParallel(Stream file, ChdHeader chd, out byte[]? computedRawSha1, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default, bool verifyHashes = true)
     {
         computedRawSha1 = null;
+
+        if (chd.Totalblocks == 0)
+            return ChdError.Chderrinvaliddata;
+
         var taskCount = TaskCount; // snapshot so a concurrent change cannot desync sentinels vs workers
         var md5Check = MD5.Create();
         var sha1Check = SHA1.Create();
@@ -1001,7 +1014,9 @@ public static partial class Chd
         var sw = progress != null ? Stopwatch.StartNew() : null;
         try
         {
-            var errMaster = ChdError.Chderrnone;
+            // Boxed error code shared across producer/workers/hasher threads.
+            // Using Interlocked on the field inside the box is safe; the box itself is never replaced.
+            var errMaster = new StrongBox<long>((long)ChdError.Chderrnone);
 
             var ct = ts.Token;
 
@@ -1046,10 +1061,7 @@ public static partial class Chd
                             {
                                 Log.LogWarning("Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}", block, mapEntry.Length, chd.MaxCompressedBlockCap);
                                 ts.Cancel();
-                                if (errMaster == ChdError.Chderrnone)
-                                {
-                                    errMaster = ChdError.Chderrinvaliddata;
-                                }
+                                Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvaliddata, (long)ChdError.Chderrnone);
 
                                 break;
                             }
@@ -1073,11 +1085,7 @@ public static partial class Chd
                 }
                 catch (Exception)
                 {
-                    if (errMaster == ChdError.Chderrnone)
-                    {
-                        errMaster = ChdError.Chderrinvalidfile;
-                    }
-
+                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvalidfile, (long)ChdError.Chderrnone);
                     ts.Cancel();
                 }
             }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -1106,7 +1114,7 @@ public static partial class Chd
                                 arrPoolOut.Return(outBuf);
                                 mapEntry.BuffOut = null;
                                 ts.Cancel();
-                                errMaster = err;
+                                Interlocked.CompareExchange(ref errMaster.Value, (long)err, (long)ChdError.Chderrnone);
                                 return;
                             }
 
@@ -1124,11 +1132,7 @@ public static partial class Chd
                     }
                     catch (Exception)
                     {
-                        if (errMaster == ChdError.Chderrnone)
-                        {
-                            errMaster = ChdError.Chderrdecompressionerror;
-                        }
-
+                        Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror, (long)ChdError.Chderrnone);
                         ts.Cancel();
                     }
                 }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -1184,11 +1188,7 @@ public static partial class Chd
                 }
                 catch (Exception)
                 {
-                    if (errMaster == ChdError.Chderrnone)
-                    {
-                        errMaster = ChdError.Chderrdecompressionerror;
-                    }
-
+                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror, (long)ChdError.Chderrnone);
                     ts.Cancel();
                 }
             }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -1206,8 +1206,8 @@ public static partial class Chd
             arrPoolCache.ReadStats(out issuedArraysTotal, out returnedArraysTotal);
             LogArrayStats(Log, "Cache", issuedArraysTotal, returnedArraysTotal, chd.Blocksize, null);
 
-            if (errMaster != ChdError.Chderrnone)
-                return errMaster;
+            if (Interlocked.Read(ref errMaster.Value) != (long)ChdError.Chderrnone)
+                return (ChdError)Interlocked.Read(ref errMaster.Value);
 
             // External cancellation: the pipeline drained early (workers threw/caught OCE), so the
             // partial hashes below would otherwise report a bogus decompression error. Throw instead.

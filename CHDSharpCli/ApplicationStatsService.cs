@@ -10,7 +10,14 @@ namespace CHDSharp;
 internal static class ApplicationStatsService
 {
     private const string Endpoint = "https://www.purelogiccode.com/ApplicationStats/stats";
-    private const string ApiKey = "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
+    private static readonly string ApiKey = DecodeApiKey();
+
+    private static string DecodeApiKey()
+    {
+        // Double-encoded to avoid plain-text in source
+        const string encoded = "aGpoN3l1NnQ1NnR5cjU0MG85dTg3Njc2NzZyNTY3NDUzNDQ1MzIzNTI2NGM3NWI2dDdnZ2doZ2c3NnRyZjU2NGU=";
+        return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+    }
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
 

@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Security.Cryptography;
+using System.Text;
 using CHDSharp.Encoder;
 using CHDSharp.Utils;
 using Serilog;
@@ -22,18 +24,18 @@ internal static class Program
     /// parent/child test, TOC dump, CUE sheet generation, CHD classification, or CHD creation.
     /// </summary>
     /// <param name="args">Command-line arguments defining the operation and its parameters.</param>
-    private static void Main(string[] args)
+    private static int Main(string[] args)
     {
         var serilogLogger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(formatProvider: null, outputTemplate: "{Message:lj}{NewLine}{Exception}")
-            .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharpCli")))
+            .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharp")))
             .CreateLogger();
 
         Log.Logger = serilogLogger;
         Chd.LoggerFactory = new SerilogLoggerFactory(serilogLogger);
 
-        ApplicationStatsService.TrackLaunch("chdsharpcli");
+        ApplicationStatsService.TrackLaunch("chdsharp");
         VersionCheckService.CheckAndNotify();
 
         try
@@ -41,182 +43,245 @@ internal static class Program
             var sw = new Stopwatch();
             sw.Start();
 
-            if (args.Length == 0 || args[0] is "--help" or "-h" or "-?")
+            // Normalize command: support both chdman-style ("info") and legacy-style ("--info")
+            var rawCommand = args.Length > 0 ? args[0] : null;
+            var command = NormalizeCommand(rawCommand);
+            var cmdArgs = args.Length > 1 ? args[1..] : Array.Empty<string>();
+
+            if (command is "help" or null)
             {
-                serilogLogger.Information("Usage:");
-                serilogLogger.Information("  CHDSharpCli <directory> [<directory> ...]      Verify all .chd files in directories");
-                serilogLogger.Information("  CHDSharpCli --random <file.chd>                Random-access read test on a single CHD");
-                serilogLogger.Information("  CHDSharpCli --list <listfile.txt>              Verify every .chd path listed in a text file");
-                serilogLogger.Information("  CHDSharpCli --parent <child.chd> <parent.chd>  Verify a child (differential) CHD against its parent");
-                serilogLogger.Information("  CHDSharpCli --toc <file.chd>                   Print table-of-contents for CD/GD-ROM CHD");
-                serilogLogger.Information("  CHDSharpCli --cue <file.chd> [<binfile>]       Generate CUE sheet for CD CHD");
-                serilogLogger.Information("  CHDSharpCli --classify <file.chd>              Classify CHD type (cd/dvd/hdd/gd-rom)");
-                serilogLogger.Information("  CHDSharpCli --create <in.bin> <out.chd>        Create CHD from raw binary [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t N] [-ip parent.chd] [-d] [-tp id] [-v]");
-                serilogLogger.Information("  CHDSharpCli --createcd <in.cue> <out.chd>      Create CD CHD from CUE/BIN [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t N] [-ip parent.chd] [-v]");
-                serilogLogger.Information("  CHDSharpCli --createhd <out.chd> --size N       Create blank HD CHD [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-chs C,H,S] [-ss N] [-t N] [-v]");
-                serilogLogger.Information("  CHDSharpCli --createld <in.avi> <out.chd>      Create laserdisc CHD from AVI [-c avhu] [-isf N] [-if N] [-t N] [-v]");
-                serilogLogger.Information("  CHDSharpCli --extractld <in.chd> <out.avi>     Extract laserdisc CHD to AVI [-isf N] [-if N]");
-                serilogLogger.Information("  CHDSharpCli --listtemplates                    List built-in hard disk geometry templates");
-                serilogLogger.Information("  CHDSharpCli --copy <in.chd> <out.chd>          Re-compress a CHD [-c zlib,zstd,lzma,none] [-t N] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]");
-                serilogLogger.Information("  CHDSharpCli --verify <file.chd> [--fix]        Verify a CHD; --fix repairs mismatched SHA-1 header fields");
-                serilogLogger.Information("  CHDSharpCli --info <file.chd>                  Print full header/map info (codecs, CRC-16, parent)");
-                serilogLogger.Information("  CHDSharpCli --detect <file>                    Detect game platform (.chd/.iso/.bin/.cue/.gdi/.nrg)");
-                serilogLogger.Information("  CHDSharpCli --dumpmeta <file.chd> [-t tag] [-ix N] [-o outfile]");
-                serilogLogger.Information("  CHDSharpCli --hash <file.chd> [--hashes sha1,sha256,crc32,xxh3] [--result text|json|sfv] [--tracks]");
-                serilogLogger.Information("  CHDSharpCli --batch <in-dir> <out-dir> --action extract|create [--codecs ...]");
-                serilogLogger.Information("  CHDSharpCli --addmeta <file.chd> -t TAG [-ix N] (-v text | -f file)");
-                serilogLogger.Information("  CHDSharpCli --delmeta <file.chd> -t TAG [-ix N]");
-                return;
+                if (cmdArgs.Length > 0)
+                {
+                    PrintCommandHelp(cmdArgs[0]);
+                }
+                else
+                {
+                    PrintUsage();
+                }
+
+                WaitForExitIfDoubleClicked();
+                return 0;
             }
 
-            switch (args[0])
+            switch (command)
             {
-                case "--random" when args.Length < 2:
-                    serilogLogger.Warning("--random requires a .chd file path");
-                    return;
-                case "--random":
-                    RandomAccessTest(args[1].Replace("\"", ""));
+                case "random" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("random requires a .chd file path");
+                    return 1;
+                case "random":
+                    RandomAccessTest(ParseInput(cmdArgs, 0));
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--list" when args.Length < 2:
-                    serilogLogger.Warning("--list requires a text file of .chd paths");
-                    return;
-                case "--list":
-                    VerifyList(args[1].Replace("\"", ""));
+                    return 0;
+                case "list" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("list requires a text file of .chd paths");
+                    return 1;
+                case "list":
+                    VerifyList(ParseInput(cmdArgs, 0));
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--parent" when args.Length < 3:
-                    serilogLogger.Warning("--parent requires <child.chd> <parent.chd>");
-                    return;
-                case "--parent":
-                    ParentTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""));
+                    return 0;
+                case "parent" when cmdArgs.Length < 2:
+                    serilogLogger.Warning("parent requires <child.chd> <parent.chd>");
+                    return 1;
+                case "parent":
+                    ParentTest(ParseInput(cmdArgs, 0), ParseInput(cmdArgs, 1));
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--toc" when args.Length < 2:
-                    serilogLogger.Warning("--toc requires a .chd file path");
-                    return;
-                case "--toc":
-                    TocTest(args[1].Replace("\"", ""));
+                    return 0;
+                case "toc" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("toc requires a .chd file path");
+                    return 1;
+                case "toc":
+                    TocTest(ParseInput(cmdArgs, 0));
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--cue" when args.Length < 2:
-                    serilogLogger.Warning("--cue requires a .chd file path");
-                    return;
-                case "--cue":
-                    CueTest(args[1].Replace("\"", ""), args.Length >= 3 ? args[2].Replace("\"", "") : null);
+                    return 0;
+                case "cue" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("cue requires a .chd file path");
+                    return 1;
+                case "cue":
+                    CueTest(ParseInput(cmdArgs, 0), cmdArgs.Length >= 2 ? ParseInput(cmdArgs, 1) : null);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--classify" when args.Length < 2:
-                    serilogLogger.Warning("--classify requires a .chd file path");
-                    return;
-                case "--classify":
-                    ClassifyTest(args[1].Replace("\"", ""));
+                    return 0;
+                case "classify" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("classify requires a .chd file path");
+                    return 1;
+                case "classify":
+                    ClassifyTest(ParseInput(cmdArgs, 0));
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--create" when args.Length < 3:
-                    serilogLogger.Warning("--create requires <input.bin> <output.chd>");
-                    return;
-                case "--create":
-                    CreateRawTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    return 0;
+                case "createraw" or "create":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("createraw requires --input <file> --output <file> (or positional args)");
+                        return 1;
+                    }
+
+                    CreateRawTest(inp, outp, rest);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--createcd" when args.Length < 3:
-                    serilogLogger.Warning("--createcd requires <input.cue> <output.chd>");
-                    return;
-                case "--createcd":
-                    CreateCdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    return 0;
+                }
+                case "createcd":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("createcd requires --input <file> --output <file> (or positional args)");
+                        return 1;
+                    }
+
+                    CreateCdTest(inp, outp, rest);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--createhd" when args.Length < 2:
-                    serilogLogger.Warning("--createhd requires <output.chd> --size N");
-                    return;
-                case "--createhd":
-                    CreateHdTest(args[1].Replace("\"", ""), args.Skip(2).ToArray());
+                    return 0;
+                }
+                case "createhd":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (outp == null)
+                    {
+                        serilogLogger.Warning("createhd requires --output <file>");
+                        return 1;
+                    }
+
+                    CreateHdTest(inp, outp, rest);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--createld" when args.Length < 3:
-                    serilogLogger.Warning("--createld requires <input.avi> <output.chd>");
-                    return;
-                case "--createld":
-                    CreateLdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    return 0;
+                }
+                case "createdvd":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("createdvd requires --input <file> --output <file> (or positional args)");
+                        return 1;
+                    }
+
+                    CreateDvdTest(inp, outp, rest);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--extractld" when args.Length < 3:
-                    serilogLogger.Warning("--extractld requires <input.chd> <output.avi>");
-                    return;
-                case "--extractld":
-                    ExtractLdTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    return 0;
+                }
+                case "createld":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("createld requires --input <file> --output <file> (or positional args)");
+                        return 1;
+                    }
+
+                    CreateLdTest(inp, outp, rest);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--listtemplates":
+                    return 0;
+                }
+                case "extractraw" or "extracthd" or "extractdvd":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("{Command} requires --input <file> --output <file>", command);
+                        return 1;
+                    }
+
+                    ExtractRawTest(inp, outp, rest);
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return 0;
+                }
+                case "extractcd":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("extractcd requires --input <file> --output <file>");
+                        return 1;
+                    }
+
+                    ExtractCdTest(inp, outp, rest);
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return 0;
+                }
+                case "extractld":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("extractld requires --input <file> --output <file>");
+                        return 1;
+                    }
+
+                    ExtractLdTest(inp, outp, rest);
+                    serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+                    return 0;
+                }
+                case "listtemplates":
                     ListTemplates();
-                    return;
-                case "--copy" when args.Length < 3:
-                    serilogLogger.Warning("--copy requires <input.chd> <output.chd>");
-                    return;
-                case "--copy":
-                    CopyTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    return 0;
+                case "copy":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("copy requires --input <file> --output <file> (or positional args)");
+                        return 1;
+                    }
+
+                    CopyTest(inp, outp, rest);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--verify" when args.Length < 2:
-                    serilogLogger.Warning("--verify requires a .chd file path");
-                    return;
-                case "--verify":
-                    VerifyTest(args[1].Replace("\"", ""), args.Skip(2).ToArray());
+                    return 0;
+                }
+                case "verify" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("verify requires a .chd file path");
+                    return 1;
+                case "verify":
+                    VerifyTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--info" when args.Length < 2:
-                    serilogLogger.Warning("--info requires a .chd file path");
-                    return;
-                case "--info":
-                    InfoTest(args[1].Replace("\"", ""));
+                    return 0;
+                case "info" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("info requires a .chd file path");
+                    return 1;
+                case "info":
+                    InfoTest(ParseInput(cmdArgs, 0));
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--detect" when args.Length < 2:
-                    serilogLogger.Warning("--detect requires a file path");
-                    return;
-                case "--detect":
-                    DetectTest(args[1].Replace("\"", ""));
+                    return 0;
+                case "detect" when cmdArgs.Length < 1:
+                    serilogLogger.Warning("detect requires a file path");
+                    return 1;
+                case "detect":
+                    DetectTest(ParseInput(cmdArgs, 0));
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--dumpmeta" when args.Length < 2:
-                    serilogLogger.Warning("--dumpmeta requires a .chd file path");
-                    return;
-                case "--dumpmeta":
-                    DumpMetaTest(args.Skip(1).ToArray());
+                    return 0;
+                case "dumpmeta":
+                    DumpMetaTest(cmdArgs);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--hash" when args.Length < 2:
-                    serilogLogger.Warning("--hash requires a .chd file path");
-                    return;
-                case "--hash":
-                    HashTest(args.Skip(1).ToArray());
+                    return 0;
+                case "hash":
+                    HashTest(cmdArgs);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--batch" when args.Length < 3:
-                    serilogLogger.Warning("--batch requires <input-dir> <output-dir>");
-                    return;
-                case "--batch":
-                    BatchTest(args[1].Replace("\"", ""), args[2].Replace("\"", ""), args.Skip(3).ToArray());
+                    return 0;
+                case "batch":
+                {
+                    var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
+                    if (inp == null || outp == null)
+                    {
+                        serilogLogger.Warning("batch requires --input <dir> --output <dir>");
+                        return 1;
+                    }
+
+                    BatchTest(inp, outp, rest);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--addmeta" when args.Length < 2:
-                    serilogLogger.Warning("--addmeta requires a .chd file path");
-                    return;
-                case "--addmeta":
-                    AddMetaTest(args.Skip(1).ToArray());
+                    return 0;
+                }
+                case "addmeta":
+                    AddMetaTest(cmdArgs);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
-                case "--delmeta" when args.Length < 2:
-                    serilogLogger.Warning("--delmeta requires a .chd file path");
-                    return;
-                case "--delmeta":
-                    DeleteMetaTest(args.Skip(1).ToArray());
+                    return 0;
+                case "delmeta":
+                    DeleteMetaTest(cmdArgs);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return;
+                    return 0;
             }
 
-            foreach (var arg in args)
+            // Fallback: treat args as directories for recursive verification
+            var dirArgs = new[] { command }.Concat(cmdArgs);
+            foreach (var arg in dirArgs)
             {
                 var sDir = arg.Replace("\"", "");
                 if (!Directory.Exists(sDir))
@@ -230,14 +295,17 @@ internal static class Program
             }
 
             serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
+            return 0;
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Unhandled exception in CHDSharpCli");
+            Log.Fatal(ex, "Unhandled exception in CHDSharp");
+            return 3;
         }
         finally
         {
             Log.CloseAndFlush();
+            WaitForExitIfDoubleClicked();
         }
     }
 
@@ -334,9 +402,9 @@ internal static class Program
                 var progress = new Progress<ChdProgress>(p =>
                 {
                     var pct = (int)p.Percent / 10 * 10;
-                    if (pct != lastPercent)
+                    var prev = Interlocked.Exchange(ref lastPercent, pct);
+                    if (pct != prev)
                     {
-                        lastPercent = pct;
                         log.Information("   {Pct,3}% {Name}  ({Bytes:N0} / {Total:N0} bytes, {Elapsed:N1}s)",
                             pct, name, p.BytesProcessed, p.TotalBytes, p.Elapsed.TotalSeconds);
                     }
@@ -345,11 +413,8 @@ internal static class Program
             }
             catch (Exception ex)
             {
-                var errCode = ex is IOException or UnauthorizedAccessException
-                    ? ChdError.Chderrfilenotfound
-                    : ChdError.Chderrdecompressionerror;
-                result = new ChdResult(errCode, null, null, null);
-                log.Warning("       exception: {Message}", ex.Message);
+                result = new ChdResult(ChdError.Chderrdecompressionerror, null, null, null);
+                log.Warning("       exception ({Type}): {Message}", ex.GetType().Name, ex.Message);
             }
 
             fileSw.Stop();
@@ -493,7 +558,14 @@ internal static class Program
         FileInfo[] fi;
         try
         {
-            fi = di.GetFiles("*.chd");
+            fi = di.GetFiles("*.chd", new EnumerationOptions
+                {
+                    IgnoreInaccessible = true,
+                    RecurseSubdirectories = false,
+                    AttributesToSkip = FileAttributes.ReparsePoint
+                })
+                .Where(f => f.Extension.Equals(".chd", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -514,9 +586,9 @@ internal static class Program
                 var progress = new Progress<ChdProgress>(p =>
                 {
                     var pct = (int)p.Percent / 10 * 10;
-                    if (pct != lastPercent)
+                    var prev = Interlocked.Exchange(ref lastPercent, pct);
+                    if (pct != prev)
                     {
-                        lastPercent = pct;
                         Log.Logger.Information("   {Pct,3}% {Name}  ({Bytes:N0} / {Total:N0} bytes, {Elapsed:N1}s)",
                             pct, f.Name, p.BytesProcessed, p.TotalBytes, p.Elapsed.TotalSeconds);
                     }
@@ -641,10 +713,19 @@ internal static class Program
         string? parentPath = null;
         var verbose = false;
         var dvd = false;
+        var force = false;
         int? taskCount = null;
         int? templateId = null;
-        if (!TryParseOptions(options, ref hunkBytes, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId))
+        long? inputStartBytes = null;
+        long? inputLengthBytes = null;
+        if (!TryParseOptions(options, ref hunkBytes, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId, ref inputStartBytes, ref inputLengthBytes, ref force))
             return;
+
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
+        }
 
         if (templateId.HasValue)
         {
@@ -655,6 +736,10 @@ internal static class Program
             }
 
             var tpl = HardDiskTemplates.GetTemplate(templateId.Value);
+            if (unitBytes != 512u)
+                log.Warning("  --unitsize/-us overridden by template {Id} (was {Old}, now {New})", templateId.Value, unitBytes, tpl.SectorSize);
+            if (hunkBytes != 4096u)
+                log.Warning("  --hunksize/-hs overridden by template {Id} (was {Old}, now {New})", templateId.Value, hunkBytes, Math.Max((4096u / tpl.SectorSize) * tpl.SectorSize, tpl.SectorSize));
             unitBytes = tpl.SectorSize;
             hunkBytes = Math.Max((4096u / tpl.SectorSize) * tpl.SectorSize, tpl.SectorSize);
             log.Information("  Using template {Id}: {Manufacturer} {Model} ({Cylinders}C/{Heads}H/{Sectors}S, {Size} MB)",
@@ -685,7 +770,7 @@ internal static class Program
                 taskCount.HasValue ? $", {taskCount} tasks" : "");
             var logger = verbose ? new VerboseHunkLogger() : null;
             var encodeOptions = logger?.Options;
-            if (encodeOptions == null && (taskCount.HasValue || parentPath != null || dvd || templateId.HasValue))
+            if (encodeOptions == null && (taskCount.HasValue || parentPath != null || dvd || templateId.HasValue || inputStartBytes.HasValue || inputLengthBytes.HasValue))
             {
                 encodeOptions = new ChdEncodeOptions();
             }
@@ -702,10 +787,22 @@ internal static class Program
                     encodeOptions.ParentPath = parentPath;
                 }
 
+                if (inputStartBytes.HasValue)
+                {
+                    encodeOptions.InputStartBytes = inputStartBytes.Value;
+                }
+
+                if (inputLengthBytes.HasValue)
+                {
+                    encodeOptions.InputLengthBytes = inputLengthBytes.Value;
+                }
+
                 if (dvd)
                 {
                     // --dvd (createdvd parity): force 'DVD ' metadata and a 2048-byte unit size.
                     encodeOptions.Metadata = [MetadataWriter.BuildDvdMetadata()];
+                    if (unitBytes != 2048u && unitBytes != 512u)
+                        log.Warning("  --unitsize/-us overridden by --dvd (was {Old}, now 2048)", unitBytes);
                     unitBytes = 2048;
                 }
                 else if (templateId.HasValue)
@@ -730,11 +827,12 @@ internal static class Program
     /// Creates a blank, zero-filled hard disk CHD without reading from an input file.
     /// Equivalent to chdman <c>createhd --size</c>.
     /// </summary>
+    /// <param name="inputPath">Path of the input raw file, or <c>null</c> to create a blank image.</param>
     /// <param name="outputPath">Path of the output .chd file.</param>
     /// <param name="options">Command-line options: <c>--size N</c> (required), <c>-chs C,H,S</c>,
     /// <c>-ss N</c> sector size, <c>-c</c> codecs, <c>-hs</c> hunk size, <c>-us</c> unit size,
     /// <c>-t</c> task count, <c>-v</c> verbose.</param>
-    private static void CreateHdTest(string outputPath, string[] options)
+    private static void CreateHdTest(string? inputPath, string outputPath, string[] options)
     {
         var log = Log.Logger;
 
@@ -747,14 +845,16 @@ internal static class Program
         uint unitBytes = 512;
         string? codecs = null;
         var verbose = false;
+        var force = false;
         int? taskCount = null;
         string? identPath = null;
+        int? templateId = null;
 
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
             {
-                case "--size" when i + 1 < options.Length:
+                case "--size" or "-s" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out long sz) || sz <= 0)
                     {
                         log.Warning("--createhd: invalid size: {Value}", options[i]);
@@ -763,14 +863,14 @@ internal static class Program
 
                     sizeBytes = (ulong)sz;
                     break;
-                case "-chs" when i + 1 < options.Length:
+                case "--chs" or "-chs" when i + 1 < options.Length:
                     var chsParts = options[++i].Split(',');
                     if (chsParts.Length != 3 ||
                         !uint.TryParse(chsParts[0], out var c) || c == 0 ||
                         !uint.TryParse(chsParts[1], out var h) || h == 0 ||
                         !uint.TryParse(chsParts[2], out var s) || s == 0)
                     {
-                        log.Warning("--createhd: invalid CHS geometry (expected C,H,S): {Value}", options[i]);
+                        log.Warning("createhd: invalid CHS geometry (expected C,H,S): {Value}", options[i]);
                         return;
                     }
 
@@ -778,7 +878,16 @@ internal static class Program
                     chsHeads = h;
                     chsSectors = s;
                     break;
-                case "-ss" or "--sector-size" when i + 1 < options.Length:
+                case "--template" or "-tp" when i + 1 < options.Length:
+                    if (!int.TryParse(options[++i], out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
+                    {
+                        log.Warning("createhd: invalid template ID (0-{Max}): {Value}", HardDiskTemplates.Templates.Length - 1, options[i]);
+                        return;
+                    }
+
+                    templateId = tp;
+                    break;
+                case "--sectorsize" or "-ss" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out uint ss) || ss == 0)
                     {
                         log.Warning("--createhd: invalid sector size: {Value}", options[i]);
@@ -787,62 +896,137 @@ internal static class Program
 
                     unitBytes = ss;
                     break;
-                case "-c" or "--codecs" when i + 1 < options.Length:
+                case "--compression" or "-c" when i + 1 < options.Length:
                     codecs = options[++i];
                     break;
-                case "-hs" or "--hunk-size" when i + 1 < options.Length:
+                case "--hunksize" or "-hs" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
                     {
-                        log.Warning("--createhd: invalid hunk size: {Value}", options[i]);
+                        log.Warning("createhd: invalid hunk size: {Value}", options[i]);
                         return;
                     }
 
                     hunkBytes = hs;
                     break;
-                case "-us" or "--unit-size" when i + 1 < options.Length:
+                case "--unitsize" or "-us" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out uint us) || us == 0)
                     {
-                        log.Warning("--createhd: invalid unit size: {Value}", options[i]);
+                        log.Warning("createhd: invalid unit size: {Value}", options[i]);
                         return;
                     }
 
                     unitBytes = us;
                     break;
-                case "-t" or "--tasks" when i + 1 < options.Length:
+                case "--numprocessors" or "-np" when i + 1 < options.Length:
                     if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
                     {
-                        log.Warning("--createhd: invalid task count (1-64): {Value}", options[i]);
+                        log.Warning("createhd: invalid task count (1-64): {Value}", options[i]);
                         return;
                     }
 
                     taskCount = t;
                     break;
-                case "--ident" when i + 1 < options.Length:
+                case "--ident" or "-id" when i + 1 < options.Length:
                     identPath = options[++i];
                     break;
-                case "-v" or "--verbose":
+                case "--force" or "-f":
+                    force = true;
+                    break;
+                case "--verbose" or "-v":
                     verbose = true;
                     break;
                 default:
-                    log.Warning("--createhd: unknown option: {Option}", options[i]);
+                    log.Warning("createhd: unknown option: {Option}", options[i]);
                     return;
             }
         }
 
-        // Validate required options
-        if (!sizeBytes.HasValue && !chsCylinders.HasValue)
+        if (File.Exists(outputPath) && !force)
         {
-            log.Warning("--createhd: requires --size N or -chs C,H,S");
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
+        }
+
+        // Apply hard disk template: derive geometry/size and stamp GDDD metadata
+        if (templateId.HasValue)
+        {
+            var tpl = HardDiskTemplates.GetTemplate(templateId.Value);
+            if (chsCylinders.HasValue || sizeBytes.HasValue)
+            {
+                log.Warning("createhd: --template cannot be combined with --size or -chs");
+                return;
+            }
+
+            unitBytes = tpl.SectorSize;
+            chsCylinders = tpl.Cylinders;
+            chsHeads = tpl.Heads;
+            chsSectors = tpl.Sectors;
+            log.Information("  Using template {Id}: {Manufacturer} {Model} ({Cylinders}C/{Heads}H/{Sectors}S, {Size} MB)",
+                templateId.Value, tpl.Manufacturer, tpl.Model, tpl.Cylinders, tpl.Heads, tpl.Sectors, tpl.TotalMb);
+        }
+
+        // Validate required options
+        if (!sizeBytes.HasValue && !chsCylinders.HasValue && inputPath == null)
+        {
+            log.Warning("createhd: requires --size N, -chs C,H,S, -tp ID, or --input <file>");
+            return;
+        }
+
+        // If --input is provided, convert raw input to CHD
+        if (inputPath != null)
+        {
+            if (!File.Exists(inputPath))
+            {
+                log.Warning("createhd: input file not found: {Path}", inputPath);
+                return;
+            }
+
+            if (sizeBytes.HasValue || chsCylinders.HasValue || templateId.HasValue)
+            {
+                log.Warning("createhd: --input cannot be combined with --size, -chs, or --template");
+                return;
+            }
+
+            try
+            {
+                var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "zlib");
+                log.Information("Converting raw HD to CHD: {Input} -> {Output} (codecs {Codecs})",
+                    inputPath, outputPath, string.Join(",", codecTags.Select(CodecTags.ToString)));
+                ChdEncoder.EncodeRaw(inputPath, outputPath, hunkBytes: hunkBytes, unitBytes: unitBytes, codecTags: codecTags);
+                log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
+                VerifyResultChd(outputPath, parentPath: null);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
+            {
+                log.Warning("createhd failed: {Message}", ex.Message);
+            }
+
             return;
         }
 
         // Calculate size from CHS if provided
         if (chsCylinders.HasValue && chsHeads.HasValue && chsSectors.HasValue)
         {
-            var chsSize = (ulong)chsCylinders.Value * chsHeads.Value * chsSectors.Value * unitBytes;
+            ulong chsSize;
+            try
+            {
+                chsSize = checked(chsCylinders.Value * (ulong)chsHeads.Value * chsSectors.Value * unitBytes);
+            }
+            catch (OverflowException)
+            {
+                log.Warning("createhd: CHS geometry produces a size exceeding ulong.MaxValue; reduce C/H/S values");
+                return;
+            }
+
+            if (chsSize == 0)
+            {
+                log.Warning("createhd: CHS geometry produces zero-byte image");
+                return;
+            }
+
             if (sizeBytes.HasValue && sizeBytes.Value != chsSize)
             {
-                log.Warning("--createhd: --size ({Size}) conflicts with -chs geometry ({ChsSize}); use one or the other",
+                log.Warning("createhd: --size ({Size}) conflicts with -chs geometry ({ChsSize}); use one or the other",
                     sizeBytes.Value, chsSize);
                 return;
             }
@@ -949,10 +1133,22 @@ internal static class Program
         string? parentPath = null;
         var verbose = false;
         var dvd = false;
+        var force = false;
         int? taskCount = null;
         int? templateId = null;
-        if (!TryParseOptions(options, ref hunkSize, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId))
+        long? inputStartBytes = null;
+        long? inputLengthBytes = null;
+        if (!TryParseOptions(options, ref hunkSize, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId, ref inputStartBytes, ref inputLengthBytes, ref force))
             return;
+
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
+        }
+
+        // Apply documented default codecs for CD when -c is omitted
+        codecs ??= "cdlz,cdzl,cdfl";
 
         // -c auto: detect the platform and pick the smart codec preset (CHDlite parity).
         if (string.Equals(codecs, "auto", StringComparison.OrdinalIgnoreCase))
@@ -1024,15 +1220,16 @@ internal static class Program
         long startFrame = 0;
         long? lengthFrames = null;
         var verbose = false;
+        var force = false;
         int? taskCount = null;
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
             {
-                case "-c" or "--codecs" when i + 1 < options.Length:
+                case "--compression" or "-c" or "--codecs" when i + 1 < options.Length:
                     codecs = options[++i];
                     break;
-                case "-hs" or "--hunk-size" when i + 1 < options.Length:
+                case "--hunksize" or "-hs" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
                     {
                         log.Warning("Invalid hunk size: {Value}", options[i]);
@@ -1041,7 +1238,7 @@ internal static class Program
 
                     hunkBytes = hs;
                     break;
-                case "-isf" or "--input-start-frame" when i + 1 < options.Length:
+                case "--inputstartframe" or "-isf" when i + 1 < options.Length:
                     if (!long.TryParse(options[++i], out var isf) || isf < 0)
                     {
                         log.Warning("Invalid input start frame: {Value}", options[i]);
@@ -1050,7 +1247,7 @@ internal static class Program
 
                     startFrame = isf;
                     break;
-                case "-if" or "--input-frames" when i + 1 < options.Length:
+                case "--inputframes" or "-if" when i + 1 < options.Length:
                     if (!long.TryParse(options[++i], out var ifr) || ifr < 1)
                     {
                         log.Warning("Invalid input frame count: {Value}", options[i]);
@@ -1068,6 +1265,9 @@ internal static class Program
 
                     taskCount = t;
                     break;
+                case "--force" or "-f":
+                    force = true;
+                    break;
                 case "-v" or "--verbose":
                     verbose = true;
                     break;
@@ -1075,6 +1275,12 @@ internal static class Program
                     log.Warning("Unknown option: {Option}", options[i]);
                     return;
             }
+        }
+
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
         }
 
         try
@@ -1123,17 +1329,19 @@ internal static class Program
         var log = Log.Logger;
         if (!File.Exists(inputPath))
         {
-            log.Warning("--extractld: input file not found: {Path}", inputPath);
+            log.Warning("extractld: input file not found: {Path}", inputPath);
             return;
         }
 
         long startFrame = 0;
         long? lengthFrames = null;
+        var force = false;
+        string? parentPath = null;
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
             {
-                case "-isf" or "--input-start-frame" when i + 1 < options.Length:
+                case "--inputstartframe" or "-isf" when i + 1 < options.Length:
                     if (!long.TryParse(options[++i], out var sf) || sf < 0)
                     {
                         log.Warning("Invalid input start frame: {Value}", options[i]);
@@ -1142,7 +1350,7 @@ internal static class Program
 
                     startFrame = sf;
                     break;
-                case "-if" or "--input-frames" when i + 1 < options.Length:
+                case "--inputframes" or "-if" when i + 1 < options.Length:
                     if (!long.TryParse(options[++i], out var ifr) || ifr <= 0)
                     {
                         log.Warning("Invalid input frames: {Value}", options[i]);
@@ -1151,16 +1359,28 @@ internal static class Program
 
                     lengthFrames = ifr;
                     break;
+                case "--inputparent" or "-ip" when i + 1 < options.Length:
+                    parentPath = options[++i].Replace("\"", "");
+                    break;
+                case "--force" or "-f":
+                    force = true;
+                    break;
                 default:
                     log.Warning("Unknown option: {Option}", options[i]);
                     return;
             }
         }
 
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
+        }
+
         try
         {
             log.Information("Extracting laserdisc CHD: {Input} -> {Output}", Path.GetFileName(inputPath), outputPath);
-            ChdEncoder.ExtractLaserDisc(inputPath, outputPath, startFrame, lengthFrames);
+            ChdEncoder.ExtractLaserDisc(inputPath, outputPath, parentPath, startFrame, lengthFrames);
             log.Information("  Created {File} ({Size:N0} bytes)", Path.GetFileName(outputPath), new FileInfo(outputPath).Length);
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidDataException or IOException or UnauthorizedAccessException)
@@ -1185,21 +1405,24 @@ internal static class Program
         }
     }
 
-    /// <summary>Parses optional <c>-c</c>/<c>-hs</c>/<c>-us</c>/<c>-t</c>/<c>-ip</c>/<c>-d</c>/<c>-v</c> arguments from the CLI.</summary>
+    /// <summary>Parses optional codec/hunk/unit/parent/task/template/verbose arguments from the CLI.
+    /// Accepts both chdman-style (<c>--hunksize</c>, <c>--numprocessors</c>) and legacy-style (<c>--hunk-size</c>, <c>--tasks</c>) names.</summary>
     private static bool TryParseOptions(string[] options, ref uint hunkSize, ref uint unitSize, ref string? codecs,
-        ref string? parentPath, ref bool verbose, ref int? taskCount, ref bool dvd, ref int? templateId)
+        ref string? parentPath, ref bool verbose, ref int? taskCount, ref bool dvd, ref int? templateId,
+        ref long? inputStartBytes, ref long? inputLengthBytes, ref bool force)
     {
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
             {
-                case "-c" or "--codecs" when i + 1 < options.Length:
+                case "--compression" or "-c" when i + 1 < options.Length:
                     codecs = options[++i];
                     break;
-                case "-ip" or "--input-parent" when i + 1 < options.Length:
+                case "--inputparent" or "-ip" when i + 1 < options.Length:
+                case "--outputparent" or "-op" when i + 1 < options.Length:
                     parentPath = options[++i];
                     break;
-                case "-hs" or "--hunk-size" when i + 1 < options.Length:
+                case "--hunksize" or "-hs" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
                     {
                         Log.Logger.Warning("Invalid hunk size: {Value}", options[i]);
@@ -1208,7 +1431,7 @@ internal static class Program
 
                     hunkSize = hs;
                     break;
-                case "-us" or "--unit-size" when i + 1 < options.Length:
+                case "--unitsize" or "-us" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out uint us) || us == 0)
                     {
                         Log.Logger.Warning("Invalid unit size: {Value}", options[i]);
@@ -1217,7 +1440,7 @@ internal static class Program
 
                     unitSize = us;
                     break;
-                case "-t" or "--tasks" when i + 1 < options.Length:
+                case "--numprocessors" or "-np" when i + 1 < options.Length:
                     if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
                     {
                         Log.Logger.Warning("Invalid task count (1-64): {Value}", options[i]);
@@ -1226,7 +1449,7 @@ internal static class Program
 
                     taskCount = t;
                     break;
-                case "-tp" or "--template" when i + 1 < options.Length:
+                case "--template" or "-tp" when i + 1 < options.Length:
                     if (!int.TryParse(options[++i], out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
                     {
                         Log.Logger.Warning("Invalid template ID (0-{Max}): {Value}", HardDiskTemplates.Templates.Length - 1, options[i]);
@@ -1235,10 +1458,31 @@ internal static class Program
 
                     templateId = tp;
                     break;
-                case "-d" or "--dvd":
+                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var isb) || isb < 0)
+                    {
+                        Log.Logger.Warning("Invalid input start byte: {Value}", options[i]);
+                        return false;
+                    }
+
+                    inputStartBytes = isb;
+                    break;
+                case "--inputbytes" or "-ib" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
+                    {
+                        Log.Logger.Warning("Invalid input bytes: {Value}", options[i]);
+                        return false;
+                    }
+
+                    inputLengthBytes = ib;
+                    break;
+                case "--dvd" or "-d":
                     dvd = true;
                     break;
-                case "-v" or "--verbose":
+                case "--force" or "-f":
+                    force = true;
+                    break;
+                case "--verbose" or "-v":
                     verbose = true;
                     break;
                 default:
@@ -1272,13 +1516,14 @@ internal static class Program
         string? sourceParentPath = null;
         string? outputParentPath = null;
         var verbose = false;
+        var force = false;
         int? taskCount = null;
         var noUpgrade = false;
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
             {
-                case "-c" or "--codecs" when i + 1 < options.Length:
+                case "--compression" or "-c" or "--codecs" when i + 1 < options.Length:
                     codecs = options[++i];
                     break;
                 case "-ip" or "--input-parent" when i + 1 < options.Length:
@@ -1299,6 +1544,9 @@ internal static class Program
                 case "--no-upgrade":
                     noUpgrade = true;
                     break;
+                case "--force" or "-f":
+                    force = true;
+                    break;
                 case "-v" or "--verbose":
                     verbose = true;
                     break;
@@ -1306,6 +1554,12 @@ internal static class Program
                     log.Warning("Unknown option: {Option}", options[i]);
                     return;
             }
+        }
+
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
         }
 
         try
@@ -1452,7 +1706,19 @@ internal static class Program
                 log.Information("  Fixed mismatched SHA-1 field(s); re-verifying...");
         }
 
-        var result = Chd.CheckFileWithParent(file, (string?)null);
+        string? parentFile = null;
+        for (var i = 0; i < options.Length - 1; i++)
+        {
+            if (options[i] is "-ip" or "--inputparent")
+            {
+                parentFile = options[i + 1];
+                break;
+            }
+        }
+
+        var result = parentFile != null
+            ? Chd.CheckFileWithParent(file, parentFile)
+            : Chd.CheckFileWithParent(file, (string?)null);
         if (result.IsSuccess)
             log.Information("  Verified OK (V{Version}, sha1={Sha1})", result.Version, result.Sha1Hex);
         else
@@ -1530,18 +1796,22 @@ internal static class Program
     private static void DumpMetaTest(string[] args)
     {
         var log = Log.Logger;
-        var file = args[0].Replace("\"", "");
+        string? file = null;
         string? tag = null;
         uint index = 0;
         string? outFile = null;
-        for (var i = 1; i < args.Length; i++)
+        var force = false;
+        for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
-                case "-t" or "--tag" when i + 1 < args.Length:
+                case "--input" or "-i" when i + 1 < args.Length:
+                    file = args[++i].Replace("\"", "");
+                    break;
+                case "--tag" or "-t" when i + 1 < args.Length:
                     tag = args[++i];
                     break;
-                case "-ix" or "--index" when i + 1 < args.Length:
+                case "--index" or "-ix" when i + 1 < args.Length:
                     if (!uint.TryParse(args[++i], out index))
                     {
                         log.Warning("Invalid metadata index: {Value}", args[i]);
@@ -1549,13 +1819,28 @@ internal static class Program
                     }
 
                     break;
-                case "-o" or "--output" when i + 1 < args.Length:
+                case "--output" or "-o" when i + 1 < args.Length:
                     outFile = args[++i];
                     break;
+                case "--force" or "-f":
+                    force = true;
+                    break;
                 default:
+                    if (file == null && !args[i].StartsWith('-'))
+                    {
+                        file = args[i].Replace("\"", "");
+                        break;
+                    }
+
                     log.Warning("Unknown option: {Option}", args[i]);
                     return;
             }
+        }
+
+        if (file == null)
+        {
+            log.Warning("dumpmeta requires --input <file>");
+            return;
         }
 
         var err = ChdFile.Open(file, out var chd);
@@ -1577,6 +1862,12 @@ internal static class Program
             log.Information("{Tag} flags=0x{Flags:X2} length={Length}", entry.Tag, entry.Flags, entry.Data.Length);
             if (outFile != null)
             {
+                if (File.Exists(outFile) && !force)
+                {
+                    log.Warning("Output file already exists: {Path} (use --force to overwrite)", outFile);
+                    return;
+                }
+
                 File.WriteAllBytes(outFile, entry.Data);
                 log.Information("  Wrote {Length} bytes to {Path}", entry.Data.Length, outFile);
             }
@@ -1596,27 +1887,32 @@ internal static class Program
     private static void HashTest(string[] args)
     {
         var log = Log.Logger;
-        var file = args[0].Replace("\"", "");
+        string? file = null;
         var hashes = ChdHashType.Sha1;
         var format = "text";
         var perTrack = false;
-        for (var i = 1; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
+                case "--input" or "-i" when i + 1 < args.Length:
+                    file = args[++i].Replace("\"", "");
+                    break;
                 case "--hashes" when i + 1 < args.Length:
                 {
                     var types = ChdHashType.None;
                     foreach (var name in args[++i].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                     {
-                        types |= name.ToLowerInvariant() switch
+                        switch (name.ToLowerInvariant())
                         {
-                            "sha1" => ChdHashType.Sha1,
-                            "sha256" => ChdHashType.Sha256,
-                            "crc32" => ChdHashType.Crc32,
-                            "xxh3" => ChdHashType.Xxh3,
-                            _ => throw new ArgumentException($"Unknown hash [{name}]")
-                        };
+                            case "sha1": types |= ChdHashType.Sha1; break;
+                            case "sha256": types |= ChdHashType.Sha256; break;
+                            case "crc32": types |= ChdHashType.Crc32; break;
+                            case "xxh3": types |= ChdHashType.Xxh3; break;
+                            default:
+                                log.Warning("Unknown hash type: {Name} (valid: sha1, sha256, crc32, xxh3)", name);
+                                return;
+                        }
                     }
 
                     hashes = types;
@@ -1635,9 +1931,21 @@ internal static class Program
                     perTrack = true;
                     break;
                 default:
+                    if (file == null && !args[i].StartsWith('-'))
+                    {
+                        file = args[i].Replace("\"", "");
+                        break;
+                    }
+
                     log.Warning("Unknown option: {Option}", args[i]);
                     return;
             }
+        }
+
+        if (file == null)
+        {
+            log.Warning("hash requires --input <file>");
+            return;
         }
 
         IReadOnlyList<ChdHashResult> results;
@@ -1736,7 +2044,7 @@ internal static class Program
                     }
 
                     break;
-                case "-c" or "--codecs" when i + 1 < options.Length:
+                case "--compression" or "-c" or "--codecs" when i + 1 < options.Length:
                     codecs = options[++i];
                     break;
                 default:
@@ -1754,12 +2062,21 @@ internal static class Program
         Directory.CreateDirectory(outputDir);
 
         var files = new List<string>();
-        foreach (var pattern in new[] { "*.chd", "*.cue", "*.gdi", "*.iso" })
-            files.AddRange(Directory.GetFiles(inputDir, pattern, SearchOption.TopDirectoryOnly));
+        if (string.Equals(action, "extract", StringComparison.Ordinal))
+        {
+            // Extract mode: only .chd files can be extracted
+            files.AddRange(Directory.GetFiles(inputDir, "*.chd", SearchOption.TopDirectoryOnly));
+        }
+        else
+        {
+            // Create mode: .cue/.gdi/.iso are source formats; .chd files should not be re-encoded
+            foreach (var pattern in new[] { "*.cue", "*.gdi", "*.iso" })
+                files.AddRange(Directory.GetFiles(inputDir, pattern, SearchOption.TopDirectoryOnly));
+        }
 
         if (files.Count == 0)
         {
-            log.Warning("No .chd/.cue/.gdi/.iso files found in {Path}", inputDir);
+            log.Warning("No {Files} found in {Path}", string.Equals(action, "extract", StringComparison.Ordinal) ? ".chd files" : ".cue/.gdi/.iso files", inputDir);
             return;
         }
 
@@ -1825,25 +2142,28 @@ internal static class Program
     private static void AddMetaTest(string[] args)
     {
         var log = Log.Logger;
-        var file = args[0].Replace("\"", "");
+        string? file = null;
         string? tag = null;
         string? text = null;
         string? inputFile = null;
         uint index = 0;
-        for (var i = 1; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
-                case "-t" or "--tag" when i + 1 < args.Length:
+                case "--input" or "-i" when i + 1 < args.Length:
+                    file = args[++i].Replace("\"", "");
+                    break;
+                case "--tag" or "-t" when i + 1 < args.Length:
                     tag = args[++i];
                     break;
-                case "-v" or "--value" when i + 1 < args.Length:
+                case "--valuetext" or "-vt" when i + 1 < args.Length:
                     text = args[++i];
                     break;
-                case "-f" or "--file" when i + 1 < args.Length:
+                case "--valuefile" or "-vf" when i + 1 < args.Length:
                     inputFile = args[++i];
                     break;
-                case "-ix" or "--index" when i + 1 < args.Length:
+                case "--index" or "-ix" when i + 1 < args.Length:
                     if (!uint.TryParse(args[++i], out index))
                     {
                         log.Warning("Invalid metadata index: {Value}", args[i]);
@@ -1852,14 +2172,32 @@ internal static class Program
 
                     break;
                 default:
+                    if (file == null && !args[i].StartsWith('-'))
+                    {
+                        file = args[i].Replace("\"", "");
+                        break;
+                    }
+
                     log.Warning("Unknown option: {Option}", args[i]);
                     return;
             }
         }
 
+        if (file == null)
+        {
+            log.Warning("addmeta requires --input <file>");
+            return;
+        }
+
         if (tag is not { Length: 4 })
         {
-            log.Warning("--addmeta requires a 4-character tag (-t)");
+            log.Warning("addmeta requires a 4-character tag (--tag)");
+            return;
+        }
+
+        if (text != null && inputFile != null)
+        {
+            log.Warning("addmeta: specify either --valuetext or --valuefile, not both");
             return;
         }
 
@@ -1879,7 +2217,13 @@ internal static class Program
         else
         {
             text ??= "";
-            data = System.Text.Encoding.ASCII.GetBytes(text + '\0');
+            if (text.Any(c => c > 127))
+            {
+                log.Warning("addmeta: --valuetext contains non-ASCII characters; use --valuefile with a binary file instead");
+                return;
+            }
+
+            data = Encoding.ASCII.GetBytes(text + '\0');
         }
 
         var err = ChdFile.Open(file, out var chd);
@@ -1906,17 +2250,20 @@ internal static class Program
     private static void DeleteMetaTest(string[] args)
     {
         var log = Log.Logger;
-        var file = args[0].Replace("\"", "");
+        string? file = null;
         string? tag = null;
         uint index = 0;
-        for (var i = 1; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
-                case "-t" or "--tag" when i + 1 < args.Length:
+                case "--input" or "-i" when i + 1 < args.Length:
+                    file = args[++i].Replace("\"", "");
+                    break;
+                case "--tag" or "-t" when i + 1 < args.Length:
                     tag = args[++i];
                     break;
-                case "-ix" or "--index" when i + 1 < args.Length:
+                case "--index" or "-ix" when i + 1 < args.Length:
                     if (!uint.TryParse(args[++i], out index))
                     {
                         log.Warning("Invalid metadata index: {Value}", args[i]);
@@ -1925,14 +2272,26 @@ internal static class Program
 
                     break;
                 default:
+                    if (file == null && !args[i].StartsWith('-'))
+                    {
+                        file = args[i].Replace("\"", "");
+                        break;
+                    }
+
                     log.Warning("Unknown option: {Option}", args[i]);
                     return;
             }
         }
 
+        if (file == null)
+        {
+            log.Warning("delmeta requires --input <file>");
+            return;
+        }
+
         if (tag is not { Length: 4 })
         {
-            log.Warning("--delmeta requires a 4-character tag (-t)");
+            log.Warning("delmeta requires a 4-character tag (--tag)");
             return;
         }
 
@@ -2019,5 +2378,784 @@ internal static class Program
         }
 
         return true;
+    }
+
+    /// <summary>Normalizes a command name: strips leading <c>--</c> and maps aliases.</summary>
+    private static string? NormalizeCommand(string? raw)
+    {
+        if (raw == null) return null;
+
+        var cmd = raw.TrimStart('-');
+        // Map legacy aliases
+        return cmd switch
+        {
+            "h" or "?" or "help" => "help",
+            _ => cmd
+        };
+    }
+
+    /// <summary>Gets an input file path from a named <c>--input</c>/<c>-i</c> flag or a positional argument.</summary>
+    private static string ParseInput(string[] args, int positionalIndex)
+    {
+        // Check for --input/-i flag first
+        for (var i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] is "--input" or "-i")
+                return args[i + 1].Replace("\"", "");
+        }
+
+        // Fall back to positional
+        var pos = 0;
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i].StartsWith('-')) continue;
+
+            if (pos == positionalIndex) return args[i].Replace("\"", "");
+
+            pos++;
+        }
+
+        return "";
+    }
+
+    /// <summary>Parses <c>--input</c>/<c>-i</c> and <c>--output</c>/<c>-o</c> named flags, falling back to
+    /// positional arguments. Returns (input, output, remainingOptions).</summary>
+    private static (string? input, string? output, string[] rest) ParseCreateArgs(string[] args)
+    {
+        string? input = null;
+        string? output = null;
+        var rest = new List<string>();
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--input" or "-i" when i + 1 < args.Length:
+                    input = args[++i].Replace("\"", "");
+                    break;
+                case "--output" or "-o" when i + 1 < args.Length:
+                    output = args[++i].Replace("\"", "");
+                    break;
+                default:
+                    rest.Add(args[i]);
+                    break;
+            }
+        }
+
+        // Fall back to positional args, but only scan the LEADING non-option tokens.
+        // Legacy style puts <input> <output> before any flags; anything after the first
+        // '-'-prefixed token is an option or an option value and must not be stolen
+        // (e.g. "--size 1048576" would otherwise lose its value to this fallback).
+        var positionalIdx = 0;
+        while (positionalIdx < rest.Count && !rest[positionalIdx].StartsWith('-'))
+        {
+            positionalIdx++;
+        }
+
+        if (input == null && positionalIdx > 0)
+        {
+            input = rest[0].Replace("\"", "");
+            rest.RemoveAt(0);
+            positionalIdx--;
+        }
+
+        if (output == null && positionalIdx > 0)
+        {
+            output = rest[0].Replace("\"", "");
+            rest.RemoveAt(0);
+        }
+
+        return (input, output, rest.ToArray());
+    }
+
+    /// <summary>Prints the main usage text in chdman style.</summary>
+    private static void PrintUsage()
+    {
+        var exe = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
+        Log.Logger.Information("{Exe} - CHDSharp Compressed Hunks of Data (CHD) manager", exe);
+        Log.Logger.Information("Usage:");
+        Log.Logger.Information("   {Exe} info: displays information about a CHD", exe);
+        Log.Logger.Information("   {Exe} verify: verifies a CHD's integrity", exe);
+        Log.Logger.Information("   {Exe} createraw: create a raw CHD from the input file", exe);
+        Log.Logger.Information("   {Exe} createhd: create a hard disk CHD from the input file", exe);
+        Log.Logger.Information("   {Exe} createcd: create a CD CHD from the input file", exe);
+        Log.Logger.Information("   {Exe} createdvd: create a DVD CHD from the input file", exe);
+        Log.Logger.Information("   {Exe} createld: create a laserdisc CHD from the input file", exe);
+        Log.Logger.Information("   {Exe} extractraw: extract raw file from a CHD input file", exe);
+        Log.Logger.Information("   {Exe} extracthd: extract raw hard disk file from a CHD input file", exe);
+        Log.Logger.Information("   {Exe} extractcd: extract CD file from a CHD input file", exe);
+        Log.Logger.Information("   {Exe} extractdvd: extract DVD file from a CHD input file", exe);
+        Log.Logger.Information("   {Exe} extractld: extract laserdisc AVI from a CHD input file", exe);
+        Log.Logger.Information("   {Exe} copy: copy data from one CHD to another of the same type", exe);
+        Log.Logger.Information("   {Exe} addmeta: add metadata to the CHD", exe);
+        Log.Logger.Information("   {Exe} delmeta: remove metadata from the CHD", exe);
+        Log.Logger.Information("   {Exe} dumpmeta: dump metadata from the CHD to stdout or to a file", exe);
+        Log.Logger.Information("   {Exe} listtemplates: list hard disk templates", exe);
+        Log.Logger.Information("");
+        Log.Logger.Information("For help with any command, run:");
+        Log.Logger.Information("   {Exe} help <command>", exe);
+    }
+
+    /// <summary>Prints detailed help for a specific command.</summary>
+    private static void PrintCommandHelp(string command)
+    {
+        var cmd = NormalizeCommand(command) ?? command;
+        var exe = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
+        switch (cmd)
+        {
+            case "info":
+                Log.Logger.Information("{Exe} info --input <file> [--verbose]", exe);
+                Log.Logger.Information("  Displays information about a CHD file.");
+                Log.Logger.Information("  --input, -i    Input CHD file (required)");
+                Log.Logger.Information("  --verbose, -v  Additional information");
+                break;
+            case "verify":
+                Log.Logger.Information("{Exe} verify --input <file> [--inputparent <file>] [--fix]", exe);
+                Log.Logger.Information("  Verifies a CHD's integrity.");
+                Log.Logger.Information("  --input, -i        Input CHD file (required)");
+                Log.Logger.Information("  --inputparent, -ip Parent CHD file");
+                Log.Logger.Information("  --fix, -f          Fix mismatched SHA-1 header fields");
+                break;
+            case "createraw" or "create":
+                Log.Logger.Information("{Exe} createraw --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Create a raw CHD from the input file.");
+                Log.Logger.Information("  --output, -o         Output CHD file (required)");
+                Log.Logger.Information("  --input, -i          Input file (required)");
+                Log.Logger.Information("  --outputparent, -op  Output parent CHD");
+                Log.Logger.Information("  --compression, -c    Codecs (default: lzma,zlib,huff,flac)");
+                Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
+                Log.Logger.Information("  --unitsize, -us      Unit size in bytes");
+                Log.Logger.Information("  --inputstartbyte, -isb  Starting byte offset within input");
+                Log.Logger.Information("  --inputbytes, -ib    Effective length of input in bytes");
+                Log.Logger.Information("  --numprocessors, -np Parallel workers");
+                Log.Logger.Information("  --template, -tp      Hard disk template ID");
+                Log.Logger.Information("  --dvd, -d            Force DVD metadata");
+                Log.Logger.Information("  --force, -f          Overwrite existing output");
+                Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
+                break;
+            case "createhd":
+                Log.Logger.Information("{Exe} createhd --output <file> [--input <file>] [options]", exe);
+                Log.Logger.Information("  Create a hard disk CHD. If --input is omitted, creates a blank zero-filled image.");
+                Log.Logger.Information("  --output, -o         Output CHD file (required)");
+                Log.Logger.Information("  --input, -i          Input file (optional; omit for blank)");
+                Log.Logger.Information("  --size, -s           Size of blank image (supports K/M/G suffixes)");
+                Log.Logger.Information("  --chs, -chs          CHS geometry: cylinders,heads,sectors");
+                Log.Logger.Information("  --sectorsize, -ss    Sector size in bytes (default: 512)");
+                Log.Logger.Information("  --ident, -id         512-byte ATA IDENTIFY DEVICE file");
+                Log.Logger.Information("  --compression, -c    Codecs (default: none for blank)");
+                Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
+                Log.Logger.Information("  --template, -tp      Hard disk template ID");
+                Log.Logger.Information("  --numprocessors, -np Parallel workers");
+                Log.Logger.Information("  --force, -f          Overwrite existing output");
+                Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
+                break;
+            case "createcd":
+                Log.Logger.Information("{Exe} createcd --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Create a CD CHD from CUE/GDI/ISO/TOC/NRG input.");
+                Log.Logger.Information("  --output, -o         Output CHD file (required)");
+                Log.Logger.Information("  --input, -i          Input file (required): .cue, .gdi, .iso, .toc, .nrg, .cdr, .toast");
+                Log.Logger.Information("  --outputparent, -op  Output parent CHD");
+                Log.Logger.Information("  --compression, -c    Codecs (default: cdlz,cdzl,cdfl)");
+                Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
+                Log.Logger.Information("  --numprocessors, -np Parallel workers");
+                Log.Logger.Information("  --force, -f          Overwrite existing output");
+                Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
+                break;
+            case "createdvd":
+                Log.Logger.Information("{Exe} createdvd --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Create a DVD CHD from the input file.");
+                Log.Logger.Information("  --output, -o         Output CHD file (required)");
+                Log.Logger.Information("  --input, -i          Input file (required): typically .iso");
+                Log.Logger.Information("  --outputparent, -op  Output parent CHD");
+                Log.Logger.Information("  --compression, -c    Codecs (default: lzma,zlib,huff,flac)");
+                Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
+                Log.Logger.Information("  --numprocessors, -np Parallel workers");
+                Log.Logger.Information("  --force, -f          Overwrite existing output");
+                Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
+                break;
+            case "createld":
+                Log.Logger.Information("{Exe} createld --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Create a laserdisc CHD from an AVI file.");
+                Log.Logger.Information("  --output, -o             Output CHD file (required)");
+                Log.Logger.Information("  --input, -i              Input AVI file (required)");
+                Log.Logger.Information("  --outputparent, -op      Output parent CHD");
+                Log.Logger.Information("  --compression, -c        Codecs (default: avhu)");
+                Log.Logger.Information("  --inputstartframe, -isf  Starting frame");
+                Log.Logger.Information("  --inputframes, -if       Frame count");
+                Log.Logger.Information("  --hunksize, -hs          Hunk size in bytes");
+                Log.Logger.Information("  --numprocessors, -np     Parallel workers");
+                Log.Logger.Information("  --force, -f              Overwrite existing output");
+                Log.Logger.Information("  --verbose, -v            Per-hunk compression logging");
+                break;
+            case "extractraw":
+                Log.Logger.Information("{Exe} extractraw --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Extract raw file from a CHD input file.");
+                Log.Logger.Information("  --output, -o             Output file (required)");
+                Log.Logger.Information("  --input, -i              Input CHD file (required)");
+                Log.Logger.Information("  --inputparent, -ip       Parent CHD file");
+                Log.Logger.Information("  --inputstartbyte, -isb   Starting byte offset");
+                Log.Logger.Information("  --inputbytes, -ib        Byte count to extract");
+                Log.Logger.Information("  --force, -f              Overwrite existing output");
+                break;
+            case "extracthd":
+                Log.Logger.Information("{Exe} extracthd --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Extract raw hard disk file from a CHD input file.");
+                Log.Logger.Information("  (Same options as extractraw)");
+                break;
+            case "extractcd":
+                Log.Logger.Information("{Exe} extractcd --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Extract CD file from a CHD input file.");
+                Log.Logger.Information("  --output, -o          Output CUE file (required)");
+                Log.Logger.Information("  --input, -i           Input CHD file (required)");
+                Log.Logger.Information("  --outputbin, -ob      Output BIN file name");
+                Log.Logger.Information("  --splitbin, -sb       One binary file per track");
+                Log.Logger.Information("  --inputparent, -ip    Parent CHD file");
+                Log.Logger.Information("  --force, -f           Overwrite existing output");
+                break;
+            case "extractdvd":
+                Log.Logger.Information("{Exe} extractdvd --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Extract DVD file from a CHD input file.");
+                Log.Logger.Information("  (Same options as extractraw)");
+                break;
+            case "extractld":
+                Log.Logger.Information("{Exe} extractld --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Extract laserdisc AVI from a CHD input file.");
+                Log.Logger.Information("  --output, -o              Output AVI file (required)");
+                Log.Logger.Information("  --input, -i               Input CHD file (required)");
+                Log.Logger.Information("  --inputparent, -ip        Parent CHD file");
+                Log.Logger.Information("  --inputstartframe, -isf   Starting frame");
+                Log.Logger.Information("  --inputframes, -if        Frame count");
+                Log.Logger.Information("  --force, -f               Overwrite existing output");
+                break;
+            case "copy":
+                Log.Logger.Information("{Exe} copy --output <file> --input <file> [options]", exe);
+                Log.Logger.Information("  Copy data from one CHD to another of the same type.");
+                Log.Logger.Information("  --output, -o         Output CHD file (required)");
+                Log.Logger.Information("  --input, -i          Input CHD file (required)");
+                Log.Logger.Information("  --inputparent, -ip   Source parent CHD");
+                Log.Logger.Information("  --outputparent, -op  Output parent CHD");
+                Log.Logger.Information("  --compression, -c    Codecs");
+                Log.Logger.Information("  --numprocessors, -np Parallel workers");
+                Log.Logger.Information("  --force, -f          Overwrite existing output");
+                Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
+                break;
+            case "addmeta":
+                Log.Logger.Information("{Exe} addmeta --input <file> --tag <tag> [--index <n>] (--valuetext <text> | --valuefile <file>)", exe);
+                Log.Logger.Information("  Add metadata to the CHD.");
+                Log.Logger.Information("  --input, -i        Input CHD file (required)");
+                Log.Logger.Information("  --tag, -t          4-character metadata tag (required)");
+                Log.Logger.Information("  --index, -ix       Indexed instance of this tag");
+                Log.Logger.Information("  --valuetext, -vt   Text value");
+                Log.Logger.Information("  --valuefile, -vf   File containing data");
+                break;
+            case "delmeta":
+                Log.Logger.Information("{Exe} delmeta --input <file> --tag <tag> [--index <n>]", exe);
+                Log.Logger.Information("  Remove metadata from the CHD.");
+                Log.Logger.Information("  --input, -i        Input CHD file (required)");
+                Log.Logger.Information("  --tag, -t          4-character metadata tag (required)");
+                Log.Logger.Information("  --index, -ix       Indexed instance of this tag");
+                break;
+            case "dumpmeta":
+                Log.Logger.Information("{Exe} dumpmeta --input <file> --tag <tag> [--output <file>] [--index <n>]", exe);
+                Log.Logger.Information("  Dump metadata from the CHD to stdout or to a file.");
+                Log.Logger.Information("  --input, -i        Input CHD file (required)");
+                Log.Logger.Information("  --tag, -t          4-character metadata tag (required)");
+                Log.Logger.Information("  --output, -o       Output file for binary data");
+                Log.Logger.Information("  --index, -ix       Indexed instance of this tag");
+                Log.Logger.Information("  --force, -f        Overwrite existing output");
+                break;
+            case "listtemplates":
+                Log.Logger.Information("{Exe} listtemplates", exe);
+                Log.Logger.Information("  List built-in hard disk geometry templates.");
+                break;
+            case "random":
+                Log.Logger.Information("{Exe} random <file> [count]", exe);
+                Log.Logger.Information("  Random-access stress test: reads random hunks from the CHD.");
+                Log.Logger.Information("  <file>   Input CHD file (positional, required)");
+                Log.Logger.Information("  [count]  Number of random reads (default: 1000)");
+                break;
+            case "list":
+                Log.Logger.Information("{Exe} list --input <file>", exe);
+                Log.Logger.Information("  Lists all metadata entries in the CHD.");
+                Log.Logger.Information("  --input, -i    Input CHD file (required)");
+                break;
+            case "parent":
+                Log.Logger.Information("{Exe} parent --input <file>", exe);
+                Log.Logger.Information("  Displays the parent SHA-1 hash for a child (differential) CHD.");
+                Log.Logger.Information("  --input, -i    Input CHD file (required)");
+                break;
+            case "toc":
+                Log.Logger.Information("{Exe} toc --input <file>", exe);
+                Log.Logger.Information("  Displays the table of contents (track layout) for a CD CHD.");
+                Log.Logger.Information("  --input, -i    Input CHD file (required)");
+                break;
+            case "cue":
+                Log.Logger.Information("{Exe} cue --input <file> [--output <file>]", exe);
+                Log.Logger.Information("  Generates a CUE sheet for a CD CHD.");
+                Log.Logger.Information("  --input, -i    Input CHD file (required)");
+                Log.Logger.Information("  --output, -o   Output CUE file (default: stdout)");
+                break;
+            case "classify":
+                Log.Logger.Information("{Exe} classify --input <file>", exe);
+                Log.Logger.Information("  Classifies the CHD type (CD, DVD, HDD, Laserdisc, etc.).");
+                Log.Logger.Information("  --input, -i    Input CHD file (required)");
+                break;
+            case "detect":
+                Log.Logger.Information("{Exe} detect --input <file>", exe);
+                Log.Logger.Information("  Detects the platform/region for a CD CHD.");
+                Log.Logger.Information("  --input, -i    Input CHD file (required)");
+                break;
+            case "hash":
+                Log.Logger.Information("{Exe} hash --input <file> [--hashes sha1,sha256,crc32,xxh3] [--format text|json|sfv] [--per-track]", exe);
+                Log.Logger.Information("  Computes content hashes over the CHD's decompressed data.");
+                Log.Logger.Information("  --input, -i        Input CHD file (required)");
+                Log.Logger.Information("  --hashes           Comma-separated hash types (default: sha1)");
+                Log.Logger.Information("  --format           Output format: text, json, sfv (default: text)");
+                Log.Logger.Information("  --per-track        Compute per-track hashes (CD only)");
+                break;
+            case "batch":
+                Log.Logger.Information("{Exe} batch --input <dir> --output <dir> [--compression <codecs>] [--numprocessors <n>]", exe);
+                Log.Logger.Information("  Batch create/extract: processes all matching files in a directory.");
+                Log.Logger.Information("  --input, -i        Input directory (required)");
+                Log.Logger.Information("  --output, -o       Output directory (required)");
+                Log.Logger.Information("  --compression, -c  Codecs for create mode");
+                Log.Logger.Information("  --numprocessors, -np Parallel workers");
+                break;
+            default:
+                Log.Logger.Information("Unknown command: {Command}. Run '{Exe} help' for a list of commands.", command, exe);
+                break;
+        }
+    }
+
+    /// <summary>Creates a DVD CHD from an input file (ISO). Forces DVD metadata and 2048-byte unit size.</summary>
+    private static void CreateDvdTest(string inputPath, string outputPath, string[] options)
+    {
+        var log = Log.Logger;
+        if (!File.Exists(inputPath))
+        {
+            log.Warning("createdvd: input file not found: {Path}", inputPath);
+            return;
+        }
+
+        var hunkBytes = 4096u;
+        var unitBytes = 2048u;
+        string? codecs = null;
+        string? parentPath = null;
+        var verbose = false;
+        var force = false;
+        int? taskCount = null;
+        bool dvdDummy = false;
+        int? templateDummy = null;
+        long? inputStartBytes = null;
+        long? inputLengthBytes = null;
+        if (!TryParseOptions(options, ref hunkBytes, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvdDummy, ref templateDummy, ref inputStartBytes, ref inputLengthBytes, ref force))
+            return;
+
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
+        }
+
+        codecs ??= "lzma,zlib,huff,flac";
+        unitBytes = 2048;
+
+        try
+        {
+            var codecTags = ChdCodecs.ParseCodecTags(codecs);
+            log.Information("Creating DVD CHD: {Input} -> {Output}  (hunk {Hunk}B, unit {Unit}B, codecs {Codecs}{Parent}{Tasks})",
+                Path.GetFileName(inputPath), outputPath, hunkBytes, unitBytes,
+                string.Join(",", codecTags.Select(CodecTags.ToString)),
+                parentPath != null ? $", parent {Path.GetFileName(parentPath)}" : "",
+                taskCount.HasValue ? $", {taskCount} tasks" : "");
+
+            var logger = verbose ? new VerboseHunkLogger() : null;
+            // DVD metadata must ALWAYS be written — createdvd exists to stamp the 'DVD ' tag.
+            var encodeOptions = logger?.Options ?? new ChdEncodeOptions();
+            if (taskCount.HasValue)
+            {
+                encodeOptions.TaskCount = taskCount;
+            }
+
+            if (parentPath != null)
+            {
+                encodeOptions.ParentPath = parentPath;
+            }
+
+            if (inputStartBytes.HasValue)
+            {
+                encodeOptions.InputStartBytes = inputStartBytes.Value;
+            }
+
+            if (inputLengthBytes.HasValue)
+            {
+                encodeOptions.InputLengthBytes = inputLengthBytes.Value;
+            }
+
+            encodeOptions.Metadata = [MetadataWriter.BuildDvdMetadata()];
+
+            ChdEncoder.EncodeRaw(inputPath, outputPath, hunkBytes, unitBytes, codecTags, encodeOptions);
+            logger?.LogSummary();
+            log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
+            VerifyResultChd(outputPath, parentPath);
+        }
+        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            log.Warning("createdvd failed: {Message}", ex.Message);
+        }
+    }
+
+    /// <summary>Extracts raw data from a CHD file to an output file, with optional partial extraction
+    /// via byte (<c>--inputstartbyte</c>/<c>--inputbytes</c>) or hunk (<c>--inputstarthunk</c>/<c>--inputhunks</c>) ranges.</summary>
+    private static void ExtractRawTest(string inputPath, string outputPath, string[] options)
+    {
+        var log = Log.Logger;
+        if (!File.Exists(inputPath))
+        {
+            log.Warning("extractraw: input file not found: {Path}", inputPath);
+            return;
+        }
+
+        string? parentPath = null;
+        var force = false;
+        long? startByte = null;
+        long? lengthBytes = null;
+        long? startHunk = null;
+        long? lengthHunks = null;
+        for (var i = 0; i < options.Length; i++)
+        {
+            switch (options[i])
+            {
+                case "--inputparent" or "-ip" when i + 1 < options.Length:
+                    parentPath = options[++i].Replace("\"", "");
+                    break;
+                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var sb) || sb < 0)
+                    {
+                        log.Warning("Invalid input start byte: {Value}", options[i]);
+                        return;
+                    }
+
+                    startByte = sb;
+                    break;
+                case "--inputbytes" or "-ib" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
+                    {
+                        log.Warning("Invalid input bytes: {Value}", options[i]);
+                        return;
+                    }
+
+                    lengthBytes = ib;
+                    break;
+                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var sh) || sh < 0)
+                    {
+                        log.Warning("Invalid input start hunk: {Value}", options[i]);
+                        return;
+                    }
+
+                    startHunk = sh;
+                    break;
+                case "--inputhunks" or "-ih" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
+                    {
+                        log.Warning("Invalid input hunks: {Value}", options[i]);
+                        return;
+                    }
+
+                    lengthHunks = ih;
+                    break;
+                case "--force" or "-f":
+                    force = true;
+                    break;
+                default:
+                    log.Warning("Unknown option: {Option}", options[i]);
+                    return;
+            }
+        }
+
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
+        }
+
+        try
+        {
+            var err = parentPath != null
+                ? ChdFile.Open(inputPath, parentPath, out var chd)
+                : ChdFile.Open(inputPath, out chd);
+            if (err != ChdError.Chderrnone || chd == null)
+            {
+                log.Warning("Open failed: {Error}", err);
+                return;
+            }
+
+            using (chd)
+            {
+                // Convert hunk-based ranges to byte ranges; byte options take precedence.
+                ulong readStart = startHunk.HasValue ? (ulong)startHunk.Value * chd.HunkBytes : 0;
+                if (startByte.HasValue)
+                {
+                    readStart = (ulong)startByte.Value;
+                }
+
+                var readLength = lengthHunks.HasValue
+                    ? (ulong)lengthHunks.Value * chd.HunkBytes
+                    : chd.TotalBytes - readStart;
+                if (lengthBytes.HasValue)
+                {
+                    readLength = (ulong)lengthBytes.Value;
+                }
+
+                if (readStart >= chd.TotalBytes)
+                {
+                    log.Warning("Start offset {Start} exceeds image size {Size}", readStart, chd.TotalBytes);
+                    return;
+                }
+
+                readLength = Math.Min(readLength, chd.TotalBytes - readStart);
+
+                log.Information("Extracting: {Input} -> {Output}  ({Bytes:N0} bytes from offset {Start:N0})",
+                    Path.GetFileName(inputPath), outputPath, readLength, readStart);
+
+                var tempPath = outputPath + ".tmp";
+                try
+                {
+                    using var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024);
+                    var buf = new byte[chd.HunkBytes];
+                    var remaining = readLength;
+                    var offset = readStart;
+                    while (remaining > 0)
+                    {
+                        var chunk = (int)Math.Min((ulong)buf.Length, remaining);
+                        err = chd.Read(offset, buf, 0, chunk);
+                        if (err != ChdError.Chderrnone)
+                        {
+                            log.Warning("  Read(offset={Offset}) => {Error}", offset, err);
+                            return;
+                        }
+
+                        fs.Write(buf, 0, chunk);
+                        offset += (ulong)chunk;
+                        remaining -= (ulong)chunk;
+                    }
+                }
+                catch
+                {
+                    try
+                    {
+                        File.Delete(tempPath);
+                    }
+                    catch
+                    {
+                        /* best-effort cleanup */
+                    }
+
+                    throw;
+                }
+
+                File.Move(tempPath, outputPath, overwrite: true);
+                log.Information("  Extracted {Size:N0} bytes", readLength);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            log.Warning("extractraw failed: {Message}", ex.Message);
+        }
+    }
+
+    /// <summary>Extracts a CD CHD to BIN/CUE (or ISO for DVD-mode CHDs), with optional --outputbin and --splitbin support.</summary>
+    private static void ExtractCdTest(string inputPath, string outputPath, string[] options)
+    {
+        var log = Log.Logger;
+        if (!File.Exists(inputPath))
+        {
+            log.Warning("extractcd: input file not found: {Path}", inputPath);
+            return;
+        }
+
+        string? parentPath = null;
+        string? binPath = null;
+        var splitBin = false;
+        var force = false;
+        for (var i = 0; i < options.Length; i++)
+        {
+            switch (options[i])
+            {
+                case "--inputparent" or "-ip" when i + 1 < options.Length:
+                    parentPath = options[++i].Replace("\"", "");
+                    break;
+                case "--outputbin" or "-ob" when i + 1 < options.Length:
+                    binPath = options[++i].Replace("\"", "");
+                    break;
+                case "--splitbin" or "-sb":
+                    splitBin = true;
+                    break;
+                case "--force" or "-f":
+                    force = true;
+                    break;
+                default:
+                    log.Warning("Unknown option: {Option}", options[i]);
+                    return;
+            }
+        }
+
+        if (File.Exists(outputPath) && !force)
+        {
+            log.Warning("Output file already exists: {Path} (use --force to overwrite)", outputPath);
+            return;
+        }
+
+        try
+        {
+            var err = parentPath != null
+                ? ChdFile.Open(inputPath, parentPath, out var chd)
+                : ChdFile.Open(inputPath, out chd);
+            if (err != ChdError.Chderrnone || chd == null)
+            {
+                log.Warning("Open failed: {Error}", err);
+                return;
+            }
+
+            using (chd)
+            {
+                var outputDir = Path.GetDirectoryName(outputPath) ?? ".";
+                var baseName = Path.GetFileNameWithoutExtension(outputPath);
+
+                if (splitBin && chd is { IsCd: true, Tracks.Count: > 1 })
+                {
+                    // --splitbin: extract each track to a separate file
+                    log.Information("Extracting CD (split): {Input} -> {Dir}", Path.GetFileName(inputPath), outputDir);
+                    Directory.CreateDirectory(outputDir);
+
+                    var trackNames = new List<string>();
+                    foreach (var track in chd.Tracks)
+                    {
+                        var trackFile = Path.Combine(outputDir, $"track{track.TrackNumber:D2}.bin");
+
+                        log.Information("  Track {Track}: {Frames} frames -> {File}", track.TrackNumber, track.Frames, Path.GetFileName(trackFile));
+                        var trackErr = chd.WriteTrackToFile(track, trackFile);
+                        if (trackErr != ChdError.Chderrnone)
+                        {
+                            log.Warning("  Track {Track} extraction failed: {Error}", track.TrackNumber, trackErr);
+                            return;
+                        }
+
+                        trackNames.Add($"track{track.TrackNumber:D2}.bin");
+                    }
+
+                    // Write CUE sheet referencing per-track files
+                    var cueFile = Path.Combine(outputDir, $"{baseName}.cue");
+                    var cueSb = new StringBuilder();
+                    cueSb.AppendLine("REM Generated by CHDSharp");
+                    cueSb.AppendLine($"REM Tracks: {chd.Tracks.Count}");
+                    cueSb.AppendLine();
+                    for (var ti = 0; ti < chd.Tracks.Count; ti++)
+                    {
+                        var track = chd.Tracks[ti];
+                        var trackFileName = trackNames[ti];
+                        cueSb.AppendLine($"FILE \"{trackFileName}\" BINARY");
+                        var modeStr = track.TrackType switch
+                        {
+                            ChdTrackType.Mode1 or ChdTrackType.Mode1Raw => $"MODE1/{track.DataSize:D4}",
+                            ChdTrackType.Mode2 => $"MODE2/{track.DataSize:D4}",
+                            ChdTrackType.Mode2Form1 => $"MODE2/{track.DataSize:D4}",
+                            ChdTrackType.Mode2Form2 => $"MODE2/{track.DataSize:D4}",
+                            ChdTrackType.Mode2FormMix => $"MODE2/{track.DataSize:D4}",
+                            ChdTrackType.Mode2Raw => $"MODE2/{track.DataSize:D4}",
+                            ChdTrackType.Audio => "AUDIO",
+                            _ => string.Create(CultureInfo.InvariantCulture, $"MODE1/{track.DataSize:D4}"
+                            )
+                        };
+                        cueSb.AppendLine($"  TRACK {track.TrackNumber:D2} {modeStr}");
+                        cueSb.AppendLine("    INDEX 01 00:00:00");
+                    }
+
+                    File.WriteAllText(cueFile, cueSb.ToString());
+                    log.Information("  Created: {File}", cueFile);
+                }
+                else
+                {
+                    // Standard extraction
+                    log.Information("Extracting CD: {Input} -> {Dir}", Path.GetFileName(inputPath), outputDir);
+                    var created = chd.ExtractToDirectory(outputDir, baseName);
+
+                    // If --outputbin is specified, rename the BIN file and update the CUE
+                    if (binPath != null)
+                    {
+                        var binFile = created.FirstOrDefault(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase));
+                        if (binFile != null)
+                        {
+                            var targetBin = Path.GetFullPath(binPath);
+                            if (File.Exists(targetBin) && !force)
+                            {
+                                log.Warning("Output BIN already exists: {Path} (use --force to overwrite)", targetBin);
+                                return;
+                            }
+
+                            File.Move(binFile, targetBin, overwrite: true);
+                            log.Information("  Renamed: {Old} -> {New}", Path.GetFileName(binFile), targetBin);
+
+                            // Update CUE sheet to reference the new BIN name
+                            var cueFile = created.FirstOrDefault(f => f.EndsWith(".cue", StringComparison.OrdinalIgnoreCase));
+                            if (cueFile != null)
+                            {
+                                var cueContent = File.ReadAllText(cueFile);
+                                var oldBinName = Path.GetFileName(binFile);
+                                var newBinName = Path.GetFileName(targetBin);
+                                cueContent = cueContent.Replace(oldBinName, newBinName);
+                                File.WriteAllText(cueFile, cueContent);
+                                log.Information("  Updated CUE: {File}", cueFile);
+                            }
+
+                            // Update GDI file to reference the new BIN name
+                            var gdiFile = created.FirstOrDefault(f => f.EndsWith(".gdi", StringComparison.OrdinalIgnoreCase));
+                            if (gdiFile != null)
+                            {
+                                var gdiContent = File.ReadAllText(gdiFile);
+                                var oldBinName = Path.GetFileName(binFile);
+                                var newBinName = Path.GetFileName(targetBin);
+                                gdiContent = gdiContent.Replace(oldBinName, newBinName);
+                                File.WriteAllText(gdiFile, gdiContent);
+                                log.Information("  Updated GDI: {File}", gdiFile);
+                            }
+                        }
+                    }
+
+                    foreach (var f in created)
+                        log.Information("  Created: {File}", f);
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            log.Warning("extractcd failed: {Message}", ex.Message);
+        }
+    }
+
+    private static int _exitPrompted;
+
+    /// <summary>Pauses before exit when the application was launched by double-clicking (no arguments).</summary>
+    private static void WaitForExitIfDoubleClicked()
+    {
+        // When launched by double-click, Environment.GetCommandLineArgs() has exactly 1 entry
+        // and stdin is not redirected. In that case, pause so the user can read the output.
+        if (Interlocked.Exchange(ref _exitPrompted, 1) == 1)
+            return;
+
+        if (Environment.GetCommandLineArgs().Length <= 1 && !Console.IsInputRedirected)
+        {
+            Console.WriteLine();
+            Console.Write("Press any key to exit...");
+            try
+            {
+                Console.ReadKey(true);
+            }
+            catch
+            {
+                // InvalidOperationException if no console available (e.g. redirected)
+            }
+        }
     }
 }

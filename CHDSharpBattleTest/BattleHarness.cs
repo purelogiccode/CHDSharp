@@ -586,8 +586,8 @@ internal sealed class BattleHarness
             });
 
         // a parent with different content must be rejected
-        var wrongParent = _assets.FirstOrDefault(a => string.Equals(a.Key, "random x zlib(4096/512)|ref", StringComparison.Ordinal))
-                          ?? _assets.FirstOrDefault(a => string.Equals(a.Key, "pattern x zlib(4096/512)|ref", StringComparison.Ordinal));
+        var wrongParent = _assets.FirstOrDefault(a => string.Equals(a.Key, "random|zlib(4096/512)|ref", StringComparison.Ordinal))
+                          ?? _assets.FirstOrDefault(a => string.Equals(a.Key, "pattern|zlib(4096/512)|ref", StringComparison.Ordinal));
         if (wrongParent != null)
         {
             Check(suite, "wrong parent rejected (ours)", () =>
@@ -706,7 +706,7 @@ internal sealed class BattleHarness
         var dir = Path.Combine(_workDir, "copy");
         Directory.CreateDirectory(dir);
 
-        var srcAsset = _assets.FirstOrDefault(a => string.Equals(a.Key, "mixed x zlib(4096/512)|ours", StringComparison.Ordinal));
+        var srcAsset = _assets.FirstOrDefault(a => string.Equals(a.Key, "mixed|zlib(4096/512)|ours", StringComparison.Ordinal));
         if (srcAsset == null)
         {
             Console.WriteLine($"[SKIP] {suite} — 'mixed x zlib(4096/512)' asset missing, skipping copy suite");
@@ -783,7 +783,7 @@ internal sealed class BattleHarness
         }
 
         // CD copy: cdzl -> cdfl
-        var cdSrc = _assets.FirstOrDefault(a => string.Equals(a.Key, "cd-mixed x cdzl(19584/2448)|ours", StringComparison.Ordinal));
+        var cdSrc = _assets.FirstOrDefault(a => string.Equals(a.Key, "cd-mixed|cdzl(19584/2448)|ours", StringComparison.Ordinal));
         if (cdSrc != null && !_quick)
         {
             const string suite2 = $"{suite} cd cdzl -> cdfl";

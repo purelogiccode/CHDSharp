@@ -19,11 +19,11 @@ public class CliAdditionalTests
             {
                 var slnRoot = baseDir[..testBinIdx];
                 var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ?? "Debug";
-                return Path.Combine(slnRoot, "CHDSharpCli", "bin", config,
-                    "net10.0", "CHDSharpCli.dll");
+                var tfm = Path.GetFileName(baseDir.TrimEnd(Path.DirectorySeparatorChar));
+                return Path.Combine(slnRoot, "CHDSharpCli", "bin", config, tfm, "CHDSharp.dll");
             }
 
-            return Path.Combine(AppContext.BaseDirectory, "CHDSharpCli.dll");
+            return Path.Combine(AppContext.BaseDirectory, "CHDSharp.dll");
         }
     }
 

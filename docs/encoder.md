@@ -110,13 +110,17 @@ For tuning and measurement today:
 ## CLI
 
 ```bash
-CHDSharpCli --create in.bin out.chd [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-t 8] [-ip parent.chd] [-tp id] [-d] [-v]
-CHDSharpCli --createcd in.cue out.chd [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-t 8] [-ip parent.chd] [-v]
-CHDSharpCli --createhd out.chd --size N [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-chs C,H,S] [-ss N] [--ident ident.bin] [-t 8] [-v]
-CHDSharpCli --createld in.avi out.chd [-c avhu] [-isf N] [-if N] [-hs N] [-v]
-CHDSharpCli --extractld in.chd out.avi [-isf N] [-if N]
-CHDSharpCli --listtemplates
-CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]
+CHDSharp createraw -o out.chd -i in.bin [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-np 8] [-op parent.chd] [-tp id] [-d] [-v]
+CHDSharp createcd -o out.chd -i in.cue [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-np 8] [-op parent.chd] [-v]
+CHDSharp createhd -o out.chd [--size N | -i in.img] [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-chs C,H,S] [-ss N] [--ident ident.bin] [-np 8] [-v]
+CHDSharp createdvd -o out.chd -i in.iso [-c lzma,zlib,huff,flac] [-hs N] [-np 8] [-op parent.chd] [-v]
+CHDSharp createld -o out.chd -i in.avi [-c avhu] [-isf N] [-if N] [-hs N] [-np 8] [-v]
+CHDSharp extractld -o out.avi -i in.chd [-isf N] [-if N]
+CHDSharp extractraw -o out.bin -i in.chd
+CHDSharp extractcd -o out.cue -i in.chd
+CHDSharp extractdvd -o out.iso -i in.chd
+CHDSharp listtemplates
+CHDSharp copy -o out.chd -i in.chd [-c zlib,zstd,lzma,none] [-np 8] [-ip parent.chd] [-op parent.chd] [-v]
 ```
 
 All commands deep-verify the result with CHDSharpLib before exiting.

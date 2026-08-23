@@ -126,7 +126,7 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 | Project | Purpose |
 |---------|---------|
 | `CHDSharpLib` | The library itself (this wiki documents it). Includes the encoder subsystem (`CHDSharp.Encoder`). |
-| `CHDSharpCli` | Command-line verification/classification tool. |
+| `CHDSharpCli` | Command-line CHD manager (binary: `CHDSharp`). chdman-compatible. |
 | `CHDSharpTest` | xUnit unit + corpus test suite (30 deterministic CHD files). |
 | `CHDSharpTestGen` | Deterministic corpus generator (drives vintage `chdman` binaries). |
 | `CHDSharpTester` | WPF interactive batch verifier cross-checked against `chdman`. |

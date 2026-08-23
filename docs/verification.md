@@ -132,9 +132,10 @@ var (err, ver, sha1, md5) = result;
 The same verification logic is exposed by the CLI:
 
 ```bash
-CHDSharpCli D:\CHD            # deep-verify every .chd under D:\CHD
-CHDSharpCli --list files.txt  # deep-verify a list of paths
-CHDSharpCli --parent child.chd parent.chd
+CHDSharp D:\CHD            # deep-verify every .chd under D:\CHD
+CHDSharp --list files.txt  # deep-verify a list of paths
+CHDSharp --parent child.chd parent.chd
+CHDSharp verify -i game.chd # chdman-style
 ```
 
 A successful run prints the A/V metadata and reports `Valid`; failures print the offending file and the `ChdError`.

@@ -178,7 +178,7 @@ internal static class TestDataGenerator
 
         // track 2 INDEX 01 = track1Frames + 150 pregap frames; track 3 INDEX 01 = + track2Frames + 150 pregap
         var track2Index = FramesToMsf(track1Frames + 150);
-        var track3Index = FramesToMsf(track1Frames + 150 + track2Frames + 150);
+        var track3Index = FramesToMsf(track1Frames + 150 + track2Frames);
 
         File.WriteAllText(cuePath, $"""
             FILE "cd-mixed.bin" BINARY

@@ -1512,11 +1512,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// in place and behaves identically.</summary>
     private void TryEnableMemoryMapping()
     {
+        System.IO.MemoryMappedFiles.MemoryMappedFile? mmf = null;
         try
         {
             // No 'using': the mapping is owned by this instance and disposed with it (the view
             // accessor keeps the mapping alive independently).
-            var mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateFromFile(
+            mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateFromFile(
                 (FileStream)_stream, null, 0, System.IO.MemoryMappedFiles.MemoryMappedFileAccess.Read,
                 HandleInheritability.None, leaveOpen: true);
             var view = mmf.CreateViewAccessor(0, _stream.Length, System.IO.MemoryMappedFiles.MemoryMappedFileAccess.Read);
@@ -1528,6 +1529,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             Log.LogDebug("Memory-mapped open unavailable for this file: {Message}", ex.Message);
             _mmfView?.Dispose();
             _mmfView = null;
+            mmf?.Dispose();
         }
     }
 
@@ -2083,8 +2085,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         _hunkBuffer ??= new byte[_chd.Blocksize];
         var err = ReadHunk(hunknum, _hunkBuffer, cancellationToken);
         if (err != ChdError.Chderrnone)
+        {
+            _cachedHunk = -1;
             return err;
+        }
 
+        _cachedHunk = hunknum;
         _hunkBuffer.AsSpan(0, (int)_chd.Blocksize).CopyTo(buffer);
         return ChdError.Chderrnone;
     }
@@ -2690,6 +2696,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
         _readAhead?.Dispose();
         _codec.Dispose();
+        foreach (var state in _concurrentCodec.Values)
+            state.Dispose();
         _concurrentCodec.Dispose();
         _mmfView?.Dispose();
         _mmf?.Dispose();
@@ -3005,6 +3013,17 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
     }
 
+    /// <summary>Writes a single track to a file, performing CDDA byte-swap for legacy GD-ROM audio tracks.</summary>
+    /// <param name="track">The track to extract.</param>
+    /// <param name="path">Output file path.</param>
+    /// <param name="progress">Optional progress reporter.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see cref="ChdError.Chderrnone"/> on success.</returns>
+    public ChdError WriteTrackToFile(ChdTrackInfo track, string path, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    {
+        return TryWriteTrackToFile(track, path, progress, cancellationToken);
+    }
+
     private ChdError TryWriteTrackToFile(ChdTrackInfo track, string path, IProgress<ChdProgress>? progress, CancellationToken cancellationToken)
     {
         var unitBytes = UnitBytes;
@@ -3195,9 +3214,6 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         internal void Clear()
         {
             _cache.Clear();
-            var currentCount = _semaphore.CurrentCount;
-            if (currentCount < LookAhead)
-                _semaphore.Release(LookAhead - currentCount);
         }
 
         public void Dispose()

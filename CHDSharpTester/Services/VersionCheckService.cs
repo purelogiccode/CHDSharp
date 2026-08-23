@@ -52,7 +52,7 @@ internal static class VersionCheckService
                 ?.BrowserDownloadUrl;
 
             var url = downloadUrl ?? RepoReleasesUrl;
-            return $"A new version of CHDSharpTester is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.MinorRevision}\nDownload: {url}";
+            return $"A new version of CHDSharpTester is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}\nDownload: {url}";
         }
         catch
         {

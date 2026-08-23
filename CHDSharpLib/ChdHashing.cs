@@ -123,7 +123,7 @@ public static partial class Chd
             remaining -= (ulong)chunk;
 
             progress?.Report(new ChdProgress(
-                (uint)((offset - (length - remaining)) / chd.HunkBytes),
+                (uint)((length - remaining) / chd.HunkBytes),
                 (uint)((length + chd.HunkBytes - 1) / chd.HunkBytes),
                 (long)(length - remaining),
                 (long)length,

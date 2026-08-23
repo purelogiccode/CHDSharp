@@ -253,17 +253,20 @@ ChdEncoder.EncodeRaw("game.bin", "game.chd", options: options);
 ### CLI Encoding
 
 ```bash
-# Raw binary → CHD
-CHDSharpCli --create in.bin out.chd [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-t 8] [-ip parent.chd] [-v]
+# Raw binary -> CHD
+CHDSharp createraw -o out.chd -i in.bin [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-np 8] [-op parent.chd] [-v]
 
-# CD image → CHD (CUE/GDI/ISO/TOC)
-CHDSharpCli --createcd in.cue out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-v]
+# CD image -> CHD (CUE/GDI/ISO/TOC/NRG)
+CHDSharp createcd -o out.chd -i in.cue [-c zlib,zstd,lzma,none] [-np 8] [-op parent.chd] [-v]
 
 # Blank HD CHD
-CHDSharpCli --createhd out.chd --size 104857600 [-chs 1024,16,63] [-ss 512] [-c zlib] [-v]
+CHDSharp createhd -o out.chd --size 104857600 [-chs 1024,16,63] [-ss 512] [-c zlib] [-v]
+
+# DVD CHD
+CHDSharp createdvd -o out.chd -i in.iso [-c lzma,zlib,huff,flac] [-v]
 
 # Re-compress an existing CHD
-CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]
+CHDSharp copy -o out.chd -i in.chd [-c zlib,zstd,lzma,none] [-np 8] [-ip parent.chd] [-op parent.chd] [-v]
 ```
 
 ---
@@ -403,33 +406,76 @@ Chd.LoggerFactory = new SerilogLoggerFactory(
 
 ## CLI
 
+The CLI tool is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows) and accepts the same subcommands as MAME's `chdman`:
+
 ```bash
-# Verify all .chd files in directories (recursive)
-CHDSharpCli D:\CHD
+# Display CHD information
+CHDSharp info -i game.chd
 
-# Verify paths from a text file
-CHDSharpCli --list chd_paths.txt
-
-# Random-access self-test on a single CHD
-CHDSharpCli --random game.chd
-
-# Verify a child CHD against its parent
-CHDSharpCli --parent child.chd parent.chd
-
-# Print CD/GD-ROM table of contents
-CHDSharpCli --toc game.chd
-
-# Generate CUE sheet for CD CHDs
-CHDSharpCli --cue game.chd
-
-# Classify CHD media type
-CHDSharpCli --classify game.chd
+# Verify a CHD
+CHDSharp verify -i game.chd
 
 # Create CHDs
-CHDSharpCli --create in.bin out.chd [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-t 8] [-ip parent.chd] [-v]
-CHDSharpCli --createcd in.cue out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-v]
-CHDSharpCli --createhd out.chd --size N [-c zlib,zstd,lzma,none] [-chs C,H,S] [-ss N] [-t 8] [-v]
-CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]
+CHDSharp createraw -o out.chd -i in.bin [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-np 8] [-op parent.chd] [-v]
+CHDSharp createcd -o out.chd -i in.cue [-c zlib,zstd,lzma,none] [-np 8] [-op parent.chd] [-v]
+CHDSharp createhd -o out.chd --size N [-c zlib,zstd,lzma,none] [-chs C,H,S] [-ss N] [-np 8] [-v]
+CHDSharp createdvd -o out.chd -i in.iso [-c lzma,zlib,huff,flac] [-v]
+CHDSharp createld -o out.chd -i in.avi [-c avhu] [-v]
+
+# Extract CHDs
+CHDSharp extractraw -o out.bin -i in.chd
+CHDSharp extractcd -o out.cue -i in.chd
+CHDSharp extractdvd -o out.iso -i in.chd
+CHDSharp extractld -o out.avi -i in.chd
+
+# Re-compress
+CHDSharp copy -o out.chd -i in.chd [-c zstd] [-ip parent.chd] [-op parent.chd]
+
+# Metadata
+CHDSharp addmeta -i game.chd -t GAME -vt "gauntlet"
+CHDSharp delmeta -i game.chd -t GAME
+CHDSharp dumpmeta -i game.chd -t GAME
+
+# List hard disk templates
+CHDSharp listtemplates
+
+# Help
+CHDSharp help
+CHDSharp help createcd
+```
+
+Additional convenience commands (CHDSharp extensions):
+
+```bash
+# Verify all .chd files in directories (recursive)
+CHDSharp D:\CHD
+
+# Verify paths from a text file
+CHDSharp --list chd_paths.txt
+
+# Random-access self-test on a single CHD
+CHDSharp --random game.chd
+
+# Verify a child CHD against its parent
+CHDSharp --parent child.chd parent.chd
+
+# Print CD/GD-ROM table of contents
+CHDSharp --toc game.chd
+
+# Generate CUE sheet for CD CHDs
+CHDSharp --cue game.chd
+
+# Classify CHD media type
+CHDSharp --classify game.chd
+
+# Detect game platform
+CHDSharp --detect game.chd
+
+# Compute content hashes
+CHDSharp --hash game.chd --hashes sha1,sha256,crc32 --result json
+
+# Batch extract/create
+CHDSharp --batch input-dir output-dir --action extract
 ```
 
 ---
@@ -519,7 +565,7 @@ CHDSharp/
 │   │   └── Interfaces/     IChdCodec interface
 │   ├── Models/             Public models (ChdHeaderInfo, ChdError, etc.)
 │   └── Utils/              Internal utilities (CRC, Huffman, BitStream)
-├── CHDSharpCli/            CLI tool
+├── CHDSharpCli/            CLI tool (binary: CHDSharp)
 ├── CHDSharpTest/           Unit + corpus tests
 ├── CHDSharpEncoderTest/    Encoder tests
 ├── CHDSharpTester/         WPF interactive tester

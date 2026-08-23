@@ -13,7 +13,7 @@ This page describes the solution layout and the internal design of the library.
 | Project | Kind | Purpose |
 |---------|------|---------|
 | `CHDSharpLib` | Library | The CHD reader and encoder (NuGet package `CHDSharp`). Everything in this wiki's API pages lives here. The encoder subsystem (`CHDSharp.Encoder` namespace) creates V5 CHDs from raw binaries and CD images (CUE/GDI/ISO/TOC/NRG) with `chdman`-matched output — CRC16, SHA1, Deflate wrappers, V5 map compressor (`MapCompressor`, `Huffman16_8`), V5 header writer, all 9 writable codecs (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl + none), SELF dedup, delta parents, CHT2/CHGD/GDDD/DVD metadata. 100% pure C#. See [Encoder](encoder.md). |
-| `CHDSharpCli` | Console | CLI verification/classification tool built on the library. |
+| `CHDSharpCli` | Console | CLI CHD manager (binary: `CHDSharp`). chdman-compatible subcommands plus convenience commands. |
 | `CHDSharpTest` | xUnit | Unit + corpus tests (468 tests, 30 CHD fixtures). |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator driving vintage `chdman`/`hdcomp` binaries. |
 | `CHDSharpTester` | WPF | Interactive batch verification, cross-checked against `chdman`. |

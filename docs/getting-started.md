@@ -163,34 +163,30 @@ See [Extraction](extraction.md) for details.
 
 ---
 
-## 5. The CLI tool (`CHDSharpCli`)
+## 5. The CLI tool (`CHDSharp`)
 
-`CHDSharpCli` is a small console app that exercises the library end to end. It is useful both as a verification tool and as a reference for calling the API.
+`CHDSharp` is a command-line CHD manager compatible with MAME's `chdman` syntax. It is useful both as a verification tool and as a reference for calling the API.
 
 ```bash
-# Verify all .chd files in one or more directories (recursive)
-CHDSharpCli D:\CHD
+# chdman-style subcommands
+CHDSharp info -i game.chd
+CHDSharp verify -i game.chd
+CHDSharp createcd -o game.chd -i game.cue
+CHDSharp extractcd -o game.cue -i game.chd
+CHDSharp copy -o new.chd -i old.chd -c zstd
+CHDSharp listtemplates
 
-# Verify every path listed in a text file
-CHDSharpCli --list chd_paths.txt
-
-# Random-access self-test on a single CHD
-CHDSharpCli --random game.chd
-
-# Verify a child CHD against its parent
-CHDSharpCli --parent child.chd parent.chd
-
-# Print the table of contents of a CD/GD-ROM CHD
-CHDSharpCli --toc game.chd
-
-# Generate a CUE sheet
-CHDSharpCli --cue game.chd
-
-# Classify the media type
-CHDSharpCli --classify game.chd
+# Convenience commands (CHDSharp extensions)
+CHDSharp D:\CHD                  # verify all .chd in directory
+CHDSharp --list chd_paths.txt    # verify from a list file
+CHDSharp --random game.chd       # random-access self-test
+CHDSharp --parent child.chd parent.chd
+CHDSharp --toc game.chd          # print table of contents
+CHDSharp --cue game.chd          # generate CUE sheet
+CHDSharp --classify game.chd     # classify media type
 ```
 
-Run `CHDSharpCli --help` for the full usage text.
+Run `CHDSharp help` for the full command list, or `CHDSharp help <command>` for detailed help on a specific command.
 
 ---
 

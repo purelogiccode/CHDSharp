@@ -93,7 +93,7 @@ internal static class ChdHeaders
     /// <returns><see cref="ChdError.Chderrnone"/> if sizes are acceptable; otherwise <see cref="ChdError.Chderrinvaliddata"/>.</returns>
     internal static ChdError ValidateSizeLimits(ChdHeader chd)
     {
-        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes || chd.Totalbytes > MaxLogicalBytes)
+        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes || chd.Totalbytes > MaxLogicalBytes || chd.Unitbytes == 0)
             return ChdError.Chderrinvaliddata;
 
         // Default the compressed-hunk cap to 2x the hunk size if not explicitly set.

@@ -418,10 +418,29 @@ public static class ChdEncoder
         long startFrame = 0, long? lengthFrames = null,
         CancellationToken cancellationToken = default)
     {
+        ExtractLaserDisc(chdPath, aviPath, parentPath: null, startFrame, lengthFrames, cancellationToken);
+    }
+
+    /// <summary>
+    /// Extracts a laserdisc CHD back to an AVI file, optionally resolving a parent CHD for
+    /// differential (child) images.
+    /// </summary>
+    /// <param name="chdPath">Path to the input laserdisc CHD file.</param>
+    /// <param name="aviPath">Path for the output AVI file (created/overwritten).</param>
+    /// <param name="parentPath">Optional path to the parent CHD. Pass <c>null</c> for standalone CHDs.</param>
+    /// <param name="startFrame">First frame to extract (0-based).</param>
+    /// <param name="lengthFrames">Number of frames to extract; <c>null</c> extracts all.</param>
+    /// <param name="cancellationToken">Cancels the extraction.</param>
+    public static void ExtractLaserDisc(string chdPath, string aviPath, string? parentPath,
+        long startFrame = 0, long? lengthFrames = null,
+        CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(chdPath);
         ArgumentNullException.ThrowIfNull(aviPath);
 
-        var openErr = ChdFile.Open(chdPath, out var chdObj, cancellationToken);
+        var openErr = parentPath != null
+            ? ChdFile.Open(chdPath, parentPath, out var chdObj, cancellationToken)
+            : ChdFile.Open(chdPath, out chdObj, cancellationToken);
         if (openErr != ChdError.Chderrnone || chdObj == null)
             throw new InvalidDataException($"Failed to open CHD: {openErr}");
 

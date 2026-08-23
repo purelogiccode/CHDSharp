@@ -20,11 +20,11 @@ public sealed class CliIntegrationTests
             {
                 var slnRoot = baseDir[..testBinIdx];
                 var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ?? "Debug";
-                return Path.Combine(slnRoot, "CHDSharpCli", "bin", config,
-                    "net10.0", "CHDSharpCli.dll");
+                var tfm = Path.GetFileName(baseDir.TrimEnd(Path.DirectorySeparatorChar));
+                return Path.Combine(slnRoot, "CHDSharpCli", "bin", config, tfm, "CHDSharp.dll");
             }
 
-            return Path.Combine(AppContext.BaseDirectory, "CHDSharpCli.dll");
+            return Path.Combine(AppContext.BaseDirectory, "CHDSharp.dll");
         }
     }
 
@@ -137,13 +137,15 @@ public sealed class CliIntegrationTests
     }
 
     [Fact]
-    public void Usage_shows_new_commands()
+    public void Usage_shows_chdman_style_commands()
     {
         var (exitCode, output) = RunCli();
 
         Assert.Equal(0, exitCode);
-        Assert.Contains("--toc", output, StringComparison.Ordinal);
-        Assert.Contains("--cue", output, StringComparison.Ordinal);
-        Assert.Contains("--classify", output, StringComparison.Ordinal);
+        Assert.Contains("info:", output, StringComparison.Ordinal);
+        Assert.Contains("verify:", output, StringComparison.Ordinal);
+        Assert.Contains("createcd:", output, StringComparison.Ordinal);
+        Assert.Contains("extractcd:", output, StringComparison.Ordinal);
+        Assert.Contains("help <command>", output, StringComparison.Ordinal);
     }
 }

@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Serilog;
 
 namespace CHDSharp;
 
@@ -33,7 +34,7 @@ internal static class VersionCheckService
                 return;
 
             using var request = new HttpRequestMessage(HttpMethod.Get, RepoApiUrl);
-            request.Headers.UserAgent.ParseAdd("CHDSharpCli");
+            request.Headers.UserAgent.ParseAdd("CHDSharp");
             using var response = await Client.SendAsync(request).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return;
@@ -55,13 +56,13 @@ internal static class VersionCheckService
                 .FirstOrDefault(a => string.Equals(a.Name, assetName, StringComparison.OrdinalIgnoreCase))
                 ?.BrowserDownloadUrl;
 
-            Console.WriteLine();
-            Console.WriteLine($"  *** A new version of CHDSharpCli is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.MinorRevision} ***");
+            Log.Logger.Information("");
+            Log.Logger.Information("  *** A new version of CHDSharp is available: v{Major}.{Minor}.{Build} ***", latestVersion.Major, latestVersion.Minor, latestVersion.Build);
             if (downloadUrl != null)
-                Console.WriteLine($"  *** Download: {downloadUrl} ***");
+                Log.Logger.Information("  *** Download: {Url} ***", downloadUrl);
             else
-                Console.WriteLine($"  *** Download: {RepoReleasesUrl} ***");
-            Console.WriteLine();
+                Log.Logger.Information("  *** Download: {Url} ***", RepoReleasesUrl);
+            Log.Logger.Information("");
         }
         catch
         {
@@ -85,6 +86,6 @@ internal static class VersionCheckService
             _ => "win-x64"
         };
 
-        return $"CHDSharpCli_{arch}_v{Assembly.GetEntryAssembly()?.GetName().Version}.zip";
+        return $"CHDSharp_{arch}_v{Assembly.GetEntryAssembly()?.GetName().Version}.zip";
     }
 }
