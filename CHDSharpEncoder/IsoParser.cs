@@ -1,5 +1,3 @@
-using CHDSharpEncoder.Models;
-
 namespace CHDSharpEncoder;
 
 /// <summary>

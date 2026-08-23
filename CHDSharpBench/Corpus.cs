@@ -78,8 +78,8 @@ public static class Corpus
             {
                 CHDSharp.Chd.ReadHeader(file, out var header);
                 if (header?.Compression is { Length: > 0 } comps &&
-                    comps[0] == (CHDSharp.Models.ChdCodec)codecTag &&
-                    comps.Skip(1).All(c => c == CHDSharp.Models.ChdCodec.None))
+                    comps[0] == (ChdCodec)codecTag &&
+                    comps.Skip(1).All(c => c == ChdCodec.None))
                 {
                     return file;
                 }

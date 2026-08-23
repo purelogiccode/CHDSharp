@@ -1,8 +1,7 @@
 ﻿using System.IO.Compression;
-using CHDSharp.Flac;
-using CHDSharp.LZMA;
-using CHDSharp.Models;
-using CHDSharp.Models.Flac.FlacDeps;
+using VendoredFlac;
+using VendoredLZMA;
+using VendoredFlac.Models.FlacDeps;
 using CHDSharp.Models.Utils;
 using CHDSharp.Utils;
 using ZstdSharp;

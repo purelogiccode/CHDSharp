@@ -2,8 +2,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using CHDSharp;
-using CHDSharp.Models;
-using CHDSharpTester.Models;
 using Serilog;
 
 namespace CHDSharpTester.Services;

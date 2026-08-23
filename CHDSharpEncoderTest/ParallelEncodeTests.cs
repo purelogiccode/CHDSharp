@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using CHDSharp;
-using CHDSharp.Models;
 using CHDSharpEncoder;
-using CHDSharpEncoder.Models;
 
 namespace CHDSharpEncoderTest;
 

@@ -1,5 +1,3 @@
-using CHDSharp.Models;
-
 namespace CHDSharp.Tests;
 
 public sealed class TrackInfoEdgeCaseTests

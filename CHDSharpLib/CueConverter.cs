@@ -3,25 +3,6 @@ using System.Text;
 
 namespace CHDSharp;
 
-/// <summary>CUE sheet output styles (CHDlite <c>CueStyle</c> parity).</summary>
-public enum CueStyle
-{
-    /// <summary>chdman-style: single-track discs get a " (Track 1)" file suffix, no CATALOG line.</summary>
-    Chdman = 0,
-
-    /// <summary>Redump-style: no CATALOG line, " (Track 1)" suffixes removed.</summary>
-    Redump = 1,
-
-    /// <summary>Redump style with a CATALOG line prepended.</summary>
-    RedumpCatalog = 2
-}
-
-/// <summary>The result of matching a CUE sheet against a known hash (CHDlite <c>match_cue</c> parity).</summary>
-/// <param name="Style">The style whose normalized output hashes to <paramref name="Hash"/>.</param>
-/// <param name="CueData">The normalized CUE sheet in <see cref="Style"/> form.</param>
-/// <param name="Hash">The hash of <see cref="CueData"/> (hex, lowercase).</param>
-public sealed record CueMatchResult(CueStyle? Style, string? CueData, string? Hash);
-
 /// <summary>
 /// Converts CUE sheets between the three common styles — chdman, Redump, and Redump+CATALOG —
 /// and matches generated CUE text against a database hash (CHDlite <c>convert_cue_style</c> /

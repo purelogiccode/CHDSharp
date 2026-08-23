@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using CHDSharp.Models;
 
 namespace CHDSharp.Tests;
 

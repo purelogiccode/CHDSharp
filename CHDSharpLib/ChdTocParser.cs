@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
-using CHDSharp.Models;
 
 namespace CHDSharp;
 
@@ -73,13 +72,6 @@ internal static partial class ChdTocParser
             return ParseBinaryTracks(chcdEntries);
 
         return null;
-    }
-
-    private enum TrackTypeParser
-    {
-        Chtr,
-        Cht2,
-        GdRom
     }
 
     private static List<ChdTrackInfo> ParseTextTracks(

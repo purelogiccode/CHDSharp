@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Windows.Data;
-using CHDSharpTester.Models;
 
 namespace CHDSharpTester.Views;
 

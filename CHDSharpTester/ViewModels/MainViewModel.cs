@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
-using CHDSharpTester.Models;
 using CHDSharpTester.Services;
 using Microsoft.Win32;
 using Serilog;
@@ -34,7 +33,7 @@ internal class MainViewModel : INotifyPropertyChanged
         RemoveFileCommand = new RelayCommand(RemoveFile);
         RunTestsCommand = new RelayCommand(_ => { _runTask = RunTestsAsync(); }, _ => CanRunTests);
         CancelTestsCommand = new RelayCommand(_ => CancelTests(), _ => IsRunning);
-        ExportPdfCommand = new RelayCommand(_ => ExportPdf(), _ => HasResults);
+        ExportPdfCommand = new RelayCommand(_ => ExportPdfAsync(), _ => HasResults);
         CopyLogCommand = new RelayCommand(_ => CopyLog());
         CopyResultsCommand = new RelayCommand(_ => CopyResults(), _ => HasResults);
         AboutCommand = new RelayCommand(_ => ShowAbout());
@@ -517,7 +516,7 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private async void ExportPdf()
+    private async void ExportPdfAsync()
     {
         try
         {

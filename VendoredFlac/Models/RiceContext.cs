@@ -1,0 +1,37 @@
+namespace VendoredFlac.Models;
+
+/// <summary>
+/// Rice coding context for encoding/decoding residual values in FLAC subframes.
+/// Uses unsafe pointers.
+/// </summary>
+internal class RiceContext
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RiceContext"/> class, allocating partition arrays.
+    /// </summary>
+    public RiceContext()
+    {
+        Rparams = new int[FlakeConstants.Maxpartitions];
+        EscBps = new int[FlakeConstants.Maxpartitions];
+    }
+
+    /// <summary>
+    /// partition order
+    /// </summary>
+    public int Porder;
+
+    /// <summary>
+    /// coding method: rice parameters use 4 bits for coding_method 0 and 5 bits for coding_method 1
+    /// </summary>
+    public int CodingMethod;
+
+    /// <summary>
+    /// Rice parameters
+    /// </summary>
+    public readonly int[] Rparams;
+
+    /// <summary>
+    /// bps if using escape code
+    /// </summary>
+    public readonly int[] EscBps;
+}

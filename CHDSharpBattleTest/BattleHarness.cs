@@ -1,14 +1,9 @@
 using System.Diagnostics;
 using CHDSharp;
-using CHDSharp.Models;
 using CHDSharp.Utils;
 using CHDSharpEncoder;
-using CHDSharpEncoder.Models;
 
 namespace CHDSharpBattleTest;
-
-/// <summary>One assertion result from the battle run.</summary>
-public sealed record CheckResult(string Suite, string Name, string Detail, bool Passed, bool Skipped, double Seconds);
 
 /// <summary>Thrown by <see cref="BattleHarness.Assert"/> to record a failed check without unwinding the whole run.</summary>
 public sealed class CheckFailedException : Exception
@@ -24,18 +19,6 @@ public sealed class CheckSkippedException : Exception
     public CheckSkippedException(string message) : base(message)
     {
     }
-}
-
-/// <summary>A CHD produced during the run, decoded exhaustively by the decode suite.</summary>
-public sealed class Asset
-{
-    public required string Key { get; init; }
-    public required string Name { get; init; }
-    public required string ChdPath { get; init; }
-    public string? ParentPath { get; init; }
-    public required byte[] Expected { get; init; }
-    public required bool IsCd { get; init; }
-    public required string CodecLabel { get; init; }
 }
 
 /// <summary>
@@ -210,11 +193,6 @@ public sealed class BattleHarness
     }
 
     // ----- raw encode suite -----
-
-    private sealed record RawConfig(string Codecs, uint HunkBytes, uint UnitBytes)
-    {
-        public string Label => $"{Codecs}({HunkBytes}/{UnitBytes})";
-    }
 
     private void RunRawEncodeSuite()
     {

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using CHDSharp.Models;
 
 namespace CHDSharp.Tests;
 

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using CHDSharp.Models;
 
 namespace CHDSharp.Tests;
 

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using CHDSharp.Models;
 using CHDSharp.Utils;
 using Microsoft.Extensions.Logging;
 

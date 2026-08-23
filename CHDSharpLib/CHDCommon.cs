@@ -1,5 +1,3 @@
-using CHDSharp.Models;
-
 namespace CHDSharp;
 
 /// <summary>Provides conversion utilities between legacy CHD V1/V2 compression type values and the modern <see cref="ChdCodec"/> and <see cref="CompressionType"/> enums.</summary>

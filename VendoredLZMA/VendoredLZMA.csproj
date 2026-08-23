@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>VendoredLZMA</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CHDSharpLib" />
+    <InternalsVisibleTo Include="CHDSharpEncoder" />
+  </ItemGroup>
+</Project>

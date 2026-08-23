@@ -1,6 +1,4 @@
-using CHDSharpEncoder.Interfaces;
-using CHDSharpEncoder.LZMA;
-using CHDSharpEncoder.Models;
+using VendoredLZMA;
 
 namespace CHDSharpEncoder;
 

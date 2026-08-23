@@ -1,5 +1,3 @@
-using CHDSharp.Models;
-
 namespace CHDSharp.Tests;
 
 /// <summary>Tests for <c>CancellationToken</c> support on public APIs (feature #13).</summary>

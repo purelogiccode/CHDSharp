@@ -1,72 +1,70 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Library</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-        <IsPackable>true</IsPackable>
-        <RootNamespace>CHDSharp</RootNamespace>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <PackageId>CHDSharp</PackageId>
-        <Authors>Peterson Fernandes</Authors>
-        <Description>Pure C# read-only CHD (Compressed Hunks of Data) reader library. Supports MAME CHD formats V1-V5 and all 10 compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants).</Description>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageIcon>chd.png</PackageIcon>
-        <PackageTags>chd;mame;compression;emulation;disk-image;zstd;lzma;flac;huffman;avhuff</PackageTags>
-        <PackageProjectUrl>https://github.com/purelogiccode/CHDSharp</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/purelogiccode/CHDSharp</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageReleaseNotes>v1.2.0: CD/GD-ROM track (TOC) parsing with full track layout and sector type information via ChdTrackInfo and ChdTocParser. New ChdTrackType and ChdSubType enums. Improved UnitBytes property detects sector sizes from metadata for all CHD versions. Centralized versioning via Directory.Build.props. Deterministic and reproducible builds with embedded SourceLink.</PackageReleaseNotes>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <Deterministic>true</Deterministic>
-        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'net8.0'" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'net9.0'" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'net10.0'" />
-      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.400" PrivateAssets="All" />
-      <PackageReference Include="System.IO.Hashing" Version="10.0.11" />
-      <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
-      <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-    </ItemGroup>
-
-    <ItemGroup>
-      <InternalsVisibleTo Include="CHDSharpTest" />
-      <InternalsVisibleTo Include="CHDSharpTestGen" />
-      <InternalsVisibleTo Include="CHDSharpEncoder" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\" />
-        <None Include="LICENSE.txt" Pack="true" PackagePath="\" />
-        <None Include="Icon\chd.png" Pack="true" PackagePath="\" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Remove="References\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Remove="References\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Page Remove="References\**" />
-    </ItemGroup>
-
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>CHDSharp</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PackageId>CHDSharp</PackageId>
+    <Authors>Peterson Fernandes</Authors>
+    <Description>Pure C# read-only CHD (Compressed Hunks of Data) reader library. Supports MAME CHD formats V1-V5 and all 10 compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants).</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>chd.png</PackageIcon>
+    <PackageTags>chd;mame;compression;emulation;disk-image;zstd;lzma;flac;huffman;avhuff</PackageTags>
+    <PackageProjectUrl>https://github.com/purelogiccode/CHDSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/purelogiccode/CHDSharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>v1.2.0: CD/GD-ROM track (TOC) parsing with full track layout and sector type information via ChdTrackInfo and ChdTocParser. New ChdTrackType and ChdSubType enums. Improved UnitBytes property detects sector sizes from metadata for all CHD versions. Centralized versioning via Directory.Build.props. Deterministic and reproducible builds with embedded SourceLink.</PackageReleaseNotes>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.400" PrivateAssets="All" />
+    <PackageReference Include="System.IO.Hashing" Version="10.0.11" />
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
+    <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CHDSharpTest" />
+    <InternalsVisibleTo Include="CHDSharpTestGen" />
+    <InternalsVisibleTo Include="CHDSharpEncoder" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="Icon\chd.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="References\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="References\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Remove="References\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" />
+    <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="CHDSharp.Models" />
+  </ItemGroup>
 </Project>

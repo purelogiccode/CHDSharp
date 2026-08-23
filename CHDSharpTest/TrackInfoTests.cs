@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using CHDSharp.Models;
 
 namespace CHDSharp.Tests;
 

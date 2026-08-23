@@ -1,5 +1,3 @@
-using CHDSharp.Models;
-
 namespace CHDSharp.Tests;
 
 /// <summary>Tests for <c>Chd.ReadHeader</c> / <c>Chd.ReadHeaderAsync</c> (libchdr <c>chd_read_header</c> parity, feature #16).</summary>

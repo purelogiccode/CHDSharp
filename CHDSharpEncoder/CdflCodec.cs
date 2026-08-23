@@ -1,6 +1,4 @@
-using CHDSharpEncoder.Flac;
-using CHDSharpEncoder.Interfaces;
-using CHDSharpEncoder.Models;
+using VendoredFlac.Encoder;
 
 namespace CHDSharpEncoder;
 

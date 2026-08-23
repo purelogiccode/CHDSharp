@@ -1,10 +1,8 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using CHDSharp.BugReporting;
-using CHDSharp.Models;
 using CHDSharp.Utils;
 using CHDSharpEncoder;
-using CHDSharpEncoder.Models;
 using Serilog;
 using Serilog.Extensions.Logging;
 

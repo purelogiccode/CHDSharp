@@ -1,53 +1,8 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
-using CHDSharp.Models;
 using System.IO.Hashing;
 
 namespace CHDSharp;
-
-/// <summary>Hash algorithms that <see cref="Chd.ComputeHashes"/> can compute over CHD content.</summary>
-[Flags]
-public enum ChdHashType
-{
-    /// <summary>No hash algorithms selected.</summary>
-    None = 0x0000,
-
-    /// <summary>SHA-1 (20 bytes) — the hash stored in V3-V5 CHD headers.</summary>
-    Sha1 = 0x0001,
-
-    /// <summary>SHA-256 (32 bytes).</summary>
-    Sha256 = 0x0002,
-
-    /// <summary>CRC-32 (IEEE 802.3, 4 bytes).</summary>
-    Crc32 = 0x0004,
-
-    /// <summary>XXH3-64 (8 bytes), the fast non-cryptographic hash used by Redump/CHDlite.</summary>
-    Xxh3 = 0x0008
-}
-
-/// <summary>Hashes of one contiguous region of a CHD's decompressed content.</summary>
-/// <param name="TrackNumber">The 1-based CD track number for per-track hashing, or <c>null</c> for the whole image.</param>
-/// <param name="StartOffset">Byte offset of the region within the decompressed image.</param>
-/// <param name="Length">Length of the region in bytes.</param>
-/// <param name="Sha1">SHA-1 of the region, or <c>null</c> if not requested.</param>
-/// <param name="Sha256">SHA-256 of the region, or <c>null</c> if not requested.</param>
-/// <param name="Crc32">CRC-32 of the region, or <c>null</c> if not requested.</param>
-/// <param name="Xxh3">XXH3-64 of the region, or <c>null</c> if not requested.</param>
-public sealed record ChdHashResult(int? TrackNumber, ulong StartOffset, long Length, byte[]? Sha1, byte[]? Sha256, uint? Crc32, ulong? Xxh3)
-{
-    /// <summary>Formats a hex string for one of the hashes, or <c>null</c> when unavailable.</summary>
-    public string? ToHex(ChdHashType type)
-    {
-        return type switch
-        {
-            ChdHashType.Sha1 => Sha1 is null ? null : Convert.ToHexString(Sha1).ToLowerInvariant(),
-            ChdHashType.Sha256 => Sha256 is null ? null : Convert.ToHexString(Sha256).ToLowerInvariant(),
-            ChdHashType.Crc32 => Crc32?.ToString("X8").ToLowerInvariant(),
-            ChdHashType.Xxh3 => Xxh3?.ToString("X16").ToLowerInvariant(),
-            _ => null
-        };
-    }
-}
 
 public static partial class Chd
 {

@@ -1,24 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <RootNamespace>CHDSharpBattleTest</RootNamespace>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <AssemblyName>CHDSharpBattleTest</AssemblyName>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
-        <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-    </ItemGroup>
-
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CHDSharpBattleTest</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>CHDSharpBattleTest</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+    <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="CHDSharpBattleTest.Models" />
+    <Using Include="CHDSharp.Models" />
+    <Using Include="CHDSharpEncoder.Models" />
+    <Using Include="CHDSharpEncoder.Interfaces" />
+  </ItemGroup>
 </Project>

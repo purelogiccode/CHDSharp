@@ -1,5 +1,3 @@
-using CHDSharp.Models;
-
 namespace CHDSharp.Tests;
 
 /// <summary>Tests for <c>IProgress&lt;ChdProgress&gt;</c> reporting on long operations (feature #21).</summary>

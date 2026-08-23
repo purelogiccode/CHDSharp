@@ -18,11 +18,6 @@ public sealed class ChdmanRunner
         ExePath = exePath;
     }
 
-    public sealed record RunResult(int ExitCode, string Stdout, string Stderr)
-    {
-        public string Combined => Stdout + Stderr;
-    }
-
     /// <summary>Runs <c>chdman &lt;command&gt; [args...]</c> and captures stdout/stderr.</summary>
     public RunResult Run(string command, params string[] args)
     {
@@ -65,22 +60,6 @@ public sealed class ChdmanRunner
         var first = r.Combined.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
         return string.IsNullOrEmpty(first) ? "(unknown chdman version)" : first;
     }
-
-    /// <summary>Parsed <c>chdman info</c> output (the fields that matter for cross-checks).</summary>
-    public sealed record ChdmanInfo(
-        int Version,
-        ulong LogicalBytes,
-        uint HunkBytes,
-        uint TotalHunks,
-        uint UnitBytes,
-        uint TotalUnits,
-        string Compression,
-        long ChdSize,
-        string? Sha1,
-        string? DataSha1,
-        string? Md5,
-        string? ParentSha1,
-        string? ParentMd5);
 
     /// <summary>Runs <c>chdman info</c> and parses the output; returns null when the file cannot be read.</summary>
     public ChdmanInfo? Info(string chdPath)

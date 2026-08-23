@@ -1,23 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-        <RootNamespace>CHDSharpBench</RootNamespace>
-        <AssemblyName>CHDSharpBench</AssemblyName>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
-        <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-        <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-    </ItemGroup>
-
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>CHDSharpBench</RootNamespace>
+    <AssemblyName>CHDSharpBench</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+    <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="CHDSharpBench.Models" />
+    <Using Include="CHDSharp.Models" />
+    <Using Include="CHDSharpEncoder.Models" />
+    <Using Include="CHDSharpEncoder.Interfaces" />
+  </ItemGroup>
 </Project>

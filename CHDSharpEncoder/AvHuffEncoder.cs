@@ -164,7 +164,7 @@ internal sealed class AvHuffEncoder
                 pcm[i] = (short)((source[off] << 8) | source[off + 1]);
             }
 
-            var encoder = new Flac.LibFlacEncoder(samples, channels: 1, sampleRate: 48000);
+            var encoder = new VendoredFlac.Encoder.LibFlacEncoder(samples, channels: 1, sampleRate: 48000);
             var length = encoder.Encode(flacOut, pcm.AsSpan(0, samples));
 
             // record the size of this channel's stream (full logical length, even when the

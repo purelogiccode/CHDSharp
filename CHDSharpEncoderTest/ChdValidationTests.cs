@@ -1,6 +1,5 @@
 using CHDSharpEncoder;
 using CHDSharp;
-using CHDSharp.Models;
 
 namespace CHDSharpEncoderTest;
 

@@ -1,5 +1,5 @@
-using CHDSharp.Flac;
-using CHDSharp.Models.Flac.FlacDeps;
+using VendoredFlac;
+using VendoredFlac.Models.FlacDeps;
 using ZstdSharp;
 
 namespace CHDSharp.Models;

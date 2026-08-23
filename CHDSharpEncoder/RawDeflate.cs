@@ -1,5 +1,6 @@
 using System.IO.Compression;
-using CHDSharpEncoder.ZLib;
+using VendoredZLib;
+using static VendoredZLib.ZLib;
 
 namespace CHDSharpEncoder;
 
@@ -15,7 +16,7 @@ public static class RawDeflate
     /// <returns>The compressed bytes, or <c>null</c> if compression did not reduce size.</returns>
     public static byte[]? Compress(byte[] data)
     {
-        var zlib = new ZLib.ZLib();
+        var zlib = new ZLib();
         var output = new byte[zlib.CompressBound((uint)data.Length)];
         var zs = new ZStream { Input = data, Output = output };
         var initStatus = zlib.DeflateInit(ref zs, ZBestCompression, ZDeflated, -15, 8, ZDefaultStrategy);

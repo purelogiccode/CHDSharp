@@ -1,27 +1,8 @@
 using CHDSharp;
 using CHDSharp.Models;
-using CHDSharpEncoder.Interfaces;
-using CHDSharpEncoder.Models;
 using MapEntry = CHDSharpEncoder.Models.MapEntry;
 
 namespace CHDSharpEncoder;
-
-/// <summary>
-/// Summary of a completed <see cref="ChdEncoder.EncodeLaserDisc"/> run: the derived A/V
-/// parameters and output geometry (mirrors chdman <c>createld</c>'s console report).
-/// </summary>
-public sealed record LaserDiscEncodingInfo(
-    ulong FpsTimes1Million,
-    uint Width,
-    uint Height,
-    bool Interlaced,
-    uint Channels,
-    uint SampleRate,
-    uint MaxSamplesPerFrame,
-    uint BytesPerFrame,
-    uint HunkBytes,
-    ulong FirstFrame,
-    ulong Frames);
 
 /// <summary>
 /// Creates CHD v5 files from raw binary data (<see cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>), from CD

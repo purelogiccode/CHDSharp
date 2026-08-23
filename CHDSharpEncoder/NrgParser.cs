@@ -1,5 +1,4 @@
 using System.Buffers.Binary;
-using CHDSharpEncoder.Models;
 
 namespace CHDSharpEncoder;
 

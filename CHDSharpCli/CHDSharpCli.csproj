@@ -1,27 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-        <RootNamespace>CHDSharp</RootNamespace>
-        <AssemblyName>CHDSharpCli</AssemblyName>
-        <ApplicationIcon>Icon\chd.ico</ApplicationIcon>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
-      <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
-      <ProjectReference Include="..\CHDSharp.BugReporting\CHDSharp.BugReporting.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Serilog" Version="4.4.0" />
-      <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-      <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-    </ItemGroup>
-
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>CHDSharp</RootNamespace>
+    <AssemblyName>CHDSharpCli</AssemblyName>
+    <ApplicationIcon>Icon\chd.ico</ApplicationIcon>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+    <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
+    <ProjectReference Include="..\CHDSharp.BugReporting\CHDSharp.BugReporting.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Update="Meziantou.Analyzer" Version="3.0.177">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="CHDSharp.Models" />
+    <Using Include="CHDSharpEncoder.Models" />
+    <Using Include="CHDSharpEncoder.Interfaces" />
+  </ItemGroup>
 </Project>

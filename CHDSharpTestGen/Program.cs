@@ -1,17 +1,6 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using CHDSharp.Models;
 
 namespace CHDSharpTestGen;
-
-internal sealed class ManifestEntry
-{
-    [JsonPropertyName("file")] public string File { get; set; } = "";
-    [JsonPropertyName("version")] public uint Version { get; set; }
-    [JsonPropertyName("parent")] public string? Parent { get; set; }
-    [JsonPropertyName("expect")] public string Expect { get; set; } = "ok";
-    [JsonPropertyName("note")] public string Note { get; set; } = "";
-}
 
 internal static class Program
 {

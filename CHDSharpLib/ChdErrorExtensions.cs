@@ -1,5 +1,3 @@
-using CHDSharp.Models;
-
 namespace CHDSharp;
 
 /// <summary>Provides extension methods for <see cref="ChdError"/> values.</summary>

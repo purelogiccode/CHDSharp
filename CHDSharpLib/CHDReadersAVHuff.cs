@@ -1,6 +1,5 @@
-﻿using CHDSharp.Flac;
-using CHDSharp.Models;
-using CHDSharp.Models.Flac.FlacDeps;
+﻿using VendoredFlac;
+using VendoredFlac.Models.FlacDeps;
 using CHDSharp.Models.Utils;
 using CHDSharp.Utils;
 
