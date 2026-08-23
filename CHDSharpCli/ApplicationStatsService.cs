@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 
 namespace CHDSharp;
@@ -33,7 +32,7 @@ internal static class ApplicationStatsService
             var json = JsonSerializer.Serialize(payload);
             using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint);
             request.Headers.Add("Authorization", $"Bearer {ApiKey}");
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
             using var _ = await Client.SendAsync(request).ConfigureAwait(false);
         }
         catch

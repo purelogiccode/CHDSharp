@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
-using System.Text;
 using CHDSharp.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -757,7 +756,7 @@ public static partial class Chd
             }
         }
 
-        using var br = new BinaryReader(file, Encoding.UTF8, true);
+        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
         try
         {
             length = br.ReadUInt32Be();
@@ -954,7 +953,7 @@ public static partial class Chd
         {
             var bps = chd.Blocksize / chd.ObsoleteHunksize;
             var gddd = $"CYLS:{chd.ObsoleteCylinders},HEADS:{chd.ObsoleteHeads},SECS:{chd.ObsoleteSectors},BPS:{bps}";
-            metadata.Add(new ChdMetadataEntry("GDDD", Encoding.ASCII.GetBytes(gddd)));
+            metadata.Add(new ChdMetadataEntry("GDDD", System.Text.Encoding.ASCII.GetBytes(gddd)));
         }
         else if (chd.Metaoffset != 0)
         {

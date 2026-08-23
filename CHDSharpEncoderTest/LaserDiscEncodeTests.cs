@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
 using CHDSharp;
-using CHDSharpEncoder;
+using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
 

@@ -1,4 +1,3 @@
-using System.Text;
 using CHDSharp.Models.Utils;
 using CHDSharp.Utils;
 
@@ -118,7 +117,7 @@ internal static class ChdHeaders
     {
         chd = new ChdHeader();
 
-        using var br = new BinaryReader(file, Encoding.UTF8, true);
+        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
 
         chd.Compression = [ChdCodec.Zlib];
         chd.Flags = br.ReadUInt32Be(); // flags
@@ -186,7 +185,7 @@ internal static class ChdHeaders
     {
         chd = new ChdHeader();
 
-        using var br = new BinaryReader(file, Encoding.UTF8, true);
+        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
 
         chd.Compression = [ChdCodec.Zlib];
         chd.Flags = br.ReadUInt32Be(); // flags
@@ -253,7 +252,7 @@ internal static class ChdHeaders
     internal static ChdError ReadHeaderV3(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
-        using var br = new BinaryReader(file, Encoding.UTF8, true);
+        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
 
         chd.Flags = br.ReadUInt32Be(); // flags
         if (ValidateLegacyFlags(chd.Flags) != ChdError.Chderrnone)
@@ -310,7 +309,7 @@ internal static class ChdHeaders
     internal static ChdError ReadHeaderV4(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
-        using var br = new BinaryReader(file, Encoding.UTF8, true);
+        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
 
         chd.Flags = br.ReadUInt32Be(); // flags
         if (ValidateLegacyFlags(chd.Flags) != ChdError.Chderrnone)
@@ -367,7 +366,7 @@ internal static class ChdHeaders
     internal static ChdError ReadHeaderV5(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
-        using var br = new BinaryReader(file, Encoding.UTF8, true);
+        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
 
         chd.Compression = new ChdCodec[4];
         for (var i = 0; i < 4; i++)

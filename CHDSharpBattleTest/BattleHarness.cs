@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using CHDSharp;
+using CHDSharp.Encoder;
 using CHDSharp.Utils;
-using CHDSharpEncoder;
 
 namespace CHDSharpBattleTest;
 
@@ -22,7 +22,7 @@ internal sealed class CheckSkippedException : Exception
 }
 
 /// <summary>
-/// The battle harness: cross-checks CHDSharpLib (decode) and CHDSharpEncoder (encode)
+/// The battle harness: cross-checks CHDSharpLib (decode) and CHDSharp.Encoder (encode)
 /// against chdman.exe. Every check is recorded, reported, and summed into an exit code.
 /// </summary>
 internal sealed class BattleHarness

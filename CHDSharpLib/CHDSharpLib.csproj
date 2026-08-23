@@ -9,14 +9,14 @@
   <PropertyGroup>
     <PackageId>CHDSharp</PackageId>
     <Authors>Peterson Fernandes</Authors>
-    <Description>Pure C# read-only CHD (Compressed Hunks of Data) reader library. Supports MAME CHD formats V1-V5 and all 10 compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants).</Description>
+    <Description>Pure C# CHD (Compressed Hunks of Data) reader and writer library. Supports MAME CHD formats V1-V5, all 10 compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants), and full CHD creation/encoding with chdman-compatible output.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>chd.png</PackageIcon>
     <PackageTags>chd;mame;compression;emulation;disk-image;zstd;lzma;flac;huffman;avhuff</PackageTags>
     <PackageProjectUrl>https://github.com/purelogiccode/CHDSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/purelogiccode/CHDSharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>v1.2.0: CD/GD-ROM track (TOC) parsing with full track layout and sector type information via ChdTrackInfo and ChdTocParser. New ChdTrackType and ChdSubType enums. Improved UnitBytes property detects sector sizes from metadata for all CHD versions. Centralized versioning via Directory.Build.props. Deterministic and reproducible builds with embedded SourceLink.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.3.0: Merged CHDSharpEncoder into CHDSharpLib. The library now includes full CHD creation/encoding capabilities (ChdEncoder) alongside the existing reader. Supports raw, CD, DVD, and laserdisc encoding with all 10 codecs, parallel compression, delta/parent CHDs, and chdman-compatible output. 100% pure C#.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
   </PropertyGroup>
@@ -39,7 +39,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="CHDSharpTest" />
     <InternalsVisibleTo Include="CHDSharpTestGen" />
-    <InternalsVisibleTo Include="CHDSharpEncoder" />
+    <InternalsVisibleTo Include="CHDSharpEncoderTest" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
@@ -56,6 +56,7 @@
     <Page Remove="References\**" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\VendoredZLib\VendoredZLib.csproj" />
     <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" />
     <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" />
   </ItemGroup>

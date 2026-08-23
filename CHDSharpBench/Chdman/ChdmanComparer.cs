@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using CHDSharpEncoder;
+using CHDSharp.Encoder;
 
 namespace CHDSharpBench.Chdman;
 

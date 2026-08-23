@@ -2156,6 +2156,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// decompresses with its own scratch buffers, so concurrent readers never share codec state.</summary>
     private readonly ThreadLocal<ChdCodecState> _concurrentCodec = new(() => new ChdCodecState(), trackAllValues: true);
 
+    private bool _disposed;
+
     /// <summary>Reads <paramref name="buffer"/>'s full length at <paramref name="offset"/> without touching
     /// the shared stream position: <c>RandomAccess</c> for file-backed instances, otherwise the
     /// stream seek+read is serialized on a private lock.</summary>
@@ -2682,6 +2684,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <summary>Asynchronously releases the underlying stream (unless opened with <c>leaveOpen: true</c>) and any internally-owned parent instance.</summary>
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+
+        _disposed = true;
+
         _readAhead?.Dispose();
         _codec.Dispose();
         _concurrentCodec.Dispose();
@@ -2707,6 +2713,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <summary>Releases the underlying stream (unless opened with <c>leaveOpen: true</c>), the parent reference if owned, and codec resources.</summary>
     public void Dispose()
     {
+        if (_disposed) return;
+
+        _disposed = true;
+
         _readAhead?.Dispose();
         _codec.Dispose();
         foreach (var state in _concurrentCodec.Values)

@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Diagnosers;
+using CHDSharp.Encoder;
 
 namespace CHDSharpBench.Models;
 
@@ -20,20 +21,20 @@ public class BenchConfig : ManualConfig
 }
 
 /// <summary>Maps a codec name (lib <see cref="ChdCodec"/>) to the encoder tag used by
-/// <see cref="CHDSharpEncoder.CodecTags"/> (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl/none).</summary>
+/// <see cref="CodecTags"/> (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl/none).</summary>
 public static class CodecMap
 {
     public static readonly (string Name, ChdCodec Decode, uint Encode)[] All =
     [
-        ("zlib", ChdCodec.Zlib, CHDSharpEncoder.CodecTags.Zlib),
-        ("zstd", ChdCodec.Zstd, CHDSharpEncoder.CodecTags.Zstd),
-        ("lzma", ChdCodec.Lzma, CHDSharpEncoder.CodecTags.Lzma),
-        ("huff", ChdCodec.Huffman, CHDSharpEncoder.CodecTags.Huff),
-        ("flac", ChdCodec.Flac, CHDSharpEncoder.CodecTags.Flac),
-        ("cdzl", ChdCodec.Cdzlib, CHDSharpEncoder.CodecTags.Cdzl),
-        ("cdlz", ChdCodec.Cdlzma, CHDSharpEncoder.CodecTags.Cdlz),
-        ("cdfl", ChdCodec.Cdflac, CHDSharpEncoder.CodecTags.Cdfl),
-        ("cdzs", ChdCodec.Cdzstd, CHDSharpEncoder.CodecTags.Cdzs)
+        ("zlib", ChdCodec.Zlib, CodecTags.Zlib),
+        ("zstd", ChdCodec.Zstd, CodecTags.Zstd),
+        ("lzma", ChdCodec.Lzma, CodecTags.Lzma),
+        ("huff", ChdCodec.Huffman, CodecTags.Huff),
+        ("flac", ChdCodec.Flac, CodecTags.Flac),
+        ("cdzl", ChdCodec.Cdzlib, CodecTags.Cdzl),
+        ("cdlz", ChdCodec.Cdlzma, CodecTags.Cdlz),
+        ("cdfl", ChdCodec.Cdflac, CodecTags.Cdfl),
+        ("cdzs", ChdCodec.Cdzstd, CodecTags.Cdzs)
         // "none" has no decode codec; encode-only, exercised by the Encode group.
     ];
 

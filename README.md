@@ -5,24 +5,11 @@
 
 # CHDSharp
 
-**Pure C# CHD (Compressed Hunks of Data) reader and writer — V1–V5, all 10 codecs, parent/child chaining, 100% byte-for-byte match with MAME `chdman`.**
+**Pure C# CHD (Compressed Hunks of Data) reader and writer** — the disk-image format used by [MAME](https://www.mamedev.org/) for arcade hard disks, CD/GD-ROMs, DVDs, and laserdisc A/V content.
 
-> Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes) — extended with Zstd, AVHuff, parallel verification, async APIs, metadata support, seekable stream, span reads, read-ahead decompression, lazy parent resolution, and a comprehensive test suite.
+Supports every CHD format version (V1–V5), all 10 compression codecs, parent/child differential chains, parallel verification, metadata, extraction, and CHD creation — with **zero native dependencies** and a **100% byte-for-byte match with MAME `chdman`**.
 
----
-
-## What's New in v1.3.0
-
-- **Hard disk ident metadata (`IDNT`)** — Read/write `IDNT` metadata (ATA IDENTIFY DEVICE response, 512 bytes) preserving original drive model, serial, CHS geometry, and firmware revision. Access via `ChdFile.IdentData` property. `--ident <path>` flag on `createhd` CLI. Automatically preserved during `ChdEncoder.Copy()`.
-- **Hard disk encryption key metadata** — Read/write `KEY ` metadata (encryption key) used by OG Xbox and other platforms with encrypted HDD contents. Access via `ChdFile.KeyData` property. Automatically preserved during `ChdEncoder.Copy()`.
-- **PCMCIA CIS metadata** — Read/write `CIS ` metadata (Card Information Structure) used by PC Engine CD and other PCMCIA platforms. Access via `ChdFile.PcmciaCisData` property. Automatically preserved during `ChdEncoder.Copy()`.
-- **`ChdImageStream` — seekable `Stream` over decompressed image** — `ChdFile.OpenAsStream()` returns a read-only, seekable `Stream` wrapping the decompressed CHD. Supports `Read`, `ReadAsync`, `Seek`, `Position`, and `Length`.
-- **`Span<byte>` read overloads** — `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` enable callers to use `stackalloc`, `ArrayPool`, or pinned memory without allocating a temporary `byte[]`.
-- **Threaded read-ahead decompression** — `ChdFile.ConfigureReadAhead(int lookAhead)` enables background pre-decompression of upcoming hunks for sequential streaming workloads.
-- **Lazy parent resolution (`ParentResolver`)** — Open child CHDs without providing the parent path upfront. Supply a `ParentResolver` callback that resolves the parent by SHA1/MD5 hash on first read.
-- **Bounded metadata string parsing** — Hardened track metadata parsing against crafted payloads (libchdr #165). TYPE/SUBTYPE/PGTYPE/PGSUB fields capped at 15 characters. Metadata entries > 64 KiB rejected.
-- **Deflate decoder infinite-loop guard** — Added guards in the inflate state machine matching miniz 3.1.2 fix parity (libchdr #168).
-- **Metadata upgrade during copy** — Legacy CD/GD-ROM metadata (`CHCD`, `CHTR`, `CHGT`) is automatically upgraded to modern equivalents (`CHT2`, `CHGD`) during `Copy`, matching MAME chdman behavior. Use `--no-upgrade` to preserve legacy tags.
+> Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes) — extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, lazy parent resolution, encoding capabilities, and a comprehensive test suite.
 
 ---
 
@@ -32,11 +19,13 @@
 dotnet add package CHDSharp
 ```
 
-Targets `net8.0`, `net9.0`, and `net10.0`. Zero native dependencies — every codec (zlib, lzma, huffman, flac, zstd, AVHuff) is implemented in pure C#, with Zstd backed by the managed [ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp).
+Targets `net8.0`, `net9.0`, and `net10.0`. Zero native dependencies — every codec (zlib, lzma, huffman, flac, zstd, AVHuff) is implemented in pure C#.
 
 ---
 
 ## Quick Start
+
+### Reading CHDs
 
 ```csharp
 using CHDSharp;
@@ -44,7 +33,17 @@ using CHDSharp.Models;
 
 // Quick check: is this a valid CHD?
 if (Chd.IsChdFile("game.chd", out uint version))
-    Console.WriteLine($"Detected V{version}");
+    Console.WriteLine($"Detected CHD version {version}");
+
+// Read the header without opening the full file
+var headerResult = Chd.ReadHeader("game.chd");
+if (headerResult.IsSuccess)
+{
+    Console.WriteLine($"Version: {headerResult.Header.Version}");
+    Console.WriteLine($"Hunk size: {headerResult.Header.HunkBytes} bytes");
+    Console.WriteLine($"Total size: {headerResult.Header.TotalBytes} bytes");
+    Console.WriteLine($"SHA-1: {headerResult.Header.Sha1Hex}");
+}
 
 // Full verification (parallel, deep decompress every hunk)
 using var stream = File.OpenRead("game.chd");
@@ -52,8 +51,11 @@ var result = Chd.CheckFile(stream, "game.chd", deepCheck: true);
 Console.WriteLine(result.IsSuccess
     ? $"V{result.Version}  SHA1: {result.Sha1Hex}"
     : $"Error: {result.Error.GetMessage()}");
+```
 
-// Random access — open once, read hunks or byte ranges on demand
+### Random Access
+
+```csharp
 var err = ChdFile.Open("game.chd", out var chd);
 using (chd)
 {
@@ -70,26 +72,336 @@ using (chd)
     var hunk = new byte[chd.HunkBytes];
     chd.ReadHunk(42, hunk);
 
-    // Read arbitrary byte range (crosses hunk boundaries)
+    // Read arbitrary byte range (crosses hunk boundaries automatically)
     var buf = new byte[1024];
     chd.Read(offset: 0x10000, buf, 0, buf.Length);
 
-    // Or decompress the entire image at once
+    // Decompress the entire image at once
     chd.ReadAllBytes(out var image);
-}
 
-// Child (differential) CHD with its parent
-var childResult = Chd.CheckFileWithParent("child.chd", "parent.chd");
-
-// Async API
-var (_, asyncChd) = await ChdFile.OpenAsync("game.chd");
-await using (asyncChd)
-{
-    await asyncChd.ReadHunkAsync(0, hunk);
+    // Zero-copy Span<byte> reads
+    Span<byte> span = stackalloc byte[512];
+    chd.ReadHunk(0, span);
+    chd.Read(0x1000, span, span.Length);
 }
 ```
 
-### CLI
+### Seekable Stream
+
+```csharp
+var err = ChdFile.Open("game.chd", out var chd);
+using (chd)
+{
+    using var stream = chd.OpenAsStream();
+    stream.Seek(0x10000, SeekOrigin.Current);
+    var buffer = new byte[4096];
+    stream.Read(buffer, 0, buffer.Length);
+}
+```
+
+### Async API
+
+```csharp
+var (_, chd) = await ChdFile.OpenAsync("game.chd");
+await using (chd)
+{
+    var hunk = new byte[chd.HunkBytes];
+    await chd.ReadHunkAsync(0, hunk);
+
+    var buf = new byte[1024];
+    await chd.ReadAsync(0x10000, buf, 0, buf.Length);
+}
+```
+
+### Parent/Child CHDs
+
+```csharp
+// Verify a child CHD against its parent
+var result = Chd.CheckFileWithParent("child.chd", "parent.chd");
+
+// Open with parent
+var err = ChdFile.Open("child.chd", out var child, parentPath: "parent.chd");
+using (child)
+{
+    child.ReadAllBytes(out var image);
+}
+
+// Lazy parent resolution (resolve by hash on first read)
+var (_, lazyChd) = ChdFile.Open("child.chd", out var chd2,
+    parentResolver: hash => FindParentByHash(hash));
+```
+
+### CD Sector Reads
+
+```csharp
+var err = ChdFile.Open("game.chd", out var chd);
+using (chd)
+{
+    // Read by LBA (Logical Block Address)
+    var sector = new byte[2352]; // raw CD sector
+    chd.ReadSector(0, sector);
+
+    // Read by MSF (Minute:Second:Frame, BCD format)
+    chd.ReadSectorMsf(0x000200, sector); // 00:02:00
+
+    // Read full 2448-byte frame (2352 data + 96 subchannel)
+    var frame = new byte[2448];
+    chd.ReadFrame(0, frame);
+
+    // Convert between MSF and LBA
+    int lba = CdRomAddress.MsfToLba(0x000200);
+    uint msf = CdRomAddress.LbaToMsf(lba);
+}
+```
+
+### Progress Reporting & Cancellation
+
+```csharp
+using var cts = new CancellationTokenSource();
+
+var progress = new Progress<ChdProgress>(p =>
+    Console.WriteLine($"Verified {p.HunksProcessed}/{p.TotalHunks} hunks"));
+
+var result = Chd.CheckFile("game.chd", deepCheck: true,
+    progress: progress, cancellationToken: cts.Token);
+```
+
+---
+
+## Writing CHDs (Encoding)
+
+The encoder is part of the same library — no separate package needed.
+
+### Raw Binary → CHD
+
+```csharp
+using CHDSharp.Encoder;
+
+// Simplest form — default codec (zlib), auto hunk/unit sizes
+ChdEncoder.EncodeRaw("game.bin", "game.chd");
+
+// Custom codecs (tried per hunk; smallest output wins)
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    codecTags: ChdCodecs.ParseCodecTags("zlib,zstd,lzma"));
+
+// Custom hunk/unit sizes
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    hunkBytes: 65536, unitBytes: 4096);
+
+// Uncompressed CHD (-c none)
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    codecTags: [CodecTags.None]);
+```
+
+### CD Image → CHD
+
+```csharp
+// From CUE sheet
+ChdEncoder.EncodeCd("game.cue", "game.chd");
+
+// From GDI, ISO, TOC, or NRG
+ChdEncoder.EncodeCd("game.gdi", "game.chd");
+ChdEncoder.EncodeCd("game.iso", "game.chd");
+```
+
+### Blank HD CHD
+
+```csharp
+// Zero-filled CHD with auto-derived CHS geometry
+ChdEncoder.CreateBlank("blank.chd", 100 * 1024 * 1024UL); // 100 MB
+
+// Explicit CHS geometry
+ChdEncoder.CreateBlankWithChs("blank.chd",
+    cylinders: 1024, heads: 16, sectors: 63, sectorSize: 512);
+```
+
+### Re-compress Existing CHD
+
+```csharp
+// Re-compress with Zstd
+ChdEncoder.Copy("old.chd", "new.chd",
+    codecTags: [CodecTags.Zstd]);
+
+// Preserve legacy metadata (no upgrade)
+ChdEncoder.Copy("old.chd", "new.chd",
+    codecTags: [CodecTags.Zstd],
+    options: new ChdEncodeOptions { NoMetadataUpgrade = true });
+```
+
+### Delta (Parent) CHD
+
+```csharp
+// Create a differential child against a parent
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    options: new ChdEncodeOptions { ParentPath = "base.chd" });
+```
+
+### Progress Reporting During Encoding
+
+```csharp
+var options = new ChdEncodeOptions
+{
+    TaskCount = 8,
+    HunkCompleted = p => Console.WriteLine(
+        $"hunk {p.HunkIndex,6}/{p.HunkCount}  {p.CodecName,-5} " +
+        $"{p.RawBytes,8} -> {p.StoredBytes,8} B  ({p.Ratio:P1})")
+};
+
+ChdEncoder.EncodeRaw("game.bin", "game.chd", options: options);
+```
+
+### CLI Encoding
+
+```bash
+# Raw binary → CHD
+CHDSharpCli --create in.bin out.chd [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-t 8] [-ip parent.chd] [-v]
+
+# CD image → CHD (CUE/GDI/ISO/TOC)
+CHDSharpCli --createcd in.cue out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-v]
+
+# Blank HD CHD
+CHDSharpCli --createhd out.chd --size 104857600 [-chs 1024,16,63] [-ss 512] [-c zlib] [-v]
+
+# Re-compress an existing CHD
+CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]
+```
+
+---
+
+## Features
+
+### Reading
+
+- **Any CHD, any version** — V1–V5 headers, every internal map format (self-hunk dedup, CRC32 maps, CRC16/compressed/RLE maps, uncompressed V5 maps, unit-based parent references)
+- **All 10 codecs** — zlib, lzma, huffman, flac, zstd, AVHuff, plus the four CD-aware variants (`cdzl`, `cdlz`, `cdfl`, `cdzs`) with ECC/sync regeneration
+- **Random access** — `ReadHunk()`, `Read()` (byte ranges across hunk boundaries), `EnumerateHunks()`, `ReadAllBytes()`
+- **LBA/MSF sector reads** — `ReadSector()`, `ReadSectorMsf()`, and `ReadFrame()` address CD/GD-ROM sectors or full 2448-byte frames by logical block address
+- **Async API** — `OpenAsync`, `ReadHunkAsync`, `ReadAsync`, `IAsyncDisposable`
+- **Seekable stream** — `OpenAsStream()` returns a read-only, seekable `Stream` over the decompressed image
+- **Span\<byte\> reads** — `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` for zero-copy paths
+- **Read-ahead decompression** — `ConfigureReadAhead(int)` enables background pre-decompression of upcoming hunks
+- **Lazy parent resolution** — `ParentResolver` callback resolves parents by SHA1/MD5 hash on first read
+- **Header DTO without opening** — `Chd.ReadHeader()` returns the full parsed header without keeping the file open
+- **Parallel verification** — multi-threaded `CheckFile()` with bounded memory and configurable worker count
+- **Parent/child chains** — transparent differential CHD support with wrong-parent detection
+- **Metadata** — tag/index query API (`GetMetadata`) plus the full entry list; IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support
+- **Track info & extraction** — CD/GD-ROM TOC parsing (`ChdTrackInfo`), CUE/GDI descriptor generation, whole-image extraction (`.bin`/`.cue`, `.iso`, `.img`, `.raw`, `.gdi`)
+- **Platform/game detection** — 11 systems (PS1, Saturn, Dreamcast, etc.)
+- **Pluggable logging** — `Microsoft.Extensions.Logging` integration, silent by default
+
+### Writing
+
+- **Raw binary → CHD** — `ChdEncoder.EncodeRaw()` with auto or custom hunk/unit sizes
+- **CD image → CHD** — `ChdEncoder.EncodeCd()` from CUE, GDI, ISO, TOC, or NRG
+- **Blank HD CHD** — `ChdEncoder.CreateBlank()` / `CreateBlankWithChs()` for zero-filled images
+- **Re-compression** — `ChdEncoder.Copy()` re-compresses existing CHDs with new codecs
+- **Delta children** — create differential CHDs against a parent (`-ip`)
+- **All 10 codecs** — zlib, zstd, lzma, huff, flac, cdzl, cdlz, cdzs, cdfl, none; best-per-hunk selection
+- **SELF deduplication** — COMPRESSION_SELF with SELF_0/SELF_1 map promotion
+- **Metadata cloning** — all source entries preserved during copy
+- **Metadata upgrade** — legacy CHCD/CHTR/CHGT → modern CHT2/CHGD during copy (matching chdman)
+- **Parallel encoding** — 1–64 workers, deterministic output regardless of worker count
+- **100% chdman match** — byte-identical output vs `chdman` for all codecs
+
+---
+
+## Support Matrix
+
+### Format Versions
+
+| Version | Header | Map | Status |
+|---------|--------|-----|--------|
+| V1 | 76 bytes | Self-hunk dedup | ✅ |
+| V2 | 80 bytes | Self-hunk dedup | ✅ |
+| V3 | 120 bytes | CRC32 map, self-hunk | ✅ |
+| V4 | 108 bytes | CRC32 map, parent chain | ✅ |
+| V5 | 124 bytes | CRC16 / compressed / RLE, parent/unit chain | ✅ |
+
+### Codecs
+
+| Codec | FourCC | CD Variant | Read | Write |
+|-------|--------|------------|:----:|:-----:|
+| Zlib (Deflate) | `zlib` | `cdzl` | ✅ | ✅ |
+| LZMA | `lzma` | `cdlz` | ✅ | ✅ |
+| Huffman | `huff` | — | ✅ | ✅ |
+| FLAC | `flac` | `cdfl` | ✅ | ✅ |
+| Zstd | `zstd` | `cdzs` | ✅ | ✅ |
+| AVHuff | `avhu` | — | ✅ | ✅ |
+
+---
+
+## vs libchdr
+
+| Feature | libchdr 0.3.0 (C) | CHDSharp (C#) |
+|---------|:---:|:---:|
+| V1–V5 headers | ✅ | ✅ |
+| 9 of 10 codecs | ✅ | ✅ |
+| AVHuff (`avhu`) | ❌ | ✅ |
+| Parent/child chains | ✅ | ✅ |
+| Random access | ✅ | ✅ |
+| Byte-range reads | ❌ (hunk-only) | ✅ |
+| LBA/MSF sector reads | ❌ | ✅ |
+| Full-image verification | ❌ | ✅ parallel |
+| Metadata read/write | ✅ / ❌ | ✅ / ✅ |
+| Extraction | ❌ | ✅ |
+| Async API | ❌ | ✅ |
+| CHD creation | ❌ | ✅ |
+| Native dependencies | zlib, LZMA SDK, zstd, dr_flac | **none** |
+
+See [docs/libchdr-comparison.md](docs/libchdr-comparison.md) for the full parity analysis.
+
+---
+
+## Library Comparison
+
+CHDSharp vs the two other independent CHD implementations, MAME's reference `chdman` (0.288), and libchdr 0.3.0.
+
+| Capability | CHDSharp | chd-rs 0.3.4 (Rust) | CHDlite 0.2.1 (C++) | `chdman` (MAME) | libchdr 0.3.0 (C) |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Reading** | | | | | |
+| Read V1–V5 | ✅ | ✅ | 🟡 V3–V5 | ✅ | ✅ |
+| All 10 codecs (decode) | ✅ | ✅ | ✅ | ✅ | 🟡 9 of 10 |
+| Parent/child chains | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Per-hunk CRC verification | ✅ | 🟡 opt-in | ✅ | ✅ | 🟡 |
+| Full-image verify | ✅ parallel | 🟡 raw SHA1 | ✅ | ✅ | ❌ |
+| Track/TOC parsing | ✅ | 🟡 | ✅ | ✅ | ❌ |
+| **Writing** | | | | | |
+| Write V5 | ✅ | ❌ | ✅ | ✅ | ❌ |
+| All 10 codecs (encode) | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Delta/parent CHD | ✅ | ❌ | ✅ | ✅ | ❌ |
+| CHD→CHD copy | ✅ | ❌ | ✅ | ✅ | ❌ |
+| **API** | | | | | |
+| Byte-range reads | ✅ | ✅ | ✅ | — | ❌ |
+| LBA/MSF sector reads | ✅ | ❌ | ✅ | — | ❌ |
+| Thread-safe random access | ✅ | ❌ | ❌ | — | ❌ |
+| Async I/O | ✅ | ❌ | 🟡 | — | ❌ |
+| Parallel verification | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Parallel encoding | ✅ | ❌ | ✅ | ✅ | ❌ |
+| **Extras** | | | | | |
+| Extraction | ✅ | 🟡 | ✅ | ✅ | ❌ |
+| Platform detection | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Native dependencies | **none** | none | zlib-ng/zstd/lzma/flac | zlib/lzma/flac | zlib/LZMA/zstd/flac |
+
+---
+
+## Logging
+
+By default the library is silent. Set `Chd.LoggerFactory` before any other call to enable logging:
+
+```csharp
+using Serilog;
+using Serilog.Extensions.Logging;
+
+Chd.LoggerFactory = new SerilogLoggerFactory(
+    new LoggerConfiguration()
+        .MinimumLevel.Debug()
+        .WriteTo.Console()
+        .CreateLogger());
+```
+
+---
+
+## CLI
 
 ```bash
 # Verify all .chd files in directories (recursive)
@@ -113,180 +425,58 @@ CHDSharpCli --cue game.chd
 # Classify CHD media type
 CHDSharpCli --classify game.chd
 
-# Create CHDs (raw, CD, or re-compress an existing CHD; -c none for uncompressed)
-CHDSharpCli --create in.bin out.chd [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-t 8] [-ip parent.chd] [-d] [-tp id] [-v]
+# Create CHDs
+CHDSharpCli --create in.bin out.chd [-c zlib,zstd,lzma,none] [-hs 65536] [-us 4096] [-t 8] [-ip parent.chd] [-v]
 CHDSharpCli --createcd in.cue out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-v]
-CHDSharpCli --createhd out.chd --size N [-c zlib,zstd,lzma,none] [-hs N] [-us N] [-chs C,H,S] [-ss N] [-t 8] [-v]
+CHDSharpCli --createhd out.chd --size N [-c zlib,zstd,lzma,none] [-chs C,H,S] [-ss N] [-t 8] [-v]
 CHDSharpCli --copy in.chd out.chd [-c zlib,zstd,lzma,none] [-t 8] [-ip parent.chd] [-op parent.chd] [--no-upgrade] [-v]
-```
-
----
-
-## Features
-
-- **Read any CHD** — V1–V5 headers, all internal map formats (self-dedup, CRC16/32, compressed/uncompressed, RLE)
-- **All 10 codecs** — zlib, lzma, huffman, flac, zstd, AVHuff + CD variants (`cdzl`, `cdlz`, `cdfl`, `cdzs`)
-- **Random-access API** — `ReadHunk()` and `Read()` with hunk-caching; `EnumerateHunks()` for sequential streaming
-- **LBA/MSF sector reads** — `ReadSector()`, `ReadSectorMsf()`, and `ReadFrame()` read CD/GD-ROM sectors or full 2448-byte frames by logical block address; `CdRomAddress` converts between BCD MSF and LBA (with or without the 150-frame lead-in)
-- **Async API** — `OpenAsync`, `ReadHunkAsync`, `ReadAsync`, `IAsyncDisposable`
-- **Seekable stream** — `OpenAsStream()` returns a read-only, seekable `Stream` over the decompressed image
-- **Span\<byte\> reads** — `ReadHunk(uint, Span<byte>)` and `Read(ulong, Span<byte>, int)` for zero-copy paths
-- **Read-ahead decompression** — `ConfigureReadAhead(int)` enables background pre-decompression of upcoming hunks
-- **Lazy parent resolution** — `ParentResolver` callback resolves parents by SHA1/MD5 hash on first read
-- **Parallel verification** — multi-threaded `CheckFile` with bounded memory, configurable thread count
-- **Parent/child chaining** — transparent differential CHD support with wrong-parent detection
-- **Track info** — parse CD/GD-ROM table of contents (track types, sector sizes, pregap/postgap, frame offsets)
-- **Metadata** — expose game name, disc labels, and other CHD header metadata. IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support.
-- **CHD creation** — companion [`CHDSharpEncoder`](CHDSharpEncoder/README.md) writes V5 CHDs from raw binaries, CD images (CUE/GDI/ISO/TOC/NRG), and AVI laserdisc sources (`createld`) with `chdman`-matched output; re-compresses existing CHDs (`Copy`), creates delta children (`-ip parent`), and writes uncompressed CHDs (`-c none`)
-- **100% chdman match** — cross-checked against `chdman info`, `verify`, `copy`, and `extractraw` (MAME 0.288)
-- **Pluggable logging** — `Microsoft.Extensions.Logging` integration; silent by default
-
----
-
-## Support Matrix
-
-| Version | Header | Map | Status |
-|---------|--------|-----|--------|
-| V1 | 76 bytes | Self-hunk dedup | ✅ |
-| V2 | 80 bytes | Self-hunk dedup | ✅ |
-| V3 | 120 bytes | CRC32 map, self-hunk | ✅ |
-| V4 | 108 bytes | CRC32 map, parent chain | ✅ |
-| V5 | 124 bytes | CRC16 / compressed / RLE, parent/unit chain | ✅ |
-
-| Codec | FourCC | CD Variant | |
-|-------|--------|------------|--|
-| Zlib (Deflate) | `zlib` | `cdzl` | ✅ |
-| LZMA | `lzma` | `cdlz` | ✅ |
-| Huffman | `huff` | — | ✅ |
-| FLAC | `flac` | `cdfl` | ✅ |
-| Zstd | `zstd` | `cdzs` | ✅ |
-| AVHuff | `avhu` | — | ✅ |
-
----
-
-## vs libchdr
-
-| Feature | libchdr 0.3.0 (C) | CHDSharp (C#) |
-|---------|:---:|:---:|
-| V1–V5 headers | ✅ | ✅ |
-| 9 of 10 codecs (zlib, lzma, huff, flac, zstd, cdzl, cdlz, cdfl, cdzs) | ✅ | ✅ |
-| AVHuff (`avhu`) | ❌ | ✅ |
-| Parent/child chains | ✅ | ✅ |
-| Random access (`chd_read` / `ReadHunk`) | ✅ | ✅ |
-| Byte-range reads | ❌ (hunk-only) | ✅ `Read(offset, ...)` |
-| LBA/MSF sector reads | ❌ | ✅ `ReadSector`/`ReadSectorMsf`/`ReadFrame` + `CdRomAddress` |
-| Full-image verification | ❌ | ✅ parallel |
-| Metadata reading | ✅ `chd_get_metadata` | ✅ `GetMetadata` + `Metadata` |
-| Metadata writing | ❌ | ✅ `SetMetadata`/`DeleteMetadata` |
-| Extraction (CUE/BIN, GDI, ISO) | ❌ | ✅ |
-| Async API | ❌ | ✅ |
-| Parallel verification | ❌ | ✅ |
-| Pluggable logging | ❌ | ✅ |
-| CHD creation | ❌ (commented out) | ✅ `CHDSharpEncoder` |
-| Native dependencies | zlib (miniz), LZMA SDK, zstd, dr_flac | **none** |
-
-See [docs/libchdr-comparison.md](docs/libchdr-comparison.md) for the full parity analysis.
-
----
-
-## Library comparison: CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr
-
-CHDSharp vs the two other independent CHD implementations (chd-rs 0.3.4 and CHDlite 0.2.1), MAME's reference `chdman` (0.288), and the C reference library libchdr 0.3.0. The CHDSharp column covers the whole repo (reader + `CHDSharpEncoder` + CLI). ✅ = supported, 🟡 = partial, ❌ = not supported, — = not applicable (CLI).
-
-| Capability | CHDSharp (this repo) | chd-rs 0.3.4 (Rust) | CHDlite 0.2.1 (C++) | `chdman` (MAME 0.288) | libchdr 0.3.0 (C) |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **Reading** | | | | | |
-| Read V1–V5 | ✅ | ✅ | 🟡 V3–V5 only (rejects V1/V2) | ✅ | ✅ |
-| All 10 codecs (decode) | ✅ | ✅ | ✅ | ✅ (reference) | 🟡 9 of 10 (no AVHuff) |
-| Parent/child chains (read) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Per-hunk CRC16/CRC32 verification | ✅ always | 🟡 opt-in feature, off by default | ✅ always | ✅ always | 🟡 V5 CRC16 build option (on by default); V3/V4 CRC32 never checked |
-| Full-image verify (rawsha1 + combined SHA1) | ✅ parallel | 🟡 raw SHA1 only | ✅ sequential | ✅ sequential | ❌ no verify function |
-| `verify --fix` (repair header hashes) | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Track/TOC parsing (CD/GD-ROM) | ✅ `Tracks`/`ChdTrackInfo` | 🟡 tags recognized, no track model | ✅ | ✅ | ❌ |
-| Metadata read | ✅ | ✅ | ✅ | ✅ | ✅ `chd_get_metadata` |
-| **Writing** | | | | | |
-| Write V5 | ✅ (encoder) | ❌ read-only | ✅ | ✅ (reference) | ❌ read-only |
-| All 10 codecs (encode) | ✅ 10 of 10 (incl. `avhu` via `createld`/`extractld`) | ❌ | ✅ | ✅ | ❌ |
-| Uncompressed CHD (`-c none`) | ✅ byte-exact with chdman | 🟡 decode only | 🟡 core supports, CLI rejects | ✅ | 🟡 decode only |
-| Delta/parent CHD creation (`-ip`) | ✅ | ❌ | ✅ | ✅ | ❌ |
-| CHD→CHD copy / re-compress | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Metadata write (addmeta/delmeta) | ✅ | ❌ | ✅ | ✅ | ❌ |
-| **Input formats** | | | | | |
-| CUE / GDI / ISO / TOC / NRG parsing | ✅ all five | — | ✅ all five | ✅ all five | ❌ |
-| CUE style conversion / Redump match | ✅ | ❌ | ✅ | ✅ `convertcue` | ❌ |
-| **API & reads** | | | | | |
-| Byte-range reads | ✅ `Read(offset, ...)` | ✅ `Read + Seek` | ✅ `read_bytes` | — | ❌ hunk-only `chd_read` |
-| LBA/MSF sector-addressed reads | ✅ `ReadSector`/`ReadSectorMsf`/`ReadFrame` + `CdRomAddress` | ❌ | ✅ `read_sector` + `msf_to_lba`/`lba_to_msf` | — | ❌ |
-| Thread-safe random access | ✅ `ReadHunkConcurrent` | ❌ | ❌ | — | ❌ |
-| Async I/O API | ✅ | ❌ | 🟡 async *compress* pump only | — | ❌ |
-| Cancellation + progress reporting | ✅ on all long-running APIs | ❌ | 🟡 cancel + callbacks via C API | — | ❌ |
-| Precache / multi-hunk LRU cache | ✅ both | ❌ | 🟡 single-hunk cache | — | 🟡 `chd_precache`, no hunk cache |
-| Header-only DTO read | ✅ `Chd.ReadHeader` (libchdr parity) | 🟡 `Header` struct exposed | 🟡 via `ChdReader` | ✅ `info` | ✅ `chd_read_header` |
-| **Performance & tooling** | | | | | |
-| Parallel verification | ✅ (default 8 workers) | ❌ | ❌ | ❌ | ❌ |
-| Parallel encoding | ✅ (1–64 workers) | ❌ | ✅ (≤ 16, per-codec weighted queues) | ✅ (≤ 16 work-queue threads) | ❌ |
-| Benchmarks | ✅ BenchmarkDotNet + chdman comparer | ✅ `benches/` | ✅ `benchmark_chd.cpp` | — | 🟡 `tests/benchmark.c` (minimal timing harness) |
-| Fuzzing / mutation testing | ✅ 3500-seed deterministic suite | ✅ cargo-fuzz target | ❌ | ❌ | 🟡 `tests/fuzz.c` (libFuzzer harness) |
-| **Extras** | | | | | |
-| Extraction (CUE/BIN, GDI, ISO) | ✅ | 🟡 raw dump only | ✅ | ✅ | ❌ |
-| Platform/game detection | ✅ 11 systems (CHDlite parity) | ❌ | ✅ 11 systems | ❌ | ❌ |
-| Multi-hash output (SHA-256/CRC32/XXH3) | ✅ SHA1/SHA256/CRC32/XXH3 | ❌ | ✅ SHA1/MD5/CRC32/SHA256/XXH3 | 🟡 SHA1/MD5 only | ❌ |
-| Batch mode (folder scan) | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Native dependencies | **none** (pure C#) | none (pure-Rust crates) | zlib-ng / zstd / lzma / flac | zlib / lzma / flac | zlib (miniz) / LZMA SDK / zstd / dr_flac |
-| Language | C# (.NET 8/9/10) | Rust | C++ | C++ (MAME) | C |
-
-See [`docs/libchdr-comparison.md`](docs/libchdr-comparison.md) for the detailed parity analysis against libchdr.
-
----
-
-## Logging
-
-By default the library is silent. Set `Chd.LoggerFactory` before any other call to enable logging with any `ILoggerFactory`-compatible provider:
-
-```csharp
-using Serilog;
-using Serilog.Extensions.Logging;
-
-Chd.LoggerFactory = new SerilogLoggerFactory(
-    new LoggerConfiguration()
-        .MinimumLevel.Debug()
-        .WriteTo.Console()
-        .CreateLogger());
 ```
 
 ---
 
 ## Documentation
 
-The full wiki lives in [`docs/`](docs/README.md) — format reference, codecs, API reference, verification, extraction, performance, testing, and troubleshooting. CHD *creation* is documented in [the `CHDSharpEncoder` README](CHDSharpEncoder/README.md) and the wiki's [Encoder page](docs/encoder.md).
+The full wiki lives in [`docs/`](docs/README.md):
 
----
-
-## Full API
-
-See the [CHDSharpLib README](CHDSharpLib/README.md#api-reference) for the complete `Chd`, `ChdFile`, `ChdResult`, `ChdHeaderInfo`, `ChdMetadataEntry`, and `ChdError` API reference, including all `Open` overloads, the full header DTO read (`Chd.ReadHeader`), performance tuning (`Chd.TaskCount`), and usage patterns.
+| Page | Description |
+|------|-------------|
+| [Getting Started](docs/getting-started.md) | Install, first program, CLI tour |
+| [CHD Format Reference](docs/chd-format.md) | On-disk format: headers, maps, metadata, hashing |
+| [Codecs](docs/codecs.md) | All 10 decompression codecs |
+| [Architecture](docs/architecture.md) | Solution layout, library design, data flow |
+| [API Reference](docs/api-reference.md) | Complete `Chd`, `ChdFile`, and all public models |
+| [Encoder](docs/encoder.md) | CHD creation, codecs, dedup, chdman validation |
+| [Verification](docs/verification.md) | Full/parallel and header-only verification |
+| [Extraction](docs/extraction.md) | TOC parsing, CUE/GDI/ISO extraction |
+| [Metadata](docs/metadata.md) | Reading and querying CHD metadata tags |
+| [Parent/Child CHDs](docs/parent-child-chds.md) | Differential CHDs, unit-based references |
+| [Performance](docs/performance.md) | Throughput, parallelism tuning, caching |
+| [Testing](docs/testing.md) | The xUnit suite, corpus, generators |
+| [Troubleshooting](docs/troubleshooting.md) | Common errors, known limitations |
 
 ---
 
 ## Tests
 
-The test infrastructure has three tiers:
-
 | Project | Type | Description |
 |---------|------|-------------|
-| [`CHDSharpTest`](CHDSharpTest/README.md) | xUnit | Unit tests (header/API, CRC checksums) + corpus tests against 29 deterministic CHD files (V1–V5, all codecs & map types) |
-| [`CHDSharpTester`](CHDSharpTester/README.md) | WPF | Interactive batch verification cross-checked against `chdman` — header info, deep verify, SHA1, random-access extraction, codec decode, parent/child chains |
-| [`CHDSharpTestGen`](CHDSharpTestGen/README.md) | Console | Deterministic corpus generator (builds source images, runs vintage chdman binaries, produces the `CHDSharpTest/TestData/` corpus) |
+| `CHDSharpTest` | xUnit | Unit + corpus tests (468 tests, 30 CHD fixtures) |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (350 tests, chdman cross-validation) |
+| `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
+| `CHDSharpTestGen` | Console | Deterministic corpus generator |
 
 ```bash
-# Regenerate corpus (requires chdman binaries in CHDSharpTest/chdman/)
-dotnet run --project CHDSharpTestGen
-
-# Run unit + corpus tests
+# Run all tests
 dotnet test
 
-# Interactive chdman cross-check
-dotnet run --project CHDSharpTester
+# Run only encoder tests
+dotnet test CHDSharpEncoderTest/
+
+# Run large file integration tests
+dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
+
+# Regenerate corpus (requires chdman binaries)
+dotnet run --project CHDSharpTestGen
 ```
 
 ---
@@ -306,13 +496,52 @@ Requires [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or lat
 
 ---
 
+## Project Layout
+
+```
+CHDSharp/
+├── CHDSharpLib/            The library (NuGet: CHDSharp)
+│   ├── CHD.cs              Main entry point (Chd class)
+│   ├── CHDFile.cs          Random-access reader (ChdFile)
+│   ├── CHDHeaders.cs       V1–V5 header parsing
+│   ├── CHDReaders.cs       Codec decompression
+│   ├── CHDMetaData.cs      Metadata read/write
+│   ├── ChdTocParser.cs     CD/GD-ROM TOC parsing
+│   ├── CueConverter.cs     CUE sheet generation
+│   ├── DiscDetector.cs     Platform/game detection
+│   ├── Encoder/            CHD creation (ChdEncoder)
+│   │   ├── ChdEncoder.cs   Main encoder API
+│   │   ├── ChdCodec.cs     Codec implementations
+│   │   ├── HunkProcessor.cs Parallel compression pipeline
+│   │   ├── MapCompressor.cs V5 compressed map writer
+│   │   ├── ParentMap.cs    Delta/parent CHD support
+│   │   ├── Models/         Encoder models (ChdEncodeOptions, etc.)
+│   │   └── Interfaces/     IChdCodec interface
+│   ├── Models/             Public models (ChdHeaderInfo, ChdError, etc.)
+│   └── Utils/              Internal utilities (CRC, Huffman, BitStream)
+├── CHDSharpCli/            CLI tool
+├── CHDSharpTest/           Unit + corpus tests
+├── CHDSharpEncoderTest/    Encoder tests
+├── CHDSharpTester/         WPF interactive tester
+├── CHDSharpTestGen/        Corpus generator
+├── CHDSharpBench/          Benchmarks
+├── CHDSharpBattleTest/     Battle test harness
+├── VendoredZLib/           Pure C# zlib port
+├── VendoredLZMA/           LZMA SDK C# port
+└── VendoredFlac/           Pure C# FLAC encoder/decoder
+```
+
+---
+
 ## License
 
 MIT License — see [LICENSE](LICENSE.txt).
 
+The `VendoredFlac` component (FLAC encoder/decoder) is based on [CUETools.Flake](https://github.com/gchudov/cuetools.net) and is licensed under the [GNU Lesser General Public License v2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). See [LICENSE.txt](LICENSE.txt) for full details.
+
 ### Special Thanks
 
-**Gordon Jefferyes ([@gjefferyes](https://github.com/gjefferyes))** — the original author of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp), which this project is forked from. Gordon built the foundational C# CHD reader (V1–V5 headers, zlib/lzma/huffman/flac codecs, and a custom LZMA/FLAC stack) that this project extends with Zstd, AVHuff, parallel verification, async APIs, metadata support, and comprehensive testing.
+**Gordon Jefferyes ([@gjefferyes](https://github.com/gjefferyes))** — the original author of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp), which this project is forked from. Gordon built the foundational C# CHD reader (V1–V5 headers, zlib/lzma/huffman/flac codecs, and a custom LZMA/FLAC stack) that this project extends with Zstd, AVHuff, parallel verification, async APIs, metadata support, encoding capabilities, and comprehensive testing.
 
 ### Acknowledgments
 
@@ -323,4 +552,4 @@ MIT License — see [LICENSE](LICENSE.txt).
 ---
 
 * **Donate:** [support the developer](https://www.purelogiccode.com/donate)
-* **⭐ Star this repo on [GitHub](https://github.com/purelogiccode/CHDSharp)**
+* **Star this repo on [GitHub](https://github.com/purelogiccode/CHDSharp)**

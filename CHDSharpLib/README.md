@@ -4,7 +4,7 @@
 
 # CHDSharpLib
 
-**Pure C# CHD (Compressed Hunks of Data) library — V1–V5, all 10 codecs, parent/child chaining, parallel verification, 100% match with MAME chdman.**
+**Pure C# CHD (Compressed Hunks of Data) reader and writer — V1–V5, all 10 codecs, parent/child chaining, parallel verification, 100% match with MAME chdman.**
 
 > Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes), extended with Zstd, AVHuff, V5 compressed map, random-access API, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, and lazy parent resolution.
 
@@ -608,7 +608,6 @@ dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ## Limits
 
-- **Reader library** — This library reads and verifies CHD files. For *creation* (raw and CD images, re-compression via `Copy`, delta children, uncompressed `-c none` — all `chdman`-matched), use the companion [`CHDSharpEncoder`](../CHDSharpEncoder/README.md).
 - **Not thread-safe per instance** — `ChdFile` instances must be used from a single thread. Use `ReadHunkConcurrent` or separate instances for parallel work.
 - **No lossy video** — Lossy AVHuff video variants are not supported
 - **Stream must be seekable** — for `ChdFile.Open` stream overloads

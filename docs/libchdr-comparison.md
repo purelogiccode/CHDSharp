@@ -16,7 +16,7 @@ This page compares CHDSharp against the C reference library [libchdr 0.3.0](http
 
 ## Five-way comparison: CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr
 
-CHDSharp vs the two other independent CHD implementations (chd-rs 0.3.4 and CHDlite 0.2.1), MAME's reference `chdman` (0.288), and libchdr 0.3.0. The CHDSharp column covers the whole repo (reader + `CHDSharpEncoder` + CLI). ✅ = supported, 🟡 = partial, ❌ = not supported, — = not applicable (CLI).
+CHDSharp vs the two other independent CHD implementations (chd-rs 0.3.4 and CHDlite 0.2.1), MAME's reference `chdman` (0.288), and libchdr 0.3.0. The CHDSharp column covers the whole repo (reader + encoder (`CHDSharp.Encoder`) + CLI). ✅ = supported, 🟡 = partial, ❌ = not supported, — = not applicable (CLI).
 
 | Capability | CHDSharp (this repo) | chd-rs 0.3.4 (Rust) | CHDlite 0.2.1 (C++) | `chdman` (MAME 0.288) | libchdr 0.3.0 (C) |
 |---|:---:|:---:|:---:|:---:|:---:|
@@ -98,7 +98,7 @@ The same table is also in the [repository README](../README.md#library-compariso
 | Classification (cd/dvd/hdd/gd-rom) | ❌ | ✅ |
 | Custom IO (callbacks vs `Stream`) | ✅ core_file callbacks | ✅ `Stream` overloads |
 | Thread-safe logging | ❌ | ✅ `ILoggerFactory` |
-| CHD creation | ❌ (commented out) | ✅ [`CHDSharpEncoder`](../CHDSharpEncoder/README.md) |
+| CHD creation | ❌ (commented out) | ✅ [`CHDSharp.Encoder`](encoder.md) |
 | Native dependencies | zlib, lzma, flac, zstd | **none** |
 
 ---

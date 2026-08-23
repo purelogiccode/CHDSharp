@@ -4,7 +4,7 @@ namespace CHDSharpBattleTest;
 
 /// <summary>
 /// CHDSharp battle test: exhaustively cross-checks the CHDSharpLib decoder and the
-/// CHDSharpEncoder encoder against MAME's chdman.exe on a deterministic corpus of raw
+/// CHDSharp.Encoder encoder against MAME's chdman.exe on a deterministic corpus of raw
 /// and CD images. Produces a report and an exit code (0 = all passed).
 /// </summary>
 internal static class Program

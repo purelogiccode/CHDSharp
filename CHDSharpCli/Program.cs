@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
+using CHDSharp.Encoder;
 using CHDSharp.Utils;
-using CHDSharpEncoder;
 using Serilog;
 using Serilog.Extensions.Logging;
 
@@ -928,7 +928,7 @@ internal static class Program
     }
 
     /// <summary>
-    /// Creates a CD CHD from a CUE sheet using the CHDSharpEncoder, then verifies
+    /// Creates a CD CHD from a CUE sheet using the CHDSharp.Encoder, then verifies
     /// the file with a deep CHDSharpLib check.
     /// </summary>
     /// <param name="inputPath">Path of the .cue file.</param>
@@ -1003,7 +1003,7 @@ internal static class Program
     }
 
     /// <summary>
-    /// Creates a laserdisc CHD from an AVI file using the CHDSharpEncoder ('avhu' codec),
+    /// Creates a laserdisc CHD from an AVI file using the CHDSharp.Encoder ('avhu' codec),
     /// then verifies the result with a deep CHDSharpLib check.
     /// </summary>
     /// <param name="inputPath">Path of the source .avi file.</param>

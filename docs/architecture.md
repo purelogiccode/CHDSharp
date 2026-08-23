@@ -12,9 +12,8 @@ This page describes the solution layout and the internal design of the library.
 
 | Project | Kind | Purpose |
 |---------|------|---------|
-| `CHDSharpLib` | Library | The CHD reader (NuGet package `CHDSharp`). Everything in this wiki's API pages lives here. |
+| `CHDSharpLib` | Library | The CHD reader and encoder (NuGet package `CHDSharp`). Everything in this wiki's API pages lives here. The encoder subsystem (`CHDSharp.Encoder` namespace) creates V5 CHDs from raw binaries and CD images (CUE/GDI/ISO/TOC/NRG) with `chdman`-matched output — CRC16, SHA1, Deflate wrappers, V5 map compressor (`MapCompressor`, `Huffman16_8`), V5 header writer, all 9 writable codecs (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl + none), SELF dedup, delta parents, CHT2/CHGD/GDDD/DVD metadata. 100% pure C#. See [Encoder](encoder.md). |
 | `CHDSharpCli` | Console | CLI verification/classification tool built on the library. |
-| `CHDSharpEncoder` | Library | Companion *encoder*: creates V5 CHDs from raw binaries and CD images (CUE/GDI/ISO/TOC/NRG) with `chdman`-matched output — CRC16, SHA1, Deflate wrappers, V5 map compressor (`MapCompressor`, `Huffman16_8`), V5 header writer, all 9 writable codecs (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl + none), SELF dedup, delta parents, CHT2/CHGD/GDDD/DVD metadata. 100% pure C#. Not required for reading. See [Encoder](encoder.md). |
 | `CHDSharpTest` | xUnit | Unit + corpus tests (468 tests, 30 CHD fixtures). |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator driving vintage `chdman`/`hdcomp` binaries. |
 | `CHDSharpTester` | WPF | Interactive batch verification, cross-checked against `chdman`. |
@@ -154,7 +153,7 @@ The number of workers is `Chd.TaskCount` (default 8, range 1–64); it must be s
 
 ## Design notes
 
-- **Read-only by design** — the library never writes or repacks CHDs; `CHDSharpEncoder` exists for the *writer* side of the ecosystem.
+- **Read-only by design** — the library never writes or repacks CHDs; the encoder subsystem (`CHDSharp.Encoder`) exists for the *writer* side of the ecosystem.
 - **Reusable scratch** — `ChdCodecState` keeps LZMA windows, zstd decompressors, FLAC decoders, and Huffman tables alive across hunks, which is the main reason sequential reads stay fast.
 - **Error contract** — public APIs return `ChdError` codes rather than throwing (exceptions are caught at the `ReadHunk` boundary, logged, and mapped). See [Error Codes](error-codes.md).
 - **Lazy loading** — metadata and tracks are parsed on first access and cached; `Open` stays cheap for header-only callers.

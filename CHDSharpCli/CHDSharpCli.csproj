@@ -8,7 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
-    <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Serilog" Version="4.4.0" />
@@ -17,7 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="CHDSharp.Models" />
-    <Using Include="CHDSharpEncoder.Models" />
-    <Using Include="CHDSharpEncoder.Interfaces" />
+    <Using Include="CHDSharp.Encoder.Models" />
+    <Using Include="CHDSharp.Encoder.Interfaces" />
   </ItemGroup>
 </Project>

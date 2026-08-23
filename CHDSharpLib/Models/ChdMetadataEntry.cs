@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace CHDSharp.Models;
 
 /// <summary>Represents a single metadata entry from a CHD file header (e.g. game name, disc label, hardware info).</summary>
@@ -34,7 +32,7 @@ public record ChdMetadataEntry(string Tag, byte[] Data)
         if (Data.Length > MaxTextDataLength)
             return string.Empty;
 
-        return Encoding.ASCII.GetString(Data);
+        return System.Text.Encoding.ASCII.GetString(Data);
     }
 
     /// <summary><c>true</c> if <see cref="Data"/> appears to be printable ASCII text.</summary>

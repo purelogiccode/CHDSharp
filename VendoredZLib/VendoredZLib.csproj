@@ -6,7 +6,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="CHDSharpEncoder" />
+    <InternalsVisibleTo Include="CHDSharpLib" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

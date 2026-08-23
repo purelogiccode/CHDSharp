@@ -1,5 +1,6 @@
 using CHDSharp.Utils;
-using CHDSharpEncoder;
+using MapEntry = CHDSharp.Encoder.Models.MapEntry;
+using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
 

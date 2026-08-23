@@ -20,13 +20,12 @@
     <PackageReference Include="xunit.v3" Version="4.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Using Include="CHDSharpEncoder.Models" />
-    <Using Include="CHDSharpEncoder.Interfaces" />
+    <Using Include="CHDSharp.Encoder.Models" />
+    <Using Include="CHDSharp.Encoder.Interfaces" />
     <Using Include="CHDSharp.Models" />
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
     <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
   </ItemGroup>
   <ItemGroup>

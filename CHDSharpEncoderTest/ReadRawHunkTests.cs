@@ -1,6 +1,6 @@
 using System.IO.Compression;
 using CHDSharp;
-using CHDSharpEncoder;
+using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
 

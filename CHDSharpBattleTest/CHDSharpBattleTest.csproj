@@ -7,14 +7,13 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
-    <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
     <Using Include="CHDSharpBattleTest.Models" />
     <Using Include="CHDSharp.Models" />
-    <Using Include="CHDSharpEncoder.Models" />
-    <Using Include="CHDSharpEncoder.Interfaces" />
+    <Using Include="CHDSharp.Encoder.Models" />
+    <Using Include="CHDSharp.Encoder.Interfaces" />
   </ItemGroup>
 </Project>

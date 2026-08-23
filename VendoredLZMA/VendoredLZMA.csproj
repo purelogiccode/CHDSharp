@@ -7,7 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CHDSharpLib" />
-    <InternalsVisibleTo Include="CHDSharpEncoder" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

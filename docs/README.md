@@ -62,7 +62,7 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 
 | Page | Description |
 |------|-------------|
-| [Encoder (CHD creation)](encoder.md) | `CHDSharpEncoder`: raw/CD encoding, codecs, dedup, `chdman` validation, ratio logging. |
+| [Encoder (CHD creation)](encoder.md) | `CHDSharp.Encoder`: raw/CD encoding, codecs, dedup, `chdman` validation, ratio logging. |
 
 ### Reference
 
@@ -125,9 +125,8 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 
 | Project | Purpose |
 |---------|---------|
-| `CHDSharpLib` | The library itself (this wiki documents it). |
+| `CHDSharpLib` | The library itself (this wiki documents it). Includes the encoder subsystem (`CHDSharp.Encoder`). |
 | `CHDSharpCli` | Command-line verification/classification tool. |
-| `CHDSharpEncoder` | Companion *encoder* library — creates V5 CHDs from raw binaries and CD images (CUE/GDI/ISO/TOC/NRG), re-compresses existing CHDs (`Copy`), creates delta children (`-ip parent`), and writes uncompressed CHDs (`-c none`), with `chdman`-matched output. 100% pure C#. See [Encoder](encoder.md). |
 | `CHDSharpTest` | xUnit unit + corpus test suite (30 deterministic CHD files). |
 | `CHDSharpTestGen` | Deterministic corpus generator (drives vintage `chdman` binaries). |
 | `CHDSharpTester` | WPF interactive batch verifier cross-checked against `chdman`. |

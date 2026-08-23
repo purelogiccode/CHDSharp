@@ -22,7 +22,7 @@ How to build, test, pack, and publish every component of the repository.
 CSharp_CHDSharp.sln
 ├── CHDSharpLib/          The library (NuGet package: CHDSharp)
 ├── CHDSharpCli/          Command-line verification + CHD creation tool
-├── CHDSharpEncoder/      Companion encoder library (V5 CHD creation; see [Encoder](encoder.md))
+├── CHDSharpLib/Encoder/  Encoder subsystem (V5 CHD creation; see [Encoder](encoder.md))
 ├── CHDSharpTest/         xUnit unit + corpus tests
 ├── CHDSharpTestGen/      Deterministic corpus generator
 ├── CHDSharpTester/       WPF interactive tester

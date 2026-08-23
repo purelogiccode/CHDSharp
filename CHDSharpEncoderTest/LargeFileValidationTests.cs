@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using CHDSharp;
-using CHDSharpEncoder;
+using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
 

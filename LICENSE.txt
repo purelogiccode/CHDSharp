@@ -26,3 +26,40 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Third-Party Licenses
+
+This software includes the following vendored components:
+
+### VendoredZLib
+Port of the .NET runtime zlib implementation.
+- Managed C#/.NET code: Copyright (c) 2022-2024 Magnus Montin (MIT License)
+- Original zlib: Copyright (c) 1995-2024 Jean-loup Gailly and Mark Adler (zlib License)
+- Source: https://github.com/dotnet/runtime
+
+### VendoredLZMA
+C# port of the LZMA SDK.
+- Copyright (c) 1999-2023 Igor Pavlov (Public Domain)
+- Source: https://www.7-zip.org/sdk.html
+
+### VendoredFlac
+Pure C# FLAC encoder/decoder, based on CUETools.Flake and libFLAC.
+- CUETools.Flake: Copyright (c) 2009-2023 Grigory Chudov (GNU Lesser General Public License v2.1)
+- Based on Flake encoder: Copyright (c) 2006-2009 Justin Ruggles
+- libFLAC encoder port: Based on libFLAC 1.4.3 (BSD/GPL dual license)
+- Source: https://github.com/gchudov/cuetools.net
+
+The LGPL 2.1 license for CUETools.Flake is available at:
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+This means the VendoredFlac component is licensed under LGPL 2.1.
+You may redistribute it and/or modify it under the terms of the
+GNU Lesser General Public License as published by the Free Software Foundation;
+either version 2.1 of the License, or (at your option) any later version.
+
+### ZstdSharp.Port (NuGet dependency)
+Pure C# Zstd decompressor.
+- Copyright (c) 2020-2024 Oleg Stepanischev (MIT License)
+- Source: https://github.com/oleg-st/ZstdSharp

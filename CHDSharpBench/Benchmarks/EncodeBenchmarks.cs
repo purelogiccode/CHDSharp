@@ -1,5 +1,5 @@
 using BenchmarkDotNet.Attributes;
-using CHDSharpEncoder;
+using CHDSharp.Encoder;
 
 namespace CHDSharpBench.Benchmarks;
 

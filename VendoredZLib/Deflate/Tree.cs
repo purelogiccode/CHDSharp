@@ -334,17 +334,17 @@ internal static class Tree
             s.BiValid += length;
         }
 #else
-        if (s.bi_valid > BufSize - length)
+        if (s.BiValid > BufSize - length)
         {
-            s.bi_buf |= (ushort)(value << s.bi_valid);
-            PutShort(s, s.bi_buf, ref pending_buf);
-            s.bi_buf = (ushort)(value >> (BufSize - s.bi_valid));
-            s.bi_valid += length - BufSize;
+            s.BiBuf |= (ushort)(value << s.BiValid);
+            PutShort(s, s.BiBuf, ref pendingBuf);
+            s.BiBuf = (ushort)(value >> (BufSize - s.BiValid));
+            s.BiValid += length - BufSize;
         }
         else
         {
-            s.bi_buf |= (ushort)(value << s.bi_valid);
-            s.bi_valid += length;
+            s.BiBuf |= (ushort)(value << s.BiValid);
+            s.BiValid += length;
         }
 #endif
     }

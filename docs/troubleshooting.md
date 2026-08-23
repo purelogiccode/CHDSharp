@@ -80,7 +80,7 @@ Possible causes:
 
 | Limitation | Detail |
 |------------|--------|
-| **Reader library** | The library reads and verifies CHDs. For writing, see `CHDSharpEncoder` (companion project). |
+| **Reader library** | The library reads and verifies CHDs. For writing, see `CHDSharp.Encoder` (encoder subsystem in CHDSharpLib). |
 | **Not thread-safe per instance** | One `ChdFile` = one thread. Use `ReadHunkConcurrent` or separate instances for parallel work. |
 | **Seekable streams only** | `Open(Stream, ...)` requires `CanSeek`. |
 | **V6+ not supported** | MAME has not released a V6 format; if it ever does, a new header parser will be needed. |
@@ -92,7 +92,7 @@ Possible causes:
 ## FAQ
 
 **Q: Is CHDSharp a full replacement for `chdman`?**
-A: For *reading, verifying, and extracting* — yes (100% byte-for-byte match with MAME 0.288). For *creating* CHDs — no; that's what `chdman` and the companion `CHDSharpEncoder` are for.
+A: For *reading, verifying, and extracting* — yes (100% byte-for-byte match with MAME 0.288). For *creating* CHDs — no; that's what `chdman` and the encoder subsystem (`CHDSharp.Encoder`) are for.
 
 **Q: Why does `CheckFile` report success when the header hashes are all zero?**
 A: A CHD with zeroed hashes is valid but unverifiable at the whole-image level; per-hunk CRCs are still validated during deep verification.

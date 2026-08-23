@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
 using CHDSharp.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -121,7 +120,7 @@ internal static class ChdMetaData
         bool collectHashes, out List<InternalEntry> entries)
     {
         entries = [];
-        using var br = new BinaryReader(file, Encoding.UTF8, true);
+        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
 
         var currentOffset = chd.Metaoffset;
         var visitedOffsets = new HashSet<ulong>();
@@ -147,7 +146,7 @@ internal static class ChdMetaData
 
             LogMetaTag(Log, tag, metaLength, null);
             if (Util.IsAscii(metaData))
-                LogMetaDataText(Log, Encoding.ASCII.GetString(metaData), null);
+                LogMetaDataText(Log, System.Text.Encoding.ASCII.GetString(metaData), null);
             else
                 LogMetaDataBinary(Log, metaData.Length, null);
 

@@ -2,9 +2,9 @@
 layout: default
 ---
 
-# CHD creation (CHDSharpEncoder)
+# CHD creation (CHDSharp.Encoder)
 
-`CHDSharpEncoder` is the encoder companion to the CHDSharp reader. It writes **CHD v5**
+The encoder is part of `CHDSharpLib` under the `CHDSharp.Encoder` namespace. It writes **CHD v5**
 files from raw binaries and CD images (CUE/GDI/ISO/TOC/NRG), re-compresses existing CHDs
 (`Copy`), creates differential (delta) children against a parent, and writes
 uncompressed CHDs (`-c none`) — producing files that are **byte-for-byte identical to
@@ -14,7 +14,7 @@ and runs identically on Windows and Linux. One parity caveat: `cdzs` encode outp
 valid and chdman-verifiable but not always bit-identical to chdman's own file (the managed
 zstd port finalizes frames differently on some buffer sizes); every other codec is bit-exact.
 
-Full API docs and project layout: [`CHDSharpEncoder/README.md`](../CHDSharpEncoder/README.md).
+Full API docs and project layout: see `CHDSharpLib/Encoder/`.
 
 
 ---
@@ -38,7 +38,7 @@ Full API docs and project layout: [`CHDSharpEncoder/README.md`](../CHDSharpEncod
 | Ratio logging | per-hunk callback (`ChdEncodeOptions.HunkCompleted`) — never changes output |
 
 ```csharp
-using CHDSharpEncoder;
+using CHDSharp.Encoder;
 
 ChdEncoder.EncodeRaw("game.bin", "game.chd");                       // raw, zlib
 ChdEncoder.EncodeCd("game.cue", "game.chd");                        // CD, zlib

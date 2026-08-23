@@ -1160,8 +1160,8 @@ internal static partial class Deflater
         flush = s.SymNext == s.SymEnd;
     }
 #else
-        => flush = Tree.Tally(s, 0, c, ref pending_buf, ref dyn_ltree, ref dyn_dtree,
-            ref dist_code, ref length_code);
+        => flush = Tree.Tally(s, 0, c, ref pendingBuf, ref dynLtree, ref dynDtree,
+            ref distCode, ref lengthCode);
 #endif
 
     private static BlockState DeflateRle(ref ZStream strm, int flush, ref byte pendingBuf, ref byte pendingOut)
@@ -1401,9 +1401,20 @@ internal static partial class Deflater
         Unsafe.Add(ref dynDtree, Tree.DCode(dist, ref distCode)).fc++;
         flush = s.SymNext == s.SymEnd;
     }
+#pragma warning disable MA0202
 #else
-     => flush = Tree.Tally(s, distance, length, ref pending_buf, ref dyn_ltree, ref dyn_dtree,
-         ref dist_code, ref length_code);
+ #pragma warning restore MA0202
+    {
+        var len = (byte)length;
+        var dist = (ushort)distance;
+        Unsafe.Add(ref pendingBuf, s.LitBufsize + s.SymNext++) = (byte)dist;
+        Unsafe.Add(ref pendingBuf, s.LitBufsize + s.SymNext++) = (byte)(dist >> 8);
+        Unsafe.Add(ref pendingBuf, s.LitBufsize + s.SymNext++) = len;
+        dist--;
+        Unsafe.Add(ref dynLtree, (uint)(SLengthCode[len] + Literals + 1)).fc++;
+        Unsafe.Add(ref dynDtree, Tree.DCode(dist, ref distCode)).fc++;
+        flush = s.SymNext == s.SymEnd;
+    }
 #endif
 
     private static BlockState DeflateFast(ref ZStream strm, int flush, ref byte pendingBuf, ref byte pendingOut)
