@@ -20,13 +20,12 @@ internal sealed class CliRunner
     {
         var psi = new ProcessStartInfo
         {
-            FileName = "dotnet",
+            FileName = ExePath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        psi.ArgumentList.Add(ExePath);
         psi.ArgumentList.Add(command);
         foreach (var a in args)
             psi.ArgumentList.Add(a);

@@ -231,9 +231,9 @@ internal static class Program
                     serilogLogger.Warning("verify requires a .chd file path");
                     return 1;
                 case "verify":
-                    VerifyTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
+                    var verified = VerifyTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return 0;
+                    return verified ? 0 : 1;
                 case "info" when cmdArgs.Length < 1:
                     serilogLogger.Warning("info requires a .chd file path");
                     return 1;
@@ -1920,7 +1920,7 @@ internal static class Program
     }
 
     /// <summary>Verifies a CHD, optionally repairing mismatched SHA-1 header fields (<c>--fix</c>).</summary>
-    private static void VerifyTest(string file, string[] options)
+    private static bool VerifyTest(string file, string[] options)
     {
         var log = Log.Logger;
         var fix = options.Contains("--fix", StringComparer.Ordinal) || options.Contains("-f", StringComparer.Ordinal);
@@ -1930,7 +1930,7 @@ internal static class Program
             if (!err.IsSuccess)
             {
                 log.Warning("Verify failed: {Error}", err);
-                return;
+                return false;
             }
 
             if (repaired)
@@ -1951,9 +1951,13 @@ internal static class Program
             ? Chd.CheckFileWithParent(file, parentFile)
             : Chd.CheckFileWithParent(file, (string?)null);
         if (result.IsSuccess)
+        {
             log.Information("  Verified OK (V{Version}, sha1={Sha1})", result.Version, result.Sha1Hex);
-        else
-            log.Warning("  Verified FAILED: {Error}", result.Error);
+            return true;
+        }
+
+        log.Warning("  Verified FAILED: {Error}", result.Error);
+        return false;
     }
 
     /// <summary>Prints a full header/map dump (chdman <c>info</c> + CHDlite header-dump parity):
@@ -2006,7 +2010,15 @@ internal static class Program
 
         // CHD file size
         long chdSize = 0;
-        try { chdSize = new FileInfo(file).Length; } catch { /* ignore */ }
+        try
+        {
+            chdSize = new FileInfo(file).Length;
+        }
+        catch
+        {
+            /* ignore */
+        }
+
         Console.WriteLine($"CHD size:     {BigintString((ulong)chdSize)} bytes");
 
         // SHA-1 hashes
@@ -2054,7 +2066,7 @@ internal static class Program
                     for (var ci = 0; ci < count; ci++)
                     {
                         var b = meta.Data[ci];
-                        preview.Append(b >= 32 && b < 127 ? (char)b : '.');
+                        preview.Append(b is >= 32 and < 127 ? (char)b : '.');
                     }
 
                     Console.WriteLine($"              {preview}");
@@ -2115,6 +2127,7 @@ internal static class Program
     {
         var active = codecs.Where(c => c != ChdCodec.None).ToArray();
         if (active.Length == 0) return "none";
+
         return string.Join(", ", active.Select(c =>
         {
             var name = CodecTagName(c);
@@ -2155,6 +2168,7 @@ internal static class Program
     {
         var bytes = Encoding.ASCII.GetBytes(tag);
         if (bytes.Length != 4) return 0;
+
         return ((uint)bytes[0] << 24) | ((uint)bytes[1] << 16) | ((uint)bytes[2] << 8) | bytes[3];
     }
 
