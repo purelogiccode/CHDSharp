@@ -106,8 +106,8 @@ public class RawEncodeMetadataTests : IDisposable
             var meta = file.Metadata.Single(m => string.Equals(m.Tag, "GDDD", StringComparison.Ordinal));
             var text = meta.GetText();
             Assert.StartsWith("CYLS:", text, StringComparison.Ordinal);
-            Assert.Contains("HEADS:16", text, StringComparison.Ordinal);
-            Assert.Contains("SECS:63", text, StringComparison.Ordinal);
+            Assert.Contains("HEADS:4", text, StringComparison.Ordinal);
+            Assert.Contains("SECS:32", text, StringComparison.Ordinal);
             Assert.Contains("BPS:512", text, StringComparison.Ordinal);
         }
     }

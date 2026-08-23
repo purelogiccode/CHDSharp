@@ -10,6 +10,7 @@ internal static class ChdCommon
     {
         switch (ct)
         {
+            case 0: return ChdCodec.None;
             case 1:
             case 2: return ChdCodec.Zlib;
             case 3: return ChdCodec.Avhuff;

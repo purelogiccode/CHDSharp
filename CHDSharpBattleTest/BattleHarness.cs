@@ -32,18 +32,22 @@ internal sealed class BattleHarness
     private readonly string _workDir;
     private readonly int _seed;
     private readonly bool _quick;
+    private readonly List<string> _realDirs;
+    private readonly int _realTimeoutMs;
 
     private readonly List<CheckResult> _checks = [];
     private readonly List<Asset> _assets = [];
 
     private static readonly string[] CdCodecMatrix = ["cdzl", "cdlz", "cdzs", "cdfl", "zlib", "none"];
 
-    internal BattleHarness(string chdmanPath, string? cliPath, string? outDir, int seed, bool quick)
+    internal BattleHarness(string chdmanPath, string? cliPath, string? outDir, int seed, bool quick, List<string> realDirs, int realTimeoutMs = 900_000)
     {
         _chdman = new ChdmanRunner(chdmanPath);
         _cli = cliPath != null ? new CliRunner(cliPath) : null;
         _seed = seed;
         _quick = quick;
+        _realDirs = realDirs;
+        _realTimeoutMs = realTimeoutMs;
         outDir ??= FindRepoRoot();
         OutDir = Path.Combine(outDir, "battle", $"battle-{DateTime.Now:yyyyMMdd-HHmmss}");
         _workDir = Path.Combine(OutDir, "artifacts");
@@ -131,6 +135,9 @@ internal sealed class BattleHarness
 
         if (_cli != null)
             RunCliSuite();
+
+        if (_realDirs.Count > 0)
+            RunRealSuites();
 
         WriteReport();
         return _checks.Count(c => c is { Passed: false, Skipped: false });
@@ -1438,6 +1445,233 @@ internal sealed class BattleHarness
         });
 
         Check(suite, "verify after meta ops (chdman)", () => VerifyChdman(refChd2));
+    }
+
+    // ----- real-file suite (battle-test user CHDs from real folders) -----
+
+    private void RunRealSuites()
+    {
+        foreach (var rawRoot in _realDirs)
+        {
+            var root = Path.GetFullPath(rawRoot);
+            if (!Directory.Exists(root))
+            {
+                Console.WriteLine($"[SKIP] real-corpus — folder not found: {rawRoot}");
+                continue;
+            }
+
+            var files = new List<string>();
+            CollectChdFiles(root, files);
+            if (files.Count == 0)
+            {
+                Console.WriteLine($"[SKIP] real-corpus — no *.chd files under: {root}");
+                continue;
+            }
+
+            Console.WriteLine();
+            Console.WriteLine($"== Real-file corpus suite: {root}  ({files.Count} CHD files) ==");
+
+            // Real CHDs can be far larger than the synthetic corpus; give verify/extract a
+            // longer per-command timeout (configurable via --real-timeout).
+            var chdman = new ChdmanRunner(_chdman.ExePath, _realTimeoutMs);
+            var cli = _cli != null ? new CliRunner(_cli.ExePath, _realTimeoutMs) : null;
+
+            RunRealSuite(chdman, cli, root, files);
+        }
+    }
+
+    private static void CollectChdFiles(string rootDir, List<string> files)
+    {
+        var di = new DirectoryInfo(rootDir);
+        try
+        {
+            foreach (var f in di.GetFiles("*.chd", new EnumerationOptions
+                     {
+                         IgnoreInaccessible = true,
+                         RecurseSubdirectories = false,
+                         AttributesToSkip = FileAttributes.ReparsePoint
+                     }))
+            {
+                if (f.Extension.Equals(".chd", StringComparison.OrdinalIgnoreCase))
+                    files.Add(f.FullName);
+            }
+
+            foreach (var d in di.GetDirectories())
+                CollectChdFiles(d.FullName, files);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or DirectoryNotFoundException)
+        {
+            // ignore inaccessible subtrees
+        }
+    }
+
+    private void RunRealSuite(ChdmanRunner chdman, CliRunner? cli, string root, List<string> files)
+    {
+        // Phase 1: read every header via the library (fast, header-only) and index parents by
+        // their combined SHA1 so differential children can resolve their parent from the set.
+        var parentsBySha1 = new Dictionary<string, string>(StringComparer.Ordinal);
+        var parentsByMd5 = new Dictionary<string, string>(StringComparer.Ordinal);
+        var headers = new Dictionary<string, ChdHeaderInfo?>(StringComparer.Ordinal);
+        foreach (var file in files)
+        {
+            var err = Chd.ReadHeader(file, out var h);
+            headers[file] = err == ChdError.Chderrnone ? h : null;
+            if (h == null)
+                continue;
+
+            if (h.Sha1 != null && !Util.IsAllZeroArray(h.Sha1))
+            {
+                parentsBySha1[Util.ToHex(h.Sha1)] = file;
+            }
+
+            if (h.Md5 != null && !Util.IsAllZeroArray(h.Md5))
+            {
+                parentsByMd5[Util.ToHex(h.Md5)] = file;
+            }
+        }
+
+        var childCount = 0;
+        foreach (var file in files)
+        {
+            var rel = file.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+                ? file[root.Length..].TrimStart(Path.DirectorySeparatorChar)
+                : file;
+            var name = Path.GetFileName(file);
+            var suite = $"real {rel}";
+            var header = headers[file];
+
+            Check(suite, "ReadHeader (library)", () =>
+                Assert(header != null, "library header read failed"));
+
+            if (header == null)
+                continue;
+
+            string? parentPath = null;
+            if (header.HasParent)
+            {
+                if (header.ParentSha1 != null && !Util.IsAllZeroArray(header.ParentSha1))
+                {
+                    var parentKey = Util.ToHex(header.ParentSha1);
+                    parentPath = parentsBySha1.GetValueOrDefault(parentKey);
+                }
+
+                if (parentPath == null && header.ParentMd5 != null && !Util.IsAllZeroArray(header.ParentMd5))
+                {
+                    var parentKey = Util.ToHex(header.ParentMd5);
+                    parentPath = parentsByMd5.GetValueOrDefault(parentKey);
+                }
+
+                if (parentPath == null)
+                {
+                    childCount++;
+                    Console.WriteLine("      (child; parent not found in scanned set — content checks SKIP)");
+                }
+            }
+
+            ChdmanInfo? chdmanInfo = null;
+            Check(suite, "chdman info", () =>
+            {
+                chdmanInfo = chdman.Info(file);
+                Assert(chdmanInfo != null, "chdman info failed");
+            });
+
+            if (cli != null)
+            {
+                ChdmanInfo? cliInfo = null;
+                Check(suite, "CLI info", () =>
+                {
+                    var r = cli.Run("info", "-i", file);
+                    Assert(r.ExitCode == 0, $"CLI info failed (exit={r.ExitCode}): {r.Combined.Trim()}");
+                    cliInfo = ChdmanRunner.ParseInfo(r.Combined);
+                    Assert(cliInfo != null, "CLI info output not parseable");
+                });
+
+                if (chdmanInfo != null && cliInfo != null)
+                {
+                    Check(suite, "info parity (chdman vs CLI)", () =>
+                    {
+                        Assert(chdmanInfo.Version == cliInfo.Version, $"info version {cliInfo.Version} != chdman {chdmanInfo.Version}");
+                        Assert(chdmanInfo.LogicalBytes == cliInfo.LogicalBytes, $"logical size {cliInfo.LogicalBytes} != chdman {chdmanInfo.LogicalBytes}");
+                        Assert(chdmanInfo.HunkBytes == cliInfo.HunkBytes, $"hunk size {cliInfo.HunkBytes} != chdman {chdmanInfo.HunkBytes}");
+                        Assert(chdmanInfo.TotalHunks == cliInfo.TotalHunks, $"hunks {cliInfo.TotalHunks} != chdman {chdmanInfo.TotalHunks}");
+                        Assert(chdmanInfo.UnitBytes == cliInfo.UnitBytes, $"unit size {cliInfo.UnitBytes} != chdman {chdmanInfo.UnitBytes}");
+                        Assert(chdmanInfo.TotalUnits == cliInfo.TotalUnits, $"units {cliInfo.TotalUnits} != chdman {chdmanInfo.TotalUnits}");
+                        Assert(string.Equals(NormalizeChdmanCodec(chdmanInfo.Compression), NormalizeChdmanCodec(cliInfo.Compression), StringComparison.Ordinal),
+                            $"compression '{cliInfo.Compression}' != chdman '{chdmanInfo.Compression}'");
+                        if (chdmanInfo.Sha1 != null)
+                            Assert(string.Equals(chdmanInfo.Sha1, cliInfo.Sha1, StringComparison.Ordinal), $"SHA1 {cliInfo.Sha1} != chdman {chdmanInfo.Sha1}");
+                        if (chdmanInfo.DataSha1 != null)
+                            Assert(string.Equals(chdmanInfo.DataSha1, cliInfo.DataSha1, StringComparison.Ordinal), $"Data SHA1 {cliInfo.DataSha1} != chdman {chdmanInfo.DataSha1}");
+                        if (chdmanInfo.ParentSha1 != null)
+                            Assert(string.Equals(chdmanInfo.ParentSha1, cliInfo.ParentSha1, StringComparison.Ordinal), $"Parent SHA1 {cliInfo.ParentSha1} != chdman {chdmanInfo.ParentSha1}");
+                    });
+                }
+            }
+
+            if (chdmanInfo != null)
+                Check(suite, "header parity (library vs chdman)", () => HeaderParity(header, chdmanInfo));
+
+            var canReadContent = !header.HasParent || parentPath != null;
+            if (canReadContent)
+            {
+                if (cli != null)
+                {
+                    Check(suite, "verify parity (chdman vs CLI)", () =>
+                    {
+                        var args = new List<string> { "-i", file };
+                        if (parentPath != null)
+                            args.AddRange(["-ip", parentPath]);
+                        var chdmanR = chdman.Run("verify", args.ToArray());
+                        var cliR = cli.Run("verify", args.ToArray());
+                        Assert(chdmanR.ExitCode == cliR.ExitCode,
+                            $"verify exit {cliR.ExitCode} != chdman {chdmanR.ExitCode}: {cliR.Combined.Trim()}");
+                    });
+                }
+
+                Check(suite, "library deep CheckFile", () =>
+                {
+                    var result = parentPath != null
+                        ? Chd.CheckFileWithParent(file, parentPath)
+                        : Chd.CheckFile(File.OpenRead(file), name, deepCheck: true);
+                    Assert(result.IsSuccess, $"CheckFile: {result.Error} ({result.Error.GetMessage()})");
+                });
+            }
+        }
+
+        if (childCount > 0)
+            Console.WriteLine($"      ({childCount} child CHD(s) could not be resolved to a parent in the scanned set)");
+    }
+
+    private static void HeaderParity(ChdHeaderInfo header, ChdmanInfo info)
+    {
+        Assert(header.Version == (uint)info.Version, $"version {header.Version} != chdman {info.Version}");
+        Assert(header.TotalBytes == info.LogicalBytes, $"logical size {header.TotalBytes} != chdman {info.LogicalBytes}");
+        Assert(header.HunkBytes == info.HunkBytes, $"hunk size {header.HunkBytes} != chdman {info.HunkBytes}");
+        Assert(header.TotalHunks == info.TotalHunks, $"hunks {header.TotalHunks} != chdman {info.TotalHunks}");
+        Assert(header.UnitBytes == info.UnitBytes, $"unit size {header.UnitBytes} != chdman {info.UnitBytes}");
+        Assert(header.UnitCount == info.TotalUnits, $"units {header.UnitCount} != chdman {info.TotalUnits}");
+
+        var expectedCompression = ChdmanCodecLabel(header.Compression);
+        Assert(string.Equals(NormalizeChdmanCodec(info.Compression), expectedCompression, StringComparison.Ordinal),
+            $"compression '{info.Compression}' (normalized '{NormalizeChdmanCodec(info.Compression)}') != ours '{expectedCompression}'");
+
+        if (info.Sha1 != null)
+        {
+            var sha1 = header.Sha1 != null && !Util.IsAllZeroArray(header.Sha1) ? Util.ToHex(header.Sha1) : null;
+            Assert(sha1 != null && string.Equals(sha1, info.Sha1, StringComparison.Ordinal), $"combined SHA1 {sha1 ?? "(none)"} != chdman {info.Sha1}");
+        }
+
+        if (info.DataSha1 != null)
+        {
+            var rawSha1 = header.RawSha1 != null && !Util.IsAllZeroArray(header.RawSha1) ? Util.ToHex(header.RawSha1) : null;
+            Assert(rawSha1 != null && string.Equals(rawSha1, info.DataSha1, StringComparison.Ordinal), $"raw SHA1 {rawSha1 ?? "(none)"} != chdman {info.DataSha1}");
+        }
+
+        if (info.ParentSha1 != null)
+        {
+            var parentSha1 = header.ParentSha1 != null && !Util.IsAllZeroArray(header.ParentSha1) ? Util.ToHex(header.ParentSha1) : null;
+            Assert(parentSha1 != null && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal), $"parent SHA1 {parentSha1 ?? "(none)"} != chdman {info.ParentSha1}");
+        }
     }
 
     // ----- shared helpers -----

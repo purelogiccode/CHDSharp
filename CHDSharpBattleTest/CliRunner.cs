@@ -9,10 +9,12 @@ namespace CHDSharpBattleTest;
 internal sealed class CliRunner
 {
     internal string ExePath { get; }
+    internal int TimeoutMs { get; }
 
-    internal CliRunner(string exePath)
+    internal CliRunner(string exePath, int timeoutMs = 300_000)
     {
         ExePath = exePath;
+        TimeoutMs = timeoutMs;
     }
 
     /// <summary>Runs <c>CHDSharp &lt;command&gt; [args...]</c> and captures stdout/stderr.</summary>
@@ -33,7 +35,7 @@ internal sealed class CliRunner
         using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {ExePath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
-        if (!p.WaitForExit(300_000))
+        if (!p.WaitForExit(TimeoutMs))
         {
             try
             {
@@ -44,7 +46,7 @@ internal sealed class CliRunner
                 // ignore
             }
 
-            throw new TimeoutException($"CHDSharp {command} timed out after 300s");
+            throw new TimeoutException($"CHDSharp {command} timed out after {TimeoutMs}ms");
         }
 
         return new RunResult(p.ExitCode, tOut.Result, tErr.Result);

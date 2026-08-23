@@ -19,6 +19,11 @@ internal static class Program
               --chdman <path>   chdman executable (default: repo-root chdman.exe or PATH)
               --cli <path>      CHDSharpCli executable (default: auto-resolve from repo)
               --out <dir>       artifact + report root (default: <repo>/TestResults/battle)
+              --real <dir>      scan a folder recursively for real *.chd files and battle-test
+                                each one (chdman vs CLI vs library). Repeatable.
+              --real-timeout <secs>
+                                per-command timeout for real-file checks (default 900s; large
+                                CHDs need more time for verify/extract than synthetic ones)
               --quick           reduced corpus (faster smoke battle)
               --seed <n>        RNG seed for the corpus (default 1337)
               --no-keep         delete artifacts at the end when everything passed
@@ -36,6 +41,8 @@ internal static class Program
         var quick = false;
         var noKeep = false;
         var seed = 1337;
+        var realDirs = new List<string>();
+        var realTimeoutMs = 900_000;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -49,6 +56,18 @@ internal static class Program
                     break;
                 case "--out" when i + 1 < args.Length:
                     outDir = args[++i];
+                    break;
+                case "--real" when i + 1 < args.Length:
+                    realDirs.Add(args[++i]);
+                    break;
+                case "--real-timeout" when i + 1 < args.Length:
+                    if (!int.TryParse(args[++i], out var rt) || rt <= 0)
+                    {
+                        Console.Error.WriteLine($"Invalid real timeout: {args[i]}");
+                        return 2;
+                    }
+
+                    realTimeoutMs = rt * 1000;
                     break;
                 case "--quick":
                     quick = true;
@@ -89,7 +108,7 @@ internal static class Program
         }
 
         var sw = Stopwatch.StartNew();
-        var harness = new BattleHarness(chdmanPath, cliPath, outDir, seed, quick);
+        var harness = new BattleHarness(chdmanPath, cliPath, outDir, seed, quick, realDirs, realTimeoutMs);
         try
         {
             var failed = harness.Run();

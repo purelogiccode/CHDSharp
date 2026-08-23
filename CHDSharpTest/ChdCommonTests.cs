@@ -5,6 +5,12 @@ public class ChdCommonTests
     // ── CompTypeConv ──
 
     [Fact]
+    public void CompTypeConv_0_returns_none()
+    {
+        Assert.Equal(ChdCodec.None, ChdCommon.CompTypeConv(0));
+    }
+
+    [Fact]
     public void CompTypeConv_1_returns_zlib()
     {
         Assert.Equal(ChdCodec.Zlib, ChdCommon.CompTypeConv(1));
@@ -23,7 +29,6 @@ public class ChdCommonTests
     }
 
     [Theory]
-    [InlineData(0)]
     [InlineData(4)]
     [InlineData(99)]
     [InlineData(uint.MaxValue)]
