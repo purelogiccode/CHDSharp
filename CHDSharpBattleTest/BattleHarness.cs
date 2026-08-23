@@ -28,6 +28,7 @@ internal sealed class CheckSkippedException : Exception
 internal sealed class BattleHarness
 {
     private readonly ChdmanRunner _chdman;
+    private readonly CliRunner? _cli;
     private readonly string _workDir;
     private readonly int _seed;
     private readonly bool _quick;
@@ -37,9 +38,10 @@ internal sealed class BattleHarness
 
     private static readonly string[] CdCodecMatrix = ["cdzl", "cdlz", "cdzs", "cdfl", "zlib", "none"];
 
-    internal BattleHarness(string chdmanPath, string? outDir, int seed, bool quick)
+    internal BattleHarness(string chdmanPath, string? cliPath, string? outDir, int seed, bool quick)
     {
         _chdman = new ChdmanRunner(chdmanPath);
+        _cli = cliPath != null ? new CliRunner(cliPath) : null;
         _seed = seed;
         _quick = quick;
         outDir ??= FindRepoRoot();
@@ -116,6 +118,8 @@ internal sealed class BattleHarness
     {
         Console.WriteLine($"== CHDSharp battle test vs {_chdman.VersionBanner()}");
         Console.WriteLine($"== seed={_seed} quick={_quick} out={OutDir}");
+        if (_cli != null)
+            Console.WriteLine($"== CLI: {_cli.ExePath}");
         Console.WriteLine();
 
         RunRawEncodeSuite();
@@ -124,6 +128,9 @@ internal sealed class BattleHarness
         RunCopySuite();
         RunDecodeSuite();
         RunInfoSuite();
+
+        if (_cli != null)
+            RunCliSuite();
 
         WriteReport();
         return _checks.Count(c => c is { Passed: false, Skipped: false });
@@ -970,6 +977,467 @@ internal sealed class BattleHarness
             var suite = $"info {asset.Name}";
             Check(suite, "ReadHeader == chdman info", () => InfoParity(asset.ChdPath, asset.ChdPath));
         }
+    }
+
+    // ----- CLI battle suite (runs CHDSharpCli vs chdman.exe) -----
+
+    private void RunCliSuite()
+    {
+        if (_cli == null) return;
+
+        Console.WriteLine();
+        Console.WriteLine("== CLI Battle Suite: CHDSharpCli vs chdman.exe ==");
+
+        RunCliInfoSuite();
+        RunCliVerifySuite();
+        RunCliCreateRawSuite();
+        RunCliCreateHdSuite();
+        RunCliCreateCdSuite();
+        RunCliCopySuite();
+        RunCliExtractRawSuite();
+        RunCliExtractCdSuite();
+        RunCliAddMetaSuite();
+    }
+
+    private void RunCliInfoSuite()
+    {
+        const string suite = "cli-info";
+        foreach (var asset in _assets.Take(_quick ? 3 : _assets.Count))
+        {
+            var tag = asset.Name;
+            Check(suite, $"info {tag}", () =>
+            {
+                var chdmanInfo = _chdman.Info(asset.ChdPath);
+                Assert(chdmanInfo != null, "chdman info failed");
+
+                var cliR = _cli!.Run("info", "-i", asset.ChdPath);
+                Assert(cliR.ExitCode == 0, $"CLI info failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+
+                var cliInfo = ChdmanRunner.ParseInfo(cliR.Combined);
+                Assert(cliInfo != null, "CLI info output not parseable");
+
+                Assert(chdmanInfo.Version == cliInfo.Version, $"version {cliInfo.Version} != chdman {chdmanInfo.Version}");
+                Assert(chdmanInfo.LogicalBytes == cliInfo.LogicalBytes, $"logical size {cliInfo.LogicalBytes} != chdman {chdmanInfo.LogicalBytes}");
+                Assert(chdmanInfo.HunkBytes == cliInfo.HunkBytes, $"hunk size {cliInfo.HunkBytes} != chdman {chdmanInfo.HunkBytes}");
+                Assert(chdmanInfo.TotalHunks == cliInfo.TotalHunks, $"hunks {cliInfo.TotalHunks} != chdman {chdmanInfo.TotalHunks}");
+                Assert(chdmanInfo.UnitBytes == cliInfo.UnitBytes, $"unit size {cliInfo.UnitBytes} != chdman {chdmanInfo.UnitBytes}");
+                Assert(chdmanInfo.TotalUnits == cliInfo.TotalUnits, $"units {cliInfo.TotalUnits} != chdman {chdmanInfo.TotalUnits}");
+
+                var normChdman = NormalizeChdmanCodec(chdmanInfo.Compression);
+                var normCli = NormalizeChdmanCodec(cliInfo.Compression);
+                Assert(string.Equals(normChdman, normCli, StringComparison.Ordinal),
+                    $"compression '{normCli}' != chdman '{normChdman}'");
+
+                if (chdmanInfo.Sha1 != null)
+                    Assert(string.Equals(chdmanInfo.Sha1, cliInfo.Sha1, StringComparison.Ordinal),
+                        $"SHA1 {cliInfo.Sha1} != chdman {chdmanInfo.Sha1}");
+                if (chdmanInfo.DataSha1 != null)
+                    Assert(string.Equals(chdmanInfo.DataSha1, cliInfo.DataSha1, StringComparison.Ordinal),
+                        $"Data SHA1 {cliInfo.DataSha1} != chdman {chdmanInfo.DataSha1}");
+            });
+        }
+    }
+
+    private void RunCliVerifySuite()
+    {
+        const string suite = "cli-verify";
+        foreach (var asset in _assets.Take(_quick ? 3 : _assets.Count))
+        {
+            var tag = asset.Name;
+            Check(suite, $"verify {tag}", () =>
+            {
+                var chdmanR = _chdman.Run("verify", "-i", asset.ChdPath);
+                var cliR = _cli!.Run("verify", "-i", asset.ChdPath);
+
+                Assert(chdmanR.ExitCode == cliR.ExitCode,
+                    $"exit code {cliR.ExitCode} != chdman {chdmanR.ExitCode}");
+            });
+        }
+    }
+
+    private void RunCliCreateRawSuite()
+    {
+        const string suite = "cli-createraw";
+        var dir = Path.Combine(_workDir, "cli-raw");
+        Directory.CreateDirectory(dir);
+
+        var inputs = _quick
+            ? new[] { ("zeros", TestDataGenerator.Zeros(64 * 1024)), ("random", TestDataGenerator.Random(128 * 1024, _seed)) }
+            : new[] { ("zeros", TestDataGenerator.Zeros(256 * 1024)), ("random", TestDataGenerator.Random(512 * 1024, _seed)), ("mixed", TestDataGenerator.Mixed(512 * 1024, _seed)) };
+
+        var configs = _quick
+            ? new[] { new RawConfig("zlib", 4096, 512) }
+            : new[] { new RawConfig("zlib", 4096, 512), new RawConfig("lzma", 4096, 512), new RawConfig("none", 4096, 512) };
+
+        foreach (var (name, data) in inputs)
+        foreach (var cfg in configs)
+        {
+            var tag = $"{name} x {cfg.Label}";
+            var inputPath = Path.Combine(dir, $"{name}.bin");
+            File.WriteAllBytes(inputPath, data);
+
+            var cliChd = Path.Combine(dir, $"{name}-{cfg.Codecs}.cli.chd");
+            var refChd = Path.Combine(dir, $"{name}-{cfg.Codecs}.ref.chd");
+
+            Check(suite, $"createraw {tag}", () =>
+            {
+                var cliR = _cli!.Run("createraw", "-i", inputPath, "-o", cliChd,
+                    "-c", cfg.Codecs, "-hs", cfg.HunkBytes.ToString(), "-us", cfg.UnitBytes.ToString(), "-f");
+                Assert(cliR.ExitCode == 0, $"CLI createraw failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+                Assert(File.Exists(cliChd), "CLI output file missing");
+            });
+
+            var refCreated = false;
+            if (data.Length % cfg.UnitBytes == 0)
+            {
+                Check(suite, $"chdman createraw {tag}", () =>
+                {
+                    var r = _chdman.Run("createraw", "-i", inputPath, "-o", refChd,
+                        "-c", cfg.Codecs, "-hs", cfg.HunkBytes.ToString(), "-us", cfg.UnitBytes.ToString(), "-f");
+                    if (r.ExitCode != 0)
+                        throw new CheckSkippedException($"chdman rejected config: {r.Combined.Trim()}");
+
+                    refCreated = true;
+                });
+            }
+
+            if (refCreated)
+            {
+                Check(suite, $"createraw byte-identical {tag}", () =>
+                {
+                    var ours = File.ReadAllBytes(cliChd);
+                    var refBytes = File.ReadAllBytes(refChd);
+                    AssertEqual(refBytes, ours, "chd file bytes");
+                });
+
+                Check(suite, $"createraw content parity {tag}", () =>
+                {
+                    var cliExtract = ExtractRaw(cliChd);
+                    var refExtract = ExtractRaw(refChd);
+                    AssertEqual(refExtract, cliExtract, "extracted data");
+                });
+            }
+
+            Check(suite, $"createraw verify {tag}", () => VerifyChdman(cliChd));
+        }
+    }
+
+    private void RunCliCreateHdSuite()
+    {
+        const string suite = "cli-createhd";
+        var dir = Path.Combine(_workDir, "cli-hd");
+        Directory.CreateDirectory(dir);
+
+        var sizes = _quick
+            ? new[] { 4096L, 32 * 1024L }
+            : new[] { 4096L, 32 * 1024L, 1024 * 1024L };
+
+        foreach (var size in sizes)
+        {
+            var tag = $"size-{size}";
+            var cliChd = Path.Combine(dir, $"hd-{size}.cli.chd");
+            var refChd = Path.Combine(dir, $"hd-{size}.ref.chd");
+
+            Check(suite, $"createhd {tag}", () =>
+            {
+                var cliR = _cli!.Run("createhd", "-o", cliChd, "-s", size.ToString(), "-f");
+                Assert(cliR.ExitCode == 0, $"CLI createhd failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+                Assert(File.Exists(cliChd), "CLI output file missing");
+            });
+
+            Check(suite, $"chdman createhd {tag}", () =>
+            {
+                var r = _chdman.Run("createhd", "-o", refChd, "-s", size.ToString(), "-f");
+                Assert(r.ExitCode == 0, $"chdman createhd failed: {r.Combined.Trim()}");
+            });
+
+            Check(suite, $"createhd byte-identical {tag}", () =>
+            {
+                var ours = File.ReadAllBytes(cliChd);
+                var refBytes = File.ReadAllBytes(refChd);
+                AssertEqual(refBytes, ours, "chd file bytes");
+            });
+
+            Check(suite, $"createhd verify {tag}", () => VerifyChdman(cliChd));
+        }
+    }
+
+    private void RunCliCreateCdSuite()
+    {
+        const string suite = "cli-createcd";
+        var dir = Path.Combine(_workDir, "cli-cd");
+        Directory.CreateDirectory(dir);
+
+        TestDataGenerator.CreateMixedCd(dir, _seed, out var mixedCue, out _);
+
+        var cliChd = Path.Combine(dir, "cd-mixed.cli.chd");
+        var refChd = Path.Combine(dir, "cd-mixed.ref.chd");
+
+        Check(suite, "createcd (CLI)", () =>
+        {
+            var cliR = _cli!.Run("createcd", "-i", mixedCue, "-o", cliChd, "-f");
+            Assert(cliR.ExitCode == 0, $"CLI createcd failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+            Assert(File.Exists(cliChd), "CLI output file missing");
+        });
+
+        Check(suite, "createcd (chdman)", () =>
+        {
+            var r = _chdman.Run("createcd", "-i", mixedCue, "-o", refChd, "-f");
+            Assert(r.ExitCode == 0, $"chdman createcd failed: {r.Combined.Trim()}");
+        });
+
+        Check(suite, "createcd content parity", () =>
+        {
+            var cliExtract = ExtractRaw(cliChd);
+            var refExtract = ExtractRaw(refChd);
+            AssertEqual(refExtract, cliExtract, "extracted data");
+        });
+
+        Check(suite, "createcd verify (CLI)", () => VerifyChdman(cliChd));
+    }
+
+    private void RunCliCopySuite()
+    {
+        const string suite = "cli-copy";
+        var dir = Path.Combine(_workDir, "cli-copy");
+        Directory.CreateDirectory(dir);
+
+        // Use a raw asset from the library test
+        var srcAsset = _assets.FirstOrDefault(a => string.Equals(a.Key, "mixed|zlib(4096/512)|ours", StringComparison.Ordinal))
+                       ?? _assets.FirstOrDefault(a => a.Key.Contains("zlib", StringComparison.Ordinal) && !a.IsCd);
+        if (srcAsset == null)
+        {
+            Console.WriteLine($"[SKIP] {suite} — no raw zlib asset available");
+            return;
+        }
+
+        var cliCopy = Path.Combine(dir, "copy.cli.chd");
+        var refCopy = Path.Combine(dir, "copy.ref.chd");
+
+        Check(suite, "copy (CLI)", () =>
+        {
+            var cliR = _cli!.Run("copy", "-i", srcAsset.ChdPath, "-o", cliCopy, "-c", "lzma", "-f");
+            Assert(cliR.ExitCode == 0, $"CLI copy failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+            Assert(File.Exists(cliCopy), "CLI output file missing");
+        });
+
+        Check(suite, "copy (chdman)", () =>
+        {
+            var r = _chdman.Run("copy", "-i", srcAsset.ChdPath, "-o", refCopy, "-c", "lzma", "-f");
+            Assert(r.ExitCode == 0, $"chdman copy failed: {r.Combined.Trim()}");
+        });
+
+        Check(suite, "copy content parity", () =>
+        {
+            var cliExtract = ExtractRaw(cliCopy);
+            var refExtract = ExtractRaw(refCopy);
+            AssertEqual(refExtract, cliExtract, "copied content");
+        });
+
+        Check(suite, "copy verify (CLI)", () => VerifyChdman(cliCopy));
+    }
+
+    private void RunCliExtractRawSuite()
+    {
+        const string suite = "cli-extractraw";
+        var dir = Path.Combine(_workDir, "cli-extract");
+        Directory.CreateDirectory(dir);
+
+        // Use a raw asset
+        var srcAsset = _assets.FirstOrDefault(a => string.Equals(a.Key, "mixed|zlib(4096/512)|ours", StringComparison.Ordinal))
+                       ?? _assets.FirstOrDefault(a => a.Key.Contains("zlib", StringComparison.Ordinal) && !a.IsCd);
+        if (srcAsset == null)
+        {
+            Console.WriteLine($"[SKIP] {suite} — no raw zlib asset available");
+            return;
+        }
+
+        var cliOut = Path.Combine(dir, "extract.cli.raw");
+        var refOut = Path.Combine(dir, "extract.ref.raw");
+
+        Check(suite, "extractraw (CLI)", () =>
+        {
+            var cliR = _cli!.Run("extractraw", "-i", srcAsset.ChdPath, "-o", cliOut, "-f");
+            Assert(cliR.ExitCode == 0, $"CLI extractraw failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+            Assert(File.Exists(cliOut), "CLI output file missing");
+        });
+
+        Check(suite, "extractraw (chdman)", () =>
+        {
+            var r = _chdman.Run("extractraw", "-i", srcAsset.ChdPath, "-o", refOut, "-f");
+            Assert(r.ExitCode == 0, $"chdman extractraw failed: {r.Combined.Trim()}");
+        });
+
+        Check(suite, "extractraw byte-identical", () =>
+        {
+            var cliBytes = File.ReadAllBytes(cliOut);
+            var refBytes = File.ReadAllBytes(refOut);
+            AssertEqual(refBytes, cliBytes, "extracted bytes");
+        });
+
+        Check(suite, "extractraw matches expected", () =>
+        {
+            var cliBytes = File.ReadAllBytes(cliOut);
+            AssertEqual(srcAsset.Expected, cliBytes, "extracted data");
+        });
+    }
+
+    private void RunCliExtractCdSuite()
+    {
+        const string suite = "cli-extractcd";
+        var dir = Path.Combine(_workDir, "cli-extractcd");
+        Directory.CreateDirectory(dir);
+
+        // Use a CD asset
+        var cdAsset = _assets.FirstOrDefault(a => a.IsCd && a.Key.Contains("cdzl", StringComparison.Ordinal));
+        if (cdAsset == null)
+        {
+            Console.WriteLine($"[SKIP] {suite} — no CD asset available");
+            return;
+        }
+
+        var cliCue = Path.Combine(dir, "extract.cli.cue");
+        var refCue = Path.Combine(dir, "extract.ref.cue");
+
+        Check(suite, "extractcd (CLI)", () =>
+        {
+            var cliR = _cli!.Run("extractcd", "-i", cdAsset.ChdPath, "-o", cliCue, "-f");
+            Assert(cliR.ExitCode == 0, $"CLI extractcd failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+            Assert(File.Exists(cliCue), "CLI output file missing");
+        });
+
+        Check(suite, "extractcd (chdman)", () =>
+        {
+            var r = _chdman.Run("extractcd", "-i", cdAsset.ChdPath, "-o", refCue, "-f");
+            Assert(r.ExitCode == 0, $"chdman extractcd failed: {r.Combined.Trim()}");
+        });
+
+        Check(suite, "extractcd CUE parity", () =>
+        {
+            var cliCueText = NormalizeCueBinName(File.ReadAllText(cliCue).Trim());
+            var refCueText = NormalizeCueBinName(File.ReadAllText(refCue).Trim());
+            Assert(string.Equals(cliCueText, refCueText, StringComparison.Ordinal), $"CUE sheets differ:\nCLI: {cliCueText[..Math.Min(200, cliCueText.Length)]}\nref: {refCueText[..Math.Min(200, refCueText.Length)]}");
+        });
+    }
+
+    /// <summary>Normalizes the FILE line of a CUE sheet to a common bin name so two CUE sheets
+    /// written to different paths/names can be compared structurally.</summary>
+    private static string NormalizeCueBinName(string cueText)
+    {
+        var lines = new List<string>();
+        foreach (var line in cueText.Split('\n'))
+        {
+            var trimmed = line.TrimEnd('\r');
+            if (trimmed.StartsWith("FILE ", StringComparison.Ordinal))
+            {
+                var q1 = trimmed.IndexOf('"');
+                var q2 = trimmed.LastIndexOf('"');
+                if (q1 >= 0 && q1 != q2)
+                {
+                    trimmed = trimmed[..q1] + "\"disc.bin\"" + trimmed[(q2 + 1)..];
+                }
+            }
+
+            lines.Add(trimmed);
+        }
+
+        return string.Join("\n", lines);
+    }
+
+    private void RunCliAddMetaSuite()
+    {
+        const string suite = "cli-addmeta";
+        var dir = Path.Combine(_workDir, "cli-meta");
+        Directory.CreateDirectory(dir);
+
+        // Create a small CHD for metadata testing. chdman can only modify (addmeta/delmeta)
+        // UNCOMPRESSED CHDs (its V5 reader sets m_allow_writes = !compressed()), so use
+        // "-c none" to keep both sides able to rewrite the file.
+        var srcData = TestDataGenerator.Zeros(64 * 1024);
+        var srcPath = Path.Combine(dir, "meta-src.bin");
+        File.WriteAllBytes(srcPath, srcData);
+
+        var cliChd = Path.Combine(dir, "meta.cli.chd");
+        var refChd = Path.Combine(dir, "meta.ref.chd");
+
+        // Create CHDs
+        var cliCreated = false;
+        Check(suite, "create for meta (CLI)", () =>
+        {
+            var cliR = _cli!.Run("createraw", "-i", srcPath, "-o", cliChd, "-hs", "4096", "-us", "512", "-c", "none", "-f");
+            Assert(cliR.ExitCode == 0, $"CLI createraw failed: {cliR.Combined.Trim()}");
+            cliCreated = true;
+        });
+        Check(suite, "create for meta (chdman)", () =>
+        {
+            var r = _chdman.Run("createraw", "-i", srcPath, "-o", refChd, "-hs", "4096", "-us", "512", "-c", "none", "-f");
+            Assert(r.ExitCode == 0, $"chdman createraw failed: {r.Combined.Trim()}");
+        });
+
+        if (cliCreated)
+        {
+            // Add metadata
+            Check(suite, "addmeta (CLI)", () =>
+            {
+                var cliR = _cli!.Run("addmeta", "-i", cliChd, "-t", "TEST", "-vt", "hello world");
+                Assert(cliR.ExitCode == 0, $"CLI addmeta failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+            });
+
+            // Dump metadata and compare
+            var cliMetaOut = Path.Combine(dir, "meta.cli.bin");
+            Check(suite, "dumpmeta (CLI)", () =>
+            {
+                var cliR = _cli!.Run("dumpmeta", "-i", cliChd, "-t", "TEST", "-o", cliMetaOut, "-f");
+                Assert(cliR.ExitCode == 0, $"CLI dumpmeta failed: {cliR.Combined.Trim()}");
+            });
+
+            // Delete metadata
+            var cliChd2 = Path.Combine(dir, "meta2.cli.chd");
+            File.Copy(cliChd, cliChd2, true);
+
+            Check(suite, "delmeta (CLI)", () =>
+            {
+                var cliR = _cli!.Run("delmeta", "-i", cliChd2, "-t", "TEST");
+                Assert(cliR.ExitCode == 0, $"CLI delmeta failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}");
+            });
+
+            Check(suite, "verify after meta ops (CLI)", () => VerifyChdman(cliChd2));
+        }
+
+        // chdman side
+        Check(suite, "addmeta (chdman)", () =>
+        {
+            var r = _chdman.Run("addmeta", "-i", refChd, "-t", "TEST", "-vt", "hello world");
+            Assert(r.ExitCode == 0, $"chdman addmeta failed: {r.Combined.Trim()}");
+        });
+
+        var refMetaOut = Path.Combine(dir, "meta.ref.bin");
+        Check(suite, "dumpmeta (chdman)", () =>
+        {
+            var r = _chdman.Run("dumpmeta", "-i", refChd, "-t", "TEST", "-o", refMetaOut, "-f");
+            Assert(r.ExitCode == 0, $"chdman dumpmeta failed: {r.Combined.Trim()}");
+        });
+
+        if (cliCreated && File.Exists(Path.Combine(dir, "meta.cli.bin")))
+        {
+            Check(suite, "metadata content parity", () =>
+            {
+                var cliBytes = File.ReadAllBytes(Path.Combine(dir, "meta.cli.bin"));
+                var refBytes = File.ReadAllBytes(refMetaOut);
+                AssertEqual(refBytes, cliBytes, "metadata bytes");
+            });
+        }
+
+        var refChd2 = Path.Combine(dir, "meta2.ref.chd");
+        File.Copy(refChd, refChd2, true);
+
+        Check(suite, "delmeta (chdman)", () =>
+        {
+            var r = _chdman.Run("delmeta", "-i", refChd2, "-t", "TEST");
+            Assert(r.ExitCode == 0, $"chdman delmeta failed: {r.Combined.Trim()}");
+        });
+
+        Check(suite, "verify after meta ops (chdman)", () => VerifyChdman(refChd2));
     }
 
     // ----- shared helpers -----

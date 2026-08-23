@@ -70,7 +70,7 @@ public sealed class ChdEncodeOptions
     /// <summary>
     /// When <c>true</c>, <see cref="ChdEncoder.EncodeRaw(Stream, string, uint, uint, IReadOnlyList{uint}?, ChdEncodeOptions?, System.Threading.CancellationToken)"/> classifies the source automatically:
     /// an ISO-9660 image (DVD) gets 'DVD ' metadata and a 2048-byte unit size, any other raw
-    /// image gets synthesized 'GDDD' hard-disk geometry metadata (CYLS/HEADS/SECS/BPS with
+    /// image gets synthesized 'GDDD' hard-disk geometry metadata (cylinders/heads/sectors/bps with
     /// BPS = the unit size). Default: <c>false</c> (chdman-compatible output without metadata).
     /// </summary>
     public bool AutoClassify { get; set; }

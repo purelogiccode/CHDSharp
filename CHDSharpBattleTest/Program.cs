@@ -17,6 +17,7 @@ internal static class Program
             Usage: CHDSharpBattleTest [options]
 
               --chdman <path>   chdman executable (default: repo-root chdman.exe or PATH)
+              --cli <path>      CHDSharpCli executable (default: auto-resolve from repo)
               --out <dir>       artifact + report root (default: <repo>/TestResults/battle)
               --quick           reduced corpus (faster smoke battle)
               --seed <n>        RNG seed for the corpus (default 1337)
@@ -30,6 +31,7 @@ internal static class Program
     private static int Main(string[] args)
     {
         string? chdmanPath = null;
+        string? cliPath = null;
         string? outDir = null;
         var quick = false;
         var noKeep = false;
@@ -41,6 +43,9 @@ internal static class Program
             {
                 case "--chdman" when i + 1 < args.Length:
                     chdmanPath = args[++i];
+                    break;
+                case "--cli" when i + 1 < args.Length:
+                    cliPath = args[++i];
                     break;
                 case "--out" when i + 1 < args.Length:
                     outDir = args[++i];
@@ -76,8 +81,15 @@ internal static class Program
             return 2;
         }
 
+        cliPath ??= ResolveCliPath();
+        if (cliPath != null && !File.Exists(cliPath))
+        {
+            Console.Error.WriteLine($"CHDSharpCli not found at: {cliPath}");
+            cliPath = null;
+        }
+
         var sw = Stopwatch.StartNew();
-        var harness = new BattleHarness(chdmanPath, outDir, seed, quick);
+        var harness = new BattleHarness(chdmanPath, cliPath, outDir, seed, quick);
         try
         {
             var failed = harness.Run();
@@ -123,6 +135,38 @@ internal static class Program
             if (File.Exists(candidate))
                 return candidate;
         }
+
+        return null;
+    }
+
+    private static string? ResolveCliPath()
+    {
+        var exeName = OperatingSystem.IsWindows() ? "CHDSharp.exe" : "CHDSharp";
+
+        // Check common build output locations
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            // Check in sibling CHDSharpCli project build output
+            var cliDebug = Path.Combine(dir.FullName, "CHDSharpCli", "bin", "Debug", "net8.0", exeName);
+            if (File.Exists(cliDebug))
+                return cliDebug;
+
+            var cliRelease = Path.Combine(dir.FullName, "CHDSharpCli", "bin", "Release", "net8.0", exeName);
+            if (File.Exists(cliRelease))
+                return cliRelease;
+
+            // Check in the same directory (self-contained publish)
+            var candidate = Path.Combine(dir.FullName, exeName);
+            if (File.Exists(candidate))
+                return candidate;
+
+            dir = dir.Parent;
+        }
+
+        var fromEnv = Environment.GetEnvironmentVariable("CHDSHARP_CLI_PATH");
+        if (!string.IsNullOrEmpty(fromEnv) && File.Exists(fromEnv))
+            return fromEnv;
 
         return null;
     }

@@ -1112,7 +1112,7 @@ internal static class Program
             sizeBytes = chsSize;
         }
 
-        codecs ??= "zlib";
+        codecs ??= "none";
 
         // Read ident file if provided
         byte[]? identData = null;
@@ -1971,7 +1971,14 @@ internal static class Program
                     case "--verbose" or "-v":
                         verbose = true;
                         break;
+                    case "--input" or "-i" when i + 1 < options.Length:
+                        // -i <file> is already consumed by ParseInput; skip both tokens
+                        i++;
+                        break;
                     default:
+                        if (!options[i].StartsWith('-'))
+                            break; // positional file path (already consumed); ignore
+
                         log.Warning("info: unknown option: {Option}", options[i]);
                         return;
                 }
@@ -1985,27 +1992,37 @@ internal static class Program
             return;
         }
 
-        log.Information("CHD information for {File}", Path.GetFileName(file));
-        log.Information("  Version: {Version}", header.Version);
-        log.Information("  Header length: {Length}", header.Length);
-        log.Information("  Flags: 0x{Flags:X8}", header.Flags);
-        log.Information("  Logical size: {Bytes:N0} bytes", header.TotalBytes);
-        log.Information("  Hunk size: {Hunk:N0} bytes ({Hunks:N0} hunks)", header.HunkBytes, header.TotalHunks);
-        log.Information("  Unit size: {Unit:N0} bytes ({Units:N0} units)", header.UnitBytes, header.UnitCount);
-        log.Information("  Compression:");
-        var codecs = header.Compression.Where(c => c != ChdCodec.None).ToArray();
-        if (codecs.Length == 0)
-            log.Information("    (uncompressed)");
-        else
-            foreach (var c in codecs)
-                log.Information("    {Codec}", CodecTagName(c));
-        log.Information("  Meta offset: {MetaOffset}  Map offset: {MapOffset}", header.MetaOffset, header.MapOffset);
-        log.Information("  Raw SHA-1: {Hash}", Util.ToHex(header.RawSha1));
-        log.Information("  Combined SHA-1: {Hash}", Util.ToHex(header.Sha1));
-        log.Information("  Parent SHA-1: {Hash}  Parent MD5: {Hash2}", Util.ToHex(header.ParentSha1), Util.ToHex(header.ParentMd5));
-        log.Information("  MD5: {Hash}", Util.ToHex(header.Md5));
-        log.Information("  Is child (requires parent): {IsChild}", !Util.IsAllZeroArray(header.ParentSha1) || !Util.IsAllZeroArray(header.ParentMd5));
+        // Match chdman info output format exactly (Key: Value)
+        Console.WriteLine($"Input file:   {Path.GetFileName(file)}");
+        Console.WriteLine($"File Version: {header.Version}");
 
+        var compression = header.Compression;
+        Console.WriteLine($"Logical size: {BigintString(header.TotalBytes)} bytes");
+        Console.WriteLine($"Hunk Size:    {BigintString(header.HunkBytes)} bytes");
+        Console.WriteLine($"Total Hunks:  {BigintString(header.TotalHunks)}");
+        Console.WriteLine($"Unit Size:    {BigintString(header.UnitBytes)} bytes");
+        Console.WriteLine($"Total Units:  {BigintString(header.UnitCount)}");
+        Console.WriteLine($"Compression:  {CompressionString(compression)}");
+
+        // CHD file size
+        long chdSize = 0;
+        try { chdSize = new FileInfo(file).Length; } catch { /* ignore */ }
+        Console.WriteLine($"CHD size:     {BigintString((ulong)chdSize)} bytes");
+
+        // SHA-1 hashes
+        var overall = header.Sha1;
+        if (overall != null && !Util.IsAllZeroArray(overall))
+        {
+            Console.WriteLine($"SHA1:         {Util.ToHex(overall)}");
+            if (header.Version >= 4)
+                Console.WriteLine($"Data SHA1:    {Util.ToHex(header.RawSha1)}");
+        }
+
+        var parent = header.ParentSha1;
+        if (parent != null && !Util.IsAllZeroArray(parent))
+            Console.WriteLine($"Parent SHA1:  {Util.ToHex(parent)}");
+
+        // Metadata listing
         if (header.MetaOffset == 0 && !verbose)
             return;
 
@@ -2021,15 +2038,28 @@ internal static class Program
         {
             if (header.MetaOffset != 0)
             {
-                log.Information("  Metadata: {Count} entries", chd.Metadata.Count);
+                // chdman prints each metadata entry with its per-tag index (0, 1, 2...)
+                var tagIndices = new Dictionary<string, uint>(StringComparer.Ordinal);
                 foreach (var meta in chd.Metadata)
-                    log.Information("    {Meta}", meta.ToString());
-            }
+                {
+                    var index = tagIndices.GetValueOrDefault(meta.Tag);
+                    tagIndices[meta.Tag] = index + 1;
 
-            if (chd.IsCd || chd.IsGdRom)
-                log.Information("  Tracks: {Count}", chd.Tracks!.Count);
-            if (chd.IsDvd) log.Information("  Media type: DVD");
-            if (chd.IsHdd) log.Information("  Media type: HDD");
+                    var tagDisplay = IsPrintableTag(meta.Tag) ? $"'{meta.Tag}'" : $"0x{TagValue(meta.Tag):X8}";
+                    Console.WriteLine($"Metadata:     Tag={tagDisplay}  Index={index}  Length={meta.Data.Length} bytes");
+
+                    // Print data preview (up to 60 chars, or full if verbose)
+                    var count = verbose ? meta.Data.Length : Math.Min(60, meta.Data.Length);
+                    var preview = new StringBuilder();
+                    for (var ci = 0; ci < count; ci++)
+                    {
+                        var b = meta.Data[ci];
+                        preview.Append(b >= 32 && b < 127 ? (char)b : '.');
+                    }
+
+                    Console.WriteLine($"              {preview}");
+                }
+            }
 
             if (verbose)
             {
@@ -2042,16 +2072,72 @@ internal static class Program
                     compressionTypes[codecName] = compressionTypes.GetValueOrDefault(codecName) + 1;
                 }
 
-                log.Information("");
-                log.Information("     Hunks  Percent  Name");
-                log.Information("----------  -------  ------------------------------------");
+                Console.WriteLine();
+                Console.WriteLine("     Hunks  Percent  Name");
+                Console.WriteLine("----------  -------  ------------------------------------");
                 foreach (var kv in compressionTypes.OrderByDescending(k => k.Value))
                 {
                     var pct = 100.0 * kv.Value / hunkCount;
-                    log.Information("{Count,10}   {Pct,5:F1}%  {Name}", kv.Value, pct, kv.Key);
+                    Console.WriteLine($"{kv.Value,10}   {pct,5:F1}%  {kv.Key}");
                 }
             }
         }
+    }
+
+    /// <summary>Formats a number with comma thousands separators (chdman parity: "65,536", not "065,536").</summary>
+    private static string BigintString(ulong value)
+    {
+        if (value == 0) return "0";
+
+        var chunks = new List<string>();
+        while (value != 0)
+        {
+            chunks.Add((value % 1000).ToString());
+            value /= 1000;
+        }
+
+        // most-significant chunk first, no leading zeros; later chunks are zero-padded to 3
+        var sb = new StringBuilder(chunks[^1]);
+        for (var i = chunks.Count - 2; i >= 0; i--)
+        {
+            sb.Append(',');
+            var chunk = chunks[i];
+            for (var pad = chunk.Length; pad < 3; pad++)
+                sb.Append('0');
+            sb.Append(chunk);
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>Formats codec tags like chdman: "zlib (Deflate), lzma (LZMA)" or "none".</summary>
+    private static string CompressionString(IReadOnlyList<ChdCodec> codecs)
+    {
+        var active = codecs.Where(c => c != ChdCodec.None).ToArray();
+        if (active.Length == 0) return "none";
+        return string.Join(", ", active.Select(c =>
+        {
+            var name = CodecTagName(c);
+            var desc = CodecDescription(c);
+            return $"{name} ({desc})";
+        }));
+    }
+
+    private static string CodecDescription(ChdCodec codec)
+    {
+        return codec switch
+        {
+            ChdCodec.Zlib => "Deflate",
+            ChdCodec.Lzma => "LZMA",
+            ChdCodec.Zstd => "Zstandard",
+            ChdCodec.Huffman => "Huffman",
+            ChdCodec.Flac => "FLAC",
+            ChdCodec.Cdzlib => "CD Deflate",
+            ChdCodec.Cdlzma => "CD LZMA",
+            ChdCodec.Cdzstd => "CD Zstandard",
+            ChdCodec.Cdflac => "CD FLAC",
+            _ => CodecTagName(codec)
+        };
     }
 
     private static string CodecTagName(ChdCodec codec)
@@ -2063,6 +2149,18 @@ internal static class Program
         chars[2] = (char)((value >> 8) & 0xFF);
         chars[3] = (char)(value & 0xFF);
         return new string(chars);
+    }
+
+    private static uint TagValue(string tag)
+    {
+        var bytes = Encoding.ASCII.GetBytes(tag);
+        if (bytes.Length != 4) return 0;
+        return ((uint)bytes[0] << 24) | ((uint)bytes[1] << 16) | ((uint)bytes[2] << 8) | bytes[3];
+    }
+
+    private static bool IsPrintableTag(string tag)
+    {
+        return tag.All(c => c >= 32 && c < 127);
     }
 
     /// <summary>Dumps a metadata entry (chdman <c>dumpmeta</c> parity): prints text entries to the

@@ -81,30 +81,52 @@ public static class MetadataWriter
 
     /// <summary>
     /// Builds the 'GDDD' hard-disk geometry metadata entry, matching MAME's
-    /// <c>HARD_DISK_METADATA_FORMAT</c> (<c>"CYLS:%d,HEADS:%d,SECS:%d,BPS:%d"</c>, written by
-    /// chdman <c>createhd</c>). The geometry is synthesized from the image size with a classic
-    /// CHS layout (16 heads, 63 sectors/track); readers only consume the BPS value (used as the
-    /// unit size), so any consistent geometry is valid.
+    /// <c>HARD_DISK_METADATA_FORMAT</c> (<c>"%u/%u/%u/%u"</c>, written by
+    /// <c>chdman createhd</c>). Uses fixed 16 heads and 63 sectors/track to compute
+    /// the cylinder count from <paramref name="totalBytes"/>, exactly like MAME.
     /// </summary>
     /// <param name="totalBytes">The logical image size in bytes.</param>
     /// <param name="bytesPerSector">The sector size in bytes (BPS; normally the unit size).</param>
     public static MetadataEntry BuildHardDiskMetadata(ulong totalBytes, uint bytesPerSector)
     {
-        const uint heads = 16;
-        const uint sectorsPerTrack = 63;
-
-        ulong cylinders = 0;
+        // Replicates chdman's guess_chs (chdman.cpp): given the file size and sector size,
+        // find a C/H/S tuple that exactly divides the total sector count, preferring the
+        // largest number of sectors per track (63 down to 2) and largest heads (16 down to 2).
+        uint cylinders = 0, heads = 0, sectorsPerTrack = 0;
         if (bytesPerSector > 0)
         {
-            var perCylinder = (ulong)bytesPerSector * heads * sectorsPerTrack;
-            cylinders = (totalBytes + perCylinder - 1) / perCylinder;
-            if (cylinders > uint.MaxValue)
+            for (ulong totalSectors = totalBytes / bytesPerSector; ; totalSectors++)
             {
-                cylinders = uint.MaxValue;
+                var found = false;
+                for (uint curSectors = 63; curSectors > 1 && !found; curSectors--)
+                {
+                    if (totalSectors % curSectors != 0)
+                        continue;
+
+                    var totalHeads = totalSectors / curSectors;
+                    for (uint curHeads = 16; curHeads > 1; curHeads--)
+                    {
+                        if (totalHeads % curHeads != 0)
+                            continue;
+
+                        var curCylinders = (uint)(totalHeads / curHeads);
+                        if (curCylinders == 0)
+                            continue;
+
+                        cylinders = curCylinders;
+                        heads = curHeads;
+                        sectorsPerTrack = curSectors;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found)
+                    break;
             }
         }
 
-        return BuildHardDiskMetadata((uint)cylinders, heads, sectorsPerTrack, bytesPerSector);
+        return BuildHardDiskMetadata(cylinders, heads, sectorsPerTrack, bytesPerSector);
     }
 
     /// <summary>
