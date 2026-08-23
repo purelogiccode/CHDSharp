@@ -19,7 +19,7 @@ internal sealed class HuffmanEncoder
     /// <summary>Creates a Huffman encoder over a fixed-size symbol alphabet.</summary>
     /// <param name="numCodes">Alphabet size (e.g. 256 for the huff codec, 24 for the small tree).</param>
     /// <param name="maxBits">Maximum code length in bits.</param>
-    public HuffmanEncoder(int numCodes, int maxBits)
+    internal HuffmanEncoder(int numCodes, int maxBits)
     {
         if (maxBits > 24)
             throw new ArgumentOutOfRangeException(nameof(maxBits));
@@ -33,19 +33,19 @@ internal sealed class HuffmanEncoder
     }
 
     /// <summary>Gets the canonical Huffman code for each symbol (valid after <see cref="BuildTree()"/>).</summary>
-    public uint[] Codes { get; }
+    internal uint[] Codes { get; }
 
     /// <summary>Gets the number of bits of each symbol's canonical code (valid after <see cref="BuildTree()"/>).</summary>
-    public int[] NumBits { get; }
+    internal int[] NumBits { get; }
 
     /// <summary>Resets the symbol frequency histogram.</summary>
-    public void ResetHistogram()
+    internal void ResetHistogram()
     {
         Array.Clear(_histogram);
     }
 
     /// <summary>Increments the frequency count of <paramref name="symbol"/>.</summary>
-    public void CountSymbol(uint symbol)
+    internal void CountSymbol(uint symbol)
     {
         if (symbol < _numCodes)
         {
@@ -58,7 +58,7 @@ internal sealed class HuffmanEncoder
     /// (MAME's <c>compute_tree_from_histo</c>). The tree state left by the final
     /// <c>build_tree</c> call is used directly, exactly like MAME.
     /// </summary>
-    public void BuildTree()
+    internal void BuildTree()
     {
         var totalData = 0;
         for (var i = 0; i < _numCodes; i++)
@@ -100,7 +100,7 @@ internal sealed class HuffmanEncoder
     /// small tree (MAME's <c>export_tree_huffman</c>), which the decoder reconstructs via
     /// <c>import_tree_huffman</c>. The 8-bit huff codec uses this form.
     /// </summary>
-    public void ExportTreeHuffman(BitStreamOut bs)
+    internal void ExportTreeHuffman(BitStreamOut bs)
     {
         // RLE-compress the code lengths: single occurrences as (length + 1),
         // runs as an RLE token (0) followed by (run - 2)
@@ -218,7 +218,7 @@ internal sealed class HuffmanEncoder
     /// of bits per entry depends on <c>maxBits</c> (5 for ≥16). Used by the avhu codec's
     /// delta-RLE video/audio trees.
     /// </summary>
-    public void ExportTreeRle(BitStreamOut bs)
+    internal void ExportTreeRle(BitStreamOut bs)
     {
         // bits per entry depends on the maxbits (huffman.cpp:207-213)
         var numBits = _maxBits >= 16 ? 5 : _maxBits >= 8 ? 4 : 3;
@@ -279,7 +279,7 @@ internal sealed class HuffmanEncoder
     }
 
     /// <summary>Writes the canonical code of <paramref name="symbol"/> to <paramref name="bs"/>.</summary>
-    public void Encode(BitStreamOut bs, uint symbol)
+    internal void Encode(BitStreamOut bs, uint symbol)
     {
         if (symbol >= _numCodes)
             return;

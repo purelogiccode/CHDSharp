@@ -16,7 +16,7 @@ namespace CHDSharpEncoder;
 /// <param name="Sha1">SHA-1 of the uncompressed hunk (20 bytes), for SELF-dedup lookups.</param>
 /// <param name="Data">The data to append to the output file, or <c>null</c> when the consumer decides
 /// this hunk is a SELF reference (nothing is stored on disk).</param>
-public readonly record struct HunkResult(
+internal readonly record struct HunkResult(
     uint HunkIndex,
     byte Compression,
     uint CompLength,
@@ -25,7 +25,7 @@ public readonly record struct HunkResult(
     byte[]? Data);
 
 /// <summary>Processes raw hunk data for CHD v5 encoding, handling compression and map entry generation.</summary>
-public class HunkProcessor
+internal class HunkProcessor
 {
     private readonly uint _hunkBytes;
     private readonly int _taskCount;

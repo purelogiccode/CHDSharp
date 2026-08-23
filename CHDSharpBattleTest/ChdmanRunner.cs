@@ -9,17 +9,17 @@ namespace CHDSharpBattleTest;
 /// <c>chdman info</c> output into strongly typed fields for cross-checking against
 /// CHDSharpLib's <see cref="CHDSharp.Chd.ReadHeader(string, out CHDSharp.Models.ChdHeaderInfo?)"/>.
 /// </summary>
-public sealed class ChdmanRunner
+internal sealed class ChdmanRunner
 {
-    public string ExePath { get; }
+    internal string ExePath { get; }
 
-    public ChdmanRunner(string exePath)
+    internal ChdmanRunner(string exePath)
     {
         ExePath = exePath;
     }
 
     /// <summary>Runs <c>chdman &lt;command&gt; [args...]</c> and captures stdout/stderr.</summary>
-    public RunResult Run(string command, params string[] args)
+    internal RunResult Run(string command, params string[] args)
     {
         var psi = new ProcessStartInfo
         {
@@ -54,7 +54,7 @@ public sealed class ChdmanRunner
     }
 
     /// <summary>The version banner line, e.g. "chdman - MAME Compressed Hunks of Data (CHD) manager 0.289 (mame0289)".</summary>
-    public string VersionBanner()
+    internal string VersionBanner()
     {
         var r = Run("help", "createraw");
         var first = r.Combined.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
@@ -62,7 +62,7 @@ public sealed class ChdmanRunner
     }
 
     /// <summary>Runs <c>chdman info</c> and parses the output; returns null when the file cannot be read.</summary>
-    public ChdmanInfo? Info(string chdPath)
+    internal ChdmanInfo? Info(string chdPath)
     {
         var r = Run("info", "-i", chdPath);
         if (r.ExitCode != 0)
@@ -72,7 +72,7 @@ public sealed class ChdmanRunner
     }
 
     /// <summary>Parses the text output of <c>chdman info</c>.</summary>
-    public static ChdmanInfo? ParseInfo(string output)
+    internal static ChdmanInfo? ParseInfo(string output)
     {
         var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var rawLine in output.Split('\n'))

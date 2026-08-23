@@ -1,7 +1,7 @@
 namespace CHDSharpBattleTest.Models;
 
 /// <summary>Parsed <c>chdman info</c> output (the fields that matter for cross-checks).</summary>
-public sealed record ChdmanInfo(
+internal sealed record ChdmanInfo(
     int Version,
     ulong LogicalBytes,
     uint HunkBytes,

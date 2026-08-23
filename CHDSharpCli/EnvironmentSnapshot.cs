@@ -8,7 +8,7 @@ namespace CHDSharp;
 /// Captures the static environment details that must accompany every forwarded bug report.
 /// Computed once at construction from the running process and operating system.
 /// </summary>
-public sealed class EnvironmentSnapshot
+internal sealed class EnvironmentSnapshot
 {
     /// <summary>Local timestamp when the snapshot was created.</summary>
     public string Date => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CHDSharp;
 
+/// <summary>Reads, validates, and hashes CHD metadata entries from the metadata chain, and computes the combined (overall) SHA-1 for V4/V5 CHDs.</summary>
 internal static class ChdMetaData
 {
     private static readonly ILogger Log = ChdLogger.GetLogger(nameof(ChdMetaData));
@@ -22,6 +23,10 @@ internal static class ChdMetaData
 
     private const uint MaxMetadataEntryBytes = 64 * 1024;
 
+    /// <summary>Reads all metadata entries and validates the combined SHA-1 hash stored in the header (V4/V5).</summary>
+    /// <param name="file">The stream containing the CHD file.</param>
+    /// <param name="chd">The parsed CHD header with metadata offset and hash fields.</param>
+    /// <returns><see cref="ChdError.Chderrnone"/> on success; <see cref="ChdError.Chderrinvalidmetadata"/> if the combined hash does not match; otherwise a read/parse error code.</returns>
     internal static ChdError ReadMetaData(Stream file, ChdHeader chd)
     {
         if (chd.Rawsha1 is not { Length: 20 } || chd.Sha1 is not { Length: 20 } || Util.IsAllZeroArray(chd.Sha1))
@@ -56,6 +61,11 @@ internal static class ChdMetaData
         return ChdError.Chderrnone;
     }
 
+    /// <summary>Reads all metadata entries from the chain without validating the combined SHA-1 hash.</summary>
+    /// <param name="file">The stream containing the CHD file.</param>
+    /// <param name="chd">The parsed CHD header with the metadata offset.</param>
+    /// <param name="entries">When this method returns, contains the list of parsed metadata entries on success, or an empty list on error.</param>
+    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise a read/parse error code.</returns>
     internal static ChdError ReadMetaDataEntries(Stream file, ChdHeader chd,
         out List<ChdMetadataEntry> entries)
     {

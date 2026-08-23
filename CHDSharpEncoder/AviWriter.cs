@@ -46,7 +46,7 @@ internal sealed class AviWriter : IDisposable
         _audioSampleRate = audioSampleRate;
     }
 
-    public static AviWriter Create(string path, uint width, uint height,
+    internal static AviWriter Create(string path, uint width, uint height,
         uint videoTimescale, uint videoSampletime,
         uint audioChannels, uint audioSampleRate)
     {
@@ -56,7 +56,7 @@ internal sealed class AviWriter : IDisposable
         return writer;
     }
 
-    public static AviWriter Create(Stream stream, uint width, uint height,
+    internal static AviWriter Create(Stream stream, uint width, uint height,
         uint videoTimescale, uint videoSampletime,
         uint audioChannels, uint audioSampleRate)
     {
@@ -68,7 +68,7 @@ internal sealed class AviWriter : IDisposable
         return writer;
     }
 
-    public void AppendVideoFrame(byte[] yuy2Data)
+    internal void AppendVideoFrame(byte[] yuy2Data)
     {
         ObjectDisposedException.ThrowIf(_finalized, this);
         var offset = _stream.Position - (_moviSizePos + 4);
@@ -80,7 +80,7 @@ internal sealed class AviWriter : IDisposable
         _videoFrameCount++;
     }
 
-    public void AppendSoundSamples(byte[] pcmData, uint sampleCount)
+    internal void AppendSoundSamples(byte[] pcmData, uint sampleCount)
     {
         ObjectDisposedException.ThrowIf(_finalized, this);
         var offset = _stream.Position - (_moviSizePos + 4);

@@ -10,7 +10,7 @@ internal partial class MainWindow
     private bool _isClosing;
 
     /// <summary>Initializes a new instance of the <see cref="MainWindow"/> WPF window.</summary>
-    public MainWindow()
+    internal MainWindow()
     {
         InitializeComponent();
         MainPageView.DataContext = new MainViewModel();

@@ -11,7 +11,7 @@ namespace CHDSharp;
 /// Bug Report API. Each report embeds the full environment snapshot and, when present, the exception details.
 /// The HTTP post is fire-and-forget so it never blocks application logging.
 /// </summary>
-public sealed class BugReportSink : ILogEventSink
+internal sealed class BugReportSink : ILogEventSink
 {
     private static readonly HttpClient Client = new();
 

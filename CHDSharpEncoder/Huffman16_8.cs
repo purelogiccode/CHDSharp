@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace CHDSharpEncoder;
 
 /// <summary>Huffman encoder supporting up to 16 symbols with a maximum code length of 8 bits.</summary>
-public class Huffman168
+internal class Huffman168
 {
     /// <summary>Number of distinct symbol codes supported.</summary>
     public const int NumCodes = 16;

@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace CHDSharp;
 
+/// <summary>Parses CD/GD-ROM track metadata from CHD metadata entries (CHCD, CHTR, CHT2, CHGT, CHGD tags) and detects DVD/HDD metadata presence.</summary>
 internal static partial class ChdTocParser
 {
     private const string CdRomOldMetadataTag = "CHCD";
@@ -24,6 +25,10 @@ internal static partial class ChdTocParser
 
     private static readonly Regex KeyValueRegex = MyRegex();
 
+    /// <summary>Parses CD/GD-ROM track metadata from the metadata entries.</summary>
+    /// <param name="metadata">The list of metadata entries from the CHD header.</param>
+    /// <param name="isGdRom">When this method returns, <c>true</c> if GD-ROM metadata was found.</param>
+    /// <returns>A list of parsed track info, or <c>null</c> if no CD/GD-ROM track metadata is present.</returns>
     internal static List<ChdTrackInfo>? ParseTracks(IReadOnlyList<ChdMetadataEntry> metadata, out bool isGdRom)
     {
         return ParseTracks(metadata, out isGdRom, out _);
@@ -299,11 +304,17 @@ internal static partial class ChdTocParser
         };
     }
 
+    /// <summary>Checks whether the metadata chain contains a DVD metadata entry ("DVD " tag).</summary>
+    /// <param name="metadata">The list of metadata entries from the CHD header.</param>
+    /// <returns><c>true</c> if a DVD metadata entry is present; otherwise <c>false</c>.</returns>
     internal static bool HasDvdMetadata(IReadOnlyList<ChdMetadataEntry> metadata)
     {
         return metadata.Any(m => string.Equals(m.Tag, DvdMetadataTag, StringComparison.Ordinal));
     }
 
+    /// <summary>Checks whether the metadata chain contains a hard disk geometry metadata entry ("GDDD" tag).</summary>
+    /// <param name="metadata">The list of metadata entries from the CHD header.</param>
+    /// <returns><c>true</c> if a hard disk metadata entry is present; otherwise <c>false</c>.</returns>
     internal static bool HasHddMetadata(IReadOnlyList<ChdMetadataEntry> metadata)
     {
         return metadata.Any(m => string.Equals(m.Tag, HardDiskMetadataTag, StringComparison.Ordinal));

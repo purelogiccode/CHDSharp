@@ -6,7 +6,7 @@ namespace CHDSharpBattleTest;
 /// compression profiles (zeros, random, pattern, text, PCM audio, mixed, repeated hunks)
 /// plus CD images (CUE+BIN and ISO) with mixed track types.
 /// </summary>
-public static class TestDataGenerator
+internal static class TestDataGenerator
 {
     // ----- raw inputs -----
 

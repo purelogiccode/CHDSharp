@@ -8,7 +8,7 @@ namespace CHDSharp;
 /// Sends a single usage hit to the ApplicationStats API at application launch.
 /// Fire-and-forget: never blocks startup or throws.
 /// </summary>
-public static class ApplicationStatsService
+internal static class ApplicationStatsService
 {
     private const string Endpoint = "https://www.purelogiccode.com/ApplicationStats/stats";
     private const string ApiKey = "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";

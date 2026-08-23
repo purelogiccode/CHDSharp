@@ -6,7 +6,7 @@ using CHDSharpEncoder;
 namespace CHDSharpBattleTest;
 
 /// <summary>Thrown by <see cref="BattleHarness.Assert"/> to record a failed check without unwinding the whole run.</summary>
-public sealed class CheckFailedException : Exception
+internal sealed class CheckFailedException : Exception
 {
     public CheckFailedException(string message) : base(message)
     {
@@ -14,7 +14,7 @@ public sealed class CheckFailedException : Exception
 }
 
 /// <summary>Thrown to skip a check (e.g. chdman rejects a configuration).</summary>
-public sealed class CheckSkippedException : Exception
+internal sealed class CheckSkippedException : Exception
 {
     public CheckSkippedException(string message) : base(message)
     {
@@ -25,7 +25,7 @@ public sealed class CheckSkippedException : Exception
 /// The battle harness: cross-checks CHDSharpLib (decode) and CHDSharpEncoder (encode)
 /// against chdman.exe. Every check is recorded, reported, and summed into an exit code.
 /// </summary>
-public sealed class BattleHarness
+internal sealed class BattleHarness
 {
     private readonly ChdmanRunner _chdman;
     private readonly string _workDir;
@@ -37,7 +37,7 @@ public sealed class BattleHarness
 
     private static readonly string[] CdCodecMatrix = ["cdzl", "cdlz", "cdzs", "cdfl", "zlib", "none"];
 
-    public BattleHarness(string chdmanPath, string? outDir, int seed, bool quick)
+    internal BattleHarness(string chdmanPath, string? outDir, int seed, bool quick)
     {
         _chdman = new ChdmanRunner(chdmanPath);
         _seed = seed;
@@ -48,7 +48,7 @@ public sealed class BattleHarness
         Directory.CreateDirectory(_workDir);
     }
 
-    public string OutDir { get; }
+    internal string OutDir { get; }
 
     private static string FindRepoRoot()
     {
@@ -112,7 +112,7 @@ public sealed class BattleHarness
 
     // ----- entry point -----
 
-    public int Run()
+    internal int Run()
     {
         Console.WriteLine($"== CHDSharp battle test vs {_chdman.VersionBanner()}");
         Console.WriteLine($"== seed={_seed} quick={_quick} out={OutDir}");
@@ -148,7 +148,7 @@ public sealed class BattleHarness
         Console.WriteLine($"Report: {path}");
     }
 
-    public void PrintSummary()
+    internal void PrintSummary()
     {
         Console.WriteLine();
         Console.WriteLine("== Summary ==");
@@ -180,7 +180,7 @@ public sealed class BattleHarness
         return sb.ToString();
     }
 
-    public void Cleanup()
+    internal void Cleanup()
     {
         try
         {
@@ -1052,7 +1052,7 @@ public sealed class BattleHarness
     /// <summary>Maps our codec tag names to chdman's info names: chdman prints the tag itself
     /// ("cdzl (CD Deflate)", "huff (Huffman)"), so the tag string ("cdzl", "huff") is the
     /// normalized short name. An all-zero slot list (uncompressed CHD) is "none".</summary>
-    public static string ChdmanCodecLabel(IReadOnlyList<ChdCodec> tags)
+    internal static string ChdmanCodecLabel(IReadOnlyList<ChdCodec> tags)
     {
         var names = tags.Where(t => (uint)t != 0).Select(t => CodecTags.ToString((uint)t)).ToList();
         if (names.Count == 0)
@@ -1062,7 +1062,7 @@ public sealed class BattleHarness
     }
 
     /// <summary>Normalizes chdman's info compression text ("zlib (Deflate), zstd (Zstandard)" → "zlib,zstd").</summary>
-    public static string NormalizeChdmanCodec(string text)
+    internal static string NormalizeChdmanCodec(string text)
     {
         return string.Join(",", text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(part => part.Split('(', 2)[0].Trim().ToLowerInvariant()));

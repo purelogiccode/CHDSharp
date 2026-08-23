@@ -7,7 +7,7 @@ using Serilog;
 namespace CHDSharpTester.Services;
 
 /// <summary>Generates a PDF report from a <see cref="TestSessionResult"/> using QuestPDF.</summary>
-public static class PdfExporter
+internal static class PdfExporter
 {
     static PdfExporter()
     {

@@ -3,7 +3,7 @@ using CHDSharp.Utils;
 namespace CHDSharpTester.Services;
 
 /// <summary>Provides utility methods for formatting and inspecting byte arrays used in hash comparisons.</summary>
-public static class HashUtil
+internal static class HashUtil
 {
     /// <summary>Converts a byte array to a lowercase hexadecimal string.</summary>
     /// <param name="a">The byte array to convert, or null.</param>

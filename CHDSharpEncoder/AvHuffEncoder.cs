@@ -21,7 +21,7 @@ internal sealed class AvHuffEncoder
     private readonly DeltaRleEncoder _crContext = new();
 
     /// <summary>Raw ('chav') data size for one frame: header + metadata + audio + video.</summary>
-    public static uint RawDataSize(uint width, uint height, uint channels, uint numSamples)
+    internal static uint RawDataSize(uint width, uint height, uint channels, uint numSamples)
     {
         return 12 + channels * numSamples * 2 + width * height * 2;
     }
@@ -39,7 +39,7 @@ internal sealed class AvHuffEncoder
     /// <param name="channels">Number of audio channels.</param>
     /// <param name="numSamples">Samples per channel in this frame.</param>
     /// <param name="samples">Planar audio: <paramref name="samples"/>[channel][sample].</param>
-    public static void AssembleData(Span<byte> buffer, ReadOnlySpan<byte> video, int width, int height,
+    internal static void AssembleData(Span<byte> buffer, ReadOnlySpan<byte> video, int width, int height,
         int channels, int numSamples, ReadOnlySpan<short[]> samples)
     {
         if (buffer.Length != 12 + channels * numSamples * 2 + width * height * 2)
@@ -77,7 +77,7 @@ internal sealed class AvHuffEncoder
     /// Encodes a raw 'chav' block into a compressed stream (MAME's
     /// <c>avhuff_encoder::encode_data</c>). Returns the compressed length.
     /// </summary>
-    public int EncodeData(ReadOnlySpan<byte> source, Span<byte> dest)
+    internal int EncodeData(ReadOnlySpan<byte> source, Span<byte> dest)
     {
         if (source.Length < 12 || source[0] != (byte)'c' || source[1] != (byte)'h' || source[2] != (byte)'a' || source[3] != (byte)'v')
             throw new InvalidDataException("AVHuff source does not start with a 'chav' header");
@@ -314,7 +314,7 @@ internal sealed class AvHuffEncoder
         /// <param name="itemsPerRow">Items per row (pixels).</param>
         /// <param name="itemAdvance">Bytes between consecutive items.</param>
         /// <param name="rowCount">Number of rows.</param>
-        public void RleAndHistoBitmap(ReadOnlySpan<byte> source, int start, int itemsPerRow, int itemAdvance, int rowCount)
+        internal void RleAndHistoBitmap(ReadOnlySpan<byte> source, int start, int itemsPerRow, int itemAdvance, int rowCount)
         {
             if (_rleBuffer.Length < itemsPerRow * rowCount)
             {
@@ -379,13 +379,13 @@ internal sealed class AvHuffEncoder
         }
 
         /// <summary>Clears a pending run so the next <see cref="EncodeOne"/> reads a fresh symbol.</summary>
-        public void FlushRle()
+        internal void FlushRle()
         {
             _rleCount = 0;
         }
 
         /// <summary>Emits the next symbol, silently consuming an active RLE run.</summary>
-        public void EncodeOne(BitStreamOut bitbuf, ref int rlePos)
+        internal void EncodeOne(BitStreamOut bitbuf, ref int rlePos)
         {
             if (_rleCount != 0)
             {
@@ -402,7 +402,7 @@ internal sealed class AvHuffEncoder
         }
 
         /// <summary>Writes the Huffman tree in RLE form (MAME's <c>export_tree_rle</c>).</summary>
-        public void ExportTreeRle(BitStreamOut bitbuf)
+        internal void ExportTreeRle(BitStreamOut bitbuf)
         {
             _encoder.ExportTreeRle(bitbuf);
         }

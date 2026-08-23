@@ -3,10 +3,12 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CHDSharp;
 
+/// <summary>Provides lazy-resolving loggers for CHDSharp that defer to an externally-supplied <see cref="ILoggerFactory"/>.</summary>
 internal static class ChdLogger
 {
     private static volatile ILoggerFactory? _factory;
 
+    /// <summary>Gets or sets the <see cref="ILoggerFactory"/> used to create loggers. Can be set at any time; loggers resolve the factory lazily.</summary>
     internal static ILoggerFactory? Factory
     {
         get => _factory;
@@ -23,6 +25,8 @@ internal static class ChdLogger
         return new LazyLogger(category);
     }
 
+    /// <summary>Returns a lazy-resolving logger for the type <typeparamref name="T"/>.</summary>
+    /// <typeparam name="T">The type whose full name is used as the logger category.</typeparam>
     internal static ILogger GetLogger<T>()
     {
         return GetLogger(typeof(T).FullName!);

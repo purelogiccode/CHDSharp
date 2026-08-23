@@ -186,8 +186,12 @@ internal static partial class ChdReaders
         return ChdError.Chderrnone;
     }
 
+    /// <summary>Number of bytes in a cooked CD-ROM sector (2352 bytes: 12-byte sync, 4-byte header, 2048-byte user data, 288-byte ECC/EDC, or 2352 bytes of CDDA audio).</summary>
     internal const int CdMaxSectorData = 2352;
+
     private const int CdMaxSubcodeData = 96;
+
+    /// <summary>Full CD frame size in bytes: 2352-byte sector data plus 96-byte subcode channel (2448 bytes total).</summary>
     internal const int CdFrameSize = CdMaxSectorData + CdMaxSubcodeData;
 
     /// <summary>

@@ -7,7 +7,7 @@ using Serilog;
 namespace CHDSharpTester.Services;
 
 /// <summary>Executes a multi-test verification suite against a list of CHD files, cross-checking the C# reader against chdman when available.</summary>
-public class ChdTestRunner
+internal class ChdTestRunner
 {
     /// <summary>Gets the detected chdman version string from the last run, or null if not yet detected.</summary>
     public string? ChdmanVersion { get; private set; }

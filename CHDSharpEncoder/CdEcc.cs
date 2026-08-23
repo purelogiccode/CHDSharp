@@ -9,7 +9,7 @@ namespace CHDSharpEncoder;
 internal static class CdEcc
 {
     /// <summary>The 12-byte CD sync header.</summary>
-    public static readonly byte[] SyncHeader = [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
+    internal static readonly byte[] SyncHeader = [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
 
     /// <summary>Offset of the mode byte within a sector.</summary>
     private const int ModeOffset = 0x00f;
@@ -245,7 +245,7 @@ internal static class CdEcc
     /// Verifies that the P and Q ECC codes of the 2352-byte sector at <paramref name="sectorOffset"/>
     /// match freshly computed values (MAME's <c>cdrom_file::ecc_verify</c>).
     /// </summary>
-    public static bool EccVerify(byte[] data, int sectorOffset)
+    internal static bool EccVerify(byte[] data, int sectorOffset)
     {
         for (var i = 0; i < EccPNumBytes; i++)
         {
@@ -267,7 +267,7 @@ internal static class CdEcc
     }
 
     /// <summary>Zeroes out the sync header and the P/Q ECC parity areas of the sector at <paramref name="sectorOffset"/>.</summary>
-    public static void EccClear(byte[] data, int sectorOffset)
+    internal static void EccClear(byte[] data, int sectorOffset)
     {
         Array.Clear(data, sectorOffset, SyncHeader.Length);
         Array.Clear(data, sectorOffset + EccPOffset, 2 * EccPNumBytes);

@@ -1,7 +1,7 @@
 namespace CHDSharpBattleTest.Models;
 
 /// <summary>A CHD produced during the run, decoded exhaustively by the decode suite.</summary>
-public sealed class Asset
+internal sealed class Asset
 {
     public required string Key { get; init; }
     public required string Name { get; init; }

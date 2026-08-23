@@ -70,7 +70,10 @@ internal class ChdHeader
     /// <summary>Obsolete hard-disk geometry fields, only populated for V1/V2 headers. Used to synthesize GDDD metadata (libchdr parity).</summary>
     internal uint ObsoleteCylinders;
 
+    /// <summary>Obsolete hard-disk geometry: number of heads. Only populated for V1/V2 headers.</summary>
     internal uint ObsoleteHeads;
+
+    /// <summary>Obsolete hard-disk geometry: sectors per track. Only populated for V1/V2 headers.</summary>
     internal uint ObsoleteSectors;
 
     /// <summary>Obsolete hunk size in sectors, only populated for V1/V2 headers. Bytes per sector = <see cref="Blocksize"/> / <see cref="ObsoleteHunksize"/>.</summary>

@@ -275,6 +275,14 @@ public static class CueParser
         return new FileInfo(path).Length;
     }
 
+    /// <summary>
+    /// Parses a CUE sheet track type string (e.g. "MODE1/2048", "AUDIO", "MODE2_RAW") and sets
+    /// the track's <see cref="CdTrack.TrackType"/> and <see cref="CdTrack.DataSize"/> accordingly.
+    /// Matches MAME's <c>parse_track_type</c>.
+    /// </summary>
+    /// <param name="typeString">The track type token from the CUE sheet.</param>
+    /// <param name="track">The track to update.</param>
+    /// <exception cref="InvalidDataException">The track type is not recognized.</exception>
     internal static void ParseTrackType(string typeString, ref CdTrack track)
     {
         switch (typeString)
@@ -323,6 +331,13 @@ public static class CueParser
         }
     }
 
+    /// <summary>
+    /// Parses a CUE sheet subcode type string ("RW" or "RW_RAW") and sets the track's
+    /// <see cref="CdTrack.SubType"/> and <see cref="CdTrack.SubSize"/> accordingly.
+    /// Matches MAME's <c>parse_subtype</c>.
+    /// </summary>
+    /// <param name="subTypeString">The subcode type token from the CUE sheet.</param>
+    /// <param name="track">The track to update.</param>
     internal static void ParseSubType(string subTypeString, ref CdTrack track)
     {
         switch (subTypeString)

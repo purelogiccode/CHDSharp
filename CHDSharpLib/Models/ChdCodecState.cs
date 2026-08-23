@@ -52,6 +52,7 @@ internal class ChdCodecState : IDisposable
     /// <summary>Huffman lookup table for AVHuff video Cr (chroma red) channel.</summary>
     internal ushort[]? BHuffmanCr;
 
+    /// <summary>Releases all disposable codec resources and clears scratch buffers.</summary>
     public void Dispose()
     {
         BZstd?.Dispose();

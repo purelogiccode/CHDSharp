@@ -8,7 +8,7 @@ using Serilog;
 namespace CHDSharpTester.Services;
 
 /// <summary>Wraps the chdman.exe command-line tool to cross-check the C# CHD reader via info, verify, and extractraw operations.</summary>
-public class ChdmanWrapper
+internal class ChdmanWrapper
 {
     private readonly string _chdmanPath;
 
@@ -38,7 +38,7 @@ public class ChdmanWrapper
         internal uint TotalHunks;
 
         /// <summary>The string description of compression codec(s) used by the CHD (e.g. "zstd", "cdzs", "cdzl,cdfl").</summary>
-        public string Compression = "";
+        internal string Compression = "";
 
         /// <summary>The overall SHA1 hash (raw data + metadata), or null if not present.</summary>
         internal string? Sha1;

@@ -14,7 +14,7 @@ namespace CHDSharpEncoder;
 /// for small hunk counts; chdman emits the clipped (zero-padded) tail and counts it in the
 /// map's compressed-length header field.
 /// </remarks>
-public class BitStreamOut
+internal class BitStreamOut
 {
     private byte[] _buffer;
     private readonly int _baseOffset;

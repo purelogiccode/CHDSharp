@@ -1,23 +1,35 @@
 namespace CHDSharpEncoder;
 
+/// <summary>
+/// A growable big-endian byte buffer used internally for serializing CHD header fields,
+/// map entries, and metadata entries. All multi-byte values are written in big-endian
+/// (network) byte order, matching the CHD on-disk format.
+/// </summary>
 internal class BigEndianWriter
 {
     private byte[] _buffer;
 
+    /// <summary>Initializes a new <see cref="BigEndianWriter"/> with the given initial capacity.</summary>
+    /// <param name="capacity">The initial buffer size in bytes (default 256).</param>
     internal BigEndianWriter(int capacity = 256)
     {
         _buffer = new byte[capacity];
         Position = 0;
     }
 
+    /// <summary>Gets the current write position (number of bytes written so far).</summary>
     internal int Position { get; private set; }
 
+    /// <summary>Writes a single byte at the current position and advances by 1.</summary>
+    /// <param name="v">The byte value to write.</param>
     internal void WriteU8(byte v)
     {
         EnsureCapacity(1);
         _buffer[Position++] = v;
     }
 
+    /// <summary>Writes a 16-bit unsigned integer in big-endian order and advances by 2.</summary>
+    /// <param name="v">The value to write.</param>
     internal void WriteU16(ushort v)
     {
         EnsureCapacity(2);
@@ -26,6 +38,8 @@ internal class BigEndianWriter
         Position += 2;
     }
 
+    /// <summary>Writes a 24-bit unsigned integer in big-endian order and advances by 3.</summary>
+    /// <param name="v">The value to write (only the low 24 bits are stored).</param>
     internal void WriteU24(uint v)
     {
         EnsureCapacity(3);
@@ -35,6 +49,8 @@ internal class BigEndianWriter
         Position += 3;
     }
 
+    /// <summary>Writes a 32-bit unsigned integer in big-endian order and advances by 4.</summary>
+    /// <param name="v">The value to write.</param>
     internal void WriteU32(uint v)
     {
         EnsureCapacity(4);
@@ -45,6 +61,8 @@ internal class BigEndianWriter
         Position += 4;
     }
 
+    /// <summary>Writes a 48-bit unsigned integer in big-endian order and advances by 6.</summary>
+    /// <param name="v">The value to write (only the low 48 bits are stored).</param>
     internal void WriteU48(ulong v)
     {
         EnsureCapacity(6);
@@ -57,6 +75,8 @@ internal class BigEndianWriter
         Position += 6;
     }
 
+    /// <summary>Writes a 64-bit unsigned integer in big-endian order and advances by 8.</summary>
+    /// <param name="v">The value to write.</param>
     internal void WriteU64(ulong v)
     {
         EnsureCapacity(8);
@@ -71,6 +91,8 @@ internal class BigEndianWriter
         Position += 8;
     }
 
+    /// <summary>Writes a span of bytes at the current position and advances by its length.</summary>
+    /// <param name="data">The bytes to write.</param>
     internal void WriteBytes(ReadOnlySpan<byte> data)
     {
         EnsureCapacity(data.Length);
@@ -78,6 +100,8 @@ internal class BigEndianWriter
         Position += data.Length;
     }
 
+    /// <summary>Writes zero bytes at the current position and advances by <paramref name="count"/>.</summary>
+    /// <param name="count">The number of zero bytes to write.</param>
     internal void WriteZeroes(int count)
     {
         EnsureCapacity(count);
@@ -85,6 +109,8 @@ internal class BigEndianWriter
         Position += count;
     }
 
+    /// <summary>Returns a copy of the written bytes as a new array sized to <see cref="Position"/>.</summary>
+    /// <returns>A byte array containing the written data.</returns>
     internal byte[] ToArray()
     {
         var result = new byte[Position];
@@ -92,6 +118,8 @@ internal class BigEndianWriter
         return result;
     }
 
+    /// <summary>Returns a span over the written bytes (from the start of the internal buffer to <see cref="Position"/>).</summary>
+    /// <returns>A <see cref="Span{T}"/> of the written data.</returns>
     internal Span<byte> AsSpan()
     {
         return _buffer.AsSpan(0, Position);
