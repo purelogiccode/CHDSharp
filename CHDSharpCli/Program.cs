@@ -238,7 +238,7 @@ internal static class Program
                     serilogLogger.Warning("info requires a .chd file path");
                     return 1;
                 case "info":
-                    InfoTest(ParseInput(cmdArgs, 0));
+                    InfoTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
                     return 0;
                 case "detect" when cmdArgs.Length < 1:
@@ -718,7 +718,11 @@ internal static class Program
         int? templateId = null;
         long? inputStartBytes = null;
         long? inputLengthBytes = null;
-        if (!TryParseOptions(options, ref hunkBytes, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId, ref inputStartBytes, ref inputLengthBytes, ref force))
+        long? inputStartHunk = null;
+        long? inputLengthHunks = null;
+        long? inputStartFrame = null;
+        long? inputLengthFrames = null;
+        if (!TryParseOptions(options, ref hunkBytes, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId, ref inputStartBytes, ref inputLengthBytes, ref force, ref inputStartHunk, ref inputLengthHunks, ref inputStartFrame, ref inputLengthFrames))
             return;
 
         if (File.Exists(outputPath) && !force)
@@ -831,7 +835,8 @@ internal static class Program
     /// <param name="outputPath">Path of the output .chd file.</param>
     /// <param name="options">Command-line options: <c>--size N</c> (required), <c>-chs C,H,S</c>,
     /// <c>-ss N</c> sector size, <c>-c</c> codecs, <c>-hs</c> hunk size, <c>-us</c> unit size,
-    /// <c>-t</c> task count, <c>-v</c> verbose.</param>
+    /// <c>-np</c> task count, <c>-v</c> verbose, <c>-op</c> output parent, <c>-isb</c> input start byte,
+    /// <c>-ib</c> input bytes, <c>-ish</c> input start hunk, <c>-ih</c> input hunks.</param>
     private static void CreateHdTest(string? inputPath, string outputPath, string[] options)
     {
         var log = Log.Logger;
@@ -844,11 +849,16 @@ internal static class Program
         uint hunkBytes = 4096;
         uint unitBytes = 512;
         string? codecs = null;
+        string? outputParentPath = null;
         var verbose = false;
         var force = false;
         int? taskCount = null;
         string? identPath = null;
         int? templateId = null;
+        long? inputStartBytes = null;
+        long? inputLengthBytes = null;
+        long? inputStartHunk = null;
+        long? inputLengthHunks = null;
 
         for (var i = 0; i < options.Length; i++)
         {
@@ -929,6 +939,45 @@ internal static class Program
                 case "--ident" or "-id" when i + 1 < options.Length:
                     identPath = options[++i];
                     break;
+                case "--outputparent" or "-op" when i + 1 < options.Length:
+                    outputParentPath = options[++i].Replace("\"", "");
+                    break;
+                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var isb) || isb < 0)
+                    {
+                        log.Warning("createhd: invalid input start byte: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputStartBytes = isb;
+                    break;
+                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ish) || ish < 0)
+                    {
+                        log.Warning("createhd: invalid input start hunk: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputStartHunk = ish;
+                    break;
+                case "--inputbytes" or "-ib" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
+                    {
+                        log.Warning("createhd: invalid input bytes: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputLengthBytes = ib;
+                    break;
+                case "--inputhunks" or "-ih" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
+                    {
+                        log.Warning("createhd: invalid input hunks: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputLengthHunks = ih;
+                    break;
                 case "--force" or "-f":
                     force = true;
                     break;
@@ -992,9 +1041,38 @@ internal static class Program
                 var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "zlib");
                 log.Information("Converting raw HD to CHD: {Input} -> {Output} (codecs {Codecs})",
                     inputPath, outputPath, string.Join(",", codecTags.Select(CodecTags.ToString)));
-                ChdEncoder.EncodeRaw(inputPath, outputPath, hunkBytes: hunkBytes, unitBytes: unitBytes, codecTags: codecTags);
+                var encodeOptions = new ChdEncodeOptions();
+                if (outputParentPath != null)
+                {
+                    encodeOptions.ParentPath = outputParentPath;
+                }
+
+                if (inputStartBytes.HasValue)
+                {
+                    encodeOptions.InputStartBytes = inputStartBytes.Value;
+                }
+                else if (inputStartHunk.HasValue)
+                {
+                    encodeOptions.InputStartBytes = inputStartHunk.Value * hunkBytes;
+                }
+
+                if (inputLengthBytes.HasValue)
+                {
+                    encodeOptions.InputLengthBytes = inputLengthBytes.Value;
+                }
+                else if (inputLengthHunks.HasValue)
+                {
+                    encodeOptions.InputLengthBytes = inputLengthHunks.Value * hunkBytes;
+                }
+
+                if (taskCount.HasValue)
+                {
+                    encodeOptions.TaskCount = taskCount;
+                }
+
+                ChdEncoder.EncodeRaw(inputPath, outputPath, hunkBytes: hunkBytes, unitBytes: unitBytes, codecTags: codecTags, options: encodeOptions);
                 log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
-                VerifyResultChd(outputPath, parentPath: null);
+                VerifyResultChd(outputPath, parentPath: outputParentPath);
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
             {
@@ -1073,14 +1151,40 @@ internal static class Program
 
             var logger = verbose ? new VerboseHunkLogger() : null;
             var encodeOptions = logger?.Options;
-            if (encodeOptions == null && taskCount.HasValue)
+            if (encodeOptions == null && (taskCount.HasValue || outputParentPath != null || inputStartBytes.HasValue || inputLengthBytes.HasValue || inputStartHunk.HasValue || inputLengthHunks.HasValue))
             {
                 encodeOptions = new ChdEncodeOptions();
             }
 
-            if (encodeOptions != null && taskCount.HasValue)
+            if (encodeOptions != null)
             {
-                encodeOptions.TaskCount = taskCount;
+                if (taskCount.HasValue)
+                {
+                    encodeOptions.TaskCount = taskCount;
+                }
+
+                if (outputParentPath != null)
+                {
+                    encodeOptions.ParentPath = outputParentPath;
+                }
+
+                if (inputStartBytes.HasValue)
+                {
+                    encodeOptions.InputStartBytes = inputStartBytes.Value;
+                }
+                else if (inputStartHunk.HasValue)
+                {
+                    encodeOptions.InputStartBytes = inputStartHunk.Value * hunkBytes;
+                }
+
+                if (inputLengthBytes.HasValue)
+                {
+                    encodeOptions.InputLengthBytes = inputLengthBytes.Value;
+                }
+                else if (inputLengthHunks.HasValue)
+                {
+                    encodeOptions.InputLengthBytes = inputLengthHunks.Value * hunkBytes;
+                }
             }
 
             // Add ident metadata if provided
@@ -1138,7 +1242,11 @@ internal static class Program
         int? templateId = null;
         long? inputStartBytes = null;
         long? inputLengthBytes = null;
-        if (!TryParseOptions(options, ref hunkSize, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId, ref inputStartBytes, ref inputLengthBytes, ref force))
+        long? inputStartHunk = null;
+        long? inputLengthHunks = null;
+        long? inputStartFrame = null;
+        long? inputLengthFrames = null;
+        if (!TryParseOptions(options, ref hunkSize, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvd, ref templateId, ref inputStartBytes, ref inputLengthBytes, ref force, ref inputStartHunk, ref inputLengthHunks, ref inputStartFrame, ref inputLengthFrames))
             return;
 
         if (File.Exists(outputPath) && !force)
@@ -1205,7 +1313,7 @@ internal static class Program
     /// <param name="inputPath">Path of the source .avi file.</param>
     /// <param name="outputPath">Path of the output .chd file.</param>
     /// <param name="options">Optional <c>-c</c> codec list, <c>-isf</c>/<c>-if</c> frame range,
-    /// <c>-t</c> task count and <c>-v</c> verbose arguments.</param>
+    /// <c>-np</c> task count, <c>-op</c> output parent, and <c>-v</c> verbose arguments.</param>
     private static void CreateLdTest(string inputPath, string outputPath, string[] options)
     {
         var log = Log.Logger;
@@ -1217,6 +1325,7 @@ internal static class Program
 
         uint hunkBytes = 0;
         string? codecs = null;
+        string? outputParentPath = null;
         long startFrame = 0;
         long? lengthFrames = null;
         var verbose = false;
@@ -1256,6 +1365,10 @@ internal static class Program
 
                     lengthFrames = ifr;
                     break;
+                case "--outputparent" or "-op" when i + 1 < options.Length:
+                    outputParentPath = options[++i].Replace("\"", "");
+                    break;
+                case "--numprocessors" or "-np" when i + 1 < options.Length:
                 case "-t" or "--tasks" when i + 1 < options.Length:
                     if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
                     {
@@ -1286,20 +1399,30 @@ internal static class Program
         try
         {
             var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "avhu");
-            var encodeOptions = verbose ? new VerboseHunkLogger().Options : null;
-            if (encodeOptions == null && taskCount.HasValue)
+            var logger = verbose ? new VerboseHunkLogger() : null;
+            var encodeOptions = logger?.Options;
+            if (encodeOptions == null && (taskCount.HasValue || outputParentPath != null))
             {
                 encodeOptions = new ChdEncodeOptions();
             }
 
-            if (encodeOptions != null && taskCount.HasValue)
+            if (encodeOptions != null)
             {
-                encodeOptions.TaskCount = taskCount;
+                if (taskCount.HasValue)
+                {
+                    encodeOptions.TaskCount = taskCount;
+                }
+
+                if (outputParentPath != null)
+                {
+                    encodeOptions.ParentPath = outputParentPath;
+                }
             }
 
-            log.Information("Creating laserdisc CHD: {Input} -> {Output}  (codecs {Codecs}{Tasks})",
+            log.Information("Creating laserdisc CHD: {Input} -> {Output}  (codecs {Codecs}{Parent}{Tasks})",
                 Path.GetFileName(inputPath), outputPath,
                 string.Join(",", codecTags.Select(CodecTags.ToString)),
+                outputParentPath != null ? $", parent {Path.GetFileName(outputParentPath)}" : "",
                 taskCount.HasValue ? $", {taskCount} tasks" : "");
 
             var info = ChdEncoder.EncodeLaserDisc(inputPath, outputPath, hunkBytes, codecTags, encodeOptions,
@@ -1409,7 +1532,8 @@ internal static class Program
     /// Accepts both chdman-style (<c>--hunksize</c>, <c>--numprocessors</c>) and legacy-style (<c>--hunk-size</c>, <c>--tasks</c>) names.</summary>
     private static bool TryParseOptions(string[] options, ref uint hunkSize, ref uint unitSize, ref string? codecs,
         ref string? parentPath, ref bool verbose, ref int? taskCount, ref bool dvd, ref int? templateId,
-        ref long? inputStartBytes, ref long? inputLengthBytes, ref bool force)
+        ref long? inputStartBytes, ref long? inputLengthBytes, ref bool force,
+        ref long? inputStartHunk, ref long? inputLengthHunks, ref long? inputStartFrame, ref long? inputLengthFrames)
     {
         for (var i = 0; i < options.Length; i++)
         {
@@ -1420,7 +1544,7 @@ internal static class Program
                     break;
                 case "--inputparent" or "-ip" when i + 1 < options.Length:
                 case "--outputparent" or "-op" when i + 1 < options.Length:
-                    parentPath = options[++i];
+                    parentPath = options[++i].Replace("\"", "");
                     break;
                 case "--hunksize" or "-hs" when i + 1 < options.Length:
                     if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
@@ -1467,6 +1591,24 @@ internal static class Program
 
                     inputStartBytes = isb;
                     break;
+                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ish) || ish < 0)
+                    {
+                        Log.Logger.Warning("Invalid input start hunk: {Value}", options[i]);
+                        return false;
+                    }
+
+                    inputStartHunk = ish;
+                    break;
+                case "--inputstartframe" or "-isf" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var isf) || isf < 0)
+                    {
+                        Log.Logger.Warning("Invalid input start frame: {Value}", options[i]);
+                        return false;
+                    }
+
+                    inputStartFrame = isf;
+                    break;
                 case "--inputbytes" or "-ib" when i + 1 < options.Length:
                     if (!long.TryParse(options[++i], out var ib) || ib <= 0)
                     {
@@ -1475,6 +1617,24 @@ internal static class Program
                     }
 
                     inputLengthBytes = ib;
+                    break;
+                case "--inputhunks" or "-ih" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
+                    {
+                        Log.Logger.Warning("Invalid input hunks: {Value}", options[i]);
+                        return false;
+                    }
+
+                    inputLengthHunks = ih;
+                    break;
+                case "--inputframes" or "-if" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ifr) || ifr <= 0)
+                    {
+                        Log.Logger.Warning("Invalid input frames: {Value}", options[i]);
+                        return false;
+                    }
+
+                    inputLengthFrames = ifr;
                     break;
                 case "--dvd" or "-d":
                     dvd = true;
@@ -1500,8 +1660,9 @@ internal static class Program
     /// </summary>
     /// <param name="inputPath">Path of the source CHD file.</param>
     /// <param name="outputPath">Path of the output .chd file.</param>
-    /// <param name="options">Optional <c>-c</c> codec list, <c>-t</c> task count, <c>-ip</c> source
-    /// parent, <c>-op</c> output parent, <c>--no-upgrade</c> to preserve legacy metadata, and
+    /// <param name="options">Optional <c>-c</c> codec list, <c>-np</c> task count, <c>-ip</c> source
+    /// parent, <c>-op</c> output parent, <c>-hs</c> hunk size, <c>-isb</c>/<c>-ish</c> input start,
+    /// <c>-ib</c>/<c>-ih</c> input length, <c>--no-upgrade</c> to preserve legacy metadata, and
     /// <c>-v</c> verbose arguments.</param>
     private static void CopyTest(string inputPath, string outputPath, string[] options)
     {
@@ -1519,6 +1680,11 @@ internal static class Program
         var force = false;
         int? taskCount = null;
         var noUpgrade = false;
+        uint? hunkSize = null;
+        long? inputStartBytes = null;
+        long? inputLengthBytes = null;
+        long? inputStartHunk = null;
+        long? inputLengthHunks = null;
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
@@ -1526,12 +1692,13 @@ internal static class Program
                 case "--compression" or "-c" or "--codecs" when i + 1 < options.Length:
                     codecs = options[++i];
                     break;
-                case "-ip" or "--input-parent" when i + 1 < options.Length:
-                    sourceParentPath = options[++i];
+                case "-ip" or "--inputparent" when i + 1 < options.Length:
+                    sourceParentPath = options[++i].Replace("\"", "");
                     break;
-                case "-op" or "--output-parent" when i + 1 < options.Length:
-                    outputParentPath = options[++i];
+                case "-op" or "--outputparent" when i + 1 < options.Length:
+                    outputParentPath = options[++i].Replace("\"", "");
                     break;
+                case "--numprocessors" or "-np" when i + 1 < options.Length:
                 case "-t" or "--tasks" when i + 1 < options.Length:
                     if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
                     {
@@ -1540,6 +1707,51 @@ internal static class Program
                     }
 
                     taskCount = t;
+                    break;
+                case "--hunksize" or "-hs" when i + 1 < options.Length:
+                    if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
+                    {
+                        log.Warning("Invalid hunk size: {Value}", options[i]);
+                        return;
+                    }
+
+                    hunkSize = hs;
+                    break;
+                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var isb) || isb < 0)
+                    {
+                        log.Warning("Invalid input start byte: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputStartBytes = isb;
+                    break;
+                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ish) || ish < 0)
+                    {
+                        log.Warning("Invalid input start hunk: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputStartHunk = ish;
+                    break;
+                case "--inputbytes" or "-ib" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
+                    {
+                        log.Warning("Invalid input bytes: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputLengthBytes = ib;
+                    break;
+                case "--inputhunks" or "-ih" when i + 1 < options.Length:
+                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
+                    {
+                        log.Warning("Invalid input hunks: {Value}", options[i]);
+                        return;
+                    }
+
+                    inputLengthHunks = ih;
                     break;
                 case "--no-upgrade":
                     noUpgrade = true;
@@ -1580,6 +1792,25 @@ internal static class Program
                 TaskCount = taskCount,
                 NoMetadataUpgrade = noUpgrade
             };
+
+            if (inputStartBytes.HasValue)
+            {
+                encodeOptions.InputStartBytes = inputStartBytes.Value;
+            }
+            else if (inputStartHunk.HasValue)
+            {
+                encodeOptions.InputStartBytes = inputStartHunk.Value * (hunkSize ?? 4096);
+            }
+
+            if (inputLengthBytes.HasValue)
+            {
+                encodeOptions.InputLengthBytes = inputLengthBytes.Value;
+            }
+            else if (inputLengthHunks.HasValue)
+            {
+                encodeOptions.InputLengthBytes = inputLengthHunks.Value * (hunkSize ?? 4096);
+            }
+
             var logger = verbose ? new VerboseHunkLogger() : null;
             encodeOptions.HunkCompleted = logger?.Options.HunkCompleted;
 
@@ -1727,9 +1958,26 @@ internal static class Program
 
     /// <summary>Prints a full header/map dump (chdman <c>info</c> + CHDlite header-dump parity):
     /// version, sizes, codecs per map slot, map CRC-16 status, parent linkage, and metadata list.</summary>
-    private static void InfoTest(string file)
+    private static void InfoTest(string file, string[]? options = null)
     {
         var log = Log.Logger;
+        var verbose = false;
+        if (options != null)
+        {
+            for (var i = 0; i < options.Length; i++)
+            {
+                switch (options[i])
+                {
+                    case "--verbose" or "-v":
+                        verbose = true;
+                        break;
+                    default:
+                        log.Warning("info: unknown option: {Option}", options[i]);
+                        return;
+                }
+            }
+        }
+
         var err = Chd.ReadHeader(file, out var header);
         if (err != ChdError.Chderrnone || header == null)
         {
@@ -1758,25 +2006,51 @@ internal static class Program
         log.Information("  MD5: {Hash}", Util.ToHex(header.Md5));
         log.Information("  Is child (requires parent): {IsChild}", !Util.IsAllZeroArray(header.ParentSha1) || !Util.IsAllZeroArray(header.ParentMd5));
 
-        if (header.MetaOffset == 0)
+        if (header.MetaOffset == 0 && !verbose)
             return;
 
         var openErr = ChdFile.Open(file, out var chd);
         if (openErr != ChdError.Chderrnone || chd == null)
         {
-            log.Warning("  Cannot open for metadata listing: {Error}", openErr);
+            if (header.MetaOffset != 0)
+                log.Warning("  Cannot open for metadata listing: {Error}", openErr);
             return;
         }
 
         using (chd)
         {
-            log.Information("  Metadata: {Count} entries", chd.Metadata.Count);
-            foreach (var meta in chd.Metadata)
-                log.Information("    {Meta}", meta.ToString());
+            if (header.MetaOffset != 0)
+            {
+                log.Information("  Metadata: {Count} entries", chd.Metadata.Count);
+                foreach (var meta in chd.Metadata)
+                    log.Information("    {Meta}", meta.ToString());
+            }
+
             if (chd.IsCd || chd.IsGdRom)
                 log.Information("  Tracks: {Count}", chd.Tracks!.Count);
             if (chd.IsDvd) log.Information("  Media type: DVD");
             if (chd.IsHdd) log.Information("  Media type: HDD");
+
+            if (verbose)
+            {
+                var compressionTypes = new Dictionary<string, int>(StringComparer.Ordinal);
+                var hunkCount = chd.HunkCount;
+                for (uint hunkNum = 0; hunkNum < hunkCount; hunkNum++)
+                {
+                    var hunkErr = chd.ReadHunk(hunkNum, new byte[chd.HunkBytes]);
+                    var codecName = hunkErr == ChdError.Chderrnone ? "data" : "error";
+                    compressionTypes[codecName] = compressionTypes.GetValueOrDefault(codecName) + 1;
+                }
+
+                log.Information("");
+                log.Information("     Hunks  Percent  Name");
+                log.Information("----------  -------  ------------------------------------");
+                foreach (var kv in compressionTypes.OrderByDescending(k => k.Value))
+                {
+                    var pct = 100.0 * kv.Value / hunkCount;
+                    log.Information("{Count,10}   {Pct,5:F1}%  {Name}", kv.Value, pct, kv.Key);
+                }
+            }
         }
     }
 
@@ -2147,6 +2421,7 @@ internal static class Program
         string? text = null;
         string? inputFile = null;
         uint index = 0;
+        var noChecksum = false;
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
@@ -2170,6 +2445,9 @@ internal static class Program
                         return;
                     }
 
+                    break;
+                case "--nochecksum" or "-nocs":
+                    noChecksum = true;
                     break;
                 default:
                     if (file == null && !args[i].StartsWith('-'))
@@ -2235,7 +2513,8 @@ internal static class Program
 
         using (chd)
         {
-            err = chd.SetMetadata(tag, data, index);
+            var flags = noChecksum ? (byte)0 : ChdFile.MetadataChecksumFlag;
+            err = chd.SetMetadata(tag, data, index, flags);
             if (err != ChdError.Chderrnone)
             {
                 log.Warning("addmeta failed: {Error}", err);
@@ -2526,7 +2805,9 @@ internal static class Program
                 Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
                 Log.Logger.Information("  --unitsize, -us      Unit size in bytes");
                 Log.Logger.Information("  --inputstartbyte, -isb  Starting byte offset within input");
+                Log.Logger.Information("  --inputstarthunk, -ish  Starting hunk offset within input");
                 Log.Logger.Information("  --inputbytes, -ib    Effective length of input in bytes");
+                Log.Logger.Information("  --inputhunks, -ih    Effective length of input in hunks");
                 Log.Logger.Information("  --numprocessors, -np Parallel workers");
                 Log.Logger.Information("  --template, -tp      Hard disk template ID");
                 Log.Logger.Information("  --dvd, -d            Force DVD metadata");
@@ -2538,6 +2819,7 @@ internal static class Program
                 Log.Logger.Information("  Create a hard disk CHD. If --input is omitted, creates a blank zero-filled image.");
                 Log.Logger.Information("  --output, -o         Output CHD file (required)");
                 Log.Logger.Information("  --input, -i          Input file (optional; omit for blank)");
+                Log.Logger.Information("  --outputparent, -op  Output parent CHD");
                 Log.Logger.Information("  --size, -s           Size of blank image (supports K/M/G suffixes)");
                 Log.Logger.Information("  --chs, -chs          CHS geometry: cylinders,heads,sectors");
                 Log.Logger.Information("  --sectorsize, -ss    Sector size in bytes (default: 512)");
@@ -2545,6 +2827,10 @@ internal static class Program
                 Log.Logger.Information("  --compression, -c    Codecs (default: none for blank)");
                 Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
                 Log.Logger.Information("  --template, -tp      Hard disk template ID");
+                Log.Logger.Information("  --inputstartbyte, -isb  Starting byte offset within input");
+                Log.Logger.Information("  --inputstarthunk, -ish  Starting hunk offset within input");
+                Log.Logger.Information("  --inputbytes, -ib    Effective length of input in bytes");
+                Log.Logger.Information("  --inputhunks, -ih    Effective length of input in hunks");
                 Log.Logger.Information("  --numprocessors, -np Parallel workers");
                 Log.Logger.Information("  --force, -f          Overwrite existing output");
                 Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
@@ -2569,6 +2855,10 @@ internal static class Program
                 Log.Logger.Information("  --outputparent, -op  Output parent CHD");
                 Log.Logger.Information("  --compression, -c    Codecs (default: lzma,zlib,huff,flac)");
                 Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
+                Log.Logger.Information("  --inputstartbyte, -isb  Starting byte offset within input");
+                Log.Logger.Information("  --inputstarthunk, -ish  Starting hunk offset within input");
+                Log.Logger.Information("  --inputbytes, -ib    Effective length of input in bytes");
+                Log.Logger.Information("  --inputhunks, -ih    Effective length of input in hunks");
                 Log.Logger.Information("  --numprocessors, -np Parallel workers");
                 Log.Logger.Information("  --force, -f          Overwrite existing output");
                 Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
@@ -2594,7 +2884,9 @@ internal static class Program
                 Log.Logger.Information("  --input, -i              Input CHD file (required)");
                 Log.Logger.Information("  --inputparent, -ip       Parent CHD file");
                 Log.Logger.Information("  --inputstartbyte, -isb   Starting byte offset");
+                Log.Logger.Information("  --inputstarthunk, -ish   Starting hunk offset");
                 Log.Logger.Information("  --inputbytes, -ib        Byte count to extract");
+                Log.Logger.Information("  --inputhunks, -ih        Hunk count to extract");
                 Log.Logger.Information("  --force, -f              Overwrite existing output");
                 break;
             case "extracthd":
@@ -2635,7 +2927,13 @@ internal static class Program
                 Log.Logger.Information("  --inputparent, -ip   Source parent CHD");
                 Log.Logger.Information("  --outputparent, -op  Output parent CHD");
                 Log.Logger.Information("  --compression, -c    Codecs");
+                Log.Logger.Information("  --hunksize, -hs      Hunk size in bytes");
+                Log.Logger.Information("  --inputstartbyte, -isb  Starting byte offset within input");
+                Log.Logger.Information("  --inputstarthunk, -ish  Starting hunk offset within input");
+                Log.Logger.Information("  --inputbytes, -ib    Effective length of input in bytes");
+                Log.Logger.Information("  --inputhunks, -ih    Effective length of input in hunks");
                 Log.Logger.Information("  --numprocessors, -np Parallel workers");
+                Log.Logger.Information("  --no-upgrade         Preserve legacy metadata tags");
                 Log.Logger.Information("  --force, -f          Overwrite existing output");
                 Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
                 break;
@@ -2647,6 +2945,7 @@ internal static class Program
                 Log.Logger.Information("  --index, -ix       Indexed instance of this tag");
                 Log.Logger.Information("  --valuetext, -vt   Text value");
                 Log.Logger.Information("  --valuefile, -vf   File containing data");
+                Log.Logger.Information("  --nochecksum, -nocs  Exclude from combined SHA-1");
                 break;
             case "delmeta":
                 Log.Logger.Information("{Exe} delmeta --input <file> --tag <tag> [--index <n>]", exe);
@@ -2748,7 +3047,11 @@ internal static class Program
         int? templateDummy = null;
         long? inputStartBytes = null;
         long? inputLengthBytes = null;
-        if (!TryParseOptions(options, ref hunkBytes, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvdDummy, ref templateDummy, ref inputStartBytes, ref inputLengthBytes, ref force))
+        long? inputStartHunk = null;
+        long? inputLengthHunks = null;
+        long? inputStartFrame = null;
+        long? inputLengthFrames = null;
+        if (!TryParseOptions(options, ref hunkBytes, ref unitBytes, ref codecs, ref parentPath, ref verbose, ref taskCount, ref dvdDummy, ref templateDummy, ref inputStartBytes, ref inputLengthBytes, ref force, ref inputStartHunk, ref inputLengthHunks, ref inputStartFrame, ref inputLengthFrames))
             return;
 
         if (File.Exists(outputPath) && !force)
