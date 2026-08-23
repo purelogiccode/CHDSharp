@@ -91,6 +91,7 @@ public class HeaderAndApiTests
             Compression = [ChdCodec.Zlib],
             Totalbytes = totalbytes,
             Blocksize = blocksize,
+            Unitbytes = blocksize,
             Totalblocks = 1,
             UncompressedMap = false,
             Map = [],

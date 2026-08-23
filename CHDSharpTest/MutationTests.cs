@@ -99,7 +99,7 @@ public class MutationTests
                 break;
         }
 
-        var mutatedPath = Path.Combine(Path.GetTempPath(), $"chdsharp_mut_{seed}.chd");
+        var mutatedPath = Path.Combine(Path.GetTempPath(), $"chdsharp_mut_{seed}_{Guid.NewGuid():N}.chd");
         try
         {
             File.WriteAllBytes(mutatedPath, bytes);
