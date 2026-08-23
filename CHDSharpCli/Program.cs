@@ -33,6 +33,8 @@ internal static class Program
         Log.Logger = serilogLogger;
         Chd.LoggerFactory = new SerilogLoggerFactory(serilogLogger);
 
+        ApplicationStatsService.TrackLaunch("chdsharpcli");
+
         try
         {
             var sw = new Stopwatch();

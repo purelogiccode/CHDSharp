@@ -34,6 +34,8 @@ public partial class App
 
             Chd.LoggerFactory = new SerilogLoggerFactory(Log.Logger);
 
+            ApplicationStatsService.TrackLaunch("chdsharptester");
+
             Log.Information("CHDSharpTester started");
         }
         catch (Exception ex)
