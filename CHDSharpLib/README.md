@@ -12,6 +12,7 @@
 
 ## What's New in v1.3.0
 
+- **Full CHD encoding/writing** — `ChdEncoder` is now part of `CHDSharpLib`. Create CHDs from raw binaries, CD images (CUE/GDI/ISO/TOC/NRG), or blank HD templates. Re-compress existing CHDs with new codecs. Create delta/parent CHDs. All 10 codecs with best-per-hunk selection, parallel compression (1–64 workers), and 100% byte-identical output vs MAME `chdman`. No separate package needed.
 - **Hard disk ident metadata (`IDNT`)** — Read/write `IDNT` metadata (ATA IDENTIFY DEVICE response, 512 bytes) preserving original drive model, serial, CHS geometry, and firmware revision. Access via `ChdFile.IdentData` property. `--ident <path>` flag on `createhd` CLI. Automatically preserved during `ChdEncoder.Copy()`.
 - **Hard disk encryption key metadata** — Read/write `KEY ` metadata (encryption key) used by OG Xbox and other platforms with encrypted HDD contents. Access via `ChdFile.KeyData` property. Automatically preserved during `ChdEncoder.Copy()`.
 - **PCMCIA CIS metadata** — Read/write `CIS ` metadata (Card Information Structure) used by PC Engine CD and other PCMCIA platforms. Access via `ChdFile.PcmciaCisData` property. Automatically preserved during `ChdEncoder.Copy()`.
