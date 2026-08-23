@@ -1,14 +1,11 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace CHDSharp.BugReporting;
+namespace CHDSharpTester.Services;
 
 /// <summary>
 /// A Serilog sink that forwards every log event at <see cref="LogEventLevel.Warning"/> or above to the

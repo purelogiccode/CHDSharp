@@ -10,7 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
     <ProjectReference Include="..\CHDSharpEncoder\CHDSharpEncoder.csproj" />
-    <ProjectReference Include="..\CHDSharp.BugReporting\CHDSharp.BugReporting.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Serilog" Version="4.4.0" />

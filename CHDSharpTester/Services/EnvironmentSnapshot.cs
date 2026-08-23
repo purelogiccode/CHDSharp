@@ -1,10 +1,9 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace CHDSharp.BugReporting;
+namespace CHDSharpTester.Services;
 
 /// <summary>
 /// Captures the static environment details that must accompany every forwarded bug report.
@@ -15,7 +14,7 @@ public sealed class EnvironmentSnapshot
     /// <summary>Local timestamp when the snapshot was created.</summary>
     public string Date => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-    /// <summary>The friendly application name (e.g. <c>CHDSharpCli</c>).</summary>
+    /// <summary>The friendly application name (e.g. <c>CHDSharpTester</c>).</summary>
     public string ApplicationName { get; }
 
     /// <summary>The entry-assembly version, or <c>Unknown</c> when it cannot be resolved.</summary>

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Windows;
 using CHDSharp;
-using CHDSharp.BugReporting;
+using CHDSharpTester.Services;
 using Serilog;
 using Serilog.Extensions.Logging;
 
