@@ -215,6 +215,111 @@ using (chd)
 
 ---
 
+## Writing CHDs (Encoding)
+
+The encoder is part of the same library — no separate package needed. All encoder types live in the `CHDSharp.Encoder` namespace.
+
+### Raw Binary → CHD
+
+```csharp
+using CHDSharp.Encoder;
+
+// Simplest form — default codec (zlib), auto hunk/unit sizes
+ChdEncoder.EncodeRaw("game.bin", "game.chd");
+
+// Custom codecs (tried per hunk; smallest output wins)
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    codecTags: ChdCodecs.ParseCodecTags("zlib,zstd,lzma"));
+
+// Custom hunk/unit sizes
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    hunkBytes: 65536, unitBytes: 4096);
+
+// Uncompressed CHD (-c none)
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    codecTags: [CodecTags.None]);
+```
+
+### CD Image → CHD
+
+```csharp
+// From CUE sheet
+ChdEncoder.EncodeCd("game.cue", "game.chd");
+
+// From GDI, ISO, TOC, or NRG
+ChdEncoder.EncodeCd("game.gdi", "game.chd");
+ChdEncoder.EncodeCd("game.iso", "game.chd");
+```
+
+### Blank HD CHD
+
+```csharp
+// Zero-filled CHD with auto-derived CHS geometry
+ChdEncoder.CreateBlank("blank.chd", 100 * 1024 * 1024UL); // 100 MB
+
+// Explicit CHS geometry
+ChdEncoder.CreateBlankWithChs("blank.chd",
+    cylinders: 1024, heads: 16, sectors: 63, sectorSize: 512);
+```
+
+### Re-compress Existing CHD
+
+```csharp
+// Re-compress with Zstd
+ChdEncoder.Copy("old.chd", "new.chd",
+    codecTags: [CodecTags.Zstd]);
+
+// Preserve legacy metadata (no upgrade)
+ChdEncoder.Copy("old.chd", "new.chd",
+    codecTags: [CodecTags.Zstd],
+    options: new ChdEncodeOptions { NoMetadataUpgrade = true });
+```
+
+### Delta (Parent) CHD
+
+```csharp
+// Create a differential child against a parent
+ChdEncoder.EncodeRaw("game.bin", "game.chd",
+    options: new ChdEncodeOptions { ParentPath = "base.chd" });
+```
+
+### Progress Reporting During Encoding
+
+```csharp
+var options = new ChdEncodeOptions
+{
+    TaskCount = 8,
+    HunkCompleted = p => Console.WriteLine(
+        $"hunk {p.HunkIndex,6}/{p.HunkCount}  {p.CodecName,-5} " +
+        $"{p.RawBytes,8} -> {p.StoredBytes,8} B  ({p.Ratio:P1})")
+};
+
+ChdEncoder.EncodeRaw("game.bin", "game.chd", options: options);
+```
+
+### Extraction
+
+```csharp
+// Extract CHD tracks to a directory
+ChdFile.Open("game.chd", out var chd);
+using (chd)
+{
+    var files = chd.ExtractToDirectory("output_folder", "game");
+    foreach (var f in files)
+        Console.WriteLine($"Extracted: {f}");
+}
+
+// Generate CUE sheet for CD CHDs
+ChdFile.Open("game.chd", out var chd2);
+using (chd2)
+{
+    string cue = chd2.GenerateCueSheet("game.bin");
+    File.WriteAllText("game.cue", cue);
+}
+```
+
+---
+
 ## Logging
 
 The library uses `Microsoft.Extensions.Logging.Abstractions`. By default, logging is discarded. To enable logging (e.g., with Serilog):
@@ -437,6 +542,35 @@ Console.WriteLine(err.GetMessage());
 // "File not found"
 ```
 
+### `ChdEncoder` — Static encoder class
+
+`CHDSharp.Encoder` namespace. All methods produce CHD v5 files with byte-identical output to MAME `chdman`.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| **EncodeRaw** | `void EncodeRaw(string input, string output, string? codecTags = null, int? hunkBytes = null, int? unitBytes = null, ChdEncodeOptions? options = null)` | Create CHD from a raw binary file. Default codec: zlib. Auto hunk/unit sizes if omitted. |
+| **EncodeCd** | `void EncodeCd(string input, string output, string? codecTags = null, ChdEncodeOptions? options = null)` | Create CD CHD from CUE, GDI, ISO, TOC, or NRG. Handles audio byte-swap, 4-frame padding, CHT2 metadata. |
+| **CreateBlank** | `void CreateBlank(string output, ulong totalBytes, string? codecTags = null, ChdEncodeOptions? options = null)` | Create a zero-filled HD CHD with auto-derived CHS geometry. |
+| **CreateBlankWithChs** | `void CreateBlankWithChs(string output, uint cylinders, uint heads, uint sectors, uint sectorSize = 512, string? codecTags = null, ChdEncodeOptions? options = null)` | Create a zero-filled HD CHD with explicit CHS geometry. |
+| **Copy** | `void Copy(string input, string output, string? codecTags = null, ChdEncodeOptions? options = null)` | Re-compress an existing CHD. Clones all metadata. Upgrades legacy CD/GD tags unless `NoMetadataUpgrade` is set. |
+
+### `ChdEncodeOptions` — Encoder options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `TaskCount` | `int` | 8 | Parallel compression workers (1–64). |
+| `ParentPath` | `string?` | null | Parent CHD path for delta encoding. |
+| `NoMetadataUpgrade` | `bool` | false | Preserve legacy `CHCD`/`CHTR`/`CHGT` tags during copy. |
+| `HunkCompleted` | `Action<HunkProgress>?` | null | Per-hunk progress callback with codec name, sizes, and ratio. |
+
+### `ChdCodecs` — Codec tag helper
+
+| Method | Description |
+|--------|-------------|
+| `ParseCodecTags(string)` | Parse comma-separated codec names (e.g. `"zlib,zstd,lzma"`) into tag array. |
+| `CodecTags.None` | Uncompressed. |
+| `CodecTags.Zlib` / `.Zstd` / `.Lzma` / `.Huff` / `.Flac` | Individual codec tags. |
+
 ---
 
 ## Supported Formats
@@ -565,12 +699,18 @@ var result = Chd.CheckFile(s, name, deepCheck: true);
 ┌────────────────────────────────────────────────────┐
 │                    Public API                       │
 │  Chd.CheckFile()  ChdFile.Open()  ChdFile.Read()   │
+│  ChdEncoder.EncodeRaw/Copy/CreateBlank/EncodeCd    │
 ├────────────────────────────────────────────────────┤
 │  CHDHeaders    →  Parse V1–V5 headers + maps       │
 │  CHDBlockRead  →  Dispatch hunk → codec delegate   │
 │  CHDReaders    →  Decompression delegates (10)     │
 │  CHDCodec      →  Per-codec reusable state         │
 │  CHDMetaData   →  Metadata traversal + SHA1 check   │
+├────────────────────────────────────────────────────┤
+│  Encoder/                                           │
+│  ChdEncoder · HunkProcessor · MapCompressor ·       │
+│  ParentMap · ChdCodec · MetadataWriter ·            │
+│  CdImageParser · CueParser · GdiParser · NrgParser  │
 ├────────────────────────────────────────────────────┤
 │  Utils/                                             │
 │  CRC · CRC16 · BitStream · HuffmanDecoder ·        │
