@@ -106,7 +106,7 @@ public static unsafe partial class Methods
 
         {
             var istart = (byte*)src;
-            SymbolEncodingType_e litEncType = (SymbolEncodingType_e)(istart[0] & 3);
+            var litEncType = (SymbolEncodingType_e)(istart[0] & 3);
             var blockSizeMax = ZSTD_blockSizeMax(dctx);
             switch (litEncType)
             {
@@ -704,9 +704,9 @@ public static unsafe partial class Methods
         }
 
         {
-            SymbolEncodingType_e LLtype = (SymbolEncodingType_e)(*ip >> 6);
-            SymbolEncodingType_e OFtype = (SymbolEncodingType_e)((*ip >> 4) & 3);
-            SymbolEncodingType_e MLtype = (SymbolEncodingType_e)((*ip >> 2) & 3);
+            var LLtype = (SymbolEncodingType_e)(*ip >> 6);
+            var OFtype = (SymbolEncodingType_e)((*ip >> 4) & 3);
+            var MLtype = (SymbolEncodingType_e)((*ip >> 2) & 3);
             ip++;
             {
                 var llhSize = ZSTD_buildSeqTable(&dctx->entropy.LLTable.e0, &dctx->LLTptr, LLtype, 35, 9, ip, (nuint)(iend - ip), LL_base, LL_bits, LL_defaultDTable, dctx->fseEntropy, dctx->ddictIsCold, nbSeq, dctx->workspace, sizeof(uint) * 640, ZSTD_DCtx_get_bmi2(dctx));
@@ -1324,7 +1324,7 @@ public static unsafe partial class Methods
             assert(dst != null);
             {
                 /* some static analyzer believe that @sequence is not initialized (it necessarily is, since for(;;) loop as at least one iteration) */
-                seq_t sequence = new seq_t
+                var sequence = new seq_t
                 {
                     litLength = 0,
                     matchLength = 0,
@@ -1379,7 +1379,7 @@ public static unsafe partial class Methods
             {
                 for (; nbSeq != 0; nbSeq--)
                 {
-                    seq_t sequence = ZSTD_decodeSequence(&seqState, isLongOffset, nbSeq == 1 ? 1 : 0);
+                    var sequence = ZSTD_decodeSequence(&seqState, isLongOffset, nbSeq == 1 ? 1 : 0);
                     var oneSeqSize = ZSTD_execSequence(op, oend, sequence, &litPtr, litBufferEnd, prefixStart, vBase, dictEnd);
                     if (ERR_isError(oneSeqSize))
                         return oneSeqSize;
@@ -1783,14 +1783,14 @@ public static unsafe partial class Methods
             ZSTD_initFseState(&seqState.stateML, &seqState.DStream, dctx->MLTptr);
             for (seqNb = 0; seqNb < seqAdvance; seqNb++)
             {
-                seq_t sequence = ZSTD_decodeSequence(&seqState, isLongOffset, seqNb == nbSeq - 1 ? 1 : 0);
+                var sequence = ZSTD_decodeSequence(&seqState, isLongOffset, seqNb == nbSeq - 1 ? 1 : 0);
                 prefetchPos = ZSTD_prefetchMatch(prefetchPos, sequence, prefixStart, dictEnd);
                 sequences[seqNb] = sequence;
             }
 
             for (; seqNb < nbSeq; seqNb++)
             {
-                seq_t sequence = ZSTD_decodeSequence(&seqState, isLongOffset, seqNb == nbSeq - 1 ? 1 : 0);
+                var sequence = ZSTD_decodeSequence(&seqState, isLongOffset, seqNb == nbSeq - 1 ? 1 : 0);
                 if (dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_split && litPtr + sequences[(seqNb - 8) & (8 - 1)].litLength > dctx->litBufferEnd)
                 {
                     /* lit buffer is reaching split point, empty out the first buffer and transition to litExtraBuffer */
@@ -1965,7 +1965,7 @@ public static unsafe partial class Methods
      */
     private static ZSTD_OffsetInfo ZSTD_getOffsetInfo(ZSTD_seqSymbol* offTable, int nbSeq)
     {
-        ZSTD_OffsetInfo info = new ZSTD_OffsetInfo
+        var info = new ZSTD_OffsetInfo
         {
             longOffsetShare = 0,
             maxNbAdditionalBits = 0
@@ -2058,7 +2058,7 @@ public static unsafe partial class Methods
              * If isLongOffsets is true, then we will later check our decoding table to see
              * if it is even possible to generate long offsets.
              */
-            ZSTD_longOffset_e isLongOffset = (ZSTD_longOffset_e)(MEM_32bits && totalHistorySize > ZSTD_maxShortOffset() ? 1 : 0);
+            var isLongOffset = (ZSTD_longOffset_e)(MEM_32bits && totalHistorySize > ZSTD_maxShortOffset() ? 1 : 0);
             var usePrefetchDecoder = dctx->ddictIsCold;
             int nbSeq;
             var seqHSize = ZSTD_decodeSeqHeaders(dctx, &nbSeq, ip, srcSize);
@@ -2079,7 +2079,7 @@ public static unsafe partial class Methods
 
             if (isLongOffset != default || (usePrefetchDecoder == 0 && totalHistorySize > 1U << 24 && nbSeq > 8))
             {
-                ZSTD_OffsetInfo info = ZSTD_getOffsetInfo(dctx->OFTptr, nbSeq);
+                var info = ZSTD_getOffsetInfo(dctx->OFTptr, nbSeq);
                 if (isLongOffset != default && info.maxNbAdditionalBits <= (uint)(MEM_32bits ? 25 : 57))
                 {
                     isLongOffset = ZSTD_longOffset_e.ZSTD_lo_isRegularOffset;

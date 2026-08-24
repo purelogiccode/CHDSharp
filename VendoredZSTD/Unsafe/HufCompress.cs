@@ -451,7 +451,7 @@ public static unsafe partial class Methods
     /* Helper swap function for HUF_quickSortPartition() */
     private static void HUF_swapNodes(nodeElt_s* a, nodeElt_s* b)
     {
-        nodeElt_s tmp = *a;
+        var tmp = *a;
         *a = *b;
         *b = tmp;
     }
@@ -481,7 +481,7 @@ public static unsafe partial class Methods
         huffNode += low;
         for (i = 1; i < size; ++i)
         {
-            nodeElt_s key = huffNode[i];
+            var key = huffNode[i];
             var j = i - 1;
             while (j >= 0 && huffNode[j].count < key.count)
             {
@@ -735,7 +735,7 @@ public static unsafe partial class Methods
 
     private static int HUF_validateCTable(nuint* CTable, uint* count, uint maxSymbolValue)
     {
-        HUF_CTableHeader header = HUF_readCTableHeader(CTable);
+        var header = HUF_readCTableHeader(CTable);
         var ct = CTable + 1;
         var bad = 0;
         int s;

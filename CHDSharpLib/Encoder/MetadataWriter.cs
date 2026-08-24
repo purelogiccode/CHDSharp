@@ -95,7 +95,7 @@ public static class MetadataWriter
         uint cylinders = 0, heads = 0, sectorsPerTrack = 0;
         if (bytesPerSector > 0)
         {
-            for (ulong totalSectors = totalBytes / bytesPerSector;; totalSectors++)
+            for (var totalSectors = totalBytes / bytesPerSector;; totalSectors++)
             {
                 var found = false;
                 for (uint curSectors = 63; curSectors > 1 && !found; curSectors--)

@@ -984,7 +984,7 @@ public static unsafe partial class Methods
         var currPos = (uint)(rawSeqStore->posInSequence + nbBytes);
         while (currPos != 0 && rawSeqStore->pos < rawSeqStore->size)
         {
-            rawSeq currSeq = rawSeqStore->seq[rawSeqStore->pos];
+            var currSeq = rawSeqStore->seq[rawSeqStore->pos];
             if (currPos >= currSeq.litLength + currSeq.matchLength)
             {
                 currPos -= currSeq.litLength + currSeq.matchLength;
@@ -1108,7 +1108,7 @@ public static unsafe partial class Methods
         var @base = ms->window.@base;
         var prefixStart = @base + ms->window.dictLimit;
         var cParams = &ms->cParams;
-        ZSTD_getAllMatchesFn getAllMatches = ZSTD_selectBtGetAllMatches(ms, dictMode);
+        var getAllMatches = ZSTD_selectBtGetAllMatches(ms, dictMode);
         var sufficient_len = cParams->targetLength < (1 << 12) - 1 ? cParams->targetLength : (1 << 12) - 1;
         var minMatch = (uint)(cParams->minMatch == 3 ? 3 : 4);
         var nextToUpdate3 = ms->nextToUpdate;
@@ -1195,7 +1195,7 @@ public static unsafe partial class Methods
                     assert(price < 1000000000);
                     if (price <= opt[cur].price)
                     {
-                        ZSTD_optimal_t prevMatch = opt[cur];
+                        var prevMatch = opt[cur];
                         opt[cur] = opt[cur - 1];
                         opt[cur].litlen = litlen;
                         opt[cur].price = price;
@@ -1208,7 +1208,7 @@ public static unsafe partial class Methods
                             {
                                 /* update offset history - before it disappears */
                                 var prev = cur - prevMatch.mlen;
-                                repcodes_s newReps = ZSTD_newRep(opt[prev].rep, prevMatch.off, opt[prev].litlen == 0 ? 1U : 0U);
+                                var newReps = ZSTD_newRep(opt[prev].rep, prevMatch.off, opt[prev].litlen == 0 ? 1U : 0U);
                                 assert(cur >= prevMatch.mlen);
                                 opt[cur + 1] = prevMatch;
                                 memcpy(opt[cur + 1].rep, &newReps, (uint)sizeof(repcodes_s));
@@ -1228,7 +1228,7 @@ public static unsafe partial class Methods
                 {
                     /* just finished a match => alter offset history */
                     var prev = cur - opt[cur].mlen;
-                    repcodes_s newReps = ZSTD_newRep(opt[prev].rep, opt[cur].off, opt[prev].litlen == 0 ? 1U : 0U);
+                    var newReps = ZSTD_newRep(opt[prev].rep, opt[cur].off, opt[prev].litlen == 0 ? 1U : 0U);
                     memcpy(opt[cur].rep, &newReps, (uint)sizeof(repcodes_s));
                 }
 
@@ -1322,7 +1322,7 @@ public static unsafe partial class Methods
             if (lastStretch.litlen == 0)
             {
                 /* finishing on a match : update offset history */
-                repcodes_s reps = ZSTD_newRep(opt[cur].rep, lastStretch.off, opt[cur].litlen == 0 ? 1U : 0U);
+                var reps = ZSTD_newRep(opt[cur].rep, lastStretch.off, opt[cur].litlen == 0 ? 1U : 0U);
                 memcpy(rep, &reps, (uint)sizeof(repcodes_s));
             }
             else
@@ -1352,7 +1352,7 @@ public static unsafe partial class Methods
 
                 while (true)
                 {
-                    ZSTD_optimal_t nextStretch = opt[stretchPos];
+                    var nextStretch = opt[stretchPos];
                     opt[storeStart].litlen = nextStretch.litlen;
                     if (nextStretch.mlen == 0)
                     {

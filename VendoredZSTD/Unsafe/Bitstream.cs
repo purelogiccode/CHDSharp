@@ -385,7 +385,7 @@ public static unsafe partial class Methods
 
         {
             var nbBytes = bitD->bitsConsumed >> 3;
-            BitDStreamStatus result = BitDStreamStatus.BitDStreamUnfinished;
+            var result = BitDStreamStatus.BitDStreamUnfinished;
             if (bitD->ptr - nbBytes < bitD->start)
             {
                 nbBytes = (uint)(bitD->ptr - bitD->start);
@@ -579,7 +579,7 @@ public static unsafe partial class Methods
 
         {
             var nbBytes = bitDBitsConsumed >> 3;
-            BitDStreamStatus result = BitDStreamStatus.BitDStreamUnfinished;
+            var result = BitDStreamStatus.BitDStreamUnfinished;
             if (bitDPtr - nbBytes < bitDStart)
             {
                 nbBytes = (uint)(bitDPtr - bitDStart);

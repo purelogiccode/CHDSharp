@@ -156,7 +156,7 @@ public static unsafe partial class Methods
      *   Consequently, `dict` can be released after `ZSTD_DDict` creation */
     public static ZSTD_DDict_s* ZSTD_createDDict(void* dict, nuint dictSize)
     {
-        ZSTD_customMem allocator = new ZSTD_customMem
+        var allocator = new ZSTD_customMem
         {
             customAlloc = null,
             customFree = null,
@@ -171,7 +171,7 @@ public static unsafe partial class Methods
      *  Warning : dictBuffer must outlive DDict (DDict must be freed before dictBuffer) */
     public static ZSTD_DDict_s* ZSTD_createDDict_byReference(void* dictBuffer, nuint dictSize)
     {
-        ZSTD_customMem allocator = new ZSTD_customMem
+        var allocator = new ZSTD_customMem
         {
             customAlloc = null,
             customFree = null,
@@ -212,7 +212,7 @@ public static unsafe partial class Methods
             return 0;
 
         {
-            ZSTD_customMem cMem = ddict->cMem;
+            var cMem = ddict->cMem;
             ZSTD_customFree(ddict->dictBuffer, cMem);
             ZSTD_customFree(ddict, cMem);
             return 0;

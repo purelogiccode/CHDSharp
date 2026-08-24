@@ -254,7 +254,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void* ZSTD_cwksp_reserve_table(ZstdCwksp* ws, nuint bytes)
     {
-        ZSTD_cwksp_alloc_phase_e phase = ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once;
+        var phase = ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once;
         if (ws->phase < phase)
         {
             if (ERR_isError(ZSTD_cwksp_internal_advance_phase(ws, phase)))

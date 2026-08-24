@@ -3155,7 +3155,7 @@ internal static class Program
         var verbose = false;
         var force = false;
         int? taskCount = null;
-        bool dvdDummy = false;
+        var dvdDummy = false;
         int? templateDummy = null;
         long? inputStartBytes = null;
         long? inputLengthBytes = null;
@@ -3309,7 +3309,7 @@ internal static class Program
             using (chd)
             {
                 // Convert hunk-based ranges to byte ranges; byte options take precedence.
-                ulong readStart = startHunk.HasValue ? (ulong)startHunk.Value * chd.HunkBytes : 0;
+                var readStart = startHunk.HasValue ? (ulong)startHunk.Value * chd.HunkBytes : 0;
                 if (startByte.HasValue)
                 {
                     readStart = (ulong)startByte.Value;

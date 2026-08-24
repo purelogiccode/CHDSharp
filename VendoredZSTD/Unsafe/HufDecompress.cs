@@ -167,7 +167,7 @@ public static unsafe partial class Methods
             return iSize;
 
         {
-            DTableDesc dtd = HUF_getDTableDesc(DTable);
+            var dtd = HUF_getDTableDesc(DTable);
             var maxTableLog = (uint)(dtd.maxTableLog + 1);
             var targetTableLog = maxTableLog < 11 ? maxTableLog : 11;
             tableLog = HUF_rescaleStats(wksp->huffWeight, wksp->rankVal, nbSymbols, tableLog, targetTableLog);
@@ -351,7 +351,7 @@ public static unsafe partial class Methods
         void* dtPtr = DTable + 1;
         var dt = (HUF_DEltX1*)dtPtr;
         BitDStreamT bitD;
-        DTableDesc dtd = HUF_getDTableDesc(DTable);
+        var dtd = HUF_getDTableDesc(DTable);
         uint dtLog = dtd.tableLog;
         {
             var _var_err__ = BIT_initDStream(&bitD, cSrc, cSrcSize);
@@ -407,7 +407,7 @@ public static unsafe partial class Methods
             var op2 = opStart2;
             var op3 = opStart3;
             var op4 = opStart4;
-            DTableDesc dtd = HUF_getDTableDesc(DTable);
+            var dtd = HUF_getDTableDesc(DTable);
             uint dtLog = dtd.tableLog;
             uint endSignal = 1;
             if (length4 > cSrcSize)
@@ -990,7 +990,7 @@ public static unsafe partial class Methods
             case 1:
                 for (ptr = begin; ptr != end; ++ptr)
                 {
-                    HUF_DEltX2 DElt = HUF_buildDEltX2(ptr->symbol, nbBits, baseSeq, level);
+                    var DElt = HUF_buildDEltX2(ptr->symbol, nbBits, baseSeq, level);
                     *DTableRank++ = DElt;
                 }
 
@@ -998,7 +998,7 @@ public static unsafe partial class Methods
             case 2:
                 for (ptr = begin; ptr != end; ++ptr)
                 {
-                    HUF_DEltX2 DElt = HUF_buildDEltX2(ptr->symbol, nbBits, baseSeq, level);
+                    var DElt = HUF_buildDEltX2(ptr->symbol, nbBits, baseSeq, level);
                     DTableRank[0] = DElt;
                     DTableRank[1] = DElt;
                     DTableRank += 2;
@@ -1141,7 +1141,7 @@ public static unsafe partial class Methods
     private static nuint HUF_readDTableX2_wksp(uint* DTable, void* src, nuint srcSize, void* workSpace, nuint wkspSize, int flags)
     {
         uint tableLog, maxW, nbSymbols;
-        DTableDesc dtd = HUF_getDTableDesc(DTable);
+        var dtd = HUF_getDTableDesc(DTable);
         uint maxTableLog = dtd.maxTableLog;
         /* force compiler to avoid strict-aliasing */
         void* dtPtr = DTable + 1;
@@ -1348,7 +1348,7 @@ public static unsafe partial class Methods
             /* force compiler to not use strict-aliasing */
             void* dtPtr = DTable + 1;
             var dt = (HUF_DEltX2*)dtPtr;
-            DTableDesc dtd = HUF_getDTableDesc(DTable);
+            var dtd = HUF_getDTableDesc(DTable);
             HUF_decodeStreamX2(ostart, &bitD, oend, dt, dtd.tableLog);
         }
 
@@ -1400,7 +1400,7 @@ public static unsafe partial class Methods
             var op3 = opStart3;
             var op4 = opStart4;
             uint endSignal = 1;
-            DTableDesc dtd = HUF_getDTableDesc(DTable);
+            var dtd = HUF_getDTableDesc(DTable);
             uint dtLog = dtd.tableLog;
             if (length4 > cSrcSize)
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
@@ -1633,7 +1633,7 @@ public static unsafe partial class Methods
                          * to reduce register pressure.
                          */
                         var index = (int)(bits0 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op0, entry.sequence);
                         bits0 <<= entry.nbBits & 0x3F;
                         op0 += entry.length;
@@ -1641,7 +1641,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits1 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op1, entry.sequence);
                         bits1 <<= entry.nbBits & 0x3F;
                         op1 += entry.length;
@@ -1649,7 +1649,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits2 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op2, entry.sequence);
                         bits2 <<= entry.nbBits & 0x3F;
                         op2 += entry.length;
@@ -1659,7 +1659,7 @@ public static unsafe partial class Methods
                 {
                     {
                         var index = (int)(bits0 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op0, entry.sequence);
                         bits0 <<= entry.nbBits & 0x3F;
                         op0 += entry.length;
@@ -1667,7 +1667,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits1 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op1, entry.sequence);
                         bits1 <<= entry.nbBits & 0x3F;
                         op1 += entry.length;
@@ -1675,7 +1675,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits2 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op2, entry.sequence);
                         bits2 <<= entry.nbBits & 0x3F;
                         op2 += entry.length;
@@ -1685,7 +1685,7 @@ public static unsafe partial class Methods
                 {
                     {
                         var index = (int)(bits0 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op0, entry.sequence);
                         bits0 <<= entry.nbBits & 0x3F;
                         op0 += entry.length;
@@ -1693,7 +1693,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits1 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op1, entry.sequence);
                         bits1 <<= entry.nbBits & 0x3F;
                         op1 += entry.length;
@@ -1701,7 +1701,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits2 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op2, entry.sequence);
                         bits2 <<= entry.nbBits & 0x3F;
                         op2 += entry.length;
@@ -1711,7 +1711,7 @@ public static unsafe partial class Methods
                 {
                     {
                         var index = (int)(bits0 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op0, entry.sequence);
                         bits0 <<= entry.nbBits & 0x3F;
                         op0 += entry.length;
@@ -1719,7 +1719,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits1 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op1, entry.sequence);
                         bits1 <<= entry.nbBits & 0x3F;
                         op1 += entry.length;
@@ -1727,7 +1727,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits2 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op2, entry.sequence);
                         bits2 <<= entry.nbBits & 0x3F;
                         op2 += entry.length;
@@ -1737,7 +1737,7 @@ public static unsafe partial class Methods
                 {
                     {
                         var index = (int)(bits0 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op0, entry.sequence);
                         bits0 <<= entry.nbBits & 0x3F;
                         op0 += entry.length;
@@ -1745,7 +1745,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits1 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op1, entry.sequence);
                         bits1 <<= entry.nbBits & 0x3F;
                         op1 += entry.length;
@@ -1753,7 +1753,7 @@ public static unsafe partial class Methods
 
                     {
                         var index = (int)(bits2 >> 53);
-                        HUF_DEltX2 entry = dtable[index];
+                        var entry = dtable[index];
                         MEM_write16(op2, entry.sequence);
                         bits2 <<= entry.nbBits & 0x3F;
                         op2 += entry.length;
@@ -1763,7 +1763,7 @@ public static unsafe partial class Methods
                 {
                     /* Decode one symbol from the final stream */
                     var index = (int)(bits3 >> 53);
-                    HUF_DEltX2 entry = dtable[index];
+                    var entry = dtable[index];
                     MEM_write16(op3, entry.sequence);
                     bits3 <<= entry.nbBits & 0x3F;
                     op3 += entry.length;
@@ -1777,7 +1777,7 @@ public static unsafe partial class Methods
                              * are decoded from the final stream before it is reloaded.
                              */
                             var index = (int)(bits3 >> 53);
-                            HUF_DEltX2 entry = dtable[index];
+                            var entry = dtable[index];
                             MEM_write16(op3, entry.sequence);
                             bits3 <<= entry.nbBits & 0x3F;
                             op3 += entry.length;
@@ -1796,7 +1796,7 @@ public static unsafe partial class Methods
                     {
                         {
                             var index = (int)(bits3 >> 53);
-                            HUF_DEltX2 entry = dtable[index];
+                            var entry = dtable[index];
                             MEM_write16(op3, entry.sequence);
                             bits3 <<= entry.nbBits & 0x3F;
                             op3 += entry.length;
@@ -1815,7 +1815,7 @@ public static unsafe partial class Methods
                     {
                         {
                             var index = (int)(bits3 >> 53);
-                            HUF_DEltX2 entry = dtable[index];
+                            var entry = dtable[index];
                             MEM_write16(op3, entry.sequence);
                             bits3 <<= entry.nbBits & 0x3F;
                             op3 += entry.length;
@@ -1834,7 +1834,7 @@ public static unsafe partial class Methods
                     {
                         {
                             var index = (int)(bits3 >> 53);
-                            HUF_DEltX2 entry = dtable[index];
+                            var entry = dtable[index];
                             MEM_write16(op3, entry.sequence);
                             bits3 <<= entry.nbBits & 0x3F;
                             op3 += entry.length;
@@ -2111,7 +2111,7 @@ public static unsafe partial class Methods
      */
     private static nuint HUF_decompress1X_usingDTable(void* dst, nuint maxDstSize, void* cSrc, nuint cSrcSize, uint* DTable, int flags)
     {
-        DTableDesc dtd = HUF_getDTableDesc(DTable);
+        var dtd = HUF_getDTableDesc(DTable);
         return dtd.tableType != 0 ? HUF_decompress1X2_usingDTable_internal(dst, maxDstSize, cSrc, cSrcSize, DTable, flags) : HUF_decompress1X1_usingDTable_internal(dst, maxDstSize, cSrc, cSrcSize, DTable, flags);
     }
 
@@ -2131,7 +2131,7 @@ public static unsafe partial class Methods
 
     private static nuint HUF_decompress4X_usingDTable(void* dst, nuint maxDstSize, void* cSrc, nuint cSrcSize, uint* DTable, int flags)
     {
-        DTableDesc dtd = HUF_getDTableDesc(DTable);
+        var dtd = HUF_getDTableDesc(DTable);
         return dtd.tableType != 0 ? HUF_decompress4X2_usingDTable_internal(dst, maxDstSize, cSrc, cSrcSize, DTable, flags) : HUF_decompress4X1_usingDTable_internal(dst, maxDstSize, cSrc, cSrcSize, DTable, flags);
     }
 

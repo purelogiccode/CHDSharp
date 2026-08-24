@@ -467,8 +467,7 @@ internal static class Tree
         node = elems; // next internal node of the tree
         do
         {
-            var nn = 0;
-            PqRemove(s, ref tree, ref nn, ref heap, ref depth); // n = node of least frequency
+            var nn = PqRemove(s, ref tree, ref heap, ref depth); // n = node of least frequency
             var mm = Unsafe.Add(ref heap, Smallest); // m = node of next least frequency
 
             Unsafe.Add(ref heap, --s.HeapMax) = nn; // keep the nodes sorted by frequency
@@ -542,11 +541,12 @@ internal static class Tree
     /// Removes the smallest element from the heap and recreate the heap with one less element. Updates heap and heap_len.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void PqRemove(DeflateState s, ref TreeNode tree, ref int top, ref int heap, ref byte depth)
+    private static int PqRemove(DeflateState s, ref TreeNode tree, ref int heap, ref byte depth)
     {
-        top = Unsafe.Add(ref heap, Smallest);
+        var top = Unsafe.Add(ref heap, Smallest);
         Unsafe.Add(ref heap, Smallest) = Unsafe.Add(ref heap, s.HeapLen--);
         PqDownHeap(s, ref tree, Smallest, ref heap, ref depth);
+        return top;
     }
 
     /// <summary>

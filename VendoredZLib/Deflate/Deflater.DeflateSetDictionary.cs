@@ -67,6 +67,7 @@ internal static partial class Deflater
         strm.Input2 = dictionary;
 #endif
         strm.NextInput = nextIn;
+        strm.AvailIn = dictLength;
 
         ref var window = ref
 #if NET7_0_OR_GREATER

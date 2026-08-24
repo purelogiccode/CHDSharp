@@ -637,7 +637,7 @@ public static unsafe partial class Methods
      */
     private static rawSeq maybeSplitSequence(RawSeqStore_t* rawSeqStore, uint remaining, uint minMatch)
     {
-        rawSeq sequence = rawSeqStore->seq[rawSeqStore->pos];
+        var sequence = rawSeqStore->seq[rawSeqStore->pos];
         assert(sequence.offset > 0);
         if (remaining >= sequence.litLength + sequence.matchLength)
         {
@@ -672,7 +672,7 @@ public static unsafe partial class Methods
         var currPos = (uint)(rawSeqStore->posInSequence + nbBytes);
         while (currPos != 0 && rawSeqStore->pos < rawSeqStore->size)
         {
-            rawSeq currSeq = rawSeqStore->seq[rawSeqStore->pos];
+            var currSeq = rawSeqStore->seq[rawSeqStore->pos];
             if (currPos >= currSeq.litLength + currSeq.matchLength)
             {
                 currPos -= currSeq.litLength + currSeq.matchLength;
@@ -713,7 +713,7 @@ public static unsafe partial class Methods
     {
         var cParams = &ms->cParams;
         var minMatch = cParams->minMatch;
-        ZSTD_BlockCompressor_f selectedBlockCompressor = ZSTD_selectBlockCompressor(cParams->strategy, useRowMatchFinder, ZSTD_matchState_dictMode(ms));
+        var selectedBlockCompressor = ZSTD_selectBlockCompressor(cParams->strategy, useRowMatchFinder, ZSTD_matchState_dictMode(ms));
         /* Input bounds */
         var istart = (byte*)src;
         var iend = istart + srcSize;
@@ -732,7 +732,7 @@ public static unsafe partial class Methods
         while (rawSeqStore->pos < rawSeqStore->size && ip < iend)
         {
             /* maybeSplitSequence updates rawSeqStore->pos */
-            rawSeq sequence = maybeSplitSequence(rawSeqStore, (uint)(iend - ip), minMatch);
+            var sequence = maybeSplitSequence(rawSeqStore, (uint)(iend - ip), minMatch);
             if (sequence.offset == 0)
                 break;
 

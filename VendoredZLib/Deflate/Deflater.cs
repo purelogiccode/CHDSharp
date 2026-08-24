@@ -1562,7 +1562,9 @@ internal static partial class Deflater
              */
             uint hashHead = 0; // head of the hash chain
             if (s.Lookahead >= MinMatch)
-                InsertString(s, s.Strstart, ref hashHead, ref window, ref prev, ref head);
+            {
+                hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
+            }
 
             /* Find the longest match, discarding those <= prev_length.
              * At this point we have always match_length < MinMatch
@@ -1595,7 +1597,7 @@ internal static partial class Deflater
                     do
                     {
                         s.Strstart++;
-                        InsertString(s, s.Strstart, ref hashHead, ref window, ref prev, ref head);
+                        hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
                         /* strstart never exceeds WSize-MaxMatch, so there are
                          * always MinMatch bytes ahead.
                          */
@@ -1654,13 +1656,14 @@ internal static partial class Deflater
         return BlockState.BlockDone;
     }
 
-    private static void InsertString(DeflateState s, uint str, ref uint matchHead,
+    private static uint InsertString(DeflateState s, uint str,
         ref byte window, ref ushort prev, ref ushort head)
     {
         UpdateHash(s, ref s.InsH, Unsafe.Add(ref window, str + (MinMatch - 1)));
         ref var temp = ref Unsafe.Add(ref head, s.InsH);
-        matchHead = Unsafe.Add(ref prev, (str) & s.WMask) = temp;
+        var matchHead = Unsafe.Add(ref prev, (str) & s.WMask) = temp;
         temp = (ushort)str;
+        return matchHead;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1922,7 +1925,9 @@ internal static partial class Deflater
              */
             uint hashHead = 0; // head of hash chain
             if (s.Lookahead >= MinMatch)
-                InsertString(s, s.Strstart, ref hashHead, ref window, ref prev, ref head);
+            {
+                hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
+            }
 
             // Find the longest match, discarding those <= prev_length.
             s.PrevLength = s.MatchLength;
@@ -1971,7 +1976,9 @@ internal static partial class Deflater
                 do
                 {
                     if (++s.Strstart <= maxInsert)
-                        InsertString(s, s.Strstart, ref hashHead, ref window, ref prev, ref head);
+                    {
+                        hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
+                    }
                 } while (--s.PrevLength != 0);
 
                 s.MatchAvailable = false;

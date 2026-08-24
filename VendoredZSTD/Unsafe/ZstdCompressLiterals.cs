@@ -109,7 +109,7 @@ public static unsafe partial class Methods
         var lhSize = (nuint)(3 + (srcSize >= 1 * (1 << 10) ? 1 : 0) + (srcSize >= 16 * (1 << 10) ? 1 : 0));
         var ostart = (byte*)dst;
         var singleStream = srcSize < 256 ? 1U : 0U;
-        SymbolEncodingType_e hType = SymbolEncodingType_e.set_compressed;
+        var hType = SymbolEncodingType_e.set_compressed;
         nuint cLitSize;
         memcpy(nextHuf, prevHuf, (uint)sizeof(ZSTD_hufCTables_t));
         if (disableLiteralCompression != 0)
@@ -123,7 +123,7 @@ public static unsafe partial class Methods
         }
 
         {
-            HUF_repeat repeat = prevHuf->repeatMode;
+            var repeat = prevHuf->repeatMode;
             var flags = 0 | (bmi2 != 0 ? (int)HufFlagsE.HufFlagsBmi2 : 0) | (strategy < ZSTD_strategy.ZSTD_lazy && srcSize <= 1024 ? (int)HufFlagsE.HufFlagsPreferRepeat : 0) | (strategy >= ZSTD_strategy.ZSTD_btultra ? (int)HufFlagsE.HufFlagsOptimalDepth : 0) | (suspectUncompressible != 0 ? (int)HufFlagsE.HufFlagsSuspectUncompressible : 0);
             if (repeat == HUF_repeat.HUF_repeat_valid && lhSize == 3)
             {

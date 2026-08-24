@@ -44,7 +44,7 @@ public static unsafe partial class Methods
         var f = ctx->f;
         var dmersInK = k - d + 1;
         /* Try each segment (activeSegment) and save the best (bestSegment) */
-        CoverSegmentT bestSegment = new CoverSegmentT
+        var bestSegment = new CoverSegmentT
         {
             begin = 0,
             end = 0,
@@ -253,7 +253,7 @@ public static unsafe partial class Methods
         var dict = (byte*)dictBuffer;
         var tail = dictBufferCapacity;
         /* Divide the data into epochs. We will select one segment from each epoch. */
-        CoverEpochInfoT epochs = COVER_computeEpochs((uint)dictBufferCapacity, (uint)ctx->nbDmers, parameters.k, 1);
+        var epochs = COVER_computeEpochs((uint)dictBufferCapacity, (uint)ctx->nbDmers, parameters.k, 1);
         const nuint maxZeroScoreRun = 10;
         nuint zeroScoreRun = 0;
         nuint epoch;
@@ -262,7 +262,7 @@ public static unsafe partial class Methods
             var epochBegin = (uint)(epoch * epochs.size);
             var epochEnd = epochBegin + epochs.size;
             /* Select a segment */
-            CoverSegmentT segment = FASTCOVER_selectSegment(ctx, freqs, epochBegin, epochEnd, parameters, segmentFreqs);
+            var segment = FASTCOVER_selectSegment(ctx, freqs, epochBegin, epochEnd, parameters, segmentFreqs);
             if (segment.score == 0)
             {
                 if (++zeroScoreRun >= maxZeroScoreRun)
@@ -297,14 +297,14 @@ public static unsafe partial class Methods
         /* Save parameters as local variables */
         var data = (FastcoverTryParametersDataS*)opaque;
         var ctx = data->ctx;
-        ZDICT_cover_params_t parameters = data->parameters;
+        var parameters = data->parameters;
         var dictBufferCapacity = data->dictBufferCapacity;
         var totalCompressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
         /* Initialize array to keep track of frequency of dmer within activeSegment */
         var segmentFreqs = (ushort*)calloc((ulong)1 << (int)ctx->f, sizeof(ushort));
         /* Allocate space for hash table, dict, and freqs */
         var dict = (byte*)malloc(dictBufferCapacity);
-        CoverDictSelection selection = COVER_dictSelectionError(unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC)));
+        var selection = COVER_dictSelectionError(unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC)));
         var freqs = (uint*)malloc(((ulong)1 << (int)ctx->f) * sizeof(uint));
         if (segmentFreqs == null || dict == null || freqs == null)
         {

@@ -279,7 +279,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_customMem cMem = dctx->customMem;
+            var cMem = dctx->customMem;
             ZSTD_clearDict(dctx);
             ZSTD_customFree(dctx->inBuff, cMem);
             dctx->inBuff = null;
@@ -825,7 +825,7 @@ public static unsafe partial class Methods
 
     private static nuint ZSTD_findFrameCompressedSize_advanced(void* src, nuint srcSize, ZSTD_format_e format)
     {
-        ZSTD_frameSizeInfo frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, format);
+        var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, format);
         return frameSizeInfo.compressedSize;
     }
 
@@ -848,7 +848,7 @@ public static unsafe partial class Methods
         ulong bound = 0;
         while (srcSize > 0)
         {
-            ZSTD_frameSizeInfo frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
+            var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
             var compressedSize = frameSizeInfo.compressedSize;
             var decompressedBound = frameSizeInfo.decompressedBound;
             if (ERR_isError(compressedSize) || decompressedBound == unchecked(0UL - 2))
@@ -892,7 +892,7 @@ public static unsafe partial class Methods
         uint maxBlockSize = 0;
         while (srcSize > 0)
         {
-            ZSTD_frameSizeInfo frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
+            var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
             var compressedSize = frameSizeInfo.compressedSize;
             var decompressedBound = frameSizeInfo.decompressedBound;
             ZSTD_frameHeader zfh;
@@ -1800,7 +1800,7 @@ public static unsafe partial class Methods
      *  ZSTD_getFrameHeader(), which will provide a more precise error code. */
     public static uint ZSTD_getDictID_fromFrame(void* src, nuint srcSize)
     {
-        ZSTD_frameHeader zfp = new ZSTD_frameHeader
+        var zfp = new ZSTD_frameHeader
         {
             frameContentSize = 0,
             windowSize = 0,
@@ -2102,7 +2102,7 @@ public static unsafe partial class Methods
      * since this version sets windowSize, and the other sets windowLog */
     public static nuint ZSTD_DCtx_setMaxWindowSize(ZSTD_DCtx_s* dctx, nuint maxWindowSize)
     {
-        ZSTD_bounds bounds = ZSTD_dParam_getBounds(ZstdDParameter.ZstdDWindowLogMax);
+        var bounds = ZSTD_dParam_getBounds(ZstdDParameter.ZstdDWindowLogMax);
         var min = (nuint)1 << bounds.lowerBound;
         var max = (nuint)1 << bounds.upperBound;
         if (dctx->streamStage != ZSTD_dStreamStage.zdss_init)
@@ -2144,7 +2144,7 @@ public static unsafe partial class Methods
      */
     public static ZSTD_bounds ZSTD_dParam_getBounds(ZstdDParameter dParam)
     {
-        ZSTD_bounds bounds = new ZSTD_bounds
+        var bounds = new ZSTD_bounds
         {
             error = 0,
             lowerBound = 0,
@@ -2193,7 +2193,7 @@ public static unsafe partial class Methods
      * 0 otherwise */
     private static int ZSTD_dParam_withinBounds(ZstdDParameter dParam, int value)
     {
-        ZSTD_bounds bounds = ZSTD_dParam_getBounds(dParam);
+        var bounds = ZSTD_dParam_getBounds(dParam);
         if (ERR_isError(bounds.error))
             return 0;
         if (value < bounds.lowerBound)
@@ -2463,7 +2463,7 @@ public static unsafe partial class Methods
     /* Checks that the output buffer hasn't changed if ZSTD_obm_stable is used. */
     private static nuint ZSTD_checkOutBuffer(ZSTD_DCtx_s* zds, ZSTD_outBuffer_s* output)
     {
-        ZSTD_outBuffer_s expect = zds->expectedOutBuffer;
+        var expect = zds->expectedOutBuffer;
         if (zds->outBufferMode != ZSTD_bufferMode_e.ZSTD_bm_stable)
             return 0;
         if (zds->streamStage == ZSTD_dStreamStage.zdss_init)

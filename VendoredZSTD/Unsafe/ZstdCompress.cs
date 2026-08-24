@@ -450,7 +450,7 @@ public static unsafe partial class Methods
      */
     public static ZSTD_bounds ZSTD_cParam_getBounds(ZstdCParameter param)
     {
-        ZSTD_bounds bounds = new ZSTD_bounds
+        var bounds = new ZSTD_bounds
         {
             error = 0,
             lowerBound = 0,
@@ -622,7 +622,7 @@ public static unsafe partial class Methods
      */
     private static nuint ZSTD_cParam_clampBounds(ZstdCParameter cParam, int* value)
     {
-        ZSTD_bounds bounds = ZSTD_cParam_getBounds(cParam);
+        var bounds = ZSTD_cParam_getBounds(cParam);
         if (ERR_isError(bounds.error))
             return bounds.error;
 
@@ -889,7 +889,7 @@ public static unsafe partial class Methods
                 return (nuint)CCtxParams->forceWindow;
             case ZstdCParameter.ZstdCExperimentalParam4:
             {
-                ZSTD_dictAttachPref_e pref = (ZSTD_dictAttachPref_e)value;
+                var pref = (ZSTD_dictAttachPref_e)value;
                 if (ZSTD_cParam_withinBounds(ZstdCParameter.ZstdCExperimentalParam4, (int)pref) == 0)
                 {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
@@ -901,7 +901,7 @@ public static unsafe partial class Methods
 
             case ZstdCParameter.ZstdCExperimentalParam5:
             {
-                ZSTD_paramSwitch_e lcm = (ZSTD_paramSwitch_e)value;
+                var lcm = (ZSTD_paramSwitch_e)value;
                 if (ZSTD_cParam_withinBounds(ZstdCParameter.ZstdCExperimentalParam5, (int)lcm) == 0)
                 {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
@@ -1737,7 +1737,7 @@ public static unsafe partial class Methods
     private static ZSTD_compressionParameters ZSTD_clampCParams(ZSTD_compressionParameters cParams)
     {
         {
-            ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCWindowLog);
+            var bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCWindowLog);
             if ((int)cParams.windowLog < bounds.lowerBound)
             {
                 cParams.windowLog = (uint)bounds.lowerBound;
@@ -1749,7 +1749,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCChainLog);
+            var bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCChainLog);
             if ((int)cParams.chainLog < bounds.lowerBound)
             {
                 cParams.chainLog = (uint)bounds.lowerBound;
@@ -1761,7 +1761,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCHashLog);
+            var bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCHashLog);
             if ((int)cParams.hashLog < bounds.lowerBound)
             {
                 cParams.hashLog = (uint)bounds.lowerBound;
@@ -1773,7 +1773,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCSearchLog);
+            var bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCSearchLog);
             if ((int)cParams.searchLog < bounds.lowerBound)
             {
                 cParams.searchLog = (uint)bounds.lowerBound;
@@ -1785,7 +1785,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCMinMatch);
+            var bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCMinMatch);
             if ((int)cParams.minMatch < bounds.lowerBound)
             {
                 cParams.minMatch = (uint)bounds.lowerBound;
@@ -1797,7 +1797,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCTargetLength);
+            var bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCTargetLength);
             if ((int)cParams.targetLength < bounds.lowerBound)
             {
                 cParams.targetLength = (uint)bounds.lowerBound;
@@ -1809,7 +1809,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCStrategy);
+            var bounds = ZSTD_cParam_getBounds(ZstdCParameter.ZstdCStrategy);
             if ((int)cParams.strategy < bounds.lowerBound)
             {
                 cParams.strategy = (ZSTD_strategy)bounds.lowerBound;
@@ -2094,8 +2094,8 @@ public static unsafe partial class Methods
 
     public static nuint ZSTD_estimateCCtxSize_usingCCtxParams(ZSTD_CCtx_params_s* @params)
     {
-        ZSTD_compressionParameters cParams = ZSTD_getCParamsFromCCtxParams(@params, unchecked(0UL - 1), 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
-        ZSTD_paramSwitch_e useRowMatchFinder = ZSTD_resolveRowMatchFinderMode(@params->useRowMatchFinder, &cParams);
+        var cParams = ZSTD_getCParamsFromCCtxParams(@params, unchecked(0UL - 1), 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
+        var useRowMatchFinder = ZSTD_resolveRowMatchFinderMode(@params->useRowMatchFinder, &cParams);
         if (@params->nbWorkers > 0)
         {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
@@ -2106,7 +2106,7 @@ public static unsafe partial class Methods
 
     public static nuint ZSTD_estimateCCtxSize_usingCParams(ZSTD_compressionParameters cParams)
     {
-        ZSTD_CCtx_params_s initialParams = ZSTD_makeCCtxParamsFromCParams(cParams);
+        var initialParams = ZSTD_makeCCtxParamsFromCParams(cParams);
         if (ZSTD_rowMatchFinderSupported(cParams.strategy) != 0)
         {
             /* Pick bigger of not using and using row-based matchfinder for greedy and lazy strategies */
@@ -2142,7 +2142,7 @@ public static unsafe partial class Methods
         for (; tier < 4; ++tier)
         {
             /* Choose the set of cParams for a given level across all srcSizes that give the largest cctxSize */
-            ZSTD_compressionParameters cParams = ZSTD_getCParams_internal(compressionLevel, srcSizeTiers[tier], 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
+            var cParams = ZSTD_getCParams_internal(compressionLevel, srcSizeTiers[tier], 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
             largestSize = ZSTD_estimateCCtxSize_usingCParams(cParams) > largestSize ? ZSTD_estimateCCtxSize_usingCParams(cParams) : largestSize;
         }
 
@@ -2201,18 +2201,18 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_compressionParameters cParams = ZSTD_getCParamsFromCCtxParams(@params, unchecked(0UL - 1), 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
+            var cParams = ZSTD_getCParamsFromCCtxParams(@params, unchecked(0UL - 1), 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
             var blockSize = ZSTD_resolveMaxBlockSize(@params->maxBlockSize) < (nuint)1 << (int)cParams.windowLog ? ZSTD_resolveMaxBlockSize(@params->maxBlockSize) : (nuint)1 << (int)cParams.windowLog;
             var inBuffSize = @params->inBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered ? ((nuint)1 << (int)cParams.windowLog) + blockSize : 0;
             var outBuffSize = @params->outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered ? ZSTD_compressBound(blockSize) + 1 : 0;
-            ZSTD_paramSwitch_e useRowMatchFinder = ZSTD_resolveRowMatchFinderMode(@params->useRowMatchFinder, &@params->cParams);
+            var useRowMatchFinder = ZSTD_resolveRowMatchFinderMode(@params->useRowMatchFinder, &@params->cParams);
             return ZSTD_estimateCCtxSize_usingCCtxParams_internal(&cParams, &@params->ldmParams, 1, useRowMatchFinder, inBuffSize, outBuffSize, unchecked(0UL - 1), ZSTD_hasExtSeqProd(@params), @params->maxBlockSize);
         }
     }
 
     public static nuint ZSTD_estimateCStreamSize_usingCParams(ZSTD_compressionParameters cParams)
     {
-        ZSTD_CCtx_params_s initialParams = ZSTD_makeCCtxParamsFromCParams(cParams);
+        var initialParams = ZSTD_makeCCtxParamsFromCParams(cParams);
         if (ZSTD_rowMatchFinderSupported(cParams.strategy) != 0)
         {
             /* Pick bigger of not using and using row-based matchfinder for greedy and lazy strategies */
@@ -2230,7 +2230,7 @@ public static unsafe partial class Methods
 
     private static nuint ZSTD_estimateCStreamSize_internal(int compressionLevel)
     {
-        ZSTD_compressionParameters cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
+        var cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
         return ZSTD_estimateCStreamSize_usingCParams(cParams);
     }
 
@@ -2489,7 +2489,7 @@ public static unsafe partial class Methods
             var maxNbLdmSeq = ZSTD_ldm_getMaxNbSeq(@params->ldmParams, blockSize);
             var indexTooClose = ZSTD_indexTooCloseToMax(zc->blockState.matchState.window);
             var dictTooBig = ZSTD_dictTooBig(loadedDictSize);
-            ZSTD_indexResetPolicy_e needsIndexReset = indexTooClose != 0 || dictTooBig != 0 || zc->initialized == 0 ? ZSTD_indexResetPolicy_e.ZSTDirp_reset : ZSTD_indexResetPolicy_e.ZSTDirp_continue;
+            var needsIndexReset = indexTooClose != 0 || dictTooBig != 0 || zc->initialized == 0 ? ZSTD_indexResetPolicy_e.ZSTDirp_reset : ZSTD_indexResetPolicy_e.ZSTDirp_continue;
             var neededSpace = ZSTD_estimateCCtxSize_usingCCtxParams_internal(&@params->cParams, &@params->ldmParams, zc->staticSize != 0 ? 1 : 0, @params->useRowMatchFinder, buffInSize, buffOutSize, pledgedSrcSize, ZSTD_hasExtSeqProd(@params), @params->maxBlockSize);
             {
                 var err_code = neededSpace;
@@ -2642,7 +2642,7 @@ public static unsafe partial class Methods
     private static nuint ZSTD_resetCCtx_byAttachingCDict(ZSTD_CCtx_s* cctx, ZSTD_CDict_s* cdict, ZSTD_CCtx_params_s @params, ulong pledgedSrcSize, ZSTD_buffered_policy_e zbuff)
     {
         {
-            ZSTD_compressionParameters adjusted_cdict_cParams = cdict->matchState.cParams;
+            var adjusted_cdict_cParams = cdict->matchState.cParams;
             var windowLog = @params.cParams.windowLog;
             assert(windowLog != 0);
             if (cdict->matchState.dedicatedDictSearch != 0)
@@ -2803,7 +2803,7 @@ public static unsafe partial class Methods
 
         memcpy(&dstCCtx->customMem, &srcCCtx->customMem, (uint)sizeof(ZSTD_customMem));
         {
-            ZSTD_CCtx_params_s @params = dstCCtx->requestedParams;
+            var @params = dstCCtx->requestedParams;
             @params.cParams = srcCCtx->appliedParams.cParams;
             assert(srcCCtx->appliedParams.useRowMatchFinder != ZSTD_paramSwitch_e.ZSTD_ps_auto);
             assert(srcCCtx->appliedParams.postBlockSplitter != ZSTD_paramSwitch_e.ZSTD_ps_auto);
@@ -2855,13 +2855,13 @@ public static unsafe partial class Methods
     public static nuint ZSTD_copyCCtx(ZSTD_CCtx_s* dstCCtx, ZSTD_CCtx_s* srcCCtx, ulong pledgedSrcSize)
     {
         /*content*/
-        ZstdFrameParameters fParams = new ZstdFrameParameters
+        var fParams = new ZstdFrameParameters
         {
             contentSizeFlag = 1,
             checksumFlag = 0,
             noDictIDFlag = 0
         };
-        ZSTD_buffered_policy_e zbuff = srcCCtx->bufferedPolicy;
+        var zbuff = srcCCtx->bufferedPolicy;
         if (pledgedSrcSize == 0)
         {
             pledgedSrcSize = unchecked(0UL - 1);
@@ -3059,7 +3059,7 @@ public static unsafe partial class Methods
             uint max = 31;
             var mostFrequent = HIST_countFast_wksp(countWorkspace, &max, ofCodeTable, nbSeq, entropyWorkspace, entropyWkspSize);
             /* We can only use the basic table if max <= DefaultMaxOff, otherwise the offsets are too large */
-            ZSTD_DefaultPolicy_e defaultPolicy = max <= 28 ? ZSTD_DefaultPolicy_e.ZSTD_defaultAllowed : ZSTD_DefaultPolicy_e.ZSTD_defaultDisallowed;
+            var defaultPolicy = max <= 28 ? ZSTD_DefaultPolicy_e.ZSTD_defaultAllowed : ZSTD_DefaultPolicy_e.ZSTD_defaultDisallowed;
             nextEntropy->offcode_repeatMode = prevEntropy->offcode_repeatMode;
             stats.Offtype = (uint)ZSTD_selectEncodingType(&nextEntropy->offcode_repeatMode, countWorkspace, max, mostFrequent, nbSeq, 8, prevEntropy->offcodeCTable, OF_defaultNorm, OF_defaultNormLog, defaultPolicy, strategy);
             assert(!(stats.Offtype < (uint)SymbolEncodingType_e.set_compressed && nextEntropy->offcode_repeatMode != FseRepeat.FseRepeatNone));
@@ -3112,7 +3112,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint ZSTD_entropyCompressSeqStore_internal(void* dst, nuint dstCapacity, void* literals, nuint litSize, SeqStore_t* seqStorePtr, ZSTD_entropyCTables_t* prevEntropy, ZSTD_entropyCTables_t* nextEntropy, ZSTD_CCtx_params_s* cctxParams, void* entropyWorkspace, nuint entropyWkspSize, int bmi2)
     {
-        ZSTD_strategy strategy = cctxParams->cParams.strategy;
+        var strategy = cctxParams->cParams.strategy;
         var count = (uint*)entropyWorkspace;
         var CTable_LitLength = nextEntropy->fse.litlengthCTable;
         var CTable_OffsetBits = nextEntropy->fse.offcodeCTable;
@@ -3179,7 +3179,7 @@ public static unsafe partial class Methods
         {
             var seqHead = op++;
             /* build stats for sequences */
-            ZSTD_symbolEncodingTypeStats_t stats = ZSTD_buildSequencesStatistics(seqStorePtr, nbSeq, &prevEntropy->fse, &nextEntropy->fse, op, oend, strategy, count, entropyWorkspace, entropyWkspSize);
+            var stats = ZSTD_buildSequencesStatistics(seqStorePtr, nbSeq, &prevEntropy->fse, &nextEntropy->fse, op, oend, strategy, count, entropyWorkspace, entropyWkspSize);
             {
                 var err_code = stats.size;
                 if (ERR_isError(err_code))
@@ -3391,7 +3391,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_Sequence lastSeq = outSeqs[nbExternalSeqs - 1];
+            var lastSeq = outSeqs[nbExternalSeqs - 1];
             if (lastSeq is { offset: 0, matchLength: 0 })
             {
                 return nbExternalSeqs;
@@ -3472,7 +3472,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_dictMode_e dictMode = ZSTD_matchState_dictMode(ms);
+            var dictMode = ZSTD_matchState_dictMode(ms);
             nuint lastLLSize;
             {
                 int i;
@@ -3495,7 +3495,7 @@ public static unsafe partial class Methods
             }
             else if (zc->appliedParams.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
             {
-                RawSeqStore_t ldmSeqStore = KNullRawSeqStore;
+                var ldmSeqStore = KNullRawSeqStore;
                 if (ZSTD_hasExtSeqProd(&zc->appliedParams) != 0)
                 {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_combination_unsupported));
@@ -3525,7 +3525,7 @@ public static unsafe partial class Methods
                     var nbPostProcessedSeqs = ZSTD_postProcessSequenceProducerResult(zc->extSeqBuf, nbExternalSeqs, zc->extSeqBufCapacity, srcSize);
                     if (!ERR_isError(nbPostProcessedSeqs))
                     {
-                        ZSTD_SequencePosition seqPos = new ZSTD_SequencePosition
+                        var seqPos = new ZSTD_SequencePosition
                         {
                             idx = 0,
                             posInSequence = 0,
@@ -3555,7 +3555,7 @@ public static unsafe partial class Methods
                     }
 
                     {
-                        ZSTD_BlockCompressor_f selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
+                        var selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
                         ms->ldmSeqStore = null;
                         lastLLSize = selectedBlockCompressor(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
                     }
@@ -3563,7 +3563,7 @@ public static unsafe partial class Methods
             }
             else
             {
-                ZSTD_BlockCompressor_f selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
+                var selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
                 ms->ldmSeqStore = null;
                 lastLLSize = selectedBlockCompressor(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
             }
@@ -3877,7 +3877,7 @@ public static unsafe partial class Methods
         var nodeWkspSize = (nuint)(wkspEnd - nodeWksp);
         uint maxSymbolValue = 255;
         uint huffLog = 11;
-        HUF_repeat repeat = prevHuf->repeatMode;
+        var repeat = prevHuf->repeatMode;
         memcpy(nextHuf, prevHuf, (uint)sizeof(ZSTD_hufCTables_t));
         if (literalsCompressionIsDisabled != 0)
         {
@@ -3971,7 +3971,7 @@ public static unsafe partial class Methods
      */
     private static ZSTD_symbolEncodingTypeStats_t ZSTD_buildDummySequencesStatistics(ZSTD_fseCTables_t* nextEntropy)
     {
-        ZSTD_symbolEncodingTypeStats_t stats = new ZSTD_symbolEncodingTypeStats_t
+        var stats = new ZSTD_symbolEncodingTypeStats_t
         {
             LLtype = (uint)SymbolEncodingType_e.set_basic,
             Offtype = (uint)SymbolEncodingType_e.set_basic,
@@ -3993,7 +3993,7 @@ public static unsafe partial class Methods
      * @return : size of fse tables or error code */
     private static nuint ZSTD_buildBlockEntropyStats_sequences(SeqStore_t* seqStorePtr, ZSTD_fseCTables_t* prevEntropy, ZSTD_fseCTables_t* nextEntropy, ZSTD_CCtx_params_s* cctxParams, ZSTD_fseCTablesMetadata_t* fseMetadata, void* workspace, nuint wkspSize)
     {
-        ZSTD_strategy strategy = cctxParams->cParams.strategy;
+        var strategy = cctxParams->cParams.strategy;
         var nbSeq = (nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart);
         var ostart = fseMetadata->fseTablesBuffer;
         var oend = ostart + sizeof(byte) * 133;
@@ -4187,7 +4187,7 @@ public static unsafe partial class Methods
         nuint i;
         for (i = 0; i < nbSeqs; ++i)
         {
-            SeqDef_s seq = seqStore->sequencesStart[i];
+            var seq = seqStore->sequencesStart[i];
             literalsBytes += seq.litLength;
             if (i == seqStore->longLengthPos && seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_literalLength)
             {
@@ -4206,7 +4206,7 @@ public static unsafe partial class Methods
         nuint i;
         for (i = 0; i < nbSeqs; ++i)
         {
-            SeqDef_s seq = seqStore->sequencesStart[i];
+            var seq = seqStore->sequencesStart[i];
             matchBytes += (nuint)(seq.mlBase + 3);
             if (i == seqStore->longLengthPos && seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_matchLength)
             {
@@ -4328,7 +4328,7 @@ public static unsafe partial class Methods
         var ip = (byte*)src;
         nuint cSize;
         /* In case of an RLE or raw block, the simulated decompression repcode history must be reset */
-        repcodes_s dRepOriginal = *dRep;
+        var dRepOriginal = *dRep;
         if (isPartition != 0)
             ZSTD_seqStore_resolveOffCodes(dRep, cRep, seqStore, (uint)(seqStore->sequences - seqStore->sequencesStart));
         if (dstCapacity < ZSTD_blockHeaderSize)
@@ -5166,7 +5166,7 @@ public static unsafe partial class Methods
 
     private static nuint ZSTD_getBlockSize_deprecated(ZSTD_CCtx_s* cctx)
     {
-        ZSTD_compressionParameters cParams = cctx->appliedParams.cParams;
+        var cParams = cctx->appliedParams.cParams;
         assert(ZSTD_checkCParams(cParams) == 0);
         return cctx->appliedParams.maxBlockSize < (nuint)1 << (int)cParams.windowLog ? cctx->appliedParams.maxBlockSize : (nuint)1 << (int)cParams.windowLog;
     }
@@ -5621,7 +5621,7 @@ public static unsafe partial class Methods
     {
         ZSTD_CCtx_params_s cctxParams;
         {
-            ZSTD_parameters @params = ZSTD_getParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
+            var @params = ZSTD_getParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
             ZSTD_CCtxParams_init_internal(&cctxParams, &@params, compressionLevel == 0 ? 3 : compressionLevel);
         }
 
@@ -5788,7 +5788,7 @@ public static unsafe partial class Methods
     public static nuint ZSTD_compress_usingDict(ZSTD_CCtx_s* cctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, void* dict, nuint dictSize, int compressionLevel)
     {
         {
-            ZSTD_parameters @params = ZSTD_getParams_internal(compressionLevel, srcSize, dict != null ? dictSize : 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
+            var @params = ZSTD_getParams_internal(compressionLevel, srcSize, dict != null ? dictSize : 0, ZSTD_CParamMode_e.ZSTD_cpm_noAttachDict);
             assert(@params.fParams.contentSizeFlag == 1);
             ZSTD_CCtxParams_init_internal(&cctx->simpleApiParams, &@params, compressionLevel == 0 ? 3 : compressionLevel);
         }
@@ -5842,7 +5842,7 @@ public static unsafe partial class Methods
      */
     public static nuint ZSTD_estimateCDictSize(nuint dictSize, int compressionLevel)
     {
-        ZSTD_compressionParameters cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
+        var cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
         return ZSTD_estimateCDictSize_advanced(dictSize, cParams, ZSTD_dictLoadMethod_e.ZSTD_dlm_byCopy);
     }
 
@@ -5948,7 +5948,7 @@ public static unsafe partial class Methods
      */
     public static ZSTD_CDict_s* ZSTD_createCDict_advanced2(void* dict, nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod, ZSTD_dictContentType_e dictContentType, ZSTD_CCtx_params_s* originalCctxParams, ZSTD_customMem customMem)
     {
-        ZSTD_CCtx_params_s cctxParams = *originalCctxParams;
+        var cctxParams = *originalCctxParams;
         ZSTD_compressionParameters cParams;
         if (((customMem.customAlloc == null ? 1 : 0) ^ (customMem.customFree == null ? 1 : 0)) != 0)
             return null;
@@ -5995,7 +5995,7 @@ public static unsafe partial class Methods
      *      expecting a ZSTD_CDict parameter with any data, including those without a known dictionary. */
     public static ZSTD_CDict_s* ZSTD_createCDict(void* dict, nuint dictSize, int compressionLevel)
     {
-        ZSTD_compressionParameters cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
+        var cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
         var cdict = ZSTD_createCDict_advanced(dict, dictSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byCopy, ZSTD_dictContentType_e.ZSTD_dct_auto, cParams, ZSTD_defaultCMem);
         if (cdict != null)
         {
@@ -6013,7 +6013,7 @@ public static unsafe partial class Methods
      *  note: equivalent to ZSTD_createCDict_advanced(), with dictLoadMethod==ZSTD_dlm_byRef */
     public static ZSTD_CDict_s* ZSTD_createCDict_byReference(void* dict, nuint dictSize, int compressionLevel)
     {
-        ZSTD_compressionParameters cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
+        var cParams = ZSTD_getCParams_internal(compressionLevel, unchecked(0UL - 1), dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
         var cdict = ZSTD_createCDict_advanced(dict, dictSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef, ZSTD_dictContentType_e.ZSTD_dct_auto, cParams, ZSTD_defaultCMem);
         if (cdict != null)
         {
@@ -6032,7 +6032,7 @@ public static unsafe partial class Methods
             return 0;
 
         {
-            ZSTD_customMem cMem = cdict->customMem;
+            var cMem = cdict->customMem;
             var cdictInWorkspace = ZSTD_cwksp_owns_buffer(&cdict->workspace, cdict);
             ZSTD_cwksp_free(&cdict->workspace, cMem);
             if (cdictInWorkspace == 0)
@@ -6059,7 +6059,7 @@ public static unsafe partial class Methods
      */
     public static ZSTD_CDict_s* ZSTD_initStaticCDict(void* workspace, nuint workspaceSize, void* dict, nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod, ZSTD_dictContentType_e dictContentType, ZSTD_compressionParameters cParams)
     {
-        ZSTD_paramSwitch_e useRowMatchFinder = ZSTD_resolveRowMatchFinderMode(ZSTD_paramSwitch_e.ZSTD_ps_auto, &cParams);
+        var useRowMatchFinder = ZSTD_resolveRowMatchFinderMode(ZSTD_paramSwitch_e.ZSTD_ps_auto, &cParams);
         /* enableDedicatedDictSearch */
         var matchStateSize = ZSTD_sizeof_matchState(&cParams, useRowMatchFinder, 1, 0);
         var neededSize = ZSTD_cwksp_alloc_size((nuint)sizeof(ZSTD_CDict_s)) + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : ZSTD_cwksp_alloc_size(ZSTD_cwksp_align(dictSize, (nuint)sizeof(void*)))) + ZSTD_cwksp_alloc_size((8 << 10) + 512) + matchStateSize;
@@ -6153,7 +6153,7 @@ public static unsafe partial class Methods
     private static nuint ZSTD_compressBegin_usingCDict_deprecated(ZSTD_CCtx_s* cctx, ZSTD_CDict_s* cdict)
     {
         /*content*/
-        ZstdFrameParameters fParams = new ZstdFrameParameters
+        var fParams = new ZstdFrameParameters
         {
             contentSizeFlag = 0,
             checksumFlag = 0,
@@ -6200,7 +6200,7 @@ public static unsafe partial class Methods
     public static nuint ZSTD_compress_usingCDict(ZSTD_CCtx_s* cctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, ZSTD_CDict_s* cdict)
     {
         /*content*/
-        ZstdFrameParameters fParams = new ZstdFrameParameters
+        var fParams = new ZstdFrameParameters
         {
             contentSizeFlag = 1,
             checksumFlag = 0,
@@ -6882,7 +6882,7 @@ public static unsafe partial class Methods
     {
         if (cctx->appliedParams.inBufferMode == ZSTD_bufferMode_e.ZSTD_bm_stable)
         {
-            ZSTD_inBuffer_s expect = cctx->expectedInBuffer;
+            var expect = cctx->expectedInBuffer;
             if (expect.src != input->src || expect.pos != input->pos)
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_stabilityCondition_notRespected));
         }
@@ -6904,8 +6904,8 @@ public static unsafe partial class Methods
      */
     private static nuint ZSTD_CCtx_init_compressStream2(ZSTD_CCtx_s* cctx, ZSTD_EndDirective endOp, nuint inSize)
     {
-        ZSTD_CCtx_params_s @params = cctx->requestedParams;
-        ZSTD_prefixDict_s prefixDict = cctx->prefixDict;
+        var @params = cctx->requestedParams;
+        var prefixDict = cctx->prefixDict;
         {
             /* Init the local dict if present. */
             var err_code = ZSTD_initLocalDict(cctx);
@@ -6929,7 +6929,7 @@ public static unsafe partial class Methods
 
         {
             var dictSize = prefixDict.dict != null ? prefixDict.dictSize : cctx->cdict != null ? cctx->cdict->dictContentSize : 0;
-            ZSTD_CParamMode_e mode = ZSTD_getCParamMode(cctx->cdict, &@params, cctx->pledgedSrcSizePlusOne - 1);
+            var mode = ZSTD_getCParamMode(cctx->cdict, &@params, cctx->pledgedSrcSizePlusOne - 1);
             @params.cParams = ZSTD_getCParamsFromCCtxParams(&@params, cctx->pledgedSrcSizePlusOne - 1, dictSize, mode);
         }
 
@@ -7180,8 +7180,8 @@ public static unsafe partial class Methods
      */
     public static nuint ZSTD_compress2(ZSTD_CCtx_s* cctx, void* dst, nuint dstCapacity, void* src, nuint srcSize)
     {
-        ZSTD_bufferMode_e originalInBufferMode = cctx->requestedParams.inBufferMode;
-        ZSTD_bufferMode_e originalOutBufferMode = cctx->requestedParams.outBufferMode;
+        var originalInBufferMode = cctx->requestedParams.inBufferMode;
+        var originalOutBufferMode = cctx->requestedParams.outBufferMode;
         ZSTD_CCtx_reset(cctx, ZSTD_ResetDirective.ZSTD_reset_session_only);
         cctx->requestedParams.inBufferMode = ZSTD_bufferMode_e.ZSTD_bm_stable;
         cctx->requestedParams.outBufferMode = ZSTD_bufferMode_e.ZSTD_bm_stable;
@@ -7429,7 +7429,7 @@ public static unsafe partial class Methods
         memcpy(updatedRepcodes.rep, cctx->blockState.prevCBlock->rep, (uint)sizeof(repcodes_s));
         while (endPosInSequence != 0 && idx < inSeqsSize && finalMatchSplit == 0)
         {
-            ZSTD_Sequence currSeq = inSeqs[idx];
+            var currSeq = inSeqs[idx];
             var litLength = currSeq.litLength;
             var matchLength = currSeq.matchLength;
             var rawOffset = currSeq.offset;
@@ -7610,7 +7610,7 @@ public static unsafe partial class Methods
     {
         nuint cSize = 0;
         var remaining = srcSize;
-        ZSTD_SequencePosition seqPos = new ZSTD_SequencePosition
+        var seqPos = new ZSTD_SequencePosition
         {
             idx = 0,
             posInSequence = 0,
@@ -8013,7 +8013,7 @@ public static unsafe partial class Methods
         while (nbSequences != 0)
         {
             nuint cBlockSize;
-            BlockSummary block = ZSTD_get1BlockSummary(inSeqs, nbSequences);
+            var block = ZSTD_get1BlockSummary(inSeqs, nbSequences);
             var lastBlock = block.nbSequences == nbSequences ? 1U : 0U;
             {
                 var err_code = block.nbSequences;
@@ -8185,7 +8185,7 @@ public static unsafe partial class Methods
     /*======   Finalize   ======*/
     private static ZSTD_inBuffer_s inBuffer_forEndFlush(ZSTD_CCtx_s* zcs)
     {
-        ZSTD_inBuffer_s nullInput = new ZSTD_inBuffer_s
+        var nullInput = new ZSTD_inBuffer_s
         {
             src = null,
             size = 0,
@@ -8199,7 +8199,7 @@ public static unsafe partial class Methods
      * @return : amount of data remaining to flush */
     public static nuint ZSTD_flushStream(ZSTD_CCtx_s* zcs, ZSTD_outBuffer_s* output)
     {
-        ZSTD_inBuffer_s input = inBuffer_forEndFlush(zcs);
+        var input = inBuffer_forEndFlush(zcs);
         input.size = input.pos;
         return ZSTD_compressStream2(zcs, output, &input, ZSTD_EndDirective.ZSTD_e_flush);
     }
@@ -8207,7 +8207,7 @@ public static unsafe partial class Methods
     /*! Equivalent to ZSTD_compressStream2(zcs, output, &emptyInput, ZSTD_e_end). */
     public static nuint ZSTD_endStream(ZSTD_CCtx_s* zcs, ZSTD_outBuffer_s* output)
     {
-        ZSTD_inBuffer_s input = inBuffer_forEndFlush(zcs);
+        var input = inBuffer_forEndFlush(zcs);
         var remainingToFlush = ZSTD_compressStream2(zcs, output, &input, ZSTD_EndDirective.ZSTD_e_end);
         {
             var err_code = remainingToFlush;
@@ -8245,7 +8245,7 @@ public static unsafe partial class Methods
 
     private static ZSTD_compressionParameters ZSTD_dedicatedDictSearch_getCParams(int compressionLevel, nuint dictSize)
     {
-        ZSTD_compressionParameters cParams = ZSTD_getCParams_internal(compressionLevel, 0, dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
+        var cParams = ZSTD_getCParams_internal(compressionLevel, 0, dictSize, ZSTD_CParamMode_e.ZSTD_cpm_createCDict);
         switch (cParams.strategy)
         {
             case ZSTD_strategy.ZSTD_fast:
@@ -8352,7 +8352,7 @@ public static unsafe partial class Methods
         }
 
         {
-            ZSTD_compressionParameters cp = ZstdDefaultCParameters[tableID][row];
+            var cp = ZstdDefaultCParameters[tableID][row];
             if (compressionLevel < 0)
             {
                 var clampedCompressionLevel = ZSTD_minCLevel() > compressionLevel ? ZSTD_minCLevel() : compressionLevel;
@@ -8382,7 +8382,7 @@ public static unsafe partial class Methods
      *  Fields of `ZSTD_frameParameters` are set to default values */
     private static ZSTD_parameters ZSTD_getParams_internal(int compressionLevel, ulong srcSizeHint, nuint dictSize, ZSTD_CParamMode_e mode)
     {
-        ZSTD_compressionParameters cParams = ZSTD_getCParams_internal(compressionLevel, srcSizeHint, dictSize, mode);
+        var cParams = ZSTD_getCParams_internal(compressionLevel, srcSizeHint, dictSize, mode);
         var @params = new ZSTD_parameters
         {
             cParams = cParams

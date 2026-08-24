@@ -25,7 +25,7 @@ public static unsafe partial class Methods
     {
         FSE_initCState(ref statePtr, ct);
         {
-            FseSymbolCompressionTransform symbolTt = ((FseSymbolCompressionTransform*)statePtr.symbolTT)[symbol];
+            var symbolTt = ((FseSymbolCompressionTransform*)statePtr.symbolTT)[symbol];
             var stateTable = (ushort*)statePtr.stateTable;
             var nbBitsOut = (symbolTt.deltaNbBits + (1 << 15)) >> 16;
             statePtr.value = (nint)((nbBitsOut << 16) - symbolTt.deltaNbBits);
@@ -36,7 +36,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void FSE_encodeSymbol(ref nuint bitCBitContainer, ref uint bitCBitPos, ref FseCStateT statePtr, uint symbol)
     {
-        FseSymbolCompressionTransform symbolTt = ((FseSymbolCompressionTransform*)statePtr.symbolTT)[symbol];
+        var symbolTt = ((FseSymbolCompressionTransform*)statePtr.symbolTT)[symbol];
         var stateTable = (ushort*)statePtr.stateTable;
         var nbBitsOut = ((uint)statePtr.value + symbolTt.deltaNbBits) >> 16;
         BIT_addBits(ref bitCBitContainer, ref bitCBitPos, (nuint)statePtr.value, nbBitsOut);
@@ -99,14 +99,14 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte FSE_peekSymbol(FseDStateT* dStatePtr)
     {
-        FseDecodeT dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
+        var dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
         return dInfo.symbol;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void FSE_updateState(FseDStateT* dStatePtr, BitDStreamT* bitD)
     {
-        FseDecodeT dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
+        var dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
         uint nbBits = dInfo.nbBits;
         var lowBits = BIT_readBits(bitD, nbBits);
         dStatePtr->state = dInfo.newState + lowBits;
@@ -116,7 +116,7 @@ public static unsafe partial class Methods
     [InlineMethod.Inline]
     private static byte FSE_decodeSymbol(ref FseDStateT dStatePtr, nuint bitDBitContainer, ref uint bitDBitsConsumed)
     {
-        FseDecodeT dInfo = ((FseDecodeT*)dStatePtr.table)[dStatePtr.state];
+        var dInfo = ((FseDecodeT*)dStatePtr.table)[dStatePtr.state];
         uint nbBits = dInfo.nbBits;
         var symbol = dInfo.symbol;
         var lowBits = BIT_readBits(bitDBitContainer, ref bitDBitsConsumed, nbBits);
@@ -129,7 +129,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte FSE_decodeSymbolFast(ref FseDStateT dStatePtr, nuint bitDBitContainer, ref uint bitDBitsConsumed)
     {
-        FseDecodeT dInfo = ((FseDecodeT*)dStatePtr.table)[dStatePtr.state];
+        var dInfo = ((FseDecodeT*)dStatePtr.table)[dStatePtr.state];
         uint nbBits = dInfo.nbBits;
         var symbol = dInfo.symbol;
         var lowBits = BIT_readBitsFast(bitDBitContainer, ref bitDBitsConsumed, nbBits);

@@ -268,7 +268,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ZSTD_cParam_withinBounds(ZstdCParameter cParam, int value)
     {
-        ZSTD_bounds bounds = ZSTD_cParam_getBounds(cParam);
+        var bounds = ZSTD_cParam_getBounds(cParam);
         if (ERR_isError(bounds.error))
             return 0;
         if (value < bounds.lowerBound)

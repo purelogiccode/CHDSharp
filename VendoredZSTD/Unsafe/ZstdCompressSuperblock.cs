@@ -31,7 +31,7 @@ public static unsafe partial class Methods
         var oend = ostart + dstSize;
         var op = ostart + lhSize;
         var singleStream = lhSize == 3 ? 1U : 0U;
-        SymbolEncodingType_e hType = writeEntropy != 0 ? hufMetadata->hType : SymbolEncodingType_e.set_repeat;
+        var hType = writeEntropy != 0 ? hufMetadata->hType : SymbolEncodingType_e.set_repeat;
         nuint cLitSize = 0;
         *entropyWritten = 0;
         if (litSize == 0 || hufMetadata->hType == SymbolEncodingType_e.set_basic)
@@ -114,7 +114,7 @@ public static unsafe partial class Methods
         nuint n;
         for (n = 0; n < nbSeqs; n++)
         {
-            ZSTD_SequenceLength seqLen = ZSTD_getSequenceLength(seqStore, sequences + n);
+            var seqLen = ZSTD_getSequenceLength(seqStore, sequences + n);
             litLengthSum += seqLen.litLength;
             matchLengthSum += seqLen.matchLength;
         }
@@ -450,7 +450,7 @@ public static unsafe partial class Methods
         var writeSeqEntropy = 1;
         if (nbSeqs > 0)
         {
-            EstimatedBlockSize ebs = ZSTD_estimateSubBlockSize(lp, nbLiterals, ofCodePtr, llCodePtr, mlCodePtr, nbSeqs, &nextCBlock->entropy, entropyMetadata, workspace, wkspSize, writeLitEntropy, writeSeqEntropy);
+            var ebs = ZSTD_estimateSubBlockSize(lp, nbLiterals, ofCodePtr, llCodePtr, mlCodePtr, nbSeqs, &nextCBlock->entropy, entropyMetadata, workspace, wkspSize, writeLitEntropy, writeSeqEntropy);
             /* quick estimation */
             var avgLitCost = nbLiterals != 0 ? ebs.estLitSize * 256 / nbLiterals : 256;
             var avgSeqCost = (ebs.estBlockSize - ebs.estLitSize) * 256 / nbSeqs;

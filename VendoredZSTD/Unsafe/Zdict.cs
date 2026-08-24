@@ -161,7 +161,7 @@ public static unsafe partial class Methods
         var litLengthNCount = stackalloc short[36];
         var repOffset = stackalloc uint[1024];
         var bestRepOffset = stackalloc offsetCount_t[4];
-        EStatsRessT esr = new EStatsRessT
+        var esr = new EStatsRessT
         {
             dict = null,
             zc = null,
