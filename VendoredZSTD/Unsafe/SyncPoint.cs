@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct SyncPoint
     {
         /* The number of bytes to load from the input. */

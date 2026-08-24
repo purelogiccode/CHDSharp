@@ -77,7 +77,7 @@ namespace ZstdSharp
             {
                 decompressor.Dispose();
             }
-            decompressor = null;
+            decompressor = null!;
 
             if (inputBuffer != null)
             {

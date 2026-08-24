@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct algo_time_t
     {
         public uint tableTime;

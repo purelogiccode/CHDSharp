@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_frameProgression
     {
         /* nb input bytes read and buffered */

@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct EStats_ress_t
     {
         /* dictionary */

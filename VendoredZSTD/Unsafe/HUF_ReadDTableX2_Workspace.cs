@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct HUF_ReadDTableX2_Workspace
     {
         public _rankVal_e__FixedBuffer rankVal;
@@ -12,12 +14,14 @@ namespace ZstdSharp.Unsafe
         public fixed uint calleeWksp[219];
 #if NET8_0_OR_GREATER
         [InlineArray(12)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _rankVal_e__FixedBuffer
         {
             public rankValCol_t e0;
         }
 
 #else
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _rankVal_e__FixedBuffer
         {
             public rankValCol_t e0;
@@ -37,12 +41,14 @@ namespace ZstdSharp.Unsafe
 
 #if NET8_0_OR_GREATER
         [InlineArray(256)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _sortedSymbol_e__FixedBuffer
         {
             public sortedSymbol_t e0;
         }
 
 #else
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _sortedSymbol_e__FixedBuffer
         {
             public sortedSymbol_t e0;

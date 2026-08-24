@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct seqState_t
     {
         public BIT_DStream_t DStream;
@@ -7,6 +9,7 @@ namespace ZstdSharp.Unsafe
         public ZSTD_fseState stateOffb;
         public ZSTD_fseState stateML;
         public _prevOffset_e__FixedBuffer prevOffset;
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _prevOffset_e__FixedBuffer
         {
             public nuint e0;

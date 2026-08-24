@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /** ZSTD_fseCTablesMetadata_t :
@@ -5,6 +6,7 @@ namespace ZstdSharp.Unsafe
      *  fse tables in fseTablesBuffer.
      *  fseTablesSize refers to the size of fse tables in bytes.
      *  This metadata is populated in ZSTD_buildBlockEntropyStats_sequences() */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_fseCTablesMetadata_t
     {
         public SymbolEncodingType_e llType;

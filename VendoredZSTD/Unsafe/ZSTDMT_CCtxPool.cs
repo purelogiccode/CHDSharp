@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /* =====   CCtx Pool   ===== */
     /* a single CCtx Pool can be invoked from multiple threads in parallel */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTDMT_CCtxPool
     {
         public void* poolMutex;

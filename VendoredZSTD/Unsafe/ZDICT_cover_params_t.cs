@@ -1,9 +1,11 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /*! ZDICT_cover_params_t:
      *  k and d are the only required parameters.
      *  For others, value 0 means default.
      */
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZDICT_cover_params_t
     {
         /* Segment size : constraint: 0 < k : Reasonable range [16, 2048+] */

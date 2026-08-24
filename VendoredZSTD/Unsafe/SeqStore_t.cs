@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct SeqStore_t
     {
         public SeqDef_s* sequencesStart;

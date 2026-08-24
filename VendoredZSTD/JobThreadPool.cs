@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ namespace ZstdSharp
         private readonly List<JobThread> threads;
         private readonly BlockingCollection<Job> queue;
 
+        [StructLayout(LayoutKind.Sequential)]
         private struct Job
         {
             public void* function;
@@ -44,7 +46,7 @@ namespace ZstdSharp
             }
         }
 
-        private void Worker(object obj)
+        private void Worker(object? obj)
         {
             if (obj is not JobThread poolThread)
                 return;

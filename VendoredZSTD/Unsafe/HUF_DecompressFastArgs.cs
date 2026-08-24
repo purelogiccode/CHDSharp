@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /**
@@ -13,6 +14,7 @@ namespace ZstdSharp.Unsafe
      * iend [in] - The end of each input stream. ip[i] may cross iend[i],
      *             as long as it is above ilowest, but that indicates corruption.
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct HUF_DecompressFastArgs
     {
         public _ip_e__FixedBuffer ip;
@@ -22,6 +24,7 @@ namespace ZstdSharp.Unsafe
         public byte* ilowest;
         public byte* oend;
         public _iend_e__FixedBuffer iend;
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _ip_e__FixedBuffer
         {
             public byte* e0;
@@ -30,6 +33,7 @@ namespace ZstdSharp.Unsafe
             public byte* e3;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _op_e__FixedBuffer
         {
             public byte* e0;
@@ -38,6 +42,7 @@ namespace ZstdSharp.Unsafe
             public byte* e3;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _iend_e__FixedBuffer
         {
             public byte* e0;

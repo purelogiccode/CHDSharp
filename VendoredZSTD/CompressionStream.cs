@@ -107,7 +107,7 @@ namespace ZstdSharp
             {
                 compressor.Dispose();
             }
-            compressor = null;
+            compressor = null!;
 
             if (outputBuffer != null)
             {
@@ -147,7 +147,7 @@ namespace ZstdSharp
         {
             EnsureNotDisposed();
 
-            var input = new ZSTD_inBuffer_s {pos = 0, size = buffer != null ? (nuint) buffer.Length : 0};
+            var input = new ZSTD_inBuffer_s {pos = 0, size = (nuint) buffer.Length};
             nuint remaining;
             do
             {

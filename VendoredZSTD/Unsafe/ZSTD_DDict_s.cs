@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /*-*******************************************************
      *  Types
      *********************************************************/
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_DDict_s
     {
         public void* dictBuffer;

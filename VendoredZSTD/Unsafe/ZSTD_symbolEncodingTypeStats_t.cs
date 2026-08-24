@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /* Type returned by ZSTD_buildSequencesStatistics containing finalized symbol encoding types
      * and size of the sequences statistics
      */
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_symbolEncodingTypeStats_t
     {
         public uint LLtype;

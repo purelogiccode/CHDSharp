@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZDICT_params_t
     {
         /**< optimize for a specific zstd compression level; 0 means default */

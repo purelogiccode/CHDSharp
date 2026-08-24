@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct HUF_compress_tables_t
     {
         public fixed uint count[256];
@@ -9,12 +11,14 @@ namespace ZstdSharp.Unsafe
         public _wksps_e__Union wksps;
 #if NET8_0_OR_GREATER
         [InlineArray(257)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _CTable_e__FixedBuffer
         {
             public nuint e0;
         }
 
 #else
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _CTable_e__FixedBuffer
         {
             public nuint e0;

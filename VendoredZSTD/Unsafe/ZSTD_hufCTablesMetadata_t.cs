@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /***********************************************
@@ -8,6 +9,7 @@ namespace ZstdSharp.Unsafe
      *  huffman tree description in hufDesBuffer.
      *  hufDesSize refers to the size of huffman tree description in bytes.
      *  This metadata is populated in ZSTD_buildBlockEntropyStats_literals() */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_hufCTablesMetadata_t
     {
         public SymbolEncodingType_e hType;

@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /****************************
      *  Streaming
      ****************************/
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_inBuffer_s
     {
         /**< start of input buffer */

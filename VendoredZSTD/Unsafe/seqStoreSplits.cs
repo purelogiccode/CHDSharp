@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /* Struct to keep track of where we are in our recursive calls. */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct seqStoreSplits
     {
         /* Array of split indices */

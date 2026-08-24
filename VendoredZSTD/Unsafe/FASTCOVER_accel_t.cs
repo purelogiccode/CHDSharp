@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /*-*************************************
      * Acceleration
      ***************************************/
+    [StructLayout(LayoutKind.Sequential)]
     public struct FASTCOVER_accel_t
     {
         /* Percentage of training samples used for ZDICT_finalizeDictionary */

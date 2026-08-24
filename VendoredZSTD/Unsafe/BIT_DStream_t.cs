@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /*-********************************************
      *  bitStream decoding API (read backward)
      **********************************************/
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct BIT_DStream_t
     {
         public nuint bitContainer;

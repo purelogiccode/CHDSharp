@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_compressionParameters
     {
         /**< largest match distance : larger == more compression, more memory needed during decompression */

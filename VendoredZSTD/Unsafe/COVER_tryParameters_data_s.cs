@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /**
      * Parameters for COVER_tryParameters().
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct COVER_tryParameters_data_s
     {
         public COVER_ctx_t* ctx;

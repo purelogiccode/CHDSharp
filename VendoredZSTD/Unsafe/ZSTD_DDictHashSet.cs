@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /* Hashset for storing references to multiple ZSTD_DDict within ZSTD_DCtx */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_DDictHashSet
     {
         public ZSTD_DDict_s** ddictPtrTable;

@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /*-*************************************
      * Context
      ***************************************/
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct FASTCOVER_ctx_t
     {
         public byte* samples;

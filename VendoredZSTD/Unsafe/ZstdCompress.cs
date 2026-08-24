@@ -3122,9 +3122,9 @@ namespace ZstdSharp.Unsafe
             return ZSTD_entropyCompressSeqStore_wExtLitBuffer(dst, dstCapacity, seqStorePtr->litStart, (nuint)(seqStorePtr->lit - seqStorePtr->litStart), srcSize, seqStorePtr, prevEntropy, nextEntropy, cctxParams, entropyWorkspace, entropyWkspSize, bmi2);
         }
 
-        private static readonly ZSTD_BlockCompressor_f[][] blockCompressor = new ZSTD_BlockCompressor_f[4][]
+        private static readonly ZSTD_BlockCompressor_f?[][] blockCompressor = new             ZSTD_BlockCompressor_f?[4][]
         {
-            new ZSTD_BlockCompressor_f[10]
+            new ZSTD_BlockCompressor_f?[10]
             {
                 ZSTD_compressBlock_fast,
                 ZSTD_compressBlock_fast,
@@ -3137,7 +3137,7 @@ namespace ZstdSharp.Unsafe
                 ZSTD_compressBlock_btultra,
                 ZSTD_compressBlock_btultra2
             },
-            new ZSTD_BlockCompressor_f[10]
+            new ZSTD_BlockCompressor_f?[10]
             {
                 ZSTD_compressBlock_fast_extDict,
                 ZSTD_compressBlock_fast_extDict,
@@ -3150,7 +3150,7 @@ namespace ZstdSharp.Unsafe
                 ZSTD_compressBlock_btultra_extDict,
                 ZSTD_compressBlock_btultra_extDict
             },
-            new ZSTD_BlockCompressor_f[10]
+            new ZSTD_BlockCompressor_f?[10]
             {
                 ZSTD_compressBlock_fast_dictMatchState,
                 ZSTD_compressBlock_fast_dictMatchState,
@@ -3163,7 +3163,7 @@ namespace ZstdSharp.Unsafe
                 ZSTD_compressBlock_btultra_dictMatchState,
                 ZSTD_compressBlock_btultra_dictMatchState
             },
-            new ZSTD_BlockCompressor_f[10]
+            new ZSTD_BlockCompressor_f?[10]
             {
                 null,
                 null,
@@ -3177,27 +3177,27 @@ namespace ZstdSharp.Unsafe
                 null
             }
         };
-        private static readonly ZSTD_BlockCompressor_f[][] rowBasedBlockCompressors = new ZSTD_BlockCompressor_f[4][]
+        private static readonly ZSTD_BlockCompressor_f?[][] rowBasedBlockCompressors = new             ZSTD_BlockCompressor_f?[4][]
         {
-            new ZSTD_BlockCompressor_f[3]
+            new ZSTD_BlockCompressor_f?[3]
             {
                 ZSTD_compressBlock_greedy_row,
                 ZSTD_compressBlock_lazy_row,
                 ZSTD_compressBlock_lazy2_row
             },
-            new ZSTD_BlockCompressor_f[3]
+            new ZSTD_BlockCompressor_f?[3]
             {
                 ZSTD_compressBlock_greedy_extDict_row,
                 ZSTD_compressBlock_lazy_extDict_row,
                 ZSTD_compressBlock_lazy2_extDict_row
             },
-            new ZSTD_BlockCompressor_f[3]
+            new ZSTD_BlockCompressor_f?[3]
             {
                 ZSTD_compressBlock_greedy_dictMatchState_row,
                 ZSTD_compressBlock_lazy_dictMatchState_row,
                 ZSTD_compressBlock_lazy2_dictMatchState_row
             },
-            new ZSTD_BlockCompressor_f[3]
+            new ZSTD_BlockCompressor_f?[3]
             {
                 ZSTD_compressBlock_greedy_dedicatedDictSearch_row,
                 ZSTD_compressBlock_lazy_dedicatedDictSearch_row,
@@ -3209,7 +3209,7 @@ namespace ZstdSharp.Unsafe
          * assumption : strat is a valid strategy */
         private static ZSTD_BlockCompressor_f ZSTD_selectBlockCompressor(ZSTD_strategy strat, ZSTD_paramSwitch_e useRowMatchFinder, ZSTD_dictMode_e dictMode)
         {
-            ZSTD_BlockCompressor_f selectedCompressor;
+            ZSTD_BlockCompressor_f? selectedCompressor;
             assert(ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_strategy, (int)strat) != 0);
             if (ZSTD_rowMatchFinderUsed(strat, useRowMatchFinder) != 0)
             {
@@ -3222,7 +3222,7 @@ namespace ZstdSharp.Unsafe
             }
 
             assert(selectedCompressor != null);
-            return selectedCompressor;
+            return selectedCompressor!;
         }
 
         private static void ZSTD_storeLastLiterals(SeqStore_t* seqStorePtr, byte* anchor, nuint lastLLSize)
@@ -3335,7 +3335,7 @@ namespace ZstdSharp.Unsafe
                 uint curr = (uint)(istart - @base);
 #if DEBUG
                 if (sizeof(nint) == 8)
-                    assert(istart - @base < (nint)unchecked((uint)-1));
+                    assert(istart - @base < unchecked((nint)(uint)-1));
 #endif
                 if (curr > ms->nextToUpdate + 384)
                     ms->nextToUpdate = curr - (192 < curr - ms->nextToUpdate - 384 ? 192 : curr - ms->nextToUpdate - 384);
@@ -3423,17 +3423,17 @@ namespace ZstdSharp.Unsafe
                         }
 
                         {
-                            ZSTD_BlockCompressor_f blockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
+                            ZSTD_BlockCompressor_f selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
                             ms->ldmSeqStore = null;
-                            lastLLSize = blockCompressor(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
+                            lastLLSize = selectedBlockCompressor(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
                         }
                     }
                 }
                 else
                 {
-                    ZSTD_BlockCompressor_f blockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
+                    ZSTD_BlockCompressor_f selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
                     ms->ldmSeqStore = null;
-                    lastLLSize = blockCompressor(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
+                    lastLLSize = selectedBlockCompressor(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
                 }
 
                 {

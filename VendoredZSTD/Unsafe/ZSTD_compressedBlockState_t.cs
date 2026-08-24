@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_compressedBlockState_t
     {
         public ZSTD_entropyCTables_t entropy;

@@ -1008,6 +1008,7 @@ namespace ZstdSharp.Unsafe
          * Each row is a circular buffer beginning at the value of "headGrouped". So we
          * must rotate the "matches" bitfield to match up with the actual layout of the
          * entries within the hashTable */
+#pragma warning disable MA0140
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ulong ZSTD_row_getMatchMask(byte* tagRow, byte tag, uint headGrouped, uint rowEntries)
         {
@@ -1136,6 +1137,7 @@ namespace ZstdSharp.Unsafe
                 }
             }
         }
+#pragma warning restore MA0140
 
         /* The high-level approach of the SIMD row based match finder is as follows:
          * - Figure out where to insert the new entry:

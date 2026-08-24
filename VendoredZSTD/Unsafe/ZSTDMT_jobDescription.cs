@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTDMT_jobDescription
     {
         /* SHARED - set0 by mtctx, then modified by worker AND read by mtctx */

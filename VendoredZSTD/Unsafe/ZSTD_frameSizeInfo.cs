@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /**
@@ -6,6 +7,7 @@ namespace ZstdSharp.Unsafe
      *       similarly, before using `decompressedBound`, check for errors using:
      *          `decompressedBound != ZSTD_CONTENTSIZE_ERROR`
      */
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_frameSizeInfo
     {
         public nuint nbBlocks;

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 namespace ZstdSharp.Unsafe
 {
     /*!
@@ -12,6 +13,7 @@ namespace ZstdSharp.Unsafe
      * Do not access the members of this struct directly.
      * @see XXH64_state_s, XXH3_state_s
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct XXH32_state_s
     {
         /*!< Total length hashed, modulo 2^32 */

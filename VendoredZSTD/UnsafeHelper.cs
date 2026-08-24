@@ -89,7 +89,7 @@ namespace ZstdSharp
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void assert(bool condition, string message = null)
+        public static void assert(bool condition, string? message = null)
         {
             if (!condition)
                 throw new ArgumentException(message ?? "assert failed");
