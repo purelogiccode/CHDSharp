@@ -1,9 +1,9 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_sequenceFormat_e
+public enum ZstdSequenceFormatE
 {
     /* ZSTD_Sequence[] has no block delimiters, just sequences */
-    ZSTD_sf_noBlockDelimiters = 0,
+    ZstdSfNoBlockDelimiters = 0,
     /* ZSTD_Sequence[] contains explicit block delimiters */
-    ZSTD_sf_explicitBlockDelimiters = 1
+    ZstdSfExplicitBlockDelimiters = 1
 }

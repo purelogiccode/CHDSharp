@@ -5,7 +5,7 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static void ZSTD_fillHashTableForCDict(ZSTD_MatchState_t* ms, void* end, ZSTD_dictTableLoadMethod_e dtlm)
+    private static void ZSTD_fillHashTableForCDict(ZstdMatchStateT* ms, void* end, ZstdDictTableLoadMethodE dtlm)
     {
         var cParams = &ms->cParams;
         var hashTable = ms->hashTable;
@@ -15,7 +15,7 @@ public static unsafe partial class Methods
         var ip = @base + ms->nextToUpdate;
         var iend = (byte*)end - 8;
         const uint fastHashFillStep = 3;
-        assert(dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_full);
+        assert(dtlm == ZstdDictTableLoadMethodE.ZstdDtlmFull);
         for (; ip + fastHashFillStep < iend + 2; ip += fastHashFillStep)
         {
             var curr = (uint)(ip - @base);
@@ -24,7 +24,7 @@ public static unsafe partial class Methods
                 ZSTD_writeTaggedIndex(hashTable, hashAndTag, curr);
             }
 
-            if (dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast)
+            if (dtlm == ZstdDictTableLoadMethodE.ZstdDtlmFast)
                 continue;
 
             {
@@ -41,7 +41,7 @@ public static unsafe partial class Methods
         }
     }
 
-    private static void ZSTD_fillHashTableForCCtx(ZSTD_MatchState_t* ms, void* end, ZSTD_dictTableLoadMethod_e dtlm)
+    private static void ZSTD_fillHashTableForCCtx(ZstdMatchStateT* ms, void* end, ZstdDictTableLoadMethodE dtlm)
     {
         var cParams = &ms->cParams;
         var hashTable = ms->hashTable;
@@ -51,13 +51,13 @@ public static unsafe partial class Methods
         var ip = @base + ms->nextToUpdate;
         var iend = (byte*)end - 8;
         const uint fastHashFillStep = 3;
-        assert(dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast);
+        assert(dtlm == ZstdDictTableLoadMethodE.ZstdDtlmFast);
         for (; ip + fastHashFillStep < iend + 2; ip += fastHashFillStep)
         {
             var curr = (uint)(ip - @base);
             var hash0 = ZSTD_hashPtr(ip, hBits, mls);
             hashTable[hash0] = curr;
-            if (dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast)
+            if (dtlm == ZstdDictTableLoadMethodE.ZstdDtlmFast)
                 continue;
 
             {
@@ -74,9 +74,9 @@ public static unsafe partial class Methods
         }
     }
 
-    private static void ZSTD_fillHashTable(ZSTD_MatchState_t* ms, void* end, ZSTD_dictTableLoadMethod_e dtlm, ZSTD_tableFillPurpose_e tfp)
+    private static void ZSTD_fillHashTable(ZstdMatchStateT* ms, void* end, ZstdDictTableLoadMethodE dtlm, ZstdTableFillPurposeE tfp)
     {
-        if (tfp == ZSTD_tableFillPurpose_e.ZSTD_tfp_forCDict)
+        if (tfp == ZstdTableFillPurposeE.ZstdTfpForCDict)
         {
             ZSTD_fillHashTableForCDict(ms, end, dtlm);
         }
@@ -92,7 +92,7 @@ public static unsafe partial class Methods
         /* currentIdx >= lowLimit is a (somewhat) unpredictable branch.
          * However expression below compiles into conditional move.
          */
-        var mvalAddr = ZSTD_selectAddr(matchIdx, idxLowLimit, matchAddress, dummy);
+        var mvalAddr = ZSTD_selectAddr(matchIdx, idxLowLimit, matchAddress, Dummy);
         if (MEM_read32(currentPtr) != MEM_read32(mvalAddr))
             return 0;
 
@@ -166,7 +166,7 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
-    private static nuint ZSTD_compressBlock_fast_noDict_generic(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize, uint mls, int useCmov)
+    private static nuint ZSTD_compressBlock_fast_noDict_generic(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize, uint mls, int useCmov)
     {
         var cParams = &ms->cParams;
         var hashTable = ms->hashTable;
@@ -183,8 +183,8 @@ public static unsafe partial class Methods
         var anchor = istart;
         var ip0 = istart;
         uint current0;
-        var rep_offset1 = rep[0];
-        var rep_offset2 = rep[1];
+        var repOffset1 = rep[0];
+        var repOffset2 = rep[1];
         uint offsetSaved1 = 0, offsetSaved2 = 0;
         /* hash for ip0 */
         /* hash for ip1 */
@@ -203,16 +203,16 @@ public static unsafe partial class Methods
             var curr = (uint)(ip0 - @base);
             var windowLow = ZSTD_getLowestPrefixIndex(ms, curr, cParams->windowLog);
             var maxRep = curr - windowLow;
-            if (rep_offset2 > maxRep)
+            if (repOffset2 > maxRep)
             {
-                offsetSaved2 = rep_offset2;
-                rep_offset2 = 0;
+                offsetSaved2 = repOffset2;
+                repOffset2 = 0;
             }
 
-            if (rep_offset1 > maxRep)
+            if (repOffset1 > maxRep)
             {
-                offsetSaved1 = rep_offset1;
-                rep_offset1 = 0;
+                offsetSaved1 = repOffset1;
+                repOffset1 = 0;
             }
         }
 
@@ -233,13 +233,13 @@ public static unsafe partial class Methods
         do
         {
             /* load repcode match for ip[2]*/
-            var rval = MEM_read32(ip2 - rep_offset1);
+            var rval = MEM_read32(ip2 - repOffset1);
             current0 = (uint)(ip0 - @base);
             hashTable[hash0] = current0;
-            if (MEM_read32(ip2) == rval && rep_offset1 > 0)
+            if (MEM_read32(ip2) == rval && repOffset1 > 0)
             {
                 ip0 = ip2;
-                match0 = ip0 - rep_offset1;
+                match0 = ip0 - repOffset1;
                 mLength = ip0[-1] == match0[-1] ? 1U : 0U;
                 ip0 -= mLength;
                 match0 -= mLength;
@@ -298,17 +298,17 @@ public static unsafe partial class Methods
         }
         while (ip3 < ilimit);
         _cleanup:
-        offsetSaved2 = offsetSaved1 != 0 && rep_offset1 != 0 ? offsetSaved1 : offsetSaved2;
-        rep[0] = rep_offset1 != 0 ? rep_offset1 : offsetSaved1;
-        rep[1] = rep_offset2 != 0 ? rep_offset2 : offsetSaved2;
+        offsetSaved2 = offsetSaved1 != 0 && repOffset1 != 0 ? offsetSaved1 : offsetSaved2;
+        rep[0] = repOffset1 != 0 ? repOffset1 : offsetSaved1;
+        rep[1] = repOffset2 != 0 ? repOffset2 : offsetSaved2;
         return (nuint)(iend - anchor);
 
         _offset:
         match0 = @base + matchIdx;
-        rep_offset2 = rep_offset1;
-        rep_offset1 = (uint)(ip0 - match0);
-        assert(rep_offset1 > 0);
-        offcode = rep_offset1 + 3;
+        repOffset2 = repOffset1;
+        repOffset1 = (uint)(ip0 - match0);
+        assert(repOffset1 > 0);
+        offcode = repOffset1 + 3;
         mLength = 4;
         while (ip0 > anchor && match0 > prefixStart && ip0[-1] == match0[-1])
         {
@@ -327,17 +327,17 @@ public static unsafe partial class Methods
             assert(@base + current0 + 2 > istart);
             hashTable[ZSTD_hashPtr(@base + current0 + 2, hlog, mls)] = current0 + 2;
             hashTable[ZSTD_hashPtr(ip0 - 2, hlog, mls)] = (uint)(ip0 - 2 - @base);
-            if (rep_offset2 > 0)
+            if (repOffset2 > 0)
             {
-                while (ip0 <= ilimit && MEM_read32(ip0) == MEM_read32(ip0 - rep_offset2))
+                while (ip0 <= ilimit && MEM_read32(ip0) == MEM_read32(ip0 - repOffset2))
                 {
                     /* store sequence */
-                    var rLength = ZSTD_count(ip0 + 4, ip0 + 4 - rep_offset2, iend) + 4;
+                    var rLength = ZSTD_count(ip0 + 4, ip0 + 4 - repOffset2, iend) + 4;
                     {
                         /* swap rep_offset2 <=> rep_offset1 */
-                        var tmpOff = rep_offset2;
-                        rep_offset2 = rep_offset1;
-                        rep_offset1 = tmpOff;
+                        var tmpOff = repOffset2;
+                        repOffset2 = repOffset1;
+                        repOffset1 = tmpOff;
                     }
 
                     hashTable[ZSTD_hashPtr(ip0, hlog, mls)] = (uint)(ip0 - @base);
@@ -346,7 +346,6 @@ public static unsafe partial class Methods
                     assert(1 <= 3);
                     ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, rLength);
                     anchor = ip0;
-                    continue;
                 }
             }
         }
@@ -354,47 +353,47 @@ public static unsafe partial class Methods
         goto _start;
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_4_1(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_4_1(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 4, 1);
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_5_1(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_5_1(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 5, 1);
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_6_1(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_6_1(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 6, 1);
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_7_1(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_7_1(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 7, 1);
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_4_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_4_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 4, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_5_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_5_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 5, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_6_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_6_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 6, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_noDict_7_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_noDict_7_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_noDict_generic(ms, seqStore, rep, src, srcSize, 7, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         var mml = ms->cParams.minMatch;
         /* use cmov when "candidate in range" branch is likely unpredictable */
@@ -433,7 +432,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint ZSTD_compressBlock_fast_dictMatchState_generic(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize, uint mls, uint hasStep)
+    private static nuint ZSTD_compressBlock_fast_dictMatchState_generic(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize, uint mls, uint hasStep)
     {
         var cParams = &ms->cParams;
         var hashTable = ms->hashTable;
@@ -450,7 +449,7 @@ public static unsafe partial class Methods
         var prefixStart = @base + prefixStartIndex;
         var iend = istart + srcSize;
         var ilimit = iend - 8;
-        uint offset_1 = rep[0], offset_2 = rep[1];
+        uint offset1 = rep[0], offset2 = rep[1];
         var dms = ms->dictMatchState;
         var dictCParams = &dms->cParams;
         var dictHashTable = dms->hashTable;
@@ -471,15 +470,15 @@ public static unsafe partial class Methods
         {
             var hashTableBytes = ((nuint)1 << (int)dictCParams->hashLog) * sizeof(uint);
             {
-                var _ptr = (sbyte*)dictHashTable;
-                var _size = hashTableBytes;
-                nuint _pos;
-                for (_pos = 0; _pos < _size; _pos += 64)
+                var ptr = (sbyte*)dictHashTable;
+                var size = hashTableBytes;
+                nuint pos;
+                for (pos = 0; pos < size; pos += 64)
                 {
 #if NETCOREAPP3_0_OR_GREATER
                     if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
                     {
-                        System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
+                        System.Runtime.Intrinsics.X86.Sse.Prefetch1(ptr + pos);
                     }
 #endif
                 }
@@ -487,8 +486,8 @@ public static unsafe partial class Methods
         }
 
         ip0 += dictAndPrefixLength == 0 ? 1 : 0;
-        assert(offset_1 <= dictAndPrefixLength);
-        assert(offset_2 <= dictAndPrefixLength);
+        assert(offset1 <= dictAndPrefixLength);
+        assert(offset2 <= dictAndPrefixLength);
         assert(stepSize >= 1);
         while (ip1 <= ilimit)
         {
@@ -505,7 +504,7 @@ public static unsafe partial class Methods
             while (true)
             {
                 var match = @base + matchIndex;
-                var repIndex = curr + 1 - offset_1;
+                var repIndex = curr + 1 - offset1;
                 var repMatch = repIndex < prefixStartIndex ? dictBase + (repIndex - dictIndexDelta) : @base + repIndex;
                 var hash1 = ZSTD_hashPtr(ip1, hlog, mls);
                 var dictHashAndTag1 = ZSTD_hashPtr(ip1, dictHBits, mls);
@@ -539,8 +538,8 @@ public static unsafe partial class Methods
                                 mLength++;
                             }
 
-                            offset_2 = offset_1;
-                            offset_1 = offset;
+                            offset2 = offset1;
+                            offset1 = offset;
                             assert(offset > 0);
                             ZSTD_storeSeq(seqStore, (nuint)(ip0 - anchor), anchor, iend, offset + 3, mLength);
                             break;
@@ -560,8 +559,8 @@ public static unsafe partial class Methods
                         mLength++;
                     }
 
-                    offset_2 = offset_1;
-                    offset_1 = offset;
+                    offset2 = offset1;
+                    offset1 = offset;
                     assert(offset > 0);
                     ZSTD_storeSeq(seqStore, (nuint)(ip0 - anchor), anchor, iend, offset + 3, mLength);
                     break;
@@ -596,16 +595,16 @@ public static unsafe partial class Methods
                 while (ip0 <= ilimit)
                 {
                     var current2 = (uint)(ip0 - @base);
-                    var repIndex2 = current2 - offset_2;
+                    var repIndex2 = current2 - offset2;
                     var repMatch2 = repIndex2 < prefixStartIndex ? dictBase - dictIndexDelta + repIndex2 : @base + repIndex2;
                     if (ZSTD_index_overlap_check(prefixStartIndex, repIndex2) != 0 && MEM_read32(repMatch2) == MEM_read32(ip0))
                     {
                         var repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                         var repLength2 = ZSTD_count_2segments(ip0 + 4, repMatch2 + 4, iend, repEnd2, prefixStart) + 4;
                         /* swap offset_2 <=> offset_1 */
-                        var tmpOffset = offset_2;
-                        offset_2 = offset_1;
-                        offset_1 = tmpOffset;
+                        var tmpOffset = offset2;
+                        offset2 = offset1;
+                        offset1 = tmpOffset;
                         assert(1 >= 1);
                         assert(1 <= 3);
                         ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, repLength2);
@@ -624,32 +623,32 @@ public static unsafe partial class Methods
         }
 
         _cleanup:
-        rep[0] = offset_1;
-        rep[1] = offset_2;
+        rep[0] = offset1;
+        rep[1] = offset2;
         return (nuint)(iend - anchor);
     }
 
-    private static nuint ZSTD_compressBlock_fast_dictMatchState_4_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_dictMatchState_4_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_dictMatchState_generic(ms, seqStore, rep, src, srcSize, 4, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_dictMatchState_5_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_dictMatchState_5_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_dictMatchState_generic(ms, seqStore, rep, src, srcSize, 5, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_dictMatchState_6_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_dictMatchState_6_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_dictMatchState_generic(ms, seqStore, rep, src, srcSize, 6, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_dictMatchState_7_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_dictMatchState_7_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_dictMatchState_generic(ms, seqStore, rep, src, srcSize, 7, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_dictMatchState(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_dictMatchState(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         var mls = ms->cParams.minMatch;
         assert(ms->dictMatchState != null);
@@ -667,7 +666,7 @@ public static unsafe partial class Methods
         }
     }
 
-    private static nuint ZSTD_compressBlock_fast_extDict_generic(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize, uint mls, uint hasStep)
+    private static nuint ZSTD_compressBlock_fast_extDict_generic(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize, uint mls, uint hasStep)
     {
         var cParams = &ms->cParams;
         var hashTable = ms->hashTable;
@@ -688,7 +687,7 @@ public static unsafe partial class Methods
         var dictEnd = dictBase + prefixStartIndex;
         var iend = istart + srcSize;
         var ilimit = iend - 8;
-        uint offset_1 = rep[0], offset_2 = rep[1];
+        uint offset1 = rep[0], offset2 = rep[1];
         uint offsetSaved1 = 0, offsetSaved2 = 0;
         var ip0 = istart;
         uint current0;
@@ -708,16 +707,16 @@ public static unsafe partial class Methods
         {
             var curr = (uint)(ip0 - @base);
             var maxRep = curr - dictStartIndex;
-            if (offset_2 >= maxRep)
+            if (offset2 >= maxRep)
             {
-                offsetSaved2 = offset_2;
-                offset_2 = 0;
+                offsetSaved2 = offset2;
+                offset2 = 0;
             }
 
-            if (offset_1 >= maxRep)
+            if (offset1 >= maxRep)
             {
-                offsetSaved1 = offset_1;
-                offset_1 = 0;
+                offsetSaved1 = offset1;
+                offset1 = 0;
             }
         }
 
@@ -740,10 +739,10 @@ public static unsafe partial class Methods
         {
             {
                 var current2 = (uint)(ip2 - @base);
-                var repIndex = current2 - offset_1;
+                var repIndex = current2 - offset1;
                 var repBase = repIndex < prefixStartIndex ? dictBase : @base;
                 uint rval;
-                if (prefixStartIndex - repIndex >= 4 && offset_1 > 0)
+                if (prefixStartIndex - repIndex >= 4 && offset1 > 0)
                 {
                     rval = MEM_read32(repBase + repIndex);
                 }
@@ -820,9 +819,9 @@ public static unsafe partial class Methods
         }
         while (ip3 < ilimit);
         _cleanup:
-        offsetSaved2 = offsetSaved1 != 0 && offset_1 != 0 ? offsetSaved1 : offsetSaved2;
-        rep[0] = offset_1 != 0 ? offset_1 : offsetSaved1;
-        rep[1] = offset_2 != 0 ? offset_2 : offsetSaved2;
+        offsetSaved2 = offsetSaved1 != 0 && offset1 != 0 ? offsetSaved1 : offsetSaved2;
+        rep[0] = offset1 != 0 ? offset1 : offsetSaved1;
+        rep[1] = offset2 != 0 ? offset2 : offsetSaved2;
         return (nuint)(iend - anchor);
 
         _offset:
@@ -831,8 +830,8 @@ public static unsafe partial class Methods
             var lowMatchPtr = idx < prefixStartIndex ? dictStart : prefixStart;
             matchEnd = idx < prefixStartIndex ? dictEnd : iend;
             match0 = idxBase + idx;
-            offset_2 = offset_1;
-            offset_1 = offset;
+            offset2 = offset1;
+            offset1 = offset;
             assert(offset > 0);
             offcode = offset + 3;
             mLength = 4;
@@ -862,17 +861,17 @@ public static unsafe partial class Methods
             hashTable[ZSTD_hashPtr(ip0 - 2, hlog, mls)] = (uint)(ip0 - 2 - @base);
             while (ip0 <= ilimit)
             {
-                var repIndex2 = (uint)(ip0 - @base) - offset_2;
+                var repIndex2 = (uint)(ip0 - @base) - offset2;
                 var repMatch2 = repIndex2 < prefixStartIndex ? dictBase + repIndex2 : @base + repIndex2;
-                if ((ZSTD_index_overlap_check(prefixStartIndex, repIndex2) & (offset_2 > 0 ? 1 : 0)) != 0 && MEM_read32(repMatch2) == MEM_read32(ip0))
+                if ((ZSTD_index_overlap_check(prefixStartIndex, repIndex2) & (offset2 > 0 ? 1 : 0)) != 0 && MEM_read32(repMatch2) == MEM_read32(ip0))
                 {
                     var repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                     var repLength2 = ZSTD_count_2segments(ip0 + 4, repMatch2 + 4, iend, repEnd2, prefixStart) + 4;
                     {
                         /* swap offset_2 <=> offset_1 */
-                        var tmpOffset = offset_2;
-                        offset_2 = offset_1;
-                        offset_1 = tmpOffset;
+                        var tmpOffset = offset2;
+                        offset2 = offset1;
+                        offset1 = tmpOffset;
                     }
 
                     assert(1 >= 1);
@@ -891,27 +890,27 @@ public static unsafe partial class Methods
         goto _start;
     }
 
-    private static nuint ZSTD_compressBlock_fast_extDict_4_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_extDict_4_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_extDict_generic(ms, seqStore, rep, src, srcSize, 4, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_extDict_5_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_extDict_5_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_extDict_generic(ms, seqStore, rep, src, srcSize, 5, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_extDict_6_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_extDict_6_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_extDict_generic(ms, seqStore, rep, src, srcSize, 6, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_extDict_7_0(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_extDict_7_0(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         return ZSTD_compressBlock_fast_extDict_generic(ms, seqStore, rep, src, srcSize, 7, 0);
     }
 
-    private static nuint ZSTD_compressBlock_fast_extDict(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+    private static nuint ZSTD_compressBlock_fast_extDict(ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize)
     {
         var mls = ms->cParams.minMatch;
         assert(ms->dictMatchState == null);

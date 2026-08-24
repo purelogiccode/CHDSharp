@@ -8,7 +8,7 @@ public static unsafe partial class Methods
      *
      * Initializes the rolling hash state such that it will honor the
      * settings in params. */
-    private static void ZSTD_ldm_gear_init(ldmRollingHashState_t* state, ldmParams_t* @params)
+    private static void ZSTD_ldm_gear_init(LdmRollingHashStateT* state, LdmParamsT* @params)
     {
         var maxBitsInMask = @params->minMatchLength < 64 ? @params->minMatchLength : 64;
         var hashRateLog = @params->hashRateLog;
@@ -28,36 +28,36 @@ public static unsafe partial class Methods
      * splits. This effectively resets the hash state. This is used when skipping
      * over data, either at the beginning of a block, or skipping sections.
      */
-    private static void ZSTD_ldm_gear_reset(ldmRollingHashState_t* state, byte* data, nuint minMatchLength)
+    private static void ZSTD_ldm_gear_reset(LdmRollingHashStateT* state, byte* data, nuint minMatchLength)
     {
         var hash = state->rolling;
         nuint n = 0;
         while (n + 3 < minMatchLength)
         {
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
             }
 
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
             }
 
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
             }
 
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
             }
         }
 
         while (n < minMatchLength)
         {
-            hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+            hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
             n += 1;
         }
     }
@@ -71,7 +71,7 @@ public static unsafe partial class Methods
      *
      * Precondition: The splits array must not be full.
      * Returns: The number of bytes processed. */
-    private static nuint ZSTD_ldm_gear_feed(ldmRollingHashState_t* state, byte* data, nuint size, nuint* splits, uint* numSplits)
+    private static nuint ZSTD_ldm_gear_feed(LdmRollingHashStateT* state, byte* data, nuint size, nuint* splits, uint* numSplits)
     {
         var hash = state->rolling;
         var mask = state->stopMask;
@@ -79,7 +79,7 @@ public static unsafe partial class Methods
         while (n + 3 < size)
         {
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
                 if ((hash & mask) == 0)
                 {
@@ -91,7 +91,7 @@ public static unsafe partial class Methods
             }
 
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
                 if ((hash & mask) == 0)
                 {
@@ -103,7 +103,7 @@ public static unsafe partial class Methods
             }
 
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
                 if ((hash & mask) == 0)
                 {
@@ -115,7 +115,7 @@ public static unsafe partial class Methods
             }
 
             {
-                hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+                hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
                 n += 1;
                 if ((hash & mask) == 0)
                 {
@@ -129,7 +129,7 @@ public static unsafe partial class Methods
 
         while (n < size)
         {
-            hash = (hash << 1) + ZSTD_ldm_gearTab[data[n] & 0xff];
+            hash = (hash << 1) + ZstdLdmGearTab[data[n] & 0xff];
             n += 1;
             if ((hash & mask) == 0)
             {
@@ -154,7 +154,7 @@ public static unsafe partial class Methods
      *
      *  Ensures that the minMatchLength >= targetLength during optimal parsing.
      */
-    private static void ZSTD_ldm_adjustParameters(ldmParams_t* @params, ZSTD_compressionParameters* cParams)
+    private static void ZSTD_ldm_adjustParameters(LdmParamsT* @params, ZstdCompressionParameters* cParams)
     {
         @params->windowLog = cParams->windowLog;
         if (@params->hashRateLog == 0)
@@ -182,7 +182,7 @@ public static unsafe partial class Methods
         if (@params->minMatchLength == 0)
         {
             @params->minMatchLength = 64;
-            if (cParams->strategy >= ZSTD_strategy.ZSTD_btultra)
+            if (cParams->strategy >= ZstdStrategy.ZstdBtultra)
             {
                 @params->minMatchLength /= 2;
             }
@@ -201,34 +201,34 @@ public static unsafe partial class Methods
      *  Estimate the space needed for long distance matching tables or 0 if LDM is
      *  disabled.
      */
-    private static nuint ZSTD_ldm_getTableSize(ldmParams_t @params)
+    private static nuint ZSTD_ldm_getTableSize(LdmParamsT @params)
     {
         var ldmHSize = (nuint)1 << (int)@params.hashLog;
         nuint ldmBucketSizeLog = @params.bucketSizeLog < @params.hashLog ? @params.bucketSizeLog : @params.hashLog;
         var ldmBucketSize = (nuint)1 << (int)(@params.hashLog - ldmBucketSizeLog);
-        var totalSize = ZSTD_cwksp_alloc_size(ldmBucketSize) + ZSTD_cwksp_alloc_size(ldmHSize * (nuint)sizeof(ldmEntry_t));
-        return @params.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable ? totalSize : 0;
+        var totalSize = ZSTD_cwksp_alloc_size(ldmBucketSize) + ZSTD_cwksp_alloc_size(ldmHSize * (nuint)sizeof(LdmEntryT));
+        return @params.enableLdm == ZstdParamSwitchE.ZstdPsEnable ? totalSize : 0;
     }
 
     /** ZSTD_ldm_getSeqSpace() :
      *  Return an upper bound on the number of sequences that can be produced by
      *  the long distance matcher, or 0 if LDM is disabled.
      */
-    private static nuint ZSTD_ldm_getMaxNbSeq(ldmParams_t @params, nuint maxChunkSize)
+    private static nuint ZSTD_ldm_getMaxNbSeq(LdmParamsT @params, nuint maxChunkSize)
     {
-        return @params.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable ? maxChunkSize / @params.minMatchLength : 0;
+        return @params.enableLdm == ZstdParamSwitchE.ZstdPsEnable ? maxChunkSize / @params.minMatchLength : 0;
     }
 
     /** ZSTD_ldm_getBucket() :
      *  Returns a pointer to the start of the bucket associated with hash. */
-    private static ldmEntry_t* ZSTD_ldm_getBucket(ldmState_t* ldmState, nuint hash, uint bucketSizeLog)
+    private static LdmEntryT* ZSTD_ldm_getBucket(LdmStateT* ldmState, nuint hash, uint bucketSizeLog)
     {
         return ldmState->hashTable + (hash << (int)bucketSizeLog);
     }
 
     /** ZSTD_ldm_insertEntry() :
      *  Insert the entry with corresponding hash into the hash table */
-    private static void ZSTD_ldm_insertEntry(ldmState_t* ldmState, nuint hash, ldmEntry_t entry, uint bucketSizeLog)
+    private static void ZSTD_ldm_insertEntry(LdmStateT* ldmState, nuint hash, LdmEntryT entry, uint bucketSizeLog)
     {
         var pOffset = ldmState->bucketOffsets + hash;
         uint offset = *pOffset;
@@ -277,24 +277,24 @@ public static unsafe partial class Methods
      *
      *  The tables for the other strategies are filled within their
      *  block compressors. */
-    private static nuint ZSTD_ldm_fillFastTables(ZSTD_MatchState_t* ms, void* end)
+    private static nuint ZSTD_ldm_fillFastTables(ZstdMatchStateT* ms, void* end)
     {
         var iend = (byte*)end;
         switch (ms->cParams.strategy)
         {
-            case ZSTD_strategy.ZSTD_fast:
-                ZSTD_fillHashTable(ms, iend, ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast, ZSTD_tableFillPurpose_e.ZSTD_tfp_forCCtx);
+            case ZstdStrategy.ZstdFast:
+                ZSTD_fillHashTable(ms, iend, ZstdDictTableLoadMethodE.ZstdDtlmFast, ZstdTableFillPurposeE.ZstdTfpForCCtx);
                 break;
-            case ZSTD_strategy.ZSTD_dfast:
-                ZSTD_fillDoubleHashTable(ms, iend, ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast, ZSTD_tableFillPurpose_e.ZSTD_tfp_forCCtx);
+            case ZstdStrategy.ZstdDfast:
+                ZSTD_fillDoubleHashTable(ms, iend, ZstdDictTableLoadMethodE.ZstdDtlmFast, ZstdTableFillPurposeE.ZstdTfpForCCtx);
                 break;
-            case ZSTD_strategy.ZSTD_greedy:
-            case ZSTD_strategy.ZSTD_lazy:
-            case ZSTD_strategy.ZSTD_lazy2:
-            case ZSTD_strategy.ZSTD_btlazy2:
-            case ZSTD_strategy.ZSTD_btopt:
-            case ZSTD_strategy.ZSTD_btultra:
-            case ZSTD_strategy.ZSTD_btultra2:
+            case ZstdStrategy.ZstdGreedy:
+            case ZstdStrategy.ZstdLazy:
+            case ZstdStrategy.ZstdLazy2:
+            case ZstdStrategy.ZstdBtlazy2:
+            case ZstdStrategy.ZstdBtopt:
+            case ZstdStrategy.ZstdBtultra:
+            case ZstdStrategy.ZstdBtultra2:
                 break;
             default:
                 assert(0 != 0);
@@ -304,14 +304,14 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    private static void ZSTD_ldm_fillHashTable(ldmState_t* ldmState, byte* ip, byte* iend, ldmParams_t* @params)
+    private static void ZSTD_ldm_fillHashTable(LdmStateT* ldmState, byte* ip, byte* iend, LdmParamsT* @params)
     {
         var minMatchLength = @params->minMatchLength;
         var bucketSizeLog = @params->bucketSizeLog;
         var hBits = @params->hashLog - bucketSizeLog;
         var @base = ldmState->window.@base;
         var istart = ip;
-        ldmRollingHashState_t hashState;
+        LdmRollingHashStateT hashState;
         var splits = &ldmState->splitIndices.e0;
         uint numSplits;
         ZSTD_ldm_gear_init(&hashState, @params);
@@ -327,7 +327,7 @@ public static unsafe partial class Methods
                     var split = ip + splits[n] - minMatchLength;
                     var xxhash = ZSTD_XXH64(split, minMatchLength, 0);
                     var hash = (uint)(xxhash & (((uint)1 << (int)hBits) - 1));
-                    ldmEntry_t entry;
+                    LdmEntryT entry;
                     entry.offset = (uint)(split - @base);
                     entry.checksum = (uint)(xxhash >> 32);
                     ZSTD_ldm_insertEntry(ldmState, hash, entry, @params->bucketSizeLog);
@@ -343,7 +343,7 @@ public static unsafe partial class Methods
      *  Sets cctx->nextToUpdate to a position corresponding closer to anchor
      *  if it is far way
      *  (after a long match, only update tables a limited amount). */
-    private static void ZSTD_ldm_limitTableUpdate(ZSTD_MatchState_t* ms, byte* anchor)
+    private static void ZSTD_ldm_limitTableUpdate(ZstdMatchStateT* ms, byte* anchor)
     {
         var curr = (uint)(anchor - ms->window.@base);
         if (curr > ms->nextToUpdate + 1024)
@@ -352,7 +352,7 @@ public static unsafe partial class Methods
         }
     }
 
-    private static nuint ZSTD_ldm_generateSequences_internal(ldmState_t* ldmState, RawSeqStore_t* rawSeqStore, ldmParams_t* @params, void* src, nuint srcSize)
+    private static nuint ZSTD_ldm_generateSequences_internal(LdmStateT* ldmState, RawSeqStoreT* rawSeqStore, LdmParamsT* @params, void* src, nuint srcSize)
     {
         /* LDM parameters */
         var extDict = (int)ZSTD_window_hasExtDict(ldmState->window);
@@ -375,7 +375,7 @@ public static unsafe partial class Methods
         var anchor = istart;
         var ip = istart;
         /* Rolling hash state */
-        ldmRollingHashState_t hashState;
+        LdmRollingHashStateT hashState;
         /* Arrays for staged-processing */
         var splits = &ldmState->splitIndices.e0;
         var candidates = &ldmState->matchCandidates.e0;
@@ -415,9 +415,9 @@ public static unsafe partial class Methods
                 var checksum = candidates[n].checksum;
                 var hash = candidates[n].hash;
                 var bucket = candidates[n].bucket;
-                ldmEntry_t* cur;
-                ldmEntry_t* bestEntry = null;
-                ldmEntry_t newEntry;
+                LdmEntryT* cur;
+                LdmEntryT* bestEntry = null;
+                LdmEntryT newEntry;
                 newEntry.offset = (uint)(split - @base);
                 newEntry.checksum = checksum;
                 if (split < anchor)
@@ -481,7 +481,7 @@ public static unsafe partial class Methods
                 {
                     var seq = rawSeqStore->seq + rawSeqStore->size;
                     if (rawSeqStore->size == rawSeqStore->capacity)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
                     seq->litLength = (uint)(split - backwardMatchLength - anchor);
                     seq->matchLength = (uint)mLength;
@@ -507,7 +507,7 @@ public static unsafe partial class Methods
 
     /*! ZSTD_ldm_reduceTable() :
      *  reduce table indexes by `reducerValue` */
-    private static void ZSTD_ldm_reduceTable(ldmEntry_t* table, uint size, uint reducerValue)
+    private static void ZSTD_ldm_reduceTable(LdmEntryT* table, uint size, uint reducerValue)
     {
         uint u;
         for (u = 0; u < size; u++)
@@ -537,7 +537,7 @@ public static unsafe partial class Methods
      * NOTE: This function returns an error if it runs out of space to store
      *       sequences.
      */
-    private static nuint ZSTD_ldm_generateSequences(ldmState_t* ldmState, RawSeqStore_t* sequences, ldmParams_t* @params, void* src, nuint srcSize)
+    private static nuint ZSTD_ldm_generateSequences(LdmStateT* ldmState, RawSeqStoreT* sequences, LdmParamsT* @params, void* src, nuint srcSize)
     {
         var maxDist = 1U << (int)@params->windowLog;
         var istart = (byte*)src;
@@ -593,7 +593,7 @@ public static unsafe partial class Methods
      * Avoids emitting matches less than `minMatch` bytes.
      * Must be called for data that is not passed to ZSTD_ldm_blockCompress().
      */
-    private static void ZSTD_ldm_skipSequences(RawSeqStore_t* rawSeqStore, nuint srcSize, uint minMatch)
+    private static void ZSTD_ldm_skipSequences(RawSeqStoreT* rawSeqStore, nuint srcSize, uint minMatch)
     {
         while (srcSize > 0 && rawSeqStore->pos < rawSeqStore->size)
         {
@@ -635,7 +635,7 @@ public static unsafe partial class Methods
      * Returns the current sequence to handle, or if the rest of the block should
      * be literals, it returns a sequence with offset == 0.
      */
-    private static rawSeq maybeSplitSequence(RawSeqStore_t* rawSeqStore, uint remaining, uint minMatch)
+    private static RawSeq MaybeSplitSequence(RawSeqStoreT* rawSeqStore, uint remaining, uint minMatch)
     {
         var sequence = rawSeqStore->seq[rawSeqStore->pos];
         assert(sequence.offset > 0);
@@ -667,7 +667,7 @@ public static unsafe partial class Methods
      * Not to be used in conjunction with ZSTD_ldm_skipSequences().
      * Must be called for data with is not passed to ZSTD_ldm_blockCompress().
      */
-    private static void ZSTD_ldm_skipRawSeqStoreBytes(RawSeqStore_t* rawSeqStore, nuint nbBytes)
+    private static void ZSTD_ldm_skipRawSeqStoreBytes(RawSeqStoreT* rawSeqStore, nuint nbBytes)
     {
         var currPos = (uint)(rawSeqStore->posInSequence + nbBytes);
         while (currPos != 0 && rawSeqStore->pos < rawSeqStore->size)
@@ -709,7 +709,7 @@ public static unsafe partial class Methods
      * two. We handle that case correctly, and update `rawSeqStore` appropriately.
      * NOTE: This function does not return any errors.
      */
-    private static nuint ZSTD_ldm_blockCompress(RawSeqStore_t* rawSeqStore, ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, ZSTD_paramSwitch_e useRowMatchFinder, void* src, nuint srcSize)
+    private static nuint ZSTD_ldm_blockCompress(RawSeqStoreT* rawSeqStore, ZstdMatchStateT* ms, SeqStoreT* seqStore, uint* rep, ZstdParamSwitchE useRowMatchFinder, void* src, nuint srcSize)
     {
         var cParams = &ms->cParams;
         var minMatch = cParams->minMatch;
@@ -719,12 +719,12 @@ public static unsafe partial class Methods
         var iend = istart + srcSize;
         /* Input positions */
         var ip = istart;
-        if (cParams->strategy >= ZSTD_strategy.ZSTD_btopt)
+        if (cParams->strategy >= ZstdStrategy.ZstdBtopt)
         {
             ms->ldmSeqStore = rawSeqStore;
-            var lastLLSize = selectedBlockCompressor(ms, seqStore, rep, src, srcSize);
+            var lastLlSize = selectedBlockCompressor(ms, seqStore, rep, src, srcSize);
             ZSTD_ldm_skipRawSeqStoreBytes(rawSeqStore, srcSize);
-            return lastLLSize;
+            return lastLlSize;
         }
 
         assert(rawSeqStore->pos <= rawSeqStore->size);
@@ -732,7 +732,7 @@ public static unsafe partial class Methods
         while (rawSeqStore->pos < rawSeqStore->size && ip < iend)
         {
             /* maybeSplitSequence updates rawSeqStore->pos */
-            var sequence = maybeSplitSequence(rawSeqStore, (uint)(iend - ip), minMatch);
+            var sequence = MaybeSplitSequence(rawSeqStore, (uint)(iend - ip), minMatch);
             if (sequence.offset == 0)
                 break;
 

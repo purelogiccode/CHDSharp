@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct optState_t
+public unsafe struct OptStateT
 {
     /* table of literals statistics, of size 256 */
     public uint* litFreq;
@@ -14,9 +14,9 @@ public unsafe struct optState_t
     /* table of offCode statistics, of size (MaxOff+1) */
     public uint* offCodeFreq;
     /* list of found matches, of size ZSTD_OPT_SIZE */
-    public ZSTD_match_t* matchTable;
+    public ZstdMatchT* matchTable;
     /* All positions tracked by optimal parser, of size ZSTD_OPT_SIZE */
-    public ZSTD_optimal_t* priceTable;
+    public ZstdOptimalT* priceTable;
     /* nb of literals */
     public uint litSum;
     /* nb of litLength codes */
@@ -34,8 +34,8 @@ public unsafe struct optState_t
     /* to compare to log2(offreq)  */
     public uint offCodeSumBasePrice;
     /* prices can be determined dynamically, or follow a pre-defined cost structure */
-    public ZSTD_OptPrice_e priceType;
+    public ZstdOptPriceE priceType;
     /* pre-calculated dictionary statistics */
-    public ZSTD_entropyCTables_t* symbolCosts;
-    public ZSTD_paramSwitch_e literalCompressionMode;
+    public ZstdEntropyCTablesT* symbolCosts;
+    public ZstdParamSwitchE literalCompressionMode;
 }

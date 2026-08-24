@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_outBuffer_s
+public unsafe struct ZstdOutBufferS
 {
     /**< start of output buffer */
     public void* dst;

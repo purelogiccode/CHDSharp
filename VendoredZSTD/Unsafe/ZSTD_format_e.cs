@@ -1,11 +1,11 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_format_e
+public enum ZstdFormatE
 {
     /* zstd frame format, specified in zstd_compression_format.md (default) */
-    ZSTD_f_zstd1 = 0,
+    ZstdFZstd1 = 0,
     /* Variant of zstd frame format, without initial 4-bytes magic number.
      * Useful to save 4 bytes per generated frame.
      * Decoder cannot recognise automatically this format, requiring this instruction. */
-    ZSTD_f_zstd1_magicless = 1
+    ZstdFZstd1Magicless = 1
 }

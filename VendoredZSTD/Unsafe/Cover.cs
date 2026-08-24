@@ -24,7 +24,7 @@ public static unsafe partial class Methods
     /**
      * Warns the user when their corpus is too small.
      */
-    private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers, int displayLevel)
+    private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers)
     {
         var ratio = nbDmers / (double)maxDictSize;
         if (ratio >= 10)
@@ -66,9 +66,9 @@ public static unsafe partial class Methods
     /**
      *  Checks total compressed size of a dictionary
      */
-    private static nuint COVER_checkTotalCompressedSize(ZDICT_cover_params_t parameters, nuint* samplesSizes, byte* samples, nuint* offsets, nuint nbTrainSamples, nuint nbSamples, byte* dict, nuint dictBufferCapacity)
+    private static nuint COVER_checkTotalCompressedSize(ZdictCoverParamsT parameters, nuint* samplesSizes, byte* samples, nuint* offsets, nuint nbTrainSamples, nuint nbSamples, byte* dict, nuint dictBufferCapacity)
     {
-        var totalCompressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        var totalCompressedSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         /* Pointers */
         void* dst;
         /* Local variables */
@@ -131,7 +131,7 @@ public static unsafe partial class Methods
         best->dict = null;
         best->dictSize = 0;
         best->compressedSize = unchecked((nuint)(-1));
-        best->parameters = new ZDICT_cover_params_t();
+        best->parameters = new ZdictCoverParamsT();
     }
 
     /**
@@ -145,6 +145,7 @@ public static unsafe partial class Methods
         }
 
         SynchronizationWrapper.Enter(&best->mutex);
+        // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
         while (best->liveJobs != 0)
         {
             SynchronizationWrapper.Wait(&best->mutex);
@@ -193,7 +194,7 @@ public static unsafe partial class Methods
      * Decrements liveJobs and signals any waiting threads if liveJobs == 0.
      * If this dictionary is the best so far save it and its parameters.
      */
-    private static void COVER_best_finish(CoverBestS* best, ZDICT_cover_params_t parameters, CoverDictSelection selection)
+    private static void COVER_best_finish(CoverBestS* best, ZdictCoverParamsT parameters, CoverDictSelection selection)
     {
         void* dict = selection.dictContent;
         var compressedSize = selection.totalCompressedSize;
@@ -219,7 +220,7 @@ public static unsafe partial class Methods
                     best->dict = malloc(dictSize);
                     if (best->dict == null)
                     {
-                        best->compressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                        best->compressedSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
                         best->dictSize = 0;
                         SynchronizationWrapper.Pulse(&best->mutex);
                         SynchronizationWrapper.Exit(&best->mutex);
@@ -287,10 +288,13 @@ public static unsafe partial class Methods
      * smallest dictionary within a specified regression of the compressed size
      * from the largest dictionary.
      */
-    private static CoverDictSelection COVER_selectDict(byte* customDictContent, nuint dictBufferCapacity, nuint dictContentSize, byte* samplesBuffer, nuint* samplesSizes, uint nbFinalizeSamples, nuint nbCheckSamples, nuint nbSamples, ZDICT_cover_params_t @params, nuint* offsets, nuint totalCompressedSize)
+    private static CoverDictSelection COVER_selectDict(byte* customDictContent, nuint dictBufferCapacity, nuint dictContentSize,
+        byte* samplesBuffer, nuint* samplesSizes, uint nbFinalizeSamples, nuint nbCheckSamples, nuint nbSamples,
+        ZdictCoverParamsT @params, nuint* offsets)
     {
         nuint largestDict = 0;
         nuint largestCompressed = 0;
+        nuint totalCompressedSize = 0;
         var customDictContentEnd = customDictContent + dictContentSize;
         var largestDictbuffer = (byte*)malloc(dictBufferCapacity);
         var candidateDictBuffer = (byte*)malloc(dictBufferCapacity);

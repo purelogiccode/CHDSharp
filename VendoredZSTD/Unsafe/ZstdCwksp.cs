@@ -144,12 +144,12 @@ public static unsafe partial class Methods
      * Returns a 0 on success, or zstd error
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint ZSTD_cwksp_internal_advance_phase(ZstdCwksp* ws, ZSTD_cwksp_alloc_phase_e phase)
+    private static nuint ZSTD_cwksp_internal_advance_phase(ZstdCwksp* ws, ZstdCwkspAllocPhaseE phase)
     {
         assert(phase >= ws->phase);
         if (phase > ws->phase)
         {
-            if (ws->phase < ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once && phase >= ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once)
+            if (ws->phase < ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce && phase >= ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce)
             {
                 ws->tableValidEnd = ws->objectEnd;
                 ws->initOnceStart = ZSTD_cwksp_initialAllocStart(ws);
@@ -159,7 +159,7 @@ public static unsafe partial class Methods
                     void* objectEnd = (byte*)alloc + bytesToAlign;
                     if (objectEnd > ws->workspaceEnd)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
                     }
 
                     ws->objectEnd = objectEnd;
@@ -191,7 +191,7 @@ public static unsafe partial class Methods
      * Internal function. Do not use directly.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void* ZSTD_cwksp_reserve_internal(ZstdCwksp* ws, nuint bytes, ZSTD_cwksp_alloc_phase_e phase)
+    private static void* ZSTD_cwksp_reserve_internal(ZstdCwksp* ws, nuint bytes, ZstdCwkspAllocPhaseE phase)
     {
         if (ERR_isError(ZSTD_cwksp_internal_advance_phase(ws, phase)) || bytes == 0)
         {
@@ -208,7 +208,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte* ZSTD_cwksp_reserve_buffer(ZstdCwksp* ws, nuint bytes)
     {
-        return (byte*)ZSTD_cwksp_reserve_internal(ws, bytes, ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_buffers);
+        return (byte*)ZSTD_cwksp_reserve_internal(ws, bytes, ZstdCwkspAllocPhaseE.ZstdCwkspAllocBuffers);
     }
 
     /**
@@ -224,7 +224,7 @@ public static unsafe partial class Methods
     private static void* ZSTD_cwksp_reserve_aligned_init_once(ZstdCwksp* ws, nuint bytes)
     {
         var alignedBytes = ZSTD_cwksp_align(bytes, 64);
-        var ptr = ZSTD_cwksp_reserve_internal(ws, alignedBytes, ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once);
+        var ptr = ZSTD_cwksp_reserve_internal(ws, alignedBytes, ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce);
         assert(((nuint)ptr & (64 - 1)) == 0);
         if (ptr != null && ptr < ws->initOnceStart)
         {
@@ -241,7 +241,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void* ZSTD_cwksp_reserve_aligned64(ZstdCwksp* ws, nuint bytes)
     {
-        var ptr = ZSTD_cwksp_reserve_internal(ws, ZSTD_cwksp_align(bytes, 64), ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned);
+        var ptr = ZSTD_cwksp_reserve_internal(ws, ZSTD_cwksp_align(bytes, 64), ZstdCwkspAllocPhaseE.ZstdCwkspAllocAligned);
         assert(((nuint)ptr & (64 - 1)) == 0);
         return ptr;
     }
@@ -254,7 +254,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void* ZSTD_cwksp_reserve_table(ZstdCwksp* ws, nuint bytes)
     {
-        var phase = ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once;
+        var phase = ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce;
         if (ws->phase < phase)
         {
             if (ERR_isError(ZSTD_cwksp_internal_advance_phase(ws, phase)))
@@ -294,7 +294,7 @@ public static unsafe partial class Methods
         assert((nuint)alloc % (nuint)sizeof(void*) == 0);
         assert(bytes % (nuint)sizeof(void*) == 0);
         ZSTD_cwksp_assert_internal_consistency(ws);
-        if (ws->phase != ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_objects || end > ws->workspaceEnd)
+        if (ws->phase != ZstdCwkspAllocPhaseE.ZstdCwkspAllocObjects || end > ws->workspaceEnd)
         {
             ws->allocFailed = 1;
             return null;
@@ -384,9 +384,9 @@ public static unsafe partial class Methods
         ws->tableEnd = ws->objectEnd;
         ws->allocStart = ZSTD_cwksp_initialAllocStart(ws);
         ws->allocFailed = 0;
-        if (ws->phase > ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once)
+        if (ws->phase > ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce)
         {
-            ws->phase = ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_aligned_init_once;
+            ws->phase = ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce;
         }
 
         ZSTD_cwksp_assert_internal_consistency(ws);
@@ -410,7 +410,7 @@ public static unsafe partial class Methods
      * buffer, if present, must be separately freed).
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_cwksp_init(ZstdCwksp* ws, void* start, nuint size, ZSTD_cwksp_static_alloc_e isStatic)
+    private static void ZSTD_cwksp_init(ZstdCwksp* ws, void* start, nuint size, ZstdCwkspStaticAllocE isStatic)
     {
         assert(((nuint)start & (nuint)(sizeof(void*) - 1)) == 0);
         ws->workspace = start;
@@ -418,7 +418,7 @@ public static unsafe partial class Methods
         ws->objectEnd = ws->workspace;
         ws->tableValidEnd = ws->objectEnd;
         ws->initOnceStart = ZSTD_cwksp_initialAllocStart(ws);
-        ws->phase = ZSTD_cwksp_alloc_phase_e.ZSTD_cwksp_alloc_objects;
+        ws->phase = ZstdCwkspAllocPhaseE.ZstdCwkspAllocObjects;
         ws->isStatic = isStatic;
         ZSTD_cwksp_clear(ws);
         ws->workspaceOversizedDuration = 0;
@@ -426,20 +426,20 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint ZSTD_cwksp_create(ZstdCwksp* ws, nuint size, ZSTD_customMem customMem)
+    private static nuint ZSTD_cwksp_create(ZstdCwksp* ws, nuint size, ZstdCustomMem customMem)
     {
         var workspace = ZSTD_customMalloc(size, customMem);
         if (workspace == null)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
 
-        ZSTD_cwksp_init(ws, workspace, size, ZSTD_cwksp_static_alloc_e.ZSTD_cwksp_dynamic_alloc);
+        ZSTD_cwksp_init(ws, workspace, size, ZstdCwkspStaticAllocE.ZstdCwkspDynamicAlloc);
         return 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_cwksp_free(ZstdCwksp* ws, ZSTD_customMem customMem)
+    private static void ZSTD_cwksp_free(ZstdCwksp* ws, ZstdCustomMem customMem)
     {
         var ptr = ws->workspace;
         *ws = new ZstdCwksp();

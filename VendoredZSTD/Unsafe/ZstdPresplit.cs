@@ -10,7 +10,7 @@ public static unsafe partial class Methods
      * for hashLog == 8, just take the byte, no hashing.
      * The speed of this method relies on compile-time constant propagation */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint hash2(void* p, uint hashLog)
+    private static uint Hash2(void* p, uint hashLog)
     {
         assert(hashLog >= 8);
         if (hashLog == 8)
@@ -20,7 +20,7 @@ public static unsafe partial class Methods
         return (MEM_read16(p) * 0x9e3779b9) >> (int)(32 - hashLog);
     }
 
-    private static void initStats(FpStats* fpstats)
+    private static void InitStats(FpStats* fpstats)
     {
         *fpstats = new FpStats();
     }
@@ -34,7 +34,7 @@ public static unsafe partial class Methods
         assert(srcSize >= 2);
         for (n = 0; n < limit; n += samplingRate)
         {
-            fp->events[hash2(p + n, hashLog)]++;
+            fp->events[Hash2(p + n, hashLog)]++;
         }
 
         fp->nbEvents += limit / samplingRate;
@@ -68,19 +68,19 @@ public static unsafe partial class Methods
         recordFingerprint_generic(fp, src, srcSize, 43, 8);
     }
 
-    private static ulong abs64(long s64)
+    private static ulong Abs64(long s64)
     {
         return (ulong)(s64 < 0 ? -s64 : s64);
     }
 
-    private static ulong fpDistance(Fingerprint* fp1, Fingerprint* fp2, uint hashLog)
+    private static ulong FpDistance(Fingerprint* fp1, Fingerprint* fp2, uint hashLog)
     {
         ulong distance = 0;
         nuint n;
         assert(hashLog <= 10);
         for (n = 0; n < (nuint)1 << (int)hashLog; n++)
         {
-            distance += abs64(fp1->events[n] * (long)fp2->nbEvents - fp2->events[n] * (long)fp1->nbEvents);
+            distance += Abs64(fp1->events[n] * (long)fp2->nbEvents - fp2->events[n] * (long)fp1->nbEvents);
         }
 
         return distance;
@@ -89,19 +89,19 @@ public static unsafe partial class Methods
     /* Compare newEvents with pastEvents
      * return 1 when considered "too different"
      */
-    private static int compareFingerprints(Fingerprint* @ref, Fingerprint* newfp, int penalty, uint hashLog)
+    private static int CompareFingerprints(Fingerprint* @ref, Fingerprint* newfp, int penalty, uint hashLog)
     {
         assert(@ref->nbEvents > 0);
         assert(newfp->nbEvents > 0);
         {
             var p50 = @ref->nbEvents * (ulong)newfp->nbEvents;
-            var deviation = fpDistance(@ref, newfp, hashLog);
+            var deviation = FpDistance(@ref, newfp, hashLog);
             var threshold = p50 * (ulong)(16 - 2 + penalty) / 16;
             return deviation >= threshold ? 1 : 0;
         }
     }
 
-    private static void mergeEvents(Fingerprint* acc, Fingerprint* newfp)
+    private static void MergeEvents(Fingerprint* acc, Fingerprint* newfp)
     {
         nuint n;
         for (n = 0; n < 1 << 10; n++)
@@ -112,7 +112,7 @@ public static unsafe partial class Methods
         acc->nbEvents += newfp->nbEvents;
     }
 
-    private static void flushEvents(FpStats* fpstats)
+    private static void FlushEvents(FpStats* fpstats)
     {
         nuint n;
         for (n = 0; n < 1 << 10; n++)
@@ -124,7 +124,7 @@ public static unsafe partial class Methods
         fpstats->newEvents = new Fingerprint();
     }
 
-    private static void removeEvents(Fingerprint* acc, Fingerprint* slice)
+    private static void RemoveEvents(Fingerprint* acc, Fingerprint* slice)
     {
         nuint n;
         for (n = 0; n < 1 << 10; n++)
@@ -136,7 +136,7 @@ public static unsafe partial class Methods
         acc->nbEvents -= slice->nbEvents;
     }
 
-    private static readonly void*[] records_fs = new void*[4]
+    private static readonly void*[] RecordsFs = new void*[4]
     {
         (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_43),
         (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_11),
@@ -144,14 +144,14 @@ public static unsafe partial class Methods
         (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_1)
     };
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_hashParams => new uint[4]
+    private static ReadOnlySpan<uint> SpanHashParams => new uint[4]
     {
         8,
         9,
         10,
         10
     };
-    private static uint* hashParams => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_hashParams));
+    private static uint* HashParams => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanHashParams));
 #else
 
         private static readonly uint* hashParams = GetArrayPointer(new uint[4] { 8, 9, 10, 10 });
@@ -159,7 +159,7 @@ public static unsafe partial class Methods
     private static nuint ZSTD_splitBlock_byChunks(void* blockStart, nuint blockSize, int level, void* workspace, nuint wkspSize)
     {
         assert(level is >= 0 and <= 3);
-        var record_f = records_fs[level];
+        var recordF = RecordsFs[level];
         var fpstats = (FpStats*)workspace;
         var p = (sbyte*)blockStart;
         var penalty = 3;
@@ -168,18 +168,18 @@ public static unsafe partial class Methods
         assert(workspace != null);
         assert((nuint)workspace % (nuint)Math.Max(sizeof(uint), sizeof(ulong)) == 0);
         assert(wkspSize >= (nuint)sizeof(FpStats));
-        initStats(fpstats);
-        ((delegate* managed<Fingerprint*, void*, nuint, void>)record_f)(&fpstats->pastEvents, p, 8 << 10);
+        InitStats(fpstats);
+        ((delegate* managed<Fingerprint*, void*, nuint, void>)recordF)(&fpstats->pastEvents, p, 8 << 10);
         for (pos = 8 << 10; pos <= blockSize - (8 << 10); pos += 8 << 10)
         {
-            ((delegate* managed<Fingerprint*, void*, nuint, void>)record_f)(&fpstats->newEvents, p + pos, 8 << 10);
-            if (compareFingerprints(&fpstats->pastEvents, &fpstats->newEvents, penalty, hashParams[level]) != 0)
+            ((delegate* managed<Fingerprint*, void*, nuint, void>)recordF)(&fpstats->newEvents, p + pos, 8 << 10);
+            if (CompareFingerprints(&fpstats->pastEvents, &fpstats->newEvents, penalty, HashParams[level]) != 0)
             {
                 return pos;
             }
             else
             {
-                mergeEvents(&fpstats->pastEvents, &fpstats->newEvents);
+                MergeEvents(&fpstats->pastEvents, &fpstats->newEvents);
                 if (penalty > 0)
                 {
                     penalty--;
@@ -208,20 +208,20 @@ public static unsafe partial class Methods
         assert(workspace != null);
         assert((nuint)workspace % (nuint)Math.Max(sizeof(uint), sizeof(ulong)) == 0);
         assert(wkspSize >= (nuint)sizeof(FpStats));
-        initStats(fpstats);
+        InitStats(fpstats);
         HIST_add(fpstats->pastEvents.events, blockStart, 512);
         HIST_add(fpstats->newEvents.events, (sbyte*)blockStart + blockSize - 512, 512);
         fpstats->pastEvents.nbEvents = fpstats->newEvents.nbEvents = 512;
-        if (compareFingerprints(&fpstats->pastEvents, &fpstats->newEvents, 0, 8) == 0)
+        if (CompareFingerprints(&fpstats->pastEvents, &fpstats->newEvents, 0, 8) == 0)
             return blockSize;
 
         HIST_add(middleEvents->events, (sbyte*)blockStart + blockSize / 2 - 512 / 2, 512);
         middleEvents->nbEvents = 512;
         {
-            var distFromBegin = fpDistance(&fpstats->pastEvents, middleEvents, 8);
-            var distFromEnd = fpDistance(&fpstats->newEvents, middleEvents, 8);
+            var distFromBegin = FpDistance(&fpstats->pastEvents, middleEvents, 8);
+            var distFromEnd = FpDistance(&fpstats->newEvents, middleEvents, 8);
             const ulong minDistance = 512 * 512 / 3;
-            if (abs64((long)distFromBegin - (long)distFromEnd) < minDistance)
+            if (Abs64((long)distFromBegin - (long)distFromEnd) < minDistance)
                 return 64 * (1 << 10);
 
             return (nuint)(distFromBegin > distFromEnd ? 32 * (1 << 10) : 96 * (1 << 10));

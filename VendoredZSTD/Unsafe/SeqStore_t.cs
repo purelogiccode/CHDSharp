@@ -3,11 +3,11 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct SeqStore_t
+public unsafe struct SeqStoreT
 {
-    public SeqDef_s* sequencesStart;
+    public SeqDefS* sequencesStart;
     /* ptr to end of sequences */
-    public SeqDef_s* sequences;
+    public SeqDefS* sequences;
     public byte* litStart;
     /* ptr to end of literals */
     public byte* lit;
@@ -20,7 +20,7 @@ public unsafe struct SeqStore_t
      * in the seqStore that has a value larger than U16 (if it exists). To do so, we increment
      * the existing value of the litLength or matchLength by 0x10000.
      */
-    public ZSTD_longLengthType_e longLengthType;
+    public ZstdLongLengthTypeE longLengthType;
     /* Index of the sequence to apply long length modification to */
     public uint longLengthPos;
 }

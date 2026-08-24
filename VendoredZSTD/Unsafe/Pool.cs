@@ -23,10 +23,10 @@ public static unsafe partial class Methods
      */
     private static void* POOL_create(nuint numThreads, nuint queueSize)
     {
-        return POOL_create_advanced(numThreads, queueSize, ZSTD_defaultCMem);
+        return POOL_create_advanced(numThreads, queueSize, ZstdDefaultCMem);
     }
 
-    private static void* POOL_create_advanced(nuint numThreads, nuint queueSize, ZSTD_customMem customMem)
+    private static void* POOL_create_advanced(nuint numThreads, nuint queueSize, ZstdCustomMem customMem)
     {
         var jobThreadPool = new JobThreadPool((int)numThreads, (int)queueSize);
         return UnmanagedObject.Wrap(jobThreadPool);

@@ -13,19 +13,19 @@ public static unsafe partial class Methods
         var flSize = (uint)(1 + (srcSize > 31 ? 1 : 0) + (srcSize > 4095 ? 1 : 0));
         if (srcSize + flSize > dstCapacity)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         switch (flSize)
         {
             case 1:
-                ostart[0] = (byte)((uint)SymbolEncodingType_e.set_basic + (srcSize << 3));
+                ostart[0] = (byte)((uint)SymbolEncodingTypeE.SetBasic + (srcSize << 3));
                 break;
             case 2:
-                MEM_writeLE16(ostart, (ushort)((uint)SymbolEncodingType_e.set_basic + (1 << 2) + (srcSize << 4)));
+                MEM_writeLE16(ostart, (ushort)((uint)SymbolEncodingTypeE.SetBasic + (1 << 2) + (srcSize << 4)));
                 break;
             case 3:
-                MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingType_e.set_basic + (3 << 2) + (srcSize << 4)));
+                MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingTypeE.SetBasic + (3 << 2) + (srcSize << 4)));
                 break;
             default:
                 assert(0 != 0);
@@ -36,7 +36,7 @@ public static unsafe partial class Methods
         return srcSize + flSize;
     }
 
-    private static int allBytesIdentical(void* src, nuint srcSize)
+    private static int AllBytesIdentical(void* src, nuint srcSize)
     {
         assert(srcSize >= 1);
         assert(src != null);
@@ -62,17 +62,17 @@ public static unsafe partial class Methods
         var ostart = (byte*)dst;
         var flSize = (uint)(1 + (srcSize > 31 ? 1 : 0) + (srcSize > 4095 ? 1 : 0));
         assert(dstCapacity >= 4);
-        assert(allBytesIdentical(src, srcSize) != 0);
+        assert(AllBytesIdentical(src, srcSize) != 0);
         switch (flSize)
         {
             case 1:
-                ostart[0] = (byte)((uint)SymbolEncodingType_e.set_rle + (srcSize << 3));
+                ostart[0] = (byte)((uint)SymbolEncodingTypeE.SetRle + (srcSize << 3));
                 break;
             case 2:
-                MEM_writeLE16(ostart, (ushort)((uint)SymbolEncodingType_e.set_rle + (1 << 2) + (srcSize << 4)));
+                MEM_writeLE16(ostart, (ushort)((uint)SymbolEncodingTypeE.SetRle + (1 << 2) + (srcSize << 4)));
                 break;
             case 3:
-                MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingType_e.set_rle + (3 << 2) + (srcSize << 4)));
+                MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingTypeE.SetRle + (3 << 2) + (srcSize << 4)));
                 break;
             default:
                 assert(0 != 0);
@@ -88,13 +88,13 @@ public static unsafe partial class Methods
      * for literal compression to even be attempted.
      * Minimum is made tighter as compression strategy increases.
      */
-    private static nuint ZSTD_minLiteralsToCompress(ZSTD_strategy strategy, HUF_repeat huf_repeat)
+    private static nuint ZSTD_minLiteralsToCompress(ZstdStrategy strategy, HufRepeat hufRepeat)
     {
         assert((int)strategy >= 0);
         assert((int)strategy <= 9);
         {
             var shift = 9 - (int)strategy < 3 ? 9 - (int)strategy : 3;
-            var mintc = huf_repeat == HUF_repeat.HUF_repeat_valid ? 6 : (nuint)8 << shift;
+            var mintc = hufRepeat == HufRepeat.HufRepeatValid ? 6 : (nuint)8 << shift;
             return mintc;
         }
     }
@@ -104,14 +104,14 @@ public static unsafe partial class Methods
      * @entropyWorkspaceSize : must be >= HUF_WORKSPACE_SIZE
      * @suspectUncompressible: sampling checks, to potentially skip huffman coding
      */
-    private static nuint ZSTD_compressLiterals(void* dst, nuint dstCapacity, void* src, nuint srcSize, void* entropyWorkspace, nuint entropyWorkspaceSize, ZSTD_hufCTables_t* prevHuf, ZSTD_hufCTables_t* nextHuf, ZSTD_strategy strategy, int disableLiteralCompression, int suspectUncompressible, int bmi2)
+    private static nuint ZSTD_compressLiterals(void* dst, nuint dstCapacity, void* src, nuint srcSize, void* entropyWorkspace, nuint entropyWorkspaceSize, ZstdHufCTablesT* prevHuf, ZstdHufCTablesT* nextHuf, ZstdStrategy strategy, int disableLiteralCompression, int suspectUncompressible, int bmi2)
     {
         var lhSize = (nuint)(3 + (srcSize >= 1 * (1 << 10) ? 1 : 0) + (srcSize >= 16 * (1 << 10) ? 1 : 0));
         var ostart = (byte*)dst;
         var singleStream = srcSize < 256 ? 1U : 0U;
-        var hType = SymbolEncodingType_e.set_compressed;
+        var hType = SymbolEncodingTypeE.SetCompressed;
         nuint cLitSize;
-        memcpy(nextHuf, prevHuf, (uint)sizeof(ZSTD_hufCTables_t));
+        memcpy(nextHuf, prevHuf, (uint)sizeof(ZstdHufCTablesT));
         if (disableLiteralCompression != 0)
             return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
         if (srcSize < ZSTD_minLiteralsToCompress(strategy, prevHuf->repeatMode))
@@ -119,22 +119,22 @@ public static unsafe partial class Methods
 
         if (dstCapacity < lhSize + 1)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         {
             var repeat = prevHuf->repeatMode;
-            var flags = 0 | (bmi2 != 0 ? (int)HufFlagsE.HufFlagsBmi2 : 0) | (strategy < ZSTD_strategy.ZSTD_lazy && srcSize <= 1024 ? (int)HufFlagsE.HufFlagsPreferRepeat : 0) | (strategy >= ZSTD_strategy.ZSTD_btultra ? (int)HufFlagsE.HufFlagsOptimalDepth : 0) | (suspectUncompressible != 0 ? (int)HufFlagsE.HufFlagsSuspectUncompressible : 0);
-            if (repeat == HUF_repeat.HUF_repeat_valid && lhSize == 3)
+            var flags = 0 | (bmi2 != 0 ? (int)HufFlagsE.HufFlagsBmi2 : 0) | (strategy < ZstdStrategy.ZstdLazy && srcSize <= 1024 ? (int)HufFlagsE.HufFlagsPreferRepeat : 0) | (strategy >= ZstdStrategy.ZstdBtultra ? (int)HufFlagsE.HufFlagsOptimalDepth : 0) | (suspectUncompressible != 0 ? (int)HufFlagsE.HufFlagsSuspectUncompressible : 0);
+            if (repeat == HufRepeat.HufRepeatValid && lhSize == 3)
             {
                 singleStream = 1;
             }
 
-            void* huf_compress = singleStream != 0 ? (delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HUF_repeat*, int, nuint>)(&HUF_compress1X_repeat) : (delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HUF_repeat*, int, nuint>)(&HUF_compress4X_repeat);
-            cLitSize = ((delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HUF_repeat*, int, nuint>)huf_compress)(ostart + lhSize, dstCapacity - lhSize, src, srcSize, 255, 11, entropyWorkspace, entropyWorkspaceSize, &nextHuf->CTable.e0, &repeat, flags);
-            if (repeat != HUF_repeat.HUF_repeat_none)
+            void* hufCompress = singleStream != 0 ? (delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HufRepeat*, int, nuint>)(&HUF_compress1X_repeat) : (delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HufRepeat*, int, nuint>)(&HUF_compress4X_repeat);
+            cLitSize = ((delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HufRepeat*, int, nuint>)hufCompress)(ostart + lhSize, dstCapacity - lhSize, src, srcSize, 255, 11, entropyWorkspace, entropyWorkspaceSize, &nextHuf->CTable.e0, &repeat, flags);
+            if (repeat != HufRepeat.HufRepeatNone)
             {
-                hType = SymbolEncodingType_e.set_repeat;
+                hType = SymbolEncodingTypeE.SetRepeat;
             }
         }
 
@@ -142,23 +142,23 @@ public static unsafe partial class Methods
             var minGain = ZSTD_minGain(srcSize, strategy);
             if (cLitSize == 0 || cLitSize >= srcSize - minGain || ERR_isError(cLitSize))
             {
-                memcpy(nextHuf, prevHuf, (uint)sizeof(ZSTD_hufCTables_t));
+                memcpy(nextHuf, prevHuf, (uint)sizeof(ZstdHufCTablesT));
                 return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
             }
         }
 
         if (cLitSize == 1)
         {
-            if (srcSize >= 8 || allBytesIdentical(src, srcSize) != 0)
+            if (srcSize >= 8 || AllBytesIdentical(src, srcSize) != 0)
             {
-                memcpy(nextHuf, prevHuf, (uint)sizeof(ZSTD_hufCTables_t));
+                memcpy(nextHuf, prevHuf, (uint)sizeof(ZstdHufCTablesT));
                 return ZSTD_compressRleLiteralsBlock(dst, dstCapacity, src, srcSize);
             }
         }
 
-        if (hType == SymbolEncodingType_e.set_compressed)
+        if (hType == SymbolEncodingTypeE.SetCompressed)
         {
-            nextHuf->repeatMode = HUF_repeat.HUF_repeat_check;
+            nextHuf->repeatMode = HufRepeat.HufRepeatCheck;
         }
 
         switch (lhSize)

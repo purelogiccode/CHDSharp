@@ -5,8 +5,8 @@ namespace VendoredZSTD.Unsafe;
  * necessarily ever be freed), or if it's dynamically allocated and we can
  * expect a well-formed caller to free this.
  */
-public enum ZSTD_cwksp_static_alloc_e
+public enum ZstdCwkspStaticAllocE
 {
-    ZSTD_cwksp_dynamic_alloc,
-    ZSTD_cwksp_static_alloc
+    ZstdCwkspDynamicAlloc,
+    ZstdCwkspStaticAlloc
 }

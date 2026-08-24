@@ -16,17 +16,18 @@ namespace VendoredZSTD.Unsafe;
  *             as long as it is above ilowest, but that indicates corruption.
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct HUF_DecompressFastArgs
+public unsafe struct HufDecompressFastArgs
 {
-    public _ip_e__FixedBuffer ip;
-    public _op_e__FixedBuffer op;
+    public IpEFixedBuffer ip;
+    public OpEFixedBuffer op;
     public fixed ulong bits[4];
     public void* dt;
     public byte* ilowest;
     public byte* oend;
-    public _iend_e__FixedBuffer iend;
+    public IendEFixedBuffer iend;
+
     [StructLayout(LayoutKind.Sequential)]
-    public struct _ip_e__FixedBuffer
+    public struct IpEFixedBuffer
     {
         public byte* e0;
         public byte* e1;
@@ -35,7 +36,7 @@ public unsafe struct HUF_DecompressFastArgs
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct _op_e__FixedBuffer
+    public struct OpEFixedBuffer
     {
         public byte* e0;
         public byte* e1;
@@ -44,7 +45,7 @@ public unsafe struct HUF_DecompressFastArgs
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct _iend_e__FixedBuffer
+    public struct IendEFixedBuffer
     {
         public byte* e0;
         public byte* e1;

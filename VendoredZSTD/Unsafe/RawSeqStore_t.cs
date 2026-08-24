@@ -3,10 +3,10 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct RawSeqStore_t
+public unsafe struct RawSeqStoreT
 {
     /* The start of the sequences */
-    public rawSeq* seq;
+    public RawSeq* seq;
     /* The index in seq where reading stopped. pos <= size. */
     public nuint pos;
     /* The position within the sequence at seq[pos] where reading
@@ -16,7 +16,7 @@ public unsafe struct RawSeqStore_t
     public nuint size;
     /* The capacity starting from `seq` pointer */
     public nuint capacity;
-    public RawSeqStore_t(rawSeq* seq, nuint pos, nuint posInSequence, nuint size, nuint capacity)
+    public RawSeqStoreT(RawSeq* seq, nuint pos, nuint posInSequence, nuint size, nuint capacity)
     {
         this.seq = seq;
         this.pos = pos;

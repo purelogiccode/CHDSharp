@@ -28,9 +28,9 @@ public static class ThrowHelper
         switch (returnValue)
         {
             case ZstdContentsizeUnknown:
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Decompressed content size is not specified");
+                throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Decompressed content size is not specified");
             case ZstdContentsizeError:
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Decompressed content size cannot be determined (e.g. invalid magic number, srcSize too small)");
+                throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Decompressed content size cannot be determined (e.g. invalid magic number, srcSize too small)");
             default:
                 return returnValue;
         }
@@ -39,6 +39,6 @@ public static class ThrowHelper
     private static void ThrowException(nuint returnValue, string message)
     {
         var code = 0 - returnValue;
-        throw new ZstdException((ZSTD_ErrorCode)code, message);
+        throw new ZstdException((ZstdErrorCode)code, message);
     }
 }

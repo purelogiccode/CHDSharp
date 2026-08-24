@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct blockProperties_t
+public struct BlockPropertiesT
 {
-    public blockType_e blockType;
+    public BlockTypeE blockType;
     public uint lastBlock;
     public uint origSize;
 }

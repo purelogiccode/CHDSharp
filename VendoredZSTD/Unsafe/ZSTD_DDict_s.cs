@@ -6,13 +6,13 @@ namespace VendoredZSTD.Unsafe;
  *  Types
  *********************************************************/
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_DDict_s
+public unsafe struct ZstdDDictS
 {
     public void* dictBuffer;
     public void* dictContent;
     public nuint dictSize;
-    public ZSTD_entropyDTables_t entropy;
+    public ZstdEntropyDTablesT entropy;
     public uint dictID;
     public uint entropyPresent;
-    public ZSTD_customMem cMem;
+    public ZstdCustomMem cMem;
 }

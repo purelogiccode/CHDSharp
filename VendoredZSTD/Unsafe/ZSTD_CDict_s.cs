@@ -6,18 +6,18 @@ namespace VendoredZSTD.Unsafe;
  *  Context memory management
  ***************************************/
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_CDict_s
+public unsafe struct ZstdCDictS
 {
     public void* dictContent;
     public nuint dictContentSize;
     /* The dictContentType the CDict was created with */
-    public ZSTD_dictContentType_e dictContentType;
+    public ZstdDictContentTypeE dictContentType;
     /* entropy workspace of HUF_WORKSPACE_SIZE bytes */
     public uint* entropyWorkspace;
     public ZstdCwksp workspace;
-    public ZSTD_MatchState_t matchState;
-    public ZSTD_compressedBlockState_t cBlockState;
-    public ZSTD_customMem customMem;
+    public ZstdMatchStateT matchState;
+    public ZstdCompressedBlockStateT cBlockState;
+    public ZstdCustomMem customMem;
     public uint dictID;
     /* 0 indicates that advanced API was used to select CDict params */
     public int compressionLevel;
@@ -25,5 +25,5 @@ public unsafe struct ZSTD_CDict_s
      * row-based matchfinder. Unless the cdict is reloaded, we will use
      * the same greedy/lazy matchfinder at compression time.
      */
-    public ZSTD_paramSwitch_e useRowMatchFinder;
+    public ZstdParamSwitchE useRowMatchFinder;
 }

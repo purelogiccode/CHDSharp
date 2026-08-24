@@ -63,10 +63,10 @@ public unsafe class Decompressor : IDisposable
     {
         var expectedDstSize = GetDecompressedSize(src);
         if (expectedDstSize > (ulong)maxDecompressedSize)
-            throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
+            throw new ZstdException(ZstdErrorCode.ZstdErrorDstSizeTooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than {nameof(maxDecompressedSize)} {maxDecompressedSize}");
         if (expectedDstSize > Constants.MaxByteArrayLength)
-            throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
+            throw new ZstdException(ZstdErrorCode.ZstdErrorDstSizeTooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than max possible byte array size {Constants.MaxByteArrayLength}");
 
         var dest = new byte[expectedDstSize];
@@ -113,7 +113,7 @@ public unsafe class Decompressor : IDisposable
                     Methods.ZSTD_decompressDCtx(dctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length);
             }
 
-            if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
+            if (returnValue == unchecked(0 - (nuint)ZstdErrorCode.ZstdErrorDstSizeTooSmall))
             {
                 written = 0;
                 return false;
@@ -136,10 +136,10 @@ public unsafe class Decompressor : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    internal nuint DecompressStream(ref ZSTD_inBuffer_s input, ref ZSTD_outBuffer_s output)
+    internal nuint DecompressStream(ref ZstdInBufferS input, ref ZstdOutBufferS output)
     {
-        fixed (ZSTD_inBuffer_s* inputPtr = &input)
-        fixed (ZSTD_outBuffer_s* outputPtr = &output)
+        fixed (ZstdInBufferS* inputPtr = &input)
+        fixed (ZstdOutBufferS* outputPtr = &output)
         {
             using var dctx = _handle.Acquire();
             return Methods.ZSTD_decompressStream(dctx, outputPtr, inputPtr).EnsureZstdSuccess();
@@ -149,7 +149,7 @@ public unsafe class Decompressor : IDisposable
     public void ResetStream()
     {
         using var dctx = _handle.Acquire();
-        Methods.ZSTD_DCtx_reset(dctx, ZSTD_ResetDirective.ZSTD_reset_session_only).EnsureZstdSuccess();
+        Methods.ZSTD_DCtx_reset(dctx, ZstdResetDirective.ZstdResetSessionOnly).EnsureZstdSuccess();
     }
 
     public OperationStatus UnwrapStream(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesConsumed, out int bytesWritten)
@@ -160,8 +160,8 @@ public unsafe class Decompressor : IDisposable
         fixed (byte* srcPtr = source)
         fixed (byte* dstPtr = destination)
         {
-            var input = new ZSTD_inBuffer_s { src = srcPtr, size = (nuint)source.Length, pos = 0 };
-            var output = new ZSTD_outBuffer_s { dst = dstPtr, size = (nuint)destination.Length, pos = 0 };
+            var input = new ZstdInBufferS { src = srcPtr, size = (nuint)source.Length, pos = 0 };
+            var output = new ZstdOutBufferS { dst = dstPtr, size = (nuint)destination.Length, pos = 0 };
 
             while (output.pos != output.size)
             {

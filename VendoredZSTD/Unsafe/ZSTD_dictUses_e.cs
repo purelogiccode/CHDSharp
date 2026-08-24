@@ -1,11 +1,11 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_dictUses_e
+public enum ZstdDictUsesE
 {
     /* Use the dictionary indefinitely */
-    ZSTD_use_indefinitely = -1,
+    ZstdUseIndefinitely = -1,
     /* Do not use the dictionary (if one exists free it) */
-    ZSTD_dont_use = 0,
+    ZstdDontUse = 0,
     /* Use the dictionary once and set to ZSTD_dont_use */
-    ZSTD_use_once = 1
+    ZstdUseOnce = 1
 }

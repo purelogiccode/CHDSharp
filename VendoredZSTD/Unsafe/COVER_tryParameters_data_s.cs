@@ -11,5 +11,5 @@ public unsafe struct CoverTryParametersDataS
     public CoverCtxT* ctx;
     public CoverBestS* best;
     public nuint dictBufferCapacity;
-    public ZDICT_cover_params_t parameters;
+    public ZdictCoverParamsT parameters;
 }

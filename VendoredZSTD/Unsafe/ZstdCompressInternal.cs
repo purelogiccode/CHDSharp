@@ -11,19 +11,19 @@ public static unsafe partial class Methods
      * indicated by longLengthPos and longLengthType, and adds MINMATCH back to matchLength.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ZSTD_SequenceLength ZSTD_getSequenceLength(SeqStore_t* seqStore, SeqDef_s* seq)
+    private static ZstdSequenceLength ZSTD_getSequenceLength(SeqStoreT* seqStore, SeqDefS* seq)
     {
-        ZSTD_SequenceLength seqLen;
+        ZstdSequenceLength seqLen;
         seqLen.litLength = seq->litLength;
         seqLen.matchLength = (uint)(seq->mlBase + 3);
         if (seqStore->longLengthPos == (uint)(seq - seqStore->sequencesStart))
         {
-            if (seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_literalLength)
+            if (seqStore->longLengthType == ZstdLongLengthTypeE.ZstdLltLiteralLength)
             {
                 seqLen.litLength += 0x10000;
             }
 
-            if (seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_matchLength)
+            if (seqStore->longLengthType == ZstdLongLengthTypeE.ZstdLltMatchLength)
             {
                 seqLen.matchLength += 0x10000;
             }
@@ -32,7 +32,7 @@ public static unsafe partial class Methods
         return seqLen;
     }
 
-    private static readonly RawSeqStore_t KNullRawSeqStore = new(seq: null, pos: 0, posInSequence: 0, size: 0, capacity: 0);
+    private static readonly RawSeqStoreT KNullRawSeqStore = new(seq: null, pos: 0, posInSequence: 0, size: 0, capacity: 0);
 #if NET7_0_OR_GREATER
     private static ReadOnlySpan<byte> SpanLlCode => new byte[]
     {
@@ -294,25 +294,25 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint ZSTD_noCompressBlock(void* dst, nuint dstCapacity, void* src, nuint srcSize, uint lastBlock)
     {
-        var cBlockHeader24 = lastBlock + ((uint)blockType_e.bt_raw << 1) + (uint)(srcSize << 3);
-        if (srcSize + ZSTD_blockHeaderSize > dstCapacity)
+        var cBlockHeader24 = lastBlock + ((uint)BlockTypeE.BtRaw << 1) + (uint)(srcSize << 3);
+        if (srcSize + ZstdBlockHeaderSize > dstCapacity)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         MEM_writeLE24(dst, cBlockHeader24);
-        memcpy((byte*)dst + ZSTD_blockHeaderSize, src, (uint)srcSize);
-        return ZSTD_blockHeaderSize + srcSize;
+        memcpy((byte*)dst + ZstdBlockHeaderSize, src, (uint)srcSize);
+        return ZstdBlockHeaderSize + srcSize;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint ZSTD_rleCompressBlock(void* dst, nuint dstCapacity, byte src, nuint srcSize, uint lastBlock)
     {
         var op = (byte*)dst;
-        var cBlockHeader = lastBlock + ((uint)blockType_e.bt_rle << 1) + (uint)(srcSize << 3);
+        var cBlockHeader = lastBlock + ((uint)BlockTypeE.BtRle << 1) + (uint)(srcSize << 3);
         if (dstCapacity < 4)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         MEM_writeLE24(op, cBlockHeader);
@@ -325,27 +325,27 @@ public static unsafe partial class Methods
      * to generate a compress block or a compressed literals section.
      * note : use same formula for both situations */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint ZSTD_minGain(nuint srcSize, ZSTD_strategy strat)
+    private static nuint ZSTD_minGain(nuint srcSize, ZstdStrategy strat)
     {
-        var minlog = strat >= ZSTD_strategy.ZSTD_btultra ? (uint)strat - 1 : 6;
+        var minlog = strat >= ZstdStrategy.ZstdBtultra ? (uint)strat - 1 : 6;
         assert(ZSTD_cParam_withinBounds(ZstdCParameter.ZstdCStrategy, (int)strat) != 0);
         return (srcSize >> (int)minlog) + 2;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ZSTD_literalsCompressionIsDisabled(ZSTD_CCtx_params_s* cctxParams)
+    private static int ZSTD_literalsCompressionIsDisabled(ZstdCCtxParamsS* cctxParams)
     {
         switch (cctxParams->literalCompressionMode)
         {
-            case ZSTD_paramSwitch_e.ZSTD_ps_enable:
+            case ZstdParamSwitchE.ZstdPsEnable:
                 return 0;
-            case ZSTD_paramSwitch_e.ZSTD_ps_disable:
+            case ZstdParamSwitchE.ZstdPsDisable:
                 return 1;
             default:
                 assert(0 != 0);
-                goto case ZSTD_paramSwitch_e.ZSTD_ps_auto;
-            case ZSTD_paramSwitch_e.ZSTD_ps_auto:
-                return cctxParams->cParams.strategy == ZSTD_strategy.ZSTD_fast && cctxParams->cParams.targetLength > 0 ? 1 : 0;
+                goto case ZstdParamSwitchE.ZstdPsAuto;
+            case ZstdParamSwitchE.ZstdPsAuto:
+                return cctxParams->cParams.strategy == ZstdStrategy.ZstdFast && cctxParams->cParams.targetLength > 0 ? 1 : 0;
         }
     }
 
@@ -359,7 +359,7 @@ public static unsafe partial class Methods
         assert(iend > ilimitW);
         if (ip <= ilimitW)
         {
-            ZSTD_wildcopy(op, ip, (nint)(ilimitW - ip), ZSTD_overlap_e.ZSTD_no_overlap);
+            ZSTD_wildcopy(op, ip, (nint)(ilimitW - ip), ZstdOverlapE.ZstdNoOverlap);
             op += ilimitW - ip;
             ip = ilimitW;
         }
@@ -377,14 +377,14 @@ public static unsafe partial class Methods
      *  @matchLength : must be >= MINMATCH
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_storeSeqOnly(SeqStore_t* seqStorePtr, nuint litLength, uint offBase, nuint matchLength)
+    private static void ZSTD_storeSeqOnly(SeqStoreT* seqStorePtr, nuint litLength, uint offBase, nuint matchLength)
     {
         assert((nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart) < seqStorePtr->maxNbSeq);
         assert(litLength <= 1 << 17);
         if (litLength > 0xFFFF)
         {
-            assert(seqStorePtr->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_none);
-            seqStorePtr->longLengthType = ZSTD_longLengthType_e.ZSTD_llt_literalLength;
+            assert(seqStorePtr->longLengthType == ZstdLongLengthTypeE.ZstdLltNone);
+            seqStorePtr->longLengthType = ZstdLongLengthTypeE.ZstdLltLiteralLength;
             seqStorePtr->longLengthPos = (uint)(seqStorePtr->sequences - seqStorePtr->sequencesStart);
         }
 
@@ -396,8 +396,8 @@ public static unsafe partial class Methods
             var mlBase = matchLength - 3;
             if (mlBase > 0xFFFF)
             {
-                assert(seqStorePtr->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_none);
-                seqStorePtr->longLengthType = ZSTD_longLengthType_e.ZSTD_llt_matchLength;
+                assert(seqStorePtr->longLengthType == ZstdLongLengthTypeE.ZstdLltNone);
+                seqStorePtr->longLengthType = ZstdLongLengthTypeE.ZstdLltMatchLength;
                 seqStorePtr->longLengthPos = (uint)(seqStorePtr->sequences - seqStorePtr->sequencesStart);
             }
 
@@ -415,7 +415,7 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
-    private static void ZSTD_storeSeq(SeqStore_t* seqStorePtr, nuint litLength, byte* literals, byte* litLimit, uint offBase, nuint matchLength)
+    private static void ZSTD_storeSeq(SeqStoreT* seqStorePtr, nuint litLength, byte* literals, byte* litLimit, uint offBase, nuint matchLength)
     {
         var litLimitW = litLimit - 32;
         var litEnd = literals + litLength;
@@ -428,7 +428,7 @@ public static unsafe partial class Methods
             ZSTD_copy16(seqStorePtr->lit, literals);
             if (litLength > 16)
             {
-                ZSTD_wildcopy(seqStorePtr->lit + 16, literals + 16, (nint)litLength - 16, ZSTD_overlap_e.ZSTD_no_overlap);
+                ZSTD_wildcopy(seqStorePtr->lit + 16, literals + 16, (nint)litLength - 16, ZstdOverlapE.ZstdNoOverlap);
             }
         }
         else
@@ -469,10 +469,10 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static repcodes_s ZSTD_newRep(uint* rep, uint offBase, uint ll0)
+    private static RepcodesS ZSTD_newRep(uint* rep, uint offBase, uint ll0)
     {
-        repcodes_s newReps;
-        memcpy(&newReps, rep, (uint)sizeof(repcodes_s));
+        RepcodesS newReps;
+        memcpy(&newReps, rep, (uint)sizeof(RepcodesS));
         ZSTD_updateRep(newReps.rep, offBase, ll0);
         return newReps;
     }
@@ -770,7 +770,7 @@ public static unsafe partial class Methods
      * Clears the window containing the history by simply setting it to empty.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_window_clear(ZSTD_window_t* window)
+    private static void ZSTD_window_clear(ZstdWindowT* window)
     {
         var endT = (nuint)(window->nextSrc - window->@base);
         var end = (uint)endT;
@@ -779,7 +779,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_isEmpty(ZSTD_window_t window)
+    private static uint ZSTD_window_isEmpty(ZstdWindowT window)
     {
         return window is { dictLimit: 2, lowLimit: 2 } && window.nextSrc - window.@base == 2 ? 1U : 0U;
     }
@@ -789,7 +789,7 @@ public static unsafe partial class Methods
      * Returns non-zero if the window has a non-empty extDict.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_hasExtDict(ZSTD_window_t window)
+    private static uint ZSTD_window_hasExtDict(ZstdWindowT window)
     {
         return window.lowLimit < window.dictLimit ? 1U : 0U;
     }
@@ -800,9 +800,9 @@ public static unsafe partial class Methods
      * passed to the compressor.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ZSTD_dictMode_e ZSTD_matchState_dictMode(ZSTD_MatchState_t* ms)
+    private static ZstdDictModeE ZSTD_matchState_dictMode(ZstdMatchStateT* ms)
     {
-        return ZSTD_window_hasExtDict(ms->window) != 0 ? ZSTD_dictMode_e.ZSTD_extDict : ms->dictMatchState != null ? ms->dictMatchState->dedicatedDictSearch != 0 ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch : ZSTD_dictMode_e.ZSTD_dictMatchState : ZSTD_dictMode_e.ZSTD_noDict;
+        return ZSTD_window_hasExtDict(ms->window) != 0 ? ZstdDictModeE.ZstdExtDict : ms->dictMatchState != null ? ms->dictMatchState->dedicatedDictSearch != 0 ? ZstdDictModeE.ZstdDedicatedDictSearch : ZstdDictModeE.ZstdDictMatchState : ZstdDictModeE.ZstdNoDict;
     }
 
     /**
@@ -811,7 +811,7 @@ public static unsafe partial class Methods
      * to work correctly without impacting compression ratio.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_canOverflowCorrect(ZSTD_window_t window, uint cycleLog, uint maxDist, uint loadedDictEnd, void* src)
+    private static uint ZSTD_window_canOverflowCorrect(ZstdWindowT window, uint cycleLog, uint maxDist, uint loadedDictEnd, void* src)
     {
         var cycleSize = 1U << (int)cycleLog;
         var curr = (uint)((byte*)src - window.@base);
@@ -837,7 +837,7 @@ public static unsafe partial class Methods
      * protection.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_needOverflowCorrection(ZSTD_window_t window, uint cycleLog, uint maxDist, uint loadedDictEnd, void* src, void* srcEnd)
+    private static uint ZSTD_window_needOverflowCorrection(ZstdWindowT window, uint cycleLog, uint maxDist, uint loadedDictEnd, void* src, void* srcEnd)
     {
         var curr = (uint)((byte*)srcEnd - window.@base);
         return curr > (MEM_64bits ? 3500U * (1 << 20) : 2000U * (1 << 20)) ? 1U : 0U;
@@ -853,7 +853,7 @@ public static unsafe partial class Methods
      * which may be 0. Every index up to maxDist in the past must be valid.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_correctOverflow(ZSTD_window_t* window, uint cycleLog, uint maxDist, void* src)
+    private static uint ZSTD_window_correctOverflow(ZstdWindowT* window, uint cycleLog, uint maxDist, void* src)
     {
         /* preemptive overflow correction:
          * 1. correction is large enough:
@@ -941,7 +941,7 @@ public static unsafe partial class Methods
      * forceWindow and dictMatchState are therefore incompatible.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_window_enforceMaxDist(ZSTD_window_t* window, void* blockEnd, uint maxDist, uint* loadedDictEndPtr, ZSTD_MatchState_t** dictMatchStatePtr)
+    private static void ZSTD_window_enforceMaxDist(ZstdWindowT* window, void* blockEnd, uint maxDist, uint* loadedDictEndPtr, ZstdMatchStateT** dictMatchStatePtr)
     {
         var blockEndIdx = (uint)((byte*)blockEnd - window->@base);
         var loadedDictEnd = loadedDictEndPtr != null ? *loadedDictEndPtr : 0;
@@ -977,7 +977,7 @@ public static unsafe partial class Methods
      *              loadedDictEnd uses same referential as window->base
      *              maxDist is the window size */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_checkDictValidity(ZSTD_window_t* window, void* blockEnd, uint maxDist, uint* loadedDictEndPtr, ZSTD_MatchState_t** dictMatchStatePtr)
+    private static void ZSTD_checkDictValidity(ZstdWindowT* window, void* blockEnd, uint maxDist, uint* loadedDictEndPtr, ZstdMatchStateT** dictMatchStatePtr)
     {
         assert(loadedDictEndPtr != null);
         assert(dictMatchStatePtr != null);
@@ -1001,9 +1001,9 @@ public static unsafe partial class Methods
         private static readonly byte* stringToByte_20_00 = GetArrayPointer(new byte[] { 32, 0 });
 #endif
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_window_init(ZSTD_window_t* window)
+    private static void ZSTD_window_init(ZstdWindowT* window)
     {
-        *window = new ZSTD_window_t
+        *window = new ZstdWindowT
         {
             @base = StringToByte2000,
             dictBase = StringToByte2000,
@@ -1022,7 +1022,7 @@ public static unsafe partial class Methods
      * Returns non-zero if the segment is contiguous.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_update(ZSTD_window_t* window, void* src, nuint srcSize, int forceNonContiguous)
+    private static uint ZSTD_window_update(ZstdWindowT* window, void* src, nuint srcSize, int forceNonContiguous)
     {
         var ip = (byte*)src;
         uint contiguous = 1;
@@ -1064,7 +1064,7 @@ public static unsafe partial class Methods
      * Returns the lowest allowed match index. It may either be in the ext-dict or the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_getLowestMatchIndex(ZSTD_MatchState_t* ms, uint curr, uint windowLog)
+    private static uint ZSTD_getLowestMatchIndex(ZstdMatchStateT* ms, uint curr, uint windowLog)
     {
         var maxDistance = 1U << (int)windowLog;
         var lowestValid = ms->window.lowLimit;
@@ -1082,7 +1082,7 @@ public static unsafe partial class Methods
      * Returns the lowest allowed match index in the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_getLowestPrefixIndex(ZSTD_MatchState_t* ms, uint curr, uint windowLog)
+    private static uint ZSTD_getLowestPrefixIndex(ZstdMatchStateT* ms, uint curr, uint windowLog)
     {
         var maxDistance = 1U << (int)windowLog;
         var lowestValid = ms->window.dictLimit;
@@ -1128,7 +1128,7 @@ public static unsafe partial class Methods
 
     /* Returns 1 if an external sequence producer is registered, otherwise returns 0. */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ZSTD_hasExtSeqProd(ZSTD_CCtx_params_s* @params)
+    private static int ZSTD_hasExtSeqProd(ZstdCCtxParamsS* @params)
     {
         return @params->extSeqProdFunc != null ? 1 : 0;
     }

@@ -28,7 +28,7 @@ public static unsafe partial class Methods
         var highThreshold = tableSize - 1;
         assert(((nuint)workSpace & 1) == 0);
         if (sizeof(uint) * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint)) > wkspSize)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
 
         tableU16[-2] = (ushort)tableLog;
         tableU16[-1] = (ushort)maxSymbolValue;
@@ -209,7 +209,7 @@ public static unsafe partial class Methods
                     start += 24;
                     bitStream += 0xFFFFU << bitCount;
                     if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
@@ -229,7 +229,7 @@ public static unsafe partial class Methods
                 if (bitCount > 16)
                 {
                     if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
@@ -254,7 +254,7 @@ public static unsafe partial class Methods
                 bitCount -= count < max ? 1 : 0;
                 previousIs0 = count == 1 ? 1 : 0;
                 if (remaining < 1)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
                 while (remaining < threshold)
                 {
@@ -266,7 +266,7 @@ public static unsafe partial class Methods
             if (bitCount > 16)
             {
                 if (writeIsSafe == 0 && @out > oend - 2)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
                 @out[0] = (byte)bitStream;
                 @out[1] = (byte)(bitStream >> 8);
@@ -277,11 +277,11 @@ public static unsafe partial class Methods
         }
 
         if (remaining != 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
         assert(symbol <= alphabetSize);
         if (writeIsSafe == 0 && @out > oend - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         @out[0] = (byte)bitStream;
         @out[1] = (byte)(bitStream >> 8);
@@ -296,10 +296,14 @@ public static unsafe partial class Methods
     or an errorCode, which can be tested using FSE_isError(). */
     private static nuint FSE_writeNCount(void* buffer, nuint bufferSize, short* normalizedCounter, uint maxSymbolValue, uint tableLog)
     {
-        if (tableLog > 14 - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
-        if (tableLog < 5)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        switch (tableLog)
+        {
+            case > 14 - 2:
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
+            case < 5:
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
+        }
+
         if (bufferSize < FSE_NCountWriteBound(maxSymbolValue, tableLog))
             return FSE_writeNCount_generic(buffer, bufferSize, normalizedCounter, maxSymbolValue, tableLog, 0);
 
@@ -413,7 +417,6 @@ public static unsafe partial class Methods
                     norm[s] = 1;
                     distributed++;
                     total -= count[s];
-                    continue;
                 }
             }
 
@@ -464,7 +467,7 @@ public static unsafe partial class Methods
                     var sEnd = (uint)(end >> (int)vStepLog);
                     var weight = sEnd - sStart;
                     if (weight < 1)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
                     norm[s] = (short)weight;
                     tmpTotal = end;
@@ -487,6 +490,7 @@ public static unsafe partial class Methods
         750000,
         830000
     };
+
     private static uint* RtbTable => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanRtbTable));
 #else
 
@@ -510,12 +514,16 @@ public static unsafe partial class Methods
             tableLog = 13 - 2;
         }
 
-        if (tableLog < 5)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-        if (tableLog > 14 - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        switch (tableLog)
+        {
+            case < 5:
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
+            case > 14 - 2:
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
+        }
+
         if (tableLog < FSE_minTableLog(total, maxSymbolValue))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
         {
             var lowProbCount = (short)(useLowProbCount != 0 ? -1 : 1);

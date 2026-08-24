@@ -6,13 +6,15 @@ namespace VendoredZSTD.Unsafe;
  * Acceleration
  ***************************************/
 [StructLayout(LayoutKind.Sequential)]
-public struct FASTCOVER_accel_t
+public struct FastcoverAccelT
 {
     /* Percentage of training samples used for ZDICT_finalizeDictionary */
     public uint finalize;
+
     /* Number of dmer skipped between each dmer counted in computeFrequency */
     public uint skip;
-    public FASTCOVER_accel_t(uint finalize, uint skip)
+
+    public FastcoverAccelT(uint finalize, uint skip)
     {
         this.finalize = finalize;
         this.skip = skip;

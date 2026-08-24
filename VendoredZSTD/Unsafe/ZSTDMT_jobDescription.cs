@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTDMT_jobDescription
+public unsafe struct ZstdmtJobDescription
 {
     /* SHARED - set0 by mtctx, then modified by worker AND read by mtctx */
     public nuint consumed;
@@ -14,15 +14,15 @@ public unsafe struct ZSTDMT_jobDescription
     /* Thread-safe - used by mtctx and worker */
     public void* job_cond;
     /* Thread-safe - used by mtctx and (all) workers */
-    public ZSTDMT_CCtxPool* cctxPool;
+    public ZstdmtCCtxPool* cctxPool;
     /* Thread-safe - used by mtctx and (all) workers */
-    public ZSTDMT_bufferPool_s* bufPool;
+    public ZstdmtBufferPoolS* bufPool;
     /* Thread-safe - used by mtctx and (all) workers */
-    public ZSTDMT_bufferPool_s* seqPool;
+    public ZstdmtBufferPoolS* seqPool;
     /* Thread-safe - used by mtctx and (all) workers */
     public SerialState* serial;
     /* set by worker (or mtctx), then read by worker & mtctx, then modified by mtctx => no barrier */
-    public buffer_s dstBuff;
+    public BufferS dstBuff;
     /* set by mtctx, then read by worker & mtctx => no barrier */
     public Range prefix;
     /* set by mtctx, then read by worker & mtctx => no barrier */
@@ -34,9 +34,9 @@ public unsafe struct ZSTDMT_jobDescription
     /* set by mtctx, then read by worker => no barrier */
     public uint lastJob;
     /* set by mtctx, then read by worker => no barrier */
-    public ZSTD_CCtx_params_s @params;
+    public ZstdCCtxParamsS @params;
     /* set by mtctx, then read by worker => no barrier */
-    public ZSTD_CDict_s* cdict;
+    public ZstdCDictS* cdict;
     /* set by mtctx, then read by worker => no barrier */
     public ulong fullFrameSize;
     /* used only by mtctx */

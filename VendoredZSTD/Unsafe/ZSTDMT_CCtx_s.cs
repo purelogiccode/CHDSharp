@@ -3,20 +3,20 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTDMT_CCtx_s
+public unsafe struct ZstdmtCCtxS
 {
     public void* factory;
-    public ZSTDMT_jobDescription* jobs;
-    public ZSTDMT_bufferPool_s* bufPool;
-    public ZSTDMT_CCtxPool* cctxPool;
-    public ZSTDMT_bufferPool_s* seqPool;
-    public ZSTD_CCtx_params_s @params;
+    public ZstdmtJobDescription* jobs;
+    public ZstdmtBufferPoolS* bufPool;
+    public ZstdmtCCtxPool* cctxPool;
+    public ZstdmtBufferPoolS* seqPool;
+    public ZstdCCtxParamsS @params;
     public nuint targetSectionSize;
     public nuint targetPrefixSize;
     /* 1 => one job is already prepared, but pool has shortage of workers. Don't create a new job. */
     public int jobReady;
-    public InBuff_t inBuff;
-    public RoundBuff_t roundBuff;
+    public InBuffT inBuff;
+    public RoundBuffT roundBuff;
     public SerialState serial;
     public RSyncStateT rsync;
     public uint jobIDMask;
@@ -27,8 +27,8 @@ public unsafe struct ZSTDMT_CCtx_s
     public ulong frameContentSize;
     public ulong consumed;
     public ulong produced;
-    public ZSTD_customMem cMem;
-    public ZSTD_CDict_s* cdictLocal;
-    public ZSTD_CDict_s* cdict;
+    public ZstdCustomMem cMem;
+    public ZstdCDictS* cdictLocal;
+    public ZstdCDictS* cdict;
     public uint providedFactory;
 }

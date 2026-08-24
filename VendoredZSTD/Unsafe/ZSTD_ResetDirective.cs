@@ -1,8 +1,8 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_ResetDirective
+public enum ZstdResetDirective
 {
-    ZSTD_reset_session_only = 1,
-    ZSTD_reset_parameters = 2,
-    ZSTD_reset_session_and_parameters = 3
+    ZstdResetSessionOnly = 1,
+    ZstdResetParameters = 2,
+    ZstdResetSessionAndParameters = 3
 }

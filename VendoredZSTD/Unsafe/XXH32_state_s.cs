@@ -15,7 +15,7 @@ namespace VendoredZSTD.Unsafe;
  * @see XXH64_state_s, XXH3_state_s
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct XXH32_state_s
+public unsafe struct Xxh32StateS
 {
     /*!< Total length hashed, modulo 2^32 */
     public uint total_len_32;

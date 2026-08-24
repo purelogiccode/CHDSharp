@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_parameters
+public struct ZstdParameters
 {
-    public ZSTD_compressionParameters cParams;
+    public ZstdCompressionParameters cParams;
     public ZstdFrameParameters fParams;
 }

@@ -18,6 +18,6 @@ public unsafe struct CoverBestS
     public nuint liveJobs;
     public void* dict;
     public nuint dictSize;
-    public ZDICT_cover_params_t parameters;
+    public ZdictCoverParamsT parameters;
     public nuint compressedSize;
 }

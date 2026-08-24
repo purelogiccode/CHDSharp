@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
  *  Required declarations
  ****************************************************************/
 [StructLayout(LayoutKind.Sequential)]
-public struct nodeElt_s
+public struct NodeEltS
 {
     public uint count;
     public ushort parent;

@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
  * Context
  ***************************************/
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct FASTCOVER_ctx_t
+public unsafe struct FastcoverCtxT
 {
     public byte* samples;
     public nuint* offsets;
@@ -18,5 +18,5 @@ public unsafe struct FASTCOVER_ctx_t
     public uint* freqs;
     public uint d;
     public uint f;
-    public FASTCOVER_accel_t accelParams;
+    public FastcoverAccelT accelParams;
 }

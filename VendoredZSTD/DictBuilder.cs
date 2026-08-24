@@ -12,7 +12,7 @@ public static unsafe class DictBuilder
     public static Span<byte> TrainFromBufferFastCover(IEnumerable<byte[]> samples, int level, int dictCapacity = DefaultDictCapacity)
     {
         // same as in ZDICT_trainFromBuffer
-        return TrainFromBufferFastCover(samples, new ZDICT_fastCover_params_t
+        return TrainFromBufferFastCover(samples, new ZdictFastCoverParamsT
         {
             d = 8,
             steps = 4,
@@ -20,7 +20,7 @@ public static unsafe class DictBuilder
         }, dictCapacity);
     }
 
-    public static Span<byte> TrainFromBufferFastCover(IEnumerable<byte[]> samples, ZDICT_fastCover_params_t @params, int dictCapacity = DefaultDictCapacity)
+    public static Span<byte> TrainFromBufferFastCover(IEnumerable<byte[]> samples, ZdictFastCoverParamsT @params, int dictCapacity = DefaultDictCapacity)
     {
         var ms = new MemoryStream();
         var samplesSizes = samples.Select(sample =>

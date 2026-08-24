@@ -82,10 +82,10 @@ public static unsafe partial class Methods
         var iend = ip + sourceSize;
         nuint countSize = (*maxSymbolValuePtr + 1) * sizeof(uint);
         uint max = 0;
-        var Counting1 = workSpace;
-        var Counting2 = Counting1 + 256;
-        var Counting3 = Counting2 + 256;
-        var Counting4 = Counting3 + 256;
+        var counting1 = workSpace;
+        var counting2 = counting1 + 256;
+        var counting3 = counting2 + 256;
+        var counting4 = counting3 + 256;
         assert(*maxSymbolValuePtr <= 255);
         if (sourceSize == 0)
         {
@@ -103,31 +103,31 @@ public static unsafe partial class Methods
                 var c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                Counting1[(byte)c]++;
-                Counting2[(byte)(c >> 8)]++;
-                Counting3[(byte)(c >> 16)]++;
-                Counting4[c >> 24]++;
+                counting1[(byte)c]++;
+                counting2[(byte)(c >> 8)]++;
+                counting3[(byte)(c >> 16)]++;
+                counting4[c >> 24]++;
                 c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                Counting1[(byte)c]++;
-                Counting2[(byte)(c >> 8)]++;
-                Counting3[(byte)(c >> 16)]++;
-                Counting4[c >> 24]++;
+                counting1[(byte)c]++;
+                counting2[(byte)(c >> 8)]++;
+                counting3[(byte)(c >> 16)]++;
+                counting4[c >> 24]++;
                 c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                Counting1[(byte)c]++;
-                Counting2[(byte)(c >> 8)]++;
-                Counting3[(byte)(c >> 16)]++;
-                Counting4[c >> 24]++;
+                counting1[(byte)c]++;
+                counting2[(byte)(c >> 8)]++;
+                counting3[(byte)(c >> 16)]++;
+                counting4[c >> 24]++;
                 c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                Counting1[(byte)c]++;
-                Counting2[(byte)(c >> 8)]++;
-                Counting3[(byte)(c >> 16)]++;
-                Counting4[c >> 24]++;
+                counting1[(byte)c]++;
+                counting2[(byte)(c >> 8)]++;
+                counting3[(byte)(c >> 16)]++;
+                counting4[c >> 24]++;
             }
 
             ip -= 4;
@@ -135,33 +135,33 @@ public static unsafe partial class Methods
 
         while (ip < iend)
         {
-            Counting1[*ip++]++;
+            counting1[*ip++]++;
         }
 
         {
             uint s;
             for (s = 0; s < 256; s++)
             {
-                Counting1[s] += Counting2[s] + Counting3[s] + Counting4[s];
-                if (Counting1[s] > max)
+                counting1[s] += counting2[s] + counting3[s] + counting4[s];
+                if (counting1[s] > max)
                 {
-                    max = Counting1[s];
+                    max = counting1[s];
                 }
             }
         }
 
         {
             uint maxSymbolValue = 255;
-            while (Counting1[maxSymbolValue] == 0)
+            while (counting1[maxSymbolValue] == 0)
             {
                 maxSymbolValue--;
             }
 
             if (check != default && maxSymbolValue > *maxSymbolValuePtr)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooSmall));
 
             *maxSymbolValuePtr = maxSymbolValue;
-            memmove(count, Counting1, countSize);
+            memmove(count, counting1, countSize);
         }
 
         return max;
@@ -177,9 +177,9 @@ public static unsafe partial class Methods
         if (sourceSize < 1500)
             return HIST_count_simple(count, maxSymbolValuePtr, source, sourceSize);
         if (((nuint)workSpace & 3) != 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         if (workSpaceSize < 1024 * sizeof(uint))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorWorkSpaceTooSmall));
 
         return HIST_count_parallel_wksp(count, maxSymbolValuePtr, source, sourceSize, HistCheckInputE.TrustInput, (uint*)workSpace);
     }
@@ -190,9 +190,9 @@ public static unsafe partial class Methods
     private static nuint HIST_count_wksp(uint* count, uint* maxSymbolValuePtr, void* source, nuint sourceSize, void* workSpace, nuint workSpaceSize)
     {
         if (((nuint)workSpace & 3) != 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         if (workSpaceSize < 1024 * sizeof(uint))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorWorkSpaceTooSmall));
         if (*maxSymbolValuePtr < 255)
             return HIST_count_parallel_wksp(count, maxSymbolValuePtr, source, sourceSize, HistCheckInputE.CheckMaxSymbolValue, (uint*)workSpace);
 

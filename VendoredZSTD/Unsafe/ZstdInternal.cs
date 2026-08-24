@@ -11,22 +11,22 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_repStartValue => new uint[3]
+    private static ReadOnlySpan<uint> SpanRepStartValue => new uint[3]
     {
         1,
         4,
         8
     };
-    private static uint* repStartValue => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_repStartValue));
+    private static uint* RepStartValue => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanRepStartValue));
 #else
 
         private static readonly uint* repStartValue = GetArrayPointer(new uint[3] { 1, 4, 8 });
 #endif
-    private static readonly nuint* ZSTD_fcs_fieldSize = GetArrayPointer(new nuint[4] { 0, 2, 4, 8 });
-    private static readonly nuint* ZSTD_did_fieldSize = GetArrayPointer(new nuint[4] { 0, 1, 2, 4 });
-    private const uint ZSTD_blockHeaderSize = 3;
+    private static readonly nuint* ZstdFcsFieldSize = GetArrayPointer(new nuint[4] { 0, 2, 4, 8 });
+    private static readonly nuint* ZstdDidFieldSize = GetArrayPointer(new nuint[4] { 0, 1, 2, 4 });
+    private const uint ZstdBlockHeaderSize = 3;
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> Span_LL_bits => new byte[36]
+    private static ReadOnlySpan<byte> SpanLlBits => new byte[36]
     {
         0,
         0,
@@ -65,13 +65,13 @@ public static unsafe partial class Methods
         15,
         16
     };
-    private static byte* LL_bits => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_LL_bits));
+    private static byte* LlBits => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanLlBits));
 #else
 
         private static readonly byte* LL_bits = GetArrayPointer(new byte[36] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<short> Span_LL_defaultNorm => new short[36]
+    private static ReadOnlySpan<short> SpanLlDefaultNorm => new short[36]
     {
         4,
         3,
@@ -110,14 +110,14 @@ public static unsafe partial class Methods
         -1,
         -1
     };
-    private static short* LL_defaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_LL_defaultNorm));
+    private static short* LlDefaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanLlDefaultNorm));
 #else
 
         private static readonly short* LL_defaultNorm = GetArrayPointer(new short[36] { 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 1, 1, 1, 1, 1, (short)(-1), (short)(-1), (short)(-1), (short)(-1) });
 #endif
-    private const uint LL_defaultNormLog = 6;
+    private const uint LlDefaultNormLog = 6;
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> Span_ML_bits => new byte[53]
+    private static ReadOnlySpan<byte> SpanMlBits => new byte[53]
     {
         0,
         0,
@@ -173,13 +173,13 @@ public static unsafe partial class Methods
         15,
         16
     };
-    private static byte* ML_bits => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_ML_bits));
+    private static byte* MlBits => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanMlBits));
 #else
 
         private static readonly byte* ML_bits = GetArrayPointer(new byte[53] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<short> Span_ML_defaultNorm => new short[53]
+    private static ReadOnlySpan<short> SpanMlDefaultNorm => new short[53]
     {
         1,
         4,
@@ -235,14 +235,14 @@ public static unsafe partial class Methods
         -1,
         -1
     };
-    private static short* ML_defaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_ML_defaultNorm));
+    private static short* MlDefaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanMlDefaultNorm));
 #else
 
         private static readonly short* ML_defaultNorm = GetArrayPointer(new short[53] { 1, 4, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, (short)(-1), (short)(-1), (short)(-1), (short)(-1), (short)(-1), (short)(-1), (short)(-1) });
 #endif
-    private const uint ML_defaultNormLog = 6;
+    private const uint MlDefaultNormLog = 6;
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<short> Span_OF_defaultNorm => new short[29]
+    private static ReadOnlySpan<short> SpanOfDefaultNorm => new short[29]
     {
         1,
         1,
@@ -274,12 +274,12 @@ public static unsafe partial class Methods
         -1,
         -1
     };
-    private static short* OF_defaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_OF_defaultNorm));
+    private static short* OfDefaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanOfDefaultNorm));
 #else
 
         private static readonly short* OF_defaultNorm = GetArrayPointer(new short[29] { 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, (short)(-1), (short)(-1), (short)(-1), (short)(-1), (short)(-1) });
 #endif
-    private const uint OF_defaultNormLog = 5;
+    private const uint OfDefaultNormLog = 5;
     /*-*******************************************
      *  Shared functions to include for inlining
      *********************************************/
@@ -325,13 +325,13 @@ public static unsafe partial class Methods
      *           The src buffer must be before the dst buffer.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_wildcopy(void* dst, void* src, nint length, ZSTD_overlap_e ovtype)
+    private static void ZSTD_wildcopy(void* dst, void* src, nint length, ZstdOverlapE ovtype)
     {
         var diff = (nint)((byte*)dst - (byte*)src);
         var ip = (byte*)src;
         var op = (byte*)dst;
         var oend = op + length;
-        if (ovtype == ZSTD_overlap_e.ZSTD_overlap_src_before_dst && diff < 16)
+        if (ovtype == ZstdOverlapE.ZstdOverlapSrcBeforeDst && diff < 16)
         {
             do
             {

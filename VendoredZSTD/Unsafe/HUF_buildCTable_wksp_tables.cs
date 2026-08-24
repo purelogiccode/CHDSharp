@@ -4,16 +4,16 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct HUF_buildCTable_wksp_tables
+public struct HufBuildCTableWkspTables
 {
-    public _huffNodeTbl_e__FixedBuffer huffNodeTbl;
-    public _rankPosition_e__FixedBuffer rankPosition;
+    public HuffNodeTblEFixedBuffer huffNodeTbl;
+    public RankPositionEFixedBuffer rankPosition;
 #if NET8_0_OR_GREATER
     [InlineArray(512)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _huffNodeTbl_e__FixedBuffer
+    public struct HuffNodeTblEFixedBuffer
     {
-        public nodeElt_s e0;
+        public NodeEltS e0;
     }
 
 #else
@@ -538,9 +538,9 @@ public struct HUF_buildCTable_wksp_tables
 #if NET8_0_OR_GREATER
     [InlineArray(192)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _rankPosition_e__FixedBuffer
+    public struct RankPositionEFixedBuffer
     {
-        public rankPos e0;
+        public RankPos e0;
     }
 
 #else

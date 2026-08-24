@@ -7,9 +7,9 @@ public static unsafe partial class Methods
     /* Hash function to determine starting position of dict insertion within the table
      * Returns an index between [0, hashSet->ddictPtrTableSize]
      */
-    private static nuint ZSTD_DDictHashSet_getIndex(ZSTD_DDictHashSet* hashSet, uint dictID)
+    private static nuint ZSTD_DDictHashSet_getIndex(ZstdDDictHashSet* hashSet, uint dictId)
     {
-        var hash = ZSTD_XXH64(&dictID, sizeof(uint), 0);
+        var hash = ZSTD_XXH64(&dictId, sizeof(uint), 0);
         return (nuint)(hash & (hashSet->ddictPtrTableSize - 1));
     }
 
@@ -17,19 +17,19 @@ public static unsafe partial class Methods
      * If inserting a DDict with a dictID that already exists in the set, replaces the one in the set.
      * Returns 0 if successful, or a zstd error code if something went wrong.
      */
-    private static nuint ZSTD_DDictHashSet_emplaceDDict(ZSTD_DDictHashSet* hashSet, ZSTD_DDict_s* ddict)
+    private static nuint ZSTD_DDictHashSet_emplaceDDict(ZstdDDictHashSet* hashSet, ZstdDDictS* ddict)
     {
-        var dictID = ZSTD_getDictID_fromDDict(ddict);
-        var idx = ZSTD_DDictHashSet_getIndex(hashSet, dictID);
+        var dictId = ZSTD_getDictID_fromDDict(ddict);
+        var idx = ZSTD_DDictHashSet_getIndex(hashSet, dictId);
         var idxRangeMask = hashSet->ddictPtrTableSize - 1;
         if (hashSet->ddictPtrCount == hashSet->ddictPtrTableSize)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
 
         while (hashSet->ddictPtrTable[idx] != null)
         {
-            if (ZSTD_getDictID_fromDDict(hashSet->ddictPtrTable[idx]) == dictID)
+            if (ZSTD_getDictID_fromDDict(hashSet->ddictPtrTable[idx]) == dictId)
             {
                 hashSet->ddictPtrTable[idx] = ddict;
                 return 0;
@@ -48,16 +48,16 @@ public static unsafe partial class Methods
      * rehashes all values, allocates new table, frees old table.
      * Returns 0 on success, otherwise a zstd error code.
      */
-    private static nuint ZSTD_DDictHashSet_expand(ZSTD_DDictHashSet* hashSet, ZSTD_customMem customMem)
+    private static nuint ZSTD_DDictHashSet_expand(ZstdDDictHashSet* hashSet, ZstdCustomMem customMem)
     {
         var newTableSize = hashSet->ddictPtrTableSize * 2;
-        var newTable = (ZSTD_DDict_s**)ZSTD_customCalloc((nuint)sizeof(ZSTD_DDict_s*) * newTableSize, customMem);
+        var newTable = (ZstdDDictS**)ZSTD_customCalloc((nuint)sizeof(ZstdDDictS*) * newTableSize, customMem);
         var oldTable = hashSet->ddictPtrTable;
         var oldTableSize = hashSet->ddictPtrTableSize;
         nuint i;
         if (newTable == null)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
 
         hashSet->ddictPtrTable = newTable;
@@ -67,10 +67,10 @@ public static unsafe partial class Methods
         {
             if (oldTable[i] != null)
             {
-                var err_code = ZSTD_DDictHashSet_emplaceDDict(hashSet, oldTable[i]);
-                if (ERR_isError(err_code))
+                var errCode = ZSTD_DDictHashSet_emplaceDDict(hashSet, oldTable[i]);
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
         }
@@ -82,14 +82,14 @@ public static unsafe partial class Methods
     /* Fetches a DDict with the given dictID
      * Returns the ZSTD_DDict* with the requested dictID. If it doesn't exist, then returns NULL.
      */
-    private static ZSTD_DDict_s* ZSTD_DDictHashSet_getDDict(ZSTD_DDictHashSet* hashSet, uint dictID)
+    private static ZstdDDictS* ZSTD_DDictHashSet_getDDict(ZstdDDictHashSet* hashSet, uint dictId)
     {
-        var idx = ZSTD_DDictHashSet_getIndex(hashSet, dictID);
+        var idx = ZSTD_DDictHashSet_getIndex(hashSet, dictId);
         var idxRangeMask = hashSet->ddictPtrTableSize - 1;
         for (; ; )
         {
-            nuint currDictID = ZSTD_getDictID_fromDDict(hashSet->ddictPtrTable[idx]);
-            if (currDictID == dictID || currDictID == 0)
+            nuint currDictId = ZSTD_getDictID_fromDDict(hashSet->ddictPtrTable[idx]);
+            if (currDictId == dictId || currDictId == 0)
             {
                 break;
             }
@@ -107,13 +107,13 @@ public static unsafe partial class Methods
      * The hash set's ZSTD_DDict* table has all values automatically set to NULL to begin with.
      * Returns NULL if allocation failed.
      */
-    private static ZSTD_DDictHashSet* ZSTD_createDDictHashSet(ZSTD_customMem customMem)
+    private static ZstdDDictHashSet* ZSTD_createDDictHashSet(ZstdCustomMem customMem)
     {
-        var ret = (ZSTD_DDictHashSet*)ZSTD_customMalloc((nuint)sizeof(ZSTD_DDictHashSet), customMem);
+        var ret = (ZstdDDictHashSet*)ZSTD_customMalloc((nuint)sizeof(ZstdDDictHashSet), customMem);
         if (ret == null)
             return null;
 
-        ret->ddictPtrTable = (ZSTD_DDict_s**)ZSTD_customCalloc((nuint)(64 * sizeof(ZSTD_DDict_s*)), customMem);
+        ret->ddictPtrTable = (ZstdDDictS**)ZSTD_customCalloc((nuint)(64 * sizeof(ZstdDDictS*)), customMem);
         if (ret->ddictPtrTable == null)
         {
             ZSTD_customFree(ret, customMem);
@@ -128,7 +128,7 @@ public static unsafe partial class Methods
     /* Frees the table of ZSTD_DDict* within a hashset, then frees the hashset itself.
      * Note: The ZSTD_DDict* within the table are NOT freed.
      */
-    private static void ZSTD_freeDDictHashSet(ZSTD_DDictHashSet* hashSet, ZSTD_customMem customMem)
+    private static void ZSTD_freeDDictHashSet(ZstdDDictHashSet* hashSet, ZstdCustomMem customMem)
     {
         if (hashSet != null && hashSet->ddictPtrTable != null)
         {
@@ -144,22 +144,22 @@ public static unsafe partial class Methods
     /* Public function: Adds a DDict into the ZSTD_DDictHashSet, possibly triggering a resize of the hash set.
      * Returns 0 on success, or a ZSTD error.
      */
-    private static nuint ZSTD_DDictHashSet_addDDict(ZSTD_DDictHashSet* hashSet, ZSTD_DDict_s* ddict, ZSTD_customMem customMem)
+    private static nuint ZSTD_DDictHashSet_addDDict(ZstdDDictHashSet* hashSet, ZstdDDictS* ddict, ZstdCustomMem customMem)
     {
         if (hashSet->ddictPtrCount * 4 / hashSet->ddictPtrTableSize * 3 != 0)
         {
-            var err_code = ZSTD_DDictHashSet_expand(hashSet, customMem);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DDictHashSet_expand(hashSet, customMem);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
         {
-            var err_code = ZSTD_DDictHashSet_emplaceDDict(hashSet, ddict);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DDictHashSet_emplaceDDict(hashSet, ddict);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
@@ -169,50 +169,50 @@ public static unsafe partial class Methods
     /*-*************************************************************
      *   Context management
      ***************************************************************/
-    public static nuint ZSTD_sizeof_DCtx(ZSTD_DCtx_s* dctx)
+    public static nuint ZSTD_sizeof_DCtx(ZstdDCtxS* dctx)
     {
         if (dctx == null)
             return 0;
 
-        return (nuint)sizeof(ZSTD_DCtx_s) + ZSTD_sizeof_DDict(dctx->ddictLocal) + dctx->inBuffSize + dctx->outBuffSize;
+        return (nuint)sizeof(ZstdDCtxS) + ZSTD_sizeof_DDict(dctx->ddictLocal) + dctx->inBuffSize + dctx->outBuffSize;
     }
 
     public static nuint ZSTD_estimateDCtxSize()
     {
-        return (nuint)sizeof(ZSTD_DCtx_s);
+        return (nuint)sizeof(ZstdDCtxS);
     }
 
-    private static nuint ZSTD_startingInputLength(ZSTD_format_e format)
+    private static nuint ZSTD_startingInputLength(ZstdFormatE format)
     {
-        var startingInputLength = (nuint)(format == ZSTD_format_e.ZSTD_f_zstd1 ? 5 : 1);
-        assert(format is ZSTD_format_e.ZSTD_f_zstd1 or ZSTD_format_e.ZSTD_f_zstd1_magicless);
+        var startingInputLength = (nuint)(format == ZstdFormatE.ZstdFZstd1 ? 5 : 1);
+        assert(format is ZstdFormatE.ZstdFZstd1 or ZstdFormatE.ZstdFZstd1Magicless);
         return startingInputLength;
     }
 
-    private static void ZSTD_DCtx_resetParameters(ZSTD_DCtx_s* dctx)
+    private static void ZSTD_DCtx_resetParameters(ZstdDCtxS* dctx)
     {
-        assert(dctx->streamStage == ZSTD_dStreamStage.zdss_init);
-        dctx->format = ZSTD_format_e.ZSTD_f_zstd1;
+        assert(dctx->streamStage == ZstdDStreamStage.ZdssInit);
+        dctx->format = ZstdFormatE.ZstdFZstd1;
         dctx->maxWindowSize = ((uint)1 << 27) + 1;
-        dctx->outBufferMode = ZSTD_bufferMode_e.ZSTD_bm_buffered;
-        dctx->forceIgnoreChecksum = ZSTD_forceIgnoreChecksum_e.ZSTD_d_validateChecksum;
-        dctx->refMultipleDDicts = ZSTD_refMultipleDDicts_e.ZSTD_rmd_refSingleDDict;
+        dctx->outBufferMode = ZstdBufferModeE.ZstdBmBuffered;
+        dctx->forceIgnoreChecksum = ZstdForceIgnoreChecksumE.ZstdDValidateChecksum;
+        dctx->refMultipleDDicts = ZstdRefMultipleDDictsE.ZstdRmdRefSingleDDict;
         dctx->disableHufAsm = 0;
         dctx->maxBlockSizeParam = 0;
     }
 
-    private static void ZSTD_initDCtx_internal(ZSTD_DCtx_s* dctx)
+    private static void ZSTD_initDCtx_internal(ZstdDCtxS* dctx)
     {
         dctx->staticSize = 0;
         dctx->ddict = null;
         dctx->ddictLocal = null;
         dctx->dictEnd = null;
         dctx->ddictIsCold = 0;
-        dctx->dictUses = ZSTD_dictUses_e.ZSTD_dont_use;
+        dctx->dictUses = ZstdDictUsesE.ZstdDontUse;
         dctx->inBuff = null;
         dctx->inBuffSize = 0;
         dctx->outBuffSize = 0;
-        dctx->streamStage = ZSTD_dStreamStage.zdss_init;
+        dctx->streamStage = ZstdDStreamStage.ZdssInit;
         dctx->noForwardProgress = 0;
         dctx->oversizedDuration = 0;
         dctx->isFrameDecompression = 1;
@@ -220,12 +220,12 @@ public static unsafe partial class Methods
         ZSTD_DCtx_resetParameters(dctx);
     }
 
-    public static ZSTD_DCtx_s* ZSTD_initStaticDCtx(void* workspace, nuint workspaceSize)
+    public static ZstdDCtxS* ZSTD_initStaticDCtx(void* workspace, nuint workspaceSize)
     {
-        var dctx = (ZSTD_DCtx_s*)workspace;
+        var dctx = (ZstdDCtxS*)workspace;
         if (((nuint)workspace & 7) != 0)
             return null;
-        if (workspaceSize < (nuint)sizeof(ZSTD_DCtx_s))
+        if (workspaceSize < (nuint)sizeof(ZstdDCtxS))
             return null;
 
         ZSTD_initDCtx_internal(dctx);
@@ -234,13 +234,13 @@ public static unsafe partial class Methods
         return dctx;
     }
 
-    private static ZSTD_DCtx_s* ZSTD_createDCtx_internal(ZSTD_customMem customMem)
+    private static ZstdDCtxS* ZSTD_createDCtx_internal(ZstdCustomMem customMem)
     {
         if (((customMem.customAlloc == null ? 1 : 0) ^ (customMem.customFree == null ? 1 : 0)) != 0)
             return null;
 
         {
-            var dctx = (ZSTD_DCtx_s*)ZSTD_customMalloc((nuint)sizeof(ZSTD_DCtx_s), customMem);
+            var dctx = (ZstdDCtxS*)ZSTD_customMalloc((nuint)sizeof(ZstdDCtxS), customMem);
             if (dctx == null)
                 return null;
 
@@ -250,32 +250,32 @@ public static unsafe partial class Methods
         }
     }
 
-    public static ZSTD_DCtx_s* ZSTD_createDCtx_advanced(ZSTD_customMem customMem)
+    public static ZstdDCtxS* ZSTD_createDCtx_advanced(ZstdCustomMem customMem)
     {
         return ZSTD_createDCtx_internal(customMem);
     }
 
-    public static ZSTD_DCtx_s* ZSTD_createDCtx()
+    public static ZstdDCtxS* ZSTD_createDCtx()
     {
-        return ZSTD_createDCtx_internal(ZSTD_defaultCMem);
+        return ZSTD_createDCtx_internal(ZstdDefaultCMem);
     }
 
-    private static void ZSTD_clearDict(ZSTD_DCtx_s* dctx)
+    private static void ZSTD_clearDict(ZstdDCtxS* dctx)
     {
         ZSTD_freeDDict(dctx->ddictLocal);
         dctx->ddictLocal = null;
         dctx->ddict = null;
-        dctx->dictUses = ZSTD_dictUses_e.ZSTD_dont_use;
+        dctx->dictUses = ZstdDictUsesE.ZstdDontUse;
     }
 
-    public static nuint ZSTD_freeDCtx(ZSTD_DCtx_s* dctx)
+    public static nuint ZSTD_freeDCtx(ZstdDCtxS* dctx)
     {
         if (dctx == null)
             return 0;
 
         if (dctx->staticSize != 0)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
 
         {
@@ -295,7 +295,7 @@ public static unsafe partial class Methods
     }
 
     /* no longer useful */
-    public static void ZSTD_copyDCtx(ZSTD_DCtx_s* dstDCtx, ZSTD_DCtx_s* srcDCtx)
+    public static void ZSTD_copyDCtx(ZstdDCtxS* dstDCtx, ZstdDCtxS* srcDCtx)
     {
         var toCopy = (nuint)((sbyte*)&dstDCtx->inBuff - (sbyte*)dstDCtx);
         memcpy(dstDCtx, srcDCtx, (uint)toCopy);
@@ -309,7 +309,7 @@ public static unsafe partial class Methods
      *
      * ZSTD_d_refMultipleDDicts must be enabled for this function to be called.
      */
-    private static void ZSTD_DCtx_selectFrameDDict(ZSTD_DCtx_s* dctx)
+    private static void ZSTD_DCtx_selectFrameDDict(ZstdDCtxS* dctx)
     {
         assert(dctx->refMultipleDDicts != default && dctx->ddictSet != null);
         if (dctx->ddict != null)
@@ -320,7 +320,7 @@ public static unsafe partial class Methods
                 ZSTD_clearDict(dctx);
                 dctx->dictID = dctx->fParams.dictID;
                 dctx->ddict = frameDDict;
-                dctx->dictUses = ZSTD_dictUses_e.ZSTD_use_indefinitely;
+                dctx->dictUses = ZstdDictUsesE.ZstdUseIndefinitely;
             }
         }
     }
@@ -369,20 +369,20 @@ public static unsafe partial class Methods
      *  note : only works for formats ZSTD_f_zstd1 and ZSTD_f_zstd1_magicless.
      * @return : size of the Frame Header
      *           or an error code, which can be tested with ZSTD_isError() */
-    private static nuint ZSTD_frameHeaderSize_internal(void* src, nuint srcSize, ZSTD_format_e format)
+    private static nuint ZSTD_frameHeaderSize_internal(void* src, nuint srcSize, ZstdFormatE format)
     {
         var minInputSize = ZSTD_startingInputLength(format);
         if (srcSize < minInputSize)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         {
             var fhd = ((byte*)src)[minInputSize - 1];
-            var dictID = (uint)(fhd & 3);
+            var dictId = (uint)(fhd & 3);
             var singleSegment = (uint)((fhd >> 5) & 1);
             var fcsId = (uint)(fhd >> 6);
-            return minInputSize + (nuint)(singleSegment == 0 ? 1 : 0) + ZSTD_did_fieldSize[dictID] + ZSTD_fcs_fieldSize[fcsId] + (nuint)(singleSegment != 0 && fcsId == 0 ? 1 : 0);
+            return minInputSize + (nuint)(singleSegment == 0 ? 1 : 0) + ZstdDidFieldSize[dictId] + ZstdFcsFieldSize[fcsId] + (nuint)(singleSegment != 0 && fcsId == 0 ? 1 : 0);
         }
     }
 
@@ -392,7 +392,7 @@ public static unsafe partial class Methods
      *           or an error code (if srcSize is too small) */
     public static nuint ZSTD_frameHeaderSize(void* src, nuint srcSize)
     {
-        return ZSTD_frameHeaderSize_internal(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
+        return ZSTD_frameHeaderSize_internal(src, srcSize, ZstdFormatE.ZstdFZstd1);
     }
 
     /** ZSTD_getFrameHeader_advanced() :
@@ -401,7 +401,7 @@ public static unsafe partial class Methods
      * @return : 0, `zfhPtr` is correctly filled,
      *          >0, `srcSize` is too small, value is wanted `srcSize` amount,
      **           or an error code, which can be tested using ZSTD_isError() */
-    public static nuint ZSTD_getFrameHeader_advanced(ZSTD_frameHeader* zfhPtr, void* src, nuint srcSize, ZSTD_format_e format)
+    public static nuint ZSTD_getFrameHeader_advanced(ZstdFrameHeader* zfhPtr, void* src, nuint srcSize, ZstdFormatE format)
     {
         var ip = (byte*)src;
         var minInputSize = ZSTD_startingInputLength(format);
@@ -409,13 +409,13 @@ public static unsafe partial class Methods
         {
             if (src == null)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
 
         if (srcSize < minInputSize)
         {
-            if (srcSize > 0 && format != ZSTD_format_e.ZSTD_f_zstd1_magicless)
+            if (srcSize > 0 && format != ZstdFormatE.ZstdFZstd1Magicless)
             {
                 /* when receiving less than @minInputSize bytes,
                  * control these bytes at least correspond to a supported magic number
@@ -432,7 +432,7 @@ public static unsafe partial class Methods
                     memcpy(hbuf, src, (uint)toCopy);
                     if ((MEM_readLE32(hbuf) & 0xFFFFFFF0) != 0x184D2A50)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_prefix_unknown));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorPrefixUnknown));
                     }
                 }
             }
@@ -440,17 +440,17 @@ public static unsafe partial class Methods
             return minInputSize;
         }
 
-        *zfhPtr = new ZSTD_frameHeader();
-        if (format != ZSTD_format_e.ZSTD_f_zstd1_magicless && MEM_readLE32(src) != 0xFD2FB528)
+        *zfhPtr = new ZstdFrameHeader();
+        if (format != ZstdFormatE.ZstdFZstd1Magicless && MEM_readLE32(src) != 0xFD2FB528)
         {
             if ((MEM_readLE32(src) & 0xFFFFFFF0) == 0x184D2A50)
             {
                 if (srcSize < 8)
                     return 8;
 
-                *zfhPtr = new ZSTD_frameHeader
+                *zfhPtr = new ZstdFrameHeader
                 {
-                    frameType = ZSTD_frameType_e.ZSTD_skippableFrame,
+                    frameType = ZstdFrameTypeE.ZstdSkippableFrame,
                     dictID = MEM_readLE32(src) - 0x184D2A50,
                     headerSize = 8,
                     frameContentSize = MEM_readLE32((sbyte*)src + 4)
@@ -458,7 +458,7 @@ public static unsafe partial class Methods
                 return 0;
             }
 
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_prefix_unknown));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorPrefixUnknown));
         }
 
         {
@@ -472,16 +472,16 @@ public static unsafe partial class Methods
         {
             var fhdByte = ip[minInputSize - 1];
             var pos = minInputSize;
-            var dictIDSizeCode = (uint)(fhdByte & 3);
+            var dictIdSizeCode = (uint)(fhdByte & 3);
             var checksumFlag = (uint)((fhdByte >> 2) & 1);
             var singleSegment = (uint)((fhdByte >> 5) & 1);
-            var fcsID = (uint)(fhdByte >> 6);
+            var fcsId = (uint)(fhdByte >> 6);
             ulong windowSize = 0;
-            uint dictID = 0;
+            uint dictId = 0;
             var frameContentSize = unchecked(0UL - 1);
             if ((fhdByte & 0x08) != 0)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_unsupported));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorFrameParameterUnsupported));
             }
 
             if (singleSegment == 0)
@@ -490,14 +490,14 @@ public static unsafe partial class Methods
                 var windowLog = (uint)((wlByte >> 3) + 10);
                 if (windowLog > (uint)(sizeof(nuint) == 4 ? 30 : 31))
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorFrameParameterWindowTooLarge));
                 }
 
                 windowSize = 1UL << (int)windowLog;
                 windowSize += (windowSize >> 3) * (ulong)(wlByte & 7);
             }
 
-            switch (dictIDSizeCode)
+            switch (dictIdSizeCode)
             {
                 default:
                     assert(0 != 0);
@@ -505,20 +505,20 @@ public static unsafe partial class Methods
                 case 0:
                     break;
                 case 1:
-                    dictID = ip[pos];
+                    dictId = ip[pos];
                     pos++;
                     break;
                 case 2:
-                    dictID = MEM_readLE16(ip + pos);
+                    dictId = MEM_readLE16(ip + pos);
                     pos += 2;
                     break;
                 case 3:
-                    dictID = MEM_readLE32(ip + pos);
+                    dictId = MEM_readLE32(ip + pos);
                     pos += 4;
                     break;
             }
 
-            switch (fcsID)
+            switch (fcsId)
             {
                 default:
                     assert(0 != 0);
@@ -546,11 +546,11 @@ public static unsafe partial class Methods
                 windowSize = frameContentSize;
             }
 
-            zfhPtr->frameType = ZSTD_frameType_e.ZSTD_frame;
+            zfhPtr->frameType = ZstdFrameTypeE.ZstdFrame;
             zfhPtr->frameContentSize = frameContentSize;
             zfhPtr->windowSize = windowSize;
             zfhPtr->blockSizeMax = (uint)(windowSize < 1 << 17 ? windowSize : 1 << 17);
-            zfhPtr->dictID = dictID;
+            zfhPtr->dictID = dictId;
             zfhPtr->checksumFlag = checksumFlag;
         }
 
@@ -563,9 +563,9 @@ public static unsafe partial class Methods
      * @return : 0, `zfhPtr` is correctly filled,
      *          >0, `srcSize` is too small, value is wanted `srcSize` amount,
      *           or an error code, which can be tested using ZSTD_isError() */
-    public static nuint ZSTD_getFrameHeader(ZSTD_frameHeader* zfhPtr, void* src, nuint srcSize)
+    public static nuint ZSTD_getFrameHeader(ZstdFrameHeader* zfhPtr, void* src, nuint srcSize)
     {
-        return ZSTD_getFrameHeader_advanced(zfhPtr, src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
+        return ZSTD_getFrameHeader_advanced(zfhPtr, src, srcSize, ZstdFormatE.ZstdFZstd1);
     }
 
     /** ZSTD_getFrameContentSize() :
@@ -575,11 +575,11 @@ public static unsafe partial class Methods
      *         - ZSTD_CONTENTSIZE_ERROR if an error occurred (e.g. invalid magic number, srcSize too small) */
     public static ulong ZSTD_getFrameContentSize(void* src, nuint srcSize)
     {
-        ZSTD_frameHeader zfh;
+        ZstdFrameHeader zfh;
         if (ZSTD_getFrameHeader(&zfh, src, srcSize) != 0)
             return unchecked(0UL - 2);
 
-        if (zfh.frameType == ZSTD_frameType_e.ZSTD_skippableFrame)
+        if (zfh.frameType == ZstdFrameTypeE.ZstdSkippableFrame)
         {
             return 0;
         }
@@ -589,25 +589,25 @@ public static unsafe partial class Methods
         }
     }
 
-    private static nuint readSkippableFrameSize(void* src, nuint srcSize)
+    private static nuint ReadSkippableFrameSize(void* src, nuint srcSize)
     {
         const nuint skippableHeaderSize = 8;
         if (srcSize < 8)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         var sizeU32 = MEM_readLE32((byte*)src + 4);
         if (sizeU32 + 8 < sizeU32)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_unsupported));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorFrameParameterUnsupported));
         }
 
         {
             var skippableSize = skippableHeaderSize + sizeU32;
             if (skippableSize > srcSize)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
             }
 
             return skippableSize;
@@ -629,26 +629,26 @@ public static unsafe partial class Methods
     {
         if (srcSize < 8)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         {
             var magicNumber = MEM_readLE32(src);
-            var skippableFrameSize = readSkippableFrameSize(src, srcSize);
+            var skippableFrameSize = ReadSkippableFrameSize(src, srcSize);
             var skippableContentSize = skippableFrameSize - 8;
             if (ZSTD_isSkippableFrame(src, srcSize) == 0)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_unsupported));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorFrameParameterUnsupported));
             }
 
             if (skippableFrameSize < 8 || skippableFrameSize > srcSize)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
             }
 
             if (skippableContentSize > dstCapacity)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
             }
 
             if (skippableContentSize > 0 && dst != null)
@@ -670,12 +670,12 @@ public static unsafe partial class Methods
     public static ulong ZSTD_findDecompressedSize(void* src, nuint srcSize)
     {
         ulong totalDstSize = 0;
-        while (srcSize >= ZSTD_startingInputLength(ZSTD_format_e.ZSTD_f_zstd1))
+        while (srcSize >= ZSTD_startingInputLength(ZstdFormatE.ZstdFZstd1))
         {
             var magicNumber = MEM_readLE32(src);
             if ((magicNumber & 0xFFFFFFF0) == 0x184D2A50)
             {
-                var skippableSize = readSkippableFrameSize(src, srcSize);
+                var skippableSize = ReadSkippableFrameSize(src, srcSize);
                 if (ERR_isError(skippableSize))
                     return unchecked(0UL - 2);
 
@@ -730,7 +730,7 @@ public static unsafe partial class Methods
      * `headerSize` must be the size provided by ZSTD_frameHeaderSize().
      * If multiple DDict references are enabled, also will choose the correct DDict to use.
      * @return : 0 if success, or an error code, which can be tested using ZSTD_isError() */
-    private static nuint ZSTD_decodeFrameHeader(ZSTD_DCtx_s* dctx, void* src, nuint headerSize)
+    private static nuint ZSTD_decodeFrameHeader(ZstdDCtxS* dctx, void* src, nuint headerSize)
     {
         var result = ZSTD_getFrameHeader_advanced(&dctx->fParams, src, headerSize, dctx->format);
         if (ERR_isError(result))
@@ -738,17 +738,17 @@ public static unsafe partial class Methods
 
         if (result > 0)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
-        if (dctx->refMultipleDDicts == ZSTD_refMultipleDDicts_e.ZSTD_rmd_refMultipleDDicts && dctx->ddictSet != null)
+        if (dctx->refMultipleDDicts == ZstdRefMultipleDDictsE.ZstdRmdRefMultipleDDicts && dctx->ddictSet != null)
         {
             ZSTD_DCtx_selectFrameDDict(dctx);
         }
 
         if (dctx->fParams.dictID != 0 && dctx->dictID != dctx->fParams.dictID)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryWrong));
         }
 
         dctx->validateChecksum = (uint)(dctx->fParams.checksumFlag != 0 && dctx->forceIgnoreChecksum == default ? 1 : 0);
@@ -758,20 +758,20 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    private static ZSTD_frameSizeInfo ZSTD_errorFrameSizeInfo(nuint ret)
+    private static ZstdFrameSizeInfo ZSTD_errorFrameSizeInfo(nuint ret)
     {
-        System.Runtime.CompilerServices.Unsafe.SkipInit(out ZSTD_frameSizeInfo frameSizeInfo);
+        System.Runtime.CompilerServices.Unsafe.SkipInit(out ZstdFrameSizeInfo frameSizeInfo);
         frameSizeInfo.compressedSize = ret;
         frameSizeInfo.decompressedBound = unchecked(0UL - 2);
         return frameSizeInfo;
     }
 
-    private static ZSTD_frameSizeInfo ZSTD_findFrameSizeInfo(void* src, nuint srcSize, ZSTD_format_e format)
+    private static ZstdFrameSizeInfo ZSTD_findFrameSizeInfo(void* src, nuint srcSize, ZstdFormatE format)
     {
-        var frameSizeInfo = new ZSTD_frameSizeInfo();
-        if (format == ZSTD_format_e.ZSTD_f_zstd1 && srcSize >= 8 && (MEM_readLE32(src) & 0xFFFFFFF0) == 0x184D2A50)
+        var frameSizeInfo = new ZstdFrameSizeInfo();
+        if (format == ZstdFormatE.ZstdFZstd1 && srcSize >= 8 && (MEM_readLE32(src) & 0xFFFFFFF0) == 0x184D2A50)
         {
-            frameSizeInfo.compressedSize = readSkippableFrameSize(src, srcSize);
+            frameSizeInfo.compressedSize = ReadSkippableFrameSize(src, srcSize);
             assert(ERR_isError(frameSizeInfo.compressedSize) || frameSizeInfo.compressedSize <= srcSize);
             return frameSizeInfo;
         }
@@ -781,28 +781,28 @@ public static unsafe partial class Methods
             var ipstart = ip;
             var remainingSize = srcSize;
             nuint nbBlocks = 0;
-            ZSTD_frameHeader zfh;
+            ZstdFrameHeader zfh;
             {
                 var ret = ZSTD_getFrameHeader_advanced(&zfh, src, srcSize, format);
                 if (ERR_isError(ret))
                     return ZSTD_errorFrameSizeInfo(ret);
                 if (ret > 0)
-                    return ZSTD_errorFrameSizeInfo(unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong)));
+                    return ZSTD_errorFrameSizeInfo(unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong)));
             }
 
             ip += zfh.headerSize;
             remainingSize -= zfh.headerSize;
             while (true)
             {
-                blockProperties_t blockProperties;
+                BlockPropertiesT blockProperties;
                 var cBlockSize = ZSTD_getcBlockSize(ip, remainingSize, &blockProperties);
                 if (ERR_isError(cBlockSize))
                     return ZSTD_errorFrameSizeInfo(cBlockSize);
-                if (ZSTD_blockHeaderSize + cBlockSize > remainingSize)
-                    return ZSTD_errorFrameSizeInfo(unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong)));
+                if (ZstdBlockHeaderSize + cBlockSize > remainingSize)
+                    return ZSTD_errorFrameSizeInfo(unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong)));
 
-                ip += ZSTD_blockHeaderSize + cBlockSize;
-                remainingSize -= ZSTD_blockHeaderSize + cBlockSize;
+                ip += ZstdBlockHeaderSize + cBlockSize;
+                remainingSize -= ZstdBlockHeaderSize + cBlockSize;
                 nbBlocks++;
                 if (blockProperties.lastBlock != 0)
                     break;
@@ -811,7 +811,7 @@ public static unsafe partial class Methods
             if (zfh.checksumFlag != 0)
             {
                 if (remainingSize < 4)
-                    return ZSTD_errorFrameSizeInfo(unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong)));
+                    return ZSTD_errorFrameSizeInfo(unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong)));
 
                 ip += 4;
             }
@@ -823,7 +823,7 @@ public static unsafe partial class Methods
         }
     }
 
-    private static nuint ZSTD_findFrameCompressedSize_advanced(void* src, nuint srcSize, ZSTD_format_e format)
+    private static nuint ZSTD_findFrameCompressedSize_advanced(void* src, nuint srcSize, ZstdFormatE format)
     {
         var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, format);
         return frameSizeInfo.compressedSize;
@@ -834,7 +834,7 @@ public static unsafe partial class Methods
      * Note: compatible with legacy mode */
     public static nuint ZSTD_findFrameCompressedSize(void* src, nuint srcSize)
     {
-        return ZSTD_findFrameCompressedSize_advanced(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
+        return ZSTD_findFrameCompressedSize_advanced(src, srcSize, ZstdFormatE.ZstdFZstd1);
     }
 
     /** ZSTD_decompressBound() :
@@ -848,7 +848,7 @@ public static unsafe partial class Methods
         ulong bound = 0;
         while (srcSize > 0)
         {
-            var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
+            var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZstdFormatE.ZstdFZstd1);
             var compressedSize = frameSizeInfo.compressedSize;
             var decompressedBound = frameSizeInfo.decompressedBound;
             if (ERR_isError(compressedSize) || decompressedBound == unchecked(0UL - 2))
@@ -892,22 +892,22 @@ public static unsafe partial class Methods
         uint maxBlockSize = 0;
         while (srcSize > 0)
         {
-            var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZSTD_format_e.ZSTD_f_zstd1);
+            var frameSizeInfo = ZSTD_findFrameSizeInfo(src, srcSize, ZstdFormatE.ZstdFZstd1);
             var compressedSize = frameSizeInfo.compressedSize;
             var decompressedBound = frameSizeInfo.decompressedBound;
-            ZSTD_frameHeader zfh;
+            ZstdFrameHeader zfh;
             {
-                var err_code = ZSTD_getFrameHeader(&zfh, src, srcSize);
-                if (ERR_isError(err_code))
+                var errCode = ZSTD_getFrameHeader(&zfh, src, srcSize);
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
             if (ERR_isError(compressedSize) || decompressedBound == unchecked(0UL - 2))
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
-            if (zfh.frameType == ZSTD_frameType_e.ZSTD_frame)
+            if (zfh.frameType == ZstdFrameTypeE.ZstdFrame)
             {
                 margin += zfh.headerSize;
                 margin += (nuint)(zfh.checksumFlag != 0 ? 4 : 0);
@@ -916,7 +916,7 @@ public static unsafe partial class Methods
             }
             else
             {
-                assert(zfh.frameType == ZSTD_frameType_e.ZSTD_skippableFrame);
+                assert(zfh.frameType == ZstdFrameTypeE.ZstdSkippableFrame);
                 margin += compressedSize;
             }
 
@@ -931,7 +931,7 @@ public static unsafe partial class Methods
 
     /** ZSTD_insertBlock() :
      *  insert `src` block into `dctx` history. Useful to track uncompressed blocks. */
-    public static nuint ZSTD_insertBlock(ZSTD_DCtx_s* dctx, void* blockStart, nuint blockSize)
+    public static nuint ZSTD_insertBlock(ZstdDCtxS* dctx, void* blockStart, nuint blockSize)
     {
         ZSTD_checkContinuity(dctx, blockStart, blockSize);
         dctx->previousDstEnd = (sbyte*)blockStart + blockSize;
@@ -942,7 +942,7 @@ public static unsafe partial class Methods
     {
         if (srcSize > dstCapacity)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         if (dst == null)
@@ -950,7 +950,7 @@ public static unsafe partial class Methods
             if (srcSize == 0)
                 return 0;
 
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstBuffer_null));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstBufferNull));
         }
 
         memmove(dst, src, srcSize);
@@ -961,7 +961,7 @@ public static unsafe partial class Methods
     {
         if (regenSize > dstCapacity)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         if (dst == null)
@@ -969,14 +969,14 @@ public static unsafe partial class Methods
             if (regenSize == 0)
                 return 0;
 
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstBuffer_null));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstBufferNull));
         }
 
         memset(dst, b, (uint)regenSize);
         return regenSize;
     }
 
-    private static void ZSTD_DCtx_trace_end(ZSTD_DCtx_s* dctx, ulong uncompressedSize, ulong compressedSize, int streaming)
+    private static void ZSTD_DCtx_trace_end(ZstdDCtxS* dctx, ulong uncompressedSize, ulong compressedSize, int streaming)
     {
     }
 
@@ -984,7 +984,7 @@ public static unsafe partial class Methods
      * @dctx must be properly initialized
      *  will update *srcPtr and *srcSizePtr,
      *  to make *srcPtr progress by one frame. */
-    private static nuint ZSTD_decompressFrame(ZSTD_DCtx_s* dctx, void* dst, nuint dstCapacity, void** srcPtr, nuint* srcSizePtr)
+    private static nuint ZSTD_decompressFrame(ZstdDCtxS* dctx, void* dst, nuint dstCapacity, void** srcPtr, nuint* srcSizePtr)
     {
         var istart = (byte*)*srcPtr;
         var ip = istart;
@@ -992,26 +992,26 @@ public static unsafe partial class Methods
         var oend = dstCapacity != 0 ? ostart + dstCapacity : ostart;
         var op = ostart;
         var remainingSrcSize = *srcSizePtr;
-        if (remainingSrcSize < (nuint)(dctx->format == ZSTD_format_e.ZSTD_f_zstd1 ? 6 : 2) + ZSTD_blockHeaderSize)
+        if (remainingSrcSize < (nuint)(dctx->format == ZstdFormatE.ZstdFZstd1 ? 6 : 2) + ZstdBlockHeaderSize)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         {
-            var frameHeaderSize = ZSTD_frameHeaderSize_internal(ip, (nuint)(dctx->format == ZSTD_format_e.ZSTD_f_zstd1 ? 5 : 1), dctx->format);
+            var frameHeaderSize = ZSTD_frameHeaderSize_internal(ip, (nuint)(dctx->format == ZstdFormatE.ZstdFZstd1 ? 5 : 1), dctx->format);
             if (ERR_isError(frameHeaderSize))
                 return frameHeaderSize;
 
-            if (remainingSrcSize < frameHeaderSize + ZSTD_blockHeaderSize)
+            if (remainingSrcSize < frameHeaderSize + ZstdBlockHeaderSize)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
             }
 
             {
-                var err_code = ZSTD_decodeFrameHeader(dctx, ip, frameHeaderSize);
-                if (ERR_isError(err_code))
+                var errCode = ZSTD_decodeFrameHeader(dctx, ip, frameHeaderSize);
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
@@ -1028,16 +1028,16 @@ public static unsafe partial class Methods
         {
             var oBlockEnd = oend;
             nuint decodedSize;
-            blockProperties_t blockProperties;
+            BlockPropertiesT blockProperties;
             var cBlockSize = ZSTD_getcBlockSize(ip, remainingSrcSize, &blockProperties);
             if (ERR_isError(cBlockSize))
                 return cBlockSize;
 
-            ip += ZSTD_blockHeaderSize;
-            remainingSrcSize -= ZSTD_blockHeaderSize;
+            ip += ZstdBlockHeaderSize;
+            remainingSrcSize -= ZstdBlockHeaderSize;
             if (cBlockSize > remainingSrcSize)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
             }
 
             if (ip >= op && ip < oBlockEnd)
@@ -1047,26 +1047,26 @@ public static unsafe partial class Methods
 
             switch (blockProperties.blockType)
             {
-                case blockType_e.bt_compressed:
+                case BlockTypeE.BtCompressed:
                     assert(dctx->isFrameDecompression == 1);
                     decodedSize = ZSTD_decompressBlock_internal(dctx, op, (nuint)(oBlockEnd - op), ip, cBlockSize, StreamingOperation.NotStreaming);
                     break;
-                case blockType_e.bt_raw:
+                case BlockTypeE.BtRaw:
                     decodedSize = ZSTD_copyRawBlock(op, (nuint)(oend - op), ip, cBlockSize);
                     break;
-                case blockType_e.bt_rle:
+                case BlockTypeE.BtRle:
                     decodedSize = ZSTD_setRleBlock(op, (nuint)(oBlockEnd - op), *ip, blockProperties.origSize);
                     break;
-                case blockType_e.bt_reserved:
+                case BlockTypeE.BtReserved:
                 default:
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             }
 
             {
-                var err_code = decodedSize;
-                if (ERR_isError(err_code))
+                var errCode = decodedSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
@@ -1091,7 +1091,7 @@ public static unsafe partial class Methods
         {
             if ((ulong)(op - ostart) != dctx->fParams.frameContentSize)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             }
         }
 
@@ -1099,7 +1099,7 @@ public static unsafe partial class Methods
         {
             if (remainingSrcSize < 4)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_checksum_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorChecksumWrong));
             }
 
             if (dctx->forceIgnoreChecksum == default)
@@ -1108,7 +1108,7 @@ public static unsafe partial class Methods
                 var checkRead = MEM_readLE32(ip);
                 if (checkRead != checkCalc)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_checksum_wrong));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorChecksumWrong));
                 }
             }
 
@@ -1122,7 +1122,7 @@ public static unsafe partial class Methods
         return (nuint)(op - ostart);
     }
 
-    private static nuint ZSTD_decompressMultiFrame(ZSTD_DCtx_s* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, void* dict, nuint dictSize, ZSTD_DDict_s* ddict)
+    private static nuint ZSTD_decompressMultiFrame(ZstdDCtxS* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, void* dict, nuint dictSize, ZstdDDictS* ddict)
     {
         var dststart = dst;
         var moreThan1Frame = 0;
@@ -1135,18 +1135,18 @@ public static unsafe partial class Methods
 
         while (srcSize >= ZSTD_startingInputLength(dctx->format))
         {
-            if (dctx->format == ZSTD_format_e.ZSTD_f_zstd1 && srcSize >= 4)
+            if (dctx->format == ZstdFormatE.ZstdFZstd1 && srcSize >= 4)
             {
                 var magicNumber = MEM_readLE32(src);
                 if ((magicNumber & 0xFFFFFFF0) == 0x184D2A50)
                 {
                     /* skippable frame detected : skip it */
-                    var skippableSize = readSkippableFrameSize(src, srcSize);
+                    var skippableSize = ReadSkippableFrameSize(src, srcSize);
                     {
-                        var err_code = skippableSize;
-                        if (ERR_isError(err_code))
+                        var errCode = skippableSize;
+                        if (ERR_isError(errCode))
                         {
-                            return err_code;
+                            return errCode;
                         }
                     }
 
@@ -1160,29 +1160,29 @@ public static unsafe partial class Methods
             if (ddict != null)
             {
                 /* we were called from ZSTD_decompress_usingDDict */
-                var err_code = ZSTD_decompressBegin_usingDDict(dctx, ddict);
-                if (ERR_isError(err_code))
+                var errCode = ZSTD_decompressBegin_usingDDict(dctx, ddict);
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
             else
             {
                 /* this will initialize correctly with no dict if dict == NULL, so
                  * use this in all cases but ddict */
-                var err_code = ZSTD_decompressBegin_usingDict(dctx, dict, dictSize);
-                if (ERR_isError(err_code))
+                var errCode = ZSTD_decompressBegin_usingDict(dctx, dict, dictSize);
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
             ZSTD_checkContinuity(dctx, dst, dstCapacity);
             {
                 var res = ZSTD_decompressFrame(dctx, dst, dstCapacity, &src, &srcSize);
-                if (ZSTD_getErrorCode(res) == ZSTD_ErrorCode.ZSTD_error_prefix_unknown && moreThan1Frame == 1)
+                if (ZSTD_getErrorCode(res) == ZstdErrorCode.ZstdErrorPrefixUnknown && moreThan1Frame == 1)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
                 }
 
                 if (ERR_isError(res))
@@ -1202,7 +1202,7 @@ public static unsafe partial class Methods
 
         if (srcSize != 0)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         return (nuint)((byte*)dst - (byte*)dststart);
@@ -1214,25 +1214,25 @@ public static unsafe partial class Methods
      *  Note : This function loads the dictionary, resulting in significant startup delay.
      *         It's intended for a dictionary used only once.
      *  Note : When `dict == NULL || dictSize < 8` no dictionary is used. */
-    public static nuint ZSTD_decompress_usingDict(ZSTD_DCtx_s* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, void* dict, nuint dictSize)
+    public static nuint ZSTD_decompress_usingDict(ZstdDCtxS* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, void* dict, nuint dictSize)
     {
         return ZSTD_decompressMultiFrame(dctx, dst, dstCapacity, src, srcSize, dict, dictSize, null);
     }
 
-    private static ZSTD_DDict_s* ZSTD_getDDict(ZSTD_DCtx_s* dctx)
+    private static ZstdDDictS* ZSTD_getDDict(ZstdDCtxS* dctx)
     {
         switch (dctx->dictUses)
         {
             default:
                 assert(0 != 0);
-                goto case ZSTD_dictUses_e.ZSTD_dont_use;
-            case ZSTD_dictUses_e.ZSTD_dont_use:
+                goto case ZstdDictUsesE.ZstdDontUse;
+            case ZstdDictUsesE.ZstdDontUse:
                 ZSTD_clearDict(dctx);
                 return null;
-            case ZSTD_dictUses_e.ZSTD_use_indefinitely:
+            case ZstdDictUsesE.ZstdUseIndefinitely:
                 return dctx->ddict;
-            case ZSTD_dictUses_e.ZSTD_use_once:
-                dctx->dictUses = ZSTD_dictUses_e.ZSTD_dont_use;
+            case ZstdDictUsesE.ZstdUseOnce:
+                dctx->dictUses = ZstdDictUsesE.ZstdDontUse;
                 return dctx->ddict;
         }
     }
@@ -1242,7 +1242,7 @@ public static unsafe partial class Methods
      *  requires an allocated ZSTD_DCtx.
      *  Compatible with sticky parameters (see below).
      */
-    public static nuint ZSTD_decompressDCtx(ZSTD_DCtx_s* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize)
+    public static nuint ZSTD_decompressDCtx(ZstdDCtxS* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize)
     {
         return ZSTD_decompress_usingDDict(dctx, dst, dstCapacity, src, srcSize, ZSTD_getDDict(dctx));
     }
@@ -1258,10 +1258,10 @@ public static unsafe partial class Methods
      *           or an errorCode if it fails (which can be tested using ZSTD_isError()). */
     public static nuint ZSTD_decompress(void* dst, nuint dstCapacity, void* src, nuint srcSize)
     {
-        var dctx = ZSTD_createDCtx_internal(ZSTD_defaultCMem);
+        var dctx = ZSTD_createDCtx_internal(ZstdDefaultCMem);
         if (dctx == null)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
 
         var regenSize = ZSTD_decompressDCtx(dctx, dst, dstCapacity, src, srcSize);
@@ -1273,7 +1273,7 @@ public static unsafe partial class Methods
      *   Advanced Streaming Decompression API
      *   Bufferless and synchronous
      ****************************************/
-    public static nuint ZSTD_nextSrcSizeToDecompress(ZSTD_DCtx_s* dctx)
+    public static nuint ZSTD_nextSrcSizeToDecompress(ZstdDCtxS* dctx)
     {
         return dctx->expected;
     }
@@ -1288,70 +1288,70 @@ public static unsafe partial class Methods
      *
      * @param inputSize - The total amount of input that the caller currently has.
      */
-    private static nuint ZSTD_nextSrcSizeToDecompressWithInputSize(ZSTD_DCtx_s* dctx, nuint inputSize)
+    private static nuint ZSTD_nextSrcSizeToDecompressWithInputSize(ZstdDCtxS* dctx, nuint inputSize)
     {
-        if (!(dctx->stage == ZSTD_dStage.ZSTDds_decompressBlock || dctx->stage == ZSTD_dStage.ZSTDds_decompressLastBlock))
+        if (!(dctx->stage == ZstdDStage.ZstDdsDecompressBlock || dctx->stage == ZstdDStage.ZstDdsDecompressLastBlock))
             return dctx->expected;
-        if (dctx->bType != blockType_e.bt_raw)
+        if (dctx->bType != BlockTypeE.BtRaw)
             return dctx->expected;
 
         return inputSize <= 1 ? 1 : inputSize <= dctx->expected ? inputSize : dctx->expected;
     }
 
-    public static ZSTD_nextInputType_e ZSTD_nextInputType(ZSTD_DCtx_s* dctx)
+    public static ZstdNextInputTypeE ZSTD_nextInputType(ZstdDCtxS* dctx)
     {
         switch (dctx->stage)
         {
             default:
                 assert(0 != 0);
-                goto case ZSTD_dStage.ZSTDds_getFrameHeaderSize;
-            case ZSTD_dStage.ZSTDds_getFrameHeaderSize:
-            case ZSTD_dStage.ZSTDds_decodeFrameHeader:
-                return ZSTD_nextInputType_e.ZSTDnit_frameHeader;
-            case ZSTD_dStage.ZSTDds_decodeBlockHeader:
-                return ZSTD_nextInputType_e.ZSTDnit_blockHeader;
-            case ZSTD_dStage.ZSTDds_decompressBlock:
-                return ZSTD_nextInputType_e.ZSTDnit_block;
-            case ZSTD_dStage.ZSTDds_decompressLastBlock:
-                return ZSTD_nextInputType_e.ZSTDnit_lastBlock;
-            case ZSTD_dStage.ZSTDds_checkChecksum:
-                return ZSTD_nextInputType_e.ZSTDnit_checksum;
-            case ZSTD_dStage.ZSTDds_decodeSkippableHeader:
-            case ZSTD_dStage.ZSTDds_skipFrame:
-                return ZSTD_nextInputType_e.ZSTDnit_skippableFrame;
+                goto case ZstdDStage.ZstDdsGetFrameHeaderSize;
+            case ZstdDStage.ZstDdsGetFrameHeaderSize:
+            case ZstdDStage.ZstDdsDecodeFrameHeader:
+                return ZstdNextInputTypeE.ZstDnitFrameHeader;
+            case ZstdDStage.ZstDdsDecodeBlockHeader:
+                return ZstdNextInputTypeE.ZstDnitBlockHeader;
+            case ZstdDStage.ZstDdsDecompressBlock:
+                return ZstdNextInputTypeE.ZstDnitBlock;
+            case ZstdDStage.ZstDdsDecompressLastBlock:
+                return ZstdNextInputTypeE.ZstDnitLastBlock;
+            case ZstdDStage.ZstDdsCheckChecksum:
+                return ZstdNextInputTypeE.ZstDnitChecksum;
+            case ZstdDStage.ZstDdsDecodeSkippableHeader:
+            case ZstdDStage.ZstDdsSkipFrame:
+                return ZstdNextInputTypeE.ZstDnitSkippableFrame;
         }
     }
 
-    private static int ZSTD_isSkipFrame(ZSTD_DCtx_s* dctx)
+    private static int ZSTD_isSkipFrame(ZstdDCtxS* dctx)
     {
-        return dctx->stage == ZSTD_dStage.ZSTDds_skipFrame ? 1 : 0;
+        return dctx->stage == ZstdDStage.ZstDdsSkipFrame ? 1 : 0;
     }
 
     /** ZSTD_decompressContinue() :
      *  srcSize : must be the exact nb of bytes expected (see ZSTD_nextSrcSizeToDecompress())
      *  @return : nb of bytes generated into `dst` (necessarily <= `dstCapacity)
      *            or an error code, which can be tested using ZSTD_isError() */
-    public static nuint ZSTD_decompressContinue(ZSTD_DCtx_s* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize)
+    public static nuint ZSTD_decompressContinue(ZstdDCtxS* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize)
     {
         if (srcSize != ZSTD_nextSrcSizeToDecompressWithInputSize(dctx, srcSize))
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         ZSTD_checkContinuity(dctx, dst, dstCapacity);
         dctx->processedCSize += srcSize;
         switch (dctx->stage)
         {
-            case ZSTD_dStage.ZSTDds_getFrameHeaderSize:
+            case ZstdDStage.ZstDdsGetFrameHeaderSize:
                 assert(src != null);
-                if (dctx->format == ZSTD_format_e.ZSTD_f_zstd1)
+                if (dctx->format == ZstdFormatE.ZstdFZstd1)
                 {
                     assert(srcSize >= 4);
                     if ((MEM_readLE32(src) & 0xFFFFFFF0) == 0x184D2A50)
                     {
                         memcpy(dctx->headerBuffer, src, (uint)srcSize);
                         dctx->expected = 8 - srcSize;
-                        dctx->stage = ZSTD_dStage.ZSTDds_decodeSkippableHeader;
+                        dctx->stage = ZstdDStage.ZstDdsDecodeSkippableHeader;
                         return 0;
                     }
                 }
@@ -1362,32 +1362,32 @@ public static unsafe partial class Methods
 
                 memcpy(dctx->headerBuffer, src, (uint)srcSize);
                 dctx->expected = dctx->headerSize - srcSize;
-                dctx->stage = ZSTD_dStage.ZSTDds_decodeFrameHeader;
+                dctx->stage = ZstdDStage.ZstDdsDecodeFrameHeader;
                 return 0;
-            case ZSTD_dStage.ZSTDds_decodeFrameHeader:
+            case ZstdDStage.ZstDdsDecodeFrameHeader:
                 assert(src != null);
                 memcpy(dctx->headerBuffer + (dctx->headerSize - srcSize), src, (uint)srcSize);
             {
-                var err_code = ZSTD_decodeFrameHeader(dctx, dctx->headerBuffer, dctx->headerSize);
-                if (ERR_isError(err_code))
+                var errCode = ZSTD_decodeFrameHeader(dctx, dctx->headerBuffer, dctx->headerSize);
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
-                dctx->expected = ZSTD_blockHeaderSize;
-                dctx->stage = ZSTD_dStage.ZSTDds_decodeBlockHeader;
+                dctx->expected = ZstdBlockHeaderSize;
+                dctx->stage = ZstdDStage.ZstDdsDecodeBlockHeader;
                 return 0;
-            case ZSTD_dStage.ZSTDds_decodeBlockHeader:
+            case ZstdDStage.ZstDdsDecodeBlockHeader:
             {
-                blockProperties_t bp;
-                var cBlockSize = ZSTD_getcBlockSize(src, ZSTD_blockHeaderSize, &bp);
+                BlockPropertiesT bp;
+                var cBlockSize = ZSTD_getcBlockSize(src, ZstdBlockHeaderSize, &bp);
                 if (ERR_isError(cBlockSize))
                     return cBlockSize;
 
                 if (cBlockSize > dctx->fParams.blockSizeMax)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                 }
 
                 dctx->expected = cBlockSize;
@@ -1395,7 +1395,7 @@ public static unsafe partial class Methods
                 dctx->rleSize = bp.origSize;
                 if (cBlockSize != 0)
                 {
-                    dctx->stage = bp.lastBlock != 0 ? ZSTD_dStage.ZSTDds_decompressLastBlock : ZSTD_dStage.ZSTDds_decompressBlock;
+                    dctx->stage = bp.lastBlock != 0 ? ZstdDStage.ZstDdsDecompressLastBlock : ZstdDStage.ZstDdsDecompressBlock;
                     return 0;
                 }
 
@@ -1404,68 +1404,68 @@ public static unsafe partial class Methods
                     if (dctx->fParams.checksumFlag != 0)
                     {
                         dctx->expected = 4;
-                        dctx->stage = ZSTD_dStage.ZSTDds_checkChecksum;
+                        dctx->stage = ZstdDStage.ZstDdsCheckChecksum;
                     }
                     else
                     {
                         dctx->expected = 0;
-                        dctx->stage = ZSTD_dStage.ZSTDds_getFrameHeaderSize;
+                        dctx->stage = ZstdDStage.ZstDdsGetFrameHeaderSize;
                     }
                 }
                 else
                 {
-                    dctx->expected = ZSTD_blockHeaderSize;
-                    dctx->stage = ZSTD_dStage.ZSTDds_decodeBlockHeader;
+                    dctx->expected = ZstdBlockHeaderSize;
+                    dctx->stage = ZstdDStage.ZstDdsDecodeBlockHeader;
                 }
 
                 return 0;
             }
 
-            case ZSTD_dStage.ZSTDds_decompressLastBlock:
-            case ZSTD_dStage.ZSTDds_decompressBlock:
+            case ZstdDStage.ZstDdsDecompressLastBlock:
+            case ZstdDStage.ZstDdsDecompressBlock:
             {
                 nuint rSize;
                 switch (dctx->bType)
                 {
-                    case blockType_e.bt_compressed:
+                    case BlockTypeE.BtCompressed:
                         assert(dctx->isFrameDecompression == 1);
                         rSize = ZSTD_decompressBlock_internal(dctx, dst, dstCapacity, src, srcSize, StreamingOperation.IsStreaming);
                         dctx->expected = 0;
                         break;
-                    case blockType_e.bt_raw:
+                    case BlockTypeE.BtRaw:
                         assert(srcSize <= dctx->expected);
                         rSize = ZSTD_copyRawBlock(dst, dstCapacity, src, srcSize);
                     {
-                        var err_code = rSize;
-                        if (ERR_isError(err_code))
+                        var errCode = rSize;
+                        if (ERR_isError(errCode))
                         {
-                            return err_code;
+                            return errCode;
                         }
                     }
 
                         assert(rSize == srcSize);
                         dctx->expected -= rSize;
                         break;
-                    case blockType_e.bt_rle:
+                    case BlockTypeE.BtRle:
                         rSize = ZSTD_setRleBlock(dst, dstCapacity, *(byte*)src, dctx->rleSize);
                         dctx->expected = 0;
                         break;
-                    case blockType_e.bt_reserved:
+                    case BlockTypeE.BtReserved:
                     default:
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                 }
 
                 {
-                    var err_code = rSize;
-                    if (ERR_isError(err_code))
+                    var errCode = rSize;
+                    if (ERR_isError(errCode))
                     {
-                        return err_code;
+                        return errCode;
                     }
                 }
 
                 if (rSize > dctx->fParams.blockSizeMax)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                 }
 
                 dctx->decodedSize += rSize;
@@ -1477,35 +1477,35 @@ public static unsafe partial class Methods
                     return rSize;
                 }
 
-                if (dctx->stage == ZSTD_dStage.ZSTDds_decompressLastBlock)
+                if (dctx->stage == ZstdDStage.ZstDdsDecompressLastBlock)
                 {
                     if (dctx->fParams.frameContentSize != unchecked(0UL - 1) && dctx->decodedSize != dctx->fParams.frameContentSize)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                     }
 
                     if (dctx->fParams.checksumFlag != 0)
                     {
                         dctx->expected = 4;
-                        dctx->stage = ZSTD_dStage.ZSTDds_checkChecksum;
+                        dctx->stage = ZstdDStage.ZstDdsCheckChecksum;
                     }
                     else
                     {
                         ZSTD_DCtx_trace_end(dctx, dctx->decodedSize, dctx->processedCSize, 1);
                         dctx->expected = 0;
-                        dctx->stage = ZSTD_dStage.ZSTDds_getFrameHeaderSize;
+                        dctx->stage = ZstdDStage.ZstDdsGetFrameHeaderSize;
                     }
                 }
                 else
                 {
-                    dctx->stage = ZSTD_dStage.ZSTDds_decodeBlockHeader;
-                    dctx->expected = ZSTD_blockHeaderSize;
+                    dctx->stage = ZstdDStage.ZstDdsDecodeBlockHeader;
+                    dctx->expected = ZstdBlockHeaderSize;
                 }
 
                 return rSize;
             }
 
-            case ZSTD_dStage.ZSTDds_checkChecksum:
+            case ZstdDStage.ZstDdsCheckChecksum:
                 assert(srcSize == 4);
             {
                 if (dctx->validateChecksum != 0)
@@ -1514,35 +1514,35 @@ public static unsafe partial class Methods
                     var check32 = MEM_readLE32(src);
                     if (check32 != h32)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_checksum_wrong));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorChecksumWrong));
                     }
                 }
 
                 ZSTD_DCtx_trace_end(dctx, dctx->decodedSize, dctx->processedCSize, 1);
                 dctx->expected = 0;
-                dctx->stage = ZSTD_dStage.ZSTDds_getFrameHeaderSize;
+                dctx->stage = ZstdDStage.ZstDdsGetFrameHeaderSize;
                 return 0;
             }
 
-            case ZSTD_dStage.ZSTDds_decodeSkippableHeader:
+            case ZstdDStage.ZstDdsDecodeSkippableHeader:
                 assert(src != null);
                 assert(srcSize <= 8);
-                assert(dctx->format != ZSTD_format_e.ZSTD_f_zstd1_magicless);
+                assert(dctx->format != ZstdFormatE.ZstdFZstd1Magicless);
                 memcpy(dctx->headerBuffer + (8 - srcSize), src, (uint)srcSize);
                 dctx->expected = MEM_readLE32(dctx->headerBuffer + 4);
-                dctx->stage = ZSTD_dStage.ZSTDds_skipFrame;
+                dctx->stage = ZstdDStage.ZstDdsSkipFrame;
                 return 0;
-            case ZSTD_dStage.ZSTDds_skipFrame:
+            case ZstdDStage.ZstDdsSkipFrame:
                 dctx->expected = 0;
-                dctx->stage = ZSTD_dStage.ZSTDds_getFrameHeaderSize;
+                dctx->stage = ZstdDStage.ZstDdsGetFrameHeaderSize;
                 return 0;
             default:
                 assert(0 != 0);
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
     }
 
-    private static nuint ZSTD_refDictContent(ZSTD_DCtx_s* dctx, void* dict, nuint dictSize)
+    private static nuint ZSTD_refDictContent(ZstdDCtxS* dctx, void* dict, nuint dictSize)
     {
         dctx->dictEnd = dctx->previousDstEnd;
         dctx->virtualStart = (sbyte*)dict - ((sbyte*)dctx->previousDstEnd - (sbyte*)dctx->prefixStart);
@@ -1554,13 +1554,13 @@ public static unsafe partial class Methods
     /*! ZSTD_loadDEntropy() :
      *  dict : must point at beginning of a valid zstd dictionary.
      * @return : size of entropy tables read */
-    private static nuint ZSTD_loadDEntropy(ZSTD_entropyDTables_t* entropy, void* dict, nuint dictSize)
+    private static nuint ZSTD_loadDEntropy(ZstdEntropyDTablesT* entropy, void* dict, nuint dictSize)
     {
         var dictPtr = (byte*)dict;
         var dictEnd = dictPtr + dictSize;
         if (dictSize <= 8)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
         }
 
         assert(MEM_readLE32(dict) == 0xEC30A437);
@@ -1568,11 +1568,11 @@ public static unsafe partial class Methods
         {
             /* use fse tables as temporary workspace; implies fse tables are grouped together */
             void* workspace = &entropy->LLTable;
-            var workspaceSize = (nuint)(sizeof(ZSTD_seqSymbol) * 513 + sizeof(ZSTD_seqSymbol) * 257 + sizeof(ZSTD_seqSymbol) * 513);
+            var workspaceSize = (nuint)(sizeof(ZstdSeqSymbol) * 513 + sizeof(ZstdSeqSymbol) * 257 + sizeof(ZstdSeqSymbol) * 513);
             var hSize = HUF_readDTableX2_wksp(entropy->hufTable, dictPtr, (nuint)(dictEnd - dictPtr), workspace, workspaceSize, 0);
             if (ERR_isError(hSize))
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             dictPtr += hSize;
@@ -1584,20 +1584,20 @@ public static unsafe partial class Methods
             var offcodeHeaderSize = FSE_readNCount(offcodeNCount, &offcodeMaxValue, &offcodeLog, dictPtr, (nuint)(dictEnd - dictPtr));
             if (ERR_isError(offcodeHeaderSize))
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             if (offcodeMaxValue > 31)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             if (offcodeLog > 8)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
-            ZSTD_buildFSETable(&entropy->OFTable.e0, offcodeNCount, offcodeMaxValue, OF_base, OF_bits, offcodeLog, entropy->workspace, sizeof(uint) * 157, 0);
+            ZSTD_buildFSETable(&entropy->OFTable.e0, offcodeNCount, offcodeMaxValue, OfBase, OfBits, offcodeLog, entropy->workspace, sizeof(uint) * 157, 0);
             dictPtr += offcodeHeaderSize;
         }
 
@@ -1607,20 +1607,20 @@ public static unsafe partial class Methods
             var matchlengthHeaderSize = FSE_readNCount(matchlengthNCount, &matchlengthMaxValue, &matchlengthLog, dictPtr, (nuint)(dictEnd - dictPtr));
             if (ERR_isError(matchlengthHeaderSize))
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             if (matchlengthMaxValue > 52)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             if (matchlengthLog > 9)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
-            ZSTD_buildFSETable(&entropy->MLTable.e0, matchlengthNCount, matchlengthMaxValue, ML_base, ML_bits, matchlengthLog, entropy->workspace, sizeof(uint) * 157, 0);
+            ZSTD_buildFSETable(&entropy->MLTable.e0, matchlengthNCount, matchlengthMaxValue, MlBase, MlBits, matchlengthLog, entropy->workspace, sizeof(uint) * 157, 0);
             dictPtr += matchlengthHeaderSize;
         }
 
@@ -1630,26 +1630,26 @@ public static unsafe partial class Methods
             var litlengthHeaderSize = FSE_readNCount(litlengthNCount, &litlengthMaxValue, &litlengthLog, dictPtr, (nuint)(dictEnd - dictPtr));
             if (ERR_isError(litlengthHeaderSize))
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             if (litlengthMaxValue > 35)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             if (litlengthLog > 9)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
-            ZSTD_buildFSETable(&entropy->LLTable.e0, litlengthNCount, litlengthMaxValue, LL_base, LL_bits, litlengthLog, entropy->workspace, sizeof(uint) * 157, 0);
+            ZSTD_buildFSETable(&entropy->LLTable.e0, litlengthNCount, litlengthMaxValue, LlBase, LlBits, litlengthLog, entropy->workspace, sizeof(uint) * 157, 0);
             dictPtr += litlengthHeaderSize;
         }
 
         if (dictPtr + 12 > dictEnd)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
         }
 
         {
@@ -1661,7 +1661,7 @@ public static unsafe partial class Methods
                 dictPtr += 4;
                 if (rep == 0 || rep > dictContentSize)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
                 }
 
                 entropy->rep[i] = rep;
@@ -1671,7 +1671,7 @@ public static unsafe partial class Methods
         return (nuint)(dictPtr - (byte*)dict);
     }
 
-    private static nuint ZSTD_decompress_insertDictionary(ZSTD_DCtx_s* dctx, void* dict, nuint dictSize)
+    private static nuint ZSTD_decompress_insertDictionary(ZstdDCtxS* dctx, void* dict, nuint dictSize)
     {
         if (dictSize < 8)
             return ZSTD_refDictContent(dctx, dict, dictSize);
@@ -1689,7 +1689,7 @@ public static unsafe partial class Methods
             var eSize = ZSTD_loadDEntropy(&dctx->entropy, dict, dictSize);
             if (ERR_isError(eSize))
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
             dict = (sbyte*)dict + eSize;
@@ -1700,11 +1700,11 @@ public static unsafe partial class Methods
         return ZSTD_refDictContent(dctx, dict, dictSize);
     }
 
-    public static nuint ZSTD_decompressBegin(ZSTD_DCtx_s* dctx)
+    public static nuint ZSTD_decompressBegin(ZstdDCtxS* dctx)
     {
         assert(dctx != null);
         dctx->expected = ZSTD_startingInputLength(dctx->format);
-        dctx->stage = ZSTD_dStage.ZSTDds_getFrameHeaderSize;
+        dctx->stage = ZstdDStage.ZstDdsGetFrameHeaderSize;
         dctx->processedCSize = 0;
         dctx->decodedSize = 0;
         dctx->previousDstEnd = null;
@@ -1714,9 +1714,9 @@ public static unsafe partial class Methods
         dctx->entropy.hufTable[0] = 12 * 0x1000001;
         dctx->litEntropy = dctx->fseEntropy = 0;
         dctx->dictID = 0;
-        dctx->bType = blockType_e.bt_reserved;
+        dctx->bType = BlockTypeE.BtReserved;
         dctx->isFrameDecompression = 1;
-        memcpy(dctx->entropy.rep, repStartValue, sizeof(uint) * 3);
+        memcpy(dctx->entropy.rep, RepStartValue, sizeof(uint) * 3);
         dctx->LLTptr = &dctx->entropy.LLTable.e0;
         dctx->MLTptr = &dctx->entropy.MLTable.e0;
         dctx->OFTptr = &dctx->entropy.OFTable.e0;
@@ -1724,27 +1724,27 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    public static nuint ZSTD_decompressBegin_usingDict(ZSTD_DCtx_s* dctx, void* dict, nuint dictSize)
+    public static nuint ZSTD_decompressBegin_usingDict(ZstdDCtxS* dctx, void* dict, nuint dictSize)
     {
         {
-            var err_code = ZSTD_decompressBegin(dctx);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_decompressBegin(dctx);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
         if (dict != null && dictSize != 0)
             if (ERR_isError(ZSTD_decompress_insertDictionary(dctx, dict, dictSize)))
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
 
         return 0;
     }
 
     /* ======   ZSTD_DDict   ====== */
-    public static nuint ZSTD_decompressBegin_usingDDict(ZSTD_DCtx_s* dctx, ZSTD_DDict_s* ddict)
+    public static nuint ZSTD_decompressBegin_usingDDict(ZstdDCtxS* dctx, ZstdDDictS* ddict)
     {
         assert(dctx != null);
         if (ddict != null)
@@ -1756,10 +1756,10 @@ public static unsafe partial class Methods
         }
 
         {
-            var err_code = ZSTD_decompressBegin(dctx);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_decompressBegin(dctx);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
@@ -1800,12 +1800,12 @@ public static unsafe partial class Methods
      *  ZSTD_getFrameHeader(), which will provide a more precise error code. */
     public static uint ZSTD_getDictID_fromFrame(void* src, nuint srcSize)
     {
-        var zfp = new ZSTD_frameHeader
+        var zfp = new ZstdFrameHeader
         {
             frameContentSize = 0,
             windowSize = 0,
             blockSizeMax = 0,
-            frameType = ZSTD_frameType_e.ZSTD_frame,
+            frameType = ZstdFrameTypeE.ZstdFrame,
             headerSize = 0,
             dictID = 0,
             checksumFlag = 0,
@@ -1822,7 +1822,7 @@ public static unsafe partial class Methods
     /*! ZSTD_decompress_usingDDict() :
      *   Decompression using a pre-digested Dictionary
      *   Use dictionary without significant overhead. */
-    public static nuint ZSTD_decompress_usingDDict(ZSTD_DCtx_s* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, ZSTD_DDict_s* ddict)
+    public static nuint ZSTD_decompress_usingDDict(ZstdDCtxS* dctx, void* dst, nuint dstCapacity, void* src, nuint srcSize, ZstdDDictS* ddict)
     {
         return ZSTD_decompressMultiFrame(dctx, dst, dstCapacity, src, srcSize, null, 0, ddict);
     }
@@ -1830,22 +1830,22 @@ public static unsafe partial class Methods
     /*=====================================
      *   Streaming decompression
      *====================================*/
-    public static ZSTD_DCtx_s* ZSTD_createDStream()
+    public static ZstdDCtxS* ZSTD_createDStream()
     {
-        return ZSTD_createDCtx_internal(ZSTD_defaultCMem);
+        return ZSTD_createDCtx_internal(ZstdDefaultCMem);
     }
 
-    public static ZSTD_DCtx_s* ZSTD_initStaticDStream(void* workspace, nuint workspaceSize)
+    public static ZstdDCtxS* ZSTD_initStaticDStream(void* workspace, nuint workspaceSize)
     {
         return ZSTD_initStaticDCtx(workspace, workspaceSize);
     }
 
-    public static ZSTD_DCtx_s* ZSTD_createDStream_advanced(ZSTD_customMem customMem)
+    public static ZstdDCtxS* ZSTD_createDStream_advanced(ZstdCustomMem customMem)
     {
         return ZSTD_createDCtx_internal(customMem);
     }
 
-    public static nuint ZSTD_freeDStream(ZSTD_DCtx_s* zds)
+    public static nuint ZSTD_freeDStream(ZstdDCtxS* zds)
     {
         return ZSTD_freeDCtx(zds);
     }
@@ -1853,7 +1853,7 @@ public static unsafe partial class Methods
     /* ***  Initialization  *** */
     public static nuint ZSTD_DStreamInSize()
     {
-        return (nuint)(1 << 17) + ZSTD_blockHeaderSize;
+        return (nuint)(1 << 17) + ZstdBlockHeaderSize;
     }
 
     public static nuint ZSTD_DStreamOutSize()
@@ -1866,11 +1866,11 @@ public static unsafe partial class Methods
      *  but gives direct control over
      *  how to load the dictionary (by copy ? by reference ?)
      *  and how to interpret it (automatic ? force raw mode ? full mode only ?). */
-    public static nuint ZSTD_DCtx_loadDictionary_advanced(ZSTD_DCtx_s* dctx, void* dict, nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod, ZSTD_dictContentType_e dictContentType)
+    public static nuint ZSTD_DCtx_loadDictionary_advanced(ZstdDCtxS* dctx, void* dict, nuint dictSize, ZstdDictLoadMethodE dictLoadMethod, ZstdDictContentTypeE dictContentType)
     {
-        if (dctx->streamStage != ZSTD_dStreamStage.zdss_init)
+        if (dctx->streamStage != ZstdDStreamStage.ZdssInit)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_stage_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorStageWrong));
         }
 
         ZSTD_clearDict(dctx);
@@ -1879,11 +1879,11 @@ public static unsafe partial class Methods
             dctx->ddictLocal = ZSTD_createDDict_advanced(dict, dictSize, dictLoadMethod, dictContentType, dctx->customMem);
             if (dctx->ddictLocal == null)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
             }
 
             dctx->ddict = dctx->ddictLocal;
-            dctx->dictUses = ZSTD_dictUses_e.ZSTD_use_indefinitely;
+            dctx->dictUses = ZstdDictUsesE.ZstdUseIndefinitely;
         }
 
         return 0;
@@ -1894,9 +1894,9 @@ public static unsafe partial class Methods
      *  but references `dict` content instead of copying it into `dctx`.
      *  This saves memory if `dict` remains around.,
      *  However, it's imperative that `dict` remains accessible (and unmodified) while being used, so it must outlive decompression. */
-    public static nuint ZSTD_DCtx_loadDictionary_byReference(ZSTD_DCtx_s* dctx, void* dict, nuint dictSize)
+    public static nuint ZSTD_DCtx_loadDictionary_byReference(ZstdDCtxS* dctx, void* dict, nuint dictSize)
     {
-        return ZSTD_DCtx_loadDictionary_advanced(dctx, dict, dictSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef, ZSTD_dictContentType_e.ZSTD_dct_auto);
+        return ZSTD_DCtx_loadDictionary_advanced(dctx, dict, dictSize, ZstdDictLoadMethodE.ZstdDlmByRef, ZstdDictContentTypeE.ZstdDctAuto);
     }
 
     /*! ZSTD_DCtx_loadDictionary() : Requires v1.4.0+
@@ -1914,25 +1914,25 @@ public static unsafe partial class Methods
      *  Note 3 : Use ZSTD_DCtx_loadDictionary_advanced() to take control of
      *           how dictionary content is loaded and interpreted.
      */
-    public static nuint ZSTD_DCtx_loadDictionary(ZSTD_DCtx_s* dctx, void* dict, nuint dictSize)
+    public static nuint ZSTD_DCtx_loadDictionary(ZstdDCtxS* dctx, void* dict, nuint dictSize)
     {
-        return ZSTD_DCtx_loadDictionary_advanced(dctx, dict, dictSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byCopy, ZSTD_dictContentType_e.ZSTD_dct_auto);
+        return ZSTD_DCtx_loadDictionary_advanced(dctx, dict, dictSize, ZstdDictLoadMethodE.ZstdDlmByCopy, ZstdDictContentTypeE.ZstdDctAuto);
     }
 
     /*! ZSTD_DCtx_refPrefix_advanced() :
      *  Same as ZSTD_DCtx_refPrefix(), but gives finer control over
      *  how to interpret prefix content (automatic ? force raw mode (default) ? full mode only ?) */
-    public static nuint ZSTD_DCtx_refPrefix_advanced(ZSTD_DCtx_s* dctx, void* prefix, nuint prefixSize, ZSTD_dictContentType_e dictContentType)
+    public static nuint ZSTD_DCtx_refPrefix_advanced(ZstdDCtxS* dctx, void* prefix, nuint prefixSize, ZstdDictContentTypeE dictContentType)
     {
         {
-            var err_code = ZSTD_DCtx_loadDictionary_advanced(dctx, prefix, prefixSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef, dictContentType);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_loadDictionary_advanced(dctx, prefix, prefixSize, ZstdDictLoadMethodE.ZstdDlmByRef, dictContentType);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
-        dctx->dictUses = ZSTD_dictUses_e.ZSTD_use_once;
+        dctx->dictUses = ZstdDictUsesE.ZstdUseOnce;
         return 0;
     }
 
@@ -1952,29 +1952,29 @@ public static unsafe partial class Methods
      *  Note 4 : Referencing a raw content prefix has almost no cpu nor memory cost.
      *           A full dictionary is more costly, as it requires building tables.
      */
-    public static nuint ZSTD_DCtx_refPrefix(ZSTD_DCtx_s* dctx, void* prefix, nuint prefixSize)
+    public static nuint ZSTD_DCtx_refPrefix(ZstdDCtxS* dctx, void* prefix, nuint prefixSize)
     {
-        return ZSTD_DCtx_refPrefix_advanced(dctx, prefix, prefixSize, ZSTD_dictContentType_e.ZSTD_dct_rawContent);
+        return ZSTD_DCtx_refPrefix_advanced(dctx, prefix, prefixSize, ZstdDictContentTypeE.ZstdDctRawContent);
     }
 
     /* ZSTD_initDStream_usingDict() :
      * return : expected size, aka ZSTD_startingInputLength().
      * this function cannot fail */
-    public static nuint ZSTD_initDStream_usingDict(ZSTD_DCtx_s* zds, void* dict, nuint dictSize)
+    public static nuint ZSTD_initDStream_usingDict(ZstdDCtxS* zds, void* dict, nuint dictSize)
     {
         {
-            var err_code = ZSTD_DCtx_reset(zds, ZSTD_ResetDirective.ZSTD_reset_session_only);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_reset(zds, ZstdResetDirective.ZstdResetSessionOnly);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
         {
-            var err_code = ZSTD_DCtx_loadDictionary(zds, dict, dictSize);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_loadDictionary(zds, dict, dictSize);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
@@ -1982,21 +1982,21 @@ public static unsafe partial class Methods
     }
 
     /* note : this variant can't fail */
-    public static nuint ZSTD_initDStream(ZSTD_DCtx_s* zds)
+    public static nuint ZSTD_initDStream(ZstdDCtxS* zds)
     {
         {
-            var err_code = ZSTD_DCtx_reset(zds, ZSTD_ResetDirective.ZSTD_reset_session_only);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_reset(zds, ZstdResetDirective.ZstdResetSessionOnly);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
         {
-            var err_code = ZSTD_DCtx_refDDict(zds, null);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_refDDict(zds, null);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
@@ -2006,21 +2006,21 @@ public static unsafe partial class Methods
     /* ZSTD_initDStream_usingDDict() :
      * ddict will just be referenced, and must outlive decompression session
      * this function cannot fail */
-    public static nuint ZSTD_initDStream_usingDDict(ZSTD_DCtx_s* dctx, ZSTD_DDict_s* ddict)
+    public static nuint ZSTD_initDStream_usingDDict(ZstdDCtxS* dctx, ZstdDDictS* ddict)
     {
         {
-            var err_code = ZSTD_DCtx_reset(dctx, ZSTD_ResetDirective.ZSTD_reset_session_only);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_reset(dctx, ZstdResetDirective.ZstdResetSessionOnly);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
         {
-            var err_code = ZSTD_DCtx_refDDict(dctx, ddict);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_refDDict(dctx, ddict);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
@@ -2030,13 +2030,13 @@ public static unsafe partial class Methods
     /* ZSTD_resetDStream() :
      * return : expected size, aka ZSTD_startingInputLength().
      * this function cannot fail */
-    public static nuint ZSTD_resetDStream(ZSTD_DCtx_s* dctx)
+    public static nuint ZSTD_resetDStream(ZstdDCtxS* dctx)
     {
         {
-            var err_code = ZSTD_DCtx_reset(dctx, ZSTD_ResetDirective.ZSTD_reset_session_only);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_DCtx_reset(dctx, ZstdResetDirective.ZstdResetSessionOnly);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
@@ -2060,35 +2060,35 @@ public static unsafe partial class Methods
      *  Special: referencing a NULL DDict means "return to no-dictionary mode".
      *  Note 2 : DDict is just referenced, its lifetime must outlive its usage from DCtx.
      */
-    public static nuint ZSTD_DCtx_refDDict(ZSTD_DCtx_s* dctx, ZSTD_DDict_s* ddict)
+    public static nuint ZSTD_DCtx_refDDict(ZstdDCtxS* dctx, ZstdDDictS* ddict)
     {
-        if (dctx->streamStage != ZSTD_dStreamStage.zdss_init)
+        if (dctx->streamStage != ZstdDStreamStage.ZdssInit)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_stage_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorStageWrong));
         }
 
         ZSTD_clearDict(dctx);
         if (ddict != null)
         {
             dctx->ddict = ddict;
-            dctx->dictUses = ZSTD_dictUses_e.ZSTD_use_indefinitely;
-            if (dctx->refMultipleDDicts == ZSTD_refMultipleDDicts_e.ZSTD_rmd_refMultipleDDicts)
+            dctx->dictUses = ZstdDictUsesE.ZstdUseIndefinitely;
+            if (dctx->refMultipleDDicts == ZstdRefMultipleDDictsE.ZstdRmdRefMultipleDDicts)
             {
                 if (dctx->ddictSet == null)
                 {
                     dctx->ddictSet = ZSTD_createDDictHashSet(dctx->customMem);
                     if (dctx->ddictSet == null)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
                     }
                 }
 
                 assert(dctx->staticSize == 0);
                 {
-                    var err_code = ZSTD_DDictHashSet_addDDict(dctx->ddictSet, ddict, dctx->customMem);
-                    if (ERR_isError(err_code))
+                    var errCode = ZSTD_DDictHashSet_addDDict(dctx->ddictSet, ddict, dctx->customMem);
+                    if (ERR_isError(errCode))
                     {
-                        return err_code;
+                        return errCode;
                     }
                 }
             }
@@ -2100,24 +2100,24 @@ public static unsafe partial class Methods
     /* ZSTD_DCtx_setMaxWindowSize() :
      * note : no direct equivalence in ZSTD_DCtx_setParameter,
      * since this version sets windowSize, and the other sets windowLog */
-    public static nuint ZSTD_DCtx_setMaxWindowSize(ZSTD_DCtx_s* dctx, nuint maxWindowSize)
+    public static nuint ZSTD_DCtx_setMaxWindowSize(ZstdDCtxS* dctx, nuint maxWindowSize)
     {
         var bounds = ZSTD_dParam_getBounds(ZstdDParameter.ZstdDWindowLogMax);
         var min = (nuint)1 << bounds.lowerBound;
         var max = (nuint)1 << bounds.upperBound;
-        if (dctx->streamStage != ZSTD_dStreamStage.zdss_init)
+        if (dctx->streamStage != ZstdDStreamStage.ZdssInit)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_stage_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorStageWrong));
         }
 
         if (maxWindowSize < min)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
         }
 
         if (maxWindowSize > max)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
         }
 
         dctx->maxWindowSize = maxWindowSize;
@@ -2130,7 +2130,7 @@ public static unsafe partial class Methods
      *  This instruction is mandatory to decode data without a fully-formed header,
      *  such ZSTD_f_zstd1_magicless for example.
      * @return : 0, or an error code (which can be tested using ZSTD_isError()). */
-    public static nuint ZSTD_DCtx_setFormat(ZSTD_DCtx_s* dctx, ZSTD_format_e format)
+    public static nuint ZSTD_DCtx_setFormat(ZstdDCtxS* dctx, ZstdFormatE format)
     {
         return ZSTD_DCtx_setParameter(dctx, ZstdDParameter.ZstdDExperimentalParam1, (int)format);
     }
@@ -2142,9 +2142,9 @@ public static unsafe partial class Methods
      *         - an error status field, which must be tested using ZSTD_isError()
      *         - both lower and upper bounds, inclusive
      */
-    public static ZSTD_bounds ZSTD_dParam_getBounds(ZstdDParameter dParam)
+    public static ZstdBounds ZSTD_dParam_getBounds(ZstdDParameter dParam)
     {
-        var bounds = new ZSTD_bounds
+        var bounds = new ZstdBounds
         {
             error = 0,
             lowerBound = 0,
@@ -2157,20 +2157,20 @@ public static unsafe partial class Methods
                 bounds.upperBound = sizeof(nuint) == 4 ? 30 : 31;
                 return bounds;
             case ZstdDParameter.ZstdDExperimentalParam1:
-                bounds.lowerBound = (int)ZSTD_format_e.ZSTD_f_zstd1;
-                bounds.upperBound = (int)ZSTD_format_e.ZSTD_f_zstd1_magicless;
+                bounds.lowerBound = (int)ZstdFormatE.ZstdFZstd1;
+                bounds.upperBound = (int)ZstdFormatE.ZstdFZstd1Magicless;
                 return bounds;
             case ZstdDParameter.ZstdDExperimentalParam2:
-                bounds.lowerBound = (int)ZSTD_bufferMode_e.ZSTD_bm_buffered;
-                bounds.upperBound = (int)ZSTD_bufferMode_e.ZSTD_bm_stable;
+                bounds.lowerBound = (int)ZstdBufferModeE.ZstdBmBuffered;
+                bounds.upperBound = (int)ZstdBufferModeE.ZstdBmStable;
                 return bounds;
             case ZstdDParameter.ZstdDExperimentalParam3:
-                bounds.lowerBound = (int)ZSTD_forceIgnoreChecksum_e.ZSTD_d_validateChecksum;
-                bounds.upperBound = (int)ZSTD_forceIgnoreChecksum_e.ZSTD_d_ignoreChecksum;
+                bounds.lowerBound = (int)ZstdForceIgnoreChecksumE.ZstdDValidateChecksum;
+                bounds.upperBound = (int)ZstdForceIgnoreChecksumE.ZstdDIgnoreChecksum;
                 return bounds;
             case ZstdDParameter.ZstdDExperimentalParam4:
-                bounds.lowerBound = (int)ZSTD_refMultipleDDicts_e.ZSTD_rmd_refSingleDDict;
-                bounds.upperBound = (int)ZSTD_refMultipleDDicts_e.ZSTD_rmd_refMultipleDDicts;
+                bounds.lowerBound = (int)ZstdRefMultipleDDictsE.ZstdRmdRefSingleDDict;
+                bounds.upperBound = (int)ZstdRefMultipleDDictsE.ZstdRmdRefMultipleDDicts;
                 return bounds;
             case ZstdDParameter.ZstdDExperimentalParam5:
                 bounds.lowerBound = 0;
@@ -2184,7 +2184,7 @@ public static unsafe partial class Methods
                 break;
         }
 
-        bounds.error = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_unsupported));
+        bounds.error = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterUnsupported));
         return bounds;
     }
 
@@ -2209,7 +2209,7 @@ public static unsafe partial class Methods
      *  and store it into int* value.
      * @return : 0, or an error code (which can be tested with ZSTD_isError()).
      */
-    public static nuint ZSTD_DCtx_getParameter(ZSTD_DCtx_s* dctx, ZstdDParameter param, int* value)
+    public static nuint ZSTD_DCtx_getParameter(ZstdDCtxS* dctx, ZstdDParameter param, int* value)
     {
         switch (param)
         {
@@ -2238,7 +2238,7 @@ public static unsafe partial class Methods
                 break;
         }
 
-        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_unsupported));
+        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterUnsupported));
     }
 
     /*! ZSTD_DCtx_setParameter() :
@@ -2248,11 +2248,11 @@ public static unsafe partial class Methods
      *  Setting a parameter is only possible during frame initialization (before starting decompression).
      * @return : 0, or an error code (which can be tested using ZSTD_isError()).
      */
-    public static nuint ZSTD_DCtx_setParameter(ZSTD_DCtx_s* dctx, ZstdDParameter dParam, int value)
+    public static nuint ZSTD_DCtx_setParameter(ZstdDCtxS* dctx, ZstdDParameter dParam, int value)
     {
-        if (dctx->streamStage != ZSTD_dStreamStage.zdss_init)
+        if (dctx->streamStage != ZstdDStreamStage.ZdssInit)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_stage_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorStageWrong));
         }
 
         switch (dParam)
@@ -2266,7 +2266,7 @@ public static unsafe partial class Methods
             {
                 if (ZSTD_dParam_withinBounds(ZstdDParameter.ZstdDWindowLogMax, value) == 0)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
                 }
             }
 
@@ -2276,52 +2276,52 @@ public static unsafe partial class Methods
             {
                 if (ZSTD_dParam_withinBounds(ZstdDParameter.ZstdDExperimentalParam1, value) == 0)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
                 }
             }
 
-                dctx->format = (ZSTD_format_e)value;
+                dctx->format = (ZstdFormatE)value;
                 return 0;
             case ZstdDParameter.ZstdDExperimentalParam2:
             {
                 if (ZSTD_dParam_withinBounds(ZstdDParameter.ZstdDExperimentalParam2, value) == 0)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
                 }
             }
 
-                dctx->outBufferMode = (ZSTD_bufferMode_e)value;
+                dctx->outBufferMode = (ZstdBufferModeE)value;
                 return 0;
             case ZstdDParameter.ZstdDExperimentalParam3:
             {
                 if (ZSTD_dParam_withinBounds(ZstdDParameter.ZstdDExperimentalParam3, value) == 0)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
                 }
             }
 
-                dctx->forceIgnoreChecksum = (ZSTD_forceIgnoreChecksum_e)value;
+                dctx->forceIgnoreChecksum = (ZstdForceIgnoreChecksumE)value;
                 return 0;
             case ZstdDParameter.ZstdDExperimentalParam4:
             {
                 if (ZSTD_dParam_withinBounds(ZstdDParameter.ZstdDExperimentalParam4, value) == 0)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
                 }
             }
 
                 if (dctx->staticSize != 0)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_unsupported));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterUnsupported));
                 }
 
-                dctx->refMultipleDDicts = (ZSTD_refMultipleDDicts_e)value;
+                dctx->refMultipleDDicts = (ZstdRefMultipleDDictsE)value;
                 return 0;
             case ZstdDParameter.ZstdDExperimentalParam5:
             {
                 if (ZSTD_dParam_withinBounds(ZstdDParameter.ZstdDExperimentalParam5, value) == 0)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
                 }
             }
 
@@ -2332,7 +2332,7 @@ public static unsafe partial class Methods
                 {
                     if (ZSTD_dParam_withinBounds(ZstdDParameter.ZstdDExperimentalParam6, value) == 0)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
                     }
                 }
 
@@ -2342,7 +2342,7 @@ public static unsafe partial class Methods
                 break;
         }
 
-        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_unsupported));
+        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterUnsupported));
     }
 
     /*! ZSTD_DCtx_reset() :
@@ -2351,20 +2351,20 @@ public static unsafe partial class Methods
      *  Parameters can only be reset when no active frame is being decompressed.
      * @return : 0, or an error code, which can be tested with ZSTD_isError()
      */
-    public static nuint ZSTD_DCtx_reset(ZSTD_DCtx_s* dctx, ZSTD_ResetDirective reset)
+    public static nuint ZSTD_DCtx_reset(ZstdDCtxS* dctx, ZstdResetDirective reset)
     {
-        if (reset is ZSTD_ResetDirective.ZSTD_reset_session_only or ZSTD_ResetDirective.ZSTD_reset_session_and_parameters)
+        if (reset is ZstdResetDirective.ZstdResetSessionOnly or ZstdResetDirective.ZstdResetSessionAndParameters)
         {
-            dctx->streamStage = ZSTD_dStreamStage.zdss_init;
+            dctx->streamStage = ZstdDStreamStage.ZdssInit;
             dctx->noForwardProgress = 0;
             dctx->isFrameDecompression = 1;
         }
 
-        if (reset is ZSTD_ResetDirective.ZSTD_reset_parameters or ZSTD_ResetDirective.ZSTD_reset_session_and_parameters)
+        if (reset is ZstdResetDirective.ZstdResetParameters or ZstdResetDirective.ZstdResetSessionAndParameters)
         {
-            if (dctx->streamStage != ZSTD_dStreamStage.zdss_init)
+            if (dctx->streamStage != ZstdDStreamStage.ZdssInit)
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_stage_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorStageWrong));
             }
 
             ZSTD_clearDict(dctx);
@@ -2374,7 +2374,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    public static nuint ZSTD_sizeof_DStream(ZSTD_DCtx_s* dctx)
+    public static nuint ZSTD_sizeof_DStream(ZstdDCtxS* dctx)
     {
         return ZSTD_sizeof_DCtx(dctx);
     }
@@ -2389,15 +2389,15 @@ public static unsafe partial class Methods
          * We need another blockSize worth of buffer so that we can store split
          * literals at the end of the block without overwriting the extDict window.
          */
-        var neededRBSize = windowSize + blockSize * 2 + 32 * 2;
-        var neededSize = frameContentSize < neededRBSize ? frameContentSize : neededRBSize;
-        var minRBSize = (nuint)neededSize;
-        if (minRBSize != neededSize)
+        var neededRbSize = windowSize + blockSize * 2 + 32 * 2;
+        var neededSize = frameContentSize < neededRbSize ? frameContentSize : neededRbSize;
+        var minRbSize = (nuint)neededSize;
+        if (minRbSize != neededSize)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorFrameParameterWindowTooLarge));
         }
 
-        return minRBSize;
+        return minRbSize;
     }
 
     /*=====   Buffer-less streaming decompression functions  =====*/
@@ -2419,31 +2419,31 @@ public static unsafe partial class Methods
     {
         /* note : should be user-selectable, but requires an additional parameter (or a dctx) */
         var windowSizeMax = 1U << (sizeof(nuint) == 4 ? 30 : 31);
-        ZSTD_frameHeader zfh;
+        ZstdFrameHeader zfh;
         var err = ZSTD_getFrameHeader(&zfh, src, srcSize);
         if (ERR_isError(err))
             return err;
 
         if (err > 0)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         if (zfh.windowSize > windowSizeMax)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorFrameParameterWindowTooLarge));
         }
 
         return ZSTD_estimateDStreamSize((nuint)zfh.windowSize);
     }
 
     /* *****   Decompression   ***** */
-    private static int ZSTD_DCtx_isOverflow(ZSTD_DCtx_s* zds, nuint neededInBuffSize, nuint neededOutBuffSize)
+    private static int ZSTD_DCtx_isOverflow(ZstdDCtxS* zds, nuint neededInBuffSize, nuint neededOutBuffSize)
     {
         return zds->inBuffSize + zds->outBuffSize >= (neededInBuffSize + neededOutBuffSize) * 3 ? 1 : 0;
     }
 
-    private static void ZSTD_DCtx_updateOversizedDuration(ZSTD_DCtx_s* zds, nuint neededInBuffSize, nuint neededOutBuffSize)
+    private static void ZSTD_DCtx_updateOversizedDuration(ZstdDCtxS* zds, nuint neededInBuffSize, nuint neededOutBuffSize)
     {
         if (ZSTD_DCtx_isOverflow(zds, neededInBuffSize, neededOutBuffSize) != 0)
         {
@@ -2455,23 +2455,23 @@ public static unsafe partial class Methods
         }
     }
 
-    private static int ZSTD_DCtx_isOversizedTooLong(ZSTD_DCtx_s* zds)
+    private static int ZSTD_DCtx_isOversizedTooLong(ZstdDCtxS* zds)
     {
         return zds->oversizedDuration >= 128 ? 1 : 0;
     }
 
     /* Checks that the output buffer hasn't changed if ZSTD_obm_stable is used. */
-    private static nuint ZSTD_checkOutBuffer(ZSTD_DCtx_s* zds, ZSTD_outBuffer_s* output)
+    private static nuint ZSTD_checkOutBuffer(ZstdDCtxS* zds, ZstdOutBufferS* output)
     {
         var expect = zds->expectedOutBuffer;
-        if (zds->outBufferMode != ZSTD_bufferMode_e.ZSTD_bm_stable)
+        if (zds->outBufferMode != ZstdBufferModeE.ZstdBmStable)
             return 0;
-        if (zds->streamStage == ZSTD_dStreamStage.zdss_init)
+        if (zds->streamStage == ZstdDStreamStage.ZdssInit)
             return 0;
         if (expect.dst == output->dst && expect.pos == output->pos && expect.size == output->size)
             return 0;
 
-        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstBuffer_wrong));
+        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstBufferWrong));
     }
 
     /* Calls ZSTD_decompressContinue() with the right parameters for ZSTD_decompressStream()
@@ -2479,29 +2479,29 @@ public static unsafe partial class Methods
      * used both when reading directly from the ZSTD_inBuffer, and in buffered input mode.
      * NOTE: You must break after calling this function since the streamStage is modified.
      */
-    private static nuint ZSTD_decompressContinueStream(ZSTD_DCtx_s* zds, sbyte** op, sbyte* oend, void* src, nuint srcSize)
+    private static nuint ZSTD_decompressContinueStream(ZstdDCtxS* zds, sbyte** op, sbyte* oend, void* src, nuint srcSize)
     {
         var isSkipFrame = ZSTD_isSkipFrame(zds);
-        if (zds->outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered)
+        if (zds->outBufferMode == ZstdBufferModeE.ZstdBmBuffered)
         {
             var dstSize = isSkipFrame != 0 ? 0 : zds->outBuffSize - zds->outStart;
             var decodedSize = ZSTD_decompressContinue(zds, zds->outBuff + zds->outStart, dstSize, src, srcSize);
             {
-                var err_code = decodedSize;
-                if (ERR_isError(err_code))
+                var errCode = decodedSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
             if (decodedSize == 0 && isSkipFrame == 0)
             {
-                zds->streamStage = ZSTD_dStreamStage.zdss_read;
+                zds->streamStage = ZstdDStreamStage.ZdssRead;
             }
             else
             {
                 zds->outEnd = zds->outStart + decodedSize;
-                zds->streamStage = ZSTD_dStreamStage.zdss_flush;
+                zds->streamStage = ZstdDStreamStage.ZdssFlush;
             }
         }
         else
@@ -2510,17 +2510,17 @@ public static unsafe partial class Methods
             var dstSize = isSkipFrame != 0 ? 0 : (nuint)(oend - *op);
             var decodedSize = ZSTD_decompressContinue(zds, *op, dstSize, src, srcSize);
             {
-                var err_code = decodedSize;
-                if (ERR_isError(err_code))
+                var errCode = decodedSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
             *op += decodedSize;
-            zds->streamStage = ZSTD_dStreamStage.zdss_read;
+            zds->streamStage = ZstdDStreamStage.ZdssRead;
             assert(*op <= oend);
-            assert(zds->outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_stable);
+            assert(zds->outBufferMode == ZstdBufferModeE.ZstdBmStable);
         }
 
         return 0;
@@ -2548,7 +2548,7 @@ public static unsafe partial class Methods
      *       which can be done explicitly (`ZSTD_DCtx_reset()`),
      *       or is implied for operations starting some new decompression job (`ZSTD_initDStream`, `ZSTD_decompressDCtx()`, `ZSTD_decompress_usingDict()`)
      */
-    public static nuint ZSTD_decompressStream(ZSTD_DCtx_s* zds, ZSTD_outBuffer_s* output, ZSTD_inBuffer_s* input)
+    public static nuint ZSTD_decompressStream(ZstdDCtxS* zds, ZstdOutBufferS* output, ZstdInBufferS* input)
     {
         var src = (sbyte*)input->src;
         var istart = input->pos != 0 ? src + input->pos : src;
@@ -2562,19 +2562,19 @@ public static unsafe partial class Methods
         assert(zds != null);
         if (input->pos > input->size)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         if (output->pos > output->size)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         {
-            var err_code = ZSTD_checkOutBuffer(zds, output);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_checkOutBuffer(zds, output);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
@@ -2582,13 +2582,13 @@ public static unsafe partial class Methods
         {
             switch (zds->streamStage)
             {
-                case ZSTD_dStreamStage.zdss_init:
-                    zds->streamStage = ZSTD_dStreamStage.zdss_loadHeader;
+                case ZstdDStreamStage.ZdssInit:
+                    zds->streamStage = ZstdDStreamStage.ZdssLoadHeader;
                     zds->lhSize = zds->inPos = zds->outStart = zds->outEnd = 0;
                     zds->hostageByte = 0;
                     zds->expectedOutBuffer = *output;
-                    goto case ZSTD_dStreamStage.zdss_loadHeader;
-                case ZSTD_dStreamStage.zdss_loadHeader:
+                    goto case ZstdDStreamStage.ZdssLoadHeader;
+                case ZstdDStreamStage.ZdssLoadHeader:
                 {
                     var hSize = ZSTD_getFrameHeader_advanced(&zds->fParams, zds->headerBuffer, zds->lhSize, zds->format);
                     if (zds->refMultipleDDicts != default && zds->ddictSet != null)
@@ -2618,14 +2618,14 @@ public static unsafe partial class Methods
                             input->pos = input->size;
                             {
                                 /* check first few bytes */
-                                var err_code = ZSTD_getFrameHeader_advanced(&zds->fParams, zds->headerBuffer, zds->lhSize, zds->format);
-                                if (ERR_isError(err_code))
+                                var errCode = ZSTD_getFrameHeader_advanced(&zds->fParams, zds->headerBuffer, zds->lhSize, zds->format);
+                                if (ERR_isError(errCode))
                                 {
-                                    return err_code;
+                                    return errCode;
                                 }
                             }
 
-                            return ((nuint)(zds->format == ZSTD_format_e.ZSTD_f_zstd1 ? 6 : 2) > hSize ? (nuint)(zds->format == ZSTD_format_e.ZSTD_f_zstd1 ? 6 : 2) : hSize) - zds->lhSize + ZSTD_blockHeaderSize;
+                            return ((nuint)(zds->format == ZstdFormatE.ZstdFZstd1 ? 6 : 2) > hSize ? (nuint)(zds->format == ZstdFormatE.ZstdFZstd1 ? 6 : 2) : hSize) - zds->lhSize + ZstdBlockHeaderSize;
                         }
 
                         assert(ip != null);
@@ -2636,7 +2636,7 @@ public static unsafe partial class Methods
                     }
                 }
 
-                    if (zds->fParams.frameContentSize != unchecked(0UL - 1) && zds->fParams.frameType != ZSTD_frameType_e.ZSTD_skippableFrame && (nuint)(oend - op) >= zds->fParams.frameContentSize)
+                    if (zds->fParams.frameContentSize != unchecked(0UL - 1) && zds->fParams.frameType != ZstdFrameTypeE.ZstdSkippableFrame && (nuint)(oend - op) >= zds->fParams.frameContentSize)
                     {
                         var cSize = ZSTD_findFrameCompressedSize_advanced(istart, (nuint)(iend - istart), zds->format);
                         if (cSize <= (nuint)(iend - istart))
@@ -2650,48 +2650,48 @@ public static unsafe partial class Methods
                             ip = istart + cSize;
                             op = op != null ? op + decompressedSize : op;
                             zds->expected = 0;
-                            zds->streamStage = ZSTD_dStreamStage.zdss_init;
+                            zds->streamStage = ZstdDStreamStage.ZdssInit;
                             someMoreWork = 0;
                             break;
                         }
                     }
 
-                    if (zds->outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_stable && zds->fParams.frameType != ZSTD_frameType_e.ZSTD_skippableFrame && zds->fParams.frameContentSize != unchecked(0UL - 1) && (nuint)(oend - op) < zds->fParams.frameContentSize)
+                    if (zds->outBufferMode == ZstdBufferModeE.ZstdBmStable && zds->fParams.frameType != ZstdFrameTypeE.ZstdSkippableFrame && zds->fParams.frameContentSize != unchecked(0UL - 1) && (nuint)(oend - op) < zds->fParams.frameContentSize)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
                     }
 
                 {
-                    var err_code = ZSTD_decompressBegin_usingDDict(zds, ZSTD_getDDict(zds));
-                    if (ERR_isError(err_code))
+                    var errCode = ZSTD_decompressBegin_usingDDict(zds, ZSTD_getDDict(zds));
+                    if (ERR_isError(errCode))
                     {
-                        return err_code;
+                        return errCode;
                     }
                 }
 
-                    if (zds->format == ZSTD_format_e.ZSTD_f_zstd1 && (MEM_readLE32(zds->headerBuffer) & 0xFFFFFFF0) == 0x184D2A50)
+                    if (zds->format == ZstdFormatE.ZstdFZstd1 && (MEM_readLE32(zds->headerBuffer) & 0xFFFFFFF0) == 0x184D2A50)
                     {
                         zds->expected = MEM_readLE32(zds->headerBuffer + 4);
-                        zds->stage = ZSTD_dStage.ZSTDds_skipFrame;
+                        zds->stage = ZstdDStage.ZstDdsSkipFrame;
                     }
                     else
                     {
                         {
-                            var err_code = ZSTD_decodeFrameHeader(zds, zds->headerBuffer, zds->lhSize);
-                            if (ERR_isError(err_code))
+                            var errCode = ZSTD_decodeFrameHeader(zds, zds->headerBuffer, zds->lhSize);
+                            if (ERR_isError(errCode))
                             {
-                                return err_code;
+                                return errCode;
                             }
                         }
 
-                        zds->expected = ZSTD_blockHeaderSize;
-                        zds->stage = ZSTD_dStage.ZSTDds_decodeBlockHeader;
+                        zds->expected = ZstdBlockHeaderSize;
+                        zds->stage = ZstdDStage.ZstDdsDecodeBlockHeader;
                     }
 
                     zds->fParams.windowSize = zds->fParams.windowSize > 1U << 10 ? zds->fParams.windowSize : 1U << 10;
                     if (zds->fParams.windowSize > zds->maxWindowSize)
                     {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorFrameParameterWindowTooLarge));
                     }
 
                     if (zds->maxBlockSizeParam != 0)
@@ -2702,7 +2702,7 @@ public static unsafe partial class Methods
                 {
                     /* frame checksum */
                     nuint neededInBuffSize = zds->fParams.blockSizeMax > 4 ? zds->fParams.blockSizeMax : 4;
-                    var neededOutBuffSize = zds->outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered ? ZSTD_decodingBufferSize_internal(zds->fParams.windowSize, zds->fParams.frameContentSize, zds->fParams.blockSizeMax) : 0;
+                    var neededOutBuffSize = zds->outBufferMode == ZstdBufferModeE.ZstdBmBuffered ? ZSTD_decodingBufferSize_internal(zds->fParams.windowSize, zds->fParams.frameContentSize, zds->fParams.blockSizeMax) : 0;
                     ZSTD_DCtx_updateOversizedDuration(zds, neededInBuffSize, neededOutBuffSize);
                     {
                         var tooSmall = zds->inBuffSize < neededInBuffSize || zds->outBuffSize < neededOutBuffSize ? 1 : 0;
@@ -2712,10 +2712,10 @@ public static unsafe partial class Methods
                             var bufferSize = neededInBuffSize + neededOutBuffSize;
                             if (zds->staticSize != 0)
                             {
-                                assert(zds->staticSize >= (nuint)sizeof(ZSTD_DCtx_s));
-                                if (bufferSize > zds->staticSize - (nuint)sizeof(ZSTD_DCtx_s))
+                                assert(zds->staticSize >= (nuint)sizeof(ZstdDCtxS));
+                                if (bufferSize > zds->staticSize - (nuint)sizeof(ZstdDCtxS))
                                 {
-                                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
                                 }
                             }
                             else
@@ -2726,7 +2726,7 @@ public static unsafe partial class Methods
                                 zds->inBuff = (sbyte*)ZSTD_customMalloc(bufferSize, zds->customMem);
                                 if (zds->inBuff == null)
                                 {
-                                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
                                 }
                             }
 
@@ -2737,14 +2737,14 @@ public static unsafe partial class Methods
                     }
                 }
 
-                    zds->streamStage = ZSTD_dStreamStage.zdss_read;
-                    goto case ZSTD_dStreamStage.zdss_read;
-                case ZSTD_dStreamStage.zdss_read:
+                    zds->streamStage = ZstdDStreamStage.ZdssRead;
+                    goto case ZstdDStreamStage.ZdssRead;
+                case ZstdDStreamStage.ZdssRead:
                 {
                     var neededInSize = ZSTD_nextSrcSizeToDecompressWithInputSize(zds, (nuint)(iend - ip));
                     if (neededInSize == 0)
                     {
-                        zds->streamStage = ZSTD_dStreamStage.zdss_init;
+                        zds->streamStage = ZstdDStreamStage.ZdssInit;
                         someMoreWork = 0;
                         break;
                     }
@@ -2752,10 +2752,10 @@ public static unsafe partial class Methods
                     if ((nuint)(iend - ip) >= neededInSize)
                     {
                         {
-                            var err_code = ZSTD_decompressContinueStream(zds, &op, oend, ip, neededInSize);
-                            if (ERR_isError(err_code))
+                            var errCode = ZSTD_decompressContinueStream(zds, &op, oend, ip, neededInSize);
+                            if (ERR_isError(errCode))
                             {
-                                return err_code;
+                                return errCode;
                             }
                         }
 
@@ -2771,9 +2771,9 @@ public static unsafe partial class Methods
                         break;
                     }
 
-                    zds->streamStage = ZSTD_dStreamStage.zdss_load;
-                    goto case ZSTD_dStreamStage.zdss_load;
-                case ZSTD_dStreamStage.zdss_load:
+                    zds->streamStage = ZstdDStreamStage.ZdssLoad;
+                    goto case ZstdDStreamStage.ZdssLoad;
+                case ZstdDStreamStage.ZdssLoad:
                 {
                     var neededInSize = ZSTD_nextSrcSizeToDecompress(zds);
                     var toLoad = neededInSize - zds->inPos;
@@ -2788,7 +2788,7 @@ public static unsafe partial class Methods
                     {
                         if (toLoad > zds->inBuffSize - zds->inPos)
                         {
-                            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                         }
 
                         loadedSize = ZSTD_limitCopy(zds->inBuff + zds->inPos, toLoad, ip, (nuint)(iend - ip));
@@ -2808,17 +2808,17 @@ public static unsafe partial class Methods
 
                     zds->inPos = 0;
                     {
-                        var err_code = ZSTD_decompressContinueStream(zds, &op, oend, zds->inBuff, neededInSize);
-                        if (ERR_isError(err_code))
+                        var errCode = ZSTD_decompressContinueStream(zds, &op, oend, zds->inBuff, neededInSize);
+                        if (ERR_isError(errCode))
                         {
-                            return err_code;
+                            return errCode;
                         }
                     }
 
                     break;
                 }
 
-                case ZSTD_dStreamStage.zdss_flush:
+                case ZstdDStreamStage.ZdssFlush:
                 {
                     var toFlushSize = zds->outEnd - zds->outStart;
                     var flushedSize = ZSTD_limitCopy(op, (nuint)(oend - op), zds->outBuff + zds->outStart, toFlushSize);
@@ -2826,7 +2826,7 @@ public static unsafe partial class Methods
                     zds->outStart += flushedSize;
                     if (flushedSize == toFlushSize)
                     {
-                        zds->streamStage = ZSTD_dStreamStage.zdss_read;
+                        zds->streamStage = ZstdDStreamStage.ZdssRead;
                         if (zds->outBuffSize < zds->fParams.frameContentSize && zds->outStart + zds->fParams.blockSizeMax > zds->outBuffSize)
                         {
                             zds->outStart = zds->outEnd = 0;
@@ -2840,7 +2840,7 @@ public static unsafe partial class Methods
                     break;
                 default:
                     assert(0 != 0);
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
 
@@ -2854,12 +2854,12 @@ public static unsafe partial class Methods
             {
                 if (op == oend)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_noForwardProgress_destFull));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorNoForwardProgressDestFull));
                 }
 
                 if (ip == iend)
                 {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_noForwardProgress_inputEmpty));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorNoForwardProgressInputEmpty));
                 }
 
                 assert(0 != 0);
@@ -2880,7 +2880,7 @@ public static unsafe partial class Methods
                     {
                         if (input->pos >= input->size)
                         {
-                            zds->streamStage = ZSTD_dStreamStage.zdss_read;
+                            zds->streamStage = ZstdDStreamStage.ZdssRead;
                             return 1;
                         }
 
@@ -2899,7 +2899,7 @@ public static unsafe partial class Methods
                 return 1;
             }
 
-            nextSrcSizeHint += ZSTD_blockHeaderSize * (nuint)(ZSTD_nextInputType(zds) == ZSTD_nextInputType_e.ZSTDnit_block ? 1 : 0);
+            nextSrcSizeHint += ZstdBlockHeaderSize * (nuint)(ZSTD_nextInputType(zds) == ZstdNextInputTypeE.ZstDnitBlock ? 1 : 0);
             assert(zds->inPos <= nextSrcSizeHint);
             nextSrcSizeHint -= zds->inPos;
             return nextSrcSizeHint;
@@ -2912,10 +2912,10 @@ public static unsafe partial class Methods
      *  This can be helpful for binders from dynamic languages
      *  which have troubles handling structures containing memory pointers.
      */
-    public static nuint ZSTD_decompressStream_simpleArgs(ZSTD_DCtx_s* dctx, void* dst, nuint dstCapacity, nuint* dstPos, void* src, nuint srcSize, nuint* srcPos)
+    public static nuint ZSTD_decompressStream_simpleArgs(ZstdDCtxS* dctx, void* dst, nuint dstCapacity, nuint* dstPos, void* src, nuint srcSize, nuint* srcPos)
     {
-        ZSTD_outBuffer_s output;
-        ZSTD_inBuffer_s input;
+        ZstdOutBufferS output;
+        ZstdInBufferS input;
         output.dst = dst;
         output.size = dstCapacity;
         output.pos = *dstPos;

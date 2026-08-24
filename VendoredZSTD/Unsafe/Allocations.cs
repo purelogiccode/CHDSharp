@@ -7,7 +7,7 @@ public static unsafe partial class Methods
 {
     /* custom memory allocation functions */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void* ZSTD_customMalloc(nuint size, ZSTD_customMem customMem)
+    private static void* ZSTD_customMalloc(nuint size, ZstdCustomMem customMem)
     {
         if (customMem.customAlloc != null)
             return ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(customMem.opaque, size);
@@ -16,7 +16,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void* ZSTD_customCalloc(nuint size, ZSTD_customMem customMem)
+    private static void* ZSTD_customCalloc(nuint size, ZstdCustomMem customMem)
     {
         if (customMem.customAlloc != null)
         {
@@ -31,7 +31,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_customFree(void* ptr, ZSTD_customMem customMem)
+    private static void ZSTD_customFree(void* ptr, ZstdCustomMem customMem)
     {
         if (ptr != null)
         {

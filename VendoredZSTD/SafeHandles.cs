@@ -49,7 +49,7 @@ internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
         {
             var cctx = Methods.ZSTD_createCCtx();
             if (cctx == null)
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
+                throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Failed to create cctx");
 
             safeHandle.SetHandle((IntPtr)cctx);
             success = true;
@@ -70,16 +70,16 @@ internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
     /// </summary>
     /// <returns>
     /// A <see cref="SafeHandleHolder{T}"/> instance that can be implicitly converted to a pointer
-    /// to <see cref="ZSTD_CCtx_s"/>.
+    /// to <see cref="ZstdCCtxS"/>.
     /// </returns>
-    public SafeHandleHolder<ZSTD_CCtx_s> Acquire()
+    public SafeHandleHolder<ZstdCCtxS> Acquire()
     {
-        return new SafeHandleHolder<ZSTD_CCtx_s>(this);
+        return new SafeHandleHolder<ZstdCCtxS>(this);
     }
 
     protected override bool ReleaseHandle()
     {
-        return Methods.ZSTD_freeCCtx((ZSTD_CCtx_s*)handle) == 0;
+        return Methods.ZSTD_freeCCtx((ZstdCCtxS*)handle) == 0;
     }
 }
 
@@ -106,7 +106,7 @@ internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
         {
             var dctx = Methods.ZSTD_createDCtx();
             if (dctx == null)
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create dctx");
+                throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Failed to create dctx");
 
             safeHandle.SetHandle((IntPtr)dctx);
             success = true;
@@ -127,16 +127,16 @@ internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
     /// </summary>
     /// <returns>
     /// A <see cref="SafeHandleHolder{T}"/> instance that can be implicitly converted to a pointer
-    /// to <see cref="ZSTD_DCtx_s"/>.
+    /// to <see cref="ZstdDCtxS"/>.
     /// </returns>
-    public SafeHandleHolder<ZSTD_DCtx_s> Acquire()
+    public SafeHandleHolder<ZstdDCtxS> Acquire()
     {
-        return new SafeHandleHolder<ZSTD_DCtx_s>(this);
+        return new SafeHandleHolder<ZstdDCtxS>(this);
     }
 
     protected override bool ReleaseHandle()
     {
-        return Methods.ZSTD_freeDCtx((ZSTD_DCtx_s*)handle) == 0;
+        return Methods.ZSTD_freeDCtx((ZstdDCtxS*)handle) == 0;
     }
 }
 

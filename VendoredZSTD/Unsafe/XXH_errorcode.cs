@@ -3,10 +3,10 @@ namespace VendoredZSTD.Unsafe;
 /*!
  * @brief Exit code for the streaming API.
  */
-public enum XXH_errorcode
+public enum XxhErrorcode
 {
     /*!< OK */
-    XXH_OK = 0,
+    XxhOk = 0,
     /*!< Error */
-    XXH_ERROR
+    XxhError
 }

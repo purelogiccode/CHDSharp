@@ -1,8 +1,8 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum searchMethod_e
+public enum SearchMethodE
 {
-    search_hashChain = 0,
-    search_binaryTree = 1,
-    search_rowHash = 2
+    SearchHashChain = 0,
+    SearchBinaryTree = 1,
+    SearchRowHash = 2
 }

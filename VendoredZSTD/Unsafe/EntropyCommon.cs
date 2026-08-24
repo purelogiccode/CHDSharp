@@ -56,7 +56,7 @@ public static unsafe partial class Methods
                 if (FSE_isError(countSize))
                     return countSize;
                 if (countSize > hbSize)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
                 return countSize;
             }
@@ -67,7 +67,7 @@ public static unsafe partial class Methods
         var bitStream = MEM_readLE32(ip);
         var nbBits = (int)((bitStream & 0xF) + 5);
         if (nbBits > 15)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
 
         bitStream >>= 4;
         var bitCount = 4;
@@ -190,11 +190,11 @@ public static unsafe partial class Methods
         }
 
         if (remaining != 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
         if (charnum > maxSv1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooSmall));
         if (bitCount > 32)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
         *maxSvPtr = charnum - 1;
         ip += (bitCount + 7) >> 3;
@@ -212,6 +212,7 @@ public static unsafe partial class Methods
      */
     private static nuint FSE_readNCount_bmi2(short* normalizedCounter, uint* maxSvPtr, uint* tableLogPtr, void* headerBuffer, nuint hbSize, int bmi2)
     {
+        // ReSharper disable once UnusedParameter
         return FSE_readNCount_body_default(normalizedCounter, maxSvPtr, tableLogPtr, headerBuffer, hbSize);
     }
 
@@ -244,7 +245,7 @@ public static unsafe partial class Methods
         var ip = (byte*)src;
         nuint oSize;
         if (srcSize == 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
 
         nuint iSize = ip[0];
         if (iSize >= 128)
@@ -252,9 +253,9 @@ public static unsafe partial class Methods
             oSize = iSize - 127;
             iSize = (oSize + 1) / 2;
             if (iSize + 1 > srcSize)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
             if (oSize >= hwSize)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
             ip += 1;
             {
@@ -269,7 +270,7 @@ public static unsafe partial class Methods
         else
         {
             if (iSize + 1 > srcSize)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
 
             oSize = FSE_decompress_wksp_bmi2(huffWeight, hwSize - 1, ip + 1, iSize, 6, workSpace, wkspSize, bmi2);
             if (FSE_isError(oSize))
@@ -283,7 +284,7 @@ public static unsafe partial class Methods
             for (n = 0; n < oSize; n++)
             {
                 if (huffWeight[n] > 12)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
                 rankStats[huffWeight[n]]++;
                 weightTotal += (uint)((1 << huffWeight[n]) >> 1);
@@ -291,12 +292,12 @@ public static unsafe partial class Methods
         }
 
         if (weightTotal == 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
         {
             var tableLog = ZSTD_highbit32(weightTotal) + 1;
             if (tableLog > 12)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
             *tableLogPtr = tableLog;
             {
@@ -305,7 +306,7 @@ public static unsafe partial class Methods
                 var verif = (uint)(1 << (int)ZSTD_highbit32(rest));
                 var lastWeight = ZSTD_highbit32(rest) + 1;
                 if (verif != rest)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
                 huffWeight[oSize] = (byte)lastWeight;
                 rankStats[lastWeight]++;
@@ -313,7 +314,7 @@ public static unsafe partial class Methods
         }
 
         if (rankStats[1] < 2 || (rankStats[1] & 1) != 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
         *nbSymbolsPtr = (uint)(oSize + 1);
         return iSize + 1;
@@ -325,8 +326,10 @@ public static unsafe partial class Methods
         return HUF_readStats_body(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, workSpace, wkspSize, 0);
     }
 
-    private static nuint HUF_readStats_wksp(byte* huffWeight, nuint hwSize, uint* rankStats, uint* nbSymbolsPtr, uint* tableLogPtr, void* src, nuint srcSize, void* workSpace, nuint wkspSize, int flags)
+    private static nuint HUF_readStats_wksp(byte* huffWeight, nuint hwSize, uint* rankStats, uint* nbSymbolsPtr, uint* tableLogPtr,
+        void* src, nuint srcSize, void* workSpace, nuint wkspSize, int flags)
     {
+        // ReSharper disable once UnusedParameter
         return HUF_readStats_body_default(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, workSpace, wkspSize);
     }
 }

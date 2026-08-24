@@ -46,9 +46,9 @@ public static unsafe partial class Methods
         return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(MEM_read32(ptr)) : MEM_read32(ptr);
     }
 
-    private static uint XXH_readLE32_align(void* ptr, XXH_alignment align)
+    private static uint XXH_readLE32_align(void* ptr, XxhAlignment align)
     {
-        if (align == XXH_alignment.XXH_unaligned)
+        if (align == XxhAlignment.XxhUnaligned)
         {
             return XXH_readLE32(ptr);
         }
@@ -121,7 +121,7 @@ public static unsafe partial class Methods
      * @return The finalized hash.
      * @see XXH64_finalize().
      */
-    private static uint XXH32_finalize(uint hash, byte* ptr, nuint len, XXH_alignment align)
+    private static uint XXH32_finalize(uint hash, byte* ptr, nuint len, XxhAlignment align)
     {
         len &= 15;
         while (len >= 4)
@@ -156,7 +156,7 @@ public static unsafe partial class Methods
      * @param align Whether @p input is aligned.
      * @return The calculated hash.
      */
-    private static uint XXH32_endian_align(byte* input, nuint len, uint seed, XXH_alignment align)
+    private static uint XXH32_endian_align(byte* input, nuint len, uint seed, XxhAlignment align)
     {
         uint h32;
         if (len >= 16)
@@ -193,45 +193,45 @@ public static unsafe partial class Methods
     /*! @ingroup XXH32_family */
     private static uint ZSTD_XXH32(void* input, nuint len, uint seed)
     {
-        return XXH32_endian_align((byte*)input, len, seed, XXH_alignment.XXH_unaligned);
+        return XXH32_endian_align((byte*)input, len, seed, XxhAlignment.XxhUnaligned);
     }
 
     /*! @ingroup XXH32_family */
-    private static XXH32_state_s* ZSTD_XXH32_createState()
+    private static Xxh32StateS* ZSTD_XXH32_createState()
     {
-        return (XXH32_state_s*)XXH_malloc((nuint)sizeof(XXH32_state_s));
+        return (Xxh32StateS*)XXH_malloc((nuint)sizeof(Xxh32StateS));
     }
 
     /*! @ingroup XXH32_family */
-    private static XXH_errorcode ZSTD_XXH32_freeState(XXH32_state_s* statePtr)
+    private static XxhErrorcode ZSTD_XXH32_freeState(Xxh32StateS* statePtr)
     {
         XXH_free(statePtr);
-        return XXH_errorcode.XXH_OK;
+        return XxhErrorcode.XxhOk;
     }
 
     /*! @ingroup XXH32_family */
-    private static void ZSTD_XXH32_copyState(XXH32_state_s* dstState, XXH32_state_s* srcState)
+    private static void ZSTD_XXH32_copyState(Xxh32StateS* dstState, Xxh32StateS* srcState)
     {
-        XXH_memcpy(dstState, srcState, (nuint)sizeof(XXH32_state_s));
+        XXH_memcpy(dstState, srcState, (nuint)sizeof(Xxh32StateS));
     }
 
     /*! @ingroup XXH32_family */
-    private static XXH_errorcode ZSTD_XXH32_reset(XXH32_state_s* statePtr, uint seed)
+    private static XxhErrorcode ZSTD_XXH32_reset(Xxh32StateS* statePtr, uint seed)
     {
-        *statePtr = new XXH32_state_s();
+        *statePtr = new Xxh32StateS();
         statePtr->v[0] = seed + 0x9E3779B1U + 0x85EBCA77U;
         statePtr->v[1] = seed + 0x85EBCA77U;
         statePtr->v[2] = seed + 0;
         statePtr->v[3] = seed - 0x9E3779B1U;
-        return XXH_errorcode.XXH_OK;
+        return XxhErrorcode.XxhOk;
     }
 
     /*! @ingroup XXH32_family */
-    private static XXH_errorcode ZSTD_XXH32_update(XXH32_state_s* state, void* input, nuint len)
+    private static XxhErrorcode ZSTD_XXH32_update(Xxh32StateS* state, void* input, nuint len)
     {
         if (input == null)
         {
-            return XXH_errorcode.XXH_OK;
+            return XxhErrorcode.XxhOk;
         }
 
         {
@@ -243,7 +243,7 @@ public static unsafe partial class Methods
             {
                 XXH_memcpy((byte*)state->mem32 + state->memsize, input, len);
                 state->memsize += (uint)len;
-                return XXH_errorcode.XXH_OK;
+                return XxhErrorcode.XxhOk;
             }
 
             if (state->memsize != 0)
@@ -288,11 +288,11 @@ public static unsafe partial class Methods
             }
         }
 
-        return XXH_errorcode.XXH_OK;
+        return XxhErrorcode.XxhOk;
     }
 
     /*! @ingroup XXH32_family */
-    private static uint ZSTD_XXH32_digest(XXH32_state_s* state)
+    private static uint ZSTD_XXH32_digest(Xxh32StateS* state)
     {
         uint h32;
         if (state->large_len != 0)
@@ -305,23 +305,23 @@ public static unsafe partial class Methods
         }
 
         h32 += state->total_len_32;
-        return XXH32_finalize(h32, (byte*)state->mem32, state->memsize, XXH_alignment.XXH_aligned);
+        return XXH32_finalize(h32, (byte*)state->mem32, state->memsize, XxhAlignment.XxhAligned);
     }
 
     /*! @ingroup XXH32_family */
-    private static void ZSTD_XXH32_canonicalFromHash(XXH32_canonical_t* dst, uint hash)
+    private static void ZSTD_XXH32_canonicalFromHash(Xxh32CanonicalT* dst, uint hash)
     {
-        assert(sizeof(XXH32_canonical_t) == sizeof(uint));
+        assert(sizeof(Xxh32CanonicalT) == sizeof(uint));
         if (BitConverter.IsLittleEndian)
         {
             hash = BinaryPrimitives.ReverseEndianness(hash);
         }
 
-        XXH_memcpy(dst, &hash, (nuint)sizeof(XXH32_canonical_t));
+        XXH_memcpy(dst, &hash, (nuint)sizeof(Xxh32CanonicalT));
     }
 
     /*! @ingroup XXH32_family */
-    private static uint ZSTD_XXH32_hashFromCanonical(XXH32_canonical_t* src)
+    private static uint ZSTD_XXH32_hashFromCanonical(Xxh32CanonicalT* src)
     {
         return XXH_readBE32(src);
     }
@@ -338,9 +338,9 @@ public static unsafe partial class Methods
         return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(MEM_read64(ptr)) : MEM_read64(ptr);
     }
 
-    private static ulong XXH_readLE64_align(void* ptr, XXH_alignment align)
+    private static ulong XXH_readLE64_align(void* ptr, XxhAlignment align)
     {
-        if (align == XXH_alignment.XXH_unaligned)
+        if (align == XxhAlignment.XxhUnaligned)
             return XXH_readLE64(ptr);
         else
             return BitConverter.IsLittleEndian ? *(ulong*)ptr : BinaryPrimitives.ReverseEndianness(*(ulong*)ptr);
@@ -391,7 +391,7 @@ public static unsafe partial class Methods
      * @return The finalized hash
      * @see XXH32_finalize().
      */
-    private static ulong XXH64_finalize(ulong hash, byte* ptr, nuint len, XXH_alignment align)
+    private static ulong XXH64_finalize(ulong hash, byte* ptr, nuint len, XxhAlignment align)
     {
         len &= 31;
         while (len >= 8)
@@ -429,7 +429,7 @@ public static unsafe partial class Methods
      * @param align Whether @p input is aligned.
      * @return The calculated hash.
      */
-    private static ulong XXH64_endian_align(byte* input, nuint len, ulong seed, XXH_alignment align)
+    private static ulong XXH64_endian_align(byte* input, nuint len, ulong seed, XxhAlignment align)
     {
         ulong h64;
         if (len >= 32)
@@ -470,45 +470,45 @@ public static unsafe partial class Methods
     /*! @ingroup XXH64_family */
     private static ulong ZSTD_XXH64(void* input, nuint len, ulong seed)
     {
-        return XXH64_endian_align((byte*)input, len, seed, XXH_alignment.XXH_unaligned);
+        return XXH64_endian_align((byte*)input, len, seed, XxhAlignment.XxhUnaligned);
     }
 
     /*! @ingroup XXH64_family*/
-    private static XXH64_state_s* ZSTD_XXH64_createState()
+    private static Xxh64StateS* ZSTD_XXH64_createState()
     {
-        return (XXH64_state_s*)XXH_malloc((nuint)sizeof(XXH64_state_s));
+        return (Xxh64StateS*)XXH_malloc((nuint)sizeof(Xxh64StateS));
     }
 
     /*! @ingroup XXH64_family */
-    private static XXH_errorcode ZSTD_XXH64_freeState(XXH64_state_s* statePtr)
+    private static XxhErrorcode ZSTD_XXH64_freeState(Xxh64StateS* statePtr)
     {
         XXH_free(statePtr);
-        return XXH_errorcode.XXH_OK;
+        return XxhErrorcode.XxhOk;
     }
 
     /*! @ingroup XXH64_family */
-    private static void ZSTD_XXH64_copyState(XXH64_state_s* dstState, XXH64_state_s* srcState)
+    private static void ZSTD_XXH64_copyState(Xxh64StateS* dstState, Xxh64StateS* srcState)
     {
-        XXH_memcpy(dstState, srcState, (nuint)sizeof(XXH64_state_s));
+        XXH_memcpy(dstState, srcState, (nuint)sizeof(Xxh64StateS));
     }
 
     /*! @ingroup XXH64_family */
-    private static XXH_errorcode ZSTD_XXH64_reset(XXH64_state_s* statePtr, ulong seed)
+    private static XxhErrorcode ZSTD_XXH64_reset(Xxh64StateS* statePtr, ulong seed)
     {
-        *statePtr = new XXH64_state_s();
+        *statePtr = new Xxh64StateS();
         statePtr->v[0] = seed + 0x9E3779B185EBCA87UL + 0xC2B2AE3D27D4EB4FUL;
         statePtr->v[1] = seed + 0xC2B2AE3D27D4EB4FUL;
         statePtr->v[2] = seed + 0;
         statePtr->v[3] = seed - 0x9E3779B185EBCA87UL;
-        return XXH_errorcode.XXH_OK;
+        return XxhErrorcode.XxhOk;
     }
 
     /*! @ingroup XXH64_family */
-    private static XXH_errorcode ZSTD_XXH64_update(XXH64_state_s* state, void* input, nuint len)
+    private static XxhErrorcode ZSTD_XXH64_update(Xxh64StateS* state, void* input, nuint len)
     {
         if (input == null)
         {
-            return XXH_errorcode.XXH_OK;
+            return XxhErrorcode.XxhOk;
         }
 
         {
@@ -519,7 +519,7 @@ public static unsafe partial class Methods
             {
                 XXH_memcpy((byte*)state->mem64 + state->memsize, input, len);
                 state->memsize += (uint)len;
-                return XXH_errorcode.XXH_OK;
+                return XxhErrorcode.XxhOk;
             }
 
             if (state->memsize != 0)
@@ -557,11 +557,11 @@ public static unsafe partial class Methods
             }
         }
 
-        return XXH_errorcode.XXH_OK;
+        return XxhErrorcode.XxhOk;
     }
 
     /*! @ingroup XXH64_family */
-    private static ulong ZSTD_XXH64_digest(XXH64_state_s* state)
+    private static ulong ZSTD_XXH64_digest(Xxh64StateS* state)
     {
         ulong h64;
         if (state->total_len >= 32)
@@ -578,23 +578,23 @@ public static unsafe partial class Methods
         }
 
         h64 += state->total_len;
-        return XXH64_finalize(h64, (byte*)state->mem64, (nuint)state->total_len, XXH_alignment.XXH_aligned);
+        return XXH64_finalize(h64, (byte*)state->mem64, (nuint)state->total_len, XxhAlignment.XxhAligned);
     }
 
     /*! @ingroup XXH64_family */
-    private static void ZSTD_XXH64_canonicalFromHash(XXH64_canonical_t* dst, ulong hash)
+    private static void ZSTD_XXH64_canonicalFromHash(Xxh64CanonicalT* dst, ulong hash)
     {
-        assert(sizeof(XXH64_canonical_t) == sizeof(ulong));
+        assert(sizeof(Xxh64CanonicalT) == sizeof(ulong));
         if (BitConverter.IsLittleEndian)
         {
             hash = BinaryPrimitives.ReverseEndianness(hash);
         }
 
-        XXH_memcpy(dst, &hash, (nuint)sizeof(XXH64_canonical_t));
+        XXH_memcpy(dst, &hash, (nuint)sizeof(Xxh64CanonicalT));
     }
 
     /*! @ingroup XXH64_family */
-    private static ulong ZSTD_XXH64_hashFromCanonical(XXH64_canonical_t* src)
+    private static ulong ZSTD_XXH64_hashFromCanonical(Xxh64CanonicalT* src)
     {
         return XXH_readBE64(src);
     }

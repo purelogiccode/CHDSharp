@@ -5,8 +5,8 @@ namespace VendoredZSTD.Unsafe;
  * left off (ZSTDirp_continue), or whether it needs to be restarted from zero
  * (ZSTDirp_reset).
  */
-public enum ZSTD_indexResetPolicy_e
+public enum ZstdIndexResetPolicyE
 {
-    ZSTDirp_continue,
-    ZSTDirp_reset
+    ZstDirpContinue,
+    ZstDirpReset
 }

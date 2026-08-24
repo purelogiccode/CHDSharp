@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
 /*  single-symbol decoding   */
 /*-***************************/
 [StructLayout(LayoutKind.Sequential)]
-public struct HUF_DEltX1
+public struct HufDEltX1
 {
     /* single-symbol decoding */
     public byte nbBits;

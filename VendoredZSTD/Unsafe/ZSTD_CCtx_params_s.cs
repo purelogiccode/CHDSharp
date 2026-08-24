@@ -3,10 +3,10 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_CCtx_params_s
+public unsafe struct ZstdCCtxParamsS
 {
-    public ZSTD_format_e format;
-    public ZSTD_compressionParameters cParams;
+    public ZstdFormatE format;
+    public ZstdCompressionParameters cParams;
     public ZstdFrameParameters fParams;
     public int compressionLevel;
     /* force back-references to respect limit of
@@ -20,22 +20,22 @@ public unsafe struct ZSTD_CCtx_params_s
      * Hint is not valid when srcSizeHint == 0.
      * There is no guarantee that hint is close to actual source size */
     public int srcSizeHint;
-    public ZSTD_dictAttachPref_e attachDictPref;
-    public ZSTD_paramSwitch_e literalCompressionMode;
+    public ZstdDictAttachPrefE attachDictPref;
+    public ZstdParamSwitchE literalCompressionMode;
     /* Multithreading: used to pass parameters to mtctx */
     public int nbWorkers;
     public nuint jobSize;
     public int overlapLog;
     public int rsyncable;
     /* Long distance matching parameters */
-    public ldmParams_t ldmParams;
+    public LdmParamsT ldmParams;
     /* Dedicated dict search algorithm trigger */
     public int enableDedicatedDictSearch;
     /* Input/output buffer modes */
-    public ZSTD_bufferMode_e inBufferMode;
-    public ZSTD_bufferMode_e outBufferMode;
+    public ZstdBufferModeE inBufferMode;
+    public ZstdBufferModeE outBufferMode;
     /* Sequence compression API */
-    public ZSTD_sequenceFormat_e blockDelimiters;
+    public ZstdSequenceFormatE blockDelimiters;
     public int validateSequences;
     /* Block splitting
      * @postBlockSplitter executes split analysis after sequences are produced,
@@ -47,18 +47,18 @@ public unsafe struct ZSTD_CCtx_params_s
      * then levels are sorted in increasing cpu budget, from 2 (fastest) to 6 (slowest).
      * Highest @preBlockSplitter_level combines well with @postBlockSplitter.
      */
-    public ZSTD_paramSwitch_e postBlockSplitter;
+    public ZstdParamSwitchE postBlockSplitter;
     public int preBlockSplitter_level;
     /* Adjust the max block size*/
     public nuint maxBlockSize;
     /* Param for deciding whether to use row-based matchfinder */
-    public ZSTD_paramSwitch_e useRowMatchFinder;
+    public ZstdParamSwitchE useRowMatchFinder;
     /* Always load a dictionary in ext-dict mode (not prefix mode)? */
     public int deterministicRefPrefix;
     /* Internal use, for createCCtxParams() and freeCCtxParams() only */
-    public ZSTD_customMem customMem;
+    public ZstdCustomMem customMem;
     /* Controls prefetching in some dictMatchState matchfinders */
-    public ZSTD_paramSwitch_e prefetchCDictTables;
+    public ZstdParamSwitchE prefetchCDictTables;
     /* Controls whether zstd will fall back to an internal matchfinder
      * if the external matchfinder returns an error code. */
     public int enableMatchFinderFallback;
@@ -68,5 +68,5 @@ public unsafe struct ZSTD_CCtx_params_s
     public void* extSeqProdState;
     public void* extSeqProdFunc;
     /* Controls repcode search in external sequence parsing */
-    public ZSTD_paramSwitch_e searchForExternalRepcodes;
+    public ZstdParamSwitchE searchForExternalRepcodes;
 }

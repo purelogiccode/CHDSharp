@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Explicit)]
-public unsafe struct _wksps_e__Union
+public unsafe struct WkspsEUnion
 {
     [FieldOffset(0)]
-    public HUF_buildCTable_wksp_tables buildCTable_wksp;
+    public HufBuildCTableWkspTables buildCTable_wksp;
     [FieldOffset(0)]
-    public HUF_WriteCTableWksp writeCTable_wksp;
+    public HufWriteCTableWksp writeCTable_wksp;
     [FieldOffset(0)]
     public fixed uint hist_wksp[1024];
 }

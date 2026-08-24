@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_window_t
+public unsafe struct ZstdWindowT
 {
     /* next block here to continue on current prefix */
     public byte* nextSrc;

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_optimal_t
+public unsafe struct ZstdOptimalT
 {
     /* price from beginning of segment to this position */
     public int price;

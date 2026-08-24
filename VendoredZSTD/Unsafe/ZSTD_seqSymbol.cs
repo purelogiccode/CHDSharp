@@ -3,13 +3,13 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_seqSymbol
+public struct ZstdSeqSymbol
 {
     public ushort nextState;
     public byte nbAdditionalBits;
     public byte nbBits;
     public uint baseValue;
-    public ZSTD_seqSymbol(ushort nextState, byte nbAdditionalBits, byte nbBits, uint baseValue)
+    public ZstdSeqSymbol(ushort nextState, byte nbAdditionalBits, byte nbBits, uint baseValue)
     {
         this.nextState = nextState;
         this.nbAdditionalBits = nbAdditionalBits;

@@ -36,7 +36,7 @@ public static unsafe partial class Methods
         uint tableLog = 6;
         var wksp = (HufCompressWeightsWksp*)HUF_alignUpWorkspace(workspace, &workspaceSize, sizeof(uint));
         if (workspaceSize < (nuint)sizeof(HufCompressWeightsWksp))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         if (wtSize <= 1)
             return 0;
 
@@ -52,9 +52,9 @@ public static unsafe partial class Methods
         tableLog = FSE_optimalTableLog(tableLog, wtSize, maxSymbolValue);
         {
             /* useLowProbCount */
-            var _var_err__ = FSE_normalizeCount(wksp->norm, tableLog, wksp->count, wtSize, maxSymbolValue, 0);
-            if (ERR_isError(_var_err__))
-                return _var_err__;
+            var varErr = FSE_normalizeCount(wksp->norm, tableLog, wksp->count, wtSize, maxSymbolValue, 0);
+            if (ERR_isError(varErr))
+                return varErr;
         }
 
         {
@@ -67,9 +67,9 @@ public static unsafe partial class Methods
 
         {
             /* Compress */
-            var _var_err__ = FSE_buildCTable_wksp(wksp->CTable, wksp->norm, maxSymbolValue, tableLog, wksp->scratchBuffer, sizeof(uint) * 41);
-            if (ERR_isError(_var_err__))
-                return _var_err__;
+            var varErr = FSE_buildCTable_wksp(wksp->CTable, wksp->norm, maxSymbolValue, tableLog, wksp->scratchBuffer, sizeof(uint) * 41);
+            if (ERR_isError(varErr))
+                return varErr;
         }
 
         {
@@ -130,16 +130,16 @@ public static unsafe partial class Methods
     /** HUF_readCTableHeader() :
      *  @returns The header from the CTable specifying the tableLog and the maxSymbolValue.
      */
-    private static HUF_CTableHeader HUF_readCTableHeader(nuint* ctable)
+    private static HufCTableHeader HUF_readCTableHeader(nuint* ctable)
     {
-        HUF_CTableHeader header;
+        HufCTableHeader header;
         memcpy(&header, ctable, (uint)sizeof(nuint));
         return header;
     }
 
     private static void HUF_writeCTableHeader(nuint* ctable, uint tableLog, uint maxSymbolValue)
     {
-        HUF_CTableHeader header;
+        HufCTableHeader header;
         memset(&header, 0, (uint)sizeof(nuint));
         assert(tableLog < 256);
         header.tableLog = (byte)tableLog;
@@ -148,18 +148,18 @@ public static unsafe partial class Methods
         memcpy(ctable, &header, (uint)sizeof(nuint));
     }
 
-    private static nuint HUF_writeCTable_wksp(void* dst, nuint maxDstSize, nuint* CTable, uint maxSymbolValue, uint huffLog, void* workspace, nuint workspaceSize)
+    private static nuint HUF_writeCTable_wksp(void* dst, nuint maxDstSize, nuint* cTable, uint maxSymbolValue, uint huffLog, void* workspace, nuint workspaceSize)
     {
-        var ct = CTable + 1;
+        var ct = cTable + 1;
         var op = (byte*)dst;
         uint n;
-        var wksp = (HUF_WriteCTableWksp*)HUF_alignUpWorkspace(workspace, &workspaceSize, sizeof(uint));
-        assert(HUF_readCTableHeader(CTable).maxSymbolValue == maxSymbolValue);
-        assert(HUF_readCTableHeader(CTable).tableLog == huffLog);
-        if (workspaceSize < (nuint)sizeof(HUF_WriteCTableWksp))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        var wksp = (HufWriteCTableWksp*)HUF_alignUpWorkspace(workspace, &workspaceSize, sizeof(uint));
+        assert(HUF_readCTableHeader(cTable).maxSymbolValue == maxSymbolValue);
+        assert(HUF_readCTableHeader(cTable).tableLog == huffLog);
+        if (workspaceSize < (nuint)sizeof(HufWriteCTableWksp))
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         if (maxSymbolValue > 255)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
 
         wksp->bitsToWeight[0] = 0;
         for (n = 1; n < huffLog + 1; n++)
@@ -173,7 +173,7 @@ public static unsafe partial class Methods
         }
 
         if (maxDstSize < 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         {
             var hSize = HUF_compressWeights(op + 1, maxDstSize - 1, wksp->huffWeight, maxSymbolValue, &wksp->wksp, (nuint)sizeof(HufCompressWeightsWksp));
@@ -188,9 +188,9 @@ public static unsafe partial class Methods
         }
 
         if (maxSymbolValue > 256 - 128)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         if ((maxSymbolValue + 1) / 2 + 1 > maxDstSize)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         op[0] = (byte)(128 + (maxSymbolValue - 1));
         wksp->huffWeight[maxSymbolValue] = 0;
@@ -204,7 +204,7 @@ public static unsafe partial class Methods
 
     /** HUF_readCTable() :
      *  Loading a CTable saved with HUF_writeCTable() */
-    private static nuint HUF_readCTable(nuint* CTable, uint* maxSymbolValuePtr, void* src, nuint srcSize, uint* hasZeroWeights)
+    private static nuint HUF_readCTable(nuint* cTable, uint* maxSymbolValuePtr, void* src, nuint srcSize, uint* hasZeroWeights)
     {
         /* init not required, even though some static analyzer may complain */
         var huffWeight = stackalloc byte[256];
@@ -212,7 +212,7 @@ public static unsafe partial class Methods
         var rankVal = stackalloc uint[13];
         uint tableLog = 0;
         uint nbSymbols = 0;
-        var ct = CTable + 1;
+        var ct = cTable + 1;
         /* get symbol weights */
         var readSize = HUF_readStats(huffWeight, 255 + 1, rankVal, &nbSymbols, &tableLog, src, srcSize);
         if (ERR_isError(readSize))
@@ -220,12 +220,12 @@ public static unsafe partial class Methods
 
         *hasZeroWeights = rankVal[0] > 0 ? 1U : 0U;
         if (tableLog > 12)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         if (nbSymbols > *maxSymbolValuePtr + 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooSmall));
 
         *maxSymbolValuePtr = nbSymbols - 1;
-        HUF_writeCTableHeader(CTable, tableLog, *maxSymbolValuePtr);
+        HUF_writeCTableHeader(cTable, tableLog, *maxSymbolValuePtr);
         {
             uint n, nextRankStart = 0;
             for (n = 1; n <= tableLog; n++)
@@ -287,11 +287,11 @@ public static unsafe partial class Methods
      *  Note 1 : If symbolValue > HUF_readCTableHeader(symbolTable).maxSymbolValue, returns 0
      *  Note 2 : is not inlined, as HUF_CElt definition is private
      */
-    private static uint HUF_getNbBitsFromCTable(nuint* CTable, uint symbolValue)
+    private static uint HUF_getNbBitsFromCTable(nuint* cTable, uint symbolValue)
     {
-        var ct = CTable + 1;
+        var ct = cTable + 1;
         assert(symbolValue <= 255);
-        if (symbolValue > HUF_readCTableHeader(CTable).maxSymbolValue)
+        if (symbolValue > HUF_readCTableHeader(cTable).maxSymbolValue)
             return 0;
 
         return (uint)HUF_getNbBits(ct[symbolValue]);
@@ -318,7 +318,7 @@ public static unsafe partial class Methods
      *                    respect targetNbBits.
      * @return            The maximum number of bits of the Huffman tree after adjustment.
      */
-    private static uint HUF_setMaxHeight(nodeElt_s* huffNode, uint lastNonNull, uint targetNbBits)
+    private static uint HUF_setMaxHeight(NodeEltS* huffNode, uint lastNonNull, uint targetNbBits)
     {
         uint largestBits = huffNode[lastNonNull].nbBits;
         if (largestBits <= targetNbBits)
@@ -449,7 +449,7 @@ public static unsafe partial class Methods
     }
 
     /* Helper swap function for HUF_quickSortPartition() */
-    private static void HUF_swapNodes(nodeElt_s* a, nodeElt_s* b)
+    private static void HUF_swapNodes(NodeEltS* a, NodeEltS* b)
     {
         var tmp = *a;
         *a = *b;
@@ -458,7 +458,7 @@ public static unsafe partial class Methods
 
     /* Returns 0 if the huffNode array is not sorted by descending count */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int HUF_isSorted(nodeElt_s* huffNode, uint maxSymbolValue1)
+    private static int HUF_isSorted(NodeEltS* huffNode, uint maxSymbolValue1)
     {
         uint i;
         for (i = 1; i < maxSymbolValue1; ++i)
@@ -474,7 +474,7 @@ public static unsafe partial class Methods
 
     /* Insertion sort by descending order */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void HUF_insertionSort(nodeElt_s* huffNode, int low, int high)
+    private static void HUF_insertionSort(NodeEltS* huffNode, int low, int high)
     {
         int i;
         var size = high - low + 1;
@@ -494,7 +494,7 @@ public static unsafe partial class Methods
     }
 
     /* Pivot helper function for quicksort. */
-    private static int HUF_quickSortPartition(nodeElt_s* arr, int low, int high)
+    private static int HUF_quickSortPartition(NodeEltS* arr, int low, int high)
     {
         /* Simply select rightmost element as pivot. "Better" selectors like
          * median-of-three don't experimentally appear to have any benefit.
@@ -518,7 +518,7 @@ public static unsafe partial class Methods
     /* Classic quicksort by descending with partially iterative calls
      * to reduce worst case callstack size.
      */
-    private static void HUF_simpleQuickSort(nodeElt_s* arr, int low, int high)
+    private static void HUF_simpleQuickSort(NodeEltS* arr, int low, int high)
     {
         const int kInsertionSortThreshold = 8;
         if (high - low < kInsertionSortThreshold)
@@ -554,11 +554,11 @@ public static unsafe partial class Methods
      * @param[in]  maxSymbolValue Maximum symbol value.
      * @param      rankPosition   This is a scratch workspace. Must have RANK_POSITION_TABLE_SIZE entries.
      */
-    private static void HUF_sort(nodeElt_s* huffNode, uint* count, uint maxSymbolValue, rankPos* rankPosition)
+    private static void HUF_sort(NodeEltS* huffNode, uint* count, uint maxSymbolValue, RankPos* rankPosition)
     {
         uint n;
         var maxSymbolValue1 = maxSymbolValue + 1;
-        memset(rankPosition, 0, (uint)(sizeof(rankPos) * 192));
+        memset(rankPosition, 0, (uint)(sizeof(RankPos) * 192));
         for (n = 0; n < maxSymbolValue1; ++n)
         {
             var lowerRank = HUF_getIndex(count[n]);
@@ -604,7 +604,7 @@ public static unsafe partial class Methods
      * @param maxSymbolValue  The maximum symbol value.
      * @return                The smallest node in the Huffman tree (by count).
      */
-    private static int HUF_buildTree(nodeElt_s* huffNode, uint maxSymbolValue)
+    private static int HUF_buildTree(NodeEltS* huffNode, uint maxSymbolValue)
     {
         var huffNode0 = huffNode - 1;
         var nodeNb = 255 + 1;
@@ -661,9 +661,9 @@ public static unsafe partial class Methods
      * @param      maxSymbolValue The maximum symbol value.
      * @param      maxNbBits      The exact maximum number of bits used in the Huffman tree.
      */
-    private static void HUF_buildCTableFromTree(nuint* CTable, nodeElt_s* huffNode, int nonNullRank, uint maxSymbolValue, uint maxNbBits)
+    private static void HUF_buildCTableFromTree(nuint* cTable, NodeEltS* huffNode, int nonNullRank, uint maxSymbolValue, uint maxNbBits)
     {
-        var ct = CTable + 1;
+        var ct = cTable + 1;
         /* fill result into ctable (val, nbBits) */
         int n;
         var nbPerRank = stackalloc ushort[13];
@@ -690,16 +690,16 @@ public static unsafe partial class Methods
             HUF_setNbBits(ct + huffNode[n].@byte, huffNode[n].nbBits);
         for (n = 0; n < alphabetSize; n++)
             HUF_setValue(ct + n, valPerRank[HUF_getNbBits(ct[n])]++);
-        HUF_writeCTableHeader(CTable, maxNbBits, maxSymbolValue);
+        HUF_writeCTableHeader(cTable, maxNbBits, maxSymbolValue);
     }
 
-    private static nuint HUF_buildCTable_wksp(nuint* CTable, uint* count, uint maxSymbolValue, uint maxNbBits, void* workSpace, nuint wkspSize)
+    private static nuint HUF_buildCTable_wksp(nuint* cTable, uint* count, uint maxSymbolValue, uint maxNbBits, void* workSpace, nuint wkspSize)
     {
-        var wksp_tables = (HUF_buildCTable_wksp_tables*)HUF_alignUpWorkspace(workSpace, &wkspSize, sizeof(uint));
-        var huffNode0 = &wksp_tables->huffNodeTbl.e0;
+        var wkspTables = (HufBuildCTableWkspTables*)HUF_alignUpWorkspace(workSpace, &wkspSize, sizeof(uint));
+        var huffNode0 = &wkspTables->huffNodeTbl.e0;
         var huffNode = huffNode0 + 1;
-        if (wkspSize < (nuint)sizeof(HUF_buildCTable_wksp_tables))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+        if (wkspSize < (nuint)sizeof(HufBuildCTableWkspTables))
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorWorkSpaceTooSmall));
 
         if (maxNbBits == 0)
         {
@@ -707,22 +707,22 @@ public static unsafe partial class Methods
         }
 
         if (maxSymbolValue > 255)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
 
-        memset(huffNode0, 0, (uint)(sizeof(nodeElt_s) * 512));
-        HUF_sort(huffNode, count, maxSymbolValue, &wksp_tables->rankPosition.e0);
+        memset(huffNode0, 0, (uint)(sizeof(NodeEltS) * 512));
+        HUF_sort(huffNode, count, maxSymbolValue, &wkspTables->rankPosition.e0);
         var nonNullRank = HUF_buildTree(huffNode, maxSymbolValue);
         maxNbBits = HUF_setMaxHeight(huffNode, (uint)nonNullRank, maxNbBits);
         if (maxNbBits > 12)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
-        HUF_buildCTableFromTree(CTable, huffNode, nonNullRank, maxSymbolValue, maxNbBits);
+        HUF_buildCTableFromTree(cTable, huffNode, nonNullRank, maxSymbolValue, maxNbBits);
         return maxNbBits;
     }
 
-    private static nuint HUF_estimateCompressedSize(nuint* CTable, uint* count, uint maxSymbolValue)
+    private static nuint HUF_estimateCompressedSize(nuint* cTable, uint* count, uint maxSymbolValue)
     {
-        var ct = CTable + 1;
+        var ct = cTable + 1;
         nuint nbBits = 0;
         int s;
         for (s = 0; s <= (int)maxSymbolValue; ++s)
@@ -733,10 +733,10 @@ public static unsafe partial class Methods
         return nbBits >> 3;
     }
 
-    private static int HUF_validateCTable(nuint* CTable, uint* count, uint maxSymbolValue)
+    private static int HUF_validateCTable(nuint* cTable, uint* count, uint maxSymbolValue)
     {
-        var header = HUF_readCTableHeader(CTable);
-        var ct = CTable + 1;
+        var header = HUF_readCTableHeader(cTable);
+        var ct = cTable + 1;
         var bad = 0;
         int s;
         assert(header.tableLog <= 12);
@@ -760,16 +760,16 @@ public static unsafe partial class Methods
      * Initializes the bitstream.
      * @returns 0 or an error code.
      */
-    private static nuint HUF_initCStream(ref HUF_CStream_t bitC, void* startPtr, nuint dstCapacity)
+    private static nuint HUF_initCStream(ref HufCStreamT bitC, void* startPtr, nuint dstCapacity)
     {
-        bitC = new HUF_CStream_t
+        bitC = new HufCStreamT
         {
             startPtr = (byte*)startPtr,
             ptr = (byte*)startPtr,
             endPtr = (byte*)startPtr + dstCapacity - sizeof(nuint)
         };
         if (dstCapacity <= (nuint)sizeof(nuint))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         return 0;
     }
@@ -786,21 +786,21 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
-    private static void HUF_addBits(ref nuint bitC_bitContainer_e0, ref nuint bitC_bitPos_e0, nuint elt, int kFast)
+    private static void HUF_addBits(ref nuint bitCBitContainerE0, ref nuint bitCBitPosE0, nuint elt, int kFast)
     {
         assert(HUF_getNbBits(elt) <= 12);
-        bitC_bitContainer_e0 >>= (int)HUF_getNbBits(elt);
-        bitC_bitContainer_e0 |= kFast != 0 ? HUF_getValueFast(elt) : HUF_getValue(elt);
-        bitC_bitPos_e0 += HUF_getNbBitsFast(elt);
-        assert((bitC_bitPos_e0 & 0xFF) <= (nuint)(sizeof(nuint) * 8));
+        bitCBitContainerE0 >>= (int)HUF_getNbBits(elt);
+        bitCBitContainerE0 |= kFast != 0 ? HUF_getValueFast(elt) : HUF_getValue(elt);
+        bitCBitPosE0 += HUF_getNbBitsFast(elt);
+        assert((bitCBitPosE0 & 0xFF) <= (nuint)(sizeof(nuint) * 8));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
-    private static void HUF_zeroIndex1(ref nuint bitC_bitContainer_e1, ref nuint bitC_bitPos_e1)
+    private static void HUF_zeroIndex1(ref nuint bitCBitContainerE1, ref nuint bitCBitPosE1)
     {
-        bitC_bitContainer_e1 = 0;
-        bitC_bitPos_e1 = 0;
+        bitCBitContainerE1 = 0;
+        bitCBitPosE1 = 0;
     }
 
     /*! HUF_mergeIndex1() :
@@ -809,13 +809,13 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
-    private static void HUF_mergeIndex1(ref nuint bitC_bitContainer_e0, ref nuint bitC_bitPos_e0, ref nuint bitC_bitContainer_e1, ref nuint bitC_bitPos_e1)
+    private static void HUF_mergeIndex1(ref nuint bitCBitContainerE0, ref nuint bitCBitPosE0, ref nuint bitCBitContainerE1, ref nuint bitCBitPosE1)
     {
-        assert((bitC_bitPos_e1 & 0xFF) < (nuint)(sizeof(nuint) * 8));
-        bitC_bitContainer_e0 >>= (int)(bitC_bitPos_e1 & 0xFF);
-        bitC_bitContainer_e0 |= bitC_bitContainer_e1;
-        bitC_bitPos_e0 += bitC_bitPos_e1;
-        assert((bitC_bitPos_e0 & 0xFF) <= (nuint)(sizeof(nuint) * 8));
+        assert((bitCBitPosE1 & 0xFF) < (nuint)(sizeof(nuint) * 8));
+        bitCBitContainerE0 >>= (int)(bitCBitPosE1 & 0xFF);
+        bitCBitContainerE0 |= bitCBitContainerE1;
+        bitCBitPosE0 += bitCBitPosE1;
+        assert((bitCBitPosE0 & 0xFF) <= (nuint)(sizeof(nuint) * 8));
     }
 
     /*! HUF_flushBits() :
@@ -827,23 +827,23 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
-    private static void HUF_flushBits(ref nuint bitC_bitContainer_e0, ref nuint bitC_bitPos_e0, ref byte* bitC_ptr, byte* bitC_endPtr, int kFast)
+    private static void HUF_flushBits(ref nuint bitCBitContainerE0, ref nuint bitCBitPosE0, ref byte* bitCPtr, byte* bitCEndPtr, int kFast)
     {
         /* The upper bits of bitPos are noisy, so we must mask by 0xFF. */
-        var nbBits = bitC_bitPos_e0 & 0xFF;
+        var nbBits = bitCBitPosE0 & 0xFF;
         var nbBytes = nbBits >> 3;
         /* The top nbBits bits of bitContainer are the ones we need. */
-        var bitContainer = bitC_bitContainer_e0 >> (int)((nuint)(sizeof(nuint) * 8) - nbBits);
-        bitC_bitPos_e0 &= 7;
+        var bitContainer = bitCBitContainerE0 >> (int)((nuint)(sizeof(nuint) * 8) - nbBits);
+        bitCBitPosE0 &= 7;
         assert(nbBits > 0);
         assert(nbBits <= (nuint)(sizeof(nuint) * 8));
-        assert(bitC_ptr <= bitC_endPtr);
-        MEM_writeLEST(bitC_ptr, bitContainer);
-        bitC_ptr += nbBytes;
-        assert(kFast == 0 || bitC_ptr <= bitC_endPtr);
-        if (kFast == 0 && bitC_ptr > bitC_endPtr)
+        assert(bitCPtr <= bitCEndPtr);
+        MEM_writeLEST(bitCPtr, bitContainer);
+        bitCPtr += nbBytes;
+        assert(kFast == 0 || bitCPtr <= bitCEndPtr);
+        if (kFast == 0 && bitCPtr > bitCEndPtr)
         {
-            bitC_ptr = bitC_endPtr;
+            bitCPtr = bitCEndPtr;
         }
     }
 
@@ -861,7 +861,7 @@ public static unsafe partial class Methods
     /*! HUF_closeCStream() :
      *  @return Size of CStream, in bytes,
      *          or 0 if it could not fit into dstBuffer */
-    private static nuint HUF_closeCStream(ref HUF_CStream_t bitC)
+    private static nuint HUF_closeCStream(ref HufCStreamT bitC)
     {
         HUF_addBits(ref bitC.bitContainer.e0, ref bitC.bitPos.e0, HUF_endMark(), 0);
         HUF_flushBits(ref bitC.bitContainer.e0, ref bitC.bitPos.e0, ref bitC.ptr, bitC.endPtr, 0);
@@ -876,20 +876,20 @@ public static unsafe partial class Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
-    private static void HUF_encodeSymbol(ref nuint bitCPtr_bitContainer_e0, ref nuint bitCPtr_bitPos_e0, uint symbol, nuint* CTable, int fast)
+    private static void HUF_encodeSymbol(ref nuint bitCPtrBitContainerE0, ref nuint bitCPtrBitPosE0, uint symbol, nuint* cTable, int fast)
     {
-        HUF_addBits(ref bitCPtr_bitContainer_e0, ref bitCPtr_bitPos_e0, CTable[symbol], fast);
+        HUF_addBits(ref bitCPtrBitContainerE0, ref bitCPtrBitPosE0, cTable[symbol], fast);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void HUF_compress1X_usingCTable_internal_body_loop(ref HUF_CStream_t bitC, byte* ip, nuint srcSize, nuint* ct, int kUnroll, int kFastFlush, int kLastFast)
+    private static void HUF_compress1X_usingCTable_internal_body_loop(ref HufCStreamT bitC, byte* ip, nuint srcSize, nuint* ct, int kUnroll, int kFastFlush, int kLastFast)
     {
-        var bitC_ptr = bitC.ptr;
-        var bitC_endPtr = bitC.endPtr;
-        var bitC_bitContainer_e0 = bitC.bitContainer.e0;
-        var bitC_bitPos_e0 = bitC.bitPos.e0;
-        var bitC_bitContainer_e1 = bitC.bitContainer.e1;
-        var bitC_bitPos_e1 = bitC.bitPos.e1;
+        var bitCPtr = bitC.ptr;
+        var bitCEndPtr = bitC.endPtr;
+        var bitCBitContainerE0 = bitC.bitContainer.e0;
+        var bitCBitPosE0 = bitC.bitPos.e0;
+        var bitCBitContainerE1 = bitC.bitContainer.e1;
+        var bitCBitPosE1 = bitC.bitPos.e1;
         /* Join to kUnroll */
         var n = (int)srcSize;
         var rem = n % kUnroll;
@@ -897,10 +897,10 @@ public static unsafe partial class Methods
         {
             for (; rem > 0; --rem)
             {
-                HUF_encodeSymbol(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ip[--n], ct, 0);
+                HUF_encodeSymbol(ref bitCBitContainerE0, ref bitCBitPosE0, ip[--n], ct, 0);
             }
 
-            HUF_flushBits(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ref bitC_ptr, bitC_endPtr, kFastFlush);
+            HUF_flushBits(ref bitCBitContainerE0, ref bitCBitPosE0, ref bitCPtr, bitCEndPtr, kFastFlush);
         }
 
         assert(n % kUnroll == 0);
@@ -909,11 +909,11 @@ public static unsafe partial class Methods
             int u;
             for (u = 1; u < kUnroll; ++u)
             {
-                HUF_encodeSymbol(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ip[n - u], ct, 1);
+                HUF_encodeSymbol(ref bitCBitContainerE0, ref bitCBitPosE0, ip[n - u], ct, 1);
             }
 
-            HUF_encodeSymbol(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ip[n - kUnroll], ct, kLastFast);
-            HUF_flushBits(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ref bitC_ptr, bitC_endPtr, kFastFlush);
+            HUF_encodeSymbol(ref bitCBitContainerE0, ref bitCBitPosE0, ip[n - kUnroll], ct, kLastFast);
+            HUF_flushBits(ref bitCBitContainerE0, ref bitCBitPosE0, ref bitCPtr, bitCEndPtr, kFastFlush);
             n -= kUnroll;
         }
 
@@ -924,29 +924,29 @@ public static unsafe partial class Methods
             int u;
             for (u = 1; u < kUnroll; ++u)
             {
-                HUF_encodeSymbol(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ip[n - u], ct, 1);
+                HUF_encodeSymbol(ref bitCBitContainerE0, ref bitCBitPosE0, ip[n - u], ct, 1);
             }
 
-            HUF_encodeSymbol(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ip[n - kUnroll], ct, kLastFast);
-            HUF_flushBits(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ref bitC_ptr, bitC_endPtr, kFastFlush);
-            HUF_zeroIndex1(ref bitC_bitContainer_e1, ref bitC_bitPos_e1);
+            HUF_encodeSymbol(ref bitCBitContainerE0, ref bitCBitPosE0, ip[n - kUnroll], ct, kLastFast);
+            HUF_flushBits(ref bitCBitContainerE0, ref bitCBitPosE0, ref bitCPtr, bitCEndPtr, kFastFlush);
+            HUF_zeroIndex1(ref bitCBitContainerE1, ref bitCBitPosE1);
             for (u = 1; u < kUnroll; ++u)
             {
-                HUF_encodeSymbol(ref bitC_bitContainer_e1, ref bitC_bitPos_e1, ip[n - kUnroll - u], ct, 1);
+                HUF_encodeSymbol(ref bitCBitContainerE1, ref bitCBitPosE1, ip[n - kUnroll - u], ct, 1);
             }
 
-            HUF_encodeSymbol(ref bitC_bitContainer_e1, ref bitC_bitPos_e1, ip[n - kUnroll - kUnroll], ct, kLastFast);
-            HUF_mergeIndex1(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ref bitC_bitContainer_e1, ref bitC_bitPos_e1);
-            HUF_flushBits(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ref bitC_ptr, bitC_endPtr, kFastFlush);
+            HUF_encodeSymbol(ref bitCBitContainerE1, ref bitCBitPosE1, ip[n - kUnroll - kUnroll], ct, kLastFast);
+            HUF_mergeIndex1(ref bitCBitContainerE0, ref bitCBitPosE0, ref bitCBitContainerE1, ref bitCBitPosE1);
+            HUF_flushBits(ref bitCBitContainerE0, ref bitCBitPosE0, ref bitCPtr, bitCEndPtr, kFastFlush);
         }
 
         assert(n == 0);
-        bitC.ptr = bitC_ptr;
-        bitC.endPtr = bitC_endPtr;
-        bitC.bitContainer.e0 = bitC_bitContainer_e0;
-        bitC.bitPos.e0 = bitC_bitPos_e0;
-        bitC.bitContainer.e1 = bitC_bitContainer_e1;
-        bitC.bitPos.e1 = bitC_bitPos_e1;
+        bitC.ptr = bitCPtr;
+        bitC.endPtr = bitCEndPtr;
+        bitC.bitContainer.e0 = bitCBitContainerE0;
+        bitC.bitPos.e0 = bitCBitPosE0;
+        bitC.bitContainer.e1 = bitCBitContainerE1;
+        bitC.bitPos.e1 = bitCBitPosE1;
     }
 
     /**
@@ -959,14 +959,14 @@ public static unsafe partial class Methods
         return ((srcSize * tableLog) >> 3) + 8;
     }
 
-    private static nuint HUF_compress1X_usingCTable_internal_body(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* CTable)
+    private static nuint HUF_compress1X_usingCTable_internal_body(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* cTable)
     {
-        uint tableLog = HUF_readCTableHeader(CTable).tableLog;
-        var ct = CTable + 1;
+        uint tableLog = HUF_readCTableHeader(cTable).tableLog;
+        var ct = cTable + 1;
         var ip = (byte*)src;
         var ostart = (byte*)dst;
         var oend = ostart + dstSize;
-        System.Runtime.CompilerServices.Unsafe.SkipInit(out HUF_CStream_t bitC);
+        System.Runtime.CompilerServices.Unsafe.SkipInit(out HufCStreamT bitC);
         if (dstSize < 8)
             return 0;
 
@@ -1032,20 +1032,20 @@ public static unsafe partial class Methods
         return HUF_closeCStream(ref bitC);
     }
 
-    private static nuint HUF_compress1X_usingCTable_internal(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* CTable, int flags)
+    private static nuint HUF_compress1X_usingCTable_internal(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* cTable, int flags)
     {
-        return HUF_compress1X_usingCTable_internal_body(dst, dstSize, src, srcSize, CTable);
+        return HUF_compress1X_usingCTable_internal_body(dst, dstSize, src, srcSize, cTable);
     }
 
     /* ====================== */
     /* single stream variants */
     /* ====================== */
-    private static nuint HUF_compress1X_usingCTable(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* CTable, int flags)
+    private static nuint HUF_compress1X_usingCTable(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* cTable, int flags)
     {
-        return HUF_compress1X_usingCTable_internal(dst, dstSize, src, srcSize, CTable, flags);
+        return HUF_compress1X_usingCTable_internal(dst, dstSize, src, srcSize, cTable, flags);
     }
 
-    private static nuint HUF_compress4X_usingCTable_internal(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* CTable, int flags)
+    private static nuint HUF_compress4X_usingCTable_internal(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* cTable, int flags)
     {
         /* first 3 segments */
         var segmentSize = (srcSize + 3) / 4;
@@ -1062,7 +1062,7 @@ public static unsafe partial class Methods
         op += 6;
         assert(op <= oend);
         {
-            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, segmentSize, CTable, flags);
+            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, segmentSize, cTable, flags);
             if (ERR_isError(cSize))
                 return cSize;
             if (cSize is 0 or > 65535)
@@ -1075,7 +1075,7 @@ public static unsafe partial class Methods
         ip += segmentSize;
         assert(op <= oend);
         {
-            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, segmentSize, CTable, flags);
+            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, segmentSize, cTable, flags);
             if (ERR_isError(cSize))
                 return cSize;
             if (cSize is 0 or > 65535)
@@ -1088,7 +1088,7 @@ public static unsafe partial class Methods
         ip += segmentSize;
         assert(op <= oend);
         {
-            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, segmentSize, CTable, flags);
+            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, segmentSize, cTable, flags);
             if (ERR_isError(cSize))
                 return cSize;
             if (cSize is 0 or > 65535)
@@ -1102,7 +1102,7 @@ public static unsafe partial class Methods
         assert(op <= oend);
         assert(ip <= iend);
         {
-            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, (nuint)(iend - ip), CTable, flags);
+            var cSize = HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), ip, (nuint)(iend - ip), cTable, flags);
             if (ERR_isError(cSize))
                 return cSize;
             if (cSize is 0 or > 65535)
@@ -1114,14 +1114,14 @@ public static unsafe partial class Methods
         return (nuint)(op - ostart);
     }
 
-    private static nuint HUF_compress4X_usingCTable(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* CTable, int flags)
+    private static nuint HUF_compress4X_usingCTable(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* cTable, int flags)
     {
-        return HUF_compress4X_usingCTable_internal(dst, dstSize, src, srcSize, CTable, flags);
+        return HUF_compress4X_usingCTable_internal(dst, dstSize, src, srcSize, cTable, flags);
     }
 
-    private static nuint HUF_compressCTable_internal(byte* ostart, byte* op, byte* oend, void* src, nuint srcSize, HUF_nbStreams_e nbStreams, nuint* CTable, int flags)
+    private static nuint HUF_compressCTable_internal(byte* ostart, byte* op, byte* oend, void* src, nuint srcSize, HufNbStreamsE nbStreams, nuint* cTable, int flags)
     {
-        var cSize = nbStreams == HUF_nbStreams_e.HUF_singleStream ? HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), src, srcSize, CTable, flags) : HUF_compress4X_usingCTable_internal(op, (nuint)(oend - op), src, srcSize, CTable, flags);
+        var cSize = nbStreams == HufNbStreamsE.HufSingleStream ? HUF_compress1X_usingCTable_internal(op, (nuint)(oend - op), src, srcSize, cTable, flags) : HUF_compress4X_usingCTable_internal(op, (nuint)(oend - op), src, srcSize, cTable, flags);
         if (ERR_isError(cSize))
         {
             return cSize;
@@ -1177,15 +1177,15 @@ public static unsafe partial class Methods
     private static uint HUF_optimalTableLog(uint maxTableLog, nuint srcSize, uint maxSymbolValue, void* workSpace, nuint wkspSize, nuint* table, uint* count, int flags)
     {
         assert(srcSize > 1);
-        assert(wkspSize >= (nuint)sizeof(HUF_buildCTable_wksp_tables));
+        assert(wkspSize >= (nuint)sizeof(HufBuildCTableWkspTables));
         if ((flags & (int)HufFlagsE.HufFlagsOptimalDepth) == 0)
         {
             return FSE_optimalTableLog_internal(maxTableLog, srcSize, maxSymbolValue, 1);
         }
 
         {
-            var dst = (byte*)workSpace + sizeof(HUF_WriteCTableWksp);
-            var dstSize = wkspSize - (nuint)sizeof(HUF_WriteCTableWksp);
+            var dst = (byte*)workSpace + sizeof(HufWriteCTableWksp);
+            var dstSize = wkspSize - (nuint)sizeof(HufWriteCTableWksp);
             nuint hSize, newSize;
             var symbolCardinality = HUF_cardinality(count, maxSymbolValue);
             var minTableLog = HUF_minTableLog(symbolCardinality);
@@ -1228,24 +1228,24 @@ public static unsafe partial class Methods
     /* HUF_compress_internal() :
      * `workSpace_align4` must be aligned on 4-bytes boundaries,
      * and occupies the same space as a table of HUF_WORKSPACE_SIZE_U64 unsigned */
-    private static nuint HUF_compress_internal(void* dst, nuint dstSize, void* src, nuint srcSize, uint maxSymbolValue, uint huffLog, HUF_nbStreams_e nbStreams, void* workSpace, nuint wkspSize, nuint* oldHufTable, HUF_repeat* repeat, int flags)
+    private static nuint HUF_compress_internal(void* dst, nuint dstSize, void* src, nuint srcSize, uint maxSymbolValue, uint huffLog, HufNbStreamsE nbStreams, void* workSpace, nuint wkspSize, nuint* oldHufTable, HufRepeat* repeat, int flags)
     {
-        var table = (HUF_compress_tables_t*)HUF_alignUpWorkspace(workSpace, &wkspSize, sizeof(ulong));
+        var table = (HufCompressTablesT*)HUF_alignUpWorkspace(workSpace, &wkspSize, sizeof(ulong));
         var ostart = (byte*)dst;
         var oend = ostart + dstSize;
         var op = ostart;
-        if (wkspSize < (nuint)sizeof(HUF_compress_tables_t))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+        if (wkspSize < (nuint)sizeof(HufCompressTablesT))
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorWorkSpaceTooSmall));
         if (srcSize == 0)
             return 0;
         if (dstSize == 0)
             return 0;
         if (srcSize > 128 * 1024)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         if (huffLog > 12)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         if (maxSymbolValue > 255)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
 
         if (maxSymbolValue == 0)
         {
@@ -1257,7 +1257,7 @@ public static unsafe partial class Methods
             huffLog = 11;
         }
 
-        if ((flags & (int)HufFlagsE.HufFlagsPreferRepeat) != 0 && repeat != null && *repeat == HUF_repeat.HUF_repeat_valid)
+        if ((flags & (int)HufFlagsE.HufFlagsPreferRepeat) != 0 && repeat != null && *repeat == HufRepeat.HufRepeatValid)
         {
             return HUF_compressCTable_internal(ostart, op, oend, src, srcSize, nbStreams, oldHufTable, flags);
         }
@@ -1302,34 +1302,34 @@ public static unsafe partial class Methods
                 return 0;
         }
 
-        if (repeat != null && *repeat == HUF_repeat.HUF_repeat_check && HUF_validateCTable(oldHufTable, table->count, maxSymbolValue) == 0)
+        if (repeat != null && *repeat == HufRepeat.HufRepeatCheck && HUF_validateCTable(oldHufTable, table->count, maxSymbolValue) == 0)
         {
-            *repeat = HUF_repeat.HUF_repeat_none;
+            *repeat = HufRepeat.HufRepeatNone;
         }
 
-        if ((flags & (int)HufFlagsE.HufFlagsPreferRepeat) != 0 && repeat != null && *repeat != HUF_repeat.HUF_repeat_none)
+        if ((flags & (int)HufFlagsE.HufFlagsPreferRepeat) != 0 && repeat != null && *repeat != HufRepeat.HufRepeatNone)
         {
             return HUF_compressCTable_internal(ostart, op, oend, src, srcSize, nbStreams, oldHufTable, flags);
         }
 
-        huffLog = HUF_optimalTableLog(huffLog, srcSize, maxSymbolValue, &table->wksps, (nuint)sizeof(_wksps_e__Union), &table->CTable.e0, table->count, flags);
+        huffLog = HUF_optimalTableLog(huffLog, srcSize, maxSymbolValue, &table->wksps, (nuint)sizeof(WkspsEUnion), &table->CTable.e0, table->count, flags);
         {
-            var maxBits = HUF_buildCTable_wksp(&table->CTable.e0, table->count, maxSymbolValue, huffLog, &table->wksps.buildCTable_wksp, (nuint)sizeof(HUF_buildCTable_wksp_tables));
+            var maxBits = HUF_buildCTable_wksp(&table->CTable.e0, table->count, maxSymbolValue, huffLog, &table->wksps.buildCTable_wksp, (nuint)sizeof(HufBuildCTableWkspTables));
             {
-                var _var_err__ = maxBits;
-                if (ERR_isError(_var_err__))
-                    return _var_err__;
+                var varErr = maxBits;
+                if (ERR_isError(varErr))
+                    return varErr;
             }
 
             huffLog = (uint)maxBits;
         }
 
         {
-            var hSize = HUF_writeCTable_wksp(op, dstSize, &table->CTable.e0, maxSymbolValue, huffLog, &table->wksps.writeCTable_wksp, (nuint)sizeof(HUF_WriteCTableWksp));
+            var hSize = HUF_writeCTable_wksp(op, dstSize, &table->CTable.e0, maxSymbolValue, huffLog, &table->wksps.writeCTable_wksp, (nuint)sizeof(HufWriteCTableWksp));
             if (ERR_isError(hSize))
                 return hSize;
 
-            if (repeat != null && *repeat != HUF_repeat.HUF_repeat_none)
+            if (repeat != null && *repeat != HufRepeat.HufRepeatNone)
             {
                 var oldSize = HUF_estimateCompressedSize(oldHufTable, table->count, maxSymbolValue);
                 var newSize = HUF_estimateCompressedSize(&table->CTable.e0, table->count, maxSymbolValue);
@@ -1347,7 +1347,7 @@ public static unsafe partial class Methods
             op += hSize;
             if (repeat != null)
             {
-                *repeat = HUF_repeat.HUF_repeat_none;
+                *repeat = HufRepeat.HufRepeatNone;
             }
 
             if (oldHufTable != null)
@@ -1363,17 +1363,17 @@ public static unsafe partial class Methods
      *  If it doesn't, it sets *repeat = HUF_repeat_none, and it sets hufTable to the table used.
      *  If preferRepeat then the old table will always be used if valid.
      *  If suspectUncompressible then some sampling checks will be run to potentially skip huffman coding */
-    private static nuint HUF_compress1X_repeat(void* dst, nuint dstSize, void* src, nuint srcSize, uint maxSymbolValue, uint huffLog, void* workSpace, nuint wkspSize, nuint* hufTable, HUF_repeat* repeat, int flags)
+    private static nuint HUF_compress1X_repeat(void* dst, nuint dstSize, void* src, nuint srcSize, uint maxSymbolValue, uint huffLog, void* workSpace, nuint wkspSize, nuint* hufTable, HufRepeat* repeat, int flags)
     {
-        return HUF_compress_internal(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, HUF_nbStreams_e.HUF_singleStream, workSpace, wkspSize, hufTable, repeat, flags);
+        return HUF_compress_internal(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, HufNbStreamsE.HufSingleStream, workSpace, wkspSize, hufTable, repeat, flags);
     }
 
     /* HUF_compress4X_repeat():
      * compress input using 4 streams.
      * consider skipping quickly
      * reuse an existing huffman compression table */
-    private static nuint HUF_compress4X_repeat(void* dst, nuint dstSize, void* src, nuint srcSize, uint maxSymbolValue, uint huffLog, void* workSpace, nuint wkspSize, nuint* hufTable, HUF_repeat* repeat, int flags)
+    private static nuint HUF_compress4X_repeat(void* dst, nuint dstSize, void* src, nuint srcSize, uint maxSymbolValue, uint huffLog, void* workSpace, nuint wkspSize, nuint* hufTable, HufRepeat* repeat, int flags)
     {
-        return HUF_compress_internal(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, HUF_nbStreams_e.HUF_fourStreams, workSpace, wkspSize, hufTable, repeat, flags);
+        return HUF_compress_internal(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, HufNbStreamsE.HufFourStreams, workSpace, wkspSize, hufTable, repeat, flags);
     }
 }

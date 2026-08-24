@@ -4,15 +4,15 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct HUF_compress_tables_t
+public unsafe struct HufCompressTablesT
 {
     public fixed uint count[256];
-    public _CTable_e__FixedBuffer CTable;
-    public _wksps_e__Union wksps;
+    public CTableEFixedBuffer CTable;
+    public WkspsEUnion wksps;
 #if NET8_0_OR_GREATER
     [InlineArray(257)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _CTable_e__FixedBuffer
+    public struct CTableEFixedBuffer
     {
         public nuint e0;
     }

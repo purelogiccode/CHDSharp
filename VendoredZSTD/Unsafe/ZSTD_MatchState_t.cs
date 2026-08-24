@@ -3,10 +3,10 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_MatchState_t
+public unsafe struct ZstdMatchStateT
 {
     /* State for window round buffer management */
-    public ZSTD_window_t window;
+    public ZstdWindowT window;
     /* index of end of dictionary, within context's referential.
      * When loadedDictEnd != 0, a dictionary is in use, and still valid.
      * This relies on a mechanism to set loadedDictEnd=0 when dictionary is no longer within distance.
@@ -39,10 +39,10 @@ public unsafe struct ZSTD_MatchState_t
      */
     public int dedicatedDictSearch;
     /* optimal parser state */
-    public optState_t opt;
-    public ZSTD_MatchState_t* dictMatchState;
-    public ZSTD_compressionParameters cParams;
-    public RawSeqStore_t* ldmSeqStore;
+    public OptStateT opt;
+    public ZstdMatchStateT* dictMatchState;
+    public ZstdCompressionParameters cParams;
+    public RawSeqStoreT* ldmSeqStore;
     /* Controls prefetching in some dictMatchState matchfinders.
      * This behavior is controlled from the cctx ms.
      * This parameter has no effect in the cdict ms. */

@@ -12,7 +12,7 @@ public class DecompressionStream : Stream
     private readonly bool _leaveOpen;
     private readonly bool _checkEndOfStream;
     private Decompressor _decompressor;
-    private ZSTD_inBuffer_s _input;
+    private ZstdInBufferS _input;
     private nuint _lastDecompressResult;
     private bool _contextDrained = true;
 
@@ -40,7 +40,7 @@ public class DecompressionStream : Stream
 
         _inputBufferSize = bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
         _inputBuffer = ArrayPool<byte>.Shared.Rent(_inputBufferSize);
-        _input = new ZSTD_inBuffer_s { pos = (nuint)_inputBufferSize, size = (nuint)_inputBufferSize };
+        _input = new ZstdInBufferS { pos = (nuint)_inputBufferSize, size = (nuint)_inputBufferSize };
     }
 
     public void SetParameter(ZstdDParameter parameter, int value)
@@ -108,7 +108,7 @@ public class DecompressionStream : Stream
             return 0;
         }
 
-        var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
+        var output = new ZstdOutBufferS { pos = 0, size = (nuint)buffer.Length };
         while (true)
         {
             // If there is still input available, or there might be data buffered in the decompressor context, flush that out
@@ -169,7 +169,7 @@ public class DecompressionStream : Stream
             return 0;
         }
 
-        var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
+        var output = new ZstdOutBufferS { pos = 0, size = (nuint)buffer.Length };
         while (true)
         {
             // If there is still input available, or there might be data buffered in the decompressor context, flush that out
@@ -210,7 +210,7 @@ public class DecompressionStream : Stream
         }
     }
 
-    private unsafe nuint DecompressStream(ref ZSTD_outBuffer_s output, Span<byte> outputBuffer)
+    private unsafe nuint DecompressStream(ref ZstdOutBufferS output, Span<byte> outputBuffer)
     {
         fixed (byte* inputBufferPtr = _inputBuffer)
         fixed (byte* outputBufferPtr = outputBuffer)

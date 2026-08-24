@@ -7,8 +7,8 @@ namespace VendoredZSTD.Unsafe;
  * subsequent operation will overwrite the table space anyways (e.g., copying
  * the matchState contents in from a CDict).
  */
-public enum ZSTD_compResetPolicy_e
+public enum ZstdCompResetPolicyE
 {
-    ZSTDcrp_makeClean,
-    ZSTDcrp_leaveDirty
+    ZstDcrpMakeClean,
+    ZstDcrpLeaveDirty
 }

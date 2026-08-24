@@ -3,13 +3,13 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_blockSplitCtx
+public unsafe struct ZstdBlockSplitCtx
 {
-    public SeqStore_t fullSeqStoreChunk;
-    public SeqStore_t firstHalfSeqStore;
-    public SeqStore_t secondHalfSeqStore;
-    public SeqStore_t currSeqStore;
-    public SeqStore_t nextSeqStore;
+    public SeqStoreT fullSeqStoreChunk;
+    public SeqStoreT firstHalfSeqStore;
+    public SeqStoreT secondHalfSeqStore;
+    public SeqStoreT currSeqStore;
+    public SeqStoreT nextSeqStore;
     public fixed uint partitions[196];
-    public ZSTD_entropyCTablesMetadata_t entropyMetadata;
+    public ZstdEntropyCTablesMetadataT entropyMetadata;
 }

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct HUF_CTableHeader
+public unsafe struct HufCTableHeader
 {
     public byte tableLog;
     public byte maxSymbolValue;

@@ -4,20 +4,20 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct HUF_ReadDTableX2_Workspace
+public unsafe struct HufReadDTableX2Workspace
 {
-    public _rankVal_e__FixedBuffer rankVal;
+    public RankValEFixedBuffer rankVal;
     public fixed uint rankStats[13];
     public fixed uint rankStart0[15];
-    public _sortedSymbol_e__FixedBuffer sortedSymbol;
+    public SortedSymbolEFixedBuffer sortedSymbol;
     public fixed byte weightList[256];
     public fixed uint calleeWksp[219];
 #if NET8_0_OR_GREATER
     [InlineArray(12)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _rankVal_e__FixedBuffer
+    public struct RankValEFixedBuffer
     {
-        public rankValCol_t e0;
+        public RankValColT e0;
     }
 
 #else
@@ -42,9 +42,9 @@ public unsafe struct HUF_ReadDTableX2_Workspace
 #if NET8_0_OR_GREATER
     [InlineArray(256)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _sortedSymbol_e__FixedBuffer
+    public struct SortedSymbolEFixedBuffer
     {
-        public sortedSymbol_t e0;
+        public SortedSymbolT e0;
     }
 
 #else

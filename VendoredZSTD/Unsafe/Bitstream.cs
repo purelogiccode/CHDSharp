@@ -65,7 +65,7 @@ public static unsafe partial class Methods
         bitC.ptr = bitC.startPtr;
         bitC.endPtr = bitC.startPtr + dstCapacity - sizeof(nuint);
         if (dstCapacity <= (nuint)sizeof(nuint))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         return 0;
     }
@@ -179,7 +179,7 @@ public static unsafe partial class Methods
         if (srcSize < 1)
         {
             *bitD = new BitDStreamT();
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         bitD->start = (sbyte*)srcBuffer;
@@ -192,7 +192,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD->bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
         else
@@ -227,7 +227,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD->bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             }
 
             bitD->bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;
@@ -423,7 +423,7 @@ public static unsafe partial class Methods
         if (srcSize < 1)
         {
             bitD = new BitDStreamT();
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         bitD.start = (sbyte*)srcBuffer;
@@ -436,7 +436,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD.bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
         else
@@ -471,7 +471,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD.bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             }
 
             bitD.bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;

@@ -3,4 +3,4 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-public unsafe delegate nuint ZSTD_BlockCompressor_f(ZSTD_MatchState_t* bs, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize);
+public unsafe delegate nuint ZstdBlockCompressorF(ZstdMatchStateT* bs, SeqStoreT* seqStore, uint* rep, void* src, nuint srcSize);

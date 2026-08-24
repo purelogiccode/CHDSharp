@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_compressionParameters
+public struct ZstdCompressionParameters
 {
     /**< largest match distance : larger == more compression, more memory needed during decompression */
     public uint windowLog;
@@ -18,8 +18,8 @@ public struct ZSTD_compressionParameters
     /**< acceptable match size for optimal parser (only) : larger == more compression, slower */
     public uint targetLength;
     /**< see ZSTD_strategy definition above */
-    public ZSTD_strategy strategy;
-    public ZSTD_compressionParameters(uint windowLog, uint chainLog, uint hashLog, uint searchLog, uint minMatch, uint targetLength, ZSTD_strategy strategy)
+    public ZstdStrategy strategy;
+    public ZstdCompressionParameters(uint windowLog, uint chainLog, uint hashLog, uint searchLog, uint minMatch, uint targetLength, ZstdStrategy strategy)
     {
         this.windowLog = windowLog;
         this.chainLog = chainLog;

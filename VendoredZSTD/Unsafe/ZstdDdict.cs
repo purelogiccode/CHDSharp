@@ -14,19 +14,19 @@ public static unsafe partial class Methods
      * ZSTD_estimateDDictSize()
      * ZSTD_getDictID_fromDict()
      */
-    private static void* ZSTD_DDict_dictContent(ZSTD_DDict_s* ddict)
+    private static void* ZSTD_DDict_dictContent(ZstdDDictS* ddict)
     {
         assert(ddict != null);
         return ddict->dictContent;
     }
 
-    private static nuint ZSTD_DDict_dictSize(ZSTD_DDict_s* ddict)
+    private static nuint ZSTD_DDict_dictSize(ZstdDDictS* ddict)
     {
         assert(ddict != null);
         return ddict->dictSize;
     }
 
-    private static void ZSTD_copyDDictParameters(ZSTD_DCtx_s* dctx, ZSTD_DDict_s* ddict)
+    private static void ZSTD_copyDDictParameters(ZstdDCtxS* dctx, ZstdDDictS* ddict)
     {
         assert(dctx != null);
         assert(ddict != null);
@@ -54,17 +54,17 @@ public static unsafe partial class Methods
         }
     }
 
-    private static nuint ZSTD_loadEntropy_intoDDict(ZSTD_DDict_s* ddict, ZSTD_dictContentType_e dictContentType)
+    private static nuint ZSTD_loadEntropy_intoDDict(ZstdDDictS* ddict, ZstdDictContentTypeE dictContentType)
     {
         ddict->dictID = 0;
         ddict->entropyPresent = 0;
-        if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_rawContent)
+        if (dictContentType == ZstdDictContentTypeE.ZstdDctRawContent)
             return 0;
 
         if (ddict->dictSize < 8)
         {
-            if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_fullDict)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+            if (dictContentType == ZstdDictContentTypeE.ZstdDctFullDict)
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
 
             return 0;
         }
@@ -73,8 +73,8 @@ public static unsafe partial class Methods
             var magic = MEM_readLE32(ddict->dictContent);
             if (magic != 0xEC30A437)
             {
-                if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_fullDict)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                if (dictContentType == ZstdDictContentTypeE.ZstdDctFullDict)
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
 
                 return 0;
             }
@@ -83,16 +83,16 @@ public static unsafe partial class Methods
         ddict->dictID = MEM_readLE32((sbyte*)ddict->dictContent + 4);
         if (ERR_isError(ZSTD_loadDEntropy(&ddict->entropy, ddict->dictContent, ddict->dictSize)))
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
         }
 
         ddict->entropyPresent = 1;
         return 0;
     }
 
-    private static nuint ZSTD_initDDict_internal(ZSTD_DDict_s* ddict, void* dict, nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod, ZSTD_dictContentType_e dictContentType)
+    private static nuint ZSTD_initDDict_internal(ZstdDDictS* ddict, void* dict, nuint dictSize, ZstdDictLoadMethodE dictLoadMethod, ZstdDictContentTypeE dictContentType)
     {
-        if (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef || dict == null || dictSize == 0)
+        if (dictLoadMethod == ZstdDictLoadMethodE.ZstdDlmByRef || dict == null || dictSize == 0)
         {
             ddict->dictBuffer = null;
             ddict->dictContent = dict;
@@ -107,7 +107,7 @@ public static unsafe partial class Methods
             ddict->dictBuffer = internalBuffer;
             ddict->dictContent = internalBuffer;
             if (internalBuffer == null)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
 
             memcpy(internalBuffer, dict, (uint)dictSize);
         }
@@ -116,23 +116,23 @@ public static unsafe partial class Methods
         ddict->entropy.hufTable[0] = 12 * 0x1000001;
         {
             /* parse dictionary content */
-            var err_code = ZSTD_loadEntropy_intoDDict(ddict, dictContentType);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_loadEntropy_intoDDict(ddict, dictContentType);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
         return 0;
     }
 
-    public static ZSTD_DDict_s* ZSTD_createDDict_advanced(void* dict, nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod, ZSTD_dictContentType_e dictContentType, ZSTD_customMem customMem)
+    public static ZstdDDictS* ZSTD_createDDict_advanced(void* dict, nuint dictSize, ZstdDictLoadMethodE dictLoadMethod, ZstdDictContentTypeE dictContentType, ZstdCustomMem customMem)
     {
         if (((customMem.customAlloc == null ? 1 : 0) ^ (customMem.customFree == null ? 1 : 0)) != 0)
             return null;
 
         {
-            var ddict = (ZSTD_DDict_s*)ZSTD_customMalloc((nuint)sizeof(ZSTD_DDict_s), customMem);
+            var ddict = (ZstdDDictS*)ZSTD_customMalloc((nuint)sizeof(ZstdDDictS), customMem);
             if (ddict == null)
                 return null;
 
@@ -154,36 +154,36 @@ public static unsafe partial class Methods
      *   Create a digested dictionary, to start decompression without startup delay.
      *   `dict` content is copied inside DDict.
      *   Consequently, `dict` can be released after `ZSTD_DDict` creation */
-    public static ZSTD_DDict_s* ZSTD_createDDict(void* dict, nuint dictSize)
+    public static ZstdDDictS* ZSTD_createDDict(void* dict, nuint dictSize)
     {
-        var allocator = new ZSTD_customMem
+        var allocator = new ZstdCustomMem
         {
             customAlloc = null,
             customFree = null,
             opaque = null
         };
-        return ZSTD_createDDict_advanced(dict, dictSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byCopy, ZSTD_dictContentType_e.ZSTD_dct_auto, allocator);
+        return ZSTD_createDDict_advanced(dict, dictSize, ZstdDictLoadMethodE.ZstdDlmByCopy, ZstdDictContentTypeE.ZstdDctAuto, allocator);
     }
 
     /*! ZSTD_createDDict_byReference() :
      *  Create a digested dictionary, to start decompression without startup delay.
      *  Dictionary content is simply referenced, it will be accessed during decompression.
      *  Warning : dictBuffer must outlive DDict (DDict must be freed before dictBuffer) */
-    public static ZSTD_DDict_s* ZSTD_createDDict_byReference(void* dictBuffer, nuint dictSize)
+    public static ZstdDDictS* ZSTD_createDDict_byReference(void* dictBuffer, nuint dictSize)
     {
-        var allocator = new ZSTD_customMem
+        var allocator = new ZstdCustomMem
         {
             customAlloc = null,
             customFree = null,
             opaque = null
         };
-        return ZSTD_createDDict_advanced(dictBuffer, dictSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef, ZSTD_dictContentType_e.ZSTD_dct_auto, allocator);
+        return ZSTD_createDDict_advanced(dictBuffer, dictSize, ZstdDictLoadMethodE.ZstdDlmByRef, ZstdDictContentTypeE.ZstdDctAuto, allocator);
     }
 
-    public static ZSTD_DDict_s* ZSTD_initStaticDDict(void* sBuffer, nuint sBufferSize, void* dict, nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod, ZSTD_dictContentType_e dictContentType)
+    public static ZstdDDictS* ZSTD_initStaticDDict(void* sBuffer, nuint sBufferSize, void* dict, nuint dictSize, ZstdDictLoadMethodE dictLoadMethod, ZstdDictContentTypeE dictContentType)
     {
-        var neededSpace = (nuint)sizeof(ZSTD_DDict_s) + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
-        var ddict = (ZSTD_DDict_s*)sBuffer;
+        var neededSpace = (nuint)sizeof(ZstdDDictS) + (dictLoadMethod == ZstdDictLoadMethodE.ZstdDlmByRef ? 0 : dictSize);
+        var ddict = (ZstdDDictS*)sBuffer;
         assert(sBuffer != null);
         assert(dict != null);
         if (((nuint)sBuffer & 7) != 0)
@@ -191,13 +191,13 @@ public static unsafe partial class Methods
         if (sBufferSize < neededSpace)
             return null;
 
-        if (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byCopy)
+        if (dictLoadMethod == ZstdDictLoadMethodE.ZstdDlmByCopy)
         {
             memcpy(ddict + 1, dict, (uint)dictSize);
             dict = ddict + 1;
         }
 
-        if (ERR_isError(ZSTD_initDDict_internal(ddict, dict, dictSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef, dictContentType)))
+        if (ERR_isError(ZSTD_initDDict_internal(ddict, dict, dictSize, ZstdDictLoadMethodE.ZstdDlmByRef, dictContentType)))
             return null;
 
         return ddict;
@@ -206,7 +206,7 @@ public static unsafe partial class Methods
     /*! ZSTD_freeDDict() :
      *  Function frees memory allocated with ZSTD_createDDict()
      *  If a NULL pointer is passed, no operation is performed. */
-    public static nuint ZSTD_freeDDict(ZSTD_DDict_s* ddict)
+    public static nuint ZSTD_freeDDict(ZstdDDictS* ddict)
     {
         if (ddict == null)
             return 0;
@@ -222,24 +222,24 @@ public static unsafe partial class Methods
     /*! ZSTD_estimateDDictSize() :
      *  Estimate amount of memory that will be needed to create a dictionary for decompression.
      *  Note : dictionary created by reference using ZSTD_dlm_byRef are smaller */
-    public static nuint ZSTD_estimateDDictSize(nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod)
+    public static nuint ZSTD_estimateDDictSize(nuint dictSize, ZstdDictLoadMethodE dictLoadMethod)
     {
-        return (nuint)sizeof(ZSTD_DDict_s) + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
+        return (nuint)sizeof(ZstdDDictS) + (dictLoadMethod == ZstdDictLoadMethodE.ZstdDlmByRef ? 0 : dictSize);
     }
 
-    public static nuint ZSTD_sizeof_DDict(ZSTD_DDict_s* ddict)
+    public static nuint ZSTD_sizeof_DDict(ZstdDDictS* ddict)
     {
         if (ddict == null)
             return 0;
 
-        return (nuint)sizeof(ZSTD_DDict_s) + (ddict->dictBuffer != null ? ddict->dictSize : 0);
+        return (nuint)sizeof(ZstdDDictS) + (ddict->dictBuffer != null ? ddict->dictSize : 0);
     }
 
     /*! ZSTD_getDictID_fromDDict() :
      *  Provides the dictID of the dictionary loaded into `ddict`.
      *  If @return == 0, the dictionary is not conformant to Zstandard specification, or empty.
      *  Non-conformant dictionaries can still be loaded, but as content-only dictionaries. */
-    public static uint ZSTD_getDictID_fromDDict(ZSTD_DDict_s* ddict)
+    public static uint ZSTD_getDictID_fromDDict(ZstdDDictS* ddict)
     {
         if (ddict == null)
             return 0;

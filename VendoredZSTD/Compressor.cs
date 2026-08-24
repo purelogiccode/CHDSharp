@@ -133,7 +133,7 @@ public unsafe class Compressor : IDisposable
                     Methods.ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length);
             }
 
-            if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
+            if (returnValue == unchecked(0 - (nuint)ZstdErrorCode.ZstdErrorDstSizeTooSmall))
             {
                 written = 0;
                 return false;
@@ -161,10 +161,10 @@ public unsafe class Compressor : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    internal nuint CompressStream(ref ZSTD_inBuffer_s input, ref ZSTD_outBuffer_s output, ZSTD_EndDirective directive)
+    internal nuint CompressStream(ref ZstdInBufferS input, ref ZstdOutBufferS output, ZstdEndDirective directive)
     {
-        fixed (ZSTD_inBuffer_s* inputPtr = &input)
-        fixed (ZSTD_outBuffer_s* outputPtr = &output)
+        fixed (ZstdInBufferS* inputPtr = &input)
+        fixed (ZstdOutBufferS* outputPtr = &output)
         {
             using var cctx = _handle.Acquire();
             return Methods.ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive).EnsureZstdSuccess();
@@ -180,26 +180,26 @@ public unsafe class Compressor : IDisposable
 
     public OperationStatus WrapStream(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesConsumed, out int bytesWritten, bool isFinalBlock)
     {
-        return WrapStream(source, destination, out bytesConsumed, out bytesWritten, isFinalBlock ? ZSTD_EndDirective.ZSTD_e_end : ZSTD_EndDirective.ZSTD_e_continue);
+        return WrapStream(source, destination, out bytesConsumed, out bytesWritten, isFinalBlock ? ZstdEndDirective.ZstdEEnd : ZstdEndDirective.ZstdEContinue);
     }
 
     public OperationStatus FlushStream(Span<byte> destination, out int bytesWritten)
     {
-        return WrapStream(ReadOnlySpan<byte>.Empty, destination, out _, out bytesWritten, ZSTD_EndDirective.ZSTD_e_flush);
+        return WrapStream(ReadOnlySpan<byte>.Empty, destination, out _, out bytesWritten, ZstdEndDirective.ZstdEFlush);
     }
 
     public OperationStatus FlushStream(Span<byte> destination, out int bytesWritten, bool isFinalBlock)
     {
-        return WrapStream(ReadOnlySpan<byte>.Empty, destination, out _, out bytesWritten, isFinalBlock ? ZSTD_EndDirective.ZSTD_e_end : ZSTD_EndDirective.ZSTD_e_flush);
+        return WrapStream(ReadOnlySpan<byte>.Empty, destination, out _, out bytesWritten, isFinalBlock ? ZstdEndDirective.ZstdEEnd : ZstdEndDirective.ZstdEFlush);
     }
 
     public void ResetStream()
     {
         using var cctx = _handle.Acquire();
-        Methods.ZSTD_CCtx_reset(cctx, ZSTD_ResetDirective.ZSTD_reset_session_only).EnsureZstdSuccess();
+        Methods.ZSTD_CCtx_reset(cctx, ZstdResetDirective.ZstdResetSessionOnly).EnsureZstdSuccess();
     }
 
-    internal OperationStatus WrapStream(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesConsumed, out int bytesWritten, ZSTD_EndDirective directive)
+    internal OperationStatus WrapStream(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesConsumed, out int bytesWritten, ZstdEndDirective directive)
     {
         using var cctx = _handle.Acquire();
         bytesConsumed = bytesWritten = 0;
@@ -207,8 +207,8 @@ public unsafe class Compressor : IDisposable
         fixed (byte* srcPtr = source)
         fixed (byte* dstPtr = destination)
         {
-            var input = new ZSTD_inBuffer_s { src = srcPtr, size = (nuint)source.Length, pos = 0 };
-            var output = new ZSTD_outBuffer_s { dst = dstPtr, size = (nuint)destination.Length, pos = 0 };
+            var input = new ZstdInBufferS { src = srcPtr, size = (nuint)source.Length, pos = 0 };
+            var output = new ZstdOutBufferS { dst = dstPtr, size = (nuint)destination.Length, pos = 0 };
 
             while (output.pos != output.size)
             {

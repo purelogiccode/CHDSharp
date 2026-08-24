@@ -108,6 +108,6 @@ public unsafe struct ZstdCwksp
     public void* initOnceStart;
     public byte allocFailed;
     public int workspaceOversizedDuration;
-    public ZSTD_cwksp_alloc_phase_e phase;
-    public ZSTD_cwksp_static_alloc_e isStatic;
+    public ZstdCwkspAllocPhaseE phase;
+    public ZstdCwkspStaticAllocE isStatic;
 }

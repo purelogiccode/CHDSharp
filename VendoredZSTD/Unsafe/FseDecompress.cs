@@ -16,9 +16,9 @@ public static unsafe partial class Methods
         var tableSize = (uint)(1 << (int)tableLog);
         var highThreshold = tableSize - 1;
         if (sizeof(short) * (maxSymbolValue + 1) + (1UL << (int)tableLog) + 8 > wkspSize || maxSymbolValue > 255)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
         if (tableLog > 14 - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
 
         {
             FseDTableHeader dTableH;
@@ -112,7 +112,7 @@ public static unsafe partial class Methods
             }
 
             if (position != 0)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
 
         {
@@ -163,7 +163,7 @@ public static unsafe partial class Methods
         var bitDLimitPtr = bitD.limitPtr;
         if (BIT_reloadDStream(ref bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart, bitDLimitPtr) == BitDStreamStatus.BitDStreamOverflow)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
         }
 
         for (; BIT_reloadDStream(ref bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart, bitDLimitPtr) == BitDStreamStatus.BitDStreamUnfinished && op < olimit; op += 4)
@@ -190,7 +190,7 @@ public static unsafe partial class Methods
         while (true)
         {
             if (op > omax - 2)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
             *op++ = fast != 0 ? FSE_decodeSymbolFast(ref state1, bitDBitContainer, ref bitDBitsConsumed) : FSE_decodeSymbol(ref state1, bitDBitContainer, ref bitDBitsConsumed);
             if (BIT_reloadDStream(ref bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart, bitDLimitPtr) == BitDStreamStatus.BitDStreamOverflow)
@@ -200,7 +200,7 @@ public static unsafe partial class Methods
             }
 
             if (op > omax - 2)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
             *op++ = fast != 0 ? FSE_decodeSymbolFast(ref state2, bitDBitContainer, ref bitDBitsConsumed) : FSE_decodeSymbol(ref state2, bitDBitContainer, ref bitDBitsConsumed);
             if (BIT_reloadDStream(ref bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart, bitDLimitPtr) == BitDStreamStatus.BitDStreamOverflow)
@@ -225,14 +225,14 @@ public static unsafe partial class Methods
         var dtablePos = (nuint)(sizeof(FseDecompressWksp) / sizeof(uint));
         var dtable = (uint*)workSpace + dtablePos;
         if (wkspSize < (nuint)sizeof(FseDecompressWksp))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
         {
             var nCountLength = FSE_readNCount_bmi2(wksp->ncount, &maxSymbolValue, &tableLog, istart, cSrcSize, bmi2);
             if (ERR_isError(nCountLength))
                 return nCountLength;
             if (tableLog > maxLog)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
 
             assert(nCountLength <= cSrcSize);
             ip += nCountLength;
@@ -240,7 +240,7 @@ public static unsafe partial class Methods
         }
 
         if (((ulong)(1 + (1 << (int)tableLog) + 1) + (sizeof(short) * (maxSymbolValue + 1) + (1UL << (int)tableLog) + 8 + sizeof(uint) - 1) / sizeof(uint) + (255 + 1) / 2 + 1) * sizeof(uint) > wkspSize)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
 
         assert((nuint)(sizeof(FseDecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint)) <= wkspSize);
         workSpace = (byte*)workSpace + sizeof(FseDecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint);
@@ -268,8 +268,10 @@ public static unsafe partial class Methods
         return FSE_decompress_wksp_body(dst, dstCapacity, cSrc, cSrcSize, maxLog, workSpace, wkspSize, 0);
     }
 
-    private static nuint FSE_decompress_wksp_bmi2(void* dst, nuint dstCapacity, void* cSrc, nuint cSrcSize, uint maxLog, void* workSpace, nuint wkspSize, int bmi2)
+    private static nuint FSE_decompress_wksp_bmi2(void* dst, nuint dstCapacity, void* cSrc, nuint cSrcSize, uint maxLog,
+        void* workSpace, nuint wkspSize, int bmi2)
     {
+        // ReSharper disable once UnusedParameter
         return FSE_decompress_wksp_body_default(dst, dstCapacity, cSrc, cSrcSize, maxLog, workSpace, wkspSize);
     }
 }

@@ -6,10 +6,10 @@ namespace VendoredZSTD.Unsafe;
 public unsafe struct EStatsRessT
 {
     /* dictionary */
-    public ZSTD_CDict_s* dict;
+    public ZstdCDictS* dict;
 
     /* working context */
-    public ZSTD_CCtx_s* zc;
+    public ZstdCCtxS* zc;
 
     /* must be ZSTD_BLOCKSIZE_MAX allocated */
     public void* workPlace;

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_fseCTables_t
+public unsafe struct ZstdFseCTablesT
 {
     public fixed uint offcodeCTable[193];
     public fixed uint matchlengthCTable[363];

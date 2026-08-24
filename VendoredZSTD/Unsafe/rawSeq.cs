@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct rawSeq
+public struct RawSeq
 {
     /* Offset of sequence */
     public uint offset;

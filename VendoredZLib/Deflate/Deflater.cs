@@ -1597,7 +1597,7 @@ internal static partial class Deflater
                     do
                     {
                         s.Strstart++;
-                        hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
+                        InsertString(s, s.Strstart, ref window, ref prev, ref head);
                         /* strstart never exceeds WSize-MaxMatch, so there are
                          * always MinMatch bytes ahead.
                          */

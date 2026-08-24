@@ -8,8 +8,8 @@ namespace VendoredZSTD.Unsafe;
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct FastcoverTryParametersDataS
 {
-    public FASTCOVER_ctx_t* ctx;
+    public FastcoverCtxT* ctx;
     public CoverBestS* best;
     public nuint dictBufferCapacity;
-    public ZDICT_cover_params_t parameters;
+    public ZdictCoverParamsT parameters;
 }

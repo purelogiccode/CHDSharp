@@ -23,7 +23,7 @@ public static unsafe partial class Methods
      *  @return : compressed size of literals section of a sub-block
      *            Or 0 if unable to compress.
      *            Or error code */
-    private static nuint ZSTD_compressSubBlock_literal(nuint* hufTable, ZSTD_hufCTablesMetadata_t* hufMetadata, byte* literals, nuint litSize, void* dst, nuint dstSize, int bmi2, int writeEntropy, int* entropyWritten)
+    private static nuint ZSTD_compressSubBlock_literal(nuint* hufTable, ZstdHufCTablesMetadataT* hufMetadata, byte* literals, nuint litSize, void* dst, nuint dstSize, int bmi2, int writeEntropy, int* entropyWritten)
     {
         var header = (nuint)(writeEntropy != 0 ? 200 : 0);
         var lhSize = (nuint)(3 + (litSize >= 1 * (1 << 10) - header ? 1 : 0) + (litSize >= 16 * (1 << 10) - header ? 1 : 0));
@@ -31,21 +31,21 @@ public static unsafe partial class Methods
         var oend = ostart + dstSize;
         var op = ostart + lhSize;
         var singleStream = lhSize == 3 ? 1U : 0U;
-        var hType = writeEntropy != 0 ? hufMetadata->hType : SymbolEncodingType_e.set_repeat;
+        var hType = writeEntropy != 0 ? hufMetadata->hType : SymbolEncodingTypeE.SetRepeat;
         nuint cLitSize = 0;
         *entropyWritten = 0;
-        if (litSize == 0 || hufMetadata->hType == SymbolEncodingType_e.set_basic)
+        if (litSize == 0 || hufMetadata->hType == SymbolEncodingTypeE.SetBasic)
         {
             return ZSTD_noCompressLiterals(dst, dstSize, literals, litSize);
         }
-        else if (hufMetadata->hType == SymbolEncodingType_e.set_rle)
+        else if (hufMetadata->hType == SymbolEncodingTypeE.SetRle)
         {
             return ZSTD_compressRleLiteralsBlock(dst, dstSize, literals, litSize);
         }
 
         assert(litSize > 0);
-        assert(hufMetadata->hType == SymbolEncodingType_e.set_compressed || hufMetadata->hType == SymbolEncodingType_e.set_repeat);
-        if (writeEntropy != 0 && hufMetadata->hType == SymbolEncodingType_e.set_compressed)
+        assert(hufMetadata->hType == SymbolEncodingTypeE.SetCompressed || hufMetadata->hType == SymbolEncodingTypeE.SetRepeat);
+        if (writeEntropy != 0 && hufMetadata->hType == SymbolEncodingTypeE.SetCompressed)
         {
             memcpy(op, hufMetadata->hufDesBuffer, (uint)hufMetadata->hufDesSize);
             op += hufMetadata->hufDesSize;
@@ -107,7 +107,7 @@ public static unsafe partial class Methods
         return (nuint)(op - ostart);
     }
 
-    private static nuint ZSTD_seqDecompressedSize(SeqStore_t* seqStore, SeqDef_s* sequences, nuint nbSeqs, nuint litSize, int lastSubBlock)
+    private static nuint ZSTD_seqDecompressedSize(SeqStoreT* seqStore, SeqDefS* sequences, nuint nbSeqs, nuint litSize, int lastSubBlock)
     {
         nuint matchLengthSum = 0;
         nuint litLengthSum = 0;
@@ -136,7 +136,7 @@ public static unsafe partial class Methods
      *  @return : compressed size of sequences section of a sub-block
      *            Or 0 if it is unable to compress
      *            Or error code. */
-    private static nuint ZSTD_compressSubBlock_sequences(ZSTD_fseCTables_t* fseTables, ZSTD_fseCTablesMetadata_t* fseMetadata, SeqDef_s* sequences, nuint nbSeq, byte* llCode, byte* mlCode, byte* ofCode, ZSTD_CCtx_params_s* cctxParams, void* dst, nuint dstCapacity, int bmi2, int writeEntropy, int* entropyWritten)
+    private static nuint ZSTD_compressSubBlock_sequences(ZstdFseCTablesT* fseTables, ZstdFseCTablesMetadataT* fseMetadata, SeqDefS* sequences, nuint nbSeq, byte* llCode, byte* mlCode, byte* ofCode, ZstdCCtxParamsS* cctxParams, void* dst, nuint dstCapacity, int bmi2, int writeEntropy, int* entropyWritten)
     {
         var longOffsets = cctxParams->cParams.windowLog > (uint)(MEM_32bits ? 25 : 57) ? 1 : 0;
         var ostart = (byte*)dst;
@@ -145,7 +145,7 @@ public static unsafe partial class Methods
         *entropyWritten = 0;
         if (oend - op < 3 + 1)
         {
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
         if (nbSeq < 128)
@@ -173,26 +173,26 @@ public static unsafe partial class Methods
         var seqHead = op++;
         if (writeEntropy != 0)
         {
-            var LLtype = (uint)fseMetadata->llType;
-            var Offtype = (uint)fseMetadata->ofType;
-            var MLtype = (uint)fseMetadata->mlType;
-            *seqHead = (byte)((LLtype << 6) + (Offtype << 4) + (MLtype << 2));
+            var lLtype = (uint)fseMetadata->llType;
+            var offtype = (uint)fseMetadata->ofType;
+            var mLtype = (uint)fseMetadata->mlType;
+            *seqHead = (byte)((lLtype << 6) + (offtype << 4) + (mLtype << 2));
             memcpy(op, fseMetadata->fseTablesBuffer, (uint)fseMetadata->fseTablesSize);
             op += fseMetadata->fseTablesSize;
         }
         else
         {
-            var repeat = (uint)SymbolEncodingType_e.set_repeat;
+            var repeat = (uint)SymbolEncodingTypeE.SetRepeat;
             *seqHead = (byte)((repeat << 6) + (repeat << 4) + (repeat << 2));
         }
 
         {
             var bitstreamSize = ZSTD_encodeSequences(op, (nuint)(oend - op), fseTables->matchlengthCTable, mlCode, fseTables->offcodeCTable, ofCode, fseTables->litlengthCTable, llCode, sequences, nbSeq, longOffsets, bmi2);
             {
-                var err_code = bitstreamSize;
-                if (ERR_isError(err_code))
+                var errCode = bitstreamSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
@@ -217,18 +217,18 @@ public static unsafe partial class Methods
      *  Compresses a single sub-block.
      *  @return : compressed size of the sub-block
      *            Or 0 if it failed to compress. */
-    private static nuint ZSTD_compressSubBlock(ZSTD_entropyCTables_t* entropy, ZSTD_entropyCTablesMetadata_t* entropyMetadata, SeqDef_s* sequences, nuint nbSeq, byte* literals, nuint litSize, byte* llCode, byte* mlCode, byte* ofCode, ZSTD_CCtx_params_s* cctxParams, void* dst, nuint dstCapacity, int bmi2, int writeLitEntropy, int writeSeqEntropy, int* litEntropyWritten, int* seqEntropyWritten, uint lastBlock)
+    private static nuint ZSTD_compressSubBlock(ZstdEntropyCTablesT* entropy, ZstdEntropyCTablesMetadataT* entropyMetadata, SeqDefS* sequences, nuint nbSeq, byte* literals, nuint litSize, byte* llCode, byte* mlCode, byte* ofCode, ZstdCCtxParamsS* cctxParams, void* dst, nuint dstCapacity, int bmi2, int writeLitEntropy, int writeSeqEntropy, int* litEntropyWritten, int* seqEntropyWritten, uint lastBlock)
     {
         var ostart = (byte*)dst;
         var oend = ostart + dstCapacity;
-        var op = ostart + ZSTD_blockHeaderSize;
+        var op = ostart + ZstdBlockHeaderSize;
         {
             var cLitSize = ZSTD_compressSubBlock_literal(&entropy->huf.CTable.e0, &entropyMetadata->hufMetadata, literals, litSize, op, (nuint)(oend - op), bmi2, writeLitEntropy, litEntropyWritten);
             {
-                var err_code = cLitSize;
-                if (ERR_isError(err_code))
+                var errCode = cLitSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
@@ -241,10 +241,10 @@ public static unsafe partial class Methods
         {
             var cSeqSize = ZSTD_compressSubBlock_sequences(&entropy->fse, &entropyMetadata->fseMetadata, sequences, nbSeq, llCode, mlCode, ofCode, cctxParams, op, (nuint)(oend - op), bmi2, writeSeqEntropy, seqEntropyWritten);
             {
-                var err_code = cSeqSize;
-                if (ERR_isError(err_code))
+                var errCode = cSeqSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
@@ -255,29 +255,29 @@ public static unsafe partial class Methods
         }
 
         {
-            var cSize = (nuint)(op - ostart) - ZSTD_blockHeaderSize;
-            var cBlockHeader24 = lastBlock + ((uint)blockType_e.bt_compressed << 1) + (uint)(cSize << 3);
+            var cSize = (nuint)(op - ostart) - ZstdBlockHeaderSize;
+            var cBlockHeader24 = lastBlock + ((uint)BlockTypeE.BtCompressed << 1) + (uint)(cSize << 3);
             MEM_writeLE24(ostart, cBlockHeader24);
         }
 
         return (nuint)(op - ostart);
     }
 
-    private static nuint ZSTD_estimateSubBlockSize_literal(byte* literals, nuint litSize, ZSTD_hufCTables_t* huf, ZSTD_hufCTablesMetadata_t* hufMetadata, void* workspace, nuint wkspSize, int writeEntropy)
+    private static nuint ZSTD_estimateSubBlockSize_literal(byte* literals, nuint litSize, ZstdHufCTablesT* huf, ZstdHufCTablesMetadataT* hufMetadata, void* workspace, nuint wkspSize, int writeEntropy)
     {
         var countWksp = (uint*)workspace;
         uint maxSymbolValue = 255;
         /* Use hard coded size of 3 bytes */
         nuint literalSectionHeaderSize = 3;
-        if (hufMetadata->hType == SymbolEncodingType_e.set_basic)
+        if (hufMetadata->hType == SymbolEncodingTypeE.SetBasic)
         {
             return litSize;
         }
-        else if (hufMetadata->hType == SymbolEncodingType_e.set_rle)
+        else if (hufMetadata->hType == SymbolEncodingTypeE.SetRle)
         {
             return 1;
         }
-        else if (hufMetadata->hType == SymbolEncodingType_e.set_compressed || hufMetadata->hType == SymbolEncodingType_e.set_repeat)
+        else if (hufMetadata->hType == SymbolEncodingTypeE.SetCompressed || hufMetadata->hType == SymbolEncodingTypeE.SetRepeat)
         {
             var largest = HIST_count_wksp(countWksp, &maxSymbolValue, literals, litSize, workspace, wkspSize);
             if (ERR_isError(largest))
@@ -298,7 +298,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    private static nuint ZSTD_estimateSubBlockSize_symbolType(SymbolEncodingType_e type, byte* codeTable, uint maxCode, nuint nbSeq, uint* fseCTable, byte* additionalBits, short* defaultNorm, uint defaultNormLog, uint defaultMax, void* workspace, nuint wkspSize)
+    private static nuint ZSTD_estimateSubBlockSize_symbolType(SymbolEncodingTypeE type, byte* codeTable, uint maxCode, nuint nbSeq, uint* fseCTable, byte* additionalBits, short* defaultNorm, uint defaultNormLog, uint defaultMax, void* workspace, nuint wkspSize)
     {
         var countWksp = (uint*)workspace;
         var ctp = codeTable;
@@ -307,16 +307,16 @@ public static unsafe partial class Methods
         nuint cSymbolTypeSizeEstimateInBits = 0;
         var max = maxCode;
         HIST_countFast_wksp(countWksp, &max, codeTable, nbSeq, workspace, wkspSize);
-        if (type == SymbolEncodingType_e.set_basic)
+        if (type == SymbolEncodingTypeE.SetBasic)
         {
             assert(max <= defaultMax);
-            cSymbolTypeSizeEstimateInBits = max <= defaultMax ? ZSTD_crossEntropyCost(defaultNorm, defaultNormLog, countWksp, max) : unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            cSymbolTypeSizeEstimateInBits = max <= defaultMax ? ZSTD_crossEntropyCost(defaultNorm, defaultNormLog, countWksp, max) : unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
-        else if (type == SymbolEncodingType_e.set_rle)
+        else if (type == SymbolEncodingTypeE.SetRle)
         {
             cSymbolTypeSizeEstimateInBits = 0;
         }
-        else if (type is SymbolEncodingType_e.set_compressed or SymbolEncodingType_e.set_repeat)
+        else if (type is SymbolEncodingTypeE.SetCompressed or SymbolEncodingTypeE.SetRepeat)
         {
             cSymbolTypeSizeEstimateInBits = ZSTD_fseBitCost(fseCTable, countWksp, max);
         }
@@ -341,7 +341,7 @@ public static unsafe partial class Methods
         return cSymbolTypeSizeEstimateInBits / 8;
     }
 
-    private static nuint ZSTD_estimateSubBlockSize_sequences(byte* ofCodeTable, byte* llCodeTable, byte* mlCodeTable, nuint nbSeq, ZSTD_fseCTables_t* fseTables, ZSTD_fseCTablesMetadata_t* fseMetadata, void* workspace, nuint wkspSize, int writeEntropy)
+    private static nuint ZSTD_estimateSubBlockSize_sequences(byte* ofCodeTable, byte* llCodeTable, byte* mlCodeTable, nuint nbSeq, ZstdFseCTablesT* fseTables, ZstdFseCTablesMetadataT* fseMetadata, void* workspace, nuint wkspSize, int writeEntropy)
     {
         /* Use hard coded size of 3 bytes */
         const nuint sequencesSectionHeaderSize = 3;
@@ -349,9 +349,9 @@ public static unsafe partial class Methods
         if (nbSeq == 0)
             return sequencesSectionHeaderSize;
 
-        cSeqSizeEstimate += ZSTD_estimateSubBlockSize_symbolType(fseMetadata->ofType, ofCodeTable, 31, nbSeq, fseTables->offcodeCTable, null, OF_defaultNorm, OF_defaultNormLog, 28, workspace, wkspSize);
-        cSeqSizeEstimate += ZSTD_estimateSubBlockSize_symbolType(fseMetadata->llType, llCodeTable, 35, nbSeq, fseTables->litlengthCTable, LL_bits, LL_defaultNorm, LL_defaultNormLog, 35, workspace, wkspSize);
-        cSeqSizeEstimate += ZSTD_estimateSubBlockSize_symbolType(fseMetadata->mlType, mlCodeTable, 52, nbSeq, fseTables->matchlengthCTable, ML_bits, ML_defaultNorm, ML_defaultNormLog, 52, workspace, wkspSize);
+        cSeqSizeEstimate += ZSTD_estimateSubBlockSize_symbolType(fseMetadata->ofType, ofCodeTable, 31, nbSeq, fseTables->offcodeCTable, null, OfDefaultNorm, OfDefaultNormLog, 28, workspace, wkspSize);
+        cSeqSizeEstimate += ZSTD_estimateSubBlockSize_symbolType(fseMetadata->llType, llCodeTable, 35, nbSeq, fseTables->litlengthCTable, LlBits, LlDefaultNorm, LlDefaultNormLog, 35, workspace, wkspSize);
+        cSeqSizeEstimate += ZSTD_estimateSubBlockSize_symbolType(fseMetadata->mlType, mlCodeTable, 52, nbSeq, fseTables->matchlengthCTable, MlBits, MlDefaultNorm, MlDefaultNormLog, 52, workspace, wkspSize);
         if (writeEntropy != 0)
         {
             cSeqSizeEstimate += fseMetadata->fseTablesSize;
@@ -360,28 +360,28 @@ public static unsafe partial class Methods
         return cSeqSizeEstimate + sequencesSectionHeaderSize;
     }
 
-    private static EstimatedBlockSize ZSTD_estimateSubBlockSize(byte* literals, nuint litSize, byte* ofCodeTable, byte* llCodeTable, byte* mlCodeTable, nuint nbSeq, ZSTD_entropyCTables_t* entropy, ZSTD_entropyCTablesMetadata_t* entropyMetadata, void* workspace, nuint wkspSize, int writeLitEntropy, int writeSeqEntropy)
+    private static EstimatedBlockSize ZSTD_estimateSubBlockSize(byte* literals, nuint litSize, byte* ofCodeTable, byte* llCodeTable, byte* mlCodeTable, nuint nbSeq, ZstdEntropyCTablesT* entropy, ZstdEntropyCTablesMetadataT* entropyMetadata, void* workspace, nuint wkspSize, int writeLitEntropy, int writeSeqEntropy)
     {
         EstimatedBlockSize ebs;
         ebs.estLitSize = ZSTD_estimateSubBlockSize_literal(literals, litSize, &entropy->huf, &entropyMetadata->hufMetadata, workspace, wkspSize, writeLitEntropy);
         ebs.estBlockSize = ZSTD_estimateSubBlockSize_sequences(ofCodeTable, llCodeTable, mlCodeTable, nbSeq, &entropy->fse, &entropyMetadata->fseMetadata, workspace, wkspSize, writeSeqEntropy);
-        ebs.estBlockSize += ebs.estLitSize + ZSTD_blockHeaderSize;
+        ebs.estBlockSize += ebs.estLitSize + ZstdBlockHeaderSize;
         return ebs;
     }
 
-    private static int ZSTD_needSequenceEntropyTables(ZSTD_fseCTablesMetadata_t* fseMetadata)
+    private static int ZSTD_needSequenceEntropyTables(ZstdFseCTablesMetadataT* fseMetadata)
     {
-        if (fseMetadata->llType == SymbolEncodingType_e.set_compressed || fseMetadata->llType == SymbolEncodingType_e.set_rle)
+        if (fseMetadata->llType == SymbolEncodingTypeE.SetCompressed || fseMetadata->llType == SymbolEncodingTypeE.SetRle)
             return 1;
-        if (fseMetadata->mlType == SymbolEncodingType_e.set_compressed || fseMetadata->mlType == SymbolEncodingType_e.set_rle)
+        if (fseMetadata->mlType == SymbolEncodingTypeE.SetCompressed || fseMetadata->mlType == SymbolEncodingTypeE.SetRle)
             return 1;
-        if (fseMetadata->ofType == SymbolEncodingType_e.set_compressed || fseMetadata->ofType == SymbolEncodingType_e.set_rle)
+        if (fseMetadata->ofType == SymbolEncodingTypeE.SetCompressed || fseMetadata->ofType == SymbolEncodingTypeE.SetRle)
             return 1;
 
         return 0;
     }
 
-    private static nuint countLiterals(SeqStore_t* seqStore, SeqDef_s* sp, nuint seqCount)
+    private static nuint CountLiterals(SeqStoreT* seqStore, SeqDefS* sp, nuint seqCount)
     {
         nuint n, total = 0;
         assert(sp != null);
@@ -393,7 +393,7 @@ public static unsafe partial class Methods
         return total;
     }
 
-    private static nuint sizeBlockSequences(SeqDef_s* sp, nuint nbSeqs, nuint targetBudget, nuint avgLitCost, nuint avgSeqCost, int firstSubBlock)
+    private static nuint SizeBlockSequences(SeqDefS* sp, nuint nbSeqs, nuint targetBudget, nuint avgLitCost, nuint avgSeqCost, int firstSubBlock)
     {
         nuint n, budget = 0, inSize = 0;
         /* generous estimate */
@@ -424,7 +424,7 @@ public static unsafe partial class Methods
      *  Sub-blocks are all compressed, except the last one when beneficial.
      *  @return : compressed size of the super block (which features multiple ZSTD blocks)
      *            or 0 if it failed to compress. */
-    private static nuint ZSTD_compressSubBlock_multi(SeqStore_t* seqStorePtr, ZSTD_compressedBlockState_t* prevCBlock, ZSTD_compressedBlockState_t* nextCBlock, ZSTD_entropyCTablesMetadata_t* entropyMetadata, ZSTD_CCtx_params_s* cctxParams, void* dst, nuint dstCapacity, void* src, nuint srcSize, int bmi2, uint lastBlock, void* workspace, nuint wkspSize)
+    private static nuint ZSTD_compressSubBlock_multi(SeqStoreT* seqStorePtr, ZstdCompressedBlockStateT* prevCBlock, ZstdCompressedBlockStateT* nextCBlock, ZstdEntropyCTablesMetadataT* entropyMetadata, ZstdCCtxParamsS* cctxParams, void* dst, nuint dstCapacity, void* src, nuint srcSize, int bmi2, uint lastBlock, void* workspace, nuint wkspSize)
     {
         var sstart = seqStorePtr->sequencesStart;
         var send = seqStorePtr->sequences;
@@ -446,7 +446,7 @@ public static unsafe partial class Methods
         /* enforce minimum size, to reduce undesirable side effects */
         const nuint minTarget = 1340;
         var targetCBlockSize = minTarget > cctxParams->targetCBlockSize ? minTarget : cctxParams->targetCBlockSize;
-        var writeLitEntropy = entropyMetadata->hufMetadata.hType == SymbolEncodingType_e.set_compressed ? 1 : 0;
+        var writeLitEntropy = entropyMetadata->hufMetadata.hType == SymbolEncodingTypeE.SetCompressed ? 1 : 0;
         var writeSeqEntropy = 1;
         if (nbSeqs > 0)
         {
@@ -464,7 +464,7 @@ public static unsafe partial class Methods
             for (n = 0; n < nbSubBlocks - 1; n++)
             {
                 /* determine nb of sequences for current sub-block + nbLiterals from next sequence */
-                var seqCount = sizeBlockSequences(sp, (nuint)(send - sp), avgBlockBudget + blockBudgetSupp, avgLitCost, avgSeqCost, n == 0 ? 1 : 0);
+                var seqCount = SizeBlockSequences(sp, (nuint)(send - sp), avgBlockBudget + blockBudgetSupp, avgLitCost, avgSeqCost, n == 0 ? 1 : 0);
                 assert(seqCount <= (nuint)(send - sp));
                 if (sp + seqCount == send)
                     break;
@@ -473,14 +473,14 @@ public static unsafe partial class Methods
                 {
                     var litEntropyWritten = 0;
                     var seqEntropyWritten = 0;
-                    var litSize = countLiterals(seqStorePtr, sp, seqCount);
+                    var litSize = CountLiterals(seqStorePtr, sp, seqCount);
                     var decompressedSize = ZSTD_seqDecompressedSize(seqStorePtr, sp, seqCount, litSize, 0);
                     var cSize = ZSTD_compressSubBlock(&nextCBlock->entropy, entropyMetadata, sp, seqCount, lp, litSize, llCodePtr, mlCodePtr, ofCodePtr, cctxParams, op, (nuint)(oend - op), bmi2, writeLitEntropy, writeSeqEntropy, &litEntropyWritten, &seqEntropyWritten, 0);
                     {
-                        var err_code = cSize;
-                        if (ERR_isError(err_code))
+                        var errCode = cSize;
+                        if (ERR_isError(errCode))
                         {
-                            return err_code;
+                            return errCode;
                         }
                     }
 
@@ -518,10 +518,10 @@ public static unsafe partial class Methods
             var decompressedSize = ZSTD_seqDecompressedSize(seqStorePtr, sp, seqCount, litSize, 1);
             var cSize = ZSTD_compressSubBlock(&nextCBlock->entropy, entropyMetadata, sp, seqCount, lp, litSize, llCodePtr, mlCodePtr, ofCodePtr, cctxParams, op, (nuint)(oend - op), bmi2, writeLitEntropy, writeSeqEntropy, &litEntropyWritten, &seqEntropyWritten, lastBlock);
             {
-                var err_code = cSize;
-                if (ERR_isError(err_code))
+                var errCode = cSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
@@ -550,7 +550,7 @@ public static unsafe partial class Methods
 
         if (writeLitEntropy != 0)
         {
-            memcpy(&nextCBlock->entropy.huf, &prevCBlock->entropy.huf, (uint)sizeof(ZSTD_hufCTables_t));
+            memcpy(&nextCBlock->entropy.huf, &prevCBlock->entropy.huf, (uint)sizeof(ZstdHufCTablesT));
         }
 
         if (writeSeqEntropy != 0 && ZSTD_needSequenceEntropyTables(&entropyMetadata->fseMetadata) != 0)
@@ -564,10 +564,10 @@ public static unsafe partial class Methods
             var rSize = (nuint)(iend - ip);
             var cSize = ZSTD_noCompressBlock(op, (nuint)(oend - op), ip, rSize, lastBlock);
             {
-                var err_code = cSize;
-                if (ERR_isError(err_code))
+                var errCode = cSize;
+                if (ERR_isError(errCode))
                 {
-                    return err_code;
+                    return errCode;
                 }
             }
 
@@ -575,15 +575,15 @@ public static unsafe partial class Methods
             op += cSize;
             if (sp < send)
             {
-                SeqDef_s* seq;
-                repcodes_s rep;
-                memcpy(&rep, prevCBlock->rep, (uint)sizeof(repcodes_s));
+                SeqDefS* seq;
+                RepcodesS rep;
+                memcpy(&rep, prevCBlock->rep, (uint)sizeof(RepcodesS));
                 for (seq = sstart; seq < sp; ++seq)
                 {
                     ZSTD_updateRep(rep.rep, seq->offBase, ZSTD_getSequenceLength(seqStorePtr, seq).litLength == 0 ? 1U : 0U);
                 }
 
-                memcpy(nextCBlock->rep, &rep, (uint)sizeof(repcodes_s));
+                memcpy(nextCBlock->rep, &rep, (uint)sizeof(RepcodesS));
             }
         }
 
@@ -593,14 +593,14 @@ public static unsafe partial class Methods
     /* ZSTD_compressSuperBlock() :
      * Used to compress a super block when targetCBlockSize is being used.
      * The given block will be compressed into multiple sub blocks that are around targetCBlockSize. */
-    private static nuint ZSTD_compressSuperBlock(ZSTD_CCtx_s* zc, void* dst, nuint dstCapacity, void* src, nuint srcSize, uint lastBlock)
+    private static nuint ZSTD_compressSuperBlock(ZstdCCtxS* zc, void* dst, nuint dstCapacity, void* src, nuint srcSize, uint lastBlock)
     {
-        ZSTD_entropyCTablesMetadata_t entropyMetadata;
+        ZstdEntropyCTablesMetadataT entropyMetadata;
         {
-            var err_code = ZSTD_buildBlockEntropyStats(&zc->seqStore, &zc->blockState.prevCBlock->entropy, &zc->blockState.nextCBlock->entropy, &zc->appliedParams, &entropyMetadata, zc->tmpWorkspace, zc->tmpWkspSize);
-            if (ERR_isError(err_code))
+            var errCode = ZSTD_buildBlockEntropyStats(&zc->seqStore, &zc->blockState.prevCBlock->entropy, &zc->blockState.nextCBlock->entropy, &zc->appliedParams, &entropyMetadata, zc->tmpWorkspace, zc->tmpWkspSize);
+            if (ERR_isError(errCode))
             {
-                return err_code;
+                return errCode;
             }
         }
 
