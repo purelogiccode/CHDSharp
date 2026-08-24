@@ -4,7 +4,7 @@ layout: default
 
 # Testing
 
-CHDSharp ships a **558-test** xUnit suite plus a deterministic 30-file corpus covering every format version, codec, map type, and parent/child combination. Tests run on `net8.0`, `net9.0`, and `net10.0`.
+CHDSharp ships a **602-test** xUnit suite plus a deterministic 30-file corpus covering every format version, codec, map type, and parent/child combination. Tests run on `net8.0`, `net9.0`, and `net10.0`.
 
 ---
 
@@ -18,7 +18,7 @@ CHDSharp ships a **558-test** xUnit suite plus a deterministic 30-file corpus co
 | Interactive | `CHDSharpTester` | WPF app that batch-verifies folders and **cross-checks against `chdman`** (header info, deep verify, SHA1, random-access extraction, codec decode, parent chains). |
 | Encoder unit | `CHDSharpEncoderTest` | Tests for the `CHDSharp.Encoder` encoder: endian/CRC/SHA1/deflate primitives, Huffman + V5 map compression, header, CUE/GDI/ISO/TOC/NRG parsers, metadata writer, per-hunk ratio logging. |
 | Encoder validation | `CHDSharpEncoderTest` | Cross-validation of encoder output against `chdman.exe` v0.288 (`info`, `verify`, `extractraw`, `createcd`, `createraw`, `copy`, `createld`) and the CHDSharpLib reader — including **100 MB+ raw/CD round-trips** and byte-for-byte file comparison with `chdman` for every writable codec (zlib, zstd, lzma, huff, flac, cdzl, cdlz, cdzs, cdfl, avhu). |
-| Battle | `CHDSharpBattleTest` | Head-to-head comparison harness between CHDSharp and chdman on real-world CHD files. |
+| Battle | `CHDSharpBattleTest` | Head-to-head harness that cross-checks the CHDSharpLib **decoder** and the `CHDSharp.Encoder` **encoder** against `chdman.exe` on a deterministic corpus of raw and CD images (`create*`, `verify`, `info`, extract parity, byte-identical encode for every writable codec, delta/parent, CD, A/V laserdisc) — **587/587 checks passing**. Also scans real-world `*.chd` folders via `--real <dir>`. |
 
 ---
 
@@ -127,9 +127,35 @@ It requires the `chdman` binaries in `CHDSharpTest/chdman/` for cross-checks.
 
 ---
 
+## The battle harness (`CHDSharpBattleTest`)
+
+`CHDSharpBattleTest` exhaustively cross-checks CHDSharp against MAME's `chdman.exe`:
+
+- **Decoder** — `chdman verify` / `info` parity, extract parity, and byte-identical decode vs the reference for every codec and CD/A/V laserdisc fixture.
+- **Encoder** — `chdman create*` parity: `chdman verify` (ours) and `chdman verify` (ref) both pass, output is **byte-identical** to chdman's, and extraction round-trips match.
+- **Delta/parent, CD, and A/V laserdisc scenarios** are covered; the deterministic corpus passes **587/587 checks**.
+
+```bash
+# Deterministic corpus (seed 1337 by default); requires chdman.exe (repo root or PATH)
+dotnet run --project CHDSharpBattleTest
+
+# Reduced smoke run
+dotnet run --project CHDSharpBattleTest -- --quick
+
+# Battle-test a real CHD collection (recursive; per-command timeout in seconds)
+dotnet run --project CHDSharpBattleTest -- --real "D:\CHD Collection" --real-timeout 900
+
+# Report root (default <repo>/TestResults/battle)
+dotnet run --project CHDSharpBattleTest -- --out "D:\battle-results"
+```
+
+Exit code is `0` when every check passes, `1` on any failure, `2` on usage errors.
+
+---
+
 ## Golden rules for contributors
 
 1. **Every new feature needs a test** — corpus fixture for format-level behavior, unit test for API-level behavior.
 2. **Corpus fixtures must be deterministic** — regenerate via `CHDSharpTestGen`, never hand-edit binaries.
 3. **New fixtures must be registered in `manifest.json`** with the correct expected version and pass/fail status.
-4. All 558 tests must pass on **all three TFMs** before merging.
+4. All 602 tests must pass on **all three TFMs** before merging, and `CHDSharpBattleTest` must stay at 587/587.

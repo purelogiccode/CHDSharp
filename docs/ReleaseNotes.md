@@ -1,13 +1,37 @@
 # CHDSharp Release Notes
 
-## Unreleased
+## CHDSharp v1.4.0
+
+### Full chdman CLI argument parity
+
+The CLI (binary renamed `CHDSharp`) now accepts **every `chdman` subcommand** with the same
+option names and exit-code conventions:
+
+`info`, `verify`, `createraw`, `createhd`, `createcd`, `createdvd`, `createld`,
+`extractraw`, `extracthd`, `extractcd`, `extractdvd`, `extractld`, `copy`, `addmeta`,
+`delmeta`, `dumpmeta`, `listtemplates`.
+
+Common options mirror `chdman` (`--input/-i`, `--output/-o`, `--inputparent/-ip`,
+`--outputparent/-op`, `--compression/-c`, `--hunksize/-hs`, `--unitsize/-us`,
+`--numprocessors/-np`, `--force/-f`, `--verbose/-v`, `--chs`, `--sectorsize/-ss`, …) and the
+convenience commands from earlier versions (directory scan, `--list`, `--random`, `--parent`,
+`--toc`, `--cue`, `--classify`, `--detect`, `--hash`, `--batch`) are all still available.
+
+### Full chdman battle-test parity (587/587)
+
+The new `CHDSharpBattleTest` harness exhaustively cross-checks the CHDSharpLib **decoder**
+and the CHDSharp.Encoder **encoder** against MAME's `chdman.exe` on a deterministic corpus
+of raw and CD images — `chdman create*`, `verify`, `info`, extract parity, and **byte-identical
+encode** checks for every writable codec, plus delta/parent, CD, and A/V laserdisc scenarios.
+The full suite passes **587/587 checks**. It can also scan real-world `*.chd` folders
+(`--real <dir>`) to battle-test any collection. See [Testing](testing.md).
 
 ### Byte-for-byte parity with chdman for all codecs
 
-Every encoder output now matches MAME's `chdman` byte-for-byte, including the three
+Every encoder output now matches MAME's `chdman` byte-for-byte, closing the three
 previously non-exact paths:
 
-- **`createld` (laserdisc AVHuff)** — fixed an off-by-four AVI `idx1` base offset that
+- **`createld` (laserdisc AVHuff)** — fixed an off-by-four AVCC `idx1` base offset that
   shifted audio by one sample and misaligned video; the AVHuff codec now correctly
   compresses zero-padded single-frame hunks; and the mono-FLAC encoder now evaluates
   every fixed-predictor order per frame (matching libFLAC 1.4.3's behaviour for the
@@ -25,14 +49,65 @@ containing a full C-to-C# port of the zstd 1.5.5 source tree (the same version M
 bundles). Both the encoder and decoder are included. The library now has **zero external
 runtime NuGet dependencies** — every codec is vendored in-repo.
 
-### Bug fixes
+### 38 bugs fixed from deep code review
 
-- Fixed `AviReader` `idx1` chunk offset base: offsets are now correctly relative to the
-  `'movi'` fourcc (matching MAME's `aviio.cpp` `parse_idx1_chunk` base), fixing audio/video
-  misalignment in all AVI-based laserdisc encoding.
-- Fixed `AvHuffCodec.Compress` rejecting zero-padded single-frame hunks: hunks whose
-  trailing bytes are all zeroes (the common case for interlaced laserdisc fields with fewer
-  samples than the maximum) are now correctly compressed instead of stored raw.
+A deep code review across the CLI, library, and battle harness fixed 38 bugs. Highlights:
+
+- **Exit codes & error handling** — the CLI now returns proper exit codes (`0/1/3`),
+  `CheckFile(Stream)` catches `IOException`, and `VerifyList` logs the exception type verbatim.
+- **Encoding fixes** — `createcd` defaults to `cdlz,cdzl,cdfl`; `createhd --input` routes to
+  `EncodeRaw`; `verify --inputparent` is passed to `CheckFileWithParent`; all create/copy
+  commands require `--force` to overwrite; `dumpmeta --force` is implemented; `extractcd
+  --splitbin` delegates to the library's per-track writer and `--outputbin` updates `.gdi`
+  for GD-ROM; `LzmaStream.Seek` returns the correct position.
+- **Concurrency** — the parallel-verification master error is now thread-safe
+  (`StrongBox` + `Interlocked`), `DisposeAsync` drains per-thread codec states, and the
+  read-ahead manager no longer over-releases its semaphore.
+- **Robustness** — `ReadHunk(Span)` caches hunks on success, `FindRepeatedBlocks` validates
+  map offset bounds, `ValidateSizeLimits` rejects `Unitbytes == 0`, `MemoryMappedFile` is
+  disposed when view creation fails, and `extractraw` writes to a temp file before renaming.
+- **Diagnostics** — progress callbacks use `Interlocked`, version display uses `Build` instead
+  of `MinorRevision`, bug reports scrub PII, and API keys are no longer stored in plain text.
+- **CLI helpers** — `--batch` filters by correct extensions, `Checkdir` filters exact `.chd`
+  extension and skips symlinks, `help` covers all missing commands, and `addmeta` rejects
+  non-ASCII tag names.
+
+### Flaky-test fixes for .NET 8/9/10
+
+Stabilized flaky tests so the full suite passes consistently on every target framework.
+
+### Cleaner vendored code
+
+Resolved all compiler, analyzer, and Rider-inspection warnings across `VendoredZSTD`
+and `VendoredZlib`, including XML doc-comment and constant compile errors, and removed the
+outdated `References/MissingFeatures.md`.
+
+### Breaking changes
+
+- **CLI binary renamed** — the CLI executable is now `CHDSharp` (e.g. `CHDSharp.exe`) instead
+  of `CHDSharpCli`. Subcommand syntax changed to the `chdman` style (`CHDSharp createcd -o
+  out.chd -i in.cue`); the old `--create/--createcd/--createhd/--copy` forms are replaced.
+- **`ZstdSharp.Port` package removed** — code that referenced it directly must now use the
+  library's own codecs; no action is needed for normal library use.
+
+### NuGet Package
+
+```
+dotnet add package CHDSharp --version 1.4.0
+```
+
+### CLI Binaries
+
+Pre-built self-contained single-file executables (binary renamed from `CHDSharpCli` to `CHDSharp`):
+
+| Binary | Platform | Architecture |
+|--------|----------|-------------|
+| `CHDSharp_win-x64_v1.4.0.zip` | Windows | x64 |
+| `CHDSharp_win-arm64_v1.4.0.zip` | Windows | ARM64 |
+| `CHDSharp_linux-x64_v1.4.0.zip` | Linux | x64 |
+| `CHDSharp_linux-arm64_v1.4.0.zip` | Linux | ARM64 |
+| `CHDSharpTester_win-x64_v1.4.0.zip` | Windows | x64 |
+| `CHDSharpTester_win-arm64_v1.4.0.zip` | Windows | ARM64 |
 
 ---
 

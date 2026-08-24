@@ -92,7 +92,8 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 - **Metadata** — tag/index query API (`GetMetadata`) plus the full entry list; checksum-flag aware. IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support.
 - **Track info & extraction** — CD/GD-ROM TOC parsing (`ChdTrackInfo`), CUE/GDI descriptor generation, legacy `CHGT` little-endian CDDA handling (`IsLittleEndianAudio`), and whole-image extraction (`.bin`/`.cue`, `.iso`, `.img`, `.raw`, `.gdi`).
 - **Pluggable logging** — `Microsoft.Extensions.Logging` integration, silent by default.
-- **100% chdman match** — cross-checked against `chdman info`, `verify`, and `extractraw` (MAME 0.288).
+- **100% chdman match** — cross-checked against `chdman` (MAME 0.288/0.289) via `info`, `verify`, `extractraw`, and the `CHDSharpBattleTest` harness (587/587 checks passing).
+- **Full `chdman` CLI parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand with matching options and exit codes.
 
 ---
 
@@ -126,8 +127,10 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 | Project | Purpose |
 |---------|---------|
 | `CHDSharpLib` | The library itself (this wiki documents it). Includes the encoder subsystem (`CHDSharp.Encoder`). |
-| `CHDSharpCli` | Command-line CHD manager (binary: `CHDSharp`). chdman-compatible. |
-| `CHDSharpTest` | xUnit unit + corpus test suite (30 deterministic CHD files). |
+| `CHDSharpCli` | Command-line CHD manager (binary: `CHDSharp`). Full `chdman` subcommand parity. |
+| `CHDSharpTest` | xUnit unit + corpus test suite (602 tests, 30 deterministic CHD files). |
+| `CHDSharpEncoderTest` | xUnit encoder suite (434 tests) with chdman cross-validation. |
+| `CHDSharpBattleTest` | Battle harness: 587/587 checks vs `chdman` (deterministic + real-world corpora). |
 | `CHDSharpTestGen` | Deterministic corpus generator (drives vintage `chdman` binaries). |
 | `CHDSharpTester` | WPF interactive batch verifier cross-checked against `chdman`. |
 

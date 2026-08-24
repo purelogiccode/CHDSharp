@@ -10,6 +10,18 @@
 
 ---
 
+## What's New in v1.4.0
+
+- **Byte-for-byte parity with `chdman` for *every* codec** — including `createld` (AVHuff),
+  `cdzs` (CD Zstd), and `zstd`. The encoder's output is now byte-identical to MAME for all
+  writable codecs.
+- **`VendoredZSTD` replaces `ZstdSharp.Port`** — the library now ships its own pure C# port
+  of the zstd 1.5.5 tree MAME bundles (encoder + decoder). **Zero external NuGet
+  dependencies.**
+- **38 bugs fixed** from a deep code review — including thread-safe parallel verification,
+  correct CLI exit codes, `ReadHunk(Span)` hunk caching, `MemoryMappedFile` disposal on view
+  failure, and `LzmaStream.Seek` position fixes.
+
 ## What's New in v1.3.0
 
 - **Full CHD encoding/writing** — `ChdEncoder` is now part of `CHDSharpLib`. Create CHDs from raw binaries, CD images (CUE/GDI/ISO/TOC/NRG), or blank HD templates. Re-compress existing CHDs with new codecs. Create delta/parent CHDs. All 10 codecs with best-per-hunk selection, parallel compression (1–64 workers), and 100% byte-identical output vs MAME `chdman`. No separate package needed.
@@ -36,7 +48,7 @@
 dotnet add package CHDSharp
 ```
 
-Targets `net8.0`, `net9.0`, and `net10.0`. No native dependencies — all codecs (except Zstd via the pure-C# `ZstdSharp.Port`) are implemented from scratch in C#.
+Targets `net8.0`, `net9.0`, and `net10.0`. No native dependencies — all codecs (including Zstd via the in-repo pure-C# `VendoredZSTD` port) are implemented from scratch in C#.
 
 ---
 
@@ -594,7 +606,7 @@ Console.WriteLine(err.GetMessage());
 | **LZMA** | `lzma` | `cdlz` | Custom pure C# LZMA decoder |
 | **Huffman** | `huff` | — | Custom pure C# Huffman decoder |
 | **FLAC** | `flac` | `cdfl` | Custom pure C# FLAC decoder (16-bit stereo/mono) |
-| **Zstd** | `zstd` | `cdzs` | [ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp) (pure C#) |
+| **Zstd** | `zstd` | `cdzs` | `VendoredZSTD` (in-repo pure C# port of zstd 1.5.5) |
 | **AVHuff** | `avhu` | — | Custom pure C# AV Huffman decoder |
 
 ---
@@ -725,7 +737,7 @@ var result = Chd.CheckFile(s, name, deepCheck: true);
 │  AudioDecoder · FlacFrame · FlacSubframe ·         │
 │  BitReader · LPC · RiceContext · WindowFunction     │
 ├────────────────────────────────────────────────────┤
-│  ZstdSharp.Port  (NuGet)                            │
+│  VendoredZSTD  (in-repo pure C# zstd 1.5.5 port)    │
 └────────────────────────────────────────────────────┘
 ```
 
@@ -742,8 +754,16 @@ dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| [ZstdSharp.Port](https://www.nuget.org/packages/ZstdSharp.Port/) | 0.8.8 | Pure C# Zstd decompression |
 | [Microsoft.Extensions.Logging.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions/) | 10.0.11 (all TFMs: net8.0 / net9.0 / net10.0) | Pluggable logging (optional) |
+
+All codec implementations are vendored in-repo as project references (no external runtime NuGet dependencies):
+
+| Project | Purpose |
+|---------|---------|
+| `VendoredZLib` | Pure C# zlib (deflate/inflate) |
+| `VendoredLZMA` | Pure C# LZMA SDK port |
+| `VendoredFlac` | Pure C# FLAC encoder/decoder |
+| `VendoredZSTD` | Pure C# zstd 1.5.5 encoder/decoder (C-to-C# port of MAME's bundled tree) |
 
 ---
 
@@ -767,4 +787,4 @@ MIT License — see [LICENSE](LICENSE).
 - **[Gordon Jefferyes](https://github.com/gjefferyes)** — original C# CHDSharp implementation
 - **[MAME](https://www.mamedev.org/)** — CHD format specification and `chdman` reference
 - **[libchdr](https://github.com/rtissera/libchdr)** — C reference library by Romain Tisseraud
-- **[ZstdSharp](https://github.com/oleg-st/ZstdSharp)** — pure C# Zstd decompressor
+- **[ZstdSharp](https://github.com/oleg-st/ZstdSharp)** — original pure C# Zstd port by Oleg Stepanischev, vendored in-repo as `VendoredZSTD`

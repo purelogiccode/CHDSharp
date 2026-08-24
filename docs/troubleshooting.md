@@ -92,7 +92,7 @@ Possible causes:
 ## FAQ
 
 **Q: Is CHDSharp a full replacement for `chdman`?**
-A: For *reading, verifying, and extracting* — yes (100% byte-for-byte match with MAME 0.288). For *creating* CHDs — no; that's what `chdman` and the encoder subsystem (`CHDSharp.Encoder`) are for.
+A: Yes. Since v1.4.0 the CLI (`CHDSharp`) accepts every `chdman` subcommand — `info`, `verify`, `createraw`, `createhd`, `createcd`, `createdvd`, `createld`, `extractraw`, `extracthd`, `extractcd`, `extractdvd`, `extractld`, `copy`, `addmeta`, `delmeta`, `dumpmeta`, `listtemplates` — with byte-for-byte matching output for every writable codec. The `CHDSharpBattleTest` harness maintains 587/587 parity checks against `chdman.exe`.
 
 **Q: Why does `CheckFile` report success when the header hashes are all zero?**
 A: A CHD with zeroed hashes is valid but unverifiable at the whole-image level; per-hunk CRCs are still validated during deep verification.

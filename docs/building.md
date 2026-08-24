@@ -32,7 +32,7 @@ CSharp_CHDSharp.sln
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.3.0) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.4.0) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.3.0`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.4.0`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -81,7 +81,7 @@ dotnet test --filter "FullyQualifiedName~CorpusTests"
 dotnet test -v detailed
 ```
 
-The suite contains **558 tests** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
+The suite contains **602 tests** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
 
 The companion **encoder suite** (`CHDSharpEncoderTest`, 434 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
 
@@ -96,6 +96,15 @@ dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidatio
 > ```
 >
 > The generator is deterministic: regenerating produces byte-identical fixtures.
+
+The **battle harness** (`CHDSharpBattleTest`) cross-checks the decoder and encoder against
+`chdman.exe` (587/587 checks on the deterministic corpus), and can also scan real-world CHD
+folders via `--real <dir>`:
+
+```bash
+dotnet run --project CHDSharpBattleTest          # repo-root chdman.exe auto-resolved
+dotnet run --project CHDSharpBattleTest -- --real "D:\CHD Collection"
+```
 
 ---
 
@@ -142,10 +151,10 @@ dotnet publish CHDSharpCli/CHDSharpCli.csproj -c Release -r win-x64 --self-conta
 dotnet publish CHDSharpCli/CHDSharpCli.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-The repository ships ready-made zip bundles under `CHDSharpLib/bin/Release/` (e.g. `CHDSharp_win-x64_v1.3.0.zip`). The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows).
+The repository ships ready-made zip bundles under `CHDSharpLib/bin/Release/` (e.g. `CHDSharp_win-x64_v1.4.0.zip`). The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows).
 
 ---
 
 ## CI
 
-The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`), producing deterministic builds and SourceLink-enabled symbols. The test suite is the gatekeeper: all 468 tests must pass on all three target frameworks before a release.
+The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`), producing deterministic builds and SourceLink-enabled symbols. The test suite is the gatekeeper: all 602 tests must pass on all three target frameworks before a release.

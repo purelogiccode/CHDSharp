@@ -13,6 +13,18 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.4.0
+
+- **Full `chdman` CLI argument parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand: `info`, `verify`, `createraw`, `createhd`, `createcd`, `createdvd`, `createld`, `extractraw`, `extracthd`, `extractcd`, `extractdvd`, `extractld`, `copy`, `addmeta`, `delmeta`, `dumpmeta`, `listtemplates`.
+- **Full `chdman` battle-test parity (587/587)** — the new `CHDSharpBattleTest` harness cross-checks the decoder and encoder against `chdman.exe` on deterministic and real-world CHD corpora.
+- **Byte-for-byte parity for *every* codec** — including `createld` (AVHuff), `cdzs`, and `zstd`.
+- **Zero external NuGet dependencies** — `VendoredZSTD` (a pure C# port of MAME's zstd 1.5.5) replaces the `ZstdSharp.Port` package.
+- **38 bugs fixed** from a deep code review.
+
+See [docs/ReleaseNotes.md](docs/ReleaseNotes.md) for the full changelog.
+
+---
+
 ## Installation
 
 ```bash
@@ -506,8 +518,9 @@ The full wiki lives in [`docs/`](docs/README.md):
 
 | Project | Type | Description |
 |---------|------|-------------|
-| `CHDSharpTest` | xUnit | Unit + corpus tests (468 tests, 30 CHD fixtures) |
+| `CHDSharpTest` | xUnit | Unit + corpus tests (602 tests, 30 CHD fixtures) |
 | `CHDSharpEncoderTest` | xUnit | Encoder tests (434 tests, chdman cross-validation) |
+| `CHDSharpBattleTest` | Console | Battle harness: 587/587 checks vs `chdman` on deterministic + real-world corpora |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator |
 
@@ -517,6 +530,9 @@ dotnet test
 
 # Run only encoder tests
 dotnet test CHDSharpEncoderTest/
+
+# Run the chdman battle harness (requires chdman.exe)
+dotnet run --project CHDSharpBattleTest
 
 # Run large file integration tests
 dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
