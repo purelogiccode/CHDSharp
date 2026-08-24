@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct ZSTD_BuildCTableWksp
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ZSTD_BuildCTableWksp
-    {
-        public fixed short norm[53];
-        public fixed uint wksp[285];
-    }
+    public fixed short norm[53];
+    public fixed uint wksp[285];
 }

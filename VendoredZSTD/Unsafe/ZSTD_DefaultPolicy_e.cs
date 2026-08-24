@@ -1,8 +1,7 @@
-namespace ZstdSharp.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+public enum ZSTD_DefaultPolicy_e
 {
-    public enum ZSTD_DefaultPolicy_e
-    {
-        ZSTD_defaultDisallowed = 0,
-        ZSTD_defaultAllowed = 1
-    }
+    ZSTD_defaultDisallowed = 0,
+    ZSTD_defaultAllowed = 1
 }

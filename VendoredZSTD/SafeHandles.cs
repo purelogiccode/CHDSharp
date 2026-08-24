@@ -1,168 +1,178 @@
-using System;
 using System.Runtime.InteropServices;
-using ZstdSharp.Unsafe;
+using VendoredZSTD.Unsafe;
 
-namespace ZstdSharp
+namespace VendoredZSTD;
+
+/// <summary>
+/// Provides the base class for ZstdSharp <see cref="SafeHandle"/> implementations.
+/// </summary>
+/// <remarks>
+/// Even though ZstdSharp is a managed library, its internals are using unmanaged
+/// memory and we are using safe handles in the library's high-level API to ensure
+/// proper disposal of unmanaged resources and increase safety.
+/// </remarks>
+/// <seealso cref="SafeCctxHandle"/>
+/// <seealso cref="SafeDctxHandle"/>
+internal abstract class SafeZstdHandle : SafeHandle
 {
     /// <summary>
-    /// Provides the base class for ZstdSharp <see cref="SafeHandle"/> implementations.
+    /// Parameterless constructor is hidden. Use the static <c>Create</c> factory
+    /// method to create a new safe handle instance.
     /// </summary>
-    /// <remarks>
-    /// Even though ZstdSharp is a managed library, its internals are using unmanaged
-    /// memory and we are using safe handles in the library's high-level API to ensure
-    /// proper disposal of unmanaged resources and increase safety.
-    /// </remarks>
-    /// <seealso cref="SafeCctxHandle"/>
-    /// <seealso cref="SafeDctxHandle"/>
-    internal abstract unsafe class SafeZstdHandle : SafeHandle
+    protected SafeZstdHandle() : base(IntPtr.Zero, true)
     {
-        /// <summary>
-        /// Parameterless constructor is hidden. Use the static <c>Create</c> factory
-        /// method to create a new safe handle instance.
-        /// </summary>
-        protected SafeZstdHandle() : base(IntPtr.Zero, true)
-        {
-        }
+    }
 
-        public sealed override bool IsInvalid => handle == IntPtr.Zero;
+    public sealed override bool IsInvalid => handle == IntPtr.Zero;
+}
+
+/// <summary>
+/// Safely wraps an unmanaged Zstd compression context.
+/// </summary>
+internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
+{
+    /// <inheritdoc/>
+    private SafeCctxHandle()
+    {
     }
 
     /// <summary>
-    /// Safely wraps an unmanaged Zstd compression context.
+    /// Creates a new instance of <see cref="SafeCctxHandle"/>.
     /// </summary>
-    internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
+    /// <returns></returns>
+    /// <exception cref="ZstdException">Creation failed.</exception>
+    public static SafeCctxHandle Create()
     {
-        /// <inheritdoc/>
-        private SafeCctxHandle()
+        var safeHandle = new SafeCctxHandle();
+        var success = false;
+        try
         {
-        }
+            var cctx = Methods.ZSTD_createCCtx();
+            if (cctx == null)
+                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
 
-        /// <summary>
-        /// Creates a new instance of <see cref="SafeCctxHandle"/>.
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="ZstdException">Creation failed.</exception>
-        public static SafeCctxHandle Create()
+            safeHandle.SetHandle((IntPtr)cctx);
+            success = true;
+        }
+        finally
         {
-            var safeHandle = new SafeCctxHandle();
-            bool success = false;
-            try
+            if (!success)
             {
-                var cctx = Methods.ZSTD_createCCtx();
-                if (cctx == null)
-                    throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
-                safeHandle.SetHandle((IntPtr)cctx);
-                success = true;
+                safeHandle.SetHandleAsInvalid();
             }
-            finally
-            {
-                if (!success)
-                {
-                    safeHandle.SetHandleAsInvalid();
-                }
-            }
-            return safeHandle;
         }
 
-        /// <summary>
-        /// Acquires a reference to the safe handle.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="SafeHandleHolder{T}"/> instance that can be implicitly converted to a pointer
-        /// to <see cref="ZSTD_CCtx_s"/>.
-        /// </returns>
-        public SafeHandleHolder<ZSTD_CCtx_s> Acquire() => new(this);
-
-        protected override bool ReleaseHandle()
-        {
-            return Methods.ZSTD_freeCCtx((ZSTD_CCtx_s*)handle) == 0;
-        }
+        return safeHandle;
     }
 
     /// <summary>
-    /// Safely wraps an unmanaged Zstd compression context.
+    /// Acquires a reference to the safe handle.
     /// </summary>
-    internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
+    /// <returns>
+    /// A <see cref="SafeHandleHolder{T}"/> instance that can be implicitly converted to a pointer
+    /// to <see cref="ZSTD_CCtx_s"/>.
+    /// </returns>
+    public SafeHandleHolder<ZSTD_CCtx_s> Acquire()
     {
-        /// <inheritdoc/>
-        private SafeDctxHandle()
-        {
-        }
+        return new SafeHandleHolder<ZSTD_CCtx_s>(this);
+    }
 
-        /// <summary>
-        /// Creates a new instance of <see cref="SafeDctxHandle"/>.
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="ZstdException">Creation failed.</exception>
-        public static SafeDctxHandle Create()
-        {
-            var safeHandle = new SafeDctxHandle();
-            bool success = false;
-            try
-            {
-                var dctx = Methods.ZSTD_createDCtx();
-                if (dctx == null)
-                    throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create dctx");
-                safeHandle.SetHandle((IntPtr)dctx);
-                success = true;
-            }
-            finally
-            {
-                if (!success)
-                {
-                    safeHandle.SetHandleAsInvalid();
-                }
-            }
-            return safeHandle;
-        }
+    protected override bool ReleaseHandle()
+    {
+        return Methods.ZSTD_freeCCtx((ZSTD_CCtx_s*)handle) == 0;
+    }
+}
 
-        /// <summary>
-        /// Acquires a reference to the safe handle.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="SafeHandleHolder{T}"/> instance that can be implicitly converted to a pointer
-        /// to <see cref="ZSTD_DCtx_s"/>.
-        /// </returns>
-        public SafeHandleHolder<ZSTD_DCtx_s> Acquire() => new(this);
-
-        protected override bool ReleaseHandle()
-        {
-            return Methods.ZSTD_freeDCtx((ZSTD_DCtx_s*)handle) == 0;
-        }
+/// <summary>
+/// Safely wraps an unmanaged Zstd compression context.
+/// </summary>
+internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
+{
+    /// <inheritdoc/>
+    private SafeDctxHandle()
+    {
     }
 
     /// <summary>
-    /// Provides a convenient interface to safely acquire pointers of a specific type
-    /// from a <see cref="SafeHandle"/>, by utilizing <see langword="using"/> blocks.
+    /// Creates a new instance of <see cref="SafeDctxHandle"/>.
     /// </summary>
-    /// <typeparam name="T">The type of pointers to return.</typeparam>
-    /// <remarks>
-    /// Safe handle holders can be <see cref="Dispose"/>d to decrement the safe handle's
-    /// reference count, and can be implicitly converted to pointers to <see cref="T"/>.
-    /// </remarks>
-    internal unsafe ref struct SafeHandleHolder<T> where T : unmanaged
+    /// <returns></returns>
+    /// <exception cref="ZstdException">Creation failed.</exception>
+    public static SafeDctxHandle Create()
     {
-        private readonly SafeHandle _handle;
-
-        private bool _refAdded;
-
-        public SafeHandleHolder(SafeHandle safeHandle)
+        var safeHandle = new SafeDctxHandle();
+        var success = false;
+        try
         {
-            _handle = safeHandle;
+            var dctx = Methods.ZSTD_createDCtx();
+            if (dctx == null)
+                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create dctx");
+
+            safeHandle.SetHandle((IntPtr)dctx);
+            success = true;
+        }
+        finally
+        {
+            if (!success)
+            {
+                safeHandle.SetHandleAsInvalid();
+            }
+        }
+
+        return safeHandle;
+    }
+
+    /// <summary>
+    /// Acquires a reference to the safe handle.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="SafeHandleHolder{T}"/> instance that can be implicitly converted to a pointer
+    /// to <see cref="ZSTD_DCtx_s"/>.
+    /// </returns>
+    public SafeHandleHolder<ZSTD_DCtx_s> Acquire()
+    {
+        return new SafeHandleHolder<ZSTD_DCtx_s>(this);
+    }
+
+    protected override bool ReleaseHandle()
+    {
+        return Methods.ZSTD_freeDCtx((ZSTD_DCtx_s*)handle) == 0;
+    }
+}
+
+/// <summary>
+/// Provides a convenient interface to safely acquire pointers of a specific type
+/// from a <see cref="SafeHandle"/>, by utilizing <see langword="using"/> blocks.
+/// </summary>
+/// <typeparam name="T">The type of pointers to return.</typeparam>
+/// <remarks>
+/// Safe handle holders can be <see cref="Dispose"/>d to decrement the safe handle's
+/// reference count, and can be implicitly converted to pointers to <see cref="T"/>.
+/// </remarks>
+internal unsafe ref struct SafeHandleHolder<T> where T : unmanaged
+{
+    private readonly SafeHandle _handle;
+
+    private bool _refAdded;
+
+    public SafeHandleHolder(SafeHandle safeHandle)
+    {
+        _handle = safeHandle;
+        _refAdded = false;
+        safeHandle.DangerousAddRef(ref _refAdded);
+    }
+
+    public static implicit operator T*(SafeHandleHolder<T> holder)
+    {
+        return (T*)holder._handle.DangerousGetHandle();
+    }
+
+    public void Dispose()
+    {
+        if (_refAdded)
+        {
+            _handle.DangerousRelease();
             _refAdded = false;
-            safeHandle.DangerousAddRef(ref _refAdded);
-        }
-
-        public static implicit operator T*(SafeHandleHolder<T> holder) =>
-            (T*)holder._handle.DangerousGetHandle();
-
-        public void Dispose()
-        {
-            if (_refAdded)
-            {
-                _handle.DangerousRelease();
-                _refAdded = false;
-            }
         }
     }
 }

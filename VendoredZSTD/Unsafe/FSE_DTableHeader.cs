@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+/* ======    Decompression    ====== */
+[StructLayout(LayoutKind.Sequential)]
+public struct FseDTableHeader
 {
-    /* ======    Decompression    ====== */
-    [StructLayout(LayoutKind.Sequential)]
-    public struct FSE_DTableHeader
-    {
-        public ushort tableLog;
-        public ushort fastMode;
-    }
+    public ushort tableLog;
+    public ushort fastMode;
 }

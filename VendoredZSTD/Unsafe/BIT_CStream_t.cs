@@ -1,17 +1,17 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+/* bitStream can mix input from multiple sources.
+ * A critical property of these streams is that they encode and decode in **reverse** direction.
+ * So the first bit sequence you add will be the last to be read, like a LIFO stack.
+ */
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct BitCStreamT
 {
-    /* bitStream can mix input from multiple sources.
-     * A critical property of these streams is that they encode and decode in **reverse** direction.
-     * So the first bit sequence you add will be the last to be read, like a LIFO stack.
-     */
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct BIT_CStream_t
-    {
-        public nuint bitContainer;
-        public uint bitPos;
-        public sbyte* startPtr;
-        public sbyte* ptr;
-        public sbyte* endPtr;
-    }
+    public nuint bitContainer;
+    public uint bitPos;
+    public sbyte* startPtr;
+    public sbyte* ptr;
+    public sbyte* endPtr;
 }

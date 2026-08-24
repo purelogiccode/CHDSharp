@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ZSTD_parameters
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ZSTD_parameters
-    {
-        public ZSTD_compressionParameters cParams;
-        public ZSTD_frameParameters fParams;
-    }
+    public ZSTD_compressionParameters cParams;
+    public ZstdFrameParameters fParams;
 }

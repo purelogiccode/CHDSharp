@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct Fingerprint
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Fingerprint
-    {
-        public fixed uint events[1024];
-        public nuint nbEvents;
-    }
+    public fixed uint events[1024];
+    public nuint nbEvents;
 }

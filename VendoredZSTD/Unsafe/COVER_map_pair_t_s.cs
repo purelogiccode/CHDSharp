@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct CoverMapPairTs
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct COVER_map_pair_t_s
-    {
-        public uint key;
-        public uint value;
-    }
+    public uint key;
+    public uint value;
 }

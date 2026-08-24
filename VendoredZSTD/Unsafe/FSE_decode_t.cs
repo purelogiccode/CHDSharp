@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct FseDecodeT
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct FSE_decode_t
-    {
-        public ushort newState;
-        public byte symbol;
-        public byte nbBits;
-    }
+    public ushort newState;
+    public byte symbol;
+    public byte nbBits;
 }

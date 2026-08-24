@@ -1,19 +1,19 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ZSTD_seqSymbol
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ZSTD_seqSymbol
+    public ushort nextState;
+    public byte nbAdditionalBits;
+    public byte nbBits;
+    public uint baseValue;
+    public ZSTD_seqSymbol(ushort nextState, byte nbAdditionalBits, byte nbBits, uint baseValue)
     {
-        public ushort nextState;
-        public byte nbAdditionalBits;
-        public byte nbBits;
-        public uint baseValue;
-        public ZSTD_seqSymbol(ushort nextState, byte nbAdditionalBits, byte nbBits, uint baseValue)
-        {
-            this.nextState = nextState;
-            this.nbAdditionalBits = nbAdditionalBits;
-            this.nbBits = nbBits;
-            this.baseValue = baseValue;
-        }
+        this.nextState = nextState;
+        this.nbAdditionalBits = nbAdditionalBits;
+        this.nbBits = nbBits;
+        this.baseValue = baseValue;
     }
 }

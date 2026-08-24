@@ -1,15 +1,15 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+/* ------------------------------------------ */
+/* =====   Multi-threaded compression   ===== */
+/* ------------------------------------------ */
+[StructLayout(LayoutKind.Sequential)]
+public struct InBuff_t
 {
-    /* ------------------------------------------ */
-    /* =====   Multi-threaded compression   ===== */
-    /* ------------------------------------------ */
-    [StructLayout(LayoutKind.Sequential)]
-    public struct InBuff_t
-    {
-        /* read-only non-owned prefix buffer */
-        public Range prefix;
-        public buffer_s buffer;
-        public nuint filled;
-    }
+    /* read-only non-owned prefix buffer */
+    public Range prefix;
+    public buffer_s buffer;
+    public nuint filled;
 }

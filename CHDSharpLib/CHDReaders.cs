@@ -1,10 +1,10 @@
 ﻿using System.IO.Compression;
 using VendoredFlac;
 using VendoredLZMA;
+using VendoredZSTD;
 using VendoredFlac.Models.FlacDeps;
 using CHDSharp.Models.Utils;
 using CHDSharp.Utils;
-using ZstdSharp;
 
 namespace CHDSharp;
 

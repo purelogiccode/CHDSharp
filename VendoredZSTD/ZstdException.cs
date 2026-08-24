@@ -1,13 +1,13 @@
-﻿using System;
-using ZstdSharp.Unsafe;
+﻿using VendoredZSTD.Unsafe;
 
-namespace ZstdSharp
+namespace VendoredZSTD;
+
+public class ZstdException : Exception
 {
-    public class ZstdException : Exception
+    public ZstdException(ZSTD_ErrorCode code, string message) : base(message)
     {
-        public ZstdException(ZSTD_ErrorCode code, string message) : base(message)
-            => Code = code;
-
-        public ZSTD_ErrorCode Code { get; }
+        Code = code;
     }
+
+    public ZSTD_ErrorCode Code { get; }
 }

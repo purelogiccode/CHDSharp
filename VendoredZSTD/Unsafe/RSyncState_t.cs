@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct RSyncStateT
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RSyncState_t
-    {
-        public ulong hash;
-        public ulong hitMask;
-        public ulong primePower;
-    }
+    public ulong hash;
+    public ulong hitMask;
+    public ulong primePower;
 }

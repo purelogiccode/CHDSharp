@@ -1,15 +1,15 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct algo_time_t
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct algo_time_t
+    public uint tableTime;
+    public uint decode256Time;
+    public algo_time_t(uint tableTime, uint decode256Time)
     {
-        public uint tableTime;
-        public uint decode256Time;
-        public algo_time_t(uint tableTime, uint decode256Time)
-        {
-            this.tableTime = tableTime;
-            this.decode256Time = decode256Time;
-        }
+        this.tableTime = tableTime;
+        this.decode256Time = decode256Time;
     }
 }

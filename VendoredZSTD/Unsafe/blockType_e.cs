@@ -1,10 +1,9 @@
-namespace ZstdSharp.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+public enum blockType_e
 {
-    public enum blockType_e
-    {
-        bt_raw,
-        bt_rle,
-        bt_compressed,
-        bt_reserved
-    }
+    bt_raw,
+    bt_rle,
+    bt_compressed,
+    bt_reserved
 }

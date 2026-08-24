@@ -1,20 +1,20 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+/*-*************************************
+ * Acceleration
+ ***************************************/
+[StructLayout(LayoutKind.Sequential)]
+public struct FASTCOVER_accel_t
 {
-    /*-*************************************
-     * Acceleration
-     ***************************************/
-    [StructLayout(LayoutKind.Sequential)]
-    public struct FASTCOVER_accel_t
+    /* Percentage of training samples used for ZDICT_finalizeDictionary */
+    public uint finalize;
+    /* Number of dmer skipped between each dmer counted in computeFrequency */
+    public uint skip;
+    public FASTCOVER_accel_t(uint finalize, uint skip)
     {
-        /* Percentage of training samples used for ZDICT_finalizeDictionary */
-        public uint finalize;
-        /* Number of dmer skipped between each dmer counted in computeFrequency */
-        public uint skip;
-        public FASTCOVER_accel_t(uint finalize, uint skip)
-        {
-            this.finalize = finalize;
-            this.skip = skip;
-        }
+        this.finalize = finalize;
+        this.skip = skip;
     }
 }

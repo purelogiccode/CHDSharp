@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct rankPos
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct rankPos
-    {
-        public ushort @base;
-        public ushort curr;
-    }
+    public ushort @base;
+    public ushort curr;
 }

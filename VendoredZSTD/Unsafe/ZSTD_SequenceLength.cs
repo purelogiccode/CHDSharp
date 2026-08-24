@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ZSTD_SequenceLength
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ZSTD_SequenceLength
-    {
-        public uint litLength;
-        public uint matchLength;
-    }
+    public uint litLength;
+    public uint matchLength;
 }

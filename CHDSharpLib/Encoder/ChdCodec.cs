@@ -1,6 +1,7 @@
 using CHDSharp.Encoder.Interfaces;
 using CHDSharp.Encoder.Models;
 using VendoredLZMA;
+using VendoredZSTD;
 using LzmaEncoder = VendoredLZMA.Encoder;
 
 namespace CHDSharp.Encoder;
@@ -106,7 +107,7 @@ public sealed class ZlibCodec : IChdCodec
 /// </remarks>
 public sealed class ZstdCodec : IChdCodec
 {
-    private readonly ZstdSharp.Compressor _compressor = new(ZstdSharp.Compressor.MaxCompressionLevel);
+    private readonly Compressor _compressor = new(Compressor.MaxCompressionLevel);
 
     /// <summary>Creates the codec.</summary>
     public ZstdCodec()
@@ -120,7 +121,7 @@ public sealed class ZstdCodec : IChdCodec
     public byte[]? Compress(byte[] data)
     {
         _compressor.ResetStream();
-        var dest = new byte[ZstdSharp.Compressor.GetCompressBound(data.Length)];
+        var dest = new byte[Compressor.GetCompressBound(data.Length)];
         _compressor.WrapStream(data, dest, out var consumed, out var written, isFinalBlock: true);
         return consumed == data.Length && written < data.Length
             ? dest.AsSpan(0, written).ToArray()

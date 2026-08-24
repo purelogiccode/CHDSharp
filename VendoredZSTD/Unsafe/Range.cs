@@ -1,16 +1,16 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+/* ====   Serial State   ==== */
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct Range
 {
-    /* ====   Serial State   ==== */
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Range
+    public void* start;
+    public nuint size;
+    public Range(void* start, nuint size)
     {
-        public void* start;
-        public nuint size;
-        public Range(void* start, nuint size)
-        {
-            this.start = start;
-            this.size = size;
-        }
+        this.start = start;
+        this.size = size;
     }
 }

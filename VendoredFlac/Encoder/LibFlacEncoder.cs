@@ -326,7 +326,7 @@ internal sealed class LibFlacEncoder
             // battle pcm16 corpus and the laserdisc createld output).
             var fixedOrders = _sampleRate == 48000 && _channels == 1
                 ? new uint[] { 0, 1, 2, 3, 4 }
-                : new uint[] { guessFixed };
+                : new[] { guessFixed };
             foreach (var fixedOrder in fixedOrders)
             {
                 if (rbps[(int)fixedOrder] < bps && fixedOrder < (uint)_blockSize)

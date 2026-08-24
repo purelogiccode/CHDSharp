@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct BlockSummary
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct BlockSummary
-    {
-        public nuint nbSequences;
-        public nuint blockSize;
-        public nuint litSize;
-    }
+    public nuint nbSequences;
+    public nuint blockSize;
+    public nuint litSize;
 }

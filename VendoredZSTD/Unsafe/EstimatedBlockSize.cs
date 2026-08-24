@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct EstimatedBlockSize
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct EstimatedBlockSize
-    {
-        public nuint estLitSize;
-        public nuint estBlockSize;
-    }
+    public nuint estLitSize;
+    public nuint estBlockSize;
 }

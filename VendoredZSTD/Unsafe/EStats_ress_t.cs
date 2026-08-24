@@ -1,14 +1,16 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct EStatsRessT
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct EStats_ress_t
-    {
-        /* dictionary */
-        public ZSTD_CDict_s* dict;
-        /* working context */
-        public ZSTD_CCtx_s* zc;
-        /* must be ZSTD_BLOCKSIZE_MAX allocated */
-        public void* workPlace;
-    }
+    /* dictionary */
+    public ZSTD_CDict_s* dict;
+
+    /* working context */
+    public ZSTD_CCtx_s* zc;
+
+    /* must be ZSTD_BLOCKSIZE_MAX allocated */
+    public void* workPlace;
 }

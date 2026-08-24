@@ -1,13 +1,13 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+/* *****************************************
+ *  Implementation of inlined functions
+ *******************************************/
+[StructLayout(LayoutKind.Sequential)]
+public struct FseSymbolCompressionTransform
 {
-    /* *****************************************
-     *  Implementation of inlined functions
-     *******************************************/
-    [StructLayout(LayoutKind.Sequential)]
-    public struct FSE_symbolCompressionTransform
-    {
-        public int deltaFindState;
-        public uint deltaNbBits;
-    }
+    public int deltaFindState;
+    public uint deltaNbBits;
 }

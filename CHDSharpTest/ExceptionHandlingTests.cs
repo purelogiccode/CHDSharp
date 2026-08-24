@@ -1,3 +1,5 @@
+using VendoredZSTD;
+
 namespace CHDSharp.Tests;
 
 [Collection("TestData")]
@@ -118,7 +120,7 @@ public class ExceptionHandlingTests
     public void ChdCodecState_dispose_releases_zstd_decompressor()
     {
         var codec = new ChdCodecState();
-        codec.BZstd = new ZstdSharp.Decompressor();
+        codec.BZstd = new Decompressor();
 
         codec.Dispose();
         Assert.Null(codec.BZstd);

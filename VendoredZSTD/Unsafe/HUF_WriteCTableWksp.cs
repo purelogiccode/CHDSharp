@@ -1,12 +1,12 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct HUF_WriteCTableWksp
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct HUF_WriteCTableWksp
-    {
-        public HUF_CompressWeightsWksp wksp;
-        /* precomputed conversion table */
-        public fixed byte bitsToWeight[13];
-        public fixed byte huffWeight[255];
-    }
+    public HufCompressWeightsWksp wksp;
+    /* precomputed conversion table */
+    public fixed byte bitsToWeight[13];
+    public fixed byte huffWeight[255];
 }

@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct dictItem
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct dictItem
-    {
-        public uint pos;
-        public uint length;
-        public uint savings;
-    }
+    public uint pos;
+    public uint length;
+    public uint savings;
 }

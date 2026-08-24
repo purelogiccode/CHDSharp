@@ -1,20 +1,20 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct seqState_t
 {
+    public BitDStreamT DStream;
+    public ZSTD_fseState stateLL;
+    public ZSTD_fseState stateOffb;
+    public ZSTD_fseState stateML;
+    public _prevOffset_e__FixedBuffer prevOffset;
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct seqState_t
+    public struct _prevOffset_e__FixedBuffer
     {
-        public BIT_DStream_t DStream;
-        public ZSTD_fseState stateLL;
-        public ZSTD_fseState stateOffb;
-        public ZSTD_fseState stateML;
-        public _prevOffset_e__FixedBuffer prevOffset;
-        [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct _prevOffset_e__FixedBuffer
-        {
-            public nuint e0;
-            public nuint e1;
-            public nuint e2;
-        }
+        public nuint e0;
+        public nuint e1;
+        public nuint e2;
     }
 }

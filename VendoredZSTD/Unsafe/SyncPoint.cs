@@ -1,12 +1,12 @@
 using System.Runtime.InteropServices;
-namespace ZstdSharp.Unsafe
+
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct SyncPoint
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct SyncPoint
-    {
-        /* The number of bytes to load from the input. */
-        public nuint toLoad;
-        /* Boolean declaring if we must flush because we found a synchronization point. */
-        public int flush;
-    }
+    /* The number of bytes to load from the input. */
+    public nuint toLoad;
+    /* Boolean declaring if we must flush because we found a synchronization point. */
+    public int flush;
 }

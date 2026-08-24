@@ -1,6 +1,6 @@
 using VendoredFlac;
 using VendoredFlac.Models.FlacDeps;
-using ZstdSharp;
+using VendoredZSTD;
 
 namespace CHDSharp.Models;
 
