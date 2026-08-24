@@ -2074,12 +2074,7 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorStageWrong));
         }
 
-        if (maxWindowSize < min)
-        {
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
-        }
-
-        if (maxWindowSize > max)
+        if (maxWindowSize < min || maxWindowSize > max)
         {
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
         }
@@ -2794,7 +2789,7 @@ public static unsafe partial class Methods
                     someMoreWork = 0;
                     break;
                 default:
-                    assert(0 != 0);
+                    assert(false);
                     return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
@@ -2817,7 +2812,7 @@ public static unsafe partial class Methods
                     return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorNoForwardProgressInputEmpty));
                 }
 
-                assert(0 != 0);
+                assert(false);
             }
         }
         else

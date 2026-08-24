@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using static VendoredZSTD.UnsafeHelper;
 
 namespace VendoredZSTD.Unsafe;
@@ -392,7 +393,7 @@ public static unsafe partial class Methods
 
     private static nuint SizeBlockSequences(SeqDefS* sp, nuint nbSeqs, nuint targetBudget, nuint avgLitCost, nuint avgSeqCost, int firstSubBlock)
     {
-        nuint n, budget = 0, inSize = 0;
+        nuint n, budget = 0;
         /* generous estimate */
         var headerSize = (nuint)firstSubBlock * 120 * 256;
         assert(firstSubBlock is 0 or 1);
@@ -401,7 +402,7 @@ public static unsafe partial class Methods
         if (budget > targetBudget)
             return 1;
 
-        inSize = (nuint)(sp[0].litLength + (sp[0].mlBase + 3));
+        var inSize = (nuint)(sp[0].litLength + (sp[0].mlBase + 3));
         for (n = 1; n < nbSeqs; n++)
         {
             var currentCost = sp[n].litLength * avgLitCost + avgSeqCost;
@@ -421,6 +422,7 @@ public static unsafe partial class Methods
      *  Sub-blocks are all compressed, except the last one when beneficial.
      *  @return : compressed size of the super block (which features multiple ZSTD blocks)
      *            or 0 if it failed to compress. */
+    [SuppressMessage("ReSharper", "RedundantAssignment")]
     private static nuint ZSTD_compressSubBlock_multi(SeqStoreT* seqStorePtr, ZstdCompressedBlockStateT* prevCBlock, ZstdCompressedBlockStateT* nextCBlock, ZstdEntropyCTablesMetadataT* entropyMetadata, ZstdCCtxParamsS* cctxParams, void* dst, nuint dstCapacity, void* src, nuint srcSize, int bmi2, uint lastBlock, void* workspace, nuint wkspSize)
     {
         var sstart = seqStorePtr->sequencesStart;

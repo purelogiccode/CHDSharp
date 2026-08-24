@@ -880,6 +880,7 @@ public static unsafe partial class Methods
         return dstSize;
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private static nuint HUF_decompress1X1_usingDTable_internal(void* dst, nuint dstSize, void* cSrc, nuint cSrcSize, uint* dTable, int flags)
     {
         return HUF_decompress1X1_usingDTable_internal_body(dst, dstSize, cSrc, cSrcSize, dTable);
@@ -1353,9 +1354,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint HUF_decompress4X2_usingDTable_internal_body(void* dst, nuint dstSize, void* cSrc, nuint cSrcSize, uint* dTable)
     {
-        if (cSrcSize < 10)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-        if (dstSize < 6)
+        if (cSrcSize < 10 || dstSize < 6)
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
         {
@@ -1925,6 +1924,7 @@ public static unsafe partial class Methods
         return ((delegate* managed<void*, nuint, void*, nuint, uint*, nuint>)fallbackFn)(dst, dstSize, cSrc, cSrcSize, dTable);
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private static nuint HUF_decompress1X2_usingDTable_internal(void* dst, nuint dstSize, void* cSrc, nuint cSrcSize, uint* dTable, int flags)
     {
         return HUF_decompress1X2_usingDTable_internal_body(dst, dstSize, cSrc, cSrcSize, dTable);
@@ -1958,7 +1958,7 @@ public static unsafe partial class Methods
         return HUF_decompress4X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
     }
 
-    private static readonly AlgoTimeT[][] AlgoTime = new AlgoTimeT[16][]
+    private static readonly AlgoTimeT[][] AlgoTime = new[]
     {
         new AlgoTimeT[]
         {

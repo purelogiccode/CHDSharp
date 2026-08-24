@@ -10,6 +10,7 @@ public struct SeqStateT
     public ZstdFseState stateOffb;
     public ZstdFseState stateML;
     public PrevOffsetEFixedBuffer prevOffset;
+
     [StructLayout(LayoutKind.Sequential)]
     public struct PrevOffsetEFixedBuffer
     {

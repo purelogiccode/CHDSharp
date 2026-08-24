@@ -136,21 +136,22 @@ public static unsafe partial class Methods
         acc->nbEvents -= slice->nbEvents;
     }
 
-    private static readonly void*[] RecordsFs = new void*[4]
+    private static readonly void*[] RecordsFs = new void*[]
     {
-        (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_43),
-        (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_11),
-        (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_5),
-        (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_1)
+        (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_43),
+        (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_11),
+        (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_5),
+        (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_1)
     };
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanHashParams => new uint[4]
+    private static ReadOnlySpan<uint> SpanHashParams => new uint[]
     {
         8,
         9,
         10,
         10
     };
+
     private static uint* HashParams => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanHashParams));
 #else
 
@@ -163,7 +164,7 @@ public static unsafe partial class Methods
         var fpstats = (FpStats*)workspace;
         var p = (sbyte*)blockStart;
         var penalty = 3;
-        nuint pos = 0;
+        nuint pos;
         assert(blockSize == 128 << 10);
         assert(workspace != null);
         assert((nuint)workspace % (nuint)Math.Max(sizeof(uint), sizeof(ulong)) == 0);

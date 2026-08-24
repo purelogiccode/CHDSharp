@@ -492,6 +492,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup XXH64_family */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static XxhErrorcode ZSTD_XXH64_reset(Xxh64StateS* statePtr, ulong seed)
     {
         *statePtr = new Xxh64StateS();
@@ -503,6 +504,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup XXH64_family */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static XxhErrorcode ZSTD_XXH64_update(Xxh64StateS* state, void* input, nuint len)
     {
         if (input == null)

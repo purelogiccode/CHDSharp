@@ -6,6 +6,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
     private static readonly BufferS GNullBuffer = new(start: null, capacity: 0);
+
     private static void ZSTDMT_freeBufferPool(ZstdmtBufferPoolS* bufPool)
     {
         if (bufPool == null)
@@ -413,6 +414,7 @@ public static unsafe partial class Methods
     private static void ZSTDMT_serialState_genSequences(SerialState* serialState, RawSeqStoreT* seqStore, Range src, uint jobId)
     {
         SynchronizationWrapper.Enter(&serialState->mutex);
+        // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
         while (serialState->nextJobID < jobId)
         {
             SynchronizationWrapper.Wait(&serialState->mutex);
@@ -470,6 +472,7 @@ public static unsafe partial class Methods
     }
 
     private static readonly Range KNullRange = new(start: null, size: 0);
+
     /* ZSTDMT_compressionJob() is a POOL_function type */
     private static void ZSTDMT_compressionJob(void* jobDescription)
     {
@@ -658,6 +661,7 @@ public static unsafe partial class Methods
     }
 
     private static readonly RoundBuffT KNullRoundBuff = new(buffer: null, capacity: 0, pos: 0);
+
     private static void ZSTDMT_freeJobsTable(ZstdmtJobDescription* jobTable, uint nbJobs, ZstdCustomMem cMem)
     {
         uint jobNb;
@@ -722,6 +726,7 @@ public static unsafe partial class Methods
 
     /* ZSTDMT_CCtxParam_setNbWorkers():
      * Internal use only */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static nuint ZSTDMT_CCtxParam_setNbWorkers(ZstdCCtxParamsS* @params, uint nbWorkers)
     {
         return ZSTD_CCtxParams_setParameter(@params, ZstdCParameter.ZstdCNbWorkers, (int)nbWorkers);
@@ -819,6 +824,7 @@ public static unsafe partial class Methods
         }
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static nuint ZSTDMT_freeCCtx(ZstdmtCCtxS* mtctx)
     {
         if (mtctx == null)
@@ -1523,11 +1529,7 @@ public static unsafe partial class Methods
         nuint pos;
         syncPoint.toLoad = input.size - input.pos < mtctx->targetSectionSize - mtctx->inBuff.filled ? input.size - input.pos : mtctx->targetSectionSize - mtctx->inBuff.filled;
         syncPoint.flush = 0;
-        if (mtctx->@params.rsyncable == 0)
-            return syncPoint;
-        if (mtctx->inBuff.filled + input.size - input.pos < 1 << 17)
-            return syncPoint;
-        if (mtctx->inBuff.filled + syncPoint.toLoad < 32)
+        if (mtctx->@params.rsyncable == 0 || mtctx->inBuff.filled + input.size - input.pos < 1 << 17 || mtctx->inBuff.filled + syncPoint.toLoad < 32)
             return syncPoint;
 
         if (mtctx->inBuff.filled < 1 << 17)

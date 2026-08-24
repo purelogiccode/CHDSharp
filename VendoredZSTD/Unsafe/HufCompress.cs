@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using static VendoredZSTD.UnsafeHelper;
 
@@ -760,6 +761,7 @@ public static unsafe partial class Methods
      * Initializes the bitstream.
      * @returns 0 or an error code.
      */
+    // ReSharper disable once RedundantAssignment
     private static nuint HUF_initCStream(ref HufCStreamT bitC, void* startPtr, nuint dstCapacity)
     {
         bitC = new HufCStreamT
@@ -797,6 +799,7 @@ public static unsafe partial class Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [InlineMethod.Inline]
+    [SuppressMessage("ReSharper", "RedundantAssignment")]
     private static void HUF_zeroIndex1(ref nuint bitCBitContainerE1, ref nuint bitCBitPosE1)
     {
         bitCBitContainerE1 = 0;
@@ -1031,6 +1034,7 @@ public static unsafe partial class Methods
         return HUF_closeCStream(ref bitC);
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private static nuint HUF_compress1X_usingCTable_internal(void* dst, nuint dstSize, void* src, nuint srcSize, nuint* cTable, int flags)
     {
         return HUF_compress1X_usingCTable_internal_body(dst, dstSize, src, srcSize, cTable);
@@ -1244,12 +1248,14 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         if (huffLog > 12)
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
-        if (maxSymbolValue > 255)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
 
-        if (maxSymbolValue == 0)
+        switch (maxSymbolValue)
         {
-            maxSymbolValue = 255;
+            case > 255:
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
+            case 0:
+                maxSymbolValue = 255;
+                break;
         }
 
         if (huffLog == 0)

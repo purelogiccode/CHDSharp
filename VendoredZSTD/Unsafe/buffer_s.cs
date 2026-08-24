@@ -9,6 +9,7 @@ public unsafe struct BufferS
 {
     public void* start;
     public nuint capacity;
+
     public BufferS(void* start, nuint capacity)
     {
         this.start = start;

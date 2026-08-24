@@ -545,7 +545,6 @@ public static unsafe partial class Methods
                 {
                     FASTCOVER_tryParameters(data);
                 }
-
             }
 
             COVER_best_wait(&best);

@@ -756,7 +756,7 @@ public static unsafe partial class Methods
         private static readonly uint* dec32table = GetArrayPointer(new uint[8] { 0, 1, 2, 1, 4, 4, 4, 4 });
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<int> SpanDec64Table => new int[]
+    private static ReadOnlySpan<int> SpanDec64Table => new[]
     {
         8,
         8,

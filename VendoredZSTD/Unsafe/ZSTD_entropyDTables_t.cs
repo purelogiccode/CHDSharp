@@ -8,10 +8,13 @@ public unsafe struct ZstdEntropyDTablesT
 {
     /* Note : Space reserved for FSE Tables */
     public LlTableEFixedBuffer LLTable;
+
     /* is also used as temporary workspace while building hufTable during DDict creation */
     public OfTableEFixedBuffer OFTable;
+
     /* and therefore must be at least HUF_DECOMPRESS_WORKSPACE_SIZE large */
     public MlTableEFixedBuffer MLTable;
+
     /* can accommodate HUF_decompress4X */
     public fixed uint hufTable[4097];
     public fixed uint rep[3];

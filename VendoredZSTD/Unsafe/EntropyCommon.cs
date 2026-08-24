@@ -211,9 +211,9 @@ public static unsafe partial class Methods
      * Same as FSE_readNCount() but pass bmi2=1 when your CPU supports BMI2 and 0 otherwise.
      */
     private static nuint FSE_readNCount_bmi2(short* normalizedCounter, uint* maxSvPtr, uint* tableLogPtr,
+        // ReSharper disable once UnusedParameter.Local
         void* headerBuffer, nuint hbSize, int bmi2)
     {
-        // ReSharper disable once UnusedParameter
         return FSE_readNCount_body_default(normalizedCounter, maxSvPtr, tableLogPtr, headerBuffer, hbSize);
     }
 
@@ -328,9 +328,9 @@ public static unsafe partial class Methods
     }
 
     private static nuint HUF_readStats_wksp(byte* huffWeight, nuint hwSize, uint* rankStats, uint* nbSymbolsPtr, uint* tableLogPtr,
+        // ReSharper disable once UnusedParameter.Local
         void* src, nuint srcSize, void* workSpace, nuint wkspSize, int flags)
     {
-        // ReSharper disable once UnusedParameter
         return HUF_readStats_body_default(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, workSpace, wkspSize);
     }
 }

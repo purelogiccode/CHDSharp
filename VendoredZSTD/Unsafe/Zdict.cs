@@ -422,9 +422,7 @@ public static unsafe partial class Methods
         /* The final dictionary content must be at least as large as the largest repcode */
         nuint minContentSize = ZDICT_maxRep(RepStartValue);
         nuint paddingSize;
-        if (dictBufferCapacity < dictContentSize)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
-        if (dictBufferCapacity < 256)
+        if (dictBufferCapacity < dictContentSize || dictBufferCapacity < 256)
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         MEM_writeLE32(header, 0xEC30A437);

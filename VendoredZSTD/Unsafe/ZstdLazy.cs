@@ -633,6 +633,7 @@ public static unsafe partial class Methods
         return hashTable[ZSTD_hashPtr(ip, hashLog, mls)];
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static uint ZSTD_insertAndFindFirstIndex(ZstdMatchStateT* ms, byte* ip)
     {
         var cParams = &ms->cParams;
@@ -964,10 +965,13 @@ public static unsafe partial class Methods
 #if NET9_0_OR_GREATER
             if (AdvSimd.Arm64.IsSupported)
             {
-                if (rowEntries == 32)
-                    return 2;
-                if (rowEntries == 64)
-                    return 1;
+                switch (rowEntries)
+                {
+                    case 32:
+                        return 2;
+                    case 64:
+                        return 1;
+                }
             }
 #endif
         }
@@ -1060,40 +1064,40 @@ public static unsafe partial class Methods
                 }
                 case 32:
 #if NET9_0_OR_GREATER
-                if (AdvSimd.Arm64.IsSupported)
-                {
-                    /* Same idea as with rowEntries == 16 but doing AND with
-                     * 0x55 = 0b01010101.
-                     */
-                    (var chunk0, var chunk1) = AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)tagRow);
-                    var dup = AdvSimd.DuplicateToVector128(tag);
-                    var t0 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk0.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
-                    var t1 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk1.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
-                    var res = AdvSimd.ShiftLeftAndInsert(t0, t1, 4);
-                    var matches = res.As<byte, ulong>().GetElement(0);
-                    return BitOperations.RotateRight(matches, (int)headGrouped) & 0x5555555555555555;
-                }
+                    if (AdvSimd.Arm64.IsSupported)
+                    {
+                        /* Same idea as with rowEntries == 16 but doing AND with
+                         * 0x55 = 0b01010101.
+                         */
+                        var (chunk0, chunk1) = AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)tagRow);
+                        var dup = AdvSimd.DuplicateToVector128(tag);
+                        var t0 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk0.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
+                        var t1 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk1.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
+                        var res = AdvSimd.ShiftLeftAndInsert(t0, t1, 4);
+                        var matches = res.As<byte, ulong>().GetElement(0);
+                        return BitOperations.RotateRight(matches, (int)headGrouped) & 0x5555555555555555;
+                    }
 #endif
                     break;
                 default: /* rowEntries == 64 */
 #if NET9_0_OR_GREATER
-                if (AdvSimd.Arm64.IsSupported)
-                {
-                    (var chunk0, var chunk1, var chunk2, var chunk3) = AdvSimd.Arm64.Load4xVector128AndUnzip(tagRow);
-                    var dup = AdvSimd.DuplicateToVector128(tag);
-                    var cmp0 = AdvSimd.CompareEqual(chunk0, dup);
-                    var cmp1 = AdvSimd.CompareEqual(chunk1, dup);
-                    var cmp2 = AdvSimd.CompareEqual(chunk2, dup);
-                    var cmp3 = AdvSimd.CompareEqual(chunk3, dup);
+                    if (AdvSimd.Arm64.IsSupported)
+                    {
+                        var (chunk0, chunk1, chunk2, chunk3) = AdvSimd.Arm64.Load4xVector128AndUnzip(tagRow);
+                        var dup = AdvSimd.DuplicateToVector128(tag);
+                        var cmp0 = AdvSimd.CompareEqual(chunk0, dup);
+                        var cmp1 = AdvSimd.CompareEqual(chunk1, dup);
+                        var cmp2 = AdvSimd.CompareEqual(chunk2, dup);
+                        var cmp3 = AdvSimd.CompareEqual(chunk3, dup);
 
-                    var t0 = AdvSimd.ShiftRightAndInsert(cmp1, cmp0, 1);
-                    var t1 = AdvSimd.ShiftRightAndInsert(cmp3, cmp2, 1);
-                    var t2 = AdvSimd.ShiftRightAndInsert(t1, t0, 2);
-                    var t3 = AdvSimd.ShiftRightAndInsert(t2, t2, 4);
-                    var t4 = AdvSimd.ShiftRightLogicalNarrowingLower(t3.As<byte, ushort>(), 4);
-                    var matches = t4.As<byte, ulong>().GetElement(0);
-                    return BitOperations.RotateRight(matches, (int) headGrouped);
-                }
+                        var t0 = AdvSimd.ShiftRightAndInsert(cmp1, cmp0, 1);
+                        var t1 = AdvSimd.ShiftRightAndInsert(cmp3, cmp2, 1);
+                        var t2 = AdvSimd.ShiftRightAndInsert(t1, t0, 2);
+                        var t3 = AdvSimd.ShiftRightAndInsert(t2, t2, 4);
+                        var t4 = AdvSimd.ShiftRightLogicalNarrowingLower(t3.As<byte, ushort>(), 4);
+                        var matches = t4.As<byte, ulong>().GetElement(0);
+                        return BitOperations.RotateRight(matches, (int)headGrouped);
+                    }
 #endif
                     break;
             }
@@ -1359,20 +1363,24 @@ public static unsafe partial class Methods
                     for (; matches > 0 && nbAttempts > 0; matches &= matches - 1)
                     {
                         var matchPos = ((headGrouped + ZSTD_VecMask_next(matches)) / groupWidth) & rowMask;
-                        var matchIndex = dmsRow[matchPos];
-                        if (matchPos == 0)
-                            continue;
-
-                        if (matchIndex < dmsLowestIndex)
-                            break;
-#if NETCOREAPP3_0_OR_GREATER
-                        if (Sse.IsSupported)
+                        if (dmsRow != null)
                         {
-                            Sse.Prefetch0(dmsBase + matchIndex);
-                        }
+                            var matchIndex = dmsRow[matchPos];
+                            if (matchPos == 0)
+                                continue;
+
+                            if (matchIndex < dmsLowestIndex)
+                                break;
+#if NETCOREAPP3_0_OR_GREATER
+                            if (Sse.IsSupported)
+                            {
+                                Sse.Prefetch0(dmsBase + matchIndex);
+                            }
 #endif
 
-                        matchBuffer[numMatches++] = matchIndex;
+                            matchBuffer[numMatches++] = matchIndex;
+                        }
+
                         --nbAttempts;
                     }
 
@@ -1839,20 +1847,16 @@ public static unsafe partial class Methods
         {
             case ZstdDictModeE.ZstdNoDict when searchMethod == SearchMethodE.SearchRowHash:
             {
-                if (mls == 4)
+                switch (mls)
                 {
-                    if (rowLog == 4)
+                    case 4 when rowLog == 4:
                         return ZSTD_RowFindBestMatch_noDict_4_4(ms, ip, iend, offsetPtr);
-
-                    return rowLog == 5 ? ZSTD_RowFindBestMatch_noDict_4_5(ms, ip, iend, offsetPtr) : ZSTD_RowFindBestMatch_noDict_4_6(ms, ip, iend, offsetPtr);
-                }
-
-                if (mls == 5)
-                {
-                    if (rowLog == 4)
+                    case 4:
+                        return rowLog == 5 ? ZSTD_RowFindBestMatch_noDict_4_5(ms, ip, iend, offsetPtr) : ZSTD_RowFindBestMatch_noDict_4_6(ms, ip, iend, offsetPtr);
+                    case 5 when rowLog == 4:
                         return ZSTD_RowFindBestMatch_noDict_5_4(ms, ip, iend, offsetPtr);
-
-                    return rowLog == 5 ? ZSTD_RowFindBestMatch_noDict_5_5(ms, ip, iend, offsetPtr) : ZSTD_RowFindBestMatch_noDict_5_6(ms, ip, iend, offsetPtr);
+                    case 5:
+                        return rowLog == 5 ? ZSTD_RowFindBestMatch_noDict_5_5(ms, ip, iend, offsetPtr) : ZSTD_RowFindBestMatch_noDict_5_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (rowLog == 4)

@@ -294,8 +294,8 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint ZSTD_noCompressBlock(void* dst, nuint dstCapacity, void* src, nuint srcSize, uint lastBlock)
     {
-        var bt = (uint)BlockTypeE.BtRaw;
-        var cBlockHeader24 = lastBlock + (bt << 1) + (uint)(srcSize << 3);
+        const uint bt = (uint)BlockTypeE.BtRaw;
+        var cBlockHeader24 = lastBlock + (bt * 2) + (uint)(srcSize << 3);
         if (srcSize + ZstdBlockHeaderSize > dstCapacity)
         {
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));

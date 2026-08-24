@@ -26,6 +26,7 @@ public static unsafe partial class Methods
         return POOL_create_advanced(numThreads, queueSize, ZstdDefaultCMem);
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private static void* POOL_create_advanced(nuint numThreads, nuint queueSize, ZstdCustomMem customMem)
     {
         var jobThreadPool = new JobThreadPool((int)numThreads, (int)queueSize);

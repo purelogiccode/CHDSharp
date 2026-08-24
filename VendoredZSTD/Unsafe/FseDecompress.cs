@@ -269,9 +269,9 @@ public static unsafe partial class Methods
     }
 
     private static nuint FSE_decompress_wksp_bmi2(void* dst, nuint dstCapacity, void* cSrc, nuint cSrcSize, uint maxLog,
+        // ReSharper disable once UnusedParameter.Local
         void* workSpace, nuint wkspSize, int bmi2)
     {
-        // ReSharper disable once UnusedParameter
         return FSE_decompress_wksp_body_default(dst, dstCapacity, cSrc, cSrcSize, maxLog, workSpace, wkspSize);
     }
 }

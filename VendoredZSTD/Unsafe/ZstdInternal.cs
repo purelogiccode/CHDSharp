@@ -23,11 +23,11 @@ public static unsafe partial class Methods
 
         private static readonly uint* repStartValue = GetArrayPointer(new uint[3] { 1, 4, 8 });
 #endif
-    private static readonly nuint* ZstdFcsFieldSize = GetArrayPointer(new nuint[4] { 0, 2, 4, 8 });
-    private static readonly nuint* ZstdDidFieldSize = GetArrayPointer(new nuint[4] { 0, 1, 2, 4 });
+    private static readonly nuint* ZstdFcsFieldSize = GetArrayPointer(new nuint[] { 0, 2, 4, 8 });
+    private static readonly nuint* ZstdDidFieldSize = GetArrayPointer(new nuint[] { 0, 1, 2, 4 });
     private const uint ZstdBlockHeaderSize = 3;
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> SpanLlBits => new byte[36]
+    private static ReadOnlySpan<byte> SpanLlBits => new byte[]
     {
         0,
         0,
@@ -73,7 +73,7 @@ public static unsafe partial class Methods
         private static readonly byte* LL_bits = GetArrayPointer(new byte[36] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<short> SpanLlDefaultNorm => new short[36]
+    private static ReadOnlySpan<short> SpanLlDefaultNorm => new short[]
     {
         4,
         3,
@@ -183,7 +183,7 @@ public static unsafe partial class Methods
         private static readonly byte* ML_bits = GetArrayPointer(new byte[53] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<short> SpanMlDefaultNorm => new short[53]
+    private static ReadOnlySpan<short> SpanMlDefaultNorm => new short[]
     {
         1,
         4,
@@ -247,7 +247,7 @@ public static unsafe partial class Methods
 #endif
     private const uint MlDefaultNormLog = 6;
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<short> SpanOfDefaultNorm => new short[29]
+    private static ReadOnlySpan<short> SpanOfDefaultNorm => new short[]
     {
         1,
         1,

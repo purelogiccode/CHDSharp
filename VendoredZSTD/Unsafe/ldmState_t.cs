@@ -9,7 +9,9 @@ public unsafe struct LdmStateT
     /* State for the window round buffer management */
     public ZstdWindowT window;
     public LdmEntryT* hashTable;
+
     public uint loadedDictEnd;
+
     /* Next position in bucket to insert entry */
     public byte* bucketOffsets;
     public SplitIndicesEFixedBuffer splitIndices;

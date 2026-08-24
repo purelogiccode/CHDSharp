@@ -8,10 +8,13 @@ public struct ZstdOptLdmT
 {
     /* External match candidates store for this block */
     public RawSeqStoreT seqStore;
+
     /* Start position of the current match candidate */
     public uint startPosInBlock;
+
     /* End position of the current match candidate */
     public uint endPosInBlock;
+
     /* Offset of the match candidate */
     public uint offset;
 }

@@ -45,6 +45,7 @@ public enum ZstdErrorCode
     ZstdErrorDstBufferNull = 74,
     ZstdErrorNoForwardProgressDestFull = 80,
     ZstdErrorNoForwardProgressInputEmpty = 82,
+
     /* following error codes are __NOT STABLE__, they can be removed or changed in future versions */
     ZstdErrorFrameIndexTooLarge = 100,
     ZstdErrorSeekableIo = 102,
@@ -52,6 +53,7 @@ public enum ZstdErrorCode
     ZstdErrorSrcBufferWrong = 105,
     ZstdErrorSequenceProducerFailed = 106,
     ZstdErrorExternalSequencesInvalid = 107,
+
     /* never EVER use this value directly, it can change in future versions! Use ZSTD_isError() instead */
     ZstdErrorMaxCode = 120
 }

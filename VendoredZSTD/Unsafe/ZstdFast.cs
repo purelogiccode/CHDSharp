@@ -573,7 +573,7 @@ public static unsafe partial class Methods
                 }
 
                 ip0 = ip1;
-                ip1 = ip1 + step;
+                ip1 += step;
                 if (ip1 > ilimit)
                     goto _cleanup;
 
@@ -693,7 +693,7 @@ public static unsafe partial class Methods
         byte* match0;
         nuint mLength;
         /* initialize to avoid warning, assert != 0 later */
-        byte* matchEnd = null;
+        byte* matchEnd;
         const nuint kStepIncr = 1 << (8 - 1);
         if (prefixStartIndex == lowLimit)
             return ZSTD_compressBlock_fast(ms, seqStore, rep, src, srcSize);
@@ -756,7 +756,7 @@ public static unsafe partial class Methods
                     mLength = ip0[-1] == match0[-1] ? 1U : 0U;
                     ip0 -= mLength;
                     match0 -= mLength;
-                    assert(1 >= 1);
+                    assert(true);
                     assert(1 <= 3);
                     offcode = 1;
                     mLength += 4;

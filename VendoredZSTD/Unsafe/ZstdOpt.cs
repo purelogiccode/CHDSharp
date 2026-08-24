@@ -91,7 +91,7 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanBaseLLfreqs => new uint[36]
+    private static ReadOnlySpan<uint> SpanBaseLLfreqs => new uint[]
     {
         4,
         2,
@@ -130,13 +130,14 @@ public static unsafe partial class Methods
         1,
         1
     };
+
     private static uint* BaseLLfreqs => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanBaseLLfreqs));
 #else
 
         private static readonly uint* baseLLfreqs = GetArrayPointer(new uint[36] { 4, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanBaseOfCfreqs => new uint[32]
+    private static ReadOnlySpan<uint> SpanBaseOfCfreqs => new uint[]
     {
         6,
         2,
@@ -171,6 +172,7 @@ public static unsafe partial class Methods
         1,
         1
     };
+
     private static uint* BaseOfCfreqs => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanBaseOfCfreqs));
 #else
 
@@ -667,14 +669,14 @@ public static unsafe partial class Methods
                 {
                     var repMatch = dictMode == ZstdDictModeE.ZstdDictMatchState ? dmsBase + repIndex - dmsIndexDelta : dictBase + repIndex;
                     assert(curr >= windowLow);
-                    if (dictMode == ZstdDictModeE.ZstdExtDict && ((repOffset - 1 < curr - windowLow ? 1 : 0) & ZSTD_index_overlap_check(dictLimit, repIndex)) != 0 && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch))
+                    switch (dictMode)
                     {
-                        repLen = (uint)ZSTD_count_2segments(ip + minMatch, repMatch + minMatch, iLimit, dictEnd, prefixStart) + minMatch;
-                    }
-
-                    if (dictMode == ZstdDictModeE.ZstdDictMatchState && ((repOffset - 1 < curr - (dmsLowLimit + dmsIndexDelta) ? 1 : 0) & ZSTD_index_overlap_check(dictLimit, repIndex)) != 0 && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch))
-                    {
-                        repLen = (uint)ZSTD_count_2segments(ip + minMatch, repMatch + minMatch, iLimit, dmsEnd, prefixStart) + minMatch;
+                        case ZstdDictModeE.ZstdExtDict when ((repOffset - 1 < curr - windowLow ? 1 : 0) & ZSTD_index_overlap_check(dictLimit, repIndex)) != 0 && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch):
+                            repLen = (uint)ZSTD_count_2segments(ip + minMatch, repMatch + minMatch, iLimit, dictEnd, prefixStart) + minMatch;
+                            break;
+                        case ZstdDictModeE.ZstdDictMatchState when ((repOffset - 1 < curr - (dmsLowLimit + dmsIndexDelta) ? 1 : 0) & ZSTD_index_overlap_check(dictLimit, repIndex)) != 0 && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch):
+                            repLen = (uint)ZSTD_count_2segments(ip + minMatch, repMatch + minMatch, iLimit, dmsEnd, prefixStart) + minMatch;
+                            break;
                     }
                 }
 
@@ -943,23 +945,23 @@ public static unsafe partial class Methods
         return ZSTD_btGetAllMatches_internal(matches, ms, nextToUpdate3, ip, iHighLimit, rep, ll0, lengthToBeat, ZstdDictModeE.ZstdDictMatchState, 6);
     }
 
-    private static readonly ZstdGetAllMatchesFn[][] GetAllMatchesFns = new ZstdGetAllMatchesFn[3][]
+    private static readonly ZstdGetAllMatchesFn[][] GetAllMatchesFns = new[]
     {
-        new ZstdGetAllMatchesFn[4]
+        new ZstdGetAllMatchesFn[]
         {
             ZSTD_btGetAllMatches_noDict_3,
             ZSTD_btGetAllMatches_noDict_4,
             ZSTD_btGetAllMatches_noDict_5,
             ZSTD_btGetAllMatches_noDict_6
         },
-        new ZstdGetAllMatchesFn[4]
+        new ZstdGetAllMatchesFn[]
         {
             ZSTD_btGetAllMatches_extDict_3,
             ZSTD_btGetAllMatches_extDict_4,
             ZSTD_btGetAllMatches_extDict_5,
             ZSTD_btGetAllMatches_extDict_6
         },
-        new ZstdGetAllMatchesFn[4]
+        new ZstdGetAllMatchesFn[]
         {
             ZSTD_btGetAllMatches_dictMatchState_3,
             ZSTD_btGetAllMatches_dictMatchState_4,
@@ -967,6 +969,7 @@ public static unsafe partial class Methods
             ZSTD_btGetAllMatches_dictMatchState_6
         }
     };
+
     private static ZstdGetAllMatchesFn ZSTD_selectBtGetAllMatches(ZstdMatchStateT* ms, ZstdDictModeE dictMode)
     {
         var mls = ms->cParams.minMatch <= 3 ? 3 : ms->cParams.minMatch <= 6 ? ms->cParams.minMatch : 6;
@@ -1124,7 +1127,7 @@ public static unsafe partial class Methods
         ip += ip == prefixStart ? 1 : 0;
         while (ip < ilimit)
         {
-            uint cur, lastPos = 0;
+            uint cur, lastPos;
             {
                 var litlen = (uint)(ip - anchor);
                 var ll0 = litlen == 0 ? 1U : 0U;
@@ -1284,7 +1287,7 @@ public static unsafe partial class Methods
                                 {
                                     lastPos++;
                                     opt[lastPos].price = 1 << 30;
-                                    opt[lastPos].litlen = 0 == 0 ? 1U : 0U;
+                                    opt[lastPos].litlen = 1U;
                                 }
 
                                 opt[pos].mlen = mlen;
@@ -1334,7 +1337,7 @@ public static unsafe partial class Methods
 
             {
                 var storeEnd = cur + 2;
-                var storeStart = storeEnd;
+                uint storeStart;
                 var stretchPos = cur;
                 assert(storeEnd < (1 << 12) + 3);
                 if (lastStretch.litlen > 0)

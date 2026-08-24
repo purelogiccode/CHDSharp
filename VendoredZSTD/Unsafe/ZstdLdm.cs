@@ -161,7 +161,7 @@ public static unsafe partial class Methods
         {
             if (@params->hashLog > 0)
             {
-                assert(@params->hashLog <= (uint)((sizeof(nuint) == 4 ? 30 : 31) < 30 ? sizeof(nuint) == 4 ? 30 : 31 : 30));
+                assert(@params->hashLog <= (uint)(30));
                 if (@params->windowLog > @params->hashLog)
                 {
                     @params->hashRateLog = @params->windowLog - @params->hashLog;
@@ -176,7 +176,7 @@ public static unsafe partial class Methods
 
         if (@params->hashLog == 0)
         {
-            @params->hashLog = @params->windowLog - @params->hashRateLog <= 6 ? 6 : @params->windowLog - @params->hashRateLog <= (uint)((sizeof(nuint) == 4 ? 30 : 31) < 30 ? sizeof(nuint) == 4 ? 30 : 31 : 30) ? @params->windowLog - @params->hashRateLog : (uint)((sizeof(nuint) == 4 ? 30 : 31) < 30 ? sizeof(nuint) == 4 ? 30 : 31 : 30);
+            @params->hashLog = @params->windowLog - @params->hashRateLog <= 6 ? 6 : @params->windowLog - @params->hashRateLog <= (uint)(30) ? @params->windowLog - @params->hashRateLog : (uint)(30);
         }
 
         if (@params->minMatchLength == 0)
@@ -277,6 +277,7 @@ public static unsafe partial class Methods
      *
      *  The tables for the other strategies are filled within their
      *  block compressors. */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static nuint ZSTD_ldm_fillFastTables(ZstdMatchStateT* ms, void* end)
     {
         var iend = (byte*)end;
@@ -297,7 +298,7 @@ public static unsafe partial class Methods
             case ZstdStrategy.ZstdBtultra2:
                 break;
             default:
-                assert(0 != 0);
+                assert(false);
                 break;
         }
 
