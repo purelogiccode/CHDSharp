@@ -243,7 +243,7 @@ public static unsafe partial class Methods
                 mLength = ip0[-1] == match0[-1] ? 1U : 0U;
                 ip0 -= mLength;
                 match0 -= mLength;
-                assert(1 >= 1);
+                assert(true);
                 assert(1 <= 3);
                 offcode = 1;
                 mLength += 4;
@@ -295,8 +295,8 @@ public static unsafe partial class Methods
 
                 nextStep += kStepIncr;
             }
-        }
-        while (ip3 < ilimit);
+        } while (ip3 < ilimit);
+
         _cleanup:
         offsetSaved2 = offsetSaved1 != 0 && repOffset1 != 0 ? offsetSaved1 : offsetSaved2;
         rep[0] = repOffset1 != 0 ? repOffset1 : offsetSaved1;
@@ -335,14 +335,12 @@ public static unsafe partial class Methods
                     var rLength = ZSTD_count(ip0 + 4, ip0 + 4 - repOffset2, iend) + 4;
                     {
                         /* swap rep_offset2 <=> rep_offset1 */
-                        var tmpOff = repOffset2;
-                        repOffset2 = repOffset1;
-                        repOffset1 = tmpOff;
+                        (repOffset2, repOffset1) = (repOffset1, repOffset2);
                     }
 
                     hashTable[ZSTD_hashPtr(ip0, hlog, mls)] = (uint)(ip0 - @base);
                     ip0 += rLength;
-                    assert(1 >= 1);
+                    assert(true);
                     assert(1 <= 3);
                     ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, rLength);
                     anchor = ip0;
@@ -513,7 +511,7 @@ public static unsafe partial class Methods
                     var repMatchEnd = repIndex < prefixStartIndex ? dictEnd : iend;
                     mLength = ZSTD_count_2segments(ip0 + 1 + 4, repMatch + 4, iend, repMatchEnd, prefixStart) + 4;
                     ip0++;
-                    assert(1 >= 1);
+                    assert(true);
                     assert(1 <= 3);
                     ZSTD_storeSeq(seqStore, (nuint)(ip0 - anchor), anchor, iend, 1, mLength);
                     break;
@@ -601,10 +599,8 @@ public static unsafe partial class Methods
                         var repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                         var repLength2 = ZSTD_count_2segments(ip0 + 4, repMatch2 + 4, iend, repEnd2, prefixStart) + 4;
                         /* swap offset_2 <=> offset_1 */
-                        var tmpOffset = offset2;
-                        offset2 = offset1;
-                        offset1 = tmpOffset;
-                        assert(1 >= 1);
+                        (offset2, offset1) = (offset1, offset2);
+                        assert(true);
                         assert(1 <= 3);
                         ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, repLength2);
                         hashTable[ZSTD_hashPtr(ip0, hlog, mls)] = current2;
@@ -814,8 +810,8 @@ public static unsafe partial class Methods
 
                 nextStep += kStepIncr;
             }
-        }
-        while (ip3 < ilimit);
+        } while (ip3 < ilimit);
+
         _cleanup:
         offsetSaved2 = offsetSaved1 != 0 && offset1 != 0 ? offsetSaved1 : offsetSaved2;
         rep[0] = offset1 != 0 ? offset1 : offsetSaved1;
@@ -867,12 +863,10 @@ public static unsafe partial class Methods
                     var repLength2 = ZSTD_count_2segments(ip0 + 4, repMatch2 + 4, iend, repEnd2, prefixStart) + 4;
                     {
                         /* swap offset_2 <=> offset_1 */
-                        var tmpOffset = offset2;
-                        offset2 = offset1;
-                        offset1 = tmpOffset;
+                        (offset2, offset1) = (offset1, offset2);
                     }
 
-                    assert(1 >= 1);
+                    assert(true);
                     assert(1 <= 3);
                     ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, repLength2);
                     hashTable[ZSTD_hashPtr(ip0, hlog, mls)] = (uint)(ip0 - @base);

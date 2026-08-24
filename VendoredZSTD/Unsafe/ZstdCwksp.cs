@@ -105,7 +105,7 @@ public static unsafe partial class Methods
     {
         var endPtr = (sbyte*)ws->workspaceEnd;
         assert(ZSTD_isPower2(64) != 0);
-        endPtr = endPtr - (nuint)endPtr % 64;
+        endPtr -= (nuint)endPtr % 64;
         return endPtr;
     }
 
@@ -254,7 +254,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void* ZSTD_cwksp_reserve_table(ZstdCwksp* ws, nuint bytes)
     {
-        var phase = ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce;
+        const ZstdCwkspAllocPhaseE phase = ZstdCwkspAllocPhaseE.ZstdCwkspAllocAlignedInitOnce;
         if (ws->phase < phase)
         {
             if (ERR_isError(ZSTD_cwksp_internal_advance_phase(ws, phase)))

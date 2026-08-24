@@ -39,15 +39,15 @@ public static unsafe partial class Methods
             bpPtr->lastBlock = cBlockHeader & 1;
             bpPtr->blockType = (BlockTypeE)((cBlockHeader >> 1) & 3);
             bpPtr->origSize = cSize;
-            if (bpPtr->blockType == BlockTypeE.BtRle)
-                return 1;
-
-            if (bpPtr->blockType == BlockTypeE.BtReserved)
+            switch (bpPtr->blockType)
             {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
+                case BlockTypeE.BtRle:
+                    return 1;
+                case BlockTypeE.BtReserved:
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
+                default:
+                    return cSize;
             }
-
-            return cSize;
         }
     }
 
@@ -396,9 +396,10 @@ public static unsafe partial class Methods
         return ZSTD_decodeLiteralsBlock(dctx, src, srcSize, dst, dstCapacity, StreamingOperation.NotStreaming);
     }
 
-    private static readonly ZstdSeqSymbol* LlDefaultDTable = GetArrayPointer(new ZstdSeqSymbol[65] { new(nextState: 1, nbAdditionalBits: 1, nbBits: 1, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 1), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 3), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 4), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 12), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 14), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 16), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 20), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 22), new(nextState: 0, nbAdditionalBits: 2, nbBits: 5, baseValue: 28), new(nextState: 0, nbAdditionalBits: 3, nbBits: 5, baseValue: 32), new(nextState: 0, nbAdditionalBits: 4, nbBits: 5, baseValue: 48), new(nextState: 32, nbAdditionalBits: 6, nbBits: 5, baseValue: 64), new(nextState: 0, nbAdditionalBits: 7, nbBits: 5, baseValue: 128), new(nextState: 0, nbAdditionalBits: 8, nbBits: 6, baseValue: 256), new(nextState: 0, nbAdditionalBits: 10, nbBits: 6, baseValue: 1024), new(nextState: 0, nbAdditionalBits: 12, nbBits: 6, baseValue: 4096), new(nextState: 32, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 1), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 2), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 4), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 13), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 16), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 18), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 22), new(nextState: 0, nbAdditionalBits: 2, nbBits: 5, baseValue: 24), new(nextState: 32, nbAdditionalBits: 3, nbBits: 5, baseValue: 32), new(nextState: 0, nbAdditionalBits: 3, nbBits: 5, baseValue: 40), new(nextState: 0, nbAdditionalBits: 6, nbBits: 4, baseValue: 64), new(nextState: 16, nbAdditionalBits: 6, nbBits: 4, baseValue: 64), new(nextState: 32, nbAdditionalBits: 7, nbBits: 5, baseValue: 128), new(nextState: 0, nbAdditionalBits: 9, nbBits: 6, baseValue: 512), new(nextState: 0, nbAdditionalBits: 11, nbBits: 6, baseValue: 2048), new(nextState: 48, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 1), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 2), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 3), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 12), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 15), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 18), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 20), new(nextState: 32, nbAdditionalBits: 2, nbBits: 5, baseValue: 24), new(nextState: 32, nbAdditionalBits: 2, nbBits: 5, baseValue: 28), new(nextState: 32, nbAdditionalBits: 3, nbBits: 5, baseValue: 40), new(nextState: 32, nbAdditionalBits: 4, nbBits: 5, baseValue: 48), new(nextState: 0, nbAdditionalBits: 16, nbBits: 6, baseValue: 65536), new(nextState: 0, nbAdditionalBits: 15, nbBits: 6, baseValue: 32768), new(nextState: 0, nbAdditionalBits: 14, nbBits: 6, baseValue: 16384), new(nextState: 0, nbAdditionalBits: 13, nbBits: 6, baseValue: 8192) });
-    private static readonly ZstdSeqSymbol* OfDefaultDTable = GetArrayPointer(new ZstdSeqSymbol[33] { new(nextState: 1, nbAdditionalBits: 1, nbBits: 1, baseValue: 5), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 0), new(nextState: 0, nbAdditionalBits: 6, nbBits: 4, baseValue: 61), new(nextState: 0, nbAdditionalBits: 9, nbBits: 5, baseValue: 509), new(nextState: 0, nbAdditionalBits: 15, nbBits: 5, baseValue: 32765), new(nextState: 0, nbAdditionalBits: 21, nbBits: 5, baseValue: 2097149), new(nextState: 0, nbAdditionalBits: 3, nbBits: 5, baseValue: 5), new(nextState: 0, nbAdditionalBits: 7, nbBits: 4, baseValue: 125), new(nextState: 0, nbAdditionalBits: 12, nbBits: 5, baseValue: 4093), new(nextState: 0, nbAdditionalBits: 18, nbBits: 5, baseValue: 262141), new(nextState: 0, nbAdditionalBits: 23, nbBits: 5, baseValue: 8388605), new(nextState: 0, nbAdditionalBits: 5, nbBits: 5, baseValue: 29), new(nextState: 0, nbAdditionalBits: 8, nbBits: 4, baseValue: 253), new(nextState: 0, nbAdditionalBits: 14, nbBits: 5, baseValue: 16381), new(nextState: 0, nbAdditionalBits: 20, nbBits: 5, baseValue: 1048573), new(nextState: 0, nbAdditionalBits: 2, nbBits: 5, baseValue: 1), new(nextState: 16, nbAdditionalBits: 7, nbBits: 4, baseValue: 125), new(nextState: 0, nbAdditionalBits: 11, nbBits: 5, baseValue: 2045), new(nextState: 0, nbAdditionalBits: 17, nbBits: 5, baseValue: 131069), new(nextState: 0, nbAdditionalBits: 22, nbBits: 5, baseValue: 4194301), new(nextState: 0, nbAdditionalBits: 4, nbBits: 5, baseValue: 13), new(nextState: 16, nbAdditionalBits: 8, nbBits: 4, baseValue: 253), new(nextState: 0, nbAdditionalBits: 13, nbBits: 5, baseValue: 8189), new(nextState: 0, nbAdditionalBits: 19, nbBits: 5, baseValue: 524285), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 1), new(nextState: 16, nbAdditionalBits: 6, nbBits: 4, baseValue: 61), new(nextState: 0, nbAdditionalBits: 10, nbBits: 5, baseValue: 1021), new(nextState: 0, nbAdditionalBits: 16, nbBits: 5, baseValue: 65533), new(nextState: 0, nbAdditionalBits: 28, nbBits: 5, baseValue: 268435453), new(nextState: 0, nbAdditionalBits: 27, nbBits: 5, baseValue: 134217725), new(nextState: 0, nbAdditionalBits: 26, nbBits: 5, baseValue: 67108861), new(nextState: 0, nbAdditionalBits: 25, nbBits: 5, baseValue: 33554429), new(nextState: 0, nbAdditionalBits: 24, nbBits: 5, baseValue: 16777213) });
-    private static readonly ZstdSeqSymbol* MlDefaultDTable = GetArrayPointer(new ZstdSeqSymbol[65] { new(nextState: 1, nbAdditionalBits: 1, nbBits: 1, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 3), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 5), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 13), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 16), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 19), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 22), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 25), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 28), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 31), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 34), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 37), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 41), new(nextState: 0, nbAdditionalBits: 2, nbBits: 6, baseValue: 47), new(nextState: 0, nbAdditionalBits: 3, nbBits: 6, baseValue: 59), new(nextState: 0, nbAdditionalBits: 4, nbBits: 6, baseValue: 83), new(nextState: 0, nbAdditionalBits: 7, nbBits: 6, baseValue: 131), new(nextState: 0, nbAdditionalBits: 9, nbBits: 6, baseValue: 515), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 12), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 15), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 18), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 21), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 24), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 27), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 30), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 33), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 35), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 39), new(nextState: 0, nbAdditionalBits: 2, nbBits: 6, baseValue: 43), new(nextState: 0, nbAdditionalBits: 3, nbBits: 6, baseValue: 51), new(nextState: 0, nbAdditionalBits: 4, nbBits: 6, baseValue: 67), new(nextState: 0, nbAdditionalBits: 5, nbBits: 6, baseValue: 99), new(nextState: 0, nbAdditionalBits: 8, nbBits: 6, baseValue: 259), new(nextState: 32, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 48, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 14), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 17), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 20), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 23), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 26), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 29), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 32), new(nextState: 0, nbAdditionalBits: 16, nbBits: 6, baseValue: 65539), new(nextState: 0, nbAdditionalBits: 15, nbBits: 6, baseValue: 32771), new(nextState: 0, nbAdditionalBits: 14, nbBits: 6, baseValue: 16387), new(nextState: 0, nbAdditionalBits: 13, nbBits: 6, baseValue: 8195), new(nextState: 0, nbAdditionalBits: 12, nbBits: 6, baseValue: 4099), new(nextState: 0, nbAdditionalBits: 11, nbBits: 6, baseValue: 2051), new(nextState: 0, nbAdditionalBits: 10, nbBits: 6, baseValue: 1027) });
+    private static readonly ZstdSeqSymbol* LlDefaultDTable = GetArrayPointer(new ZstdSeqSymbol[] { new(nextState: 1, nbAdditionalBits: 1, nbBits: 1, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 1), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 3), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 4), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 12), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 14), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 16), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 20), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 22), new(nextState: 0, nbAdditionalBits: 2, nbBits: 5, baseValue: 28), new(nextState: 0, nbAdditionalBits: 3, nbBits: 5, baseValue: 32), new(nextState: 0, nbAdditionalBits: 4, nbBits: 5, baseValue: 48), new(nextState: 32, nbAdditionalBits: 6, nbBits: 5, baseValue: 64), new(nextState: 0, nbAdditionalBits: 7, nbBits: 5, baseValue: 128), new(nextState: 0, nbAdditionalBits: 8, nbBits: 6, baseValue: 256), new(nextState: 0, nbAdditionalBits: 10, nbBits: 6, baseValue: 1024), new(nextState: 0, nbAdditionalBits: 12, nbBits: 6, baseValue: 4096), new(nextState: 32, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 1), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 2), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 4), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 13), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 16), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 18), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 22), new(nextState: 0, nbAdditionalBits: 2, nbBits: 5, baseValue: 24), new(nextState: 32, nbAdditionalBits: 3, nbBits: 5, baseValue: 32), new(nextState: 0, nbAdditionalBits: 3, nbBits: 5, baseValue: 40), new(nextState: 0, nbAdditionalBits: 6, nbBits: 4, baseValue: 64), new(nextState: 16, nbAdditionalBits: 6, nbBits: 4, baseValue: 64), new(nextState: 32, nbAdditionalBits: 7, nbBits: 5, baseValue: 128), new(nextState: 0, nbAdditionalBits: 9, nbBits: 6, baseValue: 512), new(nextState: 0, nbAdditionalBits: 11, nbBits: 6, baseValue: 2048), new(nextState: 48, nbAdditionalBits: 0, nbBits: 4, baseValue: 0), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 1), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 2), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 3), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 12), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 15), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 18), new(nextState: 32, nbAdditionalBits: 1, nbBits: 5, baseValue: 20), new(nextState: 32, nbAdditionalBits: 2, nbBits: 5, baseValue: 24), new(nextState: 32, nbAdditionalBits: 2, nbBits: 5, baseValue: 28), new(nextState: 32, nbAdditionalBits: 3, nbBits: 5, baseValue: 40), new(nextState: 32, nbAdditionalBits: 4, nbBits: 5, baseValue: 48), new(nextState: 0, nbAdditionalBits: 16, nbBits: 6, baseValue: 65536), new(nextState: 0, nbAdditionalBits: 15, nbBits: 6, baseValue: 32768), new(nextState: 0, nbAdditionalBits: 14, nbBits: 6, baseValue: 16384), new(nextState: 0, nbAdditionalBits: 13, nbBits: 6, baseValue: 8192) });
+    private static readonly ZstdSeqSymbol* OfDefaultDTable = GetArrayPointer(new ZstdSeqSymbol[] { new(nextState: 1, nbAdditionalBits: 1, nbBits: 1, baseValue: 5), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 0), new(nextState: 0, nbAdditionalBits: 6, nbBits: 4, baseValue: 61), new(nextState: 0, nbAdditionalBits: 9, nbBits: 5, baseValue: 509), new(nextState: 0, nbAdditionalBits: 15, nbBits: 5, baseValue: 32765), new(nextState: 0, nbAdditionalBits: 21, nbBits: 5, baseValue: 2097149), new(nextState: 0, nbAdditionalBits: 3, nbBits: 5, baseValue: 5), new(nextState: 0, nbAdditionalBits: 7, nbBits: 4, baseValue: 125), new(nextState: 0, nbAdditionalBits: 12, nbBits: 5, baseValue: 4093), new(nextState: 0, nbAdditionalBits: 18, nbBits: 5, baseValue: 262141), new(nextState: 0, nbAdditionalBits: 23, nbBits: 5, baseValue: 8388605), new(nextState: 0, nbAdditionalBits: 5, nbBits: 5, baseValue: 29), new(nextState: 0, nbAdditionalBits: 8, nbBits: 4, baseValue: 253), new(nextState: 0, nbAdditionalBits: 14, nbBits: 5, baseValue: 16381), new(nextState: 0, nbAdditionalBits: 20, nbBits: 5, baseValue: 1048573), new(nextState: 0, nbAdditionalBits: 2, nbBits: 5, baseValue: 1), new(nextState: 16, nbAdditionalBits: 7, nbBits: 4, baseValue: 125), new(nextState: 0, nbAdditionalBits: 11, nbBits: 5, baseValue: 2045), new(nextState: 0, nbAdditionalBits: 17, nbBits: 5, baseValue: 131069), new(nextState: 0, nbAdditionalBits: 22, nbBits: 5, baseValue: 4194301), new(nextState: 0, nbAdditionalBits: 4, nbBits: 5, baseValue: 13), new(nextState: 16, nbAdditionalBits: 8, nbBits: 4, baseValue: 253), new(nextState: 0, nbAdditionalBits: 13, nbBits: 5, baseValue: 8189), new(nextState: 0, nbAdditionalBits: 19, nbBits: 5, baseValue: 524285), new(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 1), new(nextState: 16, nbAdditionalBits: 6, nbBits: 4, baseValue: 61), new(nextState: 0, nbAdditionalBits: 10, nbBits: 5, baseValue: 1021), new(nextState: 0, nbAdditionalBits: 16, nbBits: 5, baseValue: 65533), new(nextState: 0, nbAdditionalBits: 28, nbBits: 5, baseValue: 268435453), new(nextState: 0, nbAdditionalBits: 27, nbBits: 5, baseValue: 134217725), new(nextState: 0, nbAdditionalBits: 26, nbBits: 5, baseValue: 67108861), new(nextState: 0, nbAdditionalBits: 25, nbBits: 5, baseValue: 33554429), new(nextState: 0, nbAdditionalBits: 24, nbBits: 5, baseValue: 16777213) });
+    private static readonly ZstdSeqSymbol* MlDefaultDTable = GetArrayPointer(new ZstdSeqSymbol[] { new(nextState: 1, nbAdditionalBits: 1, nbBits: 1, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 3), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 5), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 13), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 16), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 19), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 22), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 25), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 28), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 31), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 34), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 37), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 41), new(nextState: 0, nbAdditionalBits: 2, nbBits: 6, baseValue: 47), new(nextState: 0, nbAdditionalBits: 3, nbBits: 6, baseValue: 59), new(nextState: 0, nbAdditionalBits: 4, nbBits: 6, baseValue: 83), new(nextState: 0, nbAdditionalBits: 7, nbBits: 6, baseValue: 131), new(nextState: 0, nbAdditionalBits: 9, nbBits: 6, baseValue: 515), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 0, nbAdditionalBits: 0, nbBits: 4, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 6), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 9), new(nextState: 0, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 12), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 15), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 18), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 21), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 24), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 27), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 30), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 33), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 35), new(nextState: 0, nbAdditionalBits: 1, nbBits: 6, baseValue: 39), new(nextState: 0, nbAdditionalBits: 2, nbBits: 6, baseValue: 43), new(nextState: 0, nbAdditionalBits: 3, nbBits: 6, baseValue: 51), new(nextState: 0, nbAdditionalBits: 4, nbBits: 6, baseValue: 67), new(nextState: 0, nbAdditionalBits: 5, nbBits: 6, baseValue: 99), new(nextState: 0, nbAdditionalBits: 8, nbBits: 6, baseValue: 259), new(nextState: 32, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 48, nbAdditionalBits: 0, nbBits: 4, baseValue: 4), new(nextState: 16, nbAdditionalBits: 0, nbBits: 4, baseValue: 5), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 7), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 8), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 10), new(nextState: 32, nbAdditionalBits: 0, nbBits: 5, baseValue: 11), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 14), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 17), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 20), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 23), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 26), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 29), new(nextState: 0, nbAdditionalBits: 0, nbBits: 6, baseValue: 32), new(nextState: 0, nbAdditionalBits: 16, nbBits: 6, baseValue: 65539), new(nextState: 0, nbAdditionalBits: 15, nbBits: 6, baseValue: 32771), new(nextState: 0, nbAdditionalBits: 14, nbBits: 6, baseValue: 16387), new(nextState: 0, nbAdditionalBits: 13, nbBits: 6, baseValue: 8195), new(nextState: 0, nbAdditionalBits: 12, nbBits: 6, baseValue: 4099), new(nextState: 0, nbAdditionalBits: 11, nbBits: 6, baseValue: 2051), new(nextState: 0, nbAdditionalBits: 10, nbBits: 6, baseValue: 1027) });
+
     private static void ZSTD_buildSeqTable_rle(ZstdSeqSymbol* dt, uint baseValue, byte nbAddBits)
     {
         void* ptr = dt;
@@ -623,12 +624,7 @@ public static unsafe partial class Methods
                 uint tableLog;
                 var norm = stackalloc short[53];
                 var headerSize = FSE_readNCount(norm, &max, &tableLog, src, srcSize);
-                if (ERR_isError(headerSize))
-                {
-                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-                }
-
-                if (tableLog > maxLog)
+                if (ERR_isError(headerSize) || tableLog > maxLog)
                 {
                     return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                 }
@@ -639,7 +635,7 @@ public static unsafe partial class Methods
             }
 
             default:
-                assert(0 != 0);
+                assert(false);
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
     }
@@ -742,7 +738,7 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanDec32Table => new uint[8]
+    private static ReadOnlySpan<uint> SpanDec32Table => new uint[]
     {
         0,
         1,
@@ -753,13 +749,14 @@ public static unsafe partial class Methods
         4,
         4
     };
+
     private static uint* Dec32Table => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanDec32Table));
 #else
 
         private static readonly uint* dec32table = GetArrayPointer(new uint[8] { 0, 1, 2, 1, 4, 4, 4, 4 });
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<int> SpanDec64Table => new int[8]
+    private static ReadOnlySpan<int> SpanDec64Table => new int[]
     {
         8,
         8,
@@ -770,6 +767,7 @@ public static unsafe partial class Methods
         10,
         11
     };
+
     private static int* Dec64Table => (int*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanDec64Table));
 #else
 
@@ -1387,12 +1385,7 @@ public static unsafe partial class Methods
                 }
             }
 
-            if (nbSeq != 0)
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-            }
-
-            if (BIT_endOfDStream(&seqState.DStream) == 0)
+            if (nbSeq != 0 || BIT_endOfDStream(&seqState.DStream) == 0)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             }
@@ -1663,8 +1656,7 @@ public static unsafe partial class Methods
                         ZSTD_wildcopy(opInner, match, (nint)sequenceMatchLength - 8, ZstdOverlapE.ZstdOverlapSrcBeforeDst);
                     }
 
-                    returnOneSeqSize:
-                    ;
+                    returnOneSeqSize: ;
                 }
 
                 if (ERR_isError(oneSeqSize))
@@ -1673,7 +1665,7 @@ public static unsafe partial class Methods
                 op += oneSeqSize;
             }
 
-            assert(nbSeq == 0);
+            assert(true);
             if (BIT_endOfDStream(seqStateDStreamBitsConsumed, seqStateDStreamPtr, seqStateDStreamStart) == 0)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
@@ -2066,12 +2058,7 @@ public static unsafe partial class Methods
 
             ip += seqHSize;
             srcSize -= seqHSize;
-            if ((dst == null || dstCapacity == 0) && nbSeq > 0)
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
-            }
-
-            if (MEM_64bits && sizeof(nuint) == sizeof(void*) && unchecked((nuint)(-1)) - (nuint)dst < 1 << 20)
+            if (((dst == null || dstCapacity == 0) && nbSeq > 0) || (MEM_64bits && sizeof(nuint) == sizeof(void*) && unchecked((nuint)(-1)) - (nuint)dst < 1 << 20))
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
             }

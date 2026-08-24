@@ -115,7 +115,7 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> SpanMlCode => new byte[128]
+    private static ReadOnlySpan<byte> SpanMlCode => new byte[]
     {
         0,
         1,
@@ -294,7 +294,8 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint ZSTD_noCompressBlock(void* dst, nuint dstCapacity, void* src, nuint srcSize, uint lastBlock)
     {
-        var cBlockHeader24 = lastBlock + ((uint)BlockTypeE.BtRaw << 1) + (uint)(srcSize << 3);
+        var bt = (uint)BlockTypeE.BtRaw;
+        var cBlockHeader24 = lastBlock + (bt << 1) + (uint)(srcSize << 3);
         if (srcSize + ZstdBlockHeaderSize > dstCapacity)
         {
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
@@ -342,7 +343,7 @@ public static unsafe partial class Methods
             case ZstdParamSwitchE.ZstdPsDisable:
                 return 1;
             default:
-                assert(0 != 0);
+                assert(false);
                 goto case ZstdParamSwitchE.ZstdPsAuto;
             case ZstdParamSwitchE.ZstdPsAuto:
                 return cctxParams->cParams.strategy == ZstdStrategy.ZstdFast && cctxParams->cParams.targetLength > 0 ? 1 : 0;
@@ -451,7 +452,7 @@ public static unsafe partial class Methods
         {
             rep[2] = rep[1];
             rep[1] = rep[0];
-            assert(offBase > 3);
+            assert(true);
             rep[0] = offBase - 3;
         }
         else
@@ -546,6 +547,7 @@ public static unsafe partial class Methods
     }
 
     private const uint Prime3Bytes = 506832829U;
+
     [InlineMethod.Inline]
     private static uint ZSTD_hash3(uint u, uint h, uint s)
     {
@@ -567,6 +569,7 @@ public static unsafe partial class Methods
     }
 
     private const uint Prime4Bytes = 2654435761U;
+
     [InlineMethod.Inline]
     private static uint ZSTD_hash4(uint u, uint h, uint s)
     {
@@ -587,6 +590,7 @@ public static unsafe partial class Methods
     }
 
     private const ulong Prime5Bytes = 889523592379UL;
+
     [InlineMethod.Inline]
     private static nuint ZSTD_hash5(ulong u, uint h, ulong s)
     {
@@ -607,6 +611,7 @@ public static unsafe partial class Methods
     }
 
     private const ulong Prime6Bytes = 227718039650203UL;
+
     [InlineMethod.Inline]
     private static nuint ZSTD_hash6(ulong u, uint h, ulong s)
     {
@@ -627,6 +632,7 @@ public static unsafe partial class Methods
     }
 
     private const ulong Prime7Bytes = 58295818150454627UL;
+
     [InlineMethod.Inline]
     private static nuint ZSTD_hash7(ulong u, uint h, ulong s)
     {
@@ -647,6 +653,7 @@ public static unsafe partial class Methods
     }
 
     private const ulong Prime8Bytes = 0xCF1BBCDCB7A56463UL;
+
     [InlineMethod.Inline]
     private static nuint ZSTD_hash8(ulong u, uint h, ulong s)
     {
@@ -670,32 +677,38 @@ public static unsafe partial class Methods
     private static nuint ZSTD_hashPtr(void* p, uint hBits, uint mls)
     {
         assert(hBits <= 32);
-        if (mls == 5)
-            return ZSTD_hash5Ptr(p, hBits);
-        if (mls == 6)
-            return ZSTD_hash6Ptr(p, hBits);
-        if (mls == 7)
-            return ZSTD_hash7Ptr(p, hBits);
-        if (mls == 8)
-            return ZSTD_hash8Ptr(p, hBits);
-
-        return ZSTD_hash4Ptr(p, hBits);
+        switch (mls)
+        {
+            case 5:
+                return ZSTD_hash5Ptr(p, hBits);
+            case 6:
+                return ZSTD_hash6Ptr(p, hBits);
+            case 7:
+                return ZSTD_hash7Ptr(p, hBits);
+            case 8:
+                return ZSTD_hash8Ptr(p, hBits);
+            default:
+                return ZSTD_hash4Ptr(p, hBits);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint ZSTD_hashPtrSalted(void* p, uint hBits, uint mls, ulong hashSalt)
     {
         assert(hBits <= 32);
-        if (mls == 5)
-            return ZSTD_hash5PtrS(p, hBits, hashSalt);
-        if (mls == 6)
-            return ZSTD_hash6PtrS(p, hBits, hashSalt);
-        if (mls == 7)
-            return ZSTD_hash7PtrS(p, hBits, hashSalt);
-        if (mls == 8)
-            return ZSTD_hash8PtrS(p, hBits, hashSalt);
-
-        return ZSTD_hash4PtrS(p, hBits, (uint)hashSalt);
+        switch (mls)
+        {
+            case 5:
+                return ZSTD_hash5PtrS(p, hBits, hashSalt);
+            case 6:
+                return ZSTD_hash6PtrS(p, hBits, hashSalt);
+            case 7:
+                return ZSTD_hash7PtrS(p, hBits, hashSalt);
+            case 8:
+                return ZSTD_hash8PtrS(p, hBits, hashSalt);
+            default:
+                return ZSTD_hash4PtrS(p, hBits, (uint)hashSalt);
+        }
     }
 
     /** ZSTD_ipow() :

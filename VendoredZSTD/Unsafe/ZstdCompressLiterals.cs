@@ -28,7 +28,7 @@ public static unsafe partial class Methods
                 MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingTypeE.SetBasic + (3 << 2) + (srcSize << 4)));
                 break;
             default:
-                assert(0 != 0);
+                assert(false);
                 break;
         }
 
@@ -75,7 +75,7 @@ public static unsafe partial class Methods
                 MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingTypeE.SetRle + (3 << 2) + (srcSize << 4)));
                 break;
             default:
-                assert(0 != 0);
+                assert(false);
                 break;
         }
 
@@ -112,9 +112,7 @@ public static unsafe partial class Methods
         var hType = SymbolEncodingTypeE.SetCompressed;
         nuint cLitSize;
         memcpy(nextHuf, prevHuf, (uint)sizeof(ZstdHufCTablesT));
-        if (disableLiteralCompression != 0)
-            return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
-        if (srcSize < ZSTD_minLiteralsToCompress(strategy, prevHuf->repeatMode))
+        if (disableLiteralCompression != 0 || srcSize < ZSTD_minLiteralsToCompress(strategy, prevHuf->repeatMode))
             return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
 
         if (dstCapacity < lhSize + 1)
@@ -192,7 +190,7 @@ public static unsafe partial class Methods
             }
 
             default:
-                assert(0 != 0);
+                assert(false);
                 break;
         }
 

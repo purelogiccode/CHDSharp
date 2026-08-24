@@ -86,7 +86,7 @@ public static unsafe partial class Methods
     {
         var idx = ZSTD_DDictHashSet_getIndex(hashSet, dictId);
         var idxRangeMask = hashSet->ddictPtrTableSize - 1;
-        for (; ; )
+        for (;;)
         {
             nuint currDictId = ZSTD_getDictID_fromDDict(hashSet->ddictPtrTable[idx]);
             if (currDictId == dictId || currDictId == 0)
@@ -500,7 +500,7 @@ public static unsafe partial class Methods
             switch (dictIdSizeCode)
             {
                 default:
-                    assert(0 != 0);
+                    assert(false);
                     goto case 0;
                 case 0:
                     break;
@@ -521,7 +521,7 @@ public static unsafe partial class Methods
             switch (fcsId)
             {
                 default:
-                    assert(0 != 0);
+                    assert(false);
                     goto case 0;
                 case 0:
                     if (singleSegment != 0)
@@ -1222,7 +1222,7 @@ public static unsafe partial class Methods
         switch (dctx->dictUses)
         {
             default:
-                assert(0 != 0);
+                assert(false);
                 goto case ZstdDictUsesE.ZstdDontUse;
             case ZstdDictUsesE.ZstdDontUse:
                 ZSTD_clearDict(dctx);
@@ -1288,9 +1288,7 @@ public static unsafe partial class Methods
      */
     private static nuint ZSTD_nextSrcSizeToDecompressWithInputSize(ZstdDCtxS* dctx, nuint inputSize)
     {
-        if (!(dctx->stage == ZstdDStage.ZstDdsDecompressBlock || dctx->stage == ZstdDStage.ZstDdsDecompressLastBlock))
-            return dctx->expected;
-        if (dctx->bType != BlockTypeE.BtRaw)
+        if (!(dctx->stage == ZstdDStage.ZstDdsDecompressBlock || dctx->stage == ZstdDStage.ZstDdsDecompressLastBlock) || dctx->bType != BlockTypeE.BtRaw)
             return dctx->expected;
 
         return inputSize <= 1 ? 1 : inputSize <= dctx->expected ? inputSize : dctx->expected;
@@ -1301,7 +1299,7 @@ public static unsafe partial class Methods
         switch (dctx->stage)
         {
             default:
-                assert(0 != 0);
+                assert(false);
                 goto case ZstdDStage.ZstDdsGetFrameHeaderSize;
             case ZstdDStage.ZstDdsGetFrameHeaderSize:
             case ZstdDStage.ZstDdsDecodeFrameHeader:
@@ -1533,7 +1531,7 @@ public static unsafe partial class Methods
                 dctx->stage = ZstdDStage.ZstDdsGetFrameHeaderSize;
                 return 0;
             default:
-                assert(0 != 0);
+                assert(false);
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
     }
@@ -1578,17 +1576,7 @@ public static unsafe partial class Methods
             var offcodeNCount = stackalloc short[32];
             uint offcodeMaxValue = 31, offcodeLog;
             var offcodeHeaderSize = FSE_readNCount(offcodeNCount, &offcodeMaxValue, &offcodeLog, dictPtr, (nuint)(dictEnd - dictPtr));
-            if (ERR_isError(offcodeHeaderSize))
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
-            }
-
-            if (offcodeMaxValue > 31)
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
-            }
-
-            if (offcodeLog > 8)
+            if (ERR_isError(offcodeHeaderSize) || offcodeMaxValue > 31 || offcodeLog > 8)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
@@ -1601,17 +1589,7 @@ public static unsafe partial class Methods
             var matchlengthNCount = stackalloc short[53];
             uint matchlengthMaxValue = 52, matchlengthLog;
             var matchlengthHeaderSize = FSE_readNCount(matchlengthNCount, &matchlengthMaxValue, &matchlengthLog, dictPtr, (nuint)(dictEnd - dictPtr));
-            if (ERR_isError(matchlengthHeaderSize))
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
-            }
-
-            if (matchlengthMaxValue > 52)
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
-            }
-
-            if (matchlengthLog > 9)
+            if (ERR_isError(matchlengthHeaderSize) || matchlengthMaxValue > 52 || matchlengthLog > 9)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
@@ -1624,17 +1602,7 @@ public static unsafe partial class Methods
             var litlengthNCount = stackalloc short[36];
             uint litlengthMaxValue = 35, litlengthLog;
             var litlengthHeaderSize = FSE_readNCount(litlengthNCount, &litlengthMaxValue, &litlengthLog, dictPtr, (nuint)(dictEnd - dictPtr));
-            if (ERR_isError(litlengthHeaderSize))
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
-            }
-
-            if (litlengthMaxValue > 35)
-            {
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
-            }
-
-            if (litlengthLog > 9)
+            if (ERR_isError(litlengthHeaderSize) || litlengthMaxValue > 35 || litlengthLog > 9)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted));
             }
@@ -2176,8 +2144,6 @@ public static unsafe partial class Methods
                 bounds.lowerBound = 1 << 10;
                 bounds.upperBound = 1 << 17;
                 return bounds;
-            default:
-                break;
         }
 
         bounds.error = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterUnsupported));
@@ -2230,8 +2196,6 @@ public static unsafe partial class Methods
             case ZstdDParameter.ZstdDExperimentalParam6:
                 *value = dctx->maxBlockSizeParam;
                 return 0;
-            default:
-                break;
         }
 
         return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterUnsupported));
@@ -2334,8 +2298,6 @@ public static unsafe partial class Methods
 
                 dctx->maxBlockSizeParam = value;
                 return 0;
-            default:
-                break;
         }
 
         return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterUnsupported));

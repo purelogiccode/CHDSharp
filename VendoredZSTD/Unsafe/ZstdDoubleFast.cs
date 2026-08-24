@@ -91,7 +91,7 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> SpanDummy => new byte[10]
+    private static ReadOnlySpan<byte> SpanDummy => new byte[]
     {
         0x12,
         0x34,
@@ -104,6 +104,7 @@ public static unsafe partial class Methods
         0xe2,
         0xb4
     };
+
     private static byte* Dummy => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanDummy));
 #else
 
@@ -199,7 +200,7 @@ public static unsafe partial class Methods
                 {
                     mLength = ZSTD_count(ip + 1 + 4, ip + 1 + 4 - offset1, iend) + 4;
                     ip++;
-                    assert(1 >= 1);
+                    assert(true);
                     assert(1 <= 3);
                     ZSTD_storeSeq(seqStore, (nuint)(ip - anchor), anchor, iend, 1, mLength);
                     goto _match_stored;
@@ -250,8 +251,8 @@ public static unsafe partial class Methods
                 hl0 = hl1;
                 idxl0 = idxl1;
                 matchl0 = matchl1;
-            }
-            while (ip1 <= ilimit);
+            } while (ip1 <= ilimit);
+
             _cleanup:
             offsetSaved2 = offsetSaved1 != 0 && offset1 != 0 ? offsetSaved1 : offsetSaved2;
             rep[0] = offset1 != 0 ? offset1 : offsetSaved1;
@@ -308,12 +309,10 @@ public static unsafe partial class Methods
                     /* store sequence */
                     var rLength = ZSTD_count(ip + 4, ip + 4 - offset2, iend) + 4;
                     /* swap offset_2 <=> offset_1 */
-                    var tmpOff = offset2;
-                    offset2 = offset1;
-                    offset1 = tmpOff;
+                    (offset2, offset1) = (offset1, offset2);
                     hashSmall[ZSTD_hashPtr(ip, hBitsS, mls)] = (uint)(ip - @base);
                     hashLong[ZSTD_hashPtr(ip, hBitsL, 8)] = (uint)(ip - @base);
-                    assert(1 >= 1);
+                    assert(true);
                     assert(1 <= 3);
                     ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, rLength);
                     ip += rLength;
@@ -416,7 +415,7 @@ public static unsafe partial class Methods
                 var repMatchEnd = repIndex < prefixLowestIndex ? dictEnd : iend;
                 mLength = ZSTD_count_2segments(ip + 1 + 4, repMatch + 4, iend, repMatchEnd, prefixLowest) + 4;
                 ip++;
-                assert(1 >= 1);
+                assert(true);
                 assert(1 <= 3);
                 ZSTD_storeSeq(seqStore, (nuint)(ip - anchor), anchor, iend, 1, mLength);
                 goto _match_stored;
@@ -575,10 +574,8 @@ public static unsafe partial class Methods
                         var repEnd2 = repIndex2 < prefixLowestIndex ? dictEnd : iend;
                         var repLength2 = ZSTD_count_2segments(ip + 4, repMatch2 + 4, iend, repEnd2, prefixLowest) + 4;
                         /* swap offset_2 <=> offset_1 */
-                        var tmpOffset = offset2;
-                        offset2 = offset1;
-                        offset1 = tmpOffset;
-                        assert(1 >= 1);
+                        (offset2, offset1) = (offset1, offset2);
+                        assert(true);
                         assert(1 <= 3);
                         ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, repLength2);
                         hashSmall[ZSTD_hashPtr(ip, hBitsS, mls)] = current2;
@@ -719,7 +716,7 @@ public static unsafe partial class Methods
                 var repMatchEnd = repIndex < prefixStartIndex ? dictEnd : iend;
                 mLength = ZSTD_count_2segments(ip + 1 + 4, repMatch + 4, iend, repMatchEnd, prefixStart) + 4;
                 ip++;
-                assert(1 >= 1);
+                assert(true);
                 assert(1 <= 3);
                 ZSTD_storeSeq(seqStore, (nuint)(ip - anchor), anchor, iend, 1, mLength);
             }
@@ -813,10 +810,8 @@ public static unsafe partial class Methods
                         var repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                         var repLength2 = ZSTD_count_2segments(ip + 4, repMatch2 + 4, iend, repEnd2, prefixStart) + 4;
                         /* swap offset_2 <=> offset_1 */
-                        var tmpOffset = offset2;
-                        offset2 = offset1;
-                        offset1 = tmpOffset;
-                        assert(1 >= 1);
+                        (offset2, offset1) = (offset1, offset2);
+                        assert(true);
                         assert(1 <= 3);
                         ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, repLength2);
                         hashSmall[ZSTD_hashPtr(ip, hBitsS, mls)] = current2;

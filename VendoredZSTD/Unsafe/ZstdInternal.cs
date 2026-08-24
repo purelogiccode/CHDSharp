@@ -11,12 +11,13 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanRepStartValue => new uint[3]
+    private static ReadOnlySpan<uint> SpanRepStartValue => new uint[]
     {
         1,
         4,
         8
     };
+
     private static uint* RepStartValue => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanRepStartValue));
 #else
 
@@ -65,6 +66,7 @@ public static unsafe partial class Methods
         15,
         16
     };
+
     private static byte* LlBits => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanLlBits));
 #else
 
@@ -110,6 +112,7 @@ public static unsafe partial class Methods
         -1,
         -1
     };
+
     private static short* LlDefaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanLlDefaultNorm));
 #else
 
@@ -117,7 +120,7 @@ public static unsafe partial class Methods
 #endif
     private const uint LlDefaultNormLog = 6;
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> SpanMlBits => new byte[53]
+    private static ReadOnlySpan<byte> SpanMlBits => new byte[]
     {
         0,
         0,
@@ -173,6 +176,7 @@ public static unsafe partial class Methods
         15,
         16
     };
+
     private static byte* MlBits => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanMlBits));
 #else
 
@@ -235,6 +239,7 @@ public static unsafe partial class Methods
         -1,
         -1
     };
+
     private static short* MlDefaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanMlDefaultNorm));
 #else
 
@@ -274,12 +279,14 @@ public static unsafe partial class Methods
         -1,
         -1
     };
+
     private static short* OfDefaultNorm => (short*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanOfDefaultNorm));
 #else
 
         private static readonly short* OF_defaultNorm = GetArrayPointer(new short[29] { 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, (short)(-1), (short)(-1), (short)(-1), (short)(-1), (short)(-1) });
 #endif
     private const uint OfDefaultNormLog = 5;
+
     /*-*******************************************
      *  Shared functions to include for inlining
      *********************************************/
@@ -338,8 +345,7 @@ public static unsafe partial class Methods
                 ZSTD_copy8(op, ip);
                 op += 8;
                 ip += 8;
-            }
-            while (op < oend);
+            } while (op < oend);
         }
         else
         {
@@ -363,8 +369,7 @@ public static unsafe partial class Methods
                     op += 16;
                     ip += 16;
                 }
-            }
-            while (op < oend);
+            } while (op < oend);
         }
     }
 

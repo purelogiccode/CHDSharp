@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanKInverseProbabilityLog256 => new uint[256]
+    private static ReadOnlySpan<uint> SpanKInverseProbabilityLog256 => new uint[]
     {
         0,
         2048,
@@ -265,6 +265,7 @@ public static unsafe partial class Methods
         2,
         1
     };
+
     private static uint* KInverseProbabilityLog256 => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanKInverseProbabilityLog256));
 #else
 
@@ -542,7 +543,7 @@ public static unsafe partial class Methods
             }
 
             default:
-                assert(0 != 0);
+                assert(false);
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
     }

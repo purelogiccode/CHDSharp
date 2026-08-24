@@ -5027,7 +5027,8 @@ public static unsafe partial class Methods
 
         {
             /*lastBlock*/
-            var cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1);
+            var bt = (uint)BlockTypeE.BtRaw;
+            var cBlockHeader24 = 1 + (bt << 1);
             MEM_writeLE24(dst, cBlockHeader24);
             return ZstdBlockHeaderSize;
         }
@@ -5635,7 +5636,8 @@ public static unsafe partial class Methods
         if (cctx->stage != ZstdCompressionStageE.ZstDcsEnding)
         {
             /* last block */
-            var cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1) + 0;
+            var bt = (uint)BlockTypeE.BtRaw;
+            var cBlockHeader24 = 1 + (bt << 1);
             if (dstCapacity < 3)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
@@ -7578,7 +7580,8 @@ public static unsafe partial class Methods
         if (remaining == 0)
         {
             /* last block */
-            var cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1);
+            var bt = (uint)BlockTypeE.BtRaw;
+            var cBlockHeader24 = 1 + (bt << 1);
             if (dstCapacity < 4)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
@@ -7947,7 +7950,8 @@ public static unsafe partial class Methods
         if (nbSequences == 1 && inSeqs[0].litLength == 0)
         {
             /* last block */
-            var cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1);
+            var bt = (uint)BlockTypeE.BtRaw;
+            var cBlockHeader24 = 1 + (bt << 1);
             if (dstCapacity < 3)
             {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));

@@ -124,9 +124,7 @@ public static unsafe partial class Methods
             if (table[u - 1].count >= table[u].count)
                 break;
 
-            var tmp = table[u - 1];
-            table[u - 1] = table[u];
-            table[u] = tmp;
+            (table[u - 1], table[u]) = (table[u], table[u - 1]);
         }
     }
 

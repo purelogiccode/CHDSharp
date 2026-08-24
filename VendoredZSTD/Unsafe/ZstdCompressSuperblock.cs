@@ -99,7 +99,7 @@ public static unsafe partial class Methods
             }
 
             default:
-                assert(0 != 0);
+                assert(false);
                 break;
         }
 
@@ -148,21 +148,21 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         }
 
-        if (nbSeq < 128)
+        switch (nbSeq)
         {
-            *op++ = (byte)nbSeq;
-        }
-        else if (nbSeq < 0x7F00)
-        {
-            op[0] = (byte)((nbSeq >> 8) + 0x80);
-            op[1] = (byte)nbSeq;
-            op += 2;
-        }
-        else
-        {
-            op[0] = 0xFF;
-            MEM_writeLE16(op + 1, (ushort)(nbSeq - 0x7F00));
-            op += 3;
+            case < 128:
+                *op++ = (byte)nbSeq;
+                break;
+            case < 0x7F00:
+                op[0] = (byte)((nbSeq >> 8) + 0x80);
+                op[1] = (byte)nbSeq;
+                op += 2;
+                break;
+            default:
+                op[0] = 0xFF;
+                MEM_writeLE16(op + 1, (ushort)(nbSeq - 0x7F00));
+                op += 3;
+                break;
         }
 
         if (nbSeq == 0)
@@ -182,7 +182,7 @@ public static unsafe partial class Methods
         }
         else
         {
-            var repeat = (uint)SymbolEncodingTypeE.SetRepeat;
+            const uint repeat = (uint)SymbolEncodingTypeE.SetRepeat;
             *seqHead = (byte)((repeat << 6) + (repeat << 4) + (repeat << 2));
         }
 
@@ -265,34 +265,34 @@ public static unsafe partial class Methods
         var countWksp = (uint*)workspace;
         uint maxSymbolValue = 255;
         /* Use hard coded size of 3 bytes */
-        nuint literalSectionHeaderSize = 3;
-        if (hufMetadata->hType == SymbolEncodingTypeE.SetBasic)
+        const UIntPtr literalSectionHeaderSize = 3;
+        switch (hufMetadata->hType)
         {
-            return litSize;
-        }
-        else if (hufMetadata->hType == SymbolEncodingTypeE.SetRle)
-        {
-            return 1;
-        }
-        else if (hufMetadata->hType == SymbolEncodingTypeE.SetCompressed || hufMetadata->hType == SymbolEncodingTypeE.SetRepeat)
-        {
-            var largest = HIST_count_wksp(countWksp, &maxSymbolValue, literals, litSize, workspace, wkspSize);
-            if (ERR_isError(largest))
+            case SymbolEncodingTypeE.SetBasic:
                 return litSize;
-
+            case SymbolEncodingTypeE.SetRle:
+                return 1;
+            case SymbolEncodingTypeE.SetCompressed:
+            case SymbolEncodingTypeE.SetRepeat:
             {
-                var cLitSizeEstimate = HUF_estimateCompressedSize(&huf->CTable.e0, countWksp, maxSymbolValue);
-                if (writeEntropy != 0)
+                var largest = HIST_count_wksp(countWksp, &maxSymbolValue, literals, litSize, workspace, wkspSize);
+                if (ERR_isError(largest))
+                    return litSize;
+
                 {
-                    cLitSizeEstimate += hufMetadata->hufDesSize;
+                    var cLitSizeEstimate = HUF_estimateCompressedSize(&huf->CTable.e0, countWksp, maxSymbolValue);
+                    if (writeEntropy != 0)
+                    {
+                        cLitSizeEstimate += hufMetadata->hufDesSize;
+                    }
+
+                    return cLitSizeEstimate + literalSectionHeaderSize;
                 }
-
-                return cLitSizeEstimate + literalSectionHeaderSize;
             }
+            default:
+                assert(false);
+                return 0;
         }
-
-        assert(0 != 0);
-        return 0;
     }
 
     private static nuint ZSTD_estimateSubBlockSize_symbolType(SymbolEncodingTypeE type, byte* codeTable, uint maxCode, nuint nbSeq, uint* fseCTable, byte* additionalBits, short* defaultNorm, uint defaultNormLog, uint defaultMax, void* workspace, nuint wkspSize)
@@ -304,18 +304,18 @@ public static unsafe partial class Methods
         nuint cSymbolTypeSizeEstimateInBits = 0;
         var max = maxCode;
         HIST_countFast_wksp(countWksp, &max, codeTable, nbSeq, workspace, wkspSize);
-        if (type == SymbolEncodingTypeE.SetBasic)
+        switch (type)
         {
-            assert(max <= defaultMax);
-            cSymbolTypeSizeEstimateInBits = max <= defaultMax ? ZSTD_crossEntropyCost(defaultNorm, defaultNormLog, countWksp, max) : unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-        }
-        else if (type == SymbolEncodingTypeE.SetRle)
-        {
-            cSymbolTypeSizeEstimateInBits = 0;
-        }
-        else if (type is SymbolEncodingTypeE.SetCompressed or SymbolEncodingTypeE.SetRepeat)
-        {
-            cSymbolTypeSizeEstimateInBits = ZSTD_fseBitCost(fseCTable, countWksp, max);
+            case SymbolEncodingTypeE.SetBasic:
+                assert(max <= defaultMax);
+                cSymbolTypeSizeEstimateInBits = max <= defaultMax ? ZSTD_crossEntropyCost(defaultNorm, defaultNormLog, countWksp, max) : unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
+                break;
+            case SymbolEncodingTypeE.SetRle:
+                cSymbolTypeSizeEstimateInBits = 0;
+                break;
+            case SymbolEncodingTypeE.SetCompressed or SymbolEncodingTypeE.SetRepeat:
+                cSymbolTypeSizeEstimateInBits = ZSTD_fseBitCost(fseCTable, countWksp, max);
+                break;
         }
 
         if (ERR_isError(cSymbolTypeSizeEstimateInBits))

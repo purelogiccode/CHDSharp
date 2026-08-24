@@ -43,10 +43,14 @@ public unsafe struct ZstdCCtxParamsS
 
     /* Input/output buffer modes */
     public ZstdBufferModeE inBufferMode;
+
     public ZstdBufferModeE outBufferMode;
+
     /* Sequence compression API */
     public ZstdSequenceFormatE blockDelimiters;
+
     public int validateSequences;
+
     /* Block splitting
      * @postBlockSplitter executes split analysis after sequences are produced,
      * it's more accurate but consumes more resources.
@@ -58,25 +62,35 @@ public unsafe struct ZstdCCtxParamsS
      * Highest @preBlockSplitter_level combines well with @postBlockSplitter.
      */
     public ZstdParamSwitchE postBlockSplitter;
+
     public int preBlockSplitter_level;
+
     /* Adjust the max block size*/
     public nuint maxBlockSize;
+
     /* Param for deciding whether to use row-based matchfinder */
     public ZstdParamSwitchE useRowMatchFinder;
+
     /* Always load a dictionary in ext-dict mode (not prefix mode)? */
     public int deterministicRefPrefix;
+
     /* Internal use, for createCCtxParams() and freeCCtxParams() only */
     public ZstdCustomMem customMem;
+
     /* Controls prefetching in some dictMatchState matchfinders */
     public ZstdParamSwitchE prefetchCDictTables;
+
     /* Controls whether zstd will fall back to an internal matchfinder
      * if the external matchfinder returns an error code. */
     public int enableMatchFinderFallback;
+
     /* Parameters for the external sequence producer API.
      * Users set these parameters through ZSTD_registerSequenceProducer().
      * It is not possible to set these parameters individually through the public API. */
     public void* extSeqProdState;
+
     public void* extSeqProdFunc;
+
     /* Controls repcode search in external sequence parsing */
     public ZstdParamSwitchE searchForExternalRepcodes;
 }
