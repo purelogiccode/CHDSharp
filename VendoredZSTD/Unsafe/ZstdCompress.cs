@@ -2402,16 +2402,15 @@ public static unsafe partial class Methods
         if (ZSTD_rowMatchFinderUsed(cParams->strategy, useRowMatchFinder) != 0)
         {
             /* Row match finder needs an additional table of hashes ("tags") */
-            var tagTableSize = hSize;
             if (forWho == ZstdResetTargetE.ZstdResetTargetCCtx)
             {
-                ms->tagTable = (byte*)ZSTD_cwksp_reserve_aligned_init_once(ws, tagTableSize);
+                ms->tagTable = (byte*)ZSTD_cwksp_reserve_aligned_init_once(ws, hSize);
                 ZSTD_advanceHashSalt(ms);
             }
             else
             {
-                ms->tagTable = (byte*)ZSTD_cwksp_reserve_aligned64(ws, tagTableSize);
-                memset(ms->tagTable, 0, (uint)tagTableSize);
+                ms->tagTable = (byte*)ZSTD_cwksp_reserve_aligned64(ws, hSize);
+                memset(ms->tagTable, 0, (uint)hSize);
                 ms->hashSalt = 0;
             }
 
@@ -2492,10 +2491,9 @@ public static unsafe partial class Methods
             var needsIndexReset = indexTooClose != 0 || dictTooBig != 0 || zc->initialized == 0 ? ZstdIndexResetPolicyE.ZstDirpReset : ZstdIndexResetPolicyE.ZstDirpContinue;
             var neededSpace = ZSTD_estimateCCtxSize_usingCCtxParams_internal(&@params->cParams, &@params->ldmParams, zc->staticSize != 0 ? 1 : 0, @params->useRowMatchFinder, buffInSize, buffOutSize, pledgedSrcSize, ZSTD_hasExtSeqProd(@params), @params->maxBlockSize);
             {
-                var errCode = neededSpace;
-                if (ERR_isError(errCode))
+                if (ERR_isError(neededSpace))
                 {
-                    return errCode;
+                    return neededSpace;
                 }
             }
 
@@ -2743,8 +2741,7 @@ public static unsafe partial class Methods
 
             if (ZSTD_rowMatchFinderUsed(cdictCParams->strategy, cdict->useRowMatchFinder) != 0)
             {
-                var tagTableSize = hSize;
-                memcpy(cctx->blockState.matchState.tagTable, cdict->matchState.tagTable, (uint)tagTableSize);
+                memcpy(cctx->blockState.matchState.tagTable, cdict->matchState.tagTable, (uint)hSize);
                 cctx->blockState.matchState.hashSalt = cdict->matchState.hashSalt;
             }
         }
@@ -3015,9 +3012,7 @@ public static unsafe partial class Methods
      */
     private static ZstdSymbolEncodingTypeStatsT ZSTD_buildSequencesStatistics(SeqStoreT* seqStorePtr, nuint nbSeq, ZstdFseCTablesT* prevEntropy, ZstdFseCTablesT* nextEntropy, byte* dst, byte* dstEnd, ZstdStrategy strategy, uint* countWorkspace, void* entropyWorkspace, nuint entropyWkspSize)
     {
-        var ostart = dst;
-        var oend = dstEnd;
-        var op = ostart;
+        var op = dst;
         var cTableLitLength = nextEntropy->litlengthCTable;
         var cTableOffsetBits = nextEntropy->offcodeCTable;
         var cTableMatchLength = nextEntropy->matchlengthCTable;
@@ -3027,7 +3022,7 @@ public static unsafe partial class Methods
         System.Runtime.CompilerServices.Unsafe.SkipInit(out ZstdSymbolEncodingTypeStatsT stats);
         stats.lastCountSize = 0;
         stats.longOffsets = ZSTD_seqToCodes(seqStorePtr);
-        assert(op <= oend);
+        assert(op <= dstEnd);
         assert(nbSeq != 0);
         {
             uint max = 35;
@@ -3038,7 +3033,7 @@ public static unsafe partial class Methods
             assert(SymbolEncodingTypeE.SetBasic < SymbolEncodingTypeE.SetCompressed && SymbolEncodingTypeE.SetRle < SymbolEncodingTypeE.SetCompressed);
             assert(!(stats.LLtype < (uint)SymbolEncodingTypeE.SetCompressed && nextEntropy->litlength_repeatMode != FseRepeat.FseRepeatNone));
             {
-                var countSize = ZSTD_buildCTable(op, (nuint)(oend - op), cTableLitLength, 9, (SymbolEncodingTypeE)stats.LLtype, countWorkspace, max, llCodeTable, nbSeq, LlDefaultNorm, LlDefaultNormLog, 35, prevEntropy->litlengthCTable, sizeof(uint) * 329, entropyWorkspace, entropyWkspSize);
+                var countSize = ZSTD_buildCTable(op, (nuint)(dstEnd - op), cTableLitLength, 9, (SymbolEncodingTypeE)stats.LLtype, countWorkspace, max, llCodeTable, nbSeq, LlDefaultNorm, LlDefaultNormLog, 35, prevEntropy->litlengthCTable, sizeof(uint) * 329, entropyWorkspace, entropyWkspSize);
                 if (ERR_isError(countSize))
                 {
                     stats.size = countSize;
@@ -3051,7 +3046,7 @@ public static unsafe partial class Methods
                 }
 
                 op += countSize;
-                assert(op <= oend);
+                assert(op <= dstEnd);
             }
         }
 
@@ -3064,7 +3059,7 @@ public static unsafe partial class Methods
             stats.Offtype = (uint)ZSTD_selectEncodingType(&nextEntropy->offcode_repeatMode, countWorkspace, max, mostFrequent, nbSeq, 8, prevEntropy->offcodeCTable, OfDefaultNorm, OfDefaultNormLog, defaultPolicy, strategy);
             assert(!(stats.Offtype < (uint)SymbolEncodingTypeE.SetCompressed && nextEntropy->offcode_repeatMode != FseRepeat.FseRepeatNone));
             {
-                var countSize = ZSTD_buildCTable(op, (nuint)(oend - op), cTableOffsetBits, 8, (SymbolEncodingTypeE)stats.Offtype, countWorkspace, max, ofCodeTable, nbSeq, OfDefaultNorm, OfDefaultNormLog, 28, prevEntropy->offcodeCTable, sizeof(uint) * 193, entropyWorkspace, entropyWkspSize);
+                var countSize = ZSTD_buildCTable(op, (nuint)(dstEnd - op), cTableOffsetBits, 8, (SymbolEncodingTypeE)stats.Offtype, countWorkspace, max, ofCodeTable, nbSeq, OfDefaultNorm, OfDefaultNormLog, 28, prevEntropy->offcodeCTable, sizeof(uint) * 193, entropyWorkspace, entropyWkspSize);
                 if (ERR_isError(countSize))
                 {
                     stats.size = countSize;
@@ -3077,7 +3072,7 @@ public static unsafe partial class Methods
                 }
 
                 op += countSize;
-                assert(op <= oend);
+                assert(op <= dstEnd);
             }
         }
 
@@ -3088,7 +3083,7 @@ public static unsafe partial class Methods
             stats.MLtype = (uint)ZSTD_selectEncodingType(&nextEntropy->matchlength_repeatMode, countWorkspace, max, mostFrequent, nbSeq, 9, prevEntropy->matchlengthCTable, MlDefaultNorm, MlDefaultNormLog, ZstdDefaultPolicyE.ZstdDefaultAllowed, strategy);
             assert(!(stats.MLtype < (uint)SymbolEncodingTypeE.SetCompressed && nextEntropy->matchlength_repeatMode != FseRepeat.FseRepeatNone));
             {
-                var countSize = ZSTD_buildCTable(op, (nuint)(oend - op), cTableMatchLength, 9, (SymbolEncodingTypeE)stats.MLtype, countWorkspace, max, mlCodeTable, nbSeq, MlDefaultNorm, MlDefaultNormLog, 52, prevEntropy->matchlengthCTable, sizeof(uint) * 363, entropyWorkspace, entropyWkspSize);
+                var countSize = ZSTD_buildCTable(op, (nuint)(dstEnd - op), cTableMatchLength, 9, (SymbolEncodingTypeE)stats.MLtype, countWorkspace, max, mlCodeTable, nbSeq, MlDefaultNorm, MlDefaultNormLog, 52, prevEntropy->matchlengthCTable, sizeof(uint) * 363, entropyWorkspace, entropyWkspSize);
                 if (ERR_isError(countSize))
                 {
                     stats.size = countSize;
@@ -3101,11 +3096,11 @@ public static unsafe partial class Methods
                 }
 
                 op += countSize;
-                assert(op <= oend);
+                assert(op <= dstEnd);
             }
         }
 
-        stats.size = (nuint)(op - ostart);
+        stats.size = (nuint)(op - dst);
         return stats;
     }
 
@@ -3136,10 +3131,9 @@ public static unsafe partial class Methods
             var suspectUncompressible = numSequences == 0 || litSize / numSequences >= 20 ? 1 : 0;
             var cSize = ZSTD_compressLiterals(op, dstCapacity, literals, litSize, entropyWorkspace, entropyWkspSize, &prevEntropy->huf, &nextEntropy->huf, cctxParams->cParams.strategy, ZSTD_literalsCompressionIsDisabled(cctxParams), suspectUncompressible, bmi2);
             {
-                var errCode = cSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSize))
                 {
-                    return errCode;
+                    return cSize;
                 }
             }
 
@@ -3197,10 +3191,9 @@ public static unsafe partial class Methods
         {
             var bitstreamSize = ZSTD_encodeSequences(op, (nuint)(oend - op), cTableMatchLength, mlCodeTable, cTableOffsetBits, ofCodeTable, cTableLitLength, llCodeTable, sequences, nbSeq, longOffsets, bmi2);
             {
-                var errCode = bitstreamSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(bitstreamSize))
                 {
-                    return errCode;
+                    return bitstreamSize;
                 }
             }
 
@@ -3228,10 +3221,9 @@ public static unsafe partial class Methods
         }
 
         {
-            var errCode = cSize;
-            if (ERR_isError(errCode))
+            if (ERR_isError(cSize))
             {
-                return errCode;
+                return cSize;
             }
         }
 
@@ -3755,10 +3747,9 @@ public static unsafe partial class Methods
             var ret = ZSTD_compress2(zc, dst, dstCapacity, src, srcSize);
             ZSTD_customFree(dst, ZstdDefaultCMem);
             {
-                var errCode = ret;
-                if (ERR_isError(errCode))
+                if (ERR_isError(ret))
                 {
-                    return errCode;
+                    return ret;
                 }
             }
         }
@@ -3804,8 +3795,7 @@ public static unsafe partial class Methods
     /* Unrolled loop to read four size_ts of input at a time. Returns 1 if is RLE, 0 if not. */
     private static int ZSTD_isRLE(byte* src, nuint length)
     {
-        var ip = src;
-        var value = ip[0];
+        var value = src[0];
         var valueSt = (nuint)(value * 0x0101010101010101UL);
         var unrollSize = (nuint)(sizeof(nuint) * 4);
         var unrollMask = unrollSize - 1;
@@ -3814,7 +3804,7 @@ public static unsafe partial class Methods
         if (length == 1)
             return 1;
 
-        if (prefixLength != 0 && ZSTD_count(ip + 1, ip, ip + prefixLength) != prefixLength - 1)
+        if (prefixLength != 0 && ZSTD_count(src + 1, src, src + prefixLength) != prefixLength - 1)
         {
             return 0;
         }
@@ -3824,7 +3814,7 @@ public static unsafe partial class Methods
             nuint u;
             for (u = 0; u < unrollSize; u += (nuint)sizeof(nuint))
             {
-                if (MEM_readST(ip + i + u) != valueSt)
+                if (MEM_readST(src + i + u) != valueSt)
                 {
                     return 0;
                 }
@@ -3870,10 +3860,9 @@ public static unsafe partial class Methods
     {
         var wkspStart = (byte*)workspace;
         var wkspEnd = wkspStart + wkspSize;
-        var countWkspStart = wkspStart;
         var countWksp = (uint*)workspace;
         const nuint countWkspSize = (255 + 1) * sizeof(uint);
-        var nodeWksp = countWkspStart + countWkspSize;
+        var nodeWksp = wkspStart + countWkspSize;
         var nodeWkspSize = (nuint)(wkspEnd - nodeWksp);
         uint maxSymbolValue = 255;
         uint huffLog = 11;
@@ -3897,10 +3886,9 @@ public static unsafe partial class Methods
         {
             var largest = HIST_count_wksp(countWksp, &maxSymbolValue, (byte*)src, srcSize, workspace, wkspSize);
             {
-                var errCode = largest;
-                if (ERR_isError(errCode))
+                if (ERR_isError(largest))
                 {
-                    return errCode;
+                    return largest;
                 }
             }
 
@@ -3928,10 +3916,9 @@ public static unsafe partial class Methods
         {
             var maxBits = HUF_buildCTable_wksp(&nextHuf->CTable.e0, countWksp, maxSymbolValue, huffLog, nodeWksp, nodeWkspSize);
             {
-                var errCode = maxBits;
-                if (ERR_isError(errCode))
+                if (ERR_isError(maxBits))
                 {
-                    return errCode;
+                    return maxBits;
                 }
             }
 
@@ -3997,11 +3984,10 @@ public static unsafe partial class Methods
         var nbSeq = (nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart);
         var ostart = fseMetadata->fseTablesBuffer;
         var oend = ostart + sizeof(byte) * 133;
-        var op = ostart;
         var countWorkspace = (uint*)workspace;
         var entropyWorkspace = countWorkspace + (52 + 1);
         var entropyWorkspaceSize = wkspSize - (52 + 1) * sizeof(uint);
-        var stats = nbSeq != 0 ? ZSTD_buildSequencesStatistics(seqStorePtr, nbSeq, prevEntropy, nextEntropy, op, oend, strategy, countWorkspace, entropyWorkspace, entropyWorkspaceSize) : ZSTD_buildDummySequencesStatistics(nextEntropy);
+        var stats = nbSeq != 0 ? ZSTD_buildSequencesStatistics(seqStorePtr, nbSeq, prevEntropy, nextEntropy, ostart, oend, strategy, countWorkspace, entropyWorkspace, entropyWorkspaceSize) : ZSTD_buildDummySequencesStatistics(nextEntropy);
         {
             var errCode = stats.size;
             if (ERR_isError(errCode))
@@ -4338,10 +4324,9 @@ public static unsafe partial class Methods
 
         var cSeqsSize = ZSTD_entropyCompressSeqStore(seqStore, &zc->blockState.prevCBlock->entropy, &zc->blockState.nextCBlock->entropy, &zc->appliedParams, op + ZstdBlockHeaderSize, dstCapacity - ZstdBlockHeaderSize, srcSize, zc->tmpWorkspace, zc->tmpWkspSize, zc->bmi2);
         {
-            var errCode = cSeqsSize;
-            if (ERR_isError(errCode))
+            if (ERR_isError(cSeqsSize))
             {
-                return errCode;
+                return cSeqsSize;
             }
         }
 
@@ -4368,10 +4353,9 @@ public static unsafe partial class Methods
         {
             cSize = ZSTD_noCompressBlock(op, dstCapacity, ip, srcSize, lastBlock);
             {
-                var errCode = cSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSize))
                 {
-                    return errCode;
+                    return cSize;
                 }
             }
 
@@ -4381,10 +4365,9 @@ public static unsafe partial class Methods
         {
             cSize = ZSTD_rleCompressBlock(op, dstCapacity, *ip, srcSize, lastBlock);
             {
-                var errCode = cSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSize))
                 {
-                    return errCode;
+                    return cSize;
                 }
             }
 
@@ -4511,10 +4494,9 @@ public static unsafe partial class Methods
         {
             var cSizeSingleBlock = ZSTD_compressSeqStore_singleBlock(zc, &zc->seqStore, &dRep, &cRep, op, dstCapacity, ip, blockSize, lastBlock, 0);
             {
-                var errCode = cSizeSingleBlock;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSizeSingleBlock))
                 {
-                    return errCode;
+                    return cSizeSingleBlock;
                 }
             }
 
@@ -4542,10 +4524,9 @@ public static unsafe partial class Methods
 
             var cSizeChunk = ZSTD_compressSeqStore_singleBlock(zc, currSeqStore, &dRep, &cRep, op, dstCapacity, ip, srcBytes, lastBlockEntireSrc, 1);
             {
-                var errCode = cSizeChunk;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSizeChunk))
                 {
-                    return errCode;
+                    return cSizeChunk;
                 }
             }
 
@@ -4569,10 +4550,9 @@ public static unsafe partial class Methods
         {
             var bss = ZSTD_buildSeqStore(zc, src, srcSize);
             {
-                var errCode = bss;
-                if (ERR_isError(errCode))
+                if (ERR_isError(bss))
                 {
-                    return errCode;
+                    return bss;
                 }
             }
 
@@ -4590,10 +4570,9 @@ public static unsafe partial class Methods
 
                 cSize = ZSTD_noCompressBlock(dst, dstCapacity, src, srcSize, lastBlock);
                 {
-                    var errCode = cSize;
-                    if (ERR_isError(errCode))
+                    if (ERR_isError(cSize))
                     {
-                        return errCode;
+                        return cSize;
                     }
                 }
 
@@ -4605,10 +4584,9 @@ public static unsafe partial class Methods
 
         cSize = ZSTD_compressBlock_splitBlock_internal(zc, dst, dstCapacity, src, srcSize, lastBlock, nbSeq);
         {
-            var errCode = cSize;
-            if (ERR_isError(errCode))
+            if (ERR_isError(cSize))
             {
-                return errCode;
+                return cSize;
             }
         }
 
@@ -4628,10 +4606,9 @@ public static unsafe partial class Methods
         {
             var bss = ZSTD_buildSeqStore(zc, src, srcSize);
             {
-                var errCode = bss;
-                if (ERR_isError(errCode))
+                if (ERR_isError(bss))
                 {
-                    return errCode;
+                    return bss;
                 }
             }
 
@@ -4697,10 +4674,9 @@ public static unsafe partial class Methods
                 {
                     var maxCSize = srcSize - ZSTD_minGain(srcSize, zc->appliedParams.cParams.strategy);
                     {
-                        var errCode = cSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(cSize))
                         {
-                            return errCode;
+                            return cSize;
                         }
                     }
 
@@ -4721,19 +4697,17 @@ public static unsafe partial class Methods
         nuint cSize = 0;
         var bss = ZSTD_buildSeqStore(zc, src, srcSize);
         {
-            var errCode = bss;
-            if (ERR_isError(errCode))
+            if (ERR_isError(bss))
             {
-                return errCode;
+                return bss;
             }
         }
 
         cSize = ZSTD_compressBlock_targetCBlockSize_body(zc, dst, dstCapacity, src, srcSize, bss, lastBlock);
         {
-            var errCode = cSize;
-            if (ERR_isError(errCode))
+            if (ERR_isError(cSize))
             {
-                return errCode;
+                return cSize;
             }
         }
 
@@ -4859,10 +4833,9 @@ public static unsafe partial class Methods
                 {
                     cSize = ZSTD_compressBlock_targetCBlockSize(cctx, op, dstCapacity, ip, blockSize, lastBlock);
                     {
-                        var errCode = cSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(cSize))
                         {
-                            return errCode;
+                            return cSize;
                         }
                     }
 
@@ -4873,10 +4846,9 @@ public static unsafe partial class Methods
                 {
                     cSize = ZSTD_compressBlock_splitBlock(cctx, op, dstCapacity, ip, blockSize, lastBlock);
                     {
-                        var errCode = cSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(cSize))
                         {
-                            return errCode;
+                            return cSize;
                         }
                     }
 
@@ -4886,10 +4858,9 @@ public static unsafe partial class Methods
                 {
                     cSize = ZSTD_compressBlock_internal(cctx, op + ZstdBlockHeaderSize, dstCapacity - ZstdBlockHeaderSize, ip, blockSize, 1);
                     {
-                        var errCode = cSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(cSize))
                         {
-                            return errCode;
+                            return cSize;
                         }
                     }
 
@@ -4897,10 +4868,9 @@ public static unsafe partial class Methods
                     {
                         cSize = ZSTD_noCompressBlock(op, dstCapacity, ip, blockSize, lastBlock);
                         {
-                            var errCode = cSize;
-                            if (ERR_isError(errCode))
+                            if (ERR_isError(cSize))
                             {
-                                return errCode;
+                                return cSize;
                             }
                         }
                     }
@@ -5096,10 +5066,9 @@ public static unsafe partial class Methods
         {
             fhSize = ZSTD_writeFrameHeader(dst, dstCapacity, &cctx->appliedParams, cctx->pledgedSrcSizePlusOne - 1, cctx->dictID);
             {
-                var errCode = fhSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(fhSize))
                 {
-                    return errCode;
+                    return fhSize;
                 }
             }
 
@@ -5131,10 +5100,9 @@ public static unsafe partial class Methods
         {
             var cSize = frame != 0 ? ZSTD_compress_frameChunk(cctx, dst, dstCapacity, src, srcSize, lastFrameChunk) : ZSTD_compressBlock_internal(cctx, dst, dstCapacity, src, srcSize, 0);
             {
-                var errCode = cSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSize))
                 {
-                    return errCode;
+                    return cSize;
                 }
             }
 
@@ -5495,10 +5463,9 @@ public static unsafe partial class Methods
         nuint dictId = @params->fParams.noDictIDFlag != 0 ? 0 : MEM_readLE32(dictPtr + 4);
         var eSize = ZSTD_loadCEntropy(bs, workspace, dict, dictSize);
         {
-            var errCode = eSize;
-            if (ERR_isError(errCode))
+            if (ERR_isError(eSize))
             {
-                return errCode;
+                return eSize;
             }
         }
 
@@ -5577,10 +5544,9 @@ public static unsafe partial class Methods
         {
             var dictId = cdict != null ? ZSTD_compress_insertDictionary(cctx->blockState.prevCBlock, &cctx->blockState.matchState, &cctx->ldmState, &cctx->workspace, &cctx->appliedParams, cdict->dictContent, cdict->dictContentSize, cdict->dictContentType, dtlm, ZstdTableFillPurposeE.ZstdTfpForCCtx, cctx->tmpWorkspace) : ZSTD_compress_insertDictionary(cctx->blockState.prevCBlock, &cctx->blockState.matchState, &cctx->ldmState, &cctx->workspace, &cctx->appliedParams, dict, dictSize, dictContentType, dtlm, ZstdTableFillPurposeE.ZstdTfpForCCtx, cctx->tmpWorkspace);
             {
-                var errCode = dictId;
-                if (ERR_isError(errCode))
+                if (ERR_isError(dictId))
                 {
-                    return errCode;
+                    return dictId;
                 }
             }
 
@@ -5655,10 +5621,9 @@ public static unsafe partial class Methods
         {
             var fhSize = ZSTD_writeFrameHeader(dst, dstCapacity, &cctx->appliedParams, 0, 0);
             {
-                var errCode = fhSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(fhSize))
                 {
-                    return errCode;
+                    return fhSize;
                 }
             }
 
@@ -5708,19 +5673,17 @@ public static unsafe partial class Methods
     {
         var cSize = ZSTD_compressContinue_internal(cctx, dst, dstCapacity, src, srcSize, 1, 1);
         {
-            var errCode = cSize;
-            if (ERR_isError(errCode))
+            if (ERR_isError(cSize))
             {
-                return errCode;
+                return cSize;
             }
         }
 
         var endResult = ZSTD_writeEpilogue(cctx, (sbyte*)dst + cSize, dstCapacity - cSize);
         {
-            var errCode = endResult;
-            if (ERR_isError(errCode))
+            if (ERR_isError(endResult))
             {
-                return errCode;
+                return endResult;
             }
         }
 
@@ -5893,10 +5856,9 @@ public static unsafe partial class Methods
             {
                 var dictId = ZSTD_compress_insertDictionary(&cdict->cBlockState, &cdict->matchState, null, &cdict->workspace, &@params, cdict->dictContent, cdict->dictContentSize, dictContentType, ZstdDictTableLoadMethodE.ZstdDtlmFull, ZstdTableFillPurposeE.ZstdTfpForCDict, cdict->entropyWorkspace);
                 {
-                    var errCode = dictId;
-                    if (ERR_isError(errCode))
+                    if (ERR_isError(dictId))
                     {
-                        return errCode;
+                        return dictId;
                     }
                 }
 
@@ -6646,10 +6608,9 @@ public static unsafe partial class Methods
                         /* shortcut to compression pass directly into output buffer */
                         var cSize = ZSTD_compressEnd_public(zcs, op, (nuint)(oend - op), ip, (nuint)(iend - ip));
                         {
-                            var errCode = cSize;
-                            if (ERR_isError(errCode))
+                            if (ERR_isError(cSize))
                             {
-                                return errCode;
+                                return cSize;
                             }
                         }
 
@@ -6722,10 +6683,9 @@ public static unsafe partial class Methods
                         var lastBlock = flushMode == ZstdEndDirective.ZstdEEnd && ip == iend ? 1U : 0U;
                         cSize = lastBlock != 0 ? ZSTD_compressEnd_public(zcs, cDst, oSize, zcs->inBuff + zcs->inToCompress, iSize) : ZSTD_compressContinue_public(zcs, cDst, oSize, zcs->inBuff + zcs->inToCompress, iSize);
                         {
-                            var errCode = cSize;
-                            if (ERR_isError(errCode))
+                            if (ERR_isError(cSize))
                             {
-                                return errCode;
+                                return cSize;
                             }
                         }
 
@@ -6753,10 +6713,9 @@ public static unsafe partial class Methods
                         }
 
                         {
-                            var errCode = cSize;
-                            if (ERR_isError(errCode))
+                            if (ERR_isError(cSize))
                             {
-                                return errCode;
+                                return cSize;
                             }
                         }
 
@@ -7105,10 +7064,9 @@ public static unsafe partial class Methods
                 }
 
                 {
-                    var errCode = flushMin;
-                    if (ERR_isError(errCode))
+                    if (ERR_isError(flushMin))
                     {
-                        return errCode;
+                        return flushMin;
                     }
                 }
 
@@ -7192,10 +7150,9 @@ public static unsafe partial class Methods
             cctx->requestedParams.inBufferMode = originalInBufferMode;
             cctx->requestedParams.outBufferMode = originalOutBufferMode;
             {
-                var errCode = result;
-                if (ERR_isError(errCode))
+                if (ERR_isError(result))
                 {
-                    return errCode;
+                    return result;
                 }
             }
 
@@ -7585,10 +7542,9 @@ public static unsafe partial class Methods
         {
             var explicitBlockSize = blockSize_explicitDelimiter(inSeqs, inSeqsSize, seqPos);
             {
-                var errCode = explicitBlockSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(explicitBlockSize))
                 {
-                    return errCode;
+                    return explicitBlockSize;
                 }
             }
 
@@ -7640,10 +7596,9 @@ public static unsafe partial class Methods
             var blockSize = determine_blockSize(cctx->appliedParams.blockDelimiters, cctx->blockSizeMax, remaining, inSeqs, inSeqsSize, seqPos);
             var lastBlock = blockSize == remaining ? 1U : 0U;
             {
-                var errCode = blockSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(blockSize))
                 {
-                    return errCode;
+                    return blockSize;
                 }
             }
 
@@ -7651,10 +7606,9 @@ public static unsafe partial class Methods
             ZSTD_resetSeqStore(&cctx->seqStore);
             blockSize = ((delegate* managed<ZstdCCtxS*, ZstdSequencePosition*, ZstdSequence*, nuint, void*, nuint, ZstdParamSwitchE, nuint>)sequenceCopier)(cctx, &seqPos, inSeqs, inSeqsSize, ip, blockSize, cctx->appliedParams.searchForExternalRepcodes);
             {
-                var errCode = blockSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(blockSize))
                 {
-                    return errCode;
+                    return blockSize;
                 }
             }
 
@@ -7662,10 +7616,9 @@ public static unsafe partial class Methods
             {
                 cBlockSize = ZSTD_noCompressBlock(op, dstCapacity, ip, blockSize, lastBlock);
                 {
-                    var errCode = cBlockSize;
-                    if (ERR_isError(errCode))
+                    if (ERR_isError(cBlockSize))
                     {
-                        return errCode;
+                        return cBlockSize;
                     }
                 }
 
@@ -7684,10 +7637,9 @@ public static unsafe partial class Methods
 
             var compressedSeqsSize = ZSTD_entropyCompressSeqStore(&cctx->seqStore, &cctx->blockState.prevCBlock->entropy, &cctx->blockState.nextCBlock->entropy, &cctx->appliedParams, op + ZstdBlockHeaderSize, dstCapacity - ZstdBlockHeaderSize, blockSize, cctx->tmpWorkspace, cctx->tmpWkspSize, cctx->bmi2);
             {
-                var errCode = compressedSeqsSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(compressedSeqsSize))
                 {
-                    return errCode;
+                    return compressedSeqsSize;
                 }
             }
 
@@ -7700,10 +7652,9 @@ public static unsafe partial class Methods
             {
                 cBlockSize = ZSTD_noCompressBlock(op, dstCapacity, ip, blockSize, lastBlock);
                 {
-                    var errCode = cBlockSize;
-                    if (ERR_isError(errCode))
+                    if (ERR_isError(cBlockSize))
                     {
-                        return errCode;
+                        return cBlockSize;
                     }
                 }
             }
@@ -7711,10 +7662,9 @@ public static unsafe partial class Methods
             {
                 cBlockSize = ZSTD_rleCompressBlock(op, dstCapacity, *ip, blockSize, lastBlock);
                 {
-                    var errCode = cBlockSize;
-                    if (ERR_isError(errCode))
+                    if (ERR_isError(cBlockSize))
                     {
-                        return errCode;
+                        return cBlockSize;
                     }
                 }
             }
@@ -7814,10 +7764,9 @@ public static unsafe partial class Methods
         {
             var cBlocksSize = ZSTD_compressSequences_internal(cctx, op, dstCapacity, inSeqs, inSeqsSize, src, srcSize);
             {
-                var errCode = cBlocksSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cBlocksSize))
                 {
-                    return errCode;
+                    return cBlocksSize;
                 }
             }
 
@@ -8032,10 +7981,9 @@ public static unsafe partial class Methods
             ZSTD_resetSeqStore(&cctx->seqStore);
             var conversionStatus = ZSTD_convertBlockSequences(cctx, inSeqs, block.nbSequences, repcodeResolution);
             {
-                var errCode = conversionStatus;
-                if (ERR_isError(errCode))
+                if (ERR_isError(conversionStatus))
                 {
-                    return errCode;
+                    return conversionStatus;
                 }
             }
 
@@ -8049,10 +7997,9 @@ public static unsafe partial class Methods
 
             var compressedSeqsSize = ZSTD_entropyCompressSeqStore_internal(op + ZstdBlockHeaderSize, dstCapacity - ZstdBlockHeaderSize, literals, block.litSize, &cctx->seqStore, &cctx->blockState.prevCBlock->entropy, &cctx->blockState.nextCBlock->entropy, &cctx->appliedParams, cctx->tmpWorkspace, cctx->tmpWkspSize, cctx->bmi2);
             {
-                var errCode = compressedSeqsSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(compressedSeqsSize))
                 {
-                    return errCode;
+                    return compressedSeqsSize;
                 }
             }
 
@@ -8167,10 +8114,9 @@ public static unsafe partial class Methods
         {
             var cBlocksSize = ZSTD_compressSequencesAndLiterals_internal(cctx, op, dstCapacity, inSeqs, inSeqsSize, literals, litSize, decompressedSize);
             {
-                var errCode = cBlocksSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cBlocksSize))
                 {
-                    return errCode;
+                    return cBlocksSize;
                 }
             }
 
@@ -8210,10 +8156,9 @@ public static unsafe partial class Methods
         var input = inBuffer_forEndFlush(zcs);
         var remainingToFlush = ZSTD_compressStream2(zcs, output, &input, ZstdEndDirective.ZstdEEnd);
         {
-            var errCode = remainingToFlush;
-            if (ERR_isError(errCode))
+            if (ERR_isError(remainingToFlush))
             {
-                return errCode;
+                return remainingToFlush;
             }
         }
 

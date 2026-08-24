@@ -1063,10 +1063,9 @@ public static unsafe partial class Methods
             }
 
             {
-                var errCode = decodedSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(decodedSize))
                 {
-                    return errCode;
+                    return decodedSize;
                 }
             }
 
@@ -1143,10 +1142,9 @@ public static unsafe partial class Methods
                     /* skippable frame detected : skip it */
                     var skippableSize = ReadSkippableFrameSize(src, srcSize);
                     {
-                        var errCode = skippableSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(skippableSize))
                         {
-                            return errCode;
+                            return skippableSize;
                         }
                     }
 
@@ -1436,10 +1434,9 @@ public static unsafe partial class Methods
                         assert(srcSize <= dctx->expected);
                         rSize = ZSTD_copyRawBlock(dst, dstCapacity, src, srcSize);
                     {
-                        var errCode = rSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(rSize))
                         {
-                            return errCode;
+                            return rSize;
                         }
                     }
 
@@ -1456,10 +1453,9 @@ public static unsafe partial class Methods
                 }
 
                 {
-                    var errCode = rSize;
-                    if (ERR_isError(errCode))
+                    if (ERR_isError(rSize))
                     {
-                        return errCode;
+                        return rSize;
                     }
                 }
 
@@ -2410,9 +2406,8 @@ public static unsafe partial class Methods
     {
         var blockSize = windowSize < 1 << 17 ? windowSize : 1 << 17;
         /* no block can be larger */
-        var inBuffSize = blockSize;
         var outBuffSize = ZSTD_decodingBufferSize_min(windowSize, unchecked(0UL - 1));
-        return ZSTD_estimateDCtxSize() + inBuffSize + outBuffSize;
+        return ZSTD_estimateDCtxSize() + blockSize + outBuffSize;
     }
 
     public static nuint ZSTD_estimateDStreamSize_fromFrame(void* src, nuint srcSize)
@@ -2487,10 +2482,9 @@ public static unsafe partial class Methods
             var dstSize = isSkipFrame != 0 ? 0 : zds->outBuffSize - zds->outStart;
             var decodedSize = ZSTD_decompressContinue(zds, zds->outBuff + zds->outStart, dstSize, src, srcSize);
             {
-                var errCode = decodedSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(decodedSize))
                 {
-                    return errCode;
+                    return decodedSize;
                 }
             }
 
@@ -2510,10 +2504,9 @@ public static unsafe partial class Methods
             var dstSize = isSkipFrame != 0 ? 0 : (nuint)(oend - *op);
             var decodedSize = ZSTD_decompressContinue(zds, *op, dstSize, src, srcSize);
             {
-                var errCode = decodedSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(decodedSize))
                 {
-                    return errCode;
+                    return decodedSize;
                 }
             }
 

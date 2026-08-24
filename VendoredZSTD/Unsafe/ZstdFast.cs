@@ -471,9 +471,8 @@ public static unsafe partial class Methods
             var hashTableBytes = ((nuint)1 << (int)dictCParams->hashLog) * sizeof(uint);
             {
                 var ptr = (sbyte*)dictHashTable;
-                var size = hashTableBytes;
                 nuint pos;
-                for (pos = 0; pos < size; pos += 64)
+                for (pos = 0; pos < hashTableBytes; pos += 64)
                 {
 #if NETCOREAPP3_0_OR_GREATER
                     if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
@@ -679,8 +678,7 @@ public static unsafe partial class Methods
         var anchor = istart;
         var endIndex = (uint)((nuint)(istart - @base) + srcSize);
         var lowLimit = ZSTD_getLowestMatchIndex(ms, endIndex, cParams->windowLog);
-        var dictStartIndex = lowLimit;
-        var dictStart = dictBase + dictStartIndex;
+        var dictStart = dictBase + lowLimit;
         var dictLimit = ms->window.dictLimit;
         var prefixStartIndex = dictLimit < lowLimit ? lowLimit : dictLimit;
         var prefixStart = @base + prefixStartIndex;
@@ -701,12 +699,12 @@ public static unsafe partial class Methods
         /* initialize to avoid warning, assert != 0 later */
         byte* matchEnd = null;
         const nuint kStepIncr = 1 << (8 - 1);
-        if (prefixStartIndex == dictStartIndex)
+        if (prefixStartIndex == lowLimit)
             return ZSTD_compressBlock_fast(ms, seqStore, rep, src, srcSize);
 
         {
             var curr = (uint)(ip0 - @base);
-            var maxRep = curr - dictStartIndex;
+            var maxRep = curr - lowLimit;
             if (offset2 >= maxRep)
             {
                 offsetSaved2 = offset2;
@@ -771,7 +769,7 @@ public static unsafe partial class Methods
             }
 
             {
-                var mval = idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
+                var mval = idx >= lowLimit ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
                 if (MEM_read32(ip0) == mval)
                 {
                     goto _offset;
@@ -788,7 +786,7 @@ public static unsafe partial class Methods
             current0 = (uint)(ip0 - @base);
             hashTable[hash0] = current0;
             {
-                var mval = idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
+                var mval = idx >= lowLimit ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
                 if (MEM_read32(ip0) == mval)
                 {
                     goto _offset;

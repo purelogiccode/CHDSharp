@@ -11,13 +11,17 @@ public unsafe struct SerialState
     public ZstdCCtxParamsS @params;
     public LdmStateT ldmState;
     public Xxh64StateS xxhState;
+
     public uint nextJobID;
+
     /* Protects ldmWindow.
      * Must be acquired after the main mutex when acquiring both.
      */
     public void* ldmWindowMutex;
+
     /* Signaled when ldmWindow is updated */
     public void* ldmWindowCond;
+
     /* A thread-safe copy of ldmState.window */
     public ZstdWindowT ldmWindow;
 }

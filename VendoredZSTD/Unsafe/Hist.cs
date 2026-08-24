@@ -82,8 +82,7 @@ public static unsafe partial class Methods
         var iend = ip + sourceSize;
         nuint countSize = (*maxSymbolValuePtr + 1) * sizeof(uint);
         uint max = 0;
-        var counting1 = workSpace;
-        var counting2 = counting1 + 256;
+        var counting2 = workSpace + 256;
         var counting3 = counting2 + 256;
         var counting4 = counting3 + 256;
         assert(*maxSymbolValuePtr <= 255);
@@ -103,28 +102,28 @@ public static unsafe partial class Methods
                 var c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                counting1[(byte)c]++;
+                workSpace[(byte)c]++;
                 counting2[(byte)(c >> 8)]++;
                 counting3[(byte)(c >> 16)]++;
                 counting4[c >> 24]++;
                 c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                counting1[(byte)c]++;
+                workSpace[(byte)c]++;
                 counting2[(byte)(c >> 8)]++;
                 counting3[(byte)(c >> 16)]++;
                 counting4[c >> 24]++;
                 c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                counting1[(byte)c]++;
+                workSpace[(byte)c]++;
                 counting2[(byte)(c >> 8)]++;
                 counting3[(byte)(c >> 16)]++;
                 counting4[c >> 24]++;
                 c = cached;
                 cached = MEM_read32(ip);
                 ip += 4;
-                counting1[(byte)c]++;
+                workSpace[(byte)c]++;
                 counting2[(byte)(c >> 8)]++;
                 counting3[(byte)(c >> 16)]++;
                 counting4[c >> 24]++;
@@ -135,24 +134,24 @@ public static unsafe partial class Methods
 
         while (ip < iend)
         {
-            counting1[*ip++]++;
+            workSpace[*ip++]++;
         }
 
         {
             uint s;
             for (s = 0; s < 256; s++)
             {
-                counting1[s] += counting2[s] + counting3[s] + counting4[s];
-                if (counting1[s] > max)
+                workSpace[s] += counting2[s] + counting3[s] + counting4[s];
+                if (workSpace[s] > max)
                 {
-                    max = counting1[s];
+                    max = workSpace[s];
                 }
             }
         }
 
         {
             uint maxSymbolValue = 255;
-            while (counting1[maxSymbolValue] == 0)
+            while (workSpace[maxSymbolValue] == 0)
             {
                 maxSymbolValue--;
             }
@@ -161,7 +160,7 @@ public static unsafe partial class Methods
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooSmall));
 
             *maxSymbolValuePtr = maxSymbolValue;
-            memmove(count, counting1, countSize);
+            memmove(count, workSpace, countSize);
         }
 
         return max;

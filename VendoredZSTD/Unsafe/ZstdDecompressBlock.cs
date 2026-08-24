@@ -604,9 +604,8 @@ public static unsafe partial class Methods
                     var pSize = (nuint)(sizeof(ZstdSeqSymbol) * (1 + (1 << (int)maxLog)));
                     {
                         var ptr = (sbyte*)pStart;
-                        var size = pSize;
                         nuint pos;
-                        for (pos = 0; pos < size; pos += 64)
+                        for (pos = 0; pos < pSize; pos += 64)
                         {
 #if NETCOREAPP3_0_OR_GREATER
                             if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
@@ -2129,10 +2128,9 @@ public static unsafe partial class Methods
         ZSTD_checkContinuity(dctx, dst, dstCapacity);
         var dSize = ZSTD_decompressBlock_internal(dctx, dst, dstCapacity, src, srcSize, StreamingOperation.NotStreaming);
         {
-            var errCode = dSize;
-            if (ERR_isError(errCode))
+            if (ERR_isError(dSize))
             {
-                return errCode;
+                return dSize;
             }
         }
 

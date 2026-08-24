@@ -189,10 +189,9 @@ public static unsafe partial class Methods
         {
             var bitstreamSize = ZSTD_encodeSequences(op, (nuint)(oend - op), fseTables->matchlengthCTable, mlCode, fseTables->offcodeCTable, ofCode, fseTables->litlengthCTable, llCode, sequences, nbSeq, longOffsets, bmi2);
             {
-                var errCode = bitstreamSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(bitstreamSize))
                 {
-                    return errCode;
+                    return bitstreamSize;
                 }
             }
 
@@ -225,10 +224,9 @@ public static unsafe partial class Methods
         {
             var cLitSize = ZSTD_compressSubBlock_literal(&entropy->huf.CTable.e0, &entropyMetadata->hufMetadata, literals, litSize, op, (nuint)(oend - op), bmi2, writeLitEntropy, litEntropyWritten);
             {
-                var errCode = cLitSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cLitSize))
                 {
-                    return errCode;
+                    return cLitSize;
                 }
             }
 
@@ -241,10 +239,9 @@ public static unsafe partial class Methods
         {
             var cSeqSize = ZSTD_compressSubBlock_sequences(&entropy->fse, &entropyMetadata->fseMetadata, sequences, nbSeq, llCode, mlCode, ofCode, cctxParams, op, (nuint)(oend - op), bmi2, writeSeqEntropy, seqEntropyWritten);
             {
-                var errCode = cSeqSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSeqSize))
                 {
-                    return errCode;
+                    return cSeqSize;
                 }
             }
 
@@ -477,10 +474,9 @@ public static unsafe partial class Methods
                     var decompressedSize = ZSTD_seqDecompressedSize(seqStorePtr, sp, seqCount, litSize, 0);
                     var cSize = ZSTD_compressSubBlock(&nextCBlock->entropy, entropyMetadata, sp, seqCount, lp, litSize, llCodePtr, mlCodePtr, ofCodePtr, cctxParams, op, (nuint)(oend - op), bmi2, writeLitEntropy, writeSeqEntropy, &litEntropyWritten, &seqEntropyWritten, 0);
                     {
-                        var errCode = cSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(cSize))
                         {
-                            return errCode;
+                            return cSize;
                         }
                     }
 
@@ -518,10 +514,9 @@ public static unsafe partial class Methods
             var decompressedSize = ZSTD_seqDecompressedSize(seqStorePtr, sp, seqCount, litSize, 1);
             var cSize = ZSTD_compressSubBlock(&nextCBlock->entropy, entropyMetadata, sp, seqCount, lp, litSize, llCodePtr, mlCodePtr, ofCodePtr, cctxParams, op, (nuint)(oend - op), bmi2, writeLitEntropy, writeSeqEntropy, &litEntropyWritten, &seqEntropyWritten, lastBlock);
             {
-                var errCode = cSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSize))
                 {
-                    return errCode;
+                    return cSize;
                 }
             }
 
@@ -564,10 +559,9 @@ public static unsafe partial class Methods
             var rSize = (nuint)(iend - ip);
             var cSize = ZSTD_noCompressBlock(op, (nuint)(oend - op), ip, rSize, lastBlock);
             {
-                var errCode = cSize;
-                if (ERR_isError(errCode))
+                if (ERR_isError(cSize))
                 {
-                    return errCode;
+                    return cSize;
                 }
             }
 

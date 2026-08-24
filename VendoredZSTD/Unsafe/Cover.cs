@@ -292,9 +292,6 @@ public static unsafe partial class Methods
         byte* samplesBuffer, nuint* samplesSizes, uint nbFinalizeSamples, nuint nbCheckSamples, nuint nbSamples,
         ZdictCoverParamsT @params, nuint* offsets)
     {
-        nuint largestDict = 0;
-        nuint largestCompressed = 0;
-        nuint totalCompressedSize = 0;
         var customDictContentEnd = customDictContent + dictContentSize;
         var largestDictbuffer = (byte*)malloc(dictBufferCapacity);
         var candidateDictBuffer = (byte*)malloc(dictBufferCapacity);
@@ -315,7 +312,7 @@ public static unsafe partial class Methods
             return COVER_dictSelectionError(dictContentSize);
         }
 
-        totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, largestDictbuffer, dictContentSize);
+        var totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, largestDictbuffer, dictContentSize);
         if (ERR_isError(totalCompressedSize))
         {
             free(largestDictbuffer);
@@ -329,8 +326,8 @@ public static unsafe partial class Methods
             return SetDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
         }
 
-        largestDict = dictContentSize;
-        largestCompressed = totalCompressedSize;
+        var largestDict = dictContentSize;
+        var largestCompressed = totalCompressedSize;
         dictContentSize = 256;
         while (dictContentSize < largestDict)
         {

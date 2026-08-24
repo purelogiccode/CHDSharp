@@ -177,8 +177,8 @@ public static unsafe partial class Methods
                 input += 4;
                 v4 = XXH32_round(v4, XXH_readLE32_align(input, align));
                 input += 4;
-            }
-            while (input < limit);
+            } while (input < limit);
+
             h32 = BitOperations.RotateLeft(v1, 1) + BitOperations.RotateLeft(v2, 7) + BitOperations.RotateLeft(v3, 12) + BitOperations.RotateLeft(v4, 18);
         }
         else
@@ -277,8 +277,7 @@ public static unsafe partial class Methods
                     p += 4;
                     state->v[3] = XXH32_round(state->v[3], XXH_readLE32(p));
                     p += 4;
-                }
-                while (p <= limit);
+                } while (p <= limit);
             }
 
             if (p < bEnd)
@@ -450,8 +449,8 @@ public static unsafe partial class Methods
                 input += 8;
                 v4 = XXH64_round(v4, XXH_readLE64_align(input, align));
                 input += 8;
-            }
-            while (input < limit);
+            } while (input < limit);
+
             h64 = BitOperations.RotateLeft(v1, 1) + BitOperations.RotateLeft(v2, 7) + BitOperations.RotateLeft(v3, 12) + BitOperations.RotateLeft(v4, 18);
             h64 = XXH64_mergeRound(h64, v1);
             h64 = XXH64_mergeRound(h64, v2);
@@ -546,8 +545,7 @@ public static unsafe partial class Methods
                     p += 8;
                     state->v[3] = XXH64_round(state->v[3], XXH_readLE64(p));
                     p += 8;
-                }
-                while (p <= limit);
+                } while (p <= limit);
             }
 
             if (p < bEnd)

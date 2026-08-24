@@ -12,7 +12,9 @@ public unsafe struct ZstdmtCCtxS
     public ZstdmtBufferPoolS* seqPool;
     public ZstdCCtxParamsS @params;
     public nuint targetSectionSize;
+
     public nuint targetPrefixSize;
+
     /* 1 => one job is already prepared, but pool has shortage of workers. Don't create a new job. */
     public int jobReady;
     public InBuffT inBuff;

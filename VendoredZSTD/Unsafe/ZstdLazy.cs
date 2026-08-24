@@ -397,7 +397,6 @@ public static unsafe partial class Methods
          * chaintable.
          */
         var hashLog = ms->cParams.hashLog - 2;
-        var tmpHashTable = hashTable;
         var tmpChainTable = hashTable + ((nuint)1 << (int)hashLog);
         var tmpChainSize = (uint)((1 << 2) - 1) << (int)hashLog;
         var tmpMinChain = tmpChainSize < target ? target - tmpChainSize : idx;
@@ -414,7 +413,7 @@ public static unsafe partial class Methods
                 tmpChainTable[idx - tmpMinChain] = hashTable[h];
             }
 
-            tmpHashTable[h] = idx;
+            hashTable[h] = idx;
         }
 
         {
@@ -423,7 +422,7 @@ public static unsafe partial class Methods
             {
                 uint count;
                 uint countBeyondMinChain = 0;
-                var i = tmpHashTable[hashIdx];
+                var i = hashTable[hashIdx];
                 for (count = 0; i >= tmpMinChain && count < cacheSize; count++)
                 {
                     if (i < minChain)
@@ -463,11 +462,11 @@ public static unsafe partial class Methods
 
                 if (count != 0)
                 {
-                    tmpHashTable[hashIdx] = ((chainPos - count) << 8) + count;
+                    hashTable[hashIdx] = ((chainPos - count) << 8) + count;
                 }
                 else
                 {
-                    tmpHashTable[hashIdx] = 0;
+                    hashTable[hashIdx] = 0;
                 }
             }
 
@@ -477,7 +476,7 @@ public static unsafe partial class Methods
         for (hashIdx = (uint)(1 << (int)hashLog); hashIdx != 0;)
         {
             var bucketIdx = --hashIdx << 2;
-            var chainPackedPointer = tmpHashTable[hashIdx];
+            var chainPackedPointer = hashTable[hashIdx];
             uint i;
             for (i = 0; i < cacheSize; i++)
             {
@@ -1027,14 +1026,13 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong ZSTD_row_getMatchMask(byte* tagRow, byte tag, uint headGrouped, uint rowEntries)
     {
-        var src = tagRow;
         assert(rowEntries is 16 or 32 or 64);
         assert(rowEntries <= 64);
         assert(ZSTD_row_matchMaskGroupWidth(rowEntries) * rowEntries <= sizeof(ulong) * 8);
 #if NETCOREAPP3_0_OR_GREATER
         if (Sse2.IsSupported)
         {
-            return ZSTD_row_getSSEMask((int)(rowEntries / 16), src, tag, headGrouped);
+            return ZSTD_row_getSSEMask((int)(rowEntries / 16), tagRow, tag, headGrouped);
         }
 #endif
 
@@ -1048,7 +1046,7 @@ public static unsafe partial class Methods
                  * all bits except the highest in these groups by doing AND with
                  * 0x88 = 0b10001000.
                  */
-                var chunk = AdvSimd.LoadVector128(src);
+                var chunk = AdvSimd.LoadVector128(tagRow);
                 var equalMask = AdvSimd.CompareEqual(chunk, AdvSimd.DuplicateToVector128(tag)).As<byte, ushort>();
                 var res = AdvSimd.ShiftRightLogicalNarrowingLower(equalMask, 4);
                 var matches = res.As<byte, ulong>().GetElement(0);
@@ -1062,7 +1060,7 @@ public static unsafe partial class Methods
                     /* Same idea as with rowEntries == 16 but doing AND with
                      * 0x55 = 0b01010101.
                      */
-                    (var chunk0, var chunk1) = AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)src);
+                    (var chunk0, var chunk1) = AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)tagRow);
                     var dup = AdvSimd.DuplicateToVector128(tag);
                     var t0 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk0.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
                     var t1 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk1.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
@@ -1077,7 +1075,7 @@ public static unsafe partial class Methods
 #if NET9_0_OR_GREATER
                 if (AdvSimd.Arm64.IsSupported)
                 {
-                    (var chunk0, var chunk1, var chunk2, var chunk3) = AdvSimd.Arm64.Load4xVector128AndUnzip(src);
+                    (var chunk0, var chunk1, var chunk2, var chunk3) = AdvSimd.Arm64.Load4xVector128AndUnzip(tagRow);
                     var dup = AdvSimd.DuplicateToVector128(tag);
                     var cmp0 = AdvSimd.CompareEqual(chunk0, dup);
                     var cmp1 = AdvSimd.CompareEqual(chunk1, dup);
@@ -1112,7 +1110,7 @@ public static unsafe partial class Methods
                 var extractMagic = (xFf / 0x7F) >> (int)chunkSize;
                 do
                 {
-                    var chunk = MEM_readST(&src[i]);
+                    var chunk = MEM_readST(&tagRow[i]);
                     chunk ^= splatChar;
                     chunk = (((chunk | x80) - x01) | chunk) & x80;
                     matches <<= (int)chunkSize;
@@ -1127,7 +1125,7 @@ public static unsafe partial class Methods
                 var extractMagic = (msb / 0x1FF) | msb;
                 do
                 {
-                    var chunk = MEM_readST(&src[i]);
+                    var chunk = MEM_readST(&tagRow[i]);
                     chunk ^= splatChar;
                     chunk = (((chunk | x80) - x01) | chunk) & x80;
                     matches <<= (int)chunkSize;

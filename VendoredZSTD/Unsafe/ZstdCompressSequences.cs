@@ -523,10 +523,9 @@ public static unsafe partial class Methods
                     /* overflow protected */
                     var nCountSize = FSE_writeNCount(op, (nuint)(oend - op), wksp->norm, max, tableLog);
                     {
-                        var errCode = nCountSize;
-                        if (ERR_isError(errCode))
+                        if (ERR_isError(nCountSize))
                         {
-                            return errCode;
+                            return nCountSize;
                         }
                     }
 

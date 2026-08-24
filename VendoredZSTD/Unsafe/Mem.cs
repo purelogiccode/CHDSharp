@@ -72,6 +72,7 @@ public static unsafe partial class Methods
         {
             val = BinaryPrimitives.ReverseEndianness(val);
         }
+
         return val;
     }
 
@@ -82,6 +83,7 @@ public static unsafe partial class Methods
         {
             val = BinaryPrimitives.ReverseEndianness(val);
         }
+
         BclUnsafe.WriteUnaligned(memPtr, val);
     }
 
@@ -106,6 +108,7 @@ public static unsafe partial class Methods
         {
             val = BinaryPrimitives.ReverseEndianness(val);
         }
+
         return val;
     }
 
@@ -116,6 +119,7 @@ public static unsafe partial class Methods
         {
             val32 = BinaryPrimitives.ReverseEndianness(val32);
         }
+
         BclUnsafe.WriteUnaligned(memPtr, val32);
     }
 
@@ -127,6 +131,7 @@ public static unsafe partial class Methods
         {
             val = BinaryPrimitives.ReverseEndianness(val);
         }
+
         return val;
     }
 
@@ -137,6 +142,7 @@ public static unsafe partial class Methods
         {
             val64 = BinaryPrimitives.ReverseEndianness(val64);
         }
+
         BclUnsafe.WriteUnaligned(memPtr, val64);
     }
 
@@ -160,6 +166,7 @@ public static unsafe partial class Methods
                 val = ReverseEndiannessNative(val);
 #endif
         }
+
         return val;
     }
 
@@ -174,6 +181,7 @@ public static unsafe partial class Methods
                 val = ReverseEndiannessNative(val);
 #endif
         }
+
         BclUnsafe.WriteUnaligned(memPtr, val);
     }
 }

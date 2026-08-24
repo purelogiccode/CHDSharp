@@ -83,9 +83,7 @@ public static unsafe partial class Methods
 
     private static nuint HUF_initRemainingDStream(BitDStreamT* bit, HufDecompressFastArgs* args, int stream, byte* segmentEnd)
     {
-        if ((&args->op.e0)[stream] > segmentEnd)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-        if ((&args->ip.e0)[stream] < (&args->iend.e0)[stream] - 8)
+        if ((&args->op.e0)[stream] > segmentEnd || (&args->ip.e0)[stream] < (&args->iend.e0)[stream] - 8)
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
         assert(sizeof(nuint) == 8);
@@ -219,7 +217,6 @@ public static unsafe partial class Methods
                 var uStart = rankStart;
                 var nbBits = (byte)(tableLog + 1 - w);
                 int s;
-                int u;
                 switch (length)
                 {
                     case 1:
@@ -268,6 +265,7 @@ public static unsafe partial class Methods
                         for (s = 0; s < symbolCount; ++s)
                         {
                             var d4 = HUF_DEltX1_set4(wksp->symbols[symbol + s], nbBits);
+                            int u;
                             for (u = 0; u < length; u += 16)
                             {
                                 MEM_write64(dt + uStart + u + 0, d4);
@@ -373,9 +371,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint HUF_decompress4X1_usingDTable_internal_body(void* dst, nuint dstSize, void* cSrc, nuint cSrcSize, uint* dTable)
     {
-        if (cSrcSize < 10)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-        if (dstSize < 6)
+        if (cSrcSize < 10 || dstSize < 6)
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
         {
@@ -410,9 +406,7 @@ public static unsafe partial class Methods
             var dtd = HUF_getDTableDesc(dTable);
             uint dtLog = dtd.tableLog;
             uint endSignal = 1;
-            if (length4 > cSrcSize)
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-            if (opStart4 > oend)
+            if (length4 > cSrcSize || opStart4 > oend)
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
             assert(dstSize >= 6);
@@ -499,11 +493,7 @@ public static unsafe partial class Methods
                 }
             }
 
-            if (op1 > opStart2)
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-            if (op2 > opStart3)
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-            if (op3 > opStart4)
+            if (op1 > opStart2 || op2 > opStart3 || op3 > opStart4)
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
             HUF_decodeStreamX1(op1, &bitD1, opStart2, dt, dtLog);
@@ -544,7 +534,7 @@ public static unsafe partial class Methods
         var op3 = args->op.e3;
         assert(BitConverter.IsLittleEndian);
         assert(!MEM_32bits);
-        for (; ; )
+        for (;;)
         {
             byte* olimit;
             {
@@ -804,8 +794,7 @@ public static unsafe partial class Methods
                         bits3 <<= nbBits;
                     }
                 }
-            }
-            while (op3 < olimit);
+            } while (op3 < olimit);
         }
 
         _out:
@@ -837,10 +826,9 @@ public static unsafe partial class Methods
         {
             var ret = HUF_DecompressFastArgs_init(&args, dst, dstSize, cSrc, cSrcSize, dTable);
             {
-                var errCode = ret;
-                if (ERR_isError(errCode))
+                if (ERR_isError(ret))
                 {
-                    return errCode;
+                    return ret;
                 }
             }
 
@@ -1402,9 +1390,7 @@ public static unsafe partial class Methods
             uint endSignal = 1;
             var dtd = HUF_getDTableDesc(dTable);
             uint dtLog = dtd.tableLog;
-            if (length4 > cSrcSize)
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-            if (opStart4 > oend)
+            if (length4 > cSrcSize || opStart4 > oend)
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
             assert(dstSize >= 6);
@@ -1491,11 +1477,7 @@ public static unsafe partial class Methods
                 }
             }
 
-            if (op1 > opStart2)
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-            if (op2 > opStart3)
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
-            if (op3 > opStart4)
+            if (op1 > opStart2 || op2 > opStart3 || op3 > opStart4)
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
 
             HUF_decodeStreamX2(op1, &bitD1, opStart2, dt, dtLog);
@@ -1539,7 +1521,7 @@ public static unsafe partial class Methods
         var oend3 = args->oend;
         assert(BitConverter.IsLittleEndian);
         assert(!MEM_32bits);
-        for (; ; )
+        for (;;)
         {
             byte* olimit;
             {
@@ -1850,8 +1832,7 @@ public static unsafe partial class Methods
                         }
                     }
                 }
-            }
-            while (op3 < olimit);
+            } while (op3 < olimit);
         }
 
         _out:
@@ -1878,10 +1859,9 @@ public static unsafe partial class Methods
         {
             var ret = HUF_DecompressFastArgs_init(&args, dst, dstSize, cSrc, cSrcSize, dTable);
             {
-                var errCode = ret;
-                if (ERR_isError(errCode))
+                if (ERR_isError(ret))
                 {
-                    return errCode;
+                    return ret;
                 }
             }
 
@@ -1980,87 +1960,88 @@ public static unsafe partial class Methods
 
     private static readonly AlgoTimeT[][] AlgoTime = new AlgoTimeT[16][]
     {
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 0, decode256Time: 0),
             new(tableTime: 1, decode256Time: 1)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 0, decode256Time: 0),
             new(tableTime: 1, decode256Time: 1)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 150, decode256Time: 216),
             new(tableTime: 381, decode256Time: 119)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 170, decode256Time: 205),
             new(tableTime: 514, decode256Time: 112)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 177, decode256Time: 199),
             new(tableTime: 539, decode256Time: 110)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 197, decode256Time: 194),
             new(tableTime: 644, decode256Time: 107)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 221, decode256Time: 192),
             new(tableTime: 735, decode256Time: 107)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 256, decode256Time: 189),
             new(tableTime: 881, decode256Time: 106)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 359, decode256Time: 188),
             new(tableTime: 1167, decode256Time: 109)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 582, decode256Time: 187),
             new(tableTime: 1570, decode256Time: 114)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 688, decode256Time: 187),
             new(tableTime: 1712, decode256Time: 122)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 825, decode256Time: 186),
             new(tableTime: 1965, decode256Time: 136)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 976, decode256Time: 185),
             new(tableTime: 2131, decode256Time: 150)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 1180, decode256Time: 186),
             new(tableTime: 2070, decode256Time: 175)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 1377, decode256Time: 185),
             new(tableTime: 1731, decode256Time: 202)
         },
-        new AlgoTimeT[2]
+        new AlgoTimeT[]
         {
             new(tableTime: 1412, decode256Time: 185),
             new(tableTime: 1695, decode256Time: 202)
         }
     };
+
     /** HUF_selectDecoder() :
      *  Tells which decoder is likely to decode faster,
      *  based on a set of pre-computed metrics.

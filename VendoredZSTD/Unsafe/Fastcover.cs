@@ -449,13 +449,11 @@ public static unsafe partial class Methods
         var kMaxK = parameters->k == 0 ? 2000 : parameters->k;
         var kSteps = parameters->steps == 0 ? 40 : parameters->steps;
         var kStepSize = (kMaxK - kMinK) / kSteps > 1 ? (kMaxK - kMinK) / kSteps : 1;
-        var kIterations = (1 + (kMaxD - kMinD) / 2) * (1 + (kMaxK - kMinK) / kStepSize);
         var f = parameters->f == 0 ? 20 : parameters->f;
         var accel = parameters->accel == 0 ? 1 : parameters->accel;
         const uint shrinkDict = 0;
         /* Local variables */
         var displayLevel = (int)parameters->zParams.notificationLevel;
-        uint iteration = 1;
         uint d;
         uint k;
         CoverBestS best;
@@ -548,7 +546,6 @@ public static unsafe partial class Methods
                     FASTCOVER_tryParameters(data);
                 }
 
-                ++iteration;
             }
 
             COVER_best_wait(&best);

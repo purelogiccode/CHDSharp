@@ -971,8 +971,7 @@ public static unsafe partial class Methods
             return 0;
 
         {
-            var op = ostart;
-            var initErr = HUF_initCStream(ref bitC, op, (nuint)(oend - op));
+            var initErr = HUF_initCStream(ref bitC, ostart, (nuint)(oend - ostart));
             if (ERR_isError(initErr))
                 return 0;
         }
@@ -1186,13 +1185,14 @@ public static unsafe partial class Methods
         {
             var dst = (byte*)workSpace + sizeof(HufWriteCTableWksp);
             var dstSize = wkspSize - (nuint)sizeof(HufWriteCTableWksp);
-            nuint hSize, newSize;
+            nuint newSize;
             var symbolCardinality = HUF_cardinality(count, maxSymbolValue);
             var minTableLog = HUF_minTableLog(symbolCardinality);
             var optSize = unchecked((nuint)~0) - 1;
             uint optLog = maxTableLog, optLogGuess;
             for (optLogGuess = minTableLog; optLogGuess <= maxTableLog; optLogGuess++)
             {
+                nuint hSize;
                 {
                     var maxBits = HUF_buildCTable_wksp(table, count, maxSymbolValue, optLogGuess, workSpace, wkspSize);
                     if (ERR_isError(maxBits))
@@ -1316,9 +1316,8 @@ public static unsafe partial class Methods
         {
             var maxBits = HUF_buildCTable_wksp(&table->CTable.e0, table->count, maxSymbolValue, huffLog, &table->wksps.buildCTable_wksp, (nuint)sizeof(HufBuildCTableWkspTables));
             {
-                var varErr = maxBits;
-                if (ERR_isError(varErr))
-                    return varErr;
+                if (ERR_isError(maxBits))
+                    return maxBits;
             }
 
             huffLog = (uint)maxBits;

@@ -8,6 +8,7 @@ public enum XxhAlignment
 {
     /*!< Aligned */
     XxhAligned,
+
     /*!< Possibly unaligned */
     XxhUnaligned
 }

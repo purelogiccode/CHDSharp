@@ -361,9 +361,8 @@ public static unsafe partial class Methods
             var chainTableBytes = ((nuint)1 << (int)dictCParams->chainLog) * sizeof(uint);
             {
                 var ptr = (sbyte*)dictHashLong;
-                var size = hashTableBytes;
                 nuint pos;
-                for (pos = 0; pos < size; pos += 64)
+                for (pos = 0; pos < hashTableBytes; pos += 64)
                 {
 #if NETCOREAPP3_0_OR_GREATER
                     if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
@@ -376,9 +375,8 @@ public static unsafe partial class Methods
 
             {
                 var ptr = (sbyte*)dictHashSmall;
-                var size = chainTableBytes;
                 nuint pos;
-                for (pos = 0; pos < size; pos += 64)
+                for (pos = 0; pos < chainTableBytes; pos += 64)
                 {
 #if NETCOREAPP3_0_OR_GREATER
                     if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
@@ -689,15 +687,14 @@ public static unsafe partial class Methods
         var @base = ms->window.@base;
         var endIndex = (uint)((nuint)(istart - @base) + srcSize);
         var lowLimit = ZSTD_getLowestMatchIndex(ms, endIndex, cParams->windowLog);
-        var dictStartIndex = lowLimit;
         var dictLimit = ms->window.dictLimit;
         var prefixStartIndex = dictLimit > lowLimit ? dictLimit : lowLimit;
         var prefixStart = @base + prefixStartIndex;
         var dictBase = ms->window.dictBase;
-        var dictStart = dictBase + dictStartIndex;
+        var dictStart = dictBase + lowLimit;
         var dictEnd = dictBase + prefixStartIndex;
         uint offset1 = rep[0], offset2 = rep[1];
-        if (prefixStartIndex == dictStartIndex)
+        if (prefixStartIndex == lowLimit)
             return ZSTD_compressBlock_doubleFast(ms, seqStore, rep, src, srcSize);
 
         while (ip < ilimit)
@@ -717,7 +714,7 @@ public static unsafe partial class Methods
             var repMatch = repBase + repIndex;
             nuint mLength;
             hashSmall[hSmall] = hashLong[hLong] = curr;
-            if ((ZSTD_index_overlap_check(prefixStartIndex, repIndex) & (offset1 <= curr + 1 - dictStartIndex ? 1 : 0)) != 0 && MEM_read32(repMatch) == MEM_read32(ip + 1))
+            if ((ZSTD_index_overlap_check(prefixStartIndex, repIndex) & (offset1 <= curr + 1 - lowLimit ? 1 : 0)) != 0 && MEM_read32(repMatch) == MEM_read32(ip + 1))
             {
                 var repMatchEnd = repIndex < prefixStartIndex ? dictEnd : iend;
                 mLength = ZSTD_count_2segments(ip + 1 + 4, repMatch + 4, iend, repMatchEnd, prefixStart) + 4;
@@ -728,7 +725,7 @@ public static unsafe partial class Methods
             }
             else
             {
-                if (matchLongIndex > dictStartIndex && MEM_read64(matchLong) == MEM_read64(ip))
+                if (matchLongIndex > lowLimit && MEM_read64(matchLong) == MEM_read64(ip))
                 {
                     var matchEnd = matchLongIndex < prefixStartIndex ? dictEnd : iend;
                     var lowMatchPtr = matchLongIndex < prefixStartIndex ? dictStart : prefixStart;
@@ -746,7 +743,7 @@ public static unsafe partial class Methods
                     assert(offset > 0);
                     ZSTD_storeSeq(seqStore, (nuint)(ip - anchor), anchor, iend, offset + 3, mLength);
                 }
-                else if (matchIndex > dictStartIndex && MEM_read32(match) == MEM_read32(ip))
+                else if (matchIndex > lowLimit && MEM_read32(match) == MEM_read32(ip))
                 {
                     var h3 = ZSTD_hashPtr(ip + 1, hBitsL, 8);
                     var matchIndex3 = hashLong[h3];
@@ -754,7 +751,7 @@ public static unsafe partial class Methods
                     var match3 = match3Base + matchIndex3;
                     uint offset;
                     hashLong[h3] = curr + 1;
-                    if (matchIndex3 > dictStartIndex && MEM_read64(match3) == MEM_read64(ip + 1))
+                    if (matchIndex3 > lowLimit && MEM_read64(match3) == MEM_read64(ip + 1))
                     {
                         var matchEnd = matchIndex3 < prefixStartIndex ? dictEnd : iend;
                         var lowMatchPtr = matchIndex3 < prefixStartIndex ? dictStart : prefixStart;
@@ -811,7 +808,7 @@ public static unsafe partial class Methods
                     var current2 = (uint)(ip - @base);
                     var repIndex2 = current2 - offset2;
                     var repMatch2 = repIndex2 < prefixStartIndex ? dictBase + repIndex2 : @base + repIndex2;
-                    if ((ZSTD_index_overlap_check(prefixStartIndex, repIndex2) & (offset2 <= current2 - dictStartIndex ? 1 : 0)) != 0 && MEM_read32(repMatch2) == MEM_read32(ip))
+                    if ((ZSTD_index_overlap_check(prefixStartIndex, repIndex2) & (offset2 <= current2 - lowLimit ? 1 : 0)) != 0 && MEM_read32(repMatch2) == MEM_read32(ip))
                     {
                         var repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                         var repLength2 = ZSTD_count_2segments(ip + 4, repMatch2 + 4, iend, repEnd2, prefixStart) + 4;

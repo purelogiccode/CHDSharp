@@ -210,7 +210,8 @@ public static unsafe partial class Methods
     /*! FSE_readNCount_bmi2():
      * Same as FSE_readNCount() but pass bmi2=1 when your CPU supports BMI2 and 0 otherwise.
      */
-    private static nuint FSE_readNCount_bmi2(short* normalizedCounter, uint* maxSvPtr, uint* tableLogPtr, void* headerBuffer, nuint hbSize, int bmi2)
+    private static nuint FSE_readNCount_bmi2(short* normalizedCounter, uint* maxSvPtr, uint* tableLogPtr,
+        void* headerBuffer, nuint hbSize, int bmi2)
     {
         // ReSharper disable once UnusedParameter
         return FSE_readNCount_body_default(normalizedCounter, maxSvPtr, tableLogPtr, headerBuffer, hbSize);

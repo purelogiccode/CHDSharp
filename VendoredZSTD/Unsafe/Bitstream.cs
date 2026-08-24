@@ -546,7 +546,7 @@ public static unsafe partial class Methods
         if (bitDPtr < bitDLimitPtr)
             return BitDStreamStatus.BitDStreamOverflow;
 
-        return BIT_reloadDStream_internal(ref bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart);
+        return BIT_reloadDStream_internal(out bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart);
     }
 
     /*! BIT_reloadDStream() :
@@ -566,7 +566,7 @@ public static unsafe partial class Methods
         assert(bitDPtr >= bitDStart);
         if (bitDPtr >= bitDLimitPtr)
         {
-            return BIT_reloadDStream_internal(ref bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart);
+            return BIT_reloadDStream_internal(out bitDBitContainer, ref bitDBitsConsumed, ref bitDPtr, bitDStart);
         }
 
         if (bitDPtr == bitDStart)
@@ -599,7 +599,7 @@ public static unsafe partial class Methods
      *  2. look window is valid after shifted down : bitD->ptr >= bitD->start
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static BitDStreamStatus BIT_reloadDStream_internal(ref nuint bitDBitContainer, ref uint bitDBitsConsumed, ref sbyte* bitDPtr, sbyte* bitDStart)
+    private static BitDStreamStatus BIT_reloadDStream_internal(out nuint bitDBitContainer, ref uint bitDBitsConsumed, ref sbyte* bitDPtr, sbyte* bitDStart)
     {
         assert(bitDBitsConsumed <= (uint)(sizeof(nuint) * 8));
         bitDPtr -= bitDBitsConsumed >> 3;

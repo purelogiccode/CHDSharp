@@ -1977,7 +1977,7 @@ internal static partial class Deflater
                 {
                     if (++s.Strstart <= maxInsert)
                     {
-                        hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
+                        InsertString(s, s.Strstart, ref window, ref prev, ref head);
                     }
                 } while (--s.PrevLength != 0);
 

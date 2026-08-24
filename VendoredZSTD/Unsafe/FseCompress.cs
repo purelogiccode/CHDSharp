@@ -479,7 +479,7 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanRtbTable => new uint[8]
+    private static ReadOnlySpan<uint> SpanRtbTable => new uint[]
     {
         0,
         473195,

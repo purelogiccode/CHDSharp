@@ -7,6 +7,7 @@ public enum XxhErrorcode
 {
     /*!< OK */
     XxhOk = 0,
+
     /*!< Error */
     XxhError
 }
