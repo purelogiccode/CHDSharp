@@ -85,7 +85,7 @@ Possible causes:
 | **Seekable streams only** | `Open(Stream, ...)` requires `CanSeek`. |
 | **V6+ not supported** | MAME has not released a V6 format; if it ever does, a new header parser will be needed. |
 | **No lossy AVHuff video** | See above. |
-| **No native codecs** | zstd goes through `ZstdSharp.Port`; everything else is managed. No `libz`/`liblzma` acceleration. |
+| **No native codecs** | zstd goes through the in-repo `VendoredZSTD` port (pure C#); everything else is managed. No `libz`/`liblzma` acceleration. |
 
 ---
 

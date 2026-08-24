@@ -116,7 +116,7 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 | LZMA | `lzma` | `cdlz` | Custom pure-C# LZMA decoder |
 | Huffman | `huff` | — | Custom pure-C# Huffman decoder |
 | FLAC | `flac` | `cdfl` | Custom pure-C# FLAC decoder |
-| Zstd | `zstd` | `cdzs` | [ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp) (pure C#) |
+| Zstd | `zstd` | `cdzs` | `VendoredZSTD` (in-repo pure C# port of zstd 1.5.5) |
 | AVHuff | `avhu` | — | Custom pure-C# A/V Huffman decoder |
 
 ---
@@ -142,4 +142,4 @@ MIT License — see [LICENSE](../LICENSE.txt).
 - **Gordon Jefferyes** — original C# CHDSharp implementation (RomVault).
 - **MAME** — CHD format specification and `chdman` reference implementation.
 - **libchdr** (Romain Tisseraud) — C reference library, used for parity comparison.
-- **ZstdSharp.Port** (Oleg Stepanischev) — pure C# Zstd decompressor.
+- **ZstdSharp.Port** (Oleg Stepanischev) — pure C# Zstd port, vendored in-repo as `VendoredZSTD`; now matches MAME's zstd 1.5.5 frames byte-for-byte.

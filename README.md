@@ -507,7 +507,7 @@ The full wiki lives in [`docs/`](docs/README.md):
 | Project | Type | Description |
 |---------|------|-------------|
 | `CHDSharpTest` | xUnit | Unit + corpus tests (468 tests, 30 CHD fixtures) |
-| `CHDSharpEncoderTest` | xUnit | Encoder tests (350 tests, chdman cross-validation) |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (434 tests, chdman cross-validation) |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator |
 
@@ -574,7 +574,8 @@ CHDSharp/
 ├── CHDSharpBattleTest/     Battle test harness
 ├── VendoredZLib/           Pure C# zlib port
 ├── VendoredLZMA/           LZMA SDK C# port
-└── VendoredFlac/           Pure C# FLAC encoder/decoder
+├── VendoredFlac/           Pure C# FLAC encoder/decoder
+└── VendoredZSTD/           Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
 ```
 
 ---
@@ -593,7 +594,7 @@ The `VendoredFlac` component (FLAC encoder/decoder) is based on [CUETools.Flake]
 
 - **[MAME](https://www.mamedev.org/)** — CHD format specification and `chdman` reference implementation
 - **[libchdr](https://github.com/rtissera/libchdr)** — C reference library by Romain Tisseraud
-- **[ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp)** — pure C# Zstd decompressor by Oleg Stepanischev
+- **[ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp)** — pure C# Zstd port by Oleg Stepanischev, vendored in-repo as `VendoredZSTD`; the port now matches MAME's bundled zstd 1.5.5 frames byte-for-byte
 
 ---
 

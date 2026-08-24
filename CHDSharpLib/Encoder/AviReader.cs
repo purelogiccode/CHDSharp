@@ -299,7 +299,9 @@ public sealed class AviReader : IDisposable
                             case ListTypeMovi:
                                 if (firstMoviData < 0)
                                 {
-                                    firstMoviData = dataPos + 4;
+                                    // idx1 chunk offsets are relative to the 'movi' fourcc
+                                    // (mame aviio.cpp: parse_idx1_chunk base = movi.offset + 8)
+                                    firstMoviData = dataPos;
                                 }
 
                                 ScanMoviList(dataPos + 4, size - 4);

@@ -26,8 +26,12 @@ CSharp_CHDSharp.sln
 ├── CHDSharpTest/         xUnit unit + corpus tests
 ├── CHDSharpTestGen/      Deterministic corpus generator
 ├── CHDSharpTester/       WPF interactive tester
-├── CHDSharpEncoderTest/  xUnit encoder tests (350 tests)
+├── CHDSharpEncoderTest/  xUnit encoder tests (434 tests)
 ├── CHDSharpBattleTest/   Battle test harness (chdman vs CHDSharp)
+├── VendoredZLib/         Pure C# zlib port
+├── VendoredLZMA/         LZMA SDK C# port
+├── VendoredFlac/         Pure C# FLAC encoder/decoder
+├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
 └── Directory.Build.props Centralized versioning (1.3.0) and analyzer setup
 ```
 
@@ -79,7 +83,7 @@ dotnet test -v detailed
 
 The suite contains **558 tests** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
 
-The companion **encoder suite** (`CHDSharpEncoderTest`, 350 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
+The companion **encoder suite** (`CHDSharpEncoderTest`, 434 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
 
 ```bash
 dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
@@ -112,9 +116,17 @@ The package (`CHDSharp.<version>.nupkg`) is written to `CHDSharpLib/bin/Release/
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| [ZstdSharp.Port](https://www.nuget.org/packages/ZstdSharp.Port/) | 0.8.8 | Pure C# Zstd decompression |
 | [Microsoft.Extensions.Logging.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions/) | 10.0.11 (all TFMs) | Pluggable logging (optional) |
 | Microsoft.SourceLink.GitHub | 10.0.400 | SourceLink (build-time, `PrivateAssets=all`) |
+
+All codec dependencies are vendored in-repo as project references (no external runtime NuGet dependencies):
+
+| Project | Purpose |
+|---------|---------|
+| `VendoredZLib` | Pure C# zlib (deflate/inflate) |
+| `VendoredLZMA` | Pure C# LZMA SDK port |
+| `VendoredFlac` | Pure C# FLAC encoder/decoder (based on CUETools.Flake) |
+| `VendoredZSTD` | Pure C# zstd 1.5.5 encoder/decoder (C-to-C# port of MAME's bundled tree) |
 
 `CHDSharpLib` also declares `InternalsVisibleTo` for `CHDSharpTest` and `CHDSharpTestGen` so the test projects can exercise internal members directly.
 

@@ -22,7 +22,7 @@ or via the Package Manager Console:
 Install-Package CHDSharp
 ```
 
-The package targets `net8.0`, `net9.0`, and `net10.0` and has **no native dependencies**. The only runtime dependency is [ZstdSharp.Port](https://www.nuget.org/packages/ZstdSharp.Port/) (a pure-C# Zstd decompressor); every other codec is implemented from scratch in managed code.
+The package targets `net8.0`, `net9.0`, and `net10.0` and has **no native dependencies**. Every codec — including Zstd and AVHuff — is implemented in managed code, with the Zstd port vendored in-repo as a pure C# project.
 
 ### From source
 

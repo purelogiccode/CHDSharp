@@ -8,11 +8,10 @@ The encoder is part of `CHDSharpLib` under the `CHDSharp.Encoder` namespace. It 
 files from raw binaries and CD images (CUE/GDI/ISO/TOC/NRG), re-compresses existing CHDs
 (`Copy`), creates differential (delta) children against a parent, and writes
 uncompressed CHDs (`-c none`) — producing files that are **byte-for-byte identical to
-`chdman`** when the same codec is used, pass `chdman verify`, and extract back
+`chdman`** for every writable codec (zlib, zstd, lzma, huff, flac, the four CD variants,
+and `avhu` via `createld`), pass `chdman verify`, and extract back
 identically via `chdman extractraw`. The library is **100% pure C#** (no native DLLs)
-and runs identically on Windows and Linux. One parity caveat: `cdzs` encode output is
-valid and chdman-verifiable but not always bit-identical to chdman's own file (the managed
-zstd port finalizes frames differently on some buffer sizes); every other codec is bit-exact.
+and runs identically on Windows and Linux.
 
 Full API docs and project layout: see `CHDSharpLib/Encoder/`.
 
@@ -60,7 +59,7 @@ produces byte-identical output to encoding without one.
 ## Validation
 
 The encoder is validated against `chdman.exe` v0.288 and the CHDSharpLib reader
-(350 tests per target framework in `CHDSharpEncoderTest`):
+(434 tests per target framework in `CHDSharpEncoderTest`):
 
 - `chdman info` reports the file without errors; `chdman verify` passes (raw + overall SHA-1).
 - `chdman extractraw` of encoder output is byte-identical to the source (raw) and to
@@ -73,8 +72,12 @@ The encoder is validated against `chdman.exe` v0.288 and the CHDSharpLib reader
   and delta-child variants).
 - Delta children made from chdman-made parents pass `chdman verify -ip` and byte-identical
   `extractraw -ip`.
-- **cdzs caveat**: output passes `chdman verify`, deep `CheckFile`, and `extractcd` parity,
-  but whole-file bytes may differ from chdman's (managed zstd trailing byte).
+- **`cdzs` is byte-identical to chdman**: the in-repo `VendoredZSTD` port (a C-to-C# port of
+  the zstd 1.5.5 tree that MAME bundles) emits the same frame bytes as C zstd for the same
+  hunk buffers, so the old "managed zstd trailing byte" caveat is gone.
+- **`createld` output is byte-identical to `chdman createld`**: the AVI reader, AVHuff
+  encoder, and the mono-FLAC audio path (exhaustive per-frame subframe search) all match
+  MAME byte-for-byte, so laserdisc CHDs round-trip exactly.
 - **100 MB+ integration tests** (`LargeFileValidationTests`) encode 100 MB raw and
   ~100 MB CD images, then check `chdman verify`, `extractraw` SHA-1 vs. the source, and a
   deep CHDSharpLib `CheckFile`:
@@ -132,8 +135,8 @@ via `createld`/`extractld`), NRG/GDI/ISO/TOC/CUE input, AVI input/output for las
 predefined HDD geometry templates (`--listtemplates`, `-tp <id>`), metadata editing
 (`SetMetadata`/`DeleteMetadata` + CLI `addmeta`/`delmeta`), IDNT/KEY/CIS metadata,
 CUE style conversion / Redump matching (`CueConverter`), platform detection with smart
-codec presets (`-c auto`), and byte-exact map clipping parity. `createld` produces valid, `chdman verify`-passing
-laserdisc CHDs from AVI files (YUY2/VYUY/UYVY, interlaced or progressive, with VBI
-metadata); `extractld` decodes laserdisc CHDs back to playable AVI files. The only gaps
-are encoding-level byte-parity with chdman's `createld` output (ours is smaller due to
-more compact encoding) and `cdzs` bit-exactness (managed zstd trailing byte). Future ideas
+codec presets (`-c auto`), and byte-exact map clipping parity. `createld` output is now
+**byte-for-byte identical to `chdman createld`** — the AVI reader, AVHuff encoder, and
+mono-FLAC audio path all match MAME exactly — and `cdzs` output is byte-identical to
+chdman's too (the vendored in-repo zstd port matches C zstd frames). `extractld` decodes
+laserdisc CHDs back to playable AVI files. No encoding-level parity gaps remain.

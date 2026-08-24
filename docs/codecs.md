@@ -18,7 +18,7 @@ dispatched per hunk by `ChdBlockRead.ReadBlock` according to the map entry's com
 | LZMA | `lzma` | `cdlz` | Custom pure-C# port of the LZMA SDK decoder |
 | Huffman | `huff` | — | Custom pure-C# Huffman decoder |
 | FLAC | `flac` | `cdfl` | Custom pure-C# FLAC decoder |
-| Zstd | `zstd` | `cdzs` | [ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp) (pure C#) |
+| Zstd | `zstd` | `cdzs` | `VendoredZSTD` (in-repo pure C# port of zstd 1.5.5) |
 | AVHuff | `avhu` | — | Custom pure-C# A/V Huffman decoder |
 
 ---
@@ -67,7 +67,13 @@ The **`cdfl`** variant uses FLAC (always byte-swapped) for sector data and zlib 
 
 ## zstd / cdzs
 
-Zstandard via the managed `ZstdSharp.Port` package — no native code. Each hunk is a single-frame zstd block; the decompressed length must exactly equal `hunkbytes`. The **`cdzs`** variant uses zstd for both sector data and subcode with ECC/sync regeneration.
+Zstandard via the in-repo `VendoredZSTD` project — a C-to-C# port of the zstd 1.5.5 tree that
+MAME bundles, kept as a local project (no NuGet dependency, no native code). Both the decoder
+and the encoder are included. Each hunk is a single-frame zstd block; the decompressed length
+must exactly equal `hunkbytes`. The **`cdzs`** variant uses zstd for both sector data and
+subcode with ECC/sync regeneration. Because the port mirrors the reference `compressStream2`/
+`compressEnd` behavior, its frames are byte-identical to C zstd for the same hunk buffers —
+the encoder's `zstd` and `cdzs` output matches `chdman` exactly.
 
 ## avhu (A/V Huffman)
 
@@ -86,7 +92,7 @@ The laserdisc A/V codec — the one codec **libchdr 0.3.0 does not implement**. 
 
 **Audio** is encoded one **mono** stream per channel:
 
-- `0xFFFF` → each channel is a headerless **mono FLAC** stream (16-bit @ 48 kHz in MAME's encoder). CHDSharp configures its FLAC decoder as 16-bit mono and swaps to big-endian output, matching MAME's `flac_decoder::reset(48000, 1, ...)`.
+- `0xFFFF` → each channel is a headerless **mono FLAC** stream (16-bit @ 48 kHz in MAME's encoder). CHDSharp configures its FLAC decoder as 16-bit mono and swaps to big-endian output, matching MAME's `flac_decoder::reset(48000, 1, ...)`. On the encode side the vendored FLAC encoder (`VendoredFlac`) drives libFLAC 1.4.3's compression level 8 and — for the mono/48 kHz avhu path — evaluates every fixed-predictor order per frame, so its output is byte-identical to chdman's.
 - non-`0xFFFF` → two delta Huffman trees (hi/lo bytes) per hunk; samples are delta-decoded from a running previous sample.
 - `0` → uncompressed 16-bit deltas.
 

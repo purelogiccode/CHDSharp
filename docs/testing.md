@@ -17,7 +17,7 @@ CHDSharp ships a **558-test** xUnit suite plus a deterministic 30-file corpus co
 | Integration | `CHDSharpTest` | End-to-end CLI tests (`CliIntegrationTests`): directory scan, `--random`, `--list`, `--parent`. |
 | Interactive | `CHDSharpTester` | WPF app that batch-verifies folders and **cross-checks against `chdman`** (header info, deep verify, SHA1, random-access extraction, codec decode, parent chains). |
 | Encoder unit | `CHDSharpEncoderTest` | Tests for the `CHDSharp.Encoder` encoder: endian/CRC/SHA1/deflate primitives, Huffman + V5 map compression, header, CUE/GDI/ISO/TOC/NRG parsers, metadata writer, per-hunk ratio logging. |
-| Encoder validation | `CHDSharpEncoderTest` | Cross-validation of encoder output against `chdman.exe` v0.288 (`info`, `verify`, `extractraw`, `createcd`, `createraw`, `copy`) and the CHDSharpLib reader — including **100 MB+ raw/CD round-trips** and byte-for-byte file comparison with `chdman createraw` (validity-checked for `cdzs`; see [Encoder](encoder.md#validation)). |
+| Encoder validation | `CHDSharpEncoderTest` | Cross-validation of encoder output against `chdman.exe` v0.288 (`info`, `verify`, `extractraw`, `createcd`, `createraw`, `copy`, `createld`) and the CHDSharpLib reader — including **100 MB+ raw/CD round-trips** and byte-for-byte file comparison with `chdman` for every writable codec (zlib, zstd, lzma, huff, flac, cdzl, cdlz, cdzs, cdfl, avhu). |
 | Battle | `CHDSharpBattleTest` | Head-to-head comparison harness between CHDSharp and chdman on real-world CHD files. |
 
 ---

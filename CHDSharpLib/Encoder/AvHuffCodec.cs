@@ -21,16 +21,31 @@ public sealed class AvHuffCodec : IChdCodec
         if (data.Length < 12 || data[0] != 'c' || data[1] != 'h' || data[2] != 'a' || data[3] != 'v')
             return null;
 
-        // Determine raw frame size from the 'chav' header. If the hunk contains
-        // multiple frames (data.Length > rawFrameSize), store raw — avhuff only
-        // compresses single-frame hunks, matching MAME's codec-chain behavior.
+        // Determine raw frame size from the 'chav' header. The hunk may hold several
+        // whole frames (multi-frame hunks) or a single frame padded with zeroes to the
+        // maximum sample count. MAME's avhuff codec compresses single-frame hunks even
+        // when the tail is zero-padded (its encoder uses the header's sample count), and
+        // stores multi-frame hunks raw. Only reject when non-zero data follows the frame.
         uint channels = data[5];
         var samples = (uint)((data[6] << 8) | data[7]);
         var width = (uint)((data[8] << 8) | data[9]);
         var height = (uint)((data[10] << 8) | data[11]);
         var rawFrameSize = AvHuffEncoder.RawDataSize(width, height, channels, samples);
         if (rawFrameSize > 0 && data.Length > rawFrameSize)
-            return null;
+        {
+            var hasTrailingData = false;
+            for (var i = rawFrameSize; i < data.Length; i++)
+            {
+                if (data[(int)i] != 0)
+                {
+                    hasTrailingData = true;
+                    break;
+                }
+            }
+
+            if (hasTrailingData)
+                return null;
+        }
 
         var encoder = new AvHuffEncoder();
         var dest = new byte[data.Length];

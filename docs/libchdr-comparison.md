@@ -31,7 +31,7 @@ CHDSharp vs the two other independent CHD implementations (chd-rs 0.3.4 and CHDl
 | Metadata read | ✅ | ✅ | ✅ | ✅ | ✅ `chd_get_metadata` |
 | **Writing** | | | | | |
 | Write V5 | ✅ (encoder) | ❌ read-only | ✅ | ✅ (reference) | ❌ read-only |
-| All 10 codecs (encode) | 🟡 9 of 10 (`avhu` decode-only; chdman produces it only via `createld`, deliberately skipped) | ❌ | ✅ | ✅ | ❌ |
+| All 10 codecs (encode) | ✅ all 10 (avhu via `createld`, byte-identical) | ❌ | ✅ | ✅ | ❌ |
 | Uncompressed CHD (`-c none`) | ✅ byte-exact with chdman | 🟡 decode only | 🟡 core supports, CLI rejects | ✅ | 🟡 decode only |
 | Delta/parent CHD creation (`-ip`) | ✅ | ❌ | ✅ | ✅ | ❌ |
 | CHD→CHD copy / re-compress | ✅ | ❌ | ✅ | ✅ | ❌ |
@@ -79,7 +79,7 @@ The same table is also in the [repository README](../README.md#library-compariso
 | `lzma` / `cdlz` | ✅ (LZMA SDK) | ✅ (custom C# port) |
 | `huff` | ✅ | ✅ |
 | `flac` / `cdfl` | ✅ (dr_flac) | ✅ (custom C# decoder) |
-| `zstd` / `cdzs` | ✅ (zstd 1.5.7) | ✅ (ZstdSharp.Port) |
+| `zstd` / `cdzs` | ✅ (zstd 1.5.7) | ✅ (in-repo VendoredZSTD, zstd 1.5.5 port) |
 | `avhu` (AVHuff) | ❌ *(known limitation)* | ✅ |
 | Secondary codec (`ZLIB_PLUS` type-6 hunks) | ❌ *declared but unimplemented* | ✅ |
 | Per-hunk CRC32 verification (V3/V4) | ❌ *stored, never checked* | ✅ (honors NO_CRC) |
@@ -132,7 +132,7 @@ All four are covered by `ParityFeaturesTests`.
 
 - **FLAC:** libchdr uses dr_flac 0.13.3 (battle-tested, full spec). CHDSharp's custom decoder covers everything CHD content uses — 16/24-bit, all channel modes incl. mid/side, fixed/LPC subframes (orders 1–32), all block sizes, Rice coding, CRC-8/16 — and rejects unsupported cases (e.g. 8/12/20-bit, custom sample-rate codes) that `chdman` never produces. The corpus includes FLAC, cdfl, and AVHuff-FLAC fixtures.
 - **LZMA:** both synthesize the fixed properties (lc=3, lp=0, pb=2, dict = hunk size) since CHD hunks are headerless; CHDSharp's port also supports LZMA2 and preset dictionaries internally.
-- **Zstd:** libchdr uses zstd 1.5.7 native; CHDSharp uses ZstdSharp.Port 0.8.8 (pure C#). Both handle single-frame blocks correctly.
+- **Zstd:** libchdr uses zstd 1.5.7 native; CHDSharp uses an in-repo pure C# port of the zstd 1.5.5 tree that MAME bundles (`VendoredZSTD`). Both handle single-frame blocks correctly and produce byte-identical output for the same hunk buffers.
 
 ---
 

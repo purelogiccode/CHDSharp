@@ -320,15 +320,26 @@ internal sealed class LibFlacEncoder
         }
         else
         {
-            if (rbps[(int)guessFixed] < bps && guessFixed < (uint)_blockSize)
+            // The avhu codec (mono, 48 kHz, per-frame block sizes) drives libFLAC's fixed
+            // subframe search over every candidate order; the raw/CD stereo FLAC codec uses
+            // the single guessed order, matching chdman (verified byte-for-byte on the
+            // battle pcm16 corpus and the laserdisc createld output).
+            var fixedOrders = _sampleRate == 48000 && _channels == 1
+                ? new uint[] { 0, 1, 2, 3, 4 }
+                : new uint[] { guessFixed };
+            foreach (var fixedOrder in fixedOrders)
             {
-                var ci = bestIdx ^ 1;
-                FlacLpcMath.FixedComputeResidual(sig, 4 + (int)guessFixed, (uint)_blockSize - guessFixed, guessFixed, sf[ci].Residual.AsSpan(0, _blockSize - (int)guessFixed));
-                var c = FixedBits(sf[ci], bps, wasted, guessFixed, riceLimit, maxPo, rice[ci]);
-                if (c < bestBits)
+                if (rbps[(int)fixedOrder] < bps && fixedOrder < (uint)_blockSize)
                 {
-                    bestIdx = ci;
-                    bestBits = c;
+                    var ci = bestIdx ^ 1;
+                    FlacLpcMath.FixedComputeResidual(sig, 4 + (int)fixedOrder, (uint)_blockSize - fixedOrder, fixedOrder, sf[ci].Residual.AsSpan(0, _blockSize - (int)fixedOrder));
+                    var c = FixedBits(sf[ci], bps, wasted, fixedOrder, riceLimit, maxPo, rice[ci]);
+
+                    if (c < bestBits)
+                    {
+                        bestIdx = ci;
+                        bestBits = c;
+                    }
                 }
             }
 

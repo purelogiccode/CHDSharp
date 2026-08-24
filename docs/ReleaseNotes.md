@@ -1,3 +1,41 @@
+# CHDSharp Release Notes
+
+## Unreleased
+
+### Byte-for-byte parity with chdman for all codecs
+
+Every encoder output now matches MAME's `chdman` byte-for-byte, including the three
+previously non-exact paths:
+
+- **`createld` (laserdisc AVHuff)** — fixed an off-by-four AVI `idx1` base offset that
+  shifted audio by one sample and misaligned video; the AVHuff codec now correctly
+  compresses zero-padded single-frame hunks; and the mono-FLAC encoder now evaluates
+  every fixed-predictor order per frame (matching libFLAC 1.4.3's behaviour for the
+  mono/48 kHz avhu path).
+- **`cdzs` (CD Zstandard)** — the in-repo `VendoredZSTD` port (a C-to-C# port of the
+  zstd 1.5.5 tree that MAME bundles) now emits frames byte-identical to C zstd for the
+  same hunk buffers, replacing the previous NuGet `ZstdSharp.Port` dependency.
+- **`zstd` (raw Zstandard)** — same fix as `cdzs`; the encoder's `zstd` output is now
+  byte-identical to `chdman createraw -c zstd`.
+
+### VendoredZSTD replaces ZstdSharp.Port NuGet dependency
+
+The `ZstdSharp.Port` NuGet package has been replaced by an in-repo `VendoredZSTD` project
+containing a full C-to-C# port of the zstd 1.5.5 source tree (the same version MAME
+bundles). Both the encoder and decoder are included. The library now has **zero external
+runtime NuGet dependencies** — every codec is vendored in-repo.
+
+### Bug fixes
+
+- Fixed `AviReader` `idx1` chunk offset base: offsets are now correctly relative to the
+  `'movi'` fourcc (matching MAME's `aviio.cpp` `parse_idx1_chunk` base), fixing audio/video
+  misalignment in all AVI-based laserdisc encoding.
+- Fixed `AvHuffCodec.Compress` rejecting zero-padded single-frame hunks: hunks whose
+  trailing bytes are all zeroes (the common case for interlaced laserdisc fields with fewer
+  samples than the maximum) are now correctly compressed instead of stored raw.
+
+---
+
 # CHDSharp v1.3.0 Release Notes
 
 ## Overview
@@ -81,5 +119,5 @@ Pre-built self-contained single-file executables (binary renamed from `CHDSharpC
 - **Gordon Jefferyes** -- original C# CHDSharp implementation (RomVault)
 - **MAME** -- CHD format specification and `chdman` reference implementation
 - **libchdr** (Romain Tisseraud) -- C reference library
-- **ZstdSharp.Port** (Oleg Stepanischev) -- pure C# Zstd decompressor
+- **ZstdSharp.Port** (Oleg Stepanischev) -- pure C# Zstd port, vendored in-repo as `VendoredZSTD`
 - **CUETools.Flake** (Grigory Chudov) -- FLAC encoder (LGPL 2.1)

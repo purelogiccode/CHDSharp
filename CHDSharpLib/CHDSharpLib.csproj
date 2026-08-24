@@ -34,7 +34,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.400" PrivateAssets="All" />
     <PackageReference Include="System.IO.Hashing" Version="10.0.11" />
-    <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CHDSharpTest" />
@@ -59,6 +58,7 @@
     <ProjectReference Include="..\VendoredZLib\VendoredZLib.csproj" />
     <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" />
     <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" />
+    <ProjectReference Include="..\VendoredZSTD\VendoredZSTD.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="CHDSharp.Models" />
