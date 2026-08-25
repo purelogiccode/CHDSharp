@@ -1,19 +1,23 @@
+﻿using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct HUF_buildCTable_wksp_tables
     {
         public _huffNodeTbl_e__FixedBuffer huffNodeTbl;
         public _rankPosition_e__FixedBuffer rankPosition;
 #if NET8_0_OR_GREATER
         [InlineArray(512)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _huffNodeTbl_e__FixedBuffer
         {
             public nodeElt_s e0;
         }
 
 #else
+[StructLayout(LayoutKind.Sequential)]
         public unsafe struct _huffNodeTbl_e__FixedBuffer
         {
             public nodeElt_s e0;
@@ -533,12 +537,14 @@ namespace VendoredZSTD.Unsafe
 
 #if NET8_0_OR_GREATER
         [InlineArray(192)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _rankPosition_e__FixedBuffer
         {
             public rankPos e0;
         }
 
 #else
+[StructLayout(LayoutKind.Sequential)]
         public unsafe struct _rankPosition_e__FixedBuffer
         {
             public rankPos e0;

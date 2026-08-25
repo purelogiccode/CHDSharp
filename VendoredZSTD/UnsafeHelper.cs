@@ -15,7 +15,7 @@ namespace VendoredZSTD
     {
         public static void* PoisonMemory(void* destination, ulong size)
         {
-            memset(destination, 0xCC, (uint) size);
+            memset(destination, 0xCC, (uint)size);
             return destination;
         }
 
@@ -33,7 +33,7 @@ namespace VendoredZSTD
         public static void* malloc(ulong size)
         {
 #if DEBUG
-            return PoisonMemory((void*) Marshal.AllocHGlobal((nint) size), size);
+            return PoisonMemory((void*)Marshal.AllocHGlobal((nint)size), size);
 #else
             return (void*) Marshal.AllocHGlobal((nint) size);
 #endif
@@ -44,8 +44,8 @@ namespace VendoredZSTD
         {
             var total = num * size;
             assert(total <= uint.MaxValue);
-            var destination = (void*) Marshal.AllocHGlobal((nint) total);
-            memset(destination, 0, (uint) total);
+            var destination = (void*)Marshal.AllocHGlobal((nint)total);
+            memset(destination, 0, (uint)total);
             return destination;
         }
 
@@ -68,14 +68,14 @@ namespace VendoredZSTD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void free(void* ptr)
         {
-            Marshal.FreeHGlobal((IntPtr) ptr);
+            Marshal.FreeHGlobal((IntPtr)ptr);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T* GetArrayPointer<T>(T[] array) where T : unmanaged
         {
-            var size = (uint) (sizeof(T) * array.Length);
-            var destination = (T*) malloc(size);
+            var size = (uint)(sizeof(T) * array.Length);
+            var destination = (T*)malloc(size);
             fixed (void* source = &array[0])
                 System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(destination, source, size);
 
@@ -84,7 +84,7 @@ namespace VendoredZSTD
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void assert(bool condition, string message = null)
+        public static void assert(bool condition, string? message = null)
         {
             if (!condition)
                 throw new ArgumentException(message ?? "assert failed");

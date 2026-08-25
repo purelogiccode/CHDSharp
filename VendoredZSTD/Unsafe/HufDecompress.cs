@@ -506,8 +506,6 @@ namespace VendoredZSTD.Unsafe
             for (; ; )
             {
                 byte* olimit;
-                int stream;
-                int symbol;
                 {
                     assert(op0 <= op1);
                     assert(ip0 >= ilimit);
@@ -1445,8 +1443,6 @@ namespace VendoredZSTD.Unsafe
             for (; ; )
             {
                 byte* olimit;
-                int stream;
-                int symbol;
                 {
                     assert(op0 <= oend0);
                     assert(ip0 >= ilimit);

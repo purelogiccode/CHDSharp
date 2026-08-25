@@ -1,3 +1,4 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /**
@@ -94,6 +95,7 @@ namespace VendoredZSTD.Unsafe
      *
      * Attempts to reserve objects of different types out of order will fail.
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_cwksp
     {
         public void* workspace;

@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct HUF_ReadDTableX1_Workspace
     {
         public fixed uint rankVal[13];

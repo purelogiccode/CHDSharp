@@ -395,8 +395,8 @@ namespace VendoredZSTD.Unsafe
             byte* spread = (byte*)(symbolNext + (35 > 52 ? 35 : 52) + 1);
             uint highThreshold = tableSize - 1;
             assert(maxSymbolValue <= (35 > 52 ? 35 : 52));
-            assert(tableLog <= ((9 > 9 ? 9 : 9) > 8 ? 9 > 9 ? 9 : 9 : 8));
-            assert(wkspSize >= sizeof(short) * ((35 > 52 ? 35 : 52) + 1) + (1U << ((9 > 9 ? 9 : 9) > 8 ? 9 > 9 ? 9 : 9 : 8)) + sizeof(ulong));
+            assert(tableLog <= 9);
+            assert(wkspSize >= sizeof(short) * (52 + 1) + (1U << 9) + sizeof(ulong));
             {
                 ZSTD_seqSymbol_header DTableH;
                 DTableH.tableLog = tableLog;
@@ -1367,7 +1367,7 @@ namespace VendoredZSTD.Unsafe
         private static nuint ZSTD_decompressSequences_body(ZSTD_DCtx_s* dctx, void* dst, nuint maxDstSize, void* seqStart, nuint seqSize, int nbSeq, ZSTD_longOffset_e isLongOffset, int frame)
         {
             // HACK, force nbSeq to stack (better register usage)
-            System.Threading.Thread.VolatileRead(ref nbSeq);
+            System.Threading.Volatile.Read(ref nbSeq);
             byte* ip = (byte*)seqStart;
             byte* iend = ip + seqSize;
             byte* ostart = (byte*)dst;
@@ -2089,7 +2089,7 @@ namespace VendoredZSTD.Unsafe
         private static nuint ZSTD_decompressSequences_body(ZSTD_DCtx_s* dctx, void* dst, nuint maxDstSize, void* seqStart, nuint seqSize, int nbSeq, ZSTD_longOffset_e isLongOffset, int frame)
         {
             // HACK, force nbSeq to stack (better register usage)
-            System.Threading.Thread.VolatileRead(ref nbSeq);
+            System.Threading.Volatile.Read(ref nbSeq);
             byte* ip = (byte*)(seqStart);
             byte* iend = ip + seqSize;
             byte* ostart = (byte*)(dst);

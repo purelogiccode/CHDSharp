@@ -8,7 +8,7 @@ namespace VendoredZSTD
 {
     public static unsafe class DictBuilder
     {
-        public static byte[] TrainFromBuffer(IEnumerable<byte[]> samples, int dictCapacity = DefaultDictCapacity) 
+        public static byte[] TrainFromBuffer(IEnumerable<byte[]> samples, int dictCapacity = DefaultDictCapacity)
             => TrainFromBufferFastCover(samples, Methods.ZSTD_defaultCLevel(), dictCapacity).ToArray();
 
         public static Span<byte> TrainFromBufferFastCover(IEnumerable<byte[]> samples, int level, int dictCapacity = DefaultDictCapacity)
@@ -18,7 +18,7 @@ namespace VendoredZSTD
             {
                 d = 8,
                 steps = 4,
-                zParams = new ZDICT_params_t {compressionLevel = level}
+                zParams = new ZDICT_params_t { compressionLevel = level }
             }, dictCapacity);
         }
 
@@ -28,7 +28,7 @@ namespace VendoredZSTD
             var samplesSizes = samples.Select(sample =>
             {
                 ms.Write(sample, 0, sample.Length);
-                return (nuint) sample.Length;
+                return (nuint)sample.Length;
             }).ToArray();
 
             var dictBuffer = new byte[dictCapacity];
@@ -36,9 +36,9 @@ namespace VendoredZSTD
             fixed (byte* samplesBufferPtr = ms.GetBuffer())
             fixed (nuint* samplesSizesPtr = samplesSizes)
             {
-                var dictSize = (int) Methods
-                    .ZDICT_optimizeTrainFromBuffer_fastCover(dictBufferPtr, (nuint) dictCapacity, samplesBufferPtr, samplesSizesPtr,
-                        (uint) samplesSizes.Length, &@params)
+                var dictSize = (int)Methods
+                    .ZDICT_optimizeTrainFromBuffer_fastCover(dictBufferPtr, (nuint)dictCapacity, samplesBufferPtr, samplesSizesPtr,
+                        (uint)samplesSizes.Length, &@params)
                     .EnsureZdictSuccess();
 
                 return new Span<byte>(dictBuffer, 0, dictSize);

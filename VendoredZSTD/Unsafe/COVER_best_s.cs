@@ -1,3 +1,4 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /**
@@ -8,6 +9,7 @@ namespace VendoredZSTD.Unsafe
      * All of the methods except COVER_best_init() are thread safe if zstd is
      * compiled with multithreaded support.
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct COVER_best_s
     {
         public void* mutex;

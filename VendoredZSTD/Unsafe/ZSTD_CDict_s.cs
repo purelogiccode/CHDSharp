@@ -1,8 +1,10 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /*-*************************************
      *  Context memory management
      ***************************************/
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ZSTD_CDict_s
     {
         public void* dictContent;

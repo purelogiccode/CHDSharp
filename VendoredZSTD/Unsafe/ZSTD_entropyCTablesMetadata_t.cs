@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_entropyCTablesMetadata_t
     {
         public ZSTD_hufCTablesMetadata_t hufMetadata;

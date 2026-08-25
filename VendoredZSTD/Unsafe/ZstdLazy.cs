@@ -964,7 +964,7 @@ namespace VendoredZSTD.Unsafe
             if (nbChunks == 2)
                 return BitOperations.RotateRight((uint)matches[1] << 16 | (uint)matches[0], (int)head);
             assert(nbChunks == 4);
-            return BitOperations.RotateRight((ulong)matches[3] << 48 | (ulong)matches[2] << 32 | (ulong)matches[1] << 16 | (ulong)matches[0], (int)head);
+            return BitOperations.RotateRight((ulong)(uint)matches[3] << 48 | (ulong)(uint)matches[2] << 32 | (ulong)(uint)matches[1] << 16 | (ulong)(uint)matches[0], (int)head);
         }
 #endif
 
@@ -998,18 +998,12 @@ namespace VendoredZSTD.Unsafe
                     Vector128<ushort> t0 = AdvSimd.ShiftLeftLogical(equalMask, 7);
                     Vector128<uint> t1 = AdvSimd.ShiftRightAndInsert(t0, t0, 14).As<ushort, uint>();
                     Vector128<ulong> t2 = AdvSimd.ShiftRightLogical(t1, 14).As<uint, ulong>();
+#pragma warning disable CA1857
                     Vector128<byte> t3 = AdvSimd.ShiftRightLogicalAdd(t2, t2, 28).As<ulong, byte>();
+#pragma warning restore CA1857
                     ushort hi = AdvSimd.Extract(t3, 8);
                     ushort lo = AdvSimd.Extract(t3, 0);
                     return BitOperations.RotateRight((ushort)(hi << 8 | lo), (int)headGrouped);
-                }
-                else if (rowEntries == 32)
-                {
-                    // todo, there is no vld2q_u16 in c#
-                }
-                else
-                { /* rowEntries == 64 */
-                    // todo, there is no vld4q_u8 in c#
                 }
             }
 #endif

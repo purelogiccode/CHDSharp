@@ -689,7 +689,7 @@ namespace VendoredZSTD.Unsafe
         {
             ZSTD_compressionParameters* cParams = &ms->cParams;
             uint minMatch = cParams->minMatch;
-            void* blockCompressor = ZSTD_selectBlockCompressor(cParams->strategy, useRowMatchFinder, ZSTD_matchState_dictMode(ms));
+            void* chosenCompressor = ZSTD_selectBlockCompressor(cParams->strategy, useRowMatchFinder, ZSTD_matchState_dictMode(ms));
             /* Input bounds */
             byte* istart = (byte*)src;
             byte* iend = istart + srcSize;
@@ -699,7 +699,7 @@ namespace VendoredZSTD.Unsafe
             {
                 nuint lastLLSize;
                 ms->ldmSeqStore = rawSeqStore;
-                lastLLSize = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)blockCompressor)(ms, seqStore, rep, src, srcSize);
+                lastLLSize = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)chosenCompressor)(ms, seqStore, rep, src, srcSize);
                 ZSTD_ldm_skipRawSeqStoreBytes(rawSeqStore, srcSize);
                 return lastLLSize;
             }
@@ -717,7 +717,7 @@ namespace VendoredZSTD.Unsafe
                 ZSTD_ldm_limitTableUpdate(ms, ip);
                 ZSTD_ldm_fillFastTables(ms, ip);
                 {
-                    nuint newLitLength = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)blockCompressor)(ms, seqStore, rep, ip, sequence.litLength);
+                    nuint newLitLength = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)chosenCompressor)(ms, seqStore, rep, ip, sequence.litLength);
                     ip += sequence.litLength;
                     for (i = 3 - 1; i > 0; i--)
                         rep[i] = rep[i - 1];
@@ -730,7 +730,7 @@ namespace VendoredZSTD.Unsafe
 
             ZSTD_ldm_limitTableUpdate(ms, ip);
             ZSTD_ldm_fillFastTables(ms, ip);
-            return ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)blockCompressor)(ms, seqStore, rep, ip, (nuint)(iend - ip));
+            return ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)chosenCompressor)(ms, seqStore, rep, ip, (nuint)(iend - ip));
         }
     }
 }

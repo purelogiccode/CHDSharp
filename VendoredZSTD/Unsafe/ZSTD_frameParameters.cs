@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_frameParameters
     {
         /**< 1: content size will be in frame header (when known) */

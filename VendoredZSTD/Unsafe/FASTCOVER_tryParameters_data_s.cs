@@ -1,8 +1,10 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /**
      * Parameters for FASTCOVER_tryParameters().
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct FASTCOVER_tryParameters_data_s
     {
         public FASTCOVER_ctx_t* ctx;

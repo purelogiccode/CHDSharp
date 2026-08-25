@@ -1,3 +1,4 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /**
@@ -12,6 +13,7 @@ namespace VendoredZSTD.Unsafe
      * iend [in] - The end of each input stream. ip[i] may cross iend[i],
      *             as long as it is above ilimit, but that indicates corruption.
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct HUF_DecompressFastArgs
     {
         public _ip_e__FixedBuffer ip;
@@ -21,6 +23,7 @@ namespace VendoredZSTD.Unsafe
         public byte* ilimit;
         public byte* oend;
         public _iend_e__FixedBuffer iend;
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _ip_e__FixedBuffer
         {
             public byte* e0;
@@ -29,6 +32,7 @@ namespace VendoredZSTD.Unsafe
             public byte* e3;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _op_e__FixedBuffer
         {
             public byte* e0;
@@ -37,6 +41,7 @@ namespace VendoredZSTD.Unsafe
             public byte* e3;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _iend_e__FixedBuffer
         {
             public byte* e0;

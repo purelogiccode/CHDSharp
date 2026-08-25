@@ -1,3 +1,4 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /*-******************************************
@@ -7,6 +8,7 @@ namespace VendoredZSTD.Unsafe
      * A critical property of these streams is that they encode and decode in **reverse** direction.
      * So the first bit sequence you add will be the last to be read, like a LIFO stack.
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct BIT_CStream_t
     {
         public nuint bitContainer;

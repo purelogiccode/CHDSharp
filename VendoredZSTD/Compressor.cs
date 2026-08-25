@@ -57,7 +57,7 @@ namespace VendoredZSTD
         public void LoadDictionary(ReadOnlySpan<byte> dict)
         {
             EnsureNotDisposed();
-            if (dict == null)
+            if (dict.IsEmpty)
             {
                 Methods.ZSTD_CCtx_loadDictionary(cctx, null, 0).EnsureZstdSuccess();
             }
@@ -65,7 +65,7 @@ namespace VendoredZSTD
             {
 
                 fixed (byte* dictPtr = dict)
-                    Methods.ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint) dict.Length).EnsureZstdSuccess();
+                    Methods.ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length).EnsureZstdSuccess();
             }
             GC.KeepAlive(this);
         }
@@ -84,11 +84,11 @@ namespace VendoredZSTD
             ReleaseUnmanagedResources();
         }
 
-        public static int GetCompressBound(int length) 
-            => (int) Methods.ZSTD_compressBound((nuint) length);
+        public static int GetCompressBound(int length)
+            => (int)Methods.ZSTD_compressBound((nuint)length);
 
         public static ulong GetCompressBoundLong(ulong length)
-            => Methods.ZSTD_compressBound((nuint) length);
+            => Methods.ZSTD_compressBound((nuint)length);
 
         public Span<byte> Wrap(ReadOnlySpan<byte> src)
         {
@@ -106,18 +106,18 @@ namespace VendoredZSTD
             fixed (byte* srcPtr = src)
             fixed (byte* destPtr = dest)
             {
-                var returnValue = (int) Methods
-                    .ZSTD_compress2(cctx, destPtr, (nuint) dest.Length, srcPtr, (nuint) src.Length)
+                var returnValue = (int)Methods
+                    .ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
                     .EnsureZstdSuccess();
                 GC.KeepAlive(this);
                 return returnValue;
             }
         }
 
-        public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest) 
-            => Wrap((ReadOnlySpan<byte>) src, dest);
+        public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest)
+            => Wrap((ReadOnlySpan<byte>)src, dest);
 
-        public int Wrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength) 
+        public int Wrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength)
             => Wrap(new ReadOnlySpan<byte>(src, srcOffset, srcLength), new Span<byte>(dst, dstOffset, dstLength));
 
         public bool TryWrap(byte[] src, byte[] dest, int offset, out int written)
@@ -130,7 +130,7 @@ namespace VendoredZSTD
             fixed (byte* destPtr = dest)
             {
                 var returnValue =
-                    Methods.ZSTD_compress2(cctx, destPtr, (nuint) dest.Length, srcPtr, (nuint) src.Length);
+                    Methods.ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length);
                 GC.KeepAlive(this);
 
                 if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
@@ -140,7 +140,7 @@ namespace VendoredZSTD
                 }
 
                 returnValue.EnsureZstdSuccess();
-                written = (int) returnValue;
+                written = (int)returnValue;
                 return true;
             }
         }

@@ -1,3 +1,4 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /* *****************************************
@@ -7,6 +8,7 @@ namespace VendoredZSTD.Unsafe
     This API consists of small unitary functions, which highly benefit from being inlined.
     Hence their body are included in next section.
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct FSE_CState_t
     {
         public nint value;

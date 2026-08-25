@@ -1,7 +1,9 @@
+﻿using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ldmState_t
     {
         /* State for the window round buffer management */
@@ -14,12 +16,14 @@ namespace VendoredZSTD.Unsafe
         public _matchCandidates_e__FixedBuffer matchCandidates;
 #if NET8_0_OR_GREATER
         [InlineArray(64)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _splitIndices_e__FixedBuffer
         {
             public nuint e0;
         }
 
 #else
+[StructLayout(LayoutKind.Sequential)]
         public unsafe struct _splitIndices_e__FixedBuffer
         {
             public nuint e0;
@@ -91,12 +95,14 @@ namespace VendoredZSTD.Unsafe
 
 #if NET8_0_OR_GREATER
         [InlineArray(64)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _matchCandidates_e__FixedBuffer
         {
             public ldmMatchCandidate_t e0;
         }
 
 #else
+[StructLayout(LayoutKind.Sequential)]
         public unsafe struct _matchCandidates_e__FixedBuffer
         {
             public ldmMatchCandidate_t e0;

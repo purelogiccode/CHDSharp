@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_CCtx_params_s
     {
         public ZSTD_format_e format;

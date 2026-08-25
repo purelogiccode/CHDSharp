@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct serialState_t
     {
         /* All variables in the struct are protected by mutex. */

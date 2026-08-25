@@ -37,7 +37,7 @@ namespace VendoredZSTD
         private static void ThrowException(nuint returnValue, string message)
         {
             var code = 0 - returnValue;
-            throw new ZstdException((ZSTD_ErrorCode) code, message);
+            throw new ZstdException((ZSTD_ErrorCode)code, message);
         }
     }
 }

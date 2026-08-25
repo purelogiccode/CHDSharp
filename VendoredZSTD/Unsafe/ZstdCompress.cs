@@ -206,11 +206,6 @@ namespace VendoredZSTD.Unsafe
                 if (cParams->windowLog > 14)
                     mode = ZSTD_paramSwitch_e.ZSTD_ps_enable;
             }
-            else
-            {
-                if (cParams->windowLog > 17)
-                    mode = ZSTD_paramSwitch_e.ZSTD_ps_enable;
-            }
 
             return mode;
         }
@@ -3376,7 +3371,7 @@ namespace VendoredZSTD.Unsafe
                 uint curr = (uint)(istart - @base);
 #if DEBUG
                 if (sizeof(nint) == 8)
-                    assert(istart - @base < (nint)unchecked((uint)-1));
+                    assert(istart - @base < unchecked((nint)(uint)-1));
 #endif
                 if (curr > ms->nextToUpdate + 384)
                     ms->nextToUpdate = curr - (192 < curr - ms->nextToUpdate - 384 ? 192 : curr - ms->nextToUpdate - 384);
@@ -3463,17 +3458,17 @@ namespace VendoredZSTD.Unsafe
                         }
 
                         {
-                            void* blockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
+                            void* selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
                             ms->ldmSeqStore = null;
-                            lastLLSize = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)blockCompressor)(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
+                            lastLLSize = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)selectedBlockCompressor)(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
                         }
                     }
                 }
                 else
                 {
-                    void* blockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
+                    void* selectedBlockCompressor = ZSTD_selectBlockCompressor(zc->appliedParams.cParams.strategy, zc->appliedParams.useRowMatchFinder, dictMode);
                     ms->ldmSeqStore = null;
-                    lastLLSize = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)blockCompressor)(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
+                    lastLLSize = ((delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)selectedBlockCompressor)(ms, &zc->seqStore, zc->blockState.nextCBlock->rep, src, srcSize);
                 }
 
                 {

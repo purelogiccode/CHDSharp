@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZDICT_fastCover_params_t
     {
         /* Segment size : constraint: 0 < k : Reasonable range [16, 2048+] */

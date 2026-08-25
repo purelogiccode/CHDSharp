@@ -1,6 +1,8 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /* Struct containing info needed to make decision about ldm inclusion */
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_optLdm_t
     {
         /* External match candidates store for this block */

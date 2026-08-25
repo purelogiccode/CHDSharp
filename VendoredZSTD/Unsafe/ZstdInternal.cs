@@ -306,18 +306,18 @@ namespace VendoredZSTD.Unsafe
             else
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-            if (Sse2.IsSupported)
-            {
-                Sse2.Store((byte*)dst, Sse2.LoadVector128((byte*)src));
-            }
-            else
+                if (Sse2.IsSupported)
+                {
+                    Sse2.Store((byte*)dst, Sse2.LoadVector128((byte*)src));
+                }
+                else
 #endif
-            {
-                var v1 = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<ulong>((ulong*)src);
-                var v2 = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<ulong>((ulong*)src + 1);
-                System.Runtime.CompilerServices.Unsafe.WriteUnaligned((ulong*)dst, v1);
-                System.Runtime.CompilerServices.Unsafe.WriteUnaligned((ulong*)dst + 1, v2);
-            }
+                {
+                    var v1 = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<ulong>((ulong*)src);
+                    var v2 = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<ulong>((ulong*)src + 1);
+                    System.Runtime.CompilerServices.Unsafe.WriteUnaligned((ulong*)dst, v1);
+                    System.Runtime.CompilerServices.Unsafe.WriteUnaligned((ulong*)dst + 1, v2);
+                }
         }
 
         /*! ZSTD_wildcopy() :

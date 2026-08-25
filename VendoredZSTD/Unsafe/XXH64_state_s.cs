@@ -1,3 +1,4 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /*!
@@ -12,6 +13,7 @@ namespace VendoredZSTD.Unsafe
      * Do not access the members of this struct directly.
      * @see XXH32_state_s, XXH3_state_s
      */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct XXH64_state_s
     {
         /*!< Total length hashed. This is always 64-bit. */

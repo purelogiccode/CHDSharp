@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ZSTD_Sequence
     {
         /* The offset of the match. (NOT the same as the offset code)

@@ -1,7 +1,9 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /* =====   Buffer Pool   ===== */
     /* a single Buffer Pool can be invoked from multiple threads in parallel */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct buffer_s
     {
         public void* start;

@@ -15,7 +15,7 @@ namespace VendoredZSTD
         private readonly bool preserveDecompressor;
         private readonly bool leaveOpen;
         private readonly bool checkEndOfStream;
-        private Decompressor decompressor;
+        private Decompressor? decompressor;
         private ZSTD_inBuffer_s input;
         private nuint lastDecompressResult = 0;
         private bool contextDrained = true;
@@ -43,27 +43,27 @@ namespace VendoredZSTD
             this.leaveOpen = leaveOpen;
             this.checkEndOfStream = checkEndOfStream;
 
-            inputBufferSize = bufferSize > 0 ? bufferSize : (int) Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
+            inputBufferSize = bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
             inputBuffer = ArrayPool<byte>.Shared.Rent(inputBufferSize);
-            input = new ZSTD_inBuffer_s {pos = (nuint) inputBufferSize, size = (nuint) inputBufferSize};
+            input = new ZSTD_inBuffer_s { pos = (nuint)inputBufferSize, size = (nuint)inputBufferSize };
         }
 
         public void SetParameter(ZSTD_dParameter parameter, int value)
         {
             EnsureNotDisposed();
-            decompressor.SetParameter(parameter, value);
+            decompressor!.SetParameter(parameter, value);
         }
 
         public int GetParameter(ZSTD_dParameter parameter)
         {
             EnsureNotDisposed();
-            return decompressor.GetParameter(parameter);
+            return decompressor!.GetParameter(parameter);
         }
 
         public void LoadDictionary(byte[] dict)
         {
             EnsureNotDisposed();
-            decompressor.LoadDictionary(dict);
+            decompressor!.LoadDictionary(dict);
         }
 
         ~DecompressionStream() => Dispose(false);
@@ -104,7 +104,7 @@ namespace VendoredZSTD
                 return 0;
             }
 
-            var output = new ZSTD_outBuffer_s {pos = 0, size = (nuint) buffer.Length};
+            var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
             while (true)
             {
                 // If there is still input available, or there might be data buffered in the decompressor context, flush that out
@@ -122,7 +122,7 @@ namespace VendoredZSTD
                     // If we have data to return, return it immediately, so we won't stall on Read
                     if (output.pos > 0)
                     {
-                        return (int) output.pos;
+                        return (int)output.pos;
                     }
                 }
 
@@ -138,7 +138,7 @@ namespace VendoredZSTD
                     return 0;
                 }
 
-                input.size = (nuint) bytesRead;
+                input.size = (nuint)bytesRead;
                 input.pos = 0;
             }
         }
@@ -162,7 +162,7 @@ namespace VendoredZSTD
                 return 0;
             }
 
-            var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length};
+            var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
             while (true)
             {
                 // If there is still input available, or there might be data buffered in the decompressor context, flush that out
@@ -197,7 +197,7 @@ namespace VendoredZSTD
                     return 0;
                 }
 
-                input.size = (nuint) bytesRead;
+                input.size = (nuint)bytesRead;
                 input.pos = 0;
             }
         }
@@ -209,7 +209,7 @@ namespace VendoredZSTD
             {
                 input.src = inputBufferPtr;
                 output.dst = outputBufferPtr;
-                return decompressor.DecompressStream(ref input, ref output);
+                return decompressor!.DecompressStream(ref input, ref output);
             }
         }
 

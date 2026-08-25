@@ -1,6 +1,8 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
     /* ====   Serial State   ==== */
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct range_t
     {
         public void* start;

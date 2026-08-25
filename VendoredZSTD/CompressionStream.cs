@@ -13,7 +13,7 @@ namespace VendoredZSTD
         private readonly byte[] outputBuffer;
         private readonly bool preserveCompressor;
         private readonly bool leaveOpen;
-        private Compressor compressor;
+        private Compressor? compressor;
         private ZSTD_outBuffer_s output;
 
         public CompressionStream(Stream stream, int level = Compressor.DefaultCompressionLevel,
@@ -40,27 +40,27 @@ namespace VendoredZSTD
             this.leaveOpen = leaveOpen;
 
             var outputBufferSize =
-                bufferSize > 0 ? bufferSize : (int) Methods.ZSTD_CStreamOutSize().EnsureZstdSuccess();
+                bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_CStreamOutSize().EnsureZstdSuccess();
             outputBuffer = ArrayPool<byte>.Shared.Rent(outputBufferSize);
-            output = new ZSTD_outBuffer_s {pos = 0, size = (nuint) outputBufferSize};
+            output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)outputBufferSize };
         }
 
         public void SetParameter(ZSTD_cParameter parameter, int value)
         {
             EnsureNotDisposed();
-            compressor.SetParameter(parameter, value);
+            compressor!.SetParameter(parameter, value);
         }
 
         public int GetParameter(ZSTD_cParameter parameter)
         {
             EnsureNotDisposed();
-            return compressor.GetParameter(parameter);
+            return compressor!.GetParameter(parameter);
         }
 
         public void LoadDictionary(byte[] dict)
         {
             EnsureNotDisposed();
-            compressor.LoadDictionary(dict);
+            compressor!.LoadDictionary(dict);
         }
 
         ~CompressionStream() => Dispose(false);
@@ -105,7 +105,7 @@ namespace VendoredZSTD
         {
             if (!preserveCompressor)
             {
-                compressor.Dispose();
+                compressor?.Dispose();
             }
             compressor = null;
 
@@ -144,14 +144,14 @@ namespace VendoredZSTD
         {
             EnsureNotDisposed();
 
-            var input = new ZSTD_inBuffer_s {pos = 0, size = buffer != null ? (nuint) buffer.Length : 0};
+            var input = new ZSTD_inBuffer_s { pos = 0, size = (nuint)buffer.Length };
             nuint remaining;
             do
             {
                 output.pos = 0;
                 remaining = CompressStream(ref input, buffer, directive);
 
-                var written = (int) output.pos;
+                var written = (int)output.pos;
                 if (written > 0)
                     innerStream.Write(outputBuffer, 0, written);
             } while (directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0);
@@ -169,7 +169,7 @@ namespace VendoredZSTD
                 output.pos = 0;
                 remaining = CompressStream(ref input, buffer.HasValue ? buffer.Value.Span : null, directive);
 
-                var written = (int) output.pos;
+                var written = (int)output.pos;
                 if (written > 0)
                     await innerStream.WriteAsync(outputBuffer, 0, written, cancellationToken).ConfigureAwait(false);
             } while (directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0);
@@ -196,7 +196,7 @@ namespace VendoredZSTD
             {
                 input.src = inputBufferPtr;
                 output.dst = outputBufferPtr;
-                return compressor.CompressStream(ref input, ref output, directive).EnsureZstdSuccess();
+                return compressor!.CompressStream(ref input, ref output, directive).EnsureZstdSuccess();
             }
         }
 

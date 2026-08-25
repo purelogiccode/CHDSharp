@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct ldmParams_t
     {
         /* ZSTD_ps_enable to enable LDM. ZSTD_ps_auto by default */
