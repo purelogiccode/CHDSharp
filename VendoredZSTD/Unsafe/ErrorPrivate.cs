@@ -7,15 +7,15 @@ public static partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool ERR_isError(nuint code)
     {
-        return code > unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxCode));
+        return code > unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxCode));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ZSTD_ErrorCode ERR_getErrorCode(nuint code)
+    private static ZstdErrorCode ERR_getErrorCode(nuint code)
     {
         if (!ERR_isError(code))
-            return ZSTD_ErrorCode.ZSTD_error_no_error;
-        return (ZSTD_ErrorCode)(0 - code);
+            return ZstdErrorCode.ZstdErrorNoError;
+        return (ZstdErrorCode)(0 - code);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,80 +27,80 @@ public static partial class Methods
     /*-****************************************
      *  Error Strings
      ******************************************/
-    private static string ERR_getErrorString(ZSTD_ErrorCode code)
+    private static string ERR_getErrorString(ZstdErrorCode code)
     {
         const string notErrorCode = "Unspecified error code";
         switch (code)
         {
-            case ZSTD_ErrorCode.ZSTD_error_no_error:
+            case ZstdErrorCode.ZstdErrorNoError:
                 return "No error detected";
-            case ZSTD_ErrorCode.ZSTD_error_GENERIC:
+            case ZstdErrorCode.ZstdErrorGeneric:
                 return "Error (generic)";
-            case ZSTD_ErrorCode.ZSTD_error_prefix_unknown:
+            case ZstdErrorCode.ZstdErrorPrefixUnknown:
                 return "Unknown frame descriptor";
-            case ZSTD_ErrorCode.ZSTD_error_version_unsupported:
+            case ZstdErrorCode.ZstdErrorVersionUnsupported:
                 return "Version not supported";
-            case ZSTD_ErrorCode.ZSTD_error_frameParameter_unsupported:
+            case ZstdErrorCode.ZstdErrorFrameParameterUnsupported:
                 return "Unsupported frame parameter";
-            case ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge:
+            case ZstdErrorCode.ZstdErrorFrameParameterWindowTooLarge:
                 return "Frame requires too much memory for decoding";
-            case ZSTD_ErrorCode.ZSTD_error_corruption_detected:
+            case ZstdErrorCode.ZstdErrorCorruptionDetected:
                 return "Data corruption detected";
-            case ZSTD_ErrorCode.ZSTD_error_checksum_wrong:
+            case ZstdErrorCode.ZstdErrorChecksumWrong:
                 return "Restored data doesn't match checksum";
-            case ZSTD_ErrorCode.ZSTD_error_literals_headerWrong:
+            case ZstdErrorCode.ZstdErrorLiteralsHeaderWrong:
                 return "Header of Literals' block doesn't respect format specification";
-            case ZSTD_ErrorCode.ZSTD_error_parameter_unsupported:
+            case ZstdErrorCode.ZstdErrorParameterUnsupported:
                 return "Unsupported parameter";
-            case ZSTD_ErrorCode.ZSTD_error_parameter_combination_unsupported:
+            case ZstdErrorCode.ZstdErrorParameterCombinationUnsupported:
                 return "Unsupported combination of parameters";
-            case ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound:
+            case ZstdErrorCode.ZstdErrorParameterOutOfBound:
                 return "Parameter is out of bound";
-            case ZSTD_ErrorCode.ZSTD_error_init_missing:
+            case ZstdErrorCode.ZstdErrorInitMissing:
                 return "Context should be init first";
-            case ZSTD_ErrorCode.ZSTD_error_memory_allocation:
+            case ZstdErrorCode.ZstdErrorMemoryAllocation:
                 return "Allocation error : not enough memory";
-            case ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall:
+            case ZstdErrorCode.ZstdErrorWorkSpaceTooSmall:
                 return "workSpace buffer is not large enough";
-            case ZSTD_ErrorCode.ZSTD_error_stage_wrong:
+            case ZstdErrorCode.ZstdErrorStageWrong:
                 return "Operation not authorized at current processing stage";
-            case ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge:
+            case ZstdErrorCode.ZstdErrorTableLogTooLarge:
                 return "tableLog requires too much memory : unsupported";
-            case ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge:
+            case ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge:
                 return "Unsupported max Symbol Value : too large";
-            case ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall:
+            case ZstdErrorCode.ZstdErrorMaxSymbolValueTooSmall:
                 return "Specified maxSymbolValue is too small";
-            case ZSTD_ErrorCode.ZSTD_error_stabilityCondition_notRespected:
+            case ZstdErrorCode.ZstdErrorStabilityConditionNotRespected:
                 return "pledged buffer stability condition is not respected";
-            case ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted:
+            case ZstdErrorCode.ZstdErrorDictionaryCorrupted:
                 return "Dictionary is corrupted";
-            case ZSTD_ErrorCode.ZSTD_error_dictionary_wrong:
+            case ZstdErrorCode.ZstdErrorDictionaryWrong:
                 return "Dictionary mismatch";
-            case ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed:
+            case ZstdErrorCode.ZstdErrorDictionaryCreationFailed:
                 return "Cannot create Dictionary from provided samples";
-            case ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall:
+            case ZstdErrorCode.ZstdErrorDstSizeTooSmall:
                 return "Destination buffer is too small";
-            case ZSTD_ErrorCode.ZSTD_error_srcSize_wrong:
+            case ZstdErrorCode.ZstdErrorSrcSizeWrong:
                 return "Src size is incorrect";
-            case ZSTD_ErrorCode.ZSTD_error_dstBuffer_null:
+            case ZstdErrorCode.ZstdErrorDstBufferNull:
                 return "Operation on NULL destination buffer";
-            case ZSTD_ErrorCode.ZSTD_error_noForwardProgress_destFull:
+            case ZstdErrorCode.ZstdErrorNoForwardProgressDestFull:
                 return "Operation made no progress over multiple calls, due to output buffer being full";
-            case ZSTD_ErrorCode.ZSTD_error_noForwardProgress_inputEmpty:
+            case ZstdErrorCode.ZstdErrorNoForwardProgressInputEmpty:
                 return "Operation made no progress over multiple calls, due to input being empty";
-            case ZSTD_ErrorCode.ZSTD_error_frameIndex_tooLarge:
+            case ZstdErrorCode.ZstdErrorFrameIndexTooLarge:
                 return "Frame index is too large";
-            case ZSTD_ErrorCode.ZSTD_error_seekableIO:
+            case ZstdErrorCode.ZstdErrorSeekableIo:
                 return "An I/O error occurred when reading/seeking";
-            case ZSTD_ErrorCode.ZSTD_error_dstBuffer_wrong:
+            case ZstdErrorCode.ZstdErrorDstBufferWrong:
                 return "Destination buffer is wrong";
-            case ZSTD_ErrorCode.ZSTD_error_srcBuffer_wrong:
+            case ZstdErrorCode.ZstdErrorSrcBufferWrong:
                 return "Source buffer is wrong";
-            case ZSTD_ErrorCode.ZSTD_error_sequenceProducer_failed:
+            case ZstdErrorCode.ZstdErrorSequenceProducerFailed:
                 return "Block-level external sequence producer returned an error code";
-            case ZSTD_ErrorCode.ZSTD_error_externalSequences_invalid:
+            case ZstdErrorCode.ZstdErrorExternalSequencesInvalid:
                 return "External sequences are not valid";
-            case ZSTD_ErrorCode.ZSTD_error_maxCode:
+            case ZstdErrorCode.ZstdErrorMaxCode:
             default:
                 return notErrorCode;
         }

@@ -1,13 +1,13 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_paramSwitch_e
+public enum ZstdParamSwitchE
 {
     /* Let the library automatically determine whether the feature shall be enabled */
-    ZSTD_ps_auto = 0,
+    ZstdPsAuto = 0,
 
     /* Force-enable the feature */
-    ZSTD_ps_enable = 1,
+    ZstdPsEnable = 1,
 
     /* Do not use the feature */
-    ZSTD_ps_disable = 2
+    ZstdPsDisable = 2
 }

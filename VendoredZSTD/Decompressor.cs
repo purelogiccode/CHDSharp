@@ -10,13 +10,13 @@ public unsafe class Decompressor : IDisposable
      * For this purpose we use GC.KeepAlive(this)
      * For reference: https://devblogs.microsoft.com/oldnewthing/20100813-00/?p=13153
      */
-    private ZSTD_DCtx_s* dctx;
+    private ZstdDCtxS* dctx;
 
     public Decompressor()
     {
         dctx = Methods.ZSTD_createDCtx();
         if (dctx == null)
-            throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create dctx");
+            throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Failed to create dctx");
     }
 
     public void Dispose()
@@ -30,14 +30,14 @@ public unsafe class Decompressor : IDisposable
         ReleaseUnmanagedResources();
     }
 
-    public void SetParameter(ZSTD_dParameter parameter, int value)
+    public void SetParameter(ZstdDParameter parameter, int value)
     {
         EnsureNotDisposed();
         Methods.ZSTD_DCtx_setParameter(dctx, parameter, value).EnsureZstdSuccess();
         GC.KeepAlive(this);
     }
 
-    public int GetParameter(ZSTD_dParameter parameter)
+    public int GetParameter(ZstdDParameter parameter)
     {
         EnsureNotDisposed();
         int value;
@@ -91,12 +91,12 @@ public unsafe class Decompressor : IDisposable
         var expectedDstSize = GetDecompressedSize(src);
         if (expectedDstSize > (ulong)maxDecompressedSize)
             throw new ZstdException(
-                ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
+                ZstdErrorCode.ZstdErrorDstSizeTooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than {nameof(maxDecompressedSize)} {maxDecompressedSize}"
             );
         if (expectedDstSize > Constants.MaxByteArrayLength)
             throw new ZstdException(
-                ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
+                ZstdErrorCode.ZstdErrorDstSizeTooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than max possible byte array size {Constants.MaxByteArrayLength}"
             );
 
@@ -166,7 +166,7 @@ public unsafe class Decompressor : IDisposable
             );
             GC.KeepAlive(this);
 
-            if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
+            if (returnValue == unchecked(0 - (nuint)ZstdErrorCode.ZstdErrorDstSizeTooSmall))
             {
                 written = default;
                 return false;
@@ -210,10 +210,10 @@ public unsafe class Decompressor : IDisposable
             throw new ObjectDisposedException(nameof(Decompressor));
     }
 
-    internal nuint DecompressStream(ref ZSTD_inBuffer_s input, ref ZSTD_outBuffer_s output)
+    internal nuint DecompressStream(ref ZstdInBufferS input, ref ZstdOutBufferS output)
     {
-        fixed (ZSTD_inBuffer_s* inputPtr = &input)
-        fixed (ZSTD_outBuffer_s* outputPtr = &output)
+        fixed (ZstdInBufferS* inputPtr = &input)
+        fixed (ZstdOutBufferS* outputPtr = &output)
         {
             var returnValue = Methods
                 .ZSTD_decompressStream(dctx, outputPtr, inputPtr)

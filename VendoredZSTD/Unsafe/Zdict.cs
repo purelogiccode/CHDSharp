@@ -18,8 +18,8 @@ public static unsafe partial class Methods
     }
 
     private static void ZDICT_countEStats(
-        EStats_ress_t esr,
-        ZSTD_parameters* @params,
+        EStatsRessT esr,
+        ZstdParameters* @params,
         uint* countLit,
         uint* offsetcodeCount,
         uint* matchlengthCount,
@@ -106,14 +106,14 @@ public static unsafe partial class Methods
         return total;
     }
 
-    private static void ZDICT_insertSortCount(offsetCount_t* table, uint val, uint count)
+    private static void ZDICT_insertSortCount(OffsetCountT* table, uint val, uint count)
     {
         uint u;
         table[3].offset = val;
         table[3].count = count;
         for (u = 3; u > 0; u--)
         {
-            offsetCount_t tmp;
+            OffsetCountT tmp;
             if (table[u - 1].count >= table[u].count)
                 break;
             tmp = table[u - 1];
@@ -159,17 +159,17 @@ public static unsafe partial class Methods
         var litLengthCount = stackalloc uint[36];
         var litLengthNCount = stackalloc short[36];
         var repOffset = stackalloc uint[1024];
-        var bestRepOffset = stackalloc offsetCount_t[4];
-        var esr = new EStats_ress_t
+        var bestRepOffset = stackalloc OffsetCountT[4];
+        var esr = new EStatsRessT
         {
             dict = null,
             zc = null,
             workPlace = null
         };
-        ZSTD_parameters @params;
+        ZstdParameters @params;
         uint u,
             huffLog = 11,
-            Offlog = 8,
+            offlog = 8,
             mlLog = 9,
             llLog = 9,
             total;
@@ -182,7 +182,7 @@ public static unsafe partial class Methods
         var wksp = stackalloc uint[1216];
         if (offcodeMax > 30)
         {
-            eSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed));
+            eSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCreationFailed));
             goto _cleanup;
         }
 
@@ -196,23 +196,23 @@ public static unsafe partial class Methods
             litLengthCount[u] = 1;
         memset(repOffset, 0, sizeof(uint) * 1024);
         repOffset[1] = repOffset[4] = repOffset[8] = 1;
-        memset(bestRepOffset, 0, (uint)(sizeof(offsetCount_t) * 4));
+        memset(bestRepOffset, 0, (uint)(sizeof(OffsetCountT) * 4));
         if (compressionLevel == 0)
             compressionLevel = 3;
         @params = ZSTD_getParams(compressionLevel, averageSampleSize, dictBufferSize);
         esr.dict = ZSTD_createCDict_advanced(
             dictBuffer,
             dictBufferSize,
-            ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef,
-            ZSTD_dictContentType_e.ZSTD_dct_rawContent,
+            ZstdDictLoadMethodE.ZstdDlmByRef,
+            ZstdDictContentTypeE.ZstdDctRawContent,
             @params.cParams,
-            ZSTD_defaultCMem
+            ZstdDefaultCMem
         );
         esr.zc = ZSTD_createCCtx();
         esr.workPlace = malloc((ulong)(1 << 17));
         if (esr.dict == null || esr.zc == null || esr.workPlace == null)
         {
-            eSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            eSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
             goto _cleanup;
         }
 
@@ -279,14 +279,14 @@ public static unsafe partial class Methods
         total = 0;
         for (u = 0; u <= offcodeMax; u++)
             total += offcodeCount[u];
-        errorCode = FSE_normalizeCount(offcodeNCount, Offlog, offcodeCount, total, offcodeMax, 1);
+        errorCode = FSE_normalizeCount(offcodeNCount, offlog, offcodeCount, total, offcodeMax, 1);
         if (ERR_isError(errorCode))
         {
             eSize = errorCode;
             goto _cleanup;
         }
 
-        Offlog = (uint)errorCode;
+        offlog = (uint)errorCode;
         total = 0;
         for (u = 0; u <= 52; u++)
             total += matchLengthCount[u];
@@ -331,7 +331,7 @@ public static unsafe partial class Methods
         }
 
         {
-            var ohSize = FSE_writeNCount(dstPtr, maxDstSize, offcodeNCount, 30, Offlog);
+            var ohSize = FSE_writeNCount(dstPtr, maxDstSize, offcodeNCount, 30, offlog);
             if (ERR_isError(ohSize))
             {
                 eSize = ohSize;
@@ -371,13 +371,13 @@ public static unsafe partial class Methods
 
         if (maxDstSize < 12)
         {
-            eSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            eSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
             goto _cleanup;
         }
 
-        MEM_writeLE32(dstPtr + 0, repStartValue[0]);
-        MEM_writeLE32(dstPtr + 4, repStartValue[1]);
-        MEM_writeLE32(dstPtr + 8, repStartValue[2]);
+        MEM_writeLE32(dstPtr + 0, RepStartValue[0]);
+        MEM_writeLE32(dstPtr + 4, RepStartValue[1]);
+        MEM_writeLE32(dstPtr + 8, RepStartValue[2]);
         eSize += 12;
         _cleanup:
         ZSTD_freeCDict(esr.dict);
@@ -441,7 +441,7 @@ public static unsafe partial class Methods
         void* samplesBuffer,
         nuint* samplesSizes,
         uint nbSamples,
-        ZDICT_params_t @params
+        ZdictParamsT @params
     )
     {
         nuint hSize;
@@ -449,18 +449,18 @@ public static unsafe partial class Methods
         var compressionLevel = @params.compressionLevel == 0 ? 3 : @params.compressionLevel;
         var notificationLevel = @params.notificationLevel;
         /* The final dictionary content must be at least as large as the largest repcode */
-        nuint minContentSize = ZDICT_maxRep(repStartValue);
+        nuint minContentSize = ZDICT_maxRep(RepStartValue);
         nuint paddingSize;
         if (dictBufferCapacity < dictContentSize)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         if (dictBufferCapacity < 256)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         MEM_writeLE32(header, 0xEC30A437);
         {
-            var randomID = ZSTD_XXH64(customDictContent, dictContentSize, 0);
-            var compliantID = (uint)(randomID % ((1U << 31) - 32768) + 32768);
-            var dictID = @params.dictID != 0 ? @params.dictID : compliantID;
-            MEM_writeLE32(header + 4, dictID);
+            var randomId = ZSTD_XXH64(customDictContent, dictContentSize, 0);
+            var compliantId = (uint)(randomId % ((1U << 31) - 32768) + 32768);
+            var dictId = @params.dictID != 0 ? @params.dictID : compliantId;
+            MEM_writeLE32(header + 4, dictId);
         }
 
         hSize = 8;
@@ -487,7 +487,7 @@ public static unsafe partial class Methods
         if (dictContentSize < minContentSize)
         {
             if (hSize + minContentSize > dictBufferCapacity)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
             paddingSize = minContentSize - dictContentSize;
         }
@@ -521,7 +521,7 @@ public static unsafe partial class Methods
         void* samplesBuffer,
         nuint* samplesSizes,
         uint nbSamples,
-        ZDICT_params_t @params
+        ZdictParamsT @params
     )
     {
         var compressionLevel = @params.compressionLevel == 0 ? 3 : @params.compressionLevel;
@@ -546,14 +546,14 @@ public static unsafe partial class Methods
 
         MEM_writeLE32(dictBuffer, 0xEC30A437);
         {
-            var randomID = ZSTD_XXH64(
+            var randomId = ZSTD_XXH64(
                 (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize,
                 dictContentSize,
                 0
             );
-            var compliantID = (uint)(randomID % ((1U << 31) - 32768) + 32768);
-            var dictID = @params.dictID != 0 ? @params.dictID : compliantID;
-            MEM_writeLE32((sbyte*)dictBuffer + 4, dictID);
+            var compliantId = (uint)(randomId % ((1U << 31) - 32768) + 32768);
+            var dictId = @params.dictID != 0 ? @params.dictID : compliantId;
+            MEM_writeLE32((sbyte*)dictBuffer + 4, dictId);
         }
 
         if (hSize + dictContentSize < dictBufferCapacity)
@@ -595,8 +595,8 @@ public static unsafe partial class Methods
         uint nbSamples
     )
     {
-        ZDICT_fastCover_params_t @params;
-        memset(&@params, 0, (uint)sizeof(ZDICT_fastCover_params_t));
+        ZdictFastCoverParamsT @params;
+        memset(&@params, 0, (uint)sizeof(ZdictFastCoverParamsT));
         @params.d = 8;
         @params.steps = 4;
         @params.zParams.compressionLevel = 3;
@@ -619,8 +619,8 @@ public static unsafe partial class Methods
         uint nbSamples
     )
     {
-        ZDICT_params_t @params;
-        memset(&@params, 0, (uint)sizeof(ZDICT_params_t));
+        ZdictParamsT @params;
+        memset(&@params, 0, (uint)sizeof(ZdictParamsT));
         return ZDICT_addEntropyTablesFromBuffer_advanced(
             dictBuffer,
             dictContentSize,

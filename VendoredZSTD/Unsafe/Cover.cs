@@ -4,7 +4,7 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static int g_displayLevel;
+    private static int _gDisplayLevel;
 
     /**
      * Returns the sum of the sample sizes.
@@ -43,7 +43,7 @@ public static unsafe partial class Methods
      * @param passes      The target number of passes over the dmer corpus.
      * More passes means a better dictionary.
      */
-    private static COVER_epoch_info_t COVER_computeEpochs(
+    private static CoverEpochInfoT COVER_computeEpochs(
         uint maxDictSize,
         uint nbDmers,
         uint k,
@@ -51,7 +51,7 @@ public static unsafe partial class Methods
     )
     {
         var minEpochSize = k * 10;
-        COVER_epoch_info_t epochs;
+        CoverEpochInfoT epochs;
         epochs.num = 1 > maxDictSize / k / passes ? 1 : maxDictSize / k / passes;
         epochs.size = nbDmers / epochs.num;
         if (epochs.size >= minEpochSize)
@@ -70,7 +70,7 @@ public static unsafe partial class Methods
      * Checks total compressed size of a dictionary
      */
     private static nuint COVER_checkTotalCompressedSize(
-        ZDICT_cover_params_t parameters,
+        ZdictCoverParamsT parameters,
         nuint* samplesSizes,
         byte* samples,
         nuint* offsets,
@@ -80,10 +80,10 @@ public static unsafe partial class Methods
         nuint dictBufferCapacity
     )
     {
-        var totalCompressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        var totalCompressedSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         /* Pointers */
-        ZSTD_CCtx_s* cctx;
-        ZSTD_CDict_s* cdict;
+        ZstdCCtxS* cctx;
+        ZstdCDictS* cdict;
         void* dst;
         /* Local variables */
         nuint dstCapacity;
@@ -136,7 +136,7 @@ public static unsafe partial class Methods
     /**
      * Initialize the `COVER_best_t`.
      */
-    private static void COVER_best_init(COVER_best_s* best)
+    private static void COVER_best_init(CoverBestS* best)
     {
         if (best == null)
             return;
@@ -145,13 +145,13 @@ public static unsafe partial class Methods
         best->dict = null;
         best->dictSize = 0;
         best->compressedSize = unchecked((nuint)(-1));
-        memset(&best->parameters, 0, (uint)sizeof(ZDICT_cover_params_t));
+        memset(&best->parameters, 0, (uint)sizeof(ZdictCoverParamsT));
     }
 
     /**
      * Wait until liveJobs == 0.
      */
-    private static void COVER_best_wait(COVER_best_s* best)
+    private static void COVER_best_wait(CoverBestS* best)
     {
         if (best == null)
             return;
@@ -166,7 +166,7 @@ public static unsafe partial class Methods
     /**
      * Call COVER_best_wait() and then destroy the COVER_best_t.
      */
-    private static void COVER_best_destroy(COVER_best_s* best)
+    private static void COVER_best_destroy(CoverBestS* best)
     {
         if (best == null)
             return;
@@ -182,7 +182,7 @@ public static unsafe partial class Methods
      * Called when a thread is about to be launched.
      * Increments liveJobs.
      */
-    private static void COVER_best_start(COVER_best_s* best)
+    private static void COVER_best_start(CoverBestS* best)
     {
         if (best == null)
             return;
@@ -198,9 +198,9 @@ public static unsafe partial class Methods
      * If this dictionary is the best so far save it and its parameters.
      */
     private static void COVER_best_finish(
-        COVER_best_s* best,
-        ZDICT_cover_params_t parameters,
-        COVER_dictSelection selection
+        CoverBestS* best,
+        ZdictCoverParamsT parameters,
+        CoverDictSelection selection
     )
     {
         void* dict = selection.dictContent;
@@ -225,7 +225,7 @@ public static unsafe partial class Methods
                     if (best->dict == null)
                     {
                         best->compressedSize = unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC)
+                            (nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric)
                         );
                         best->dictSize = 0;
                         SynchronizationWrapper.Pulse(&best->mutex);
@@ -250,9 +250,9 @@ public static unsafe partial class Methods
         }
     }
 
-    private static COVER_dictSelection setDictSelection(byte* buf, nuint s, nuint csz)
+    private static CoverDictSelection SetDictSelection(byte* buf, nuint s, nuint csz)
     {
-        COVER_dictSelection ds;
+        CoverDictSelection ds;
         ds.dictContent = buf;
         ds.dictSize = s;
         ds.totalCompressedSize = csz;
@@ -263,16 +263,16 @@ public static unsafe partial class Methods
      * Error function for COVER_selectDict function. Returns a struct where
      * return.totalCompressedSize is a ZSTD error.
      */
-    private static COVER_dictSelection COVER_dictSelectionError(nuint error)
+    private static CoverDictSelection COVER_dictSelectionError(nuint error)
     {
-        return setDictSelection(null, 0, error);
+        return SetDictSelection(null, 0, error);
     }
 
     /**
      * Error function for COVER_selectDict function. Checks if the return
      * value is an error.
      */
-    private static uint COVER_dictSelectionIsError(COVER_dictSelection selection)
+    private static uint COVER_dictSelectionIsError(CoverDictSelection selection)
     {
         return ERR_isError(selection.totalCompressedSize) || selection.dictContent == null
             ? 1U
@@ -283,7 +283,7 @@ public static unsafe partial class Methods
      * Always call after selectDict is called to free up used memory from
      * newly created dictionary.
      */
-    private static void COVER_dictSelectionFree(COVER_dictSelection selection)
+    private static void COVER_dictSelectionFree(CoverDictSelection selection)
     {
         free(selection.dictContent);
     }
@@ -294,7 +294,7 @@ public static unsafe partial class Methods
      * smallest dictionary within a specified regression of the compressed size
      * from the largest dictionary.
      */
-    private static COVER_dictSelection COVER_selectDict(
+    private static CoverDictSelection COVER_selectDict(
         byte* customDictContent,
         nuint dictBufferCapacity,
         nuint dictContentSize,
@@ -303,7 +303,7 @@ public static unsafe partial class Methods
         uint nbFinalizeSamples,
         nuint nbCheckSamples,
         nuint nbSamples,
-        ZDICT_cover_params_t @params,
+        ZdictCoverParamsT @params,
         nuint* offsets,
         nuint totalCompressedSize
     )
@@ -359,7 +359,7 @@ public static unsafe partial class Methods
         if (@params.shrinkDict == 0)
         {
             free(candidateDictBuffer);
-            return setDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
+            return SetDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
         }
 
         largestDict = dictContentSize;
@@ -405,7 +405,7 @@ public static unsafe partial class Methods
             if (totalCompressedSize <= largestCompressed * regressionTolerance)
             {
                 free(largestDictbuffer);
-                return setDictSelection(candidateDictBuffer, dictContentSize, totalCompressedSize);
+                return SetDictSelection(candidateDictBuffer, dictContentSize, totalCompressedSize);
             }
 
             dictContentSize *= 2;
@@ -414,6 +414,6 @@ public static unsafe partial class Methods
         dictContentSize = largestDict;
         totalCompressedSize = largestCompressed;
         free(candidateDictBuffer);
-        return setDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
+        return SetDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
     }
 }

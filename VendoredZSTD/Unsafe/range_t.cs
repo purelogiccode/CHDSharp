@@ -4,12 +4,12 @@ namespace VendoredZSTD.Unsafe;
 
 /* ====   Serial State   ==== */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct range_t
+public unsafe struct RangeT
 {
     public void* start;
     public nuint size;
 
-    public range_t(void* start, nuint size)
+    public RangeT(void* start, nuint size)
     {
         this.start = start;
         this.size = size;

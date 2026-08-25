@@ -16,26 +16,26 @@ public static unsafe partial class Methods
     {
         /* because *dt is unsigned, 32-bits aligned on 32-bits */
         void* tdPtr = dt + 1;
-        var tableDecode = (FSE_decode_t*)tdPtr;
+        var tableDecode = (FseDecodeT*)tdPtr;
         var symbolNext = (ushort*)workSpace;
         var spread = (byte*)(symbolNext + maxSymbolValue + 1);
-        var maxSV1 = maxSymbolValue + 1;
+        var maxSv1 = maxSymbolValue + 1;
         var tableSize = (uint)(1 << (int)tableLog);
         var highThreshold = tableSize - 1;
         if (sizeof(short) * (maxSymbolValue + 1) + (1UL << (int)tableLog) + 8 > wkspSize)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
         if (maxSymbolValue > 255)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooLarge));
         if (tableLog > 14 - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         {
-            FSE_DTableHeader DTableH;
-            DTableH.tableLog = (ushort)tableLog;
-            DTableH.fastMode = 1;
+            FseDTableHeader dTableH;
+            dTableH.tableLog = (ushort)tableLog;
+            dTableH.fastMode = 1;
             {
                 var largeLimit = (short)(1 << (int)(tableLog - 1));
                 uint s;
-                for (s = 0; s < maxSV1; s++)
+                for (s = 0; s < maxSv1; s++)
                     if (normalizedCounter[s] == -1)
                     {
                         tableDecode[highThreshold--].symbol = (byte)s;
@@ -44,12 +44,12 @@ public static unsafe partial class Methods
                     else
                     {
                         if (normalizedCounter[s] >= largeLimit)
-                            DTableH.fastMode = 0;
+                            dTableH.fastMode = 0;
                         symbolNext[s] = (ushort)normalizedCounter[s];
                     }
             }
 
-            memcpy(dt, &DTableH, (uint)sizeof(FSE_DTableHeader));
+            memcpy(dt, &dTableH, (uint)sizeof(FseDTableHeader));
         }
 
         if (highThreshold == tableSize - 1)
@@ -61,7 +61,7 @@ public static unsafe partial class Methods
                 nuint pos = 0;
                 ulong sv = 0;
                 uint s;
-                for (s = 0; s < maxSV1; ++s, sv += add)
+                for (s = 0; s < maxSv1; ++s, sv += add)
                 {
                     int i;
                     int n = normalizedCounter[s];
@@ -99,7 +99,7 @@ public static unsafe partial class Methods
             var step = (tableSize >> 1) + (tableSize >> 3) + 3;
             uint s,
                 position = 0;
-            for (s = 0; s < maxSV1; s++)
+            for (s = 0; s < maxSv1; s++)
             {
                 int i;
                 for (i = 0; i < normalizedCounter[s]; i++)
@@ -112,7 +112,7 @@ public static unsafe partial class Methods
             }
 
             if (position != 0)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         }
 
         {
@@ -167,20 +167,20 @@ public static unsafe partial class Methods
         var op = ostart;
         var omax = op + maxDstSize;
         var olimit = omax - 3;
-        BIT_DStream_t bitD;
-        FSE_DState_t state1;
-        FSE_DState_t state2;
+        BitDStreamT bitD;
+        FseDStateT state1;
+        FseDStateT state2;
         {
-            var _var_err__ = BIT_initDStream(&bitD, cSrc, cSrcSize);
-            if (ERR_isError(_var_err__))
-                return _var_err__;
+            var varErr = BIT_initDStream(&bitD, cSrc, cSrcSize);
+            if (ERR_isError(varErr))
+                return varErr;
         }
 
         FSE_initDState(&state1, &bitD, dt);
         FSE_initDState(&state2, &bitD, dt);
         for (
             ;
-            BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_unfinished && op < olimit;
+            BIT_reloadDStream(&bitD) == BitDStreamStatus.BitDStreamUnfinished && op < olimit;
             op += 4
         )
         {
@@ -191,7 +191,7 @@ public static unsafe partial class Methods
             op[1] =
                 fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
             if ((14 - 2) * 4 + 7 > sizeof(nuint) * 8)
-                if (BIT_reloadDStream(&bitD) > BIT_DStream_status.BIT_DStream_unfinished)
+                if (BIT_reloadDStream(&bitD) > BitDStreamStatus.BitDStreamUnfinished)
                 {
                     op += 2;
                     break;
@@ -208,10 +208,10 @@ public static unsafe partial class Methods
         while (true)
         {
             if (op > omax - 2)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
             *op++ =
                 fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
-            if (BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_overflow)
+            if (BIT_reloadDStream(&bitD) == BitDStreamStatus.BitDStreamOverflow)
             {
                 *op++ =
                     fast != 0
@@ -221,10 +221,10 @@ public static unsafe partial class Methods
             }
 
             if (op > omax - 2)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
             *op++ =
                 fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
-            if (BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_overflow)
+            if (BIT_reloadDStream(&bitD) == BitDStreamStatus.BitDStreamOverflow)
             {
                 *op++ =
                     fast != 0
@@ -253,11 +253,11 @@ public static unsafe partial class Methods
         var ip = istart;
         uint tableLog;
         uint maxSymbolValue = 255;
-        var wksp = (FSE_DecompressWksp*)workSpace;
-        if (wkspSize < (nuint)sizeof(FSE_DecompressWksp))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        var wksp = (FseDecompressWksp*)workSpace;
+        if (wkspSize < (nuint)sizeof(FseDecompressWksp))
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         {
-            var NCountLength = FSE_readNCount_bmi2(
+            var nCountLength = FSE_readNCount_bmi2(
                 wksp->ncount,
                 &maxSymbolValue,
                 &tableLog,
@@ -265,13 +265,13 @@ public static unsafe partial class Methods
                 cSrcSize,
                 bmi2
             );
-            if (ERR_isError(NCountLength))
-                return NCountLength;
+            if (ERR_isError(nCountLength))
+                return nCountLength;
             if (tableLog > maxLog)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
-            assert(NCountLength <= cSrcSize);
-            ip += NCountLength;
-            cSrcSize -= NCountLength;
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
+            assert(nCountLength <= cSrcSize);
+            ip += nCountLength;
+            cSrcSize -= nCountLength;
         }
 
         if (
@@ -289,18 +289,18 @@ public static unsafe partial class Methods
             ) * sizeof(uint)
             > wkspSize
         )
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         assert(
-            (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
+            (nuint)(sizeof(FseDecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
             <= wkspSize
         );
         workSpace =
             (byte*)workSpace
-            + sizeof(FSE_DecompressWksp)
+            + sizeof(FseDecompressWksp)
             + (1 + (1 << (int)tableLog)) * sizeof(uint);
-        wkspSize -= (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint));
+        wkspSize -= (nuint)(sizeof(FseDecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint));
         {
-            var _var_err__ = FSE_buildDTable_internal(
+            var varErr = FSE_buildDTable_internal(
                 wksp->dtable,
                 wksp->ncount,
                 maxSymbolValue,
@@ -308,14 +308,14 @@ public static unsafe partial class Methods
                 workSpace,
                 wkspSize
             );
-            if (ERR_isError(_var_err__))
-                return _var_err__;
+            if (ERR_isError(varErr))
+                return varErr;
         }
 
         {
             void* ptr = wksp->dtable;
-            var DTableH = (FSE_DTableHeader*)ptr;
-            uint fastMode = DTableH->fastMode;
+            var dTableH = (FseDTableHeader*)ptr;
+            uint fastMode = dTableH->fastMode;
             if (fastMode != 0)
                 return FSE_decompress_usingDTable_generic(
                     dst,

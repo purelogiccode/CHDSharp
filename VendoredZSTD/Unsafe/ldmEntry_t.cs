@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ldmEntry_t
+public struct LdmEntryT
 {
     public uint offset;
     public uint checksum;

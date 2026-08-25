@@ -3,8 +3,8 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_compressedBlockState_t
+public unsafe struct ZstdCompressedBlockStateT
 {
-    public ZSTD_entropyCTables_t entropy;
+    public ZstdEntropyCTablesT entropy;
     public fixed uint rep[3];
 }

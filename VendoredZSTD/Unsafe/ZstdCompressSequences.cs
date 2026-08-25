@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
 #if NET8_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_kInverseProbabilityLog256 =>
+    private static ReadOnlySpan<uint> SpanKInverseProbabilityLog256 =>
         new uint[256]
         {
             0,
@@ -267,10 +267,10 @@ public static unsafe partial class Methods
             1
         };
 
-    private static uint* kInverseProbabilityLog256 =>
+    private static uint* KInverseProbabilityLog256 =>
         (uint*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_kInverseProbabilityLog256)
+            ref MemoryMarshal.GetReference(SpanKInverseProbabilityLog256)
         );
 #else
     private static readonly uint* kInverseProbabilityLog256 = GetArrayPointer(
@@ -539,8 +539,8 @@ public static unsafe partial class Methods
     private static uint ZSTD_getFSEMaxSymbolValue(uint* ctable)
     {
         void* ptr = ctable;
-        var u16ptr = (ushort*)ptr;
-        uint maxSymbolValue = MEM_read16(u16ptr + 1);
+        var u16Ptr = (ushort*)ptr;
+        uint maxSymbolValue = MEM_read16(u16Ptr + 1);
         return maxSymbolValue;
     }
 
@@ -557,13 +557,13 @@ public static unsafe partial class Methods
      * Returns the cost in bytes of encoding the normalized count header.
      * Returns an error if any of the helper functions return an error.
      */
-    private static nuint ZSTD_NCountCost(uint* count, uint max, nuint nbSeq, uint FSELog)
+    private static nuint ZSTD_NCountCost(uint* count, uint max, nuint nbSeq, uint fseLog)
     {
         var wksp = stackalloc byte[512];
         var norm = stackalloc short[53];
-        var tableLog = FSE_optimalTableLog(FSELog, nbSeq, max);
+        var tableLog = FSE_optimalTableLog(fseLog, nbSeq, max);
         {
-            var err_code = FSE_normalizeCount(
+            var errCode = FSE_normalizeCount(
                 norm,
                 tableLog,
                 count,
@@ -571,8 +571,8 @@ public static unsafe partial class Methods
                 max,
                 ZSTD_useLowProbCount(nbSeq)
             );
-            if (ERR_isError(err_code))
-                return err_code;
+            if (ERR_isError(errCode))
+                return errCode;
         }
 
         return FSE_writeNCount(wksp, sizeof(byte) * 512, norm, max, tableLog);
@@ -593,7 +593,7 @@ public static unsafe partial class Methods
             if (count[s] != 0 && norm == 0)
                 norm = 1;
             assert(count[s] < total);
-            cost += count[s] * kInverseProbabilityLog256[norm];
+            cost += count[s] * KInverseProbabilityLog256[norm];
         }
 
         return cost >> 8;
@@ -608,10 +608,10 @@ public static unsafe partial class Methods
         const uint kAccuracyLog = 8;
         nuint cost = 0;
         uint s;
-        FSE_CState_t cstate;
+        FseCStateT cstate;
         FSE_initCState(&cstate, ctable);
         if (ZSTD_getFSEMaxSymbolValue(ctable) < max)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
         for (s = 0; s <= max; ++s)
         {
@@ -621,7 +621,7 @@ public static unsafe partial class Methods
             if (count[s] == 0)
                 continue;
             if (bitCost >= badCost)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
 
             cost += (nuint)count[s] * bitCost;
         }
@@ -646,57 +646,57 @@ public static unsafe partial class Methods
             var norm256 = normAcc << (int)shift;
             assert(norm256 > 0);
             assert(norm256 < 256);
-            cost += count[s] * kInverseProbabilityLog256[norm256];
+            cost += count[s] * KInverseProbabilityLog256[norm256];
         }
 
         return cost >> 8;
     }
 
-    private static symbolEncodingType_e ZSTD_selectEncodingType(
-        FSE_repeat* repeatMode,
+    private static SymbolEncodingTypeE ZSTD_selectEncodingType(
+        FseRepeat* repeatMode,
         uint* count,
         uint max,
         nuint mostFrequent,
         nuint nbSeq,
-        uint FSELog,
+        uint fseLog,
         uint* prevCTable,
         short* defaultNorm,
         uint defaultNormLog,
-        ZSTD_defaultPolicy_e isDefaultAllowed,
-        ZSTD_strategy strategy
+        ZstdDefaultPolicyE isDefaultAllowed,
+        ZstdStrategy strategy
     )
     {
         if (mostFrequent == nbSeq)
         {
-            *repeatMode = FSE_repeat.FSE_repeat_none;
+            *repeatMode = FseRepeat.FseRepeatNone;
             if (isDefaultAllowed != default && nbSeq <= 2)
-                return symbolEncodingType_e.set_basic;
+                return SymbolEncodingTypeE.SetBasic;
 
-            return symbolEncodingType_e.set_rle;
+            return SymbolEncodingTypeE.SetRle;
         }
 
-        if (strategy < ZSTD_strategy.ZSTD_lazy)
+        if (strategy < ZstdStrategy.ZstdLazy)
         {
             if (isDefaultAllowed != default)
             {
-                const nuint staticFse_nbSeq_max = 1000;
+                const nuint staticFseNbSeqMax = 1000;
                 var mult = (nuint)(10 - (int)strategy);
                 const nuint baseLog = 3;
                 /* 28-36 for offset, 56-72 for lengths */
-                var dynamicFse_nbSeq_min =
+                var dynamicFseNbSeqMin =
                     (((nuint)1 << (int)defaultNormLog) * mult) >> (int)baseLog;
                 assert(defaultNormLog >= 5 && defaultNormLog <= 6);
                 assert(mult <= 9 && mult >= 7);
-                if (*repeatMode == FSE_repeat.FSE_repeat_valid && nbSeq < staticFse_nbSeq_max)
-                    return symbolEncodingType_e.set_repeat;
+                if (*repeatMode == FseRepeat.FseRepeatValid && nbSeq < staticFseNbSeqMax)
+                    return SymbolEncodingTypeE.SetRepeat;
 
                 if (
-                    nbSeq < dynamicFse_nbSeq_min
+                    nbSeq < dynamicFseNbSeqMin
                     || mostFrequent < nbSeq >> (int)(defaultNormLog - 1)
                 )
                 {
-                    *repeatMode = FSE_repeat.FSE_repeat_none;
-                    return symbolEncodingType_e.set_basic;
+                    *repeatMode = FseRepeat.FseRepeatNone;
+                    return SymbolEncodingTypeE.SetBasic;
                 }
             }
         }
@@ -705,49 +705,49 @@ public static unsafe partial class Methods
             var basicCost =
                 isDefaultAllowed != default
                     ? ZSTD_crossEntropyCost(defaultNorm, defaultNormLog, count, max)
-                    : unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    : unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             var repeatCost =
-                *repeatMode != FSE_repeat.FSE_repeat_none
+                *repeatMode != FseRepeat.FseRepeatNone
                     ? ZSTD_fseBitCost(prevCTable, count, max)
-                    : unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-            var NCountCost = ZSTD_NCountCost(count, max, nbSeq, FSELog);
-            var compressedCost = (NCountCost << 3) + ZSTD_entropyCost(count, max, nbSeq);
+                    : unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
+            var nCountCost = ZSTD_NCountCost(count, max, nbSeq, fseLog);
+            var compressedCost = (nCountCost << 3) + ZSTD_entropyCost(count, max, nbSeq);
 #if DEBUG
             if (isDefaultAllowed != default)
             {
                 assert(!ERR_isError(basicCost));
-                assert(!(*repeatMode == FSE_repeat.FSE_repeat_valid && ERR_isError(repeatCost)));
+                assert(!(*repeatMode == FseRepeat.FseRepeatValid && ERR_isError(repeatCost)));
             }
 #endif
 
-            assert(!ERR_isError(NCountCost));
-            assert(compressedCost < unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxCode)));
+            assert(!ERR_isError(nCountCost));
+            assert(compressedCost < unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxCode)));
             if (basicCost <= repeatCost && basicCost <= compressedCost)
             {
                 assert(isDefaultAllowed != default);
-                *repeatMode = FSE_repeat.FSE_repeat_none;
-                return symbolEncodingType_e.set_basic;
+                *repeatMode = FseRepeat.FseRepeatNone;
+                return SymbolEncodingTypeE.SetBasic;
             }
 
             if (repeatCost <= compressedCost)
             {
                 assert(!ERR_isError(repeatCost));
-                return symbolEncodingType_e.set_repeat;
+                return SymbolEncodingTypeE.SetRepeat;
             }
 
             assert(compressedCost < basicCost && compressedCost < repeatCost);
         }
 
-        *repeatMode = FSE_repeat.FSE_repeat_check;
-        return symbolEncodingType_e.set_compressed;
+        *repeatMode = FseRepeat.FseRepeatCheck;
+        return SymbolEncodingTypeE.SetCompressed;
     }
 
     private static nuint ZSTD_buildCTable(
         void* dst,
         nuint dstCapacity,
         uint* nextCTable,
-        uint FSELog,
-        symbolEncodingType_e type,
+        uint fseLog,
+        SymbolEncodingTypeE type,
         uint* count,
         uint max,
         byte* codeTable,
@@ -765,24 +765,24 @@ public static unsafe partial class Methods
         var oend = op + dstCapacity;
         switch (type)
         {
-            case symbolEncodingType_e.set_rle:
+            case SymbolEncodingTypeE.SetRle:
             {
-                var err_code = FSE_buildCTable_rle(nextCTable, (byte)max);
-                if (ERR_isError(err_code))
-                    return err_code;
+                var errCode = FSE_buildCTable_rle(nextCTable, (byte)max);
+                if (ERR_isError(errCode))
+                    return errCode;
             }
 
                 if (dstCapacity == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
                 *op = codeTable[0];
                 return 1;
-            case symbolEncodingType_e.set_repeat:
+            case SymbolEncodingTypeE.SetRepeat:
                 memcpy(nextCTable, prevCTable, (uint)prevCTableSize);
                 return 0;
-            case symbolEncodingType_e.set_basic:
+            case SymbolEncodingTypeE.SetBasic:
             {
-                var err_code = FSE_buildCTable_wksp(
+                var errCode = FSE_buildCTable_wksp(
                     nextCTable,
                     defaultNorm,
                     defaultMax,
@@ -790,41 +790,41 @@ public static unsafe partial class Methods
                     entropyWorkspace,
                     entropyWorkspaceSize
                 );
-                if (ERR_isError(err_code))
-                    return err_code;
+                if (ERR_isError(errCode))
+                    return errCode;
             }
 
                 return 0;
-            case symbolEncodingType_e.set_compressed:
+            case SymbolEncodingTypeE.SetCompressed:
             {
-                var wksp = (ZSTD_BuildCTableWksp*)entropyWorkspace;
-                var nbSeq_1 = nbSeq;
-                var tableLog = FSE_optimalTableLog(FSELog, nbSeq, max);
+                var wksp = (ZstdBuildCTableWksp*)entropyWorkspace;
+                var nbSeq1 = nbSeq;
+                var tableLog = FSE_optimalTableLog(fseLog, nbSeq, max);
                 if (count[codeTable[nbSeq - 1]] > 1)
                 {
                     count[codeTable[nbSeq - 1]]--;
-                    nbSeq_1--;
+                    nbSeq1--;
                 }
 
-                assert(nbSeq_1 > 1);
-                assert(entropyWorkspaceSize >= (nuint)sizeof(ZSTD_BuildCTableWksp));
+                assert(nbSeq1 > 1);
+                assert(entropyWorkspaceSize >= (nuint)sizeof(ZstdBuildCTableWksp));
                 {
-                    var err_code = FSE_normalizeCount(
+                    var errCode = FSE_normalizeCount(
                         wksp->norm,
                         tableLog,
                         count,
-                        nbSeq_1,
+                        nbSeq1,
                         max,
-                        ZSTD_useLowProbCount(nbSeq_1)
+                        ZSTD_useLowProbCount(nbSeq1)
                     );
-                    if (ERR_isError(err_code))
-                        return err_code;
+                    if (ERR_isError(errCode))
+                        return errCode;
                 }
 
                 assert(oend >= op);
                 {
                     /* overflow protected */
-                    var NCountSize = FSE_writeNCount(
+                    var nCountSize = FSE_writeNCount(
                         op,
                         (nuint)(oend - op),
                         wksp->norm,
@@ -832,13 +832,13 @@ public static unsafe partial class Methods
                         tableLog
                     );
                     {
-                        var err_code = NCountSize;
-                        if (ERR_isError(err_code))
-                            return err_code;
+                        var errCode = nCountSize;
+                        if (ERR_isError(errCode))
+                            return errCode;
                     }
 
                     {
-                        var err_code = FSE_buildCTable_wksp(
+                        var errCode = FSE_buildCTable_wksp(
                             nextCTable,
                             wksp->norm,
                             max,
@@ -846,11 +846,11 @@ public static unsafe partial class Methods
                             wksp->wksp,
                             sizeof(uint) * 285
                         );
-                        if (ERR_isError(err_code))
-                            return err_code;
+                        if (ERR_isError(errCode))
+                            return errCode;
                     }
 
-                    return NCountSize;
+                    return nCountSize;
                 }
             }
 
@@ -858,7 +858,7 @@ public static unsafe partial class Methods
                 assert(0 != 0);
 
             {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
     }
@@ -866,31 +866,31 @@ public static unsafe partial class Methods
     private static nuint ZSTD_encodeSequences_body(
         void* dst,
         nuint dstCapacity,
-        uint* CTable_MatchLength,
+        uint* cTableMatchLength,
         byte* mlCodeTable,
-        uint* CTable_OffsetBits,
+        uint* cTableOffsetBits,
         byte* ofCodeTable,
-        uint* CTable_LitLength,
+        uint* cTableLitLength,
         byte* llCodeTable,
-        seqDef_s* sequences,
+        SeqDefS* sequences,
         nuint nbSeq,
         int longOffsets
     )
     {
-        BIT_CStream_t blockStream;
-        FSE_CState_t stateMatchLength;
-        FSE_CState_t stateOffsetBits;
-        FSE_CState_t stateLitLength;
+        BitCStreamT blockStream;
+        FseCStateT stateMatchLength;
+        FseCStateT stateOffsetBits;
+        FseCStateT stateLitLength;
         if (ERR_isError(BIT_initCStream(&blockStream, dst, dstCapacity)))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
-        FSE_initCState2(&stateMatchLength, CTable_MatchLength, mlCodeTable[nbSeq - 1]);
-        FSE_initCState2(&stateOffsetBits, CTable_OffsetBits, ofCodeTable[nbSeq - 1]);
-        FSE_initCState2(&stateLitLength, CTable_LitLength, llCodeTable[nbSeq - 1]);
-        BIT_addBits(&blockStream, sequences[nbSeq - 1].litLength, LL_bits[llCodeTable[nbSeq - 1]]);
+        FSE_initCState2(&stateMatchLength, cTableMatchLength, mlCodeTable[nbSeq - 1]);
+        FSE_initCState2(&stateOffsetBits, cTableOffsetBits, ofCodeTable[nbSeq - 1]);
+        FSE_initCState2(&stateLitLength, cTableLitLength, llCodeTable[nbSeq - 1]);
+        BIT_addBits(&blockStream, sequences[nbSeq - 1].litLength, LlBits[llCodeTable[nbSeq - 1]]);
         if (MEM_32bits)
             BIT_flushBits(&blockStream);
-        BIT_addBits(&blockStream, sequences[nbSeq - 1].mlBase, ML_bits[mlCodeTable[nbSeq - 1]]);
+        BIT_addBits(&blockStream, sequences[nbSeq - 1].mlBase, MlBits[mlCodeTable[nbSeq - 1]]);
         if (MEM_32bits)
             BIT_flushBits(&blockStream);
         if (longOffsets != 0)
@@ -928,9 +928,9 @@ public static unsafe partial class Methods
                 var llCode = llCodeTable[n];
                 var ofCode = ofCodeTable[n];
                 var mlCode = mlCodeTable[n];
-                uint llBits = LL_bits[llCode];
+                uint llBits = LlBits[llCode];
                 uint ofBits = ofCode;
-                uint mlBits = ML_bits[mlCode];
+                uint mlBits = MlBits[mlCode];
                 FSE_encodeSymbol(&blockStream, &stateOffsetBits, ofCode);
                 FSE_encodeSymbol(&blockStream, &stateMatchLength, mlCode);
                 if (MEM_32bits)
@@ -980,7 +980,7 @@ public static unsafe partial class Methods
         {
             var streamSize = BIT_closeCStream(&blockStream);
             if (streamSize == 0)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
             return streamSize;
         }
@@ -989,13 +989,13 @@ public static unsafe partial class Methods
     private static nuint ZSTD_encodeSequences_default(
         void* dst,
         nuint dstCapacity,
-        uint* CTable_MatchLength,
+        uint* cTableMatchLength,
         byte* mlCodeTable,
-        uint* CTable_OffsetBits,
+        uint* cTableOffsetBits,
         byte* ofCodeTable,
-        uint* CTable_LitLength,
+        uint* cTableLitLength,
         byte* llCodeTable,
-        seqDef_s* sequences,
+        SeqDefS* sequences,
         nuint nbSeq,
         int longOffsets
     )
@@ -1003,11 +1003,11 @@ public static unsafe partial class Methods
         return ZSTD_encodeSequences_body(
             dst,
             dstCapacity,
-            CTable_MatchLength,
+            cTableMatchLength,
             mlCodeTable,
-            CTable_OffsetBits,
+            cTableOffsetBits,
             ofCodeTable,
-            CTable_LitLength,
+            cTableLitLength,
             llCodeTable,
             sequences,
             nbSeq,
@@ -1018,13 +1018,13 @@ public static unsafe partial class Methods
     private static nuint ZSTD_encodeSequences(
         void* dst,
         nuint dstCapacity,
-        uint* CTable_MatchLength,
+        uint* cTableMatchLength,
         byte* mlCodeTable,
-        uint* CTable_OffsetBits,
+        uint* cTableOffsetBits,
         byte* ofCodeTable,
-        uint* CTable_LitLength,
+        uint* cTableLitLength,
         byte* llCodeTable,
-        seqDef_s* sequences,
+        SeqDefS* sequences,
         nuint nbSeq,
         int longOffsets,
         int bmi2
@@ -1033,11 +1033,11 @@ public static unsafe partial class Methods
         return ZSTD_encodeSequences_default(
             dst,
             dstCapacity,
-            CTable_MatchLength,
+            cTableMatchLength,
             mlCodeTable,
-            CTable_OffsetBits,
+            cTableOffsetBits,
             ofCodeTable,
-            CTable_LitLength,
+            cTableLitLength,
             llCodeTable,
             sequences,
             nbSeq,

@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_Sequence
+public struct ZstdSequence
 {
     /* The offset of the match. (NOT the same as the offset code)
      * If offset == 0 and matchLength == 0, this sequence represents the last

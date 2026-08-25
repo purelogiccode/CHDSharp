@@ -34,14 +34,14 @@ public static partial class Methods
 
     /*! ZSTD_getError() :
      *  convert a `size_t` function result into a proper ZSTD_errorCode enum */
-    public static ZSTD_ErrorCode ZSTD_getErrorCode(nuint code)
+    public static ZstdErrorCode ZSTD_getErrorCode(nuint code)
     {
         return ERR_getErrorCode(code);
     }
 
     /*! ZSTD_getErrorString() :
      *  provides error code string from enum */
-    public static string ZSTD_getErrorString(ZSTD_ErrorCode code)
+    public static string ZSTD_getErrorString(ZstdErrorCode code)
     {
         return ERR_getErrorString(code);
     }

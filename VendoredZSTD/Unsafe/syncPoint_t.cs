@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct syncPoint_t
+public struct SyncPointT
 {
     /* The number of bytes to load from the input. */
     public nuint toLoad;

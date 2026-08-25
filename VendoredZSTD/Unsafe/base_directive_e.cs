@@ -1,7 +1,7 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum base_directive_e
+public enum BaseDirectiveE
 {
-    base_0possible = 0,
-    base_1guaranteed = 1
+    Base0Possible = 0,
+    Base1Guaranteed = 1
 }

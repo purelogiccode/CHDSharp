@@ -11,7 +11,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
 #if NET8_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_BIT_mask =>
+    private static ReadOnlySpan<uint> SpanBitMask =>
         new uint[32]
         {
             0,
@@ -48,10 +48,10 @@ public static unsafe partial class Methods
             0x7FFFFFFF
         };
 
-    private static uint* BIT_mask =>
+    private static uint* BitMask =>
         (uint*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_BIT_mask)
+            ref MemoryMarshal.GetReference(SpanBitMask)
         );
 #else
     private static readonly uint* BIT_mask = GetArrayPointer(
@@ -100,7 +100,7 @@ public static unsafe partial class Methods
      *  @return : 0 if success,
      *            otherwise an error code (can be tested using ERR_isError()) */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_initCStream(BIT_CStream_t* bitC, void* startPtr, nuint dstCapacity)
+    private static nuint BIT_initCStream(BitCStreamT* bitC, void* startPtr, nuint dstCapacity)
     {
         bitC->bitContainer = 0;
         bitC->bitPos = 0;
@@ -108,7 +108,7 @@ public static unsafe partial class Methods
         bitC->ptr = bitC->startPtr;
         bitC->endPtr = bitC->startPtr + dstCapacity - sizeof(nuint);
         if (dstCapacity <= (nuint)sizeof(nuint))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         return 0;
     }
 
@@ -124,14 +124,14 @@ public static unsafe partial class Methods
             return Bmi2.ZeroHighBits((uint)bitContainer, nbBits);
 #endif
 
-        return bitContainer & BIT_mask[nbBits];
+        return bitContainer & BitMask[nbBits];
     }
 
     /*! BIT_addBits() :
      *  can add up to 31 bits into `bitC`.
      *  Note : does not check for register overflow ! */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void BIT_addBits(BIT_CStream_t* bitC, nuint value, uint nbBits)
+    private static void BIT_addBits(BitCStreamT* bitC, nuint value, uint nbBits)
     {
         assert(nbBits < sizeof(uint) * 32 / sizeof(uint));
         assert(nbBits + bitC->bitPos < (uint)(sizeof(nuint) * 8));
@@ -143,7 +143,7 @@ public static unsafe partial class Methods
      *  works only if `value` is _clean_,
      *  meaning all high bits above nbBits are 0 */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void BIT_addBitsFast(BIT_CStream_t* bitC, nuint value, uint nbBits)
+    private static void BIT_addBitsFast(BitCStreamT* bitC, nuint value, uint nbBits)
     {
         assert(value >> (int)nbBits == 0);
         assert(nbBits + bitC->bitPos < (uint)(sizeof(nuint) * 8));
@@ -155,7 +155,7 @@ public static unsafe partial class Methods
      *  assumption : bitContainer has not overflowed
      *  unsafe version; does not check buffer overflow */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void BIT_flushBitsFast(BIT_CStream_t* bitC)
+    private static void BIT_flushBitsFast(BitCStreamT* bitC)
     {
         nuint nbBytes = bitC->bitPos >> 3;
         assert(bitC->bitPos < (uint)(sizeof(nuint) * 8));
@@ -172,7 +172,7 @@ public static unsafe partial class Methods
      *  note : does not signal buffer overflow.
      *  overflow will be revealed later on using BIT_closeCStream() */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void BIT_flushBits(BIT_CStream_t* bitC)
+    private static void BIT_flushBits(BitCStreamT* bitC)
     {
         nuint nbBytes = bitC->bitPos >> 3;
         assert(bitC->bitPos < (uint)(sizeof(nuint) * 8));
@@ -189,7 +189,7 @@ public static unsafe partial class Methods
      *  @return : size of CStream, in bytes,
      *            or 0 if it could not fit into dstBuffer */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_closeCStream(BIT_CStream_t* bitC)
+    private static nuint BIT_closeCStream(BitCStreamT* bitC)
     {
         BIT_addBitsFast(bitC, 1, 1);
         BIT_flushBits(bitC);
@@ -208,12 +208,12 @@ public static unsafe partial class Methods
      * @return : size of stream (== srcSize), or an errorCode if a problem is detected
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_initDStream(BIT_DStream_t* bitD, void* srcBuffer, nuint srcSize)
+    private static nuint BIT_initDStream(BitDStreamT* bitD, void* srcBuffer, nuint srcSize)
     {
         if (srcSize < 1)
         {
-            memset(bitD, 0, (uint)sizeof(BIT_DStream_t));
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            memset(bitD, 0, (uint)sizeof(BitDStreamT));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         bitD->start = (sbyte*)srcBuffer;
@@ -226,7 +226,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD->bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
         else
@@ -261,7 +261,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD->bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             }
 
             bitD->bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;
@@ -299,7 +299,7 @@ public static unsafe partial class Methods
      *  On 64-bits, maxNbBits==56.
      * @return : value extracted */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_lookBits(BIT_DStream_t* bitD, uint nbBits)
+    private static nuint BIT_lookBits(BitDStreamT* bitD, uint nbBits)
     {
         return BIT_getMiddleBits(
             bitD->bitContainer,
@@ -312,7 +312,7 @@ public static unsafe partial class Methods
      *  unsafe version; only works if nbBits >= 1 */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static nuint BIT_lookBitsFast(BIT_DStream_t* bitD, uint nbBits)
+    private static nuint BIT_lookBitsFast(BitDStreamT* bitD, uint nbBits)
     {
         var regMask = (uint)(sizeof(nuint) * 8 - 1);
         assert(nbBits >= 1);
@@ -322,7 +322,7 @@ public static unsafe partial class Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static void BIT_skipBits(BIT_DStream_t* bitD, uint nbBits)
+    private static void BIT_skipBits(BitDStreamT* bitD, uint nbBits)
     {
         bitD->bitsConsumed += nbBits;
     }
@@ -332,7 +332,7 @@ public static unsafe partial class Methods
      *  Pay attention to not read more than nbBits contained into local register.
      * @return : extracted value. */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_readBits(BIT_DStream_t* bitD, uint nbBits)
+    private static nuint BIT_readBits(BitDStreamT* bitD, uint nbBits)
     {
         var value = BIT_lookBits(bitD, nbBits);
         BIT_skipBits(bitD, nbBits);
@@ -342,7 +342,7 @@ public static unsafe partial class Methods
     /*! BIT_readBitsFast() :
      *  unsafe version; only works if nbBits >= 1 */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_readBitsFast(BIT_DStream_t* bitD, uint nbBits)
+    private static nuint BIT_readBitsFast(BitDStreamT* bitD, uint nbBits)
     {
         var value = BIT_lookBitsFast(bitD, nbBits);
         assert(nbBits >= 1);
@@ -358,15 +358,15 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static BIT_DStream_status BIT_reloadDStreamFast(BIT_DStream_t* bitD)
+    private static BitDStreamStatus BIT_reloadDStreamFast(BitDStreamT* bitD)
     {
         if (bitD->ptr < bitD->limitPtr)
-            return BIT_DStream_status.BIT_DStream_overflow;
+            return BitDStreamStatus.BitDStreamOverflow;
         assert(bitD->bitsConsumed <= (uint)(sizeof(nuint) * 8));
         bitD->ptr -= bitD->bitsConsumed >> 3;
         bitD->bitsConsumed &= 7;
         bitD->bitContainer = MEM_readLEST(bitD->ptr);
-        return BIT_DStream_status.BIT_DStream_unfinished;
+        return BitDStreamStatus.BitDStreamUnfinished;
     }
 
     /*! BIT_reloadDStream() :
@@ -375,27 +375,27 @@ public static unsafe partial class Methods
      * @return : status of `BIT_DStream_t` internal register.
      *           when status == BIT_DStream_unfinished, internal register is filled with at least 25 or 57 bits */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static BIT_DStream_status BIT_reloadDStream(BIT_DStream_t* bitD)
+    private static BitDStreamStatus BIT_reloadDStream(BitDStreamT* bitD)
     {
         if (bitD->bitsConsumed > (uint)(sizeof(nuint) * 8))
-            return BIT_DStream_status.BIT_DStream_overflow;
+            return BitDStreamStatus.BitDStreamOverflow;
         if (bitD->ptr >= bitD->limitPtr)
             return BIT_reloadDStreamFast(bitD);
 
         if (bitD->ptr == bitD->start)
         {
             if (bitD->bitsConsumed < (uint)(sizeof(nuint) * 8))
-                return BIT_DStream_status.BIT_DStream_endOfBuffer;
-            return BIT_DStream_status.BIT_DStream_completed;
+                return BitDStreamStatus.BitDStreamEndOfBuffer;
+            return BitDStreamStatus.BitDStreamCompleted;
         }
 
         {
             var nbBytes = bitD->bitsConsumed >> 3;
-            var result = BIT_DStream_status.BIT_DStream_unfinished;
+            var result = BitDStreamStatus.BitDStreamUnfinished;
             if (bitD->ptr - nbBytes < bitD->start)
             {
                 nbBytes = (uint)(bitD->ptr - bitD->start);
-                result = BIT_DStream_status.BIT_DStream_endOfBuffer;
+                result = BitDStreamStatus.BitDStreamEndOfBuffer;
             }
 
             bitD->ptr -= nbBytes;
@@ -410,9 +410,9 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static uint BIT_endOfDStream(BIT_DStream_t* DStream)
+    private static uint BIT_endOfDStream(BitDStreamT* dStream)
     {
-        return DStream->ptr == DStream->start && DStream->bitsConsumed == (uint)(sizeof(nuint) * 8)
+        return dStream->ptr == dStream->start && dStream->bitsConsumed == (uint)(sizeof(nuint) * 8)
             ? 1U
             : 0U;
     }
@@ -427,12 +427,12 @@ public static unsafe partial class Methods
      * @return : size of stream (== srcSize), or an errorCode if a problem is detected
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_initDStream(ref BIT_DStream_t bitD, void* srcBuffer, nuint srcSize)
+    private static nuint BIT_initDStream(ref BitDStreamT bitD, void* srcBuffer, nuint srcSize)
     {
         if (srcSize < 1)
         {
-            memset(ref bitD, 0, (uint)sizeof(BIT_DStream_t));
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            memset(ref bitD, 0, (uint)sizeof(BitDStreamT));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         }
 
         bitD.start = (sbyte*)srcBuffer;
@@ -445,7 +445,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD.bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
             }
         }
         else
@@ -480,7 +480,7 @@ public static unsafe partial class Methods
                 var lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD.bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             }
 
             bitD.bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;
@@ -496,7 +496,7 @@ public static unsafe partial class Methods
      *  On 64-bits, maxNbBits==56.
      * @return : value extracted */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_lookBits(ref BIT_DStream_t bitD, uint nbBits)
+    private static nuint BIT_lookBits(ref BitDStreamT bitD, uint nbBits)
     {
         return BIT_getMiddleBits(
             bitD.bitContainer,
@@ -509,7 +509,7 @@ public static unsafe partial class Methods
      *  unsafe version; only works if nbBits >= 1 */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static nuint BIT_lookBitsFast(ref BIT_DStream_t bitD, uint nbBits)
+    private static nuint BIT_lookBitsFast(ref BitDStreamT bitD, uint nbBits)
     {
         var regMask = (uint)(sizeof(nuint) * 8 - 1);
         assert(nbBits >= 1);
@@ -519,7 +519,7 @@ public static unsafe partial class Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static void BIT_skipBits(ref BIT_DStream_t bitD, uint nbBits)
+    private static void BIT_skipBits(ref BitDStreamT bitD, uint nbBits)
     {
         bitD.bitsConsumed += nbBits;
     }
@@ -529,7 +529,7 @@ public static unsafe partial class Methods
      *  Pay attention to not read more than nbBits contained into local register.
      * @return : extracted value. */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_readBits(ref BIT_DStream_t bitD, uint nbBits)
+    private static nuint BIT_readBits(ref BitDStreamT bitD, uint nbBits)
     {
         var value = BIT_lookBits(ref bitD, nbBits);
         BIT_skipBits(ref bitD, nbBits);
@@ -539,7 +539,7 @@ public static unsafe partial class Methods
     /*! BIT_readBitsFast() :
      *  unsafe version; only works if nbBits >= 1 */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint BIT_readBitsFast(ref BIT_DStream_t bitD, uint nbBits)
+    private static nuint BIT_readBitsFast(ref BitDStreamT bitD, uint nbBits)
     {
         var value = BIT_lookBitsFast(ref bitD, nbBits);
         assert(nbBits >= 1);
@@ -555,15 +555,15 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static BIT_DStream_status BIT_reloadDStreamFast(ref BIT_DStream_t bitD)
+    private static BitDStreamStatus BIT_reloadDStreamFast(ref BitDStreamT bitD)
     {
         if (bitD.ptr < bitD.limitPtr)
-            return BIT_DStream_status.BIT_DStream_overflow;
+            return BitDStreamStatus.BitDStreamOverflow;
         assert(bitD.bitsConsumed <= (uint)(sizeof(nuint) * 8));
         bitD.ptr -= bitD.bitsConsumed >> 3;
         bitD.bitsConsumed &= 7;
         bitD.bitContainer = MEM_readLEST(bitD.ptr);
-        return BIT_DStream_status.BIT_DStream_unfinished;
+        return BitDStreamStatus.BitDStreamUnfinished;
     }
 
     /*! BIT_reloadDStream() :
@@ -572,27 +572,27 @@ public static unsafe partial class Methods
      * @return : status of `BIT_DStream_t` internal register.
      *           when status == BIT_DStream_unfinished, internal register is filled with at least 25 or 57 bits */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static BIT_DStream_status BIT_reloadDStream(ref BIT_DStream_t bitD)
+    private static BitDStreamStatus BIT_reloadDStream(ref BitDStreamT bitD)
     {
         if (bitD.bitsConsumed > (uint)(sizeof(nuint) * 8))
-            return BIT_DStream_status.BIT_DStream_overflow;
+            return BitDStreamStatus.BitDStreamOverflow;
         if (bitD.ptr >= bitD.limitPtr)
             return BIT_reloadDStreamFast(ref bitD);
 
         if (bitD.ptr == bitD.start)
         {
             if (bitD.bitsConsumed < (uint)(sizeof(nuint) * 8))
-                return BIT_DStream_status.BIT_DStream_endOfBuffer;
-            return BIT_DStream_status.BIT_DStream_completed;
+                return BitDStreamStatus.BitDStreamEndOfBuffer;
+            return BitDStreamStatus.BitDStreamCompleted;
         }
 
         {
             var nbBytes = bitD.bitsConsumed >> 3;
-            var result = BIT_DStream_status.BIT_DStream_unfinished;
+            var result = BitDStreamStatus.BitDStreamUnfinished;
             if (bitD.ptr - nbBytes < bitD.start)
             {
                 nbBytes = (uint)(bitD.ptr - bitD.start);
-                result = BIT_DStream_status.BIT_DStream_endOfBuffer;
+                result = BitDStreamStatus.BitDStreamEndOfBuffer;
             }
 
             bitD.ptr -= nbBytes;

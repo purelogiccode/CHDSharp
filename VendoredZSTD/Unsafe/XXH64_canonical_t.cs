@@ -4,7 +4,7 @@ namespace VendoredZSTD.Unsafe;
 
 /*******   Canonical representation   *******/
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct XXH64_canonical_t
+public unsafe struct Xxh64CanonicalT
 {
     public fixed byte digest[8];
 }

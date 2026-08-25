@@ -3,23 +3,23 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct HUF_CStream_t
+public unsafe struct HufCStreamT
 {
-    public _bitContainer_e__FixedBuffer bitContainer;
-    public _bitPos_e__FixedBuffer bitPos;
+    public BitContainerEFixedBuffer bitContainer;
+    public BitPosEFixedBuffer bitPos;
     public byte* startPtr;
     public byte* ptr;
     public byte* endPtr;
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct _bitContainer_e__FixedBuffer
+    public struct BitContainerEFixedBuffer
     {
         public nuint e0;
         public nuint e1;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct _bitPos_e__FixedBuffer
+    public struct BitPosEFixedBuffer
     {
         public nuint e0;
         public nuint e1;

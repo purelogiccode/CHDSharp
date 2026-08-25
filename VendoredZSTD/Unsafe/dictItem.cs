@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct dictItem
+public struct DictItem
 {
     public uint pos;
     public uint length;

@@ -10,7 +10,7 @@ This API consists of small unitary functions, which highly benefit from being in
 Hence their body are included in next section.
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct FSE_CState_t
+public unsafe struct FseCStateT
 {
     public nint value;
     public void* stateTable;

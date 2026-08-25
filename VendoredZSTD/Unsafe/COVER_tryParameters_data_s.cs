@@ -6,10 +6,10 @@ namespace VendoredZSTD.Unsafe;
  * Parameters for COVER_tryParameters().
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct COVER_tryParameters_data_s
+public unsafe struct CoverTryParametersDataS
 {
-    public COVER_ctx_t* ctx;
-    public COVER_best_s* best;
+    public CoverCtxT* ctx;
+    public CoverBestS* best;
     public nuint dictBufferCapacity;
-    public ZDICT_cover_params_t parameters;
+    public ZdictCoverParamsT parameters;
 }

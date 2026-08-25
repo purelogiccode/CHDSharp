@@ -24,11 +24,11 @@ public static unsafe class DictBuilder
         // same as in ZDICT_trainFromBuffer
         return TrainFromBufferFastCover(
             samples,
-            new ZDICT_fastCover_params_t
+            new ZdictFastCoverParamsT
             {
                 d = 8,
                 steps = 4,
-                zParams = new ZDICT_params_t { compressionLevel = level }
+                zParams = new ZdictParamsT { compressionLevel = level }
             },
             dictCapacity
         );
@@ -36,7 +36,7 @@ public static unsafe class DictBuilder
 
     public static Span<byte> TrainFromBufferFastCover(
         IEnumerable<byte[]> samples,
-        ZDICT_fastCover_params_t @params,
+        ZdictFastCoverParamsT @params,
         int dictCapacity = DefaultDictCapacity
     )
     {

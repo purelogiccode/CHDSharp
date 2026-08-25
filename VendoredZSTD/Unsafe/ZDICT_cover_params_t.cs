@@ -7,7 +7,7 @@ namespace VendoredZSTD.Unsafe;
  *  For others, value 0 means default.
  */
 [StructLayout(LayoutKind.Sequential)]
-public struct ZDICT_cover_params_t
+public struct ZdictCoverParamsT
 {
     /* Segment size : constraint: 0 < k : Reasonable range [16, 2048+] */
     public uint k;
@@ -29,5 +29,5 @@ public struct ZDICT_cover_params_t
 
     /* Sets shrinkDictMaxRegression so that a smaller dictionary can be at worse shrinkDictMaxRegression% worse than the max dict size dictionary. */
     public uint shrinkDictMaxRegression;
-    public ZDICT_params_t zParams;
+    public ZdictParamsT zParams;
 }

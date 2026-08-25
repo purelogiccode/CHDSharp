@@ -3,10 +3,10 @@ namespace VendoredZSTD.Unsafe;
 /*-*************************************
  *  Structures
  ***************************************/
-public enum ZSTD_cwksp_alloc_phase_e
+public enum ZstdCwkspAllocPhaseE
 {
-    ZSTD_cwksp_alloc_objects,
-    ZSTD_cwksp_alloc_aligned_init_once,
-    ZSTD_cwksp_alloc_aligned,
-    ZSTD_cwksp_alloc_buffers
+    ZstdCwkspAllocObjects,
+    ZstdCwkspAllocAlignedInitOnce,
+    ZstdCwkspAllocAligned,
+    ZstdCwkspAllocBuffers
 }

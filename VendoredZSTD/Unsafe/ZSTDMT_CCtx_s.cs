@@ -3,23 +3,23 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTDMT_CCtx_s
+public unsafe struct ZstdmtCCtxS
 {
     public void* factory;
-    public ZSTDMT_jobDescription* jobs;
-    public ZSTDMT_bufferPool_s* bufPool;
-    public ZSTDMT_CCtxPool* cctxPool;
-    public ZSTDMT_bufferPool_s* seqPool;
-    public ZSTD_CCtx_params_s @params;
+    public ZstdmtJobDescription* jobs;
+    public ZstdmtBufferPoolS* bufPool;
+    public ZstdmtCCtxPool* cctxPool;
+    public ZstdmtBufferPoolS* seqPool;
+    public ZstdCCtxParamsS @params;
     public nuint targetSectionSize;
     public nuint targetPrefixSize;
 
     /* 1 => one job is already prepared, but pool has shortage of workers. Don't create a new job. */
     public int jobReady;
-    public inBuff_t inBuff;
-    public roundBuff_t roundBuff;
-    public serialState_t serial;
-    public rsyncState_t rsync;
+    public InBuffT inBuff;
+    public RoundBuffT roundBuff;
+    public SerialStateT serial;
+    public RsyncStateT rsync;
     public uint jobIDMask;
     public uint doneJobID;
     public uint nextJobID;
@@ -28,8 +28,8 @@ public unsafe struct ZSTDMT_CCtx_s
     public ulong frameContentSize;
     public ulong consumed;
     public ulong produced;
-    public ZSTD_customMem cMem;
-    public ZSTD_CDict_s* cdictLocal;
-    public ZSTD_CDict_s* cdict;
+    public ZstdCustomMem cMem;
+    public ZstdCDictS* cdictLocal;
+    public ZstdCDictS* cdict;
     public uint providedFactory;
 }

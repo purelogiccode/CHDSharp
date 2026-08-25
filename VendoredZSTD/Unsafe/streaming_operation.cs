@@ -1,8 +1,8 @@
 namespace VendoredZSTD.Unsafe;
 
 /* Streaming state is used to inform allocation of the literal buffer */
-public enum streaming_operation
+public enum StreamingOperation
 {
-    not_streaming = 0,
-    is_streaming = 1
+    NotStreaming = 0,
+    IsStreaming = 1
 }

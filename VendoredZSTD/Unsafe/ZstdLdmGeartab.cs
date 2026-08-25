@@ -5,7 +5,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
 #if NET8_0_OR_GREATER
-    private static ReadOnlySpan<ulong> Span_ZSTD_ldm_gearTab =>
+    private static ReadOnlySpan<ulong> SpanZstdLdmGearTab =>
         new ulong[256]
         {
             0xf5b8f72c5f77775c,
@@ -266,10 +266,10 @@ public static unsafe partial class Methods
             0x2b4da14f2613d8f4
         };
 
-    private static ulong* ZSTD_ldm_gearTab =>
+    private static ulong* ZstdLdmGearTab =>
         (ulong*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_ZSTD_ldm_gearTab)
+            ref MemoryMarshal.GetReference(SpanZstdLdmGearTab)
         );
 #else
     private static readonly ulong* ZSTD_ldm_gearTab = GetArrayPointer(

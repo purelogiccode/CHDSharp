@@ -3,10 +3,10 @@ namespace VendoredZSTD.Unsafe;
 /*-*************************************
  *  Context memory management
  ***************************************/
-public enum ZSTD_compressionStage_e
+public enum ZstdCompressionStageE
 {
-    ZSTDcs_created = 0,
-    ZSTDcs_init,
-    ZSTDcs_ongoing,
-    ZSTDcs_ending
+    ZstDcsCreated = 0,
+    ZstDcsInit,
+    ZstDcsOngoing,
+    ZstDcsEnding
 }

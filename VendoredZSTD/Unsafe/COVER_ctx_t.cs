@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
  * Context
  ***************************************/
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct COVER_ctx_t
+public unsafe struct CoverCtxT
 {
     public byte* samples;
     public nuint* offsets;

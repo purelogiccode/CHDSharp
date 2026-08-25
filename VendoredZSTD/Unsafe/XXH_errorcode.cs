@@ -1,7 +1,7 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum XXH_errorcode
+public enum XxhErrorcode
 {
-    XXH_OK = 0,
-    XXH_ERROR
+    XxhOk = 0,
+    XxhError
 }

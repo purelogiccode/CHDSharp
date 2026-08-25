@@ -1,13 +1,13 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_litLocation_e
+public enum ZstdLitLocationE
 {
     /* Stored entirely within litExtraBuffer */
-    ZSTD_not_in_dst = 0,
+    ZstdNotInDst = 0,
 
     /* Stored entirely within dst (in memory after current output write) */
-    ZSTD_in_dst = 1,
+    ZstdInDst = 1,
 
     /* Split between litExtraBuffer and dst */
-    ZSTD_split = 2
+    ZstdSplit = 2
 }

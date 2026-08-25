@@ -6,10 +6,10 @@ namespace VendoredZSTD.Unsafe;
 /* =====   Multi-threaded compression   ===== */
 /* ------------------------------------------ */
 [StructLayout(LayoutKind.Sequential)]
-public struct inBuff_t
+public struct InBuffT
 {
     /* read-only non-owned prefix buffer */
-    public range_t prefix;
-    public buffer_s buffer;
+    public RangeT prefix;
+    public BufferS buffer;
     public nuint filled;
 }

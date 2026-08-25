@@ -3,20 +3,20 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTDMT_bufferPool_s
+public unsafe struct ZstdmtBufferPoolS
 {
     public void* poolMutex;
     public nuint bufferSize;
     public uint totalBuffers;
     public uint nbBuffers;
-    public ZSTD_customMem cMem;
+    public ZstdCustomMem cMem;
 
     /* variable size */
-    public _bTable_e__FixedBuffer bTable;
+    public BTableEFixedBuffer bTable;
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct _bTable_e__FixedBuffer
+    public struct BTableEFixedBuffer
     {
-        public buffer_s e0;
+        public BufferS e0;
     }
 }

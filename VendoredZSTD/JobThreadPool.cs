@@ -5,22 +5,22 @@ namespace VendoredZSTD;
 
 internal unsafe class JobThreadPool : IDisposable
 {
-    private readonly BlockingCollection<Job> queue;
-    private readonly List<JobThread> threads;
-    private int numThreads;
+    private readonly BlockingCollection<Job> _queue;
+    private readonly List<JobThread> _threads;
+    private int _numThreads;
 
     public JobThreadPool(int num, int queueSize)
     {
-        numThreads = num;
-        queue = new BlockingCollection<Job>(queueSize + 1);
-        threads = new List<JobThread>(num);
-        for (var i = 0; i < numThreads; i++)
+        _numThreads = num;
+        _queue = new BlockingCollection<Job>(queueSize + 1);
+        _threads = new List<JobThread>(num);
+        for (var i = 0; i < _numThreads; i++)
             CreateThread();
     }
 
     public void Dispose()
     {
-        queue.Dispose();
+        _queue.Dispose();
     }
 
     private void Worker(object? obj)
@@ -29,10 +29,10 @@ internal unsafe class JobThreadPool : IDisposable
             return;
 
         var cancellationToken = poolThread.CancellationTokenSource.Token;
-        while (!queue.IsCompleted && !cancellationToken.IsCancellationRequested)
+        while (!_queue.IsCompleted && !cancellationToken.IsCancellationRequested)
             try
             {
-                if (queue.TryTake(out var job, -1, cancellationToken))
+                if (_queue.TryTake(out var job, -1, cancellationToken))
                     ((delegate* managed<void*, void>)job.function)(job.opaque);
             }
             catch (InvalidOperationException)
@@ -46,45 +46,45 @@ internal unsafe class JobThreadPool : IDisposable
     private void CreateThread()
     {
         var poolThread = new JobThread(new Thread(Worker));
-        threads.Add(poolThread);
+        _threads.Add(poolThread);
         poolThread.Start();
     }
 
     public void Resize(int num)
     {
-        lock (threads)
+        lock (_threads)
         {
-            if (num < numThreads)
-                for (var i = numThreads - 1; i >= num; i--)
+            if (num < _numThreads)
+                for (var i = _numThreads - 1; i >= num; i--)
                 {
-                    threads[i].Cancel();
-                    threads.RemoveAt(i);
+                    _threads[i].Cancel();
+                    _threads.RemoveAt(i);
                 }
             else
-                for (var i = numThreads; i < num; i++)
+                for (var i = _numThreads; i < num; i++)
                     CreateThread();
         }
 
-        numThreads = num;
+        _numThreads = num;
     }
 
     public void Add(void* function, void* opaque)
     {
-        queue.Add(new Job { function = function, opaque = opaque });
+        _queue.Add(new Job { function = function, opaque = opaque });
     }
 
     public bool TryAdd(void* function, void* opaque)
     {
-        return queue.TryAdd(new Job { function = function, opaque = opaque });
+        return _queue.TryAdd(new Job { function = function, opaque = opaque });
     }
 
     public void Join(bool cancel = true)
     {
-        queue.CompleteAdding();
+        _queue.CompleteAdding();
         List<JobThread> jobThreads;
-        lock (threads)
+        lock (_threads)
         {
-            jobThreads = new List<JobThread>(threads);
+            jobThreads = new List<JobThread>(_threads);
         }
 
         if (cancel)

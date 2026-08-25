@@ -6,10 +6,10 @@ namespace VendoredZSTD.Unsafe;
  * Parameters for FASTCOVER_tryParameters().
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct FASTCOVER_tryParameters_data_s
+public unsafe struct FastcoverTryParametersDataS
 {
-    public FASTCOVER_ctx_t* ctx;
-    public COVER_best_s* best;
+    public FastcoverCtxT* ctx;
+    public CoverBestS* best;
     public nuint dictBufferCapacity;
-    public ZDICT_cover_params_t parameters;
+    public ZdictCoverParamsT parameters;
 }

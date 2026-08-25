@@ -4,8 +4,8 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static readonly FASTCOVER_accel_t* FASTCOVER_defaultAccelParameters = GetArrayPointer(
-        new FASTCOVER_accel_t[11]
+    private static readonly FastcoverAccelT* FastcoverDefaultAccelParameters = GetArrayPointer(
+        new FastcoverAccelT[11]
         {
             new(100, 0),
             new(100, 0),
@@ -49,12 +49,12 @@ public static unsafe partial class Methods
      *
      * Once the dmer with hash value d is in the dictionary we set F(d) = 0.
      */
-    private static COVER_segment_t FASTCOVER_selectSegment(
-        FASTCOVER_ctx_t* ctx,
+    private static CoverSegmentT FASTCOVER_selectSegment(
+        FastcoverCtxT* ctx,
         uint* freqs,
         uint begin,
         uint end,
-        ZDICT_cover_params_t parameters,
+        ZdictCoverParamsT parameters,
         ushort* segmentFreqs
     )
     {
@@ -64,13 +64,13 @@ public static unsafe partial class Methods
         var f = ctx->f;
         var dmersInK = k - d + 1;
         /* Try each segment (activeSegment) and save the best (bestSegment) */
-        var bestSegment = new COVER_segment_t
+        var bestSegment = new CoverSegmentT
         {
             begin = 0,
             end = 0,
             score = 0
         };
-        COVER_segment_t activeSegment;
+        CoverSegmentT activeSegment;
         activeSegment.begin = begin;
         activeSegment.end = begin;
         activeSegment.score = 0;
@@ -119,7 +119,7 @@ public static unsafe partial class Methods
     }
 
     private static int FASTCOVER_checkParameters(
-        ZDICT_cover_params_t parameters,
+        ZdictCoverParamsT parameters,
         nuint maxDictSize,
         uint f,
         uint accel
@@ -152,7 +152,7 @@ public static unsafe partial class Methods
     /**
      * Clean up a context initialized with `FASTCOVER_ctx_init()`.
      */
-    private static void FASTCOVER_ctx_destroy(FASTCOVER_ctx_t* ctx)
+    private static void FASTCOVER_ctx_destroy(FastcoverCtxT* ctx)
     {
         if (ctx == null)
             return;
@@ -165,7 +165,7 @@ public static unsafe partial class Methods
     /**
      * Calculate for frequency of hash value of each dmer in ctx->samples
      */
-    private static void FASTCOVER_computeFrequency(uint* freqs, FASTCOVER_ctx_t* ctx)
+    private static void FASTCOVER_computeFrequency(uint* freqs, FastcoverCtxT* ctx)
     {
         var f = ctx->f;
         var d = ctx->d;
@@ -196,14 +196,14 @@ public static unsafe partial class Methods
      * The context must be destroyed with `FASTCOVER_ctx_destroy()`.
      */
     private static nuint FASTCOVER_ctx_init(
-        FASTCOVER_ctx_t* ctx,
+        FastcoverCtxT* ctx,
         void* samplesBuffer,
         nuint* samplesSizes,
         uint nbSamples,
         uint d,
         double splitPoint,
         uint f,
-        FASTCOVER_accel_t accelParams
+        FastcoverAccelT accelParams
     )
     {
         var samples = (byte*)samplesBuffer;
@@ -221,15 +221,15 @@ public static unsafe partial class Methods
             totalSamplesSize < (d > sizeof(ulong) ? d : sizeof(ulong))
             || totalSamplesSize >= (sizeof(nuint) == 8 ? unchecked((uint)-1) : 1 * (1U << 30))
         )
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
 
         if (nbTrainSamples < 5)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
 
         if (nbTestSamples < 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
 
-        memset(ctx, 0, (uint)sizeof(FASTCOVER_ctx_t));
+        memset(ctx, 0, (uint)sizeof(FastcoverCtxT));
         ctx->samples = samples;
         ctx->samplesSizes = samplesSizes;
         ctx->nbSamples = nbSamples;
@@ -243,7 +243,7 @@ public static unsafe partial class Methods
         if (ctx->offsets == null)
         {
             FASTCOVER_ctx_destroy(ctx);
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
 
         {
@@ -258,7 +258,7 @@ public static unsafe partial class Methods
         if (ctx->freqs == null)
         {
             FASTCOVER_ctx_destroy(ctx);
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
 
         FASTCOVER_computeFrequency(ctx->freqs, ctx);
@@ -269,11 +269,11 @@ public static unsafe partial class Methods
      * Given the prepared context build the dictionary.
      */
     private static nuint FASTCOVER_buildDictionary(
-        FASTCOVER_ctx_t* ctx,
+        FastcoverCtxT* ctx,
         uint* freqs,
         void* dictBuffer,
         nuint dictBufferCapacity,
-        ZDICT_cover_params_t parameters,
+        ZdictCoverParamsT parameters,
         ushort* segmentFreqs
     )
     {
@@ -334,17 +334,17 @@ public static unsafe partial class Methods
     private static void FASTCOVER_tryParameters(void* opaque)
     {
         /* Save parameters as local variables */
-        var data = (FASTCOVER_tryParameters_data_s*)opaque;
+        var data = (FastcoverTryParametersDataS*)opaque;
         var ctx = data->ctx;
         var parameters = data->parameters;
         var dictBufferCapacity = data->dictBufferCapacity;
-        var totalCompressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        var totalCompressedSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         /* Initialize array to keep track of frequency of dmer within activeSegment */
         var segmentFreqs = (ushort*)calloc((ulong)1 << (int)ctx->f, sizeof(ushort));
         /* Allocate space for hash table, dict, and freqs */
         var dict = (byte*)malloc(dictBufferCapacity);
         var selection = COVER_dictSelectionError(
-            unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC))
+            unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric))
         );
         var freqs = (uint*)malloc(((ulong)1 << (int)ctx->f) * sizeof(uint));
         if (segmentFreqs == null || dict == null || freqs == null)
@@ -388,8 +388,8 @@ public static unsafe partial class Methods
     }
 
     private static void FASTCOVER_convertToCoverParams(
-        ZDICT_fastCover_params_t fastCoverParams,
-        ZDICT_cover_params_t* coverParams
+        ZdictFastCoverParamsT fastCoverParams,
+        ZdictCoverParamsT* coverParams
     )
     {
         coverParams->k = fastCoverParams.k;
@@ -402,8 +402,8 @@ public static unsafe partial class Methods
     }
 
     private static void FASTCOVER_convertToFastCoverParams(
-        ZDICT_cover_params_t coverParams,
-        ZDICT_fastCover_params_t* fastCoverParams,
+        ZdictCoverParamsT coverParams,
+        ZdictFastCoverParamsT* fastCoverParams,
         uint f,
         uint accel
     )
@@ -441,18 +441,18 @@ public static unsafe partial class Methods
         void* samplesBuffer,
         nuint* samplesSizes,
         uint nbSamples,
-        ZDICT_fastCover_params_t parameters
+        ZdictFastCoverParamsT parameters
     )
     {
         var dict = (byte*)dictBuffer;
-        FASTCOVER_ctx_t ctx;
-        ZDICT_cover_params_t coverParams;
-        FASTCOVER_accel_t accelParams;
-        g_displayLevel = (int)parameters.zParams.notificationLevel;
+        FastcoverCtxT ctx;
+        ZdictCoverParamsT coverParams;
+        FastcoverAccelT accelParams;
+        _gDisplayLevel = (int)parameters.zParams.notificationLevel;
         parameters.splitPoint = 1;
         parameters.f = parameters.f == 0 ? 20 : parameters.f;
         parameters.accel = parameters.accel == 0 ? 1 : parameters.accel;
-        memset(&coverParams, 0, (uint)sizeof(ZDICT_cover_params_t));
+        memset(&coverParams, 0, (uint)sizeof(ZdictCoverParamsT));
         FASTCOVER_convertToCoverParams(parameters, &coverParams);
         if (
             FASTCOVER_checkParameters(
@@ -462,15 +462,15 @@ public static unsafe partial class Methods
                 parameters.accel
             ) == 0
         )
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
 
         if (nbSamples == 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
 
         if (dictBufferCapacity < 256)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
-        accelParams = FASTCOVER_defaultAccelParameters[parameters.accel];
+        accelParams = FastcoverDefaultAccelParameters[parameters.accel];
         {
             var initVal = FASTCOVER_ctx_init(
                 &ctx,
@@ -486,7 +486,7 @@ public static unsafe partial class Methods
                 return initVal;
         }
 
-        COVER_warnOnSmallCorpus(dictBufferCapacity, ctx.nbDmers, g_displayLevel);
+        COVER_warnOnSmallCorpus(dictBufferCapacity, ctx.nbDmers, _gDisplayLevel);
         {
             /* Initialize array to keep track of frequency of dmer within activeSegment */
             var segmentFreqs = (ushort*)calloc((ulong)1 << (int)parameters.f, sizeof(ushort));
@@ -543,11 +543,11 @@ public static unsafe partial class Methods
         void* samplesBuffer,
         nuint* samplesSizes,
         uint nbSamples,
-        ZDICT_fastCover_params_t* parameters
+        ZdictFastCoverParamsT* parameters
     )
     {
-        ZDICT_cover_params_t coverParams;
-        FASTCOVER_accel_t accelParams;
+        ZdictCoverParamsT coverParams;
+        FastcoverAccelT accelParams;
         /* constants */
         var nbThreads = parameters->nbThreads;
         var splitPoint = parameters->splitPoint <= 0 ? 0.75 : parameters->splitPoint;
@@ -566,40 +566,40 @@ public static unsafe partial class Methods
         uint iteration = 1;
         uint d;
         uint k;
-        COVER_best_s best;
+        CoverBestS best;
         void* pool = null;
         var warned = 0;
         if (splitPoint <= 0 || splitPoint > 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
 
         if (accel == 0 || accel > 10)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
 
         if (kMinK < kMaxD || kMaxK < kMinK)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorParameterOutOfBound));
 
         if (nbSamples == 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
 
         if (dictBufferCapacity < 256)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         if (nbThreads > 1)
         {
             pool = POOL_create(nbThreads, 1);
             if (pool == null)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
 
         COVER_best_init(&best);
-        memset(&coverParams, 0, (uint)sizeof(ZDICT_cover_params_t));
+        memset(&coverParams, 0, (uint)sizeof(ZdictCoverParamsT));
         FASTCOVER_convertToCoverParams(*parameters, &coverParams);
-        accelParams = FASTCOVER_defaultAccelParameters[accel];
-        g_displayLevel = displayLevel == 0 ? 0 : displayLevel - 1;
+        accelParams = FastcoverDefaultAccelParameters[accel];
+        _gDisplayLevel = displayLevel == 0 ? 0 : displayLevel - 1;
         for (d = kMinD; d <= kMaxD; d += 2)
         {
             /* Initialize the context for this value of d */
-            FASTCOVER_ctx_t ctx;
+            FastcoverCtxT ctx;
             {
                 var initVal = FASTCOVER_ctx_init(
                     &ctx,
@@ -628,15 +628,15 @@ public static unsafe partial class Methods
             for (k = kMinK; k <= kMaxK; k += kStepSize)
             {
                 /* Prepare the arguments */
-                var data = (FASTCOVER_tryParameters_data_s*)malloc(
-                    (ulong)sizeof(FASTCOVER_tryParameters_data_s)
+                var data = (FastcoverTryParametersDataS*)malloc(
+                    (ulong)sizeof(FastcoverTryParametersDataS)
                 );
                 if (data == null)
                 {
                     COVER_best_destroy(&best);
                     FASTCOVER_ctx_destroy(&ctx);
                     POOL_free(pool);
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
                 }
 
                 data->ctx = &ctx;
@@ -648,7 +648,7 @@ public static unsafe partial class Methods
                 data->parameters.splitPoint = splitPoint;
                 data->parameters.steps = kSteps;
                 data->parameters.shrinkDict = shrinkDict;
-                data->parameters.zParams.notificationLevel = (uint)g_displayLevel;
+                data->parameters.zParams.notificationLevel = (uint)_gDisplayLevel;
                 if (
                     FASTCOVER_checkParameters(
                         data->parameters,

@@ -11,13 +11,13 @@ namespace VendoredZSTD.Unsafe;
  * compiled with multithreaded support.
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct COVER_best_s
+public unsafe struct CoverBestS
 {
     public void* mutex;
     public void* cond;
     public nuint liveJobs;
     public void* dict;
     public nuint dictSize;
-    public ZDICT_cover_params_t parameters;
+    public ZdictCoverParamsT parameters;
     public nuint compressedSize;
 }

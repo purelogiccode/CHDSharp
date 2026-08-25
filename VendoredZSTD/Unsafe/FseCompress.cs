@@ -24,14 +24,14 @@ public static unsafe partial class Methods
         void* ptr = ct;
         var tableU16 = (ushort*)ptr + 2;
         /* header */
-        void* FSCT = (uint*)ptr + 1 + (tableLog != 0 ? tableSize >> 1 : 1);
-        var symbolTT = (FSE_symbolCompressionTransform*)FSCT;
+        void* fsct = (uint*)ptr + 1 + (tableLog != 0 ? tableSize >> 1 : 1);
+        var symbolTt = (FseSymbolCompressionTransform*)fsct;
         var step = (tableSize >> 1) + (tableSize >> 3) + 3;
-        var maxSV1 = maxSymbolValue + 1;
+        var maxSv1 = maxSymbolValue + 1;
         /* size = maxSV1 */
         var cumul = (ushort*)workSpace;
         /* size = tableSize */
-        var tableSymbol = (byte*)(cumul + (maxSV1 + 1));
+        var tableSymbol = (byte*)(cumul + (maxSv1 + 1));
         var highThreshold = tableSize - 1;
         assert(((nuint)workSpace & 1) == 0);
         if (
@@ -39,14 +39,14 @@ public static unsafe partial class Methods
             * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint))
             > wkspSize
         )
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         tableU16[-2] = (ushort)tableLog;
         tableU16[-1] = (ushort)maxSymbolValue;
         assert(tableLog < 16);
         {
             uint u;
             cumul[0] = 0;
-            for (u = 1; u <= maxSV1; u++)
+            for (u = 1; u <= maxSv1; u++)
                 if (normalizedCounter[u - 1] == -1)
                 {
                     cumul[u] = (ushort)(cumul[u - 1] + 1);
@@ -59,7 +59,7 @@ public static unsafe partial class Methods
                     assert(cumul[u] >= cumul[u - 1]);
                 }
 
-            cumul[maxSV1] = (ushort)(tableSize + 1);
+            cumul[maxSv1] = (ushort)(tableSize + 1);
         }
 
         if (highThreshold == tableSize - 1)
@@ -71,7 +71,7 @@ public static unsafe partial class Methods
                 nuint pos = 0;
                 ulong sv = 0;
                 uint s;
-                for (s = 0; s < maxSV1; ++s, sv += add)
+                for (s = 0; s < maxSv1; ++s, sv += add)
                 {
                     int i;
                     int n = normalizedCounter[s];
@@ -109,7 +109,7 @@ public static unsafe partial class Methods
         {
             uint position = 0;
             uint symbol;
-            for (symbol = 0; symbol < maxSV1; symbol++)
+            for (symbol = 0; symbol < maxSv1; symbol++)
             {
                 int nbOccurrences;
                 int freq = normalizedCounter[symbol];
@@ -142,14 +142,14 @@ public static unsafe partial class Methods
                 switch (normalizedCounter[s])
                 {
                     case 0:
-                        symbolTT[s].deltaNbBits =
+                        symbolTt[s].deltaNbBits =
                             ((tableLog + 1) << 16) - (uint)(1 << (int)tableLog);
                         break;
                     case -1:
                     case 1:
-                        symbolTT[s].deltaNbBits = (tableLog << 16) - (uint)(1 << (int)tableLog);
+                        symbolTt[s].deltaNbBits = (tableLog << 16) - (uint)(1 << (int)tableLog);
                         assert(total <= 2147483647);
-                        symbolTT[s].deltaFindState = (int)(total - 1);
+                        symbolTt[s].deltaFindState = (int)(total - 1);
                         total++;
                         break;
                     default:
@@ -159,8 +159,8 @@ public static unsafe partial class Methods
                         var maxBitsOut =
                             tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
                         var minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
-                        symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
-                        symbolTT[s].deltaFindState = (int)(total - (uint)normalizedCounter[s]);
+                        symbolTt[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
+                        symbolTt[s].deltaFindState = (int)(total - (uint)normalizedCounter[s]);
                         total += (uint)normalizedCounter[s];
                     }
 
@@ -220,7 +220,7 @@ public static unsafe partial class Methods
                     start += 24;
                     bitStream += 0xFFFFU << bitCount;
                     if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
                     @out += 2;
@@ -239,7 +239,7 @@ public static unsafe partial class Methods
                 if (bitCount > 16)
                 {
                     if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
                     @out += 2;
@@ -260,7 +260,7 @@ public static unsafe partial class Methods
                 bitCount -= count < max ? 1 : 0;
                 previousIs0 = count == 1 ? 1 : 0;
                 if (remaining < 1)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
                 while (remaining < threshold)
                 {
                     nbBits--;
@@ -271,7 +271,7 @@ public static unsafe partial class Methods
             if (bitCount > 16)
             {
                 if (writeIsSafe == 0 && @out > oend - 2)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
                 @out[0] = (byte)bitStream;
                 @out[1] = (byte)(bitStream >> 8);
                 @out += 2;
@@ -281,10 +281,10 @@ public static unsafe partial class Methods
         }
 
         if (remaining != 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         assert(symbol <= alphabetSize);
         if (writeIsSafe == 0 && @out > oend - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
         @out[0] = (byte)bitStream;
         @out[1] = (byte)(bitStream >> 8);
         @out += (bitCount + 7) / 8;
@@ -304,9 +304,9 @@ public static unsafe partial class Methods
     )
     {
         if (tableLog > 14 - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         if (tableLog < 5)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         if (bufferSize < FSE_NCountWriteBound(maxSymbolValue, tableLog))
             return FSE_writeNCount_generic(
                 buffer,
@@ -383,10 +383,10 @@ public static unsafe partial class Methods
         short lowProbCount
     )
     {
-        const short NOT_YET_ASSIGNED = -2;
+        const short notYetAssigned = -2;
         uint s;
         uint distributed = 0;
-        uint ToDistribute;
+        uint toDistribute;
         /* Init */
         var lowThreshold = (uint)(total >> (int)tableLog);
         var lowOne = (uint)((total * 3) >> (int)(tableLog + 1));
@@ -414,24 +414,24 @@ public static unsafe partial class Methods
                 continue;
             }
 
-            norm[s] = NOT_YET_ASSIGNED;
+            norm[s] = notYetAssigned;
         }
 
-        ToDistribute = (uint)(1 << (int)tableLog) - distributed;
-        if (ToDistribute == 0)
+        toDistribute = (uint)(1 << (int)tableLog) - distributed;
+        if (toDistribute == 0)
             return 0;
-        if (total / ToDistribute > lowOne)
+        if (total / toDistribute > lowOne)
         {
-            lowOne = (uint)(total * 3 / (ToDistribute * 2));
+            lowOne = (uint)(total * 3 / (toDistribute * 2));
             for (s = 0; s <= maxSymbolValue; s++)
-                if (norm[s] == NOT_YET_ASSIGNED && count[s] <= lowOne)
+                if (norm[s] == notYetAssigned && count[s] <= lowOne)
                 {
                     norm[s] = 1;
                     distributed++;
                     total -= count[s];
                 }
 
-            ToDistribute = (uint)(1 << (int)tableLog) - distributed;
+            toDistribute = (uint)(1 << (int)tableLog) - distributed;
         }
 
         if (distributed == maxSymbolValue + 1)
@@ -448,16 +448,16 @@ public static unsafe partial class Methods
                     maxC = count[s];
                 }
 
-            norm[maxV] += (short)ToDistribute;
+            norm[maxV] += (short)toDistribute;
             return 0;
         }
 
         if (total == 0)
         {
-            for (s = 0; ToDistribute > 0; s = (s + 1) % (maxSymbolValue + 1))
+            for (s = 0; toDistribute > 0; s = (s + 1) % (maxSymbolValue + 1))
                 if (norm[s] > 0)
                 {
-                    ToDistribute--;
+                    toDistribute--;
                     norm[s]++;
                 }
 
@@ -468,17 +468,17 @@ public static unsafe partial class Methods
             ulong vStepLog = 62 - tableLog;
             var mid = (1UL << (int)(vStepLog - 1)) - 1;
             /* scale on remaining */
-            var rStep = (((ulong)1 << (int)vStepLog) * ToDistribute + mid) / (uint)total;
+            var rStep = (((ulong)1 << (int)vStepLog) * toDistribute + mid) / (uint)total;
             var tmpTotal = mid;
             for (s = 0; s <= maxSymbolValue; s++)
-                if (norm[s] == NOT_YET_ASSIGNED)
+                if (norm[s] == notYetAssigned)
                 {
                     var end = tmpTotal + count[s] * rStep;
                     var sStart = (uint)(tmpTotal >> (int)vStepLog);
                     var sEnd = (uint)(end >> (int)vStepLog);
                     var weight = sEnd - sStart;
                     if (weight < 1)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
                     norm[s] = (short)weight;
                     tmpTotal = end;
                 }
@@ -488,13 +488,13 @@ public static unsafe partial class Methods
     }
 
 #if NET8_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_rtbTable =>
+    private static ReadOnlySpan<uint> SpanRtbTable =>
         new uint[8] { 0, 473195, 504333, 520860, 550000, 700000, 750000, 830000 };
 
-    private static uint* rtbTable =>
+    private static uint* RtbTable =>
         (uint*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_rtbTable)
+            ref MemoryMarshal.GetReference(SpanRtbTable)
         );
 #else
     private static readonly uint* rtbTable = GetArrayPointer(
@@ -524,11 +524,11 @@ public static unsafe partial class Methods
         if (tableLog == 0)
             tableLog = 13 - 2;
         if (tableLog < 5)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         if (tableLog > 14 - 2)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         if (tableLog < FSE_minTableLog(total, maxSymbolValue))
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
         {
             var lowProbCount = (short)(useLowProbCount != 0 ? -1 : 1);
             ulong scale = 62 - tableLog;
@@ -560,7 +560,7 @@ public static unsafe partial class Methods
                     var proba = (short)((count[s] * step) >> (int)scale);
                     if (proba < 8)
                     {
-                        var restToBeat = vStep * rtbTable[proba];
+                        var restToBeat = vStep * RtbTable[proba];
                         proba += (short)(
                             count[s] * step - ((ulong)proba << (int)scale) > restToBeat ? 1 : 0
                         );
@@ -605,14 +605,14 @@ public static unsafe partial class Methods
     {
         void* ptr = ct;
         var tableU16 = (ushort*)ptr + 2;
-        void* FSCTptr = (uint*)ptr + 2;
-        var symbolTT = (FSE_symbolCompressionTransform*)FSCTptr;
+        void* fscTptr = (uint*)ptr + 2;
+        var symbolTt = (FseSymbolCompressionTransform*)fscTptr;
         tableU16[-2] = 0;
         tableU16[-1] = symbolValue;
         tableU16[0] = 0;
         tableU16[1] = 0;
-        symbolTT[symbolValue].deltaNbBits = 0;
-        symbolTT[symbolValue].deltaFindState = 0;
+        symbolTt[symbolValue].deltaNbBits = 0;
+        symbolTt[symbolValue].deltaFindState = 0;
         return 0;
     }
 
@@ -628,9 +628,9 @@ public static unsafe partial class Methods
         var istart = (byte*)src;
         var iend = istart + srcSize;
         var ip = iend;
-        BIT_CStream_t bitC;
-        FSE_CState_t CState1,
-            CState2;
+        BitCStreamT bitC;
+        FseCStateT cState1,
+            cState2;
         if (srcSize <= 2)
             return 0;
         {
@@ -641,9 +641,9 @@ public static unsafe partial class Methods
 
         if ((srcSize & 1) != 0)
         {
-            FSE_initCState2(&CState1, ct, *--ip);
-            FSE_initCState2(&CState2, ct, *--ip);
-            FSE_encodeSymbol(&bitC, &CState1, *--ip);
+            FSE_initCState2(&cState1, ct, *--ip);
+            FSE_initCState2(&cState2, ct, *--ip);
+            FSE_encodeSymbol(&bitC, &cState1, *--ip);
             if (fast != 0)
                 BIT_flushBitsFast(&bitC);
             else
@@ -651,15 +651,15 @@ public static unsafe partial class Methods
         }
         else
         {
-            FSE_initCState2(&CState2, ct, *--ip);
-            FSE_initCState2(&CState1, ct, *--ip);
+            FSE_initCState2(&cState2, ct, *--ip);
+            FSE_initCState2(&cState1, ct, *--ip);
         }
 
         srcSize -= 2;
         if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7 && (srcSize & 2) != 0)
         {
-            FSE_encodeSymbol(&bitC, &CState2, *--ip);
-            FSE_encodeSymbol(&bitC, &CState1, *--ip);
+            FSE_encodeSymbol(&bitC, &cState2, *--ip);
+            FSE_encodeSymbol(&bitC, &cState1, *--ip);
             if (fast != 0)
                 BIT_flushBitsFast(&bitC);
             else
@@ -668,17 +668,17 @@ public static unsafe partial class Methods
 
         while (ip > istart)
         {
-            FSE_encodeSymbol(&bitC, &CState2, *--ip);
+            FSE_encodeSymbol(&bitC, &cState2, *--ip);
             if (sizeof(nuint) * 8 < (14 - 2) * 2 + 7)
                 if (fast != 0)
                     BIT_flushBitsFast(&bitC);
                 else
                     BIT_flushBits(&bitC);
-            FSE_encodeSymbol(&bitC, &CState1, *--ip);
+            FSE_encodeSymbol(&bitC, &cState1, *--ip);
             if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7)
             {
-                FSE_encodeSymbol(&bitC, &CState2, *--ip);
-                FSE_encodeSymbol(&bitC, &CState1, *--ip);
+                FSE_encodeSymbol(&bitC, &cState2, *--ip);
+                FSE_encodeSymbol(&bitC, &cState1, *--ip);
             }
 
             if (fast != 0)
@@ -687,8 +687,8 @@ public static unsafe partial class Methods
                 BIT_flushBits(&bitC);
         }
 
-        FSE_flushCState(&bitC, &CState2);
-        FSE_flushCState(&bitC, &CState1);
+        FSE_flushCState(&bitC, &cState2);
+        FSE_flushCState(&bitC, &cState1);
         return BIT_closeCStream(&bitC);
     }
 

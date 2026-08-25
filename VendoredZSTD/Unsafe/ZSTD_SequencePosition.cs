@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_sequencePosition
+public struct ZstdSequencePosition
 {
     /* Index in array of ZSTD_Sequence */
     public uint idx;

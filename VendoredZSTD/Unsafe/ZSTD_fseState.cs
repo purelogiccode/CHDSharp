@@ -3,8 +3,8 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_fseState
+public unsafe struct ZstdFseState
 {
     public nuint state;
-    public ZSTD_seqSymbol* table;
+    public ZstdSeqSymbol* table;
 }

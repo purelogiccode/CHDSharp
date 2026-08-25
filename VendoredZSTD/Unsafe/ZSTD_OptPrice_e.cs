@@ -1,7 +1,7 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_OptPrice_e
+public enum ZstdOptPriceE
 {
-    zop_dynamic = 0,
-    zop_predef
+    ZopDynamic = 0,
+    ZopPredef
 }

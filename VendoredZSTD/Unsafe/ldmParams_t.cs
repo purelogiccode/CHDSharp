@@ -3,10 +3,10 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ldmParams_t
+public struct LdmParamsT
 {
     /* ZSTD_ps_enable to enable LDM. ZSTD_ps_auto by default */
-    public ZSTD_paramSwitch_e enableLdm;
+    public ZstdParamSwitchE enableLdm;
 
     /* Log size of hashTable */
     public uint hashLog;

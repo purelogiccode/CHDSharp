@@ -9,7 +9,7 @@ namespace VendoredZSTD.Unsafe;
  * `decompressedBound != ZSTD_CONTENTSIZE_ERROR`
  */
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_frameSizeInfo
+public struct ZstdFrameSizeInfo
 {
     public nuint nbBlocks;
     public nuint compressedSize;

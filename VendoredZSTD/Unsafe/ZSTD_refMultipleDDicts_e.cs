@@ -1,10 +1,10 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_refMultipleDDicts_e
+public enum ZstdRefMultipleDDictsE
 {
     /* Note: this enum controls ZSTD_d_refMultipleDDicts */
-    ZSTD_rmd_refSingleDDict = 0,
+    ZstdRmdRefSingleDDict = 0,
 
     /* Note: this enum controls ZSTD_d_refMultipleDDicts */
-    ZSTD_rmd_refMultipleDDicts = 1
+    ZstdRmdRefMultipleDDicts = 1
 }

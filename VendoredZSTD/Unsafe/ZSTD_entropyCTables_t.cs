@@ -3,8 +3,8 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_entropyCTables_t
+public struct ZstdEntropyCTablesT
 {
-    public ZSTD_hufCTables_t huf;
-    public ZSTD_fseCTables_t fse;
+    public ZstdHufCTablesT huf;
+    public ZstdFseCTablesT fse;
 }

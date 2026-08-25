@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct rsyncState_t
+public struct RsyncStateT
 {
     public ulong hash;
     public ulong hitMask;

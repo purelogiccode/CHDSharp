@@ -4,22 +4,22 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ldmState_t
+public unsafe struct LdmStateT
 {
     /* State for the window round buffer management */
-    public ZSTD_window_t window;
-    public ldmEntry_t* hashTable;
+    public ZstdWindowT window;
+    public LdmEntryT* hashTable;
     public uint loadedDictEnd;
 
     /* Next position in bucket to insert entry */
     public byte* bucketOffsets;
-    public _splitIndices_e__FixedBuffer splitIndices;
-    public _matchCandidates_e__FixedBuffer matchCandidates;
+    public SplitIndicesEFixedBuffer splitIndices;
+    public MatchCandidatesEFixedBuffer matchCandidates;
 
 #if NET8_0_OR_GREATER
     [InlineArray(64)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _splitIndices_e__FixedBuffer
+    public struct SplitIndicesEFixedBuffer
     {
         public nuint e0;
     }
@@ -98,9 +98,9 @@ public unsafe struct ldmState_t
 #if NET8_0_OR_GREATER
     [InlineArray(64)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _matchCandidates_e__FixedBuffer
+    public struct MatchCandidatesEFixedBuffer
     {
-        public ldmMatchCandidate_t e0;
+        public LdmMatchCandidateT e0;
     }
 
 #else

@@ -3,11 +3,11 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_localDict
+public unsafe struct ZstdLocalDict
 {
     public void* dictBuffer;
     public void* dict;
     public nuint dictSize;
-    public ZSTD_dictContentType_e dictContentType;
-    public ZSTD_CDict_s* cdict;
+    public ZstdDictContentTypeE dictContentType;
+    public ZstdCDictS* cdict;
 }

@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
  * and size of the sequences statistics
  */
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_symbolEncodingTypeStats_t
+public struct ZstdSymbolEncodingTypeStatsT
 {
     public uint LLtype;
     public uint Offtype;

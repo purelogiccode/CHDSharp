@@ -12,7 +12,7 @@ public unsafe class Compressor : IDisposable
      * For this purpose we use GC.KeepAlive(this)
      * For reference: https://devblogs.microsoft.com/oldnewthing/20100813-00/?p=13153
      */
-    private ZSTD_CCtx_s* cctx;
+    private ZstdCCtxS* cctx;
 
     private int level = DefaultCompressionLevel;
 
@@ -20,7 +20,7 @@ public unsafe class Compressor : IDisposable
     {
         cctx = Methods.ZSTD_createCCtx();
         if (cctx == null)
-            throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
+            throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Failed to create cctx");
 
         Level = level;
     }
@@ -36,7 +36,7 @@ public unsafe class Compressor : IDisposable
             if (level != value)
             {
                 level = value;
-                SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, value);
+                SetParameter(ZstdCParameter.ZstdCCompressionLevel, value);
             }
         }
     }
@@ -47,14 +47,14 @@ public unsafe class Compressor : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public void SetParameter(ZSTD_cParameter parameter, int value)
+    public void SetParameter(ZstdCParameter parameter, int value)
     {
         EnsureNotDisposed();
         Methods.ZSTD_CCtx_setParameter(cctx, parameter, value).EnsureZstdSuccess();
         GC.KeepAlive(this);
     }
 
-    public int GetParameter(ZSTD_cParameter parameter)
+    public int GetParameter(ZstdCParameter parameter)
     {
         EnsureNotDisposed();
         int value;
@@ -167,7 +167,7 @@ public unsafe class Compressor : IDisposable
             );
             GC.KeepAlive(this);
 
-            if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
+            if (returnValue == unchecked(0 - (nuint)ZstdErrorCode.ZstdErrorDstSizeTooSmall))
             {
                 written = default;
                 return false;
@@ -217,13 +217,13 @@ public unsafe class Compressor : IDisposable
     }
 
     internal nuint CompressStream(
-        ref ZSTD_inBuffer_s input,
-        ref ZSTD_outBuffer_s output,
-        ZSTD_EndDirective directive
+        ref ZstdInBufferS input,
+        ref ZstdOutBufferS output,
+        ZstdEndDirective directive
     )
     {
-        fixed (ZSTD_inBuffer_s* inputPtr = &input)
-        fixed (ZSTD_outBuffer_s* outputPtr = &output)
+        fixed (ZstdInBufferS* inputPtr = &input)
+        fixed (ZstdOutBufferS* outputPtr = &output)
         {
             var returnValue = Methods
                 .ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)

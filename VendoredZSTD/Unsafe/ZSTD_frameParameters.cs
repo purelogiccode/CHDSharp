@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_frameParameters
+public struct ZstdFrameParameters
 {
     /**
      * < 1: content size will be in frame header ( when known

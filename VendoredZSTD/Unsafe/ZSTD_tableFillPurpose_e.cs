@@ -1,7 +1,7 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_tableFillPurpose_e
+public enum ZstdTableFillPurposeE
 {
-    ZSTD_tfp_forCCtx,
-    ZSTD_tfp_forCDict
+    ZstdTfpForCCtx,
+    ZstdTfpForCDict
 }

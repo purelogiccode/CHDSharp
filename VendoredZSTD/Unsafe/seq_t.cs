@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct seq_t
+public struct SeqT
 {
     public nuint litLength;
     public nuint matchLength;

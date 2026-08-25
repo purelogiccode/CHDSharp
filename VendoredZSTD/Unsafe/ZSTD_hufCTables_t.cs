@@ -4,15 +4,15 @@ using System.Runtime.InteropServices;
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_hufCTables_t
+public struct ZstdHufCTablesT
 {
-    public _CTable_e__FixedBuffer CTable;
-    public HUF_repeat repeatMode;
+    public CTableEFixedBuffer CTable;
+    public HufRepeat repeatMode;
 
 #if NET8_0_OR_GREATER
     [InlineArray(257)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct _CTable_e__FixedBuffer
+    public struct CTableEFixedBuffer
     {
         public nuint e0;
     }

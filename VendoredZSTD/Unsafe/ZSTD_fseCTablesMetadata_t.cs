@@ -10,11 +10,11 @@ namespace VendoredZSTD.Unsafe;
  * This metadata is populated in ZSTD_buildBlockEntropyStats_sequences()
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_fseCTablesMetadata_t
+public unsafe struct ZstdFseCTablesMetadataT
 {
-    public symbolEncodingType_e llType;
-    public symbolEncodingType_e ofType;
-    public symbolEncodingType_e mlType;
+    public SymbolEncodingTypeE llType;
+    public SymbolEncodingTypeE ofType;
+    public SymbolEncodingTypeE mlType;
     public fixed byte fseTablesBuffer[133];
     public nuint fseTablesSize;
 

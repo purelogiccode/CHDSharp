@@ -1,11 +1,11 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_nextInputType_e
+public enum ZstdNextInputTypeE
 {
-    ZSTDnit_frameHeader,
-    ZSTDnit_blockHeader,
-    ZSTDnit_block,
-    ZSTDnit_lastBlock,
-    ZSTDnit_checksum,
-    ZSTDnit_skippableFrame
+    ZstDnitFrameHeader,
+    ZstDnitBlockHeader,
+    ZstDnitBlock,
+    ZstDnitLastBlock,
+    ZstDnitChecksum,
+    ZstDnitSkippableFrame
 }

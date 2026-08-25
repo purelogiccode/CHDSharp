@@ -13,9 +13,9 @@ namespace VendoredZSTD.Unsafe;
  * This metadata is populated in ZSTD_buildBlockEntropyStats_literals()
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_hufCTablesMetadata_t
+public unsafe struct ZstdHufCTablesMetadataT
 {
-    public symbolEncodingType_e hType;
+    public SymbolEncodingTypeE hType;
     public fixed byte hufDesBuffer[128];
     public nuint hufDesSize;
 }

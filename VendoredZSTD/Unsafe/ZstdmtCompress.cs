@@ -5,19 +5,19 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static readonly buffer_s g_nullBuffer = new(null, 0);
+    private static readonly BufferS GNullBuffer = new(null, 0);
 
-    private static readonly range_t kNullRange = new(null, 0);
+    private static readonly RangeT KNullRange = new(null, 0);
 
-    private static readonly roundBuff_t kNullRoundBuff = new(null, 0, 0);
+    private static readonly RoundBuffT KNullRoundBuff = new(null, 0, 0);
 
-    private static ZSTDMT_bufferPool_s* ZSTDMT_createBufferPool(
+    private static ZstdmtBufferPoolS* ZSTDMT_createBufferPool(
         uint maxNbBuffers,
-        ZSTD_customMem cMem
+        ZstdCustomMem cMem
     )
     {
-        var bufPool = (ZSTDMT_bufferPool_s*)ZSTD_customCalloc(
-            (uint)sizeof(ZSTDMT_bufferPool_s) + (maxNbBuffers - 1) * (uint)sizeof(buffer_s),
+        var bufPool = (ZstdmtBufferPoolS*)ZSTD_customCalloc(
+            (uint)sizeof(ZstdmtBufferPoolS) + (maxNbBuffers - 1) * (uint)sizeof(BufferS),
             cMem
         );
         if (bufPool == null)
@@ -30,7 +30,7 @@ public static unsafe partial class Methods
         return bufPool;
     }
 
-    private static void ZSTDMT_freeBufferPool(ZSTDMT_bufferPool_s* bufPool)
+    private static void ZSTDMT_freeBufferPool(ZstdmtBufferPoolS* bufPool)
     {
         uint u;
         if (bufPool == null)
@@ -43,11 +43,11 @@ public static unsafe partial class Methods
     }
 
     /* only works at initialization, not during compression */
-    private static nuint ZSTDMT_sizeof_bufferPool(ZSTDMT_bufferPool_s* bufPool)
+    private static nuint ZSTDMT_sizeof_bufferPool(ZstdmtBufferPoolS* bufPool)
     {
         nuint poolSize =
-            (uint)sizeof(ZSTDMT_bufferPool_s)
-            + (bufPool->totalBuffers - 1) * (uint)sizeof(buffer_s);
+            (uint)sizeof(ZstdmtBufferPoolS)
+            + (bufPool->totalBuffers - 1) * (uint)sizeof(BufferS);
         uint u;
         nuint totalBufferSize = 0;
         SynchronizationWrapper.Enter(&bufPool->poolMutex);
@@ -61,15 +61,15 @@ public static unsafe partial class Methods
      * all future buffers provided by this buffer pool will have _at least_ this size
      * note : it's better for all buffers to have same size,
      * as they become freely interchangeable, reducing malloc/free usages and memory fragmentation */
-    private static void ZSTDMT_setBufferSize(ZSTDMT_bufferPool_s* bufPool, nuint bSize)
+    private static void ZSTDMT_setBufferSize(ZstdmtBufferPoolS* bufPool, nuint bSize)
     {
         SynchronizationWrapper.Enter(&bufPool->poolMutex);
         bufPool->bufferSize = bSize;
         SynchronizationWrapper.Exit(&bufPool->poolMutex);
     }
 
-    private static ZSTDMT_bufferPool_s* ZSTDMT_expandBufferPool(
-        ZSTDMT_bufferPool_s* srcBufPool,
+    private static ZstdmtBufferPoolS* ZSTDMT_expandBufferPool(
+        ZstdmtBufferPoolS* srcBufPool,
         uint maxNbBuffers
     )
     {
@@ -81,7 +81,7 @@ public static unsafe partial class Methods
             var cMem = srcBufPool->cMem;
             /* forward parameters */
             var bSize = srcBufPool->bufferSize;
-            ZSTDMT_bufferPool_s* newBufPool;
+            ZstdmtBufferPoolS* newBufPool;
             ZSTDMT_freeBufferPool(srcBufPool);
             newBufPool = ZSTDMT_createBufferPool(maxNbBuffers, cMem);
             if (newBufPool == null)
@@ -97,7 +97,7 @@ public static unsafe partial class Methods
      * @return : a buffer, with start pointer and size
      * note: allocation may fail, in this case, start==NULL and size==0
      */
-    private static buffer_s ZSTDMT_getBuffer(ZSTDMT_bufferPool_s* bufPool)
+    private static BufferS ZSTDMT_getBuffer(ZstdmtBufferPoolS* bufPool)
     {
         var bSize = bufPool->bufferSize;
         SynchronizationWrapper.Enter(&bufPool->poolMutex);
@@ -105,7 +105,7 @@ public static unsafe partial class Methods
         {
             var buf = (&bufPool->bTable.e0)[--bufPool->nbBuffers];
             var availBufferSize = buf.capacity;
-            (&bufPool->bTable.e0)[bufPool->nbBuffers] = g_nullBuffer;
+            (&bufPool->bTable.e0)[bufPool->nbBuffers] = GNullBuffer;
             if (availBufferSize >= bSize && availBufferSize >> 3 <= bSize)
             {
                 SynchronizationWrapper.Exit(&bufPool->poolMutex);
@@ -117,7 +117,7 @@ public static unsafe partial class Methods
 
         SynchronizationWrapper.Exit(&bufPool->poolMutex);
         {
-            buffer_s buffer;
+            BufferS buffer;
             var start = ZSTD_customMalloc(bSize, bufPool->cMem);
             buffer.start = start;
             buffer.capacity = start == null ? 0 : bSize;
@@ -126,7 +126,7 @@ public static unsafe partial class Methods
     }
 
     /* store buffer for later re-use, up to pool capacity */
-    private static void ZSTDMT_releaseBuffer(ZSTDMT_bufferPool_s* bufPool, buffer_s buf)
+    private static void ZSTDMT_releaseBuffer(ZstdmtBufferPoolS* bufPool, BufferS buf)
     {
         if (buf.start == null)
             return;
@@ -142,46 +142,46 @@ public static unsafe partial class Methods
         ZSTD_customFree(buf.start, bufPool->cMem);
     }
 
-    private static nuint ZSTDMT_sizeof_seqPool(ZSTDMT_bufferPool_s* seqPool)
+    private static nuint ZSTDMT_sizeof_seqPool(ZstdmtBufferPoolS* seqPool)
     {
         return ZSTDMT_sizeof_bufferPool(seqPool);
     }
 
-    private static rawSeqStore_t bufferToSeq(buffer_s buffer)
+    private static RawSeqStoreT BufferToSeq(BufferS buffer)
     {
-        var seq = kNullRawSeqStore;
-        seq.seq = (rawSeq*)buffer.start;
-        seq.capacity = buffer.capacity / (nuint)sizeof(rawSeq);
+        var seq = KNullRawSeqStore;
+        seq.seq = (RawSeq*)buffer.start;
+        seq.capacity = buffer.capacity / (nuint)sizeof(RawSeq);
         return seq;
     }
 
-    private static buffer_s seqToBuffer(rawSeqStore_t seq)
+    private static BufferS SeqToBuffer(RawSeqStoreT seq)
     {
-        buffer_s buffer;
+        BufferS buffer;
         buffer.start = seq.seq;
-        buffer.capacity = seq.capacity * (nuint)sizeof(rawSeq);
+        buffer.capacity = seq.capacity * (nuint)sizeof(RawSeq);
         return buffer;
     }
 
-    private static rawSeqStore_t ZSTDMT_getSeq(ZSTDMT_bufferPool_s* seqPool)
+    private static RawSeqStoreT ZSTDMT_getSeq(ZstdmtBufferPoolS* seqPool)
     {
         if (seqPool->bufferSize == 0)
-            return kNullRawSeqStore;
+            return KNullRawSeqStore;
 
-        return bufferToSeq(ZSTDMT_getBuffer(seqPool));
+        return BufferToSeq(ZSTDMT_getBuffer(seqPool));
     }
 
-    private static void ZSTDMT_releaseSeq(ZSTDMT_bufferPool_s* seqPool, rawSeqStore_t seq)
+    private static void ZSTDMT_releaseSeq(ZstdmtBufferPoolS* seqPool, RawSeqStoreT seq)
     {
-        ZSTDMT_releaseBuffer(seqPool, seqToBuffer(seq));
+        ZSTDMT_releaseBuffer(seqPool, SeqToBuffer(seq));
     }
 
-    private static void ZSTDMT_setNbSeq(ZSTDMT_bufferPool_s* seqPool, nuint nbSeq)
+    private static void ZSTDMT_setNbSeq(ZstdmtBufferPoolS* seqPool, nuint nbSeq)
     {
-        ZSTDMT_setBufferSize(seqPool, nbSeq * (nuint)sizeof(rawSeq));
+        ZSTDMT_setBufferSize(seqPool, nbSeq * (nuint)sizeof(RawSeq));
     }
 
-    private static ZSTDMT_bufferPool_s* ZSTDMT_createSeqPool(uint nbWorkers, ZSTD_customMem cMem)
+    private static ZstdmtBufferPoolS* ZSTDMT_createSeqPool(uint nbWorkers, ZstdCustomMem cMem)
     {
         var seqPool = ZSTDMT_createBufferPool(nbWorkers, cMem);
         if (seqPool == null)
@@ -190,13 +190,13 @@ public static unsafe partial class Methods
         return seqPool;
     }
 
-    private static void ZSTDMT_freeSeqPool(ZSTDMT_bufferPool_s* seqPool)
+    private static void ZSTDMT_freeSeqPool(ZstdmtBufferPoolS* seqPool)
     {
         ZSTDMT_freeBufferPool(seqPool);
     }
 
-    private static ZSTDMT_bufferPool_s* ZSTDMT_expandSeqPool(
-        ZSTDMT_bufferPool_s* pool,
+    private static ZstdmtBufferPoolS* ZSTDMT_expandSeqPool(
+        ZstdmtBufferPoolS* pool,
         uint nbWorkers
     )
     {
@@ -204,7 +204,7 @@ public static unsafe partial class Methods
     }
 
     /* note : all CCtx borrowed from the pool should be released back to the pool _before_ freeing the pool */
-    private static void ZSTDMT_freeCCtxPool(ZSTDMT_CCtxPool* pool)
+    private static void ZSTDMT_freeCCtxPool(ZstdmtCCtxPool* pool)
     {
         int cid;
         for (cid = 0; cid < pool->totalCCtx; cid++)
@@ -215,10 +215,10 @@ public static unsafe partial class Methods
 
     /* ZSTDMT_createCCtxPool() :
      * implies nbWorkers >= 1 , checked by caller ZSTDMT_createCCtx() */
-    private static ZSTDMT_CCtxPool* ZSTDMT_createCCtxPool(int nbWorkers, ZSTD_customMem cMem)
+    private static ZstdmtCCtxPool* ZSTDMT_createCCtxPool(int nbWorkers, ZstdCustomMem cMem)
     {
-        var cctxPool = (ZSTDMT_CCtxPool*)ZSTD_customCalloc(
-            (nuint)(sizeof(ZSTDMT_CCtxPool) + (nbWorkers - 1) * sizeof(ZSTD_CCtx_s*)),
+        var cctxPool = (ZstdmtCCtxPool*)ZSTD_customCalloc(
+            (nuint)(sizeof(ZstdmtCCtxPool) + (nbWorkers - 1) * sizeof(ZstdCCtxS*)),
             cMem
         );
         assert(nbWorkers > 0);
@@ -238,7 +238,7 @@ public static unsafe partial class Methods
         return cctxPool;
     }
 
-    private static ZSTDMT_CCtxPool* ZSTDMT_expandCCtxPool(ZSTDMT_CCtxPool* srcPool, int nbWorkers)
+    private static ZstdmtCCtxPool* ZSTDMT_expandCCtxPool(ZstdmtCCtxPool* srcPool, int nbWorkers)
     {
         if (srcPool == null)
             return null;
@@ -252,13 +252,13 @@ public static unsafe partial class Methods
     }
 
     /* only works during initialization phase, not during compression */
-    private static nuint ZSTDMT_sizeof_CCtxPool(ZSTDMT_CCtxPool* cctxPool)
+    private static nuint ZSTDMT_sizeof_CCtxPool(ZstdmtCCtxPool* cctxPool)
     {
         SynchronizationWrapper.Enter(&cctxPool->poolMutex);
         {
             var nbWorkers = (uint)cctxPool->totalCCtx;
             nuint poolSize =
-                (uint)sizeof(ZSTDMT_CCtxPool) + (nbWorkers - 1) * (uint)sizeof(ZSTD_CCtx_s*);
+                (uint)sizeof(ZstdmtCCtxPool) + (nbWorkers - 1) * (uint)sizeof(ZstdCCtxS*);
             uint u;
             nuint totalCCtxSize = 0;
             for (u = 0; u < nbWorkers; u++)
@@ -270,7 +270,7 @@ public static unsafe partial class Methods
         }
     }
 
-    private static ZSTD_CCtx_s* ZSTDMT_getCCtx(ZSTDMT_CCtxPool* cctxPool)
+    private static ZstdCCtxS* ZSTDMT_getCCtx(ZstdmtCCtxPool* cctxPool)
     {
         SynchronizationWrapper.Enter(&cctxPool->poolMutex);
         if (cctxPool->availCCtx != 0)
@@ -287,7 +287,7 @@ public static unsafe partial class Methods
         return ZSTD_createCCtx_advanced(cctxPool->cMem);
     }
 
-    private static void ZSTDMT_releaseCCtx(ZSTDMT_CCtxPool* pool, ZSTD_CCtx_s* cctx)
+    private static void ZSTDMT_releaseCCtx(ZstdmtCCtxPool* pool, ZstdCCtxS* cctx)
     {
         if (cctx == null)
             return;
@@ -301,16 +301,16 @@ public static unsafe partial class Methods
     }
 
     private static int ZSTDMT_serialState_reset(
-        serialState_t* serialState,
-        ZSTDMT_bufferPool_s* seqPool,
-        ZSTD_CCtx_params_s @params,
+        SerialStateT* serialState,
+        ZstdmtBufferPoolS* seqPool,
+        ZstdCCtxParamsS @params,
         nuint jobSize,
         void* dict,
         nuint dictSize,
-        ZSTD_dictContentType_e dictContentType
+        ZstdDictContentTypeE dictContentType
     )
     {
-        if (@params.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
+        if (@params.ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
         {
             ZSTD_ldm_adjustParameters(&@params.ldmParams, &@params.cParams);
             assert(@params.ldmParams.hashLog >= @params.ldmParams.bucketSizeLog);
@@ -318,17 +318,17 @@ public static unsafe partial class Methods
         }
         else
         {
-            memset(&@params.ldmParams, 0, (uint)sizeof(ldmParams_t));
+            memset(&@params.ldmParams, 0, (uint)sizeof(LdmParamsT));
         }
 
         serialState->nextJobID = 0;
         if (@params.fParams.checksumFlag != 0)
             ZSTD_XXH64_reset(&serialState->xxhState, 0);
-        if (@params.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
+        if (@params.ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
         {
             var cMem = @params.customMem;
             var hashLog = @params.ldmParams.hashLog;
-            var hashSize = ((nuint)1 << (int)hashLog) * (nuint)sizeof(ldmEntry_t);
+            var hashSize = ((nuint)1 << (int)hashLog) * (nuint)sizeof(LdmEntryT);
             var bucketLog = @params.ldmParams.hashLog - @params.ldmParams.bucketSizeLog;
             var prevBucketLog =
                 serialState->@params.ldmParams.hashLog
@@ -342,7 +342,7 @@ public static unsafe partial class Methods
             )
             {
                 ZSTD_customFree(serialState->ldmState.hashTable, cMem);
-                serialState->ldmState.hashTable = (ldmEntry_t*)ZSTD_customMalloc(hashSize, cMem);
+                serialState->ldmState.hashTable = (LdmEntryT*)ZSTD_customMalloc(hashSize, cMem);
             }
 
             if (serialState->ldmState.bucketOffsets == null || prevBucketLog < bucketLog)
@@ -360,7 +360,7 @@ public static unsafe partial class Methods
             memset(serialState->ldmState.bucketOffsets, 0, (uint)numBuckets);
             serialState->ldmState.loadedDictEnd = 0;
             if (dictSize > 0)
-                if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_rawContent)
+                if (dictContentType == ZstdDictContentTypeE.ZstdDctRawContent)
                 {
                     var dictEnd = (byte*)dict + dictSize;
                     ZSTD_window_update(&serialState->ldmState.window, dict, dictSize, 0);
@@ -384,10 +384,10 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    private static int ZSTDMT_serialState_init(serialState_t* serialState)
+    private static int ZSTDMT_serialState_init(SerialStateT* serialState)
     {
         var initError = 0;
-        memset(serialState, 0, (uint)sizeof(serialState_t));
+        memset(serialState, 0, (uint)sizeof(SerialStateT));
         SynchronizationWrapper.Init(&serialState->mutex);
         initError |= 0;
         initError |= 0;
@@ -397,7 +397,7 @@ public static unsafe partial class Methods
         return initError;
     }
 
-    private static void ZSTDMT_serialState_free(serialState_t* serialState)
+    private static void ZSTDMT_serialState_free(SerialStateT* serialState)
     {
         var cMem = serialState->@params.customMem;
         SynchronizationWrapper.Free(&serialState->mutex);
@@ -407,20 +407,20 @@ public static unsafe partial class Methods
     }
 
     private static void ZSTDMT_serialState_update(
-        serialState_t* serialState,
-        ZSTD_CCtx_s* jobCCtx,
-        rawSeqStore_t seqStore,
-        range_t src,
-        uint jobID
+        SerialStateT* serialState,
+        ZstdCCtxS* jobCCtx,
+        RawSeqStoreT seqStore,
+        RangeT src,
+        uint jobId
     )
     {
         SynchronizationWrapper.Enter(&serialState->mutex);
-        while (serialState->nextJobID < jobID)
+        while (serialState->nextJobID < jobId)
             SynchronizationWrapper.Wait(&serialState->mutex);
 
-        if (serialState->nextJobID == jobID)
+        if (serialState->nextJobID == jobId)
         {
-            if (serialState->@params.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
+            if (serialState->@params.ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
             {
                 nuint error;
                 assert(
@@ -455,22 +455,22 @@ public static unsafe partial class Methods
         if (seqStore.size > 0)
         {
             var err = ZSTD_referenceExternalSequences(jobCCtx, seqStore.seq, seqStore.size);
-            assert(serialState->@params.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable);
+            assert(serialState->@params.ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable);
             assert(!ERR_isError(err));
         }
     }
 
     private static void ZSTDMT_serialState_ensureFinished(
-        serialState_t* serialState,
-        uint jobID,
+        SerialStateT* serialState,
+        uint jobId,
         nuint cSize
     )
     {
         SynchronizationWrapper.Enter(&serialState->mutex);
-        if (serialState->nextJobID <= jobID)
+        if (serialState->nextJobID <= jobId)
         {
             assert(ERR_isError(cSize));
-            serialState->nextJobID = jobID + 1;
+            serialState->nextJobID = jobId + 1;
             SynchronizationWrapper.PulseAll(&serialState->mutex);
             SynchronizationWrapper.Enter(&serialState->ldmWindowMutex);
             ZSTD_window_clear(&serialState->ldmWindow);
@@ -484,7 +484,7 @@ public static unsafe partial class Methods
     /* ZSTDMT_compressionJob() is a POOL_function type */
     private static void ZSTDMT_compressionJob(void* jobDescription)
     {
-        var job = (ZSTDMT_jobDescription*)jobDescription;
+        var job = (ZstdmtJobDescription*)jobDescription;
         /* do not modify job->params ! copy it, modify the copy */
         var jobParams = job->@params;
         var cctx = ZSTDMT_getCCtx(job->cctxPool);
@@ -494,7 +494,7 @@ public static unsafe partial class Methods
         if (cctx == null)
         {
             SynchronizationWrapper.Enter(&job->job_mutex);
-            job->cSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            job->cSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
             SynchronizationWrapper.Exit(&job->job_mutex);
             goto _endJob;
         }
@@ -505,7 +505,7 @@ public static unsafe partial class Methods
             if (dstBuff.start == null)
             {
                 SynchronizationWrapper.Enter(&job->job_mutex);
-                job->cSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                job->cSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
                 SynchronizationWrapper.Exit(&job->job_mutex);
                 goto _endJob;
             }
@@ -514,19 +514,19 @@ public static unsafe partial class Methods
         }
 
         if (
-            jobParams.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable
+            jobParams.ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable
             && rawSeqStore.seq == null
         )
         {
             SynchronizationWrapper.Enter(&job->job_mutex);
-            job->cSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            job->cSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
             SynchronizationWrapper.Exit(&job->job_mutex);
             goto _endJob;
         }
 
         if (job->jobID != 0)
             jobParams.fParams.checksumFlag = 0;
-        jobParams.ldmParams.enableLdm = ZSTD_paramSwitch_e.ZSTD_ps_disable;
+        jobParams.ldmParams.enableLdm = ZstdParamSwitchE.ZstdPsDisable;
         jobParams.nbWorkers = 0;
         if (job->cdict != null)
         {
@@ -534,8 +534,8 @@ public static unsafe partial class Methods
                 cctx,
                 null,
                 0,
-                ZSTD_dictContentType_e.ZSTD_dct_auto,
-                ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast,
+                ZstdDictContentTypeE.ZstdDctAuto,
+                ZstdDictTableLoadMethodE.ZstdDtlmFast,
                 job->cdict,
                 &jobParams,
                 job->fullFrameSize
@@ -555,7 +555,7 @@ public static unsafe partial class Methods
             {
                 var forceWindowError = ZSTD_CCtxParams_setParameter(
                     &jobParams,
-                    ZSTD_cParameter.ZSTD_c_experimentalParam3,
+                    ZstdCParameter.ZstdCExperimentalParam3,
                     job->firstJob == 0 ? 1 : 0
                 );
                 if (ERR_isError(forceWindowError))
@@ -571,7 +571,7 @@ public static unsafe partial class Methods
             {
                 var err = ZSTD_CCtxParams_setParameter(
                     &jobParams,
-                    ZSTD_cParameter.ZSTD_c_experimentalParam15,
+                    ZstdCParameter.ZstdCExperimentalParam15,
                     0
                 );
                 if (ERR_isError(err))
@@ -588,8 +588,8 @@ public static unsafe partial class Methods
                     cctx,
                     job->prefix.start,
                     job->prefix.size,
-                    ZSTD_dictContentType_e.ZSTD_dct_rawContent,
-                    ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast,
+                    ZstdDictContentTypeE.ZstdDctRawContent,
+                    ZstdDictTableLoadMethodE.ZstdDtlmFast,
                     null,
                     &jobParams,
                     pledgedSrcSize
@@ -714,9 +714,9 @@ public static unsafe partial class Methods
     }
 
     private static void ZSTDMT_freeJobsTable(
-        ZSTDMT_jobDescription* jobTable,
+        ZstdmtJobDescription* jobTable,
         uint nbJobs,
-        ZSTD_customMem cMem
+        ZstdCustomMem cMem
     )
     {
         uint jobNb;
@@ -731,16 +731,16 @@ public static unsafe partial class Methods
     /* ZSTDMT_allocJobsTable()
      * allocate and init a job table.
      * update *nbJobsPtr to next power of 2 value, as size of table */
-    private static ZSTDMT_jobDescription* ZSTDMT_createJobsTable(
+    private static ZstdmtJobDescription* ZSTDMT_createJobsTable(
         uint* nbJobsPtr,
-        ZSTD_customMem cMem
+        ZstdCustomMem cMem
     )
     {
         var nbJobsLog2 = ZSTD_highbit32(*nbJobsPtr) + 1;
         var nbJobs = (uint)(1 << (int)nbJobsLog2);
         uint jobNb;
-        var jobTable = (ZSTDMT_jobDescription*)ZSTD_customCalloc(
-            nbJobs * (uint)sizeof(ZSTDMT_jobDescription),
+        var jobTable = (ZstdmtJobDescription*)ZSTD_customCalloc(
+            nbJobs * (uint)sizeof(ZstdmtJobDescription),
             cMem
         );
         var initError = 0;
@@ -763,7 +763,7 @@ public static unsafe partial class Methods
         return jobTable;
     }
 
-    private static nuint ZSTDMT_expandJobsTable(ZSTDMT_CCtx_s* mtctx, uint nbWorkers)
+    private static nuint ZSTDMT_expandJobsTable(ZstdmtCCtxS* mtctx, uint nbWorkers)
     {
         var nbJobs = nbWorkers + 2;
         if (nbJobs > mtctx->jobIDMask + 1)
@@ -772,7 +772,7 @@ public static unsafe partial class Methods
             mtctx->jobIDMask = 0;
             mtctx->jobs = ZSTDMT_createJobsTable(&nbJobs, mtctx->cMem);
             if (mtctx->jobs == null)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
             assert(nbJobs != 0 && (nbJobs & (nbJobs - 1)) == 0);
             mtctx->jobIDMask = nbJobs - 1;
         }
@@ -782,23 +782,23 @@ public static unsafe partial class Methods
 
     /* ZSTDMT_CCtxParam_setNbWorkers():
      * Internal use only */
-    private static nuint ZSTDMT_CCtxParam_setNbWorkers(ZSTD_CCtx_params_s* @params, uint nbWorkers)
+    private static nuint ZSTDMT_CCtxParam_setNbWorkers(ZstdCCtxParamsS* @params, uint nbWorkers)
     {
         return ZSTD_CCtxParams_setParameter(
             @params,
-            ZSTD_cParameter.ZSTD_c_nbWorkers,
+            ZstdCParameter.ZstdCNbWorkers,
             (int)nbWorkers
         );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ZSTDMT_CCtx_s* ZSTDMT_createCCtx_advanced_internal(
+    private static ZstdmtCCtxS* ZSTDMT_createCCtx_advanced_internal(
         uint nbWorkers,
-        ZSTD_customMem cMem,
+        ZstdCustomMem cMem,
         void* pool
     )
     {
-        ZSTDMT_CCtx_s* mtctx;
+        ZstdmtCCtxS* mtctx;
         var nbJobs = nbWorkers + 2;
         int initError;
         if (nbWorkers < 1)
@@ -809,7 +809,7 @@ public static unsafe partial class Methods
                 : (uint)(sizeof(void*) == 4 ? 64 : 256);
         if (((cMem.customAlloc != null ? 1 : 0) ^ (cMem.customFree != null ? 1 : 0)) != 0)
             return null;
-        mtctx = (ZSTDMT_CCtx_s*)ZSTD_customCalloc((nuint)sizeof(ZSTDMT_CCtx_s), cMem);
+        mtctx = (ZstdmtCCtxS*)ZSTD_customCalloc((nuint)sizeof(ZstdmtCCtxS), cMem);
         if (mtctx == null)
             return null;
         ZSTDMT_CCtxParam_setNbWorkers(&mtctx->@params, nbWorkers);
@@ -834,7 +834,7 @@ public static unsafe partial class Methods
         mtctx->cctxPool = ZSTDMT_createCCtxPool((int)nbWorkers, cMem);
         mtctx->seqPool = ZSTDMT_createSeqPool(nbWorkers, cMem);
         initError = ZSTDMT_serialState_init(&mtctx->serial);
-        mtctx->roundBuff = kNullRoundBuff;
+        mtctx->roundBuff = KNullRoundBuff;
         if (
             (
                 (
@@ -857,9 +857,9 @@ public static unsafe partial class Methods
     }
 
     /* Requires ZSTD_MULTITHREAD to be defined during compilation, otherwise it will return NULL. */
-    private static ZSTDMT_CCtx_s* ZSTDMT_createCCtx_advanced(
+    private static ZstdmtCCtxS* ZSTDMT_createCCtx_advanced(
         uint nbWorkers,
-        ZSTD_customMem cMem,
+        ZstdCustomMem cMem,
         void* pool
     )
     {
@@ -868,40 +868,40 @@ public static unsafe partial class Methods
 
     /* ZSTDMT_releaseAllJobResources() :
      * note : ensure all workers are killed first ! */
-    private static void ZSTDMT_releaseAllJobResources(ZSTDMT_CCtx_s* mtctx)
+    private static void ZSTDMT_releaseAllJobResources(ZstdmtCCtxS* mtctx)
     {
-        uint jobID;
-        for (jobID = 0; jobID <= mtctx->jobIDMask; jobID++)
+        uint jobId;
+        for (jobId = 0; jobId <= mtctx->jobIDMask; jobId++)
         {
             /* Copy the mutex/cond out */
-            var mutex = mtctx->jobs[jobID].job_mutex;
-            var cond = mtctx->jobs[jobID].job_cond;
-            ZSTDMT_releaseBuffer(mtctx->bufPool, mtctx->jobs[jobID].dstBuff);
-            memset(&mtctx->jobs[jobID], 0, (uint)sizeof(ZSTDMT_jobDescription));
-            mtctx->jobs[jobID].job_mutex = mutex;
-            mtctx->jobs[jobID].job_cond = cond;
+            var mutex = mtctx->jobs[jobId].job_mutex;
+            var cond = mtctx->jobs[jobId].job_cond;
+            ZSTDMT_releaseBuffer(mtctx->bufPool, mtctx->jobs[jobId].dstBuff);
+            memset(&mtctx->jobs[jobId], 0, (uint)sizeof(ZstdmtJobDescription));
+            mtctx->jobs[jobId].job_mutex = mutex;
+            mtctx->jobs[jobId].job_cond = cond;
         }
 
-        mtctx->inBuff.buffer = g_nullBuffer;
+        mtctx->inBuff.buffer = GNullBuffer;
         mtctx->inBuff.filled = 0;
         mtctx->allJobsCompleted = 1;
     }
 
-    private static void ZSTDMT_waitForAllJobsCompleted(ZSTDMT_CCtx_s* mtctx)
+    private static void ZSTDMT_waitForAllJobsCompleted(ZstdmtCCtxS* mtctx)
     {
         while (mtctx->doneJobID < mtctx->nextJobID)
         {
-            var jobID = mtctx->doneJobID & mtctx->jobIDMask;
-            SynchronizationWrapper.Enter(&mtctx->jobs[jobID].job_mutex);
-            while (mtctx->jobs[jobID].consumed < mtctx->jobs[jobID].src.size)
-                SynchronizationWrapper.Wait(&mtctx->jobs[jobID].job_mutex);
+            var jobId = mtctx->doneJobID & mtctx->jobIDMask;
+            SynchronizationWrapper.Enter(&mtctx->jobs[jobId].job_mutex);
+            while (mtctx->jobs[jobId].consumed < mtctx->jobs[jobId].src.size)
+                SynchronizationWrapper.Wait(&mtctx->jobs[jobId].job_mutex);
 
-            SynchronizationWrapper.Exit(&mtctx->jobs[jobID].job_mutex);
+            SynchronizationWrapper.Exit(&mtctx->jobs[jobId].job_mutex);
             mtctx->doneJobID++;
         }
     }
 
-    private static nuint ZSTDMT_freeCCtx(ZSTDMT_CCtx_s* mtctx)
+    private static nuint ZSTDMT_freeCCtx(ZstdmtCCtxS* mtctx)
     {
         if (mtctx == null)
             return 0;
@@ -920,14 +920,14 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    private static nuint ZSTDMT_sizeof_CCtx(ZSTDMT_CCtx_s* mtctx)
+    private static nuint ZSTDMT_sizeof_CCtx(ZstdmtCCtxS* mtctx)
     {
         if (mtctx == null)
             return 0;
-        return (nuint)sizeof(ZSTDMT_CCtx_s)
+        return (nuint)sizeof(ZstdmtCCtxS)
                + POOL_sizeof(mtctx->factory)
                + ZSTDMT_sizeof_bufferPool(mtctx->bufPool)
-               + (mtctx->jobIDMask + 1) * (uint)sizeof(ZSTDMT_jobDescription)
+               + (mtctx->jobIDMask + 1) * (uint)sizeof(ZstdmtJobDescription)
                + ZSTDMT_sizeof_CCtxPool(mtctx->cctxPool)
                + ZSTDMT_sizeof_seqPool(mtctx->seqPool)
                + ZSTD_sizeof_CDict(mtctx->cdictLocal)
@@ -936,25 +936,25 @@ public static unsafe partial class Methods
 
     /* ZSTDMT_resize() :
      * @return : error code if fails, 0 on success */
-    private static nuint ZSTDMT_resize(ZSTDMT_CCtx_s* mtctx, uint nbWorkers)
+    private static nuint ZSTDMT_resize(ZstdmtCCtxS* mtctx, uint nbWorkers)
     {
         if (POOL_resize(mtctx->factory, nbWorkers) != 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         {
-            var err_code = ZSTDMT_expandJobsTable(mtctx, nbWorkers);
-            if (ERR_isError(err_code))
-                return err_code;
+            var errCode = ZSTDMT_expandJobsTable(mtctx, nbWorkers);
+            if (ERR_isError(errCode))
+                return errCode;
         }
 
         mtctx->bufPool = ZSTDMT_expandBufferPool(mtctx->bufPool, 2 * nbWorkers + 3);
         if (mtctx->bufPool == null)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         mtctx->cctxPool = ZSTDMT_expandCCtxPool(mtctx->cctxPool, (int)nbWorkers);
         if (mtctx->cctxPool == null)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         mtctx->seqPool = ZSTDMT_expandSeqPool(mtctx->seqPool, nbWorkers);
         if (mtctx->seqPool == null)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         ZSTDMT_CCtxParam_setNbWorkers(&mtctx->@params, nbWorkers);
         return 0;
     }
@@ -963,12 +963,12 @@ public static unsafe partial class Methods
      *  Updates a selected set of compression parameters, remaining compatible with currently active frame.
      *  New parameters will be applied to next compression job. */
     private static void ZSTDMT_updateCParams_whileCompressing(
-        ZSTDMT_CCtx_s* mtctx,
-        ZSTD_CCtx_params_s* cctxParams
+        ZstdmtCCtxS* mtctx,
+        ZstdCCtxParamsS* cctxParams
     )
     {
         /* Do not modify windowLog while compressing */
-        var saved_wlog = mtctx->@params.cParams.windowLog;
+        var savedWlog = mtctx->@params.cParams.windowLog;
         var compressionLevel = cctxParams->compressionLevel;
         mtctx->@params.compressionLevel = compressionLevel;
         {
@@ -976,9 +976,9 @@ public static unsafe partial class Methods
                 cctxParams,
                 unchecked(0UL - 1),
                 0,
-                ZSTD_cParamMode_e.ZSTD_cpm_noAttachDict
+                ZstdCParamModeE.ZstdCpmNoAttachDict
             );
-            cParams.windowLog = saved_wlog;
+            cParams.windowLog = savedWlog;
             mtctx->@params.cParams = cParams;
         }
     }
@@ -987,9 +987,9 @@ public static unsafe partial class Methods
      * tells how much data has been consumed (input) and produced (output) for current frame.
      * able to count progression inside worker threads.
      * Note : mutex will be acquired during statistics collection inside workers. */
-    private static ZSTD_frameProgression ZSTDMT_getFrameProgression(ZSTDMT_CCtx_s* mtctx)
+    private static ZstdFrameProgression ZSTDMT_getFrameProgression(ZstdmtCCtxS* mtctx)
     {
-        ZSTD_frameProgression fps;
+        ZstdFrameProgression fps;
         fps.ingested = mtctx->consumed + mtctx->inBuff.filled;
         fps.consumed = mtctx->consumed;
         fps.produced = fps.flushed = mtctx->produced;
@@ -1001,8 +1001,8 @@ public static unsafe partial class Methods
             assert(mtctx->jobReady <= 1);
             for (jobNb = mtctx->doneJobID; jobNb < lastJobNb; jobNb++)
             {
-                var wJobID = jobNb & mtctx->jobIDMask;
-                var jobPtr = &mtctx->jobs[wJobID];
+                var wJobId = jobNb & mtctx->jobIDMask;
+                var jobPtr = &mtctx->jobs[wJobId];
                 SynchronizationWrapper.Enter(&jobPtr->job_mutex);
                 {
                     var cResult = jobPtr->cSize;
@@ -1016,7 +1016,7 @@ public static unsafe partial class Methods
                     fps.nbActiveWorkers += jobPtr->consumed < jobPtr->src.size ? 1U : 0U;
                 }
 
-                SynchronizationWrapper.Exit(&mtctx->jobs[wJobID].job_mutex);
+                SynchronizationWrapper.Exit(&mtctx->jobs[wJobId].job_mutex);
             }
         }
 
@@ -1029,16 +1029,16 @@ public static unsafe partial class Methods
      *  If return 0, it means there is no active job,
      *  or, it means oldest job is still active, but everything produced has been flushed so far,
      *  therefore flushing is limited by speed of oldest job. */
-    private static nuint ZSTDMT_toFlushNow(ZSTDMT_CCtx_s* mtctx)
+    private static nuint ZSTDMT_toFlushNow(ZstdmtCCtxS* mtctx)
     {
         nuint toFlush;
-        var jobID = mtctx->doneJobID;
-        assert(jobID <= mtctx->nextJobID);
-        if (jobID == mtctx->nextJobID)
+        var jobId = mtctx->doneJobID;
+        assert(jobId <= mtctx->nextJobID);
+        if (jobId == mtctx->nextJobID)
             return 0;
         {
-            var wJobID = jobID & mtctx->jobIDMask;
-            var jobPtr = &mtctx->jobs[wJobID];
+            var wJobId = jobId & mtctx->jobIDMask;
+            var jobPtr = &mtctx->jobs[wJobId];
             SynchronizationWrapper.Enter(&jobPtr->job_mutex);
             {
                 var cResult = jobPtr->cSize;
@@ -1053,7 +1053,7 @@ public static unsafe partial class Methods
 #endif
             }
 
-            SynchronizationWrapper.Exit(&mtctx->jobs[wJobID].job_mutex);
+            SynchronizationWrapper.Exit(&mtctx->jobs[wJobId].job_mutex);
         }
 
         return toFlush;
@@ -1062,10 +1062,10 @@ public static unsafe partial class Methods
     /* ------------------------------------------ */
     /* =====   Multi-threaded compression   ===== */
     /* ------------------------------------------ */
-    private static uint ZSTDMT_computeTargetJobLog(ZSTD_CCtx_params_s* @params)
+    private static uint ZSTDMT_computeTargetJobLog(ZstdCCtxParamsS* @params)
     {
         uint jobLog;
-        if (@params->ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
+        if (@params->ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
             jobLog =
                 21 > ZSTD_cycleLog(@params->cParams.chainLog, @params->cParams.strategy) + 3
                     ? 21
@@ -1076,22 +1076,22 @@ public static unsafe partial class Methods
         return jobLog < (uint)(MEM_32bits ? 29 : 30) ? jobLog : (uint)(MEM_32bits ? 29 : 30);
     }
 
-    private static int ZSTDMT_overlapLog_default(ZSTD_strategy strat)
+    private static int ZSTDMT_overlapLog_default(ZstdStrategy strat)
     {
         switch (strat)
         {
-            case ZSTD_strategy.ZSTD_btultra2:
+            case ZstdStrategy.ZstdBtultra2:
                 return 9;
-            case ZSTD_strategy.ZSTD_btultra:
-            case ZSTD_strategy.ZSTD_btopt:
+            case ZstdStrategy.ZstdBtultra:
+            case ZstdStrategy.ZstdBtopt:
                 return 8;
-            case ZSTD_strategy.ZSTD_btlazy2:
-            case ZSTD_strategy.ZSTD_lazy2:
+            case ZstdStrategy.ZstdBtlazy2:
+            case ZstdStrategy.ZstdLazy2:
                 return 7;
-            case ZSTD_strategy.ZSTD_lazy:
-            case ZSTD_strategy.ZSTD_greedy:
-            case ZSTD_strategy.ZSTD_dfast:
-            case ZSTD_strategy.ZSTD_fast:
+            case ZstdStrategy.ZstdLazy:
+            case ZstdStrategy.ZstdGreedy:
+            case ZstdStrategy.ZstdDfast:
+            case ZstdStrategy.ZstdFast:
             default:
                 break;
         }
@@ -1099,7 +1099,7 @@ public static unsafe partial class Methods
         return 6;
     }
 
-    private static int ZSTDMT_overlapLog(int ovlog, ZSTD_strategy strat)
+    private static int ZSTDMT_overlapLog(int ovlog, ZstdStrategy strat)
     {
         assert(0 <= ovlog && ovlog <= 9);
         if (ovlog == 0)
@@ -1107,12 +1107,12 @@ public static unsafe partial class Methods
         return ovlog;
     }
 
-    private static nuint ZSTDMT_computeOverlapSize(ZSTD_CCtx_params_s* @params)
+    private static nuint ZSTDMT_computeOverlapSize(ZstdCCtxParamsS* @params)
     {
         var overlapRLog = 9 - ZSTDMT_overlapLog(@params->overlapLog, @params->cParams.strategy);
         var ovLog = (int)(overlapRLog >= 8 ? 0 : @params->cParams.windowLog - (uint)overlapRLog);
         assert(0 <= overlapRLog && overlapRLog <= 8);
-        if (@params->ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
+        if (@params->ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
             ovLog = (int)(
                 (
                     @params->cParams.windowLog < ZSTDMT_computeTargetJobLog(@params) - 2
@@ -1129,12 +1129,12 @@ public static unsafe partial class Methods
     /* =======      Streaming API     ======= */
     /* ====================================== */
     private static nuint ZSTDMT_initCStream_internal(
-        ZSTDMT_CCtx_s* mtctx,
+        ZstdmtCCtxS* mtctx,
         void* dict,
         nuint dictSize,
-        ZSTD_dictContentType_e dictContentType,
-        ZSTD_CDict_s* cdict,
-        ZSTD_CCtx_params_s @params,
+        ZstdDictContentTypeE dictContentType,
+        ZstdCDictS* cdict,
+        ZstdCCtxParamsS @params,
         ulong pledgedSrcSize
     )
     {
@@ -1142,9 +1142,9 @@ public static unsafe partial class Methods
         assert(!(dict != null && cdict != null));
         if (@params.nbWorkers != mtctx->@params.nbWorkers)
         {
-            var err_code = ZSTDMT_resize(mtctx, (uint)@params.nbWorkers);
-            if (ERR_isError(err_code))
-                return err_code;
+            var errCode = ZSTDMT_resize(mtctx, (uint)@params.nbWorkers);
+            if (ERR_isError(errCode))
+                return errCode;
         }
 
         if (@params.jobSize != 0 && @params.jobSize < 512 * (1 << 10))
@@ -1166,14 +1166,14 @@ public static unsafe partial class Methods
             mtctx->cdictLocal = ZSTD_createCDict_advanced(
                 dict,
                 dictSize,
-                ZSTD_dictLoadMethod_e.ZSTD_dlm_byCopy,
+                ZstdDictLoadMethodE.ZstdDlmByCopy,
                 dictContentType,
                 @params.cParams,
                 mtctx->cMem
             );
             mtctx->cdict = mtctx->cdictLocal;
             if (mtctx->cdictLocal == null)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         }
         else
         {
@@ -1193,9 +1193,9 @@ public static unsafe partial class Methods
         if (@params.rsyncable != 0)
         {
             /* Aim for the targetsectionSize as the average job size. */
-            var jobSizeKB = (uint)(mtctx->targetSectionSize >> 10);
-            assert(jobSizeKB >= 1);
-            var rsyncBits = ZSTD_highbit32(jobSizeKB) + 10;
+            var jobSizeKb = (uint)(mtctx->targetSectionSize >> 10);
+            assert(jobSizeKb >= 1);
+            var rsyncBits = ZSTD_highbit32(jobSizeKb) + 10;
             assert(rsyncBits >= 17 + 2);
             mtctx->rsync.hash = 0;
             mtctx->rsync.hitMask = (1UL << (int)rsyncBits) - 1;
@@ -1208,7 +1208,7 @@ public static unsafe partial class Methods
         {
             /* If ldm is enabled we need windowSize space. */
             nuint windowSize =
-                mtctx->@params.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable
+                mtctx->@params.ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable
                     ? 1U << (int)mtctx->@params.cParams.windowLog
                     : 0;
             /* Two buffers of slack, plus extra space for the overlap
@@ -1231,7 +1231,7 @@ public static unsafe partial class Methods
                 if (mtctx->roundBuff.buffer == null)
                 {
                     mtctx->roundBuff.capacity = 0;
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
                 }
 
                 mtctx->roundBuff.capacity = capacity;
@@ -1239,9 +1239,9 @@ public static unsafe partial class Methods
         }
 
         mtctx->roundBuff.pos = 0;
-        mtctx->inBuff.buffer = g_nullBuffer;
+        mtctx->inBuff.buffer = GNullBuffer;
         mtctx->inBuff.filled = 0;
-        mtctx->inBuff.prefix = kNullRange;
+        mtctx->inBuff.prefix = KNullRange;
         mtctx->doneJobID = 0;
         mtctx->nextJobID = 0;
         mtctx->frameEnded = 0;
@@ -1259,7 +1259,7 @@ public static unsafe partial class Methods
                 dictContentType
             ) != 0
         )
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         return 0;
     }
 
@@ -1268,7 +1268,7 @@ public static unsafe partial class Methods
      * Job must be created from streaming variant.
      * This function is always successful if expected conditions are fulfilled.
      */
-    private static void ZSTDMT_writeLastEmptyBlock(ZSTDMT_jobDescription* job)
+    private static void ZSTDMT_writeLastEmptyBlock(ZstdmtJobDescription* job)
     {
         assert(job->lastJob == 1);
         assert(job->src.size == 0);
@@ -1277,25 +1277,25 @@ public static unsafe partial class Methods
         job->dstBuff = ZSTDMT_getBuffer(job->bufPool);
         if (job->dstBuff.start == null)
         {
-            job->cSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            job->cSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
             return;
         }
 
-        assert(job->dstBuff.capacity >= ZSTD_blockHeaderSize);
-        job->src = kNullRange;
+        assert(job->dstBuff.capacity >= ZstdBlockHeaderSize);
+        job->src = KNullRange;
         job->cSize = ZSTD_writeLastEmptyBlock(job->dstBuff.start, job->dstBuff.capacity);
         assert(!ERR_isError(job->cSize));
         assert(job->consumed == 0);
     }
 
     private static nuint ZSTDMT_createCompressionJob(
-        ZSTDMT_CCtx_s* mtctx,
+        ZstdmtCCtxS* mtctx,
         nuint srcSize,
-        ZSTD_EndDirective endOp
+        ZstdEndDirective endOp
     )
     {
-        var jobID = mtctx->nextJobID & mtctx->jobIDMask;
-        var endFrame = endOp == ZSTD_EndDirective.ZSTD_e_end ? 1 : 0;
+        var jobId = mtctx->nextJobID & mtctx->jobIDMask;
+        var endFrame = endOp == ZstdEndDirective.ZstdEEnd ? 1 : 0;
         if (mtctx->nextJobID > mtctx->doneJobID + mtctx->jobIDMask)
         {
             assert((mtctx->nextJobID & mtctx->jobIDMask) == (mtctx->doneJobID & mtctx->jobIDMask));
@@ -1305,30 +1305,30 @@ public static unsafe partial class Methods
         if (mtctx->jobReady == 0)
         {
             var src = (byte*)mtctx->inBuff.buffer.start;
-            mtctx->jobs[jobID].src.start = src;
-            mtctx->jobs[jobID].src.size = srcSize;
+            mtctx->jobs[jobId].src.start = src;
+            mtctx->jobs[jobId].src.size = srcSize;
             assert(mtctx->inBuff.filled >= srcSize);
-            mtctx->jobs[jobID].prefix = mtctx->inBuff.prefix;
-            mtctx->jobs[jobID].consumed = 0;
-            mtctx->jobs[jobID].cSize = 0;
-            mtctx->jobs[jobID].@params = mtctx->@params;
-            mtctx->jobs[jobID].cdict = mtctx->nextJobID == 0 ? mtctx->cdict : null;
-            mtctx->jobs[jobID].fullFrameSize = mtctx->frameContentSize;
-            mtctx->jobs[jobID].dstBuff = g_nullBuffer;
-            mtctx->jobs[jobID].cctxPool = mtctx->cctxPool;
-            mtctx->jobs[jobID].bufPool = mtctx->bufPool;
-            mtctx->jobs[jobID].seqPool = mtctx->seqPool;
-            mtctx->jobs[jobID].serial = &mtctx->serial;
-            mtctx->jobs[jobID].jobID = mtctx->nextJobID;
-            mtctx->jobs[jobID].firstJob = mtctx->nextJobID == 0 ? 1U : 0U;
-            mtctx->jobs[jobID].lastJob = (uint)endFrame;
-            mtctx->jobs[jobID].frameChecksumNeeded =
+            mtctx->jobs[jobId].prefix = mtctx->inBuff.prefix;
+            mtctx->jobs[jobId].consumed = 0;
+            mtctx->jobs[jobId].cSize = 0;
+            mtctx->jobs[jobId].@params = mtctx->@params;
+            mtctx->jobs[jobId].cdict = mtctx->nextJobID == 0 ? mtctx->cdict : null;
+            mtctx->jobs[jobId].fullFrameSize = mtctx->frameContentSize;
+            mtctx->jobs[jobId].dstBuff = GNullBuffer;
+            mtctx->jobs[jobId].cctxPool = mtctx->cctxPool;
+            mtctx->jobs[jobId].bufPool = mtctx->bufPool;
+            mtctx->jobs[jobId].seqPool = mtctx->seqPool;
+            mtctx->jobs[jobId].serial = &mtctx->serial;
+            mtctx->jobs[jobId].jobID = mtctx->nextJobID;
+            mtctx->jobs[jobId].firstJob = mtctx->nextJobID == 0 ? 1U : 0U;
+            mtctx->jobs[jobId].lastJob = (uint)endFrame;
+            mtctx->jobs[jobId].frameChecksumNeeded =
                 mtctx->@params.fParams.checksumFlag != 0 && endFrame != 0 && mtctx->nextJobID > 0
                     ? 1U
                     : 0U;
-            mtctx->jobs[jobID].dstFlushed = 0;
+            mtctx->jobs[jobId].dstFlushed = 0;
             mtctx->roundBuff.pos += srcSize;
-            mtctx->inBuff.buffer = g_nullBuffer;
+            mtctx->inBuff.buffer = GNullBuffer;
             mtctx->inBuff.filled = 0;
             if (endFrame == 0)
             {
@@ -1339,7 +1339,7 @@ public static unsafe partial class Methods
             }
             else
             {
-                mtctx->inBuff.prefix = kNullRange;
+                mtctx->inBuff.prefix = KNullRange;
                 mtctx->frameEnded = (uint)endFrame;
                 if (mtctx->nextJobID == 0)
                     mtctx->@params.fParams.checksumFlag = 0;
@@ -1347,8 +1347,8 @@ public static unsafe partial class Methods
 
             if (srcSize == 0 && mtctx->nextJobID > 0)
             {
-                assert(endOp == ZSTD_EndDirective.ZSTD_e_end);
-                ZSTDMT_writeLastEmptyBlock(mtctx->jobs + jobID);
+                assert(endOp == ZstdEndDirective.ZstdEEnd);
+                ZSTDMT_writeLastEmptyBlock(mtctx->jobs + jobId);
                 mtctx->nextJobID++;
                 return 0;
             }
@@ -1358,7 +1358,7 @@ public static unsafe partial class Methods
             POOL_tryAdd(
                 mtctx->factory,
                 (delegate* managed<void*, void>)(&ZSTDMT_compressionJob),
-                &mtctx->jobs[jobID]
+                &mtctx->jobs[jobId]
             ) != 0
         )
         {
@@ -1380,35 +1380,35 @@ public static unsafe partial class Methods
      * `blockToFlush` : if >0, the function will block and wait if there is no data available to flush .
      * @return : amount of data remaining within internal buffer, 0 if no more, 1 if unknown but > 0, or an error code */
     private static nuint ZSTDMT_flushProduced(
-        ZSTDMT_CCtx_s* mtctx,
-        ZSTD_outBuffer_s* output,
+        ZstdmtCCtxS* mtctx,
+        ZstdOutBufferS* output,
         uint blockToFlush,
-        ZSTD_EndDirective end
+        ZstdEndDirective end
     )
     {
-        var wJobID = mtctx->doneJobID & mtctx->jobIDMask;
+        var wJobId = mtctx->doneJobID & mtctx->jobIDMask;
         assert(output->size >= output->pos);
-        SynchronizationWrapper.Enter(&mtctx->jobs[wJobID].job_mutex);
+        SynchronizationWrapper.Enter(&mtctx->jobs[wJobId].job_mutex);
         if (blockToFlush != 0 && mtctx->doneJobID < mtctx->nextJobID)
         {
-            assert(mtctx->jobs[wJobID].dstFlushed <= mtctx->jobs[wJobID].cSize);
-            while (mtctx->jobs[wJobID].dstFlushed == mtctx->jobs[wJobID].cSize)
+            assert(mtctx->jobs[wJobId].dstFlushed <= mtctx->jobs[wJobId].cSize);
+            while (mtctx->jobs[wJobId].dstFlushed == mtctx->jobs[wJobId].cSize)
             {
-                if (mtctx->jobs[wJobID].consumed == mtctx->jobs[wJobID].src.size)
+                if (mtctx->jobs[wJobId].consumed == mtctx->jobs[wJobId].src.size)
                     break;
 
-                SynchronizationWrapper.Wait(&mtctx->jobs[wJobID].job_mutex);
+                SynchronizationWrapper.Wait(&mtctx->jobs[wJobId].job_mutex);
             }
         }
 
         {
             /* shared */
-            var cSize = mtctx->jobs[wJobID].cSize;
+            var cSize = mtctx->jobs[wJobId].cSize;
             /* shared */
-            var srcConsumed = mtctx->jobs[wJobID].consumed;
+            var srcConsumed = mtctx->jobs[wJobId].consumed;
             /* read-only, could be done after mutex lock, but no-declaration-after-statement */
-            var srcSize = mtctx->jobs[wJobID].src.size;
-            SynchronizationWrapper.Exit(&mtctx->jobs[wJobID].job_mutex);
+            var srcSize = mtctx->jobs[wJobId].src.size;
+            SynchronizationWrapper.Exit(&mtctx->jobs[wJobId].job_mutex);
             if (ERR_isError(cSize))
             {
                 ZSTDMT_waitForAllJobsCompleted(mtctx);
@@ -1417,49 +1417,49 @@ public static unsafe partial class Methods
             }
 
             assert(srcConsumed <= srcSize);
-            if (srcConsumed == srcSize && mtctx->jobs[wJobID].frameChecksumNeeded != 0)
+            if (srcConsumed == srcSize && mtctx->jobs[wJobId].frameChecksumNeeded != 0)
             {
                 var checksum = (uint)ZSTD_XXH64_digest(&mtctx->serial.xxhState);
                 MEM_writeLE32(
-                    (sbyte*)mtctx->jobs[wJobID].dstBuff.start + mtctx->jobs[wJobID].cSize,
+                    (sbyte*)mtctx->jobs[wJobId].dstBuff.start + mtctx->jobs[wJobId].cSize,
                     checksum
                 );
                 cSize += 4;
-                mtctx->jobs[wJobID].cSize += 4;
-                mtctx->jobs[wJobID].frameChecksumNeeded = 0;
+                mtctx->jobs[wJobId].cSize += 4;
+                mtctx->jobs[wJobId].frameChecksumNeeded = 0;
             }
 
             if (cSize > 0)
             {
                 var toFlush =
-                    cSize - mtctx->jobs[wJobID].dstFlushed < output->size - output->pos
-                        ? cSize - mtctx->jobs[wJobID].dstFlushed
+                    cSize - mtctx->jobs[wJobId].dstFlushed < output->size - output->pos
+                        ? cSize - mtctx->jobs[wJobId].dstFlushed
                         : output->size - output->pos;
                 assert(mtctx->doneJobID < mtctx->nextJobID);
-                assert(cSize >= mtctx->jobs[wJobID].dstFlushed);
-                assert(mtctx->jobs[wJobID].dstBuff.start != null);
+                assert(cSize >= mtctx->jobs[wJobId].dstFlushed);
+                assert(mtctx->jobs[wJobId].dstBuff.start != null);
                 if (toFlush > 0)
                     memcpy(
                         (sbyte*)output->dst + output->pos,
-                        (sbyte*)mtctx->jobs[wJobID].dstBuff.start + mtctx->jobs[wJobID].dstFlushed,
+                        (sbyte*)mtctx->jobs[wJobId].dstBuff.start + mtctx->jobs[wJobId].dstFlushed,
                         (uint)toFlush
                     );
 
                 output->pos += toFlush;
-                mtctx->jobs[wJobID].dstFlushed += toFlush;
-                if (srcConsumed == srcSize && mtctx->jobs[wJobID].dstFlushed == cSize)
+                mtctx->jobs[wJobId].dstFlushed += toFlush;
+                if (srcConsumed == srcSize && mtctx->jobs[wJobId].dstFlushed == cSize)
                 {
-                    ZSTDMT_releaseBuffer(mtctx->bufPool, mtctx->jobs[wJobID].dstBuff);
-                    mtctx->jobs[wJobID].dstBuff = g_nullBuffer;
-                    mtctx->jobs[wJobID].cSize = 0;
+                    ZSTDMT_releaseBuffer(mtctx->bufPool, mtctx->jobs[wJobId].dstBuff);
+                    mtctx->jobs[wJobId].dstBuff = GNullBuffer;
+                    mtctx->jobs[wJobId].cSize = 0;
                     mtctx->consumed += srcSize;
                     mtctx->produced += cSize;
                     mtctx->doneJobID++;
                 }
             }
 
-            if (cSize > mtctx->jobs[wJobID].dstFlushed)
-                return cSize - mtctx->jobs[wJobID].dstFlushed;
+            if (cSize > mtctx->jobs[wJobId].dstFlushed)
+                return cSize - mtctx->jobs[wJobId].dstFlushed;
             if (srcSize > srcConsumed)
                 return 1;
         }
@@ -1471,7 +1471,7 @@ public static unsafe partial class Methods
         if (mtctx->inBuff.filled > 0)
             return 1;
         mtctx->allJobsCompleted = mtctx->frameEnded;
-        if (end == ZSTD_EndDirective.ZSTD_e_end)
+        if (end == ZstdEndDirective.ZstdEEnd)
             return mtctx->frameEnded == 0 ? 1U : 0U;
         return 0;
     }
@@ -1481,36 +1481,36 @@ public static unsafe partial class Methods
      * If the data of the first job is broken up into two segments, we cover both
      * sections.
      */
-    private static range_t ZSTDMT_getInputDataInUse(ZSTDMT_CCtx_s* mtctx)
+    private static RangeT ZSTDMT_getInputDataInUse(ZstdmtCCtxS* mtctx)
     {
-        var firstJobID = mtctx->doneJobID;
-        var lastJobID = mtctx->nextJobID;
-        uint jobID;
-        for (jobID = firstJobID; jobID < lastJobID; ++jobID)
+        var firstJobId = mtctx->doneJobID;
+        var lastJobId = mtctx->nextJobID;
+        uint jobId;
+        for (jobId = firstJobId; jobId < lastJobId; ++jobId)
         {
-            var wJobID = jobID & mtctx->jobIDMask;
+            var wJobId = jobId & mtctx->jobIDMask;
             nuint consumed;
-            SynchronizationWrapper.Enter(&mtctx->jobs[wJobID].job_mutex);
-            consumed = mtctx->jobs[wJobID].consumed;
-            SynchronizationWrapper.Exit(&mtctx->jobs[wJobID].job_mutex);
-            if (consumed < mtctx->jobs[wJobID].src.size)
+            SynchronizationWrapper.Enter(&mtctx->jobs[wJobId].job_mutex);
+            consumed = mtctx->jobs[wJobId].consumed;
+            SynchronizationWrapper.Exit(&mtctx->jobs[wJobId].job_mutex);
+            if (consumed < mtctx->jobs[wJobId].src.size)
             {
-                var range = mtctx->jobs[wJobID].prefix;
+                var range = mtctx->jobs[wJobId].prefix;
                 if (range.size == 0)
-                    range = mtctx->jobs[wJobID].src;
+                    range = mtctx->jobs[wJobId].src;
 
-                assert(range.start <= mtctx->jobs[wJobID].src.start);
+                assert(range.start <= mtctx->jobs[wJobId].src.start);
                 return range;
             }
         }
 
-        return kNullRange;
+        return KNullRange;
     }
 
     /**
      * Returns non-zero iff buffer and range overlap.
      */
-    private static int ZSTDMT_isOverlapped(buffer_s buffer, range_t range)
+    private static int ZSTDMT_isOverlapped(BufferS buffer, RangeT range)
     {
         var bufferStart = (byte*)buffer.start;
         var rangeStart = (byte*)range.start;
@@ -1525,10 +1525,10 @@ public static unsafe partial class Methods
         }
     }
 
-    private static int ZSTDMT_doesOverlapWindow(buffer_s buffer, ZSTD_window_t window)
+    private static int ZSTDMT_doesOverlapWindow(BufferS buffer, ZstdWindowT window)
     {
-        range_t extDict;
-        range_t prefix;
+        RangeT extDict;
+        RangeT prefix;
         extDict.start = window.dictBase + window.lowLimit;
         extDict.size = window.dictLimit - window.lowLimit;
         prefix.start = window.@base + window.dictLimit;
@@ -1538,9 +1538,9 @@ public static unsafe partial class Methods
             : 0;
     }
 
-    private static void ZSTDMT_waitForLdmComplete(ZSTDMT_CCtx_s* mtctx, buffer_s buffer)
+    private static void ZSTDMT_waitForLdmComplete(ZstdmtCCtxS* mtctx, BufferS buffer)
     {
-        if (mtctx->@params.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
+        if (mtctx->@params.ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
         {
             var mutex = &mtctx->serial.ldmWindowMutex;
             SynchronizationWrapper.Enter(mutex);
@@ -1556,12 +1556,12 @@ public static unsafe partial class Methods
      * If any part of the new section is still in use we give up.
      * Returns non-zero if the buffer is filled.
      */
-    private static int ZSTDMT_tryGetInputRange(ZSTDMT_CCtx_s* mtctx)
+    private static int ZSTDMT_tryGetInputRange(ZstdmtCCtxS* mtctx)
     {
         var inUse = ZSTDMT_getInputDataInUse(mtctx);
         var spaceLeft = mtctx->roundBuff.capacity - mtctx->roundBuff.pos;
         var target = mtctx->targetSectionSize;
-        buffer_s buffer;
+        BufferS buffer;
         assert(mtctx->inBuff.buffer.start == null);
         assert(mtctx->roundBuff.capacity >= target);
         if (spaceLeft < target)
@@ -1601,12 +1601,12 @@ public static unsafe partial class Methods
      * Otherwise, we will load as many bytes as possible and instruct the caller
      * to continue as normal.
      */
-    private static syncPoint_t findSynchronizationPoint(ZSTDMT_CCtx_s* mtctx, ZSTD_inBuffer_s input)
+    private static SyncPointT FindSynchronizationPoint(ZstdmtCCtxS* mtctx, ZstdInBufferS input)
     {
         var istart = (byte*)input.src + input.pos;
         var primePower = mtctx->rsync.primePower;
         var hitMask = mtctx->rsync.hitMask;
-        syncPoint_t syncPoint;
+        SyncPointT syncPoint;
         ulong hash;
         byte* prev;
         nuint pos;
@@ -1672,7 +1672,7 @@ public static unsafe partial class Methods
     }
 
     /* ===   Streaming functions   === */
-    private static nuint ZSTDMT_nextInputSizeHint(ZSTDMT_CCtx_s* mtctx)
+    private static nuint ZSTDMT_nextInputSizeHint(ZstdmtCCtxS* mtctx)
     {
         var hintInSize = mtctx->targetSectionSize - mtctx->inBuff.filled;
         if (hintInSize == 0)
@@ -1704,17 +1704,17 @@ public static unsafe partial class Methods
      * none
      */
     private static nuint ZSTDMT_compressStream_generic(
-        ZSTDMT_CCtx_s* mtctx,
-        ZSTD_outBuffer_s* output,
-        ZSTD_inBuffer_s* input,
-        ZSTD_EndDirective endOp
+        ZstdmtCCtxS* mtctx,
+        ZstdOutBufferS* output,
+        ZstdInBufferS* input,
+        ZstdEndDirective endOp
     )
     {
         uint forwardInputProgress = 0;
         assert(output->pos <= output->size);
         assert(input->pos <= input->size);
-        if (mtctx->frameEnded != 0 && endOp == ZSTD_EndDirective.ZSTD_e_continue)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_stage_wrong));
+        if (mtctx->frameEnded != 0 && endOp == ZstdEndDirective.ZstdEContinue)
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorStageWrong));
 
         if (mtctx->jobReady == 0 && input->size > input->pos)
         {
@@ -1727,9 +1727,9 @@ public static unsafe partial class Methods
 
             if (mtctx->inBuff.buffer.start != null)
             {
-                var syncPoint = findSynchronizationPoint(mtctx, *input);
-                if (syncPoint.flush != 0 && endOp == ZSTD_EndDirective.ZSTD_e_continue)
-                    endOp = ZSTD_EndDirective.ZSTD_e_flush;
+                var syncPoint = FindSynchronizationPoint(mtctx, *input);
+                if (syncPoint.flush != 0 && endOp == ZstdEndDirective.ZstdEContinue)
+                    endOp = ZstdEndDirective.ZstdEFlush;
 
                 assert(mtctx->inBuff.buffer.capacity >= mtctx->targetSectionSize);
                 memcpy(
@@ -1743,29 +1743,29 @@ public static unsafe partial class Methods
             }
         }
 
-        if (input->pos < input->size && endOp == ZSTD_EndDirective.ZSTD_e_end)
+        if (input->pos < input->size && endOp == ZstdEndDirective.ZstdEEnd)
         {
             assert(
                 mtctx->inBuff.filled == 0
                 || mtctx->inBuff.filled == mtctx->targetSectionSize
                 || mtctx->@params.rsyncable != 0
             );
-            endOp = ZSTD_EndDirective.ZSTD_e_flush;
+            endOp = ZstdEndDirective.ZstdEFlush;
         }
 
         if (
             mtctx->jobReady != 0
             || mtctx->inBuff.filled >= mtctx->targetSectionSize
-            || (endOp != ZSTD_EndDirective.ZSTD_e_continue && mtctx->inBuff.filled > 0)
-            || (endOp == ZSTD_EndDirective.ZSTD_e_end && mtctx->frameEnded == 0)
+            || (endOp != ZstdEndDirective.ZstdEContinue && mtctx->inBuff.filled > 0)
+            || (endOp == ZstdEndDirective.ZstdEEnd && mtctx->frameEnded == 0)
         )
         {
             var jobSize = mtctx->inBuff.filled;
             assert(mtctx->inBuff.filled <= mtctx->targetSectionSize);
             {
-                var err_code = ZSTDMT_createCompressionJob(mtctx, jobSize, endOp);
-                if (ERR_isError(err_code))
-                    return err_code;
+                var errCode = ZSTDMT_createCompressionJob(mtctx, jobSize, endOp);
+                if (ERR_isError(errCode))
+                    return errCode;
             }
         }
 

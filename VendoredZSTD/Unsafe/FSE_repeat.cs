@@ -1,19 +1,19 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum FSE_repeat
+public enum FseRepeat
 {
     /**
      * < Cannot use the previous table
      */
-    FSE_repeat_none,
+    FseRepeatNone,
 
     /**
      * < Can use the previous table but it must be checked
      */
-    FSE_repeat_check,
+    FseRepeatCheck,
 
     /**
      * < Can use the previous table and it is assumed to be valid
      */
-    FSE_repeat_valid
+    FseRepeatValid
 }

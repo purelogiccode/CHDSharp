@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_compressionParameters
+public struct ZstdCompressionParameters
 {
     /**
      * < largest match distance : larger== more compression, more memory needed during decompression
@@ -39,16 +39,16 @@ public struct ZSTD_compressionParameters
     /**
      * < see ZSTD_strategy definition above
      */
-    public ZSTD_strategy strategy;
+    public ZstdStrategy strategy;
 
-    public ZSTD_compressionParameters(
+    public ZstdCompressionParameters(
         uint windowLog,
         uint chainLog,
         uint hashLog,
         uint searchLog,
         uint minMatch,
         uint targetLength,
-        ZSTD_strategy strategy
+        ZstdStrategy strategy
     )
     {
         this.windowLog = windowLog;

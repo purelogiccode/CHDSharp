@@ -1,9 +1,9 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_dictMode_e
+public enum ZstdDictModeE
 {
-    ZSTD_noDict = 0,
-    ZSTD_extDict = 1,
-    ZSTD_dictMatchState = 2,
-    ZSTD_dedicatedDictSearch = 3
+    ZstdNoDict = 0,
+    ZstdExtDict = 1,
+    ZstdDictMatchState = 2,
+    ZstdDedicatedDictSearch = 3
 }

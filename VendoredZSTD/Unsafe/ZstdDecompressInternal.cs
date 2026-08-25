@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
 #if NET8_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_LL_base =>
+    private static ReadOnlySpan<uint> SpanLlBase =>
         new uint[36]
         {
             0,
@@ -47,10 +47,10 @@ public static unsafe partial class Methods
             0x10000
         };
 
-    private static uint* LL_base =>
+    private static uint* LlBase =>
         (uint*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_LL_base)
+            ref MemoryMarshal.GetReference(SpanLlBase)
         );
 #else
     private static readonly uint* LL_base = GetArrayPointer(
@@ -96,7 +96,7 @@ public static unsafe partial class Methods
     );
 #endif
 #if NET8_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_OF_base =>
+    private static ReadOnlySpan<uint> SpanOfBase =>
         new uint[32]
         {
             0,
@@ -133,10 +133,10 @@ public static unsafe partial class Methods
             0x7FFFFFFD
         };
 
-    private static uint* OF_base =>
+    private static uint* OfBase =>
         (uint*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_OF_base)
+            ref MemoryMarshal.GetReference(SpanOfBase)
         );
 #else
     private static readonly uint* OF_base = GetArrayPointer(
@@ -178,7 +178,7 @@ public static unsafe partial class Methods
     );
 #endif
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> Span_OF_bits =>
+    private static ReadOnlySpan<byte> SpanOfBits =>
         new byte[32]
         {
             0,
@@ -215,10 +215,10 @@ public static unsafe partial class Methods
             31
         };
 
-    private static byte* OF_bits =>
+    private static byte* OfBits =>
         (byte*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_OF_bits)
+            ref MemoryMarshal.GetReference(SpanOfBits)
         );
 #else
     private static readonly byte* OF_bits = GetArrayPointer(
@@ -260,7 +260,7 @@ public static unsafe partial class Methods
     );
 #endif
 #if NET8_0_OR_GREATER
-    private static ReadOnlySpan<uint> Span_ML_base =>
+    private static ReadOnlySpan<uint> SpanMlBase =>
         new uint[53]
         {
             3,
@@ -318,10 +318,10 @@ public static unsafe partial class Methods
             0x10003
         };
 
-    private static uint* ML_base =>
+    private static uint* MlBase =>
         (uint*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_ML_base)
+            ref MemoryMarshal.GetReference(SpanMlBase)
         );
 #else
     private static readonly uint* ML_base = GetArrayPointer(
@@ -385,7 +385,7 @@ public static unsafe partial class Methods
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ZSTD_DCtx_get_bmi2(ZSTD_DCtx_s* dctx)
+    private static int ZSTD_DCtx_get_bmi2(ZstdDCtxS* dctx)
     {
         return 0;
     }

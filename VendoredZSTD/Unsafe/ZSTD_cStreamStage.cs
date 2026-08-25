@@ -1,8 +1,8 @@
 namespace VendoredZSTD.Unsafe;
 
-public enum ZSTD_cStreamStage
+public enum ZstdCStreamStage
 {
-    zcss_init = 0,
-    zcss_load,
-    zcss_flush
+    ZcssInit = 0,
+    ZcssLoad,
+    ZcssFlush
 }

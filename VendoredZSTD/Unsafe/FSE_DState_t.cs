@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
  *  FSE symbol decompression API
  *******************************************/
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct FSE_DState_t
+public unsafe struct FseDStateT
 {
     public nuint state;
 

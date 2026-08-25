@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct HUF_CompressWeightsWksp
+public unsafe struct HufCompressWeightsWksp
 {
     public fixed uint CTable[59];
     public fixed uint scratchBuffer[41];

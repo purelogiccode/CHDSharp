@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZDICT_params_t
+public struct ZdictParamsT
 {
     /**
      * < optimize for a specific zstd compression level; 0 means default

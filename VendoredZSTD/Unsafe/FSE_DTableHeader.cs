@@ -4,7 +4,7 @@ namespace VendoredZSTD.Unsafe;
 
 /* ======    Decompression    ====== */
 [StructLayout(LayoutKind.Sequential)]
-public struct FSE_DTableHeader
+public struct FseDTableHeader
 {
     public ushort tableLog;
     public ushort fastMode;

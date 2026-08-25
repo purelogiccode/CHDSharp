@@ -4,7 +4,7 @@ namespace VendoredZSTD.Unsafe;
 
 /* Struct to keep track of where we are in our recursive calls. */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct seqStoreSplits
+public unsafe struct SeqStoreSplits
 {
     /* Array of split indices */
     public uint* splitLocations;

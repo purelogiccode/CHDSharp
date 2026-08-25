@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FSE_decode_t
+public struct FseDecodeT
 {
     public ushort newState;
     public byte symbol;

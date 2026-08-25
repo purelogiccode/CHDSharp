@@ -3,13 +3,13 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_DCtx_s
+public unsafe struct ZstdDCtxS
 {
-    public ZSTD_seqSymbol* LLTptr;
-    public ZSTD_seqSymbol* MLTptr;
-    public ZSTD_seqSymbol* OFTptr;
+    public ZstdSeqSymbol* LLTptr;
+    public ZstdSeqSymbol* MLTptr;
+    public ZstdSeqSymbol* OFTptr;
     public uint* HUFptr;
-    public ZSTD_entropyDTables_t entropy;
+    public ZstdEntropyDTablesT entropy;
 
     /* space needed when building huffman tables */
     public fixed uint workspace[640];
@@ -26,50 +26,50 @@ public unsafe struct ZSTD_DCtx_s
     /* end of previous segment */
     public void* dictEnd;
     public nuint expected;
-    public ZSTD_frameHeader fParams;
+    public ZstdFrameHeader fParams;
     public ulong processedCSize;
     public ulong decodedSize;
 
     /* used in ZSTD_decompressContinue(), store blockType between block header decoding and block decompression stages */
-    public blockType_e bType;
-    public ZSTD_dStage stage;
+    public BlockTypeE bType;
+    public ZstdDStage stage;
     public uint litEntropy;
     public uint fseEntropy;
-    public XXH64_state_s xxhState;
+    public Xxh64StateS xxhState;
     public nuint headerSize;
-    public ZSTD_format_e format;
+    public ZstdFormatE format;
 
     /* User specified: if == 1, will ignore checksums in compressed frame. Default == 0 */
-    public ZSTD_forceIgnoreChecksum_e forceIgnoreChecksum;
+    public ZstdForceIgnoreChecksumE forceIgnoreChecksum;
 
     /* if == 1, will validate checksum. Is == 1 if (fParams.checksumFlag == 1) and (forceIgnoreChecksum == 0). */
     public uint validateChecksum;
     public byte* litPtr;
-    public ZSTD_customMem customMem;
+    public ZstdCustomMem customMem;
     public nuint litSize;
     public nuint rleSize;
     public nuint staticSize;
 
     /* dictionary */
-    public ZSTD_DDict_s* ddictLocal;
+    public ZstdDDictS* ddictLocal;
 
     /* set by ZSTD_initDStream_usingDDict(), or ZSTD_DCtx_refDDict() */
-    public ZSTD_DDict_s* ddict;
+    public ZstdDDictS* ddict;
     public uint dictID;
 
     /* if == 1 : dictionary is "new" for working context, and presumed "cold" (not in cpu cache) */
     public int ddictIsCold;
-    public ZSTD_dictUses_e dictUses;
+    public ZstdDictUsesE dictUses;
 
     /* Hash set for multiple ddicts */
-    public ZSTD_DDictHashSet* ddictSet;
+    public ZstdDDictHashSet* ddictSet;
 
     /* User specified: if == 1, will allow references to multiple DDicts. Default == 0 (disabled) */
-    public ZSTD_refMultipleDDicts_e refMultipleDDicts;
+    public ZstdRefMultipleDDictsE refMultipleDDicts;
     public int disableHufAsm;
 
     /* streaming */
-    public ZSTD_dStreamStage streamStage;
+    public ZstdDStreamStage streamStage;
     public sbyte* inBuff;
     public nuint inBuffSize;
     public nuint inPos;
@@ -81,13 +81,13 @@ public unsafe struct ZSTD_DCtx_s
     public nuint lhSize;
     public uint hostageByte;
     public int noForwardProgress;
-    public ZSTD_bufferMode_e outBufferMode;
-    public ZSTD_outBuffer_s expectedOutBuffer;
+    public ZstdBufferModeE outBufferMode;
+    public ZstdOutBufferS expectedOutBuffer;
 
     /* workspace */
     public byte* litBuffer;
     public byte* litBufferEnd;
-    public ZSTD_litLocation_e litBufferLocation;
+    public ZstdLitLocationE litBufferLocation;
 
     /* literal buffer can be split between storage within dst and within this scratch buffer */
     public fixed byte litExtraBuffer[65568];

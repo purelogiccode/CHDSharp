@@ -39,7 +39,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nuint FSE_readNCount_body(
         short* normalizedCounter,
-        uint* maxSVPtr,
+        uint* maxSvPtr,
         uint* tableLogPtr,
         void* headerBuffer,
         nuint hbSize
@@ -54,7 +54,7 @@ public static unsafe partial class Methods
         uint bitStream;
         int bitCount;
         uint charnum = 0;
-        var maxSV1 = *maxSVPtr + 1;
+        var maxSv1 = *maxSvPtr + 1;
         var previous0 = 0;
         if (hbSize < 8)
         {
@@ -65,7 +65,7 @@ public static unsafe partial class Methods
             {
                 var countSize = FSE_readNCount(
                     normalizedCounter,
-                    maxSVPtr,
+                    maxSvPtr,
                     tableLogPtr,
                     buffer,
                     sizeof(sbyte) * 8
@@ -73,17 +73,17 @@ public static unsafe partial class Methods
                 if (FSE_isError(countSize))
                     return countSize;
                 if (countSize > hbSize)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                 return countSize;
             }
         }
 
         assert(hbSize >= 8);
-        memset(normalizedCounter, 0, (*maxSVPtr + 1) * sizeof(short));
+        memset(normalizedCounter, 0, (*maxSvPtr + 1) * sizeof(short));
         bitStream = MEM_readLE32(ip);
         nbBits = (int)((bitStream & 0xF) + 5);
         if (nbBits > 15)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
         bitStream >>= 4;
         bitCount = 4;
         *tableLogPtr = (uint)nbBits;
@@ -124,7 +124,7 @@ public static unsafe partial class Methods
                 assert((bitStream & 3) < 3);
                 charnum += bitStream & 3;
                 bitCount += 2;
-                if (charnum >= maxSV1)
+                if (charnum >= maxSv1)
                     break;
                 if (ip <= iend - 7 || ip + (bitCount >> 3) <= iend - 4)
                 {
@@ -180,7 +180,7 @@ public static unsafe partial class Methods
                     threshold = 1 << (nbBits - 1);
                 }
 
-                if (charnum >= maxSV1)
+                if (charnum >= maxSv1)
                     break;
                 if (ip <= iend - 7 || ip + (bitCount >> 3) <= iend - 4)
                 {
@@ -199,12 +199,12 @@ public static unsafe partial class Methods
         }
 
         if (remaining != 1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
-        if (charnum > maxSV1)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
+        if (charnum > maxSv1)
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMaxSymbolValueTooSmall));
         if (bitCount > 32)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
-        *maxSVPtr = charnum - 1;
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
+        *maxSvPtr = charnum - 1;
         ip += (bitCount + 7) >> 3;
         return (nuint)(ip - istart);
     }
@@ -212,13 +212,13 @@ public static unsafe partial class Methods
     /* Avoids the FORCE_INLINE of the _body() function. */
     private static nuint FSE_readNCount_body_default(
         short* normalizedCounter,
-        uint* maxSVPtr,
+        uint* maxSvPtr,
         uint* tableLogPtr,
         void* headerBuffer,
         nuint hbSize
     )
     {
-        return FSE_readNCount_body(normalizedCounter, maxSVPtr, tableLogPtr, headerBuffer, hbSize);
+        return FSE_readNCount_body(normalizedCounter, maxSvPtr, tableLogPtr, headerBuffer, hbSize);
     }
 
     /*! FSE_readNCount_bmi2():
@@ -226,7 +226,7 @@ public static unsafe partial class Methods
      */
     private static nuint FSE_readNCount_bmi2(
         short* normalizedCounter,
-        uint* maxSVPtr,
+        uint* maxSvPtr,
         uint* tableLogPtr,
         void* headerBuffer,
         nuint hbSize,
@@ -235,7 +235,7 @@ public static unsafe partial class Methods
     {
         return FSE_readNCount_body_default(
             normalizedCounter,
-            maxSVPtr,
+            maxSvPtr,
             tableLogPtr,
             headerBuffer,
             hbSize
@@ -249,7 +249,7 @@ public static unsafe partial class Methods
     maxSymbolValuePtr[0] and tableLogPtr[0] will also be updated with their respective values */
     private static nuint FSE_readNCount(
         short* normalizedCounter,
-        uint* maxSVPtr,
+        uint* maxSvPtr,
         uint* tableLogPtr,
         void* headerBuffer,
         nuint hbSize
@@ -257,7 +257,7 @@ public static unsafe partial class Methods
     {
         return FSE_readNCount_bmi2(
             normalizedCounter,
-            maxSVPtr,
+            maxSvPtr,
             tableLogPtr,
             headerBuffer,
             hbSize,
@@ -316,16 +316,16 @@ public static unsafe partial class Methods
         nuint iSize;
         nuint oSize;
         if (srcSize == 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
         iSize = ip[0];
         if (iSize >= 128)
         {
             oSize = iSize - 127;
             iSize = (oSize + 1) / 2;
             if (iSize + 1 > srcSize)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
             if (oSize >= hwSize)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             ip += 1;
             {
                 uint n;
@@ -339,7 +339,7 @@ public static unsafe partial class Methods
         else
         {
             if (iSize + 1 > srcSize)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorSrcSizeWrong));
             oSize = FSE_decompress_wksp_bmi2(
                 huffWeight,
                 hwSize - 1,
@@ -361,18 +361,18 @@ public static unsafe partial class Methods
             for (n = 0; n < oSize; n++)
             {
                 if (huffWeight[n] > 12)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                 rankStats[huffWeight[n]]++;
                 weightTotal += (uint)((1 << huffWeight[n]) >> 1);
             }
         }
 
         if (weightTotal == 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
         {
             var tableLog = ZSTD_highbit32(weightTotal) + 1;
             if (tableLog > 12)
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
             *tableLogPtr = tableLog;
             {
                 var total = (uint)(1 << (int)tableLog);
@@ -380,14 +380,14 @@ public static unsafe partial class Methods
                 var verif = (uint)(1 << (int)ZSTD_highbit32(rest));
                 var lastWeight = ZSTD_highbit32(rest) + 1;
                 if (verif != rest)
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
                 huffWeight[oSize] = (byte)lastWeight;
                 rankStats[lastWeight]++;
             }
         }
 
         if (rankStats[1] < 2 || (rankStats[1] & 1) != 0)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
         *nbSymbolsPtr = (uint)(oSize + 1);
         return iSize + 1;
     }

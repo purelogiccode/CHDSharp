@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct offsetCount_t
+public struct OffsetCountT
 {
     public uint offset;
     public uint count;

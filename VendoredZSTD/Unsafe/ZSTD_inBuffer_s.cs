@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
  *  Streaming
  ****************************/
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_inBuffer_s
+public unsafe struct ZstdInBufferS
 {
     /**
      * < start of input buffer

@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_optimal_t
+public unsafe struct ZstdOptimalT
 {
     public int price;
     public uint off;

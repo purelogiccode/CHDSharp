@@ -7,9 +7,9 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static readonly rawSeqStore_t kNullRawSeqStore = new(null, 0, 0, 0, 0);
+    private static readonly RawSeqStoreT KNullRawSeqStore = new(null, 0, 0, 0, 0);
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> Span_LL_Code =>
+    private static ReadOnlySpan<byte> SpanLlCode =>
         new byte[64]
         {
             0,
@@ -78,10 +78,10 @@ public static unsafe partial class Methods
             24
         };
 
-    private static byte* LL_Code =>
+    private static byte* LlCode =>
         (byte*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_LL_Code)
+            ref MemoryMarshal.GetReference(SpanLlCode)
         );
 #else
     private static readonly byte* LL_Code = GetArrayPointer(
@@ -158,12 +158,12 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_LLcode(uint litLength)
     {
-        const uint LL_deltaCode = 19;
-        return litLength > 63 ? ZSTD_highbit32(litLength) + LL_deltaCode : LL_Code[litLength];
+        const uint llDeltaCode = 19;
+        return litLength > 63 ? ZSTD_highbit32(litLength) + llDeltaCode : LlCode[litLength];
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> Span_ML_Code =>
+    private static ReadOnlySpan<byte> SpanMlCode =>
         new byte[128]
         {
             0,
@@ -296,10 +296,10 @@ public static unsafe partial class Methods
             42
         };
 
-    private static byte* ML_Code =>
+    private static byte* MlCode =>
         (byte*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_ML_Code)
+            ref MemoryMarshal.GetReference(SpanMlCode)
         );
 #else
     private static readonly byte* ML_Code = GetArrayPointer(
@@ -442,15 +442,15 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_MLcode(uint mlBase)
     {
-        const uint ML_deltaCode = 36;
-        return mlBase > 127 ? ZSTD_highbit32(mlBase) + ML_deltaCode : ML_Code[mlBase];
+        const uint mlDeltaCode = 36;
+        return mlBase > 127 ? ZSTD_highbit32(mlBase) + mlDeltaCode : MlCode[mlBase];
     }
 
     /* ZSTD_cParam_withinBounds:
      * @return 1 if value is within cParam bounds,
      * 0 otherwise */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ZSTD_cParam_withinBounds(ZSTD_cParameter cParam, int value)
+    private static int ZSTD_cParam_withinBounds(ZstdCParameter cParam, int value)
     {
         var bounds = ZSTD_cParam_getBounds(cParam);
         if (ERR_isError(bounds.error))
@@ -474,13 +474,13 @@ public static unsafe partial class Methods
         uint lastBlock
     )
     {
-        var cBlockHeader24 = lastBlock + ((uint)blockType_e.bt_raw << 1) + (uint)(srcSize << 3);
-        if (srcSize + ZSTD_blockHeaderSize > dstCapacity)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        var cBlockHeader24 = lastBlock + ((uint)BlockTypeE.BtRaw << 1) + (uint)(srcSize << 3);
+        if (srcSize + ZstdBlockHeaderSize > dstCapacity)
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         MEM_writeLE24(dst, cBlockHeader24);
-        memcpy((byte*)dst + ZSTD_blockHeaderSize, src, (uint)srcSize);
-        return ZSTD_blockHeaderSize + srcSize;
+        memcpy((byte*)dst + ZstdBlockHeaderSize, src, (uint)srcSize);
+        return ZstdBlockHeaderSize + srcSize;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -493,9 +493,9 @@ public static unsafe partial class Methods
     )
     {
         var op = (byte*)dst;
-        var cBlockHeader = lastBlock + ((uint)blockType_e.bt_rle << 1) + (uint)(srcSize << 3);
+        var cBlockHeader = lastBlock + ((uint)BlockTypeE.BtRle << 1) + (uint)(srcSize << 3);
         if (dstCapacity < 4)
-            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
         MEM_writeLE24(op, cBlockHeader);
         op[3] = src;
@@ -507,28 +507,28 @@ public static unsafe partial class Methods
      * to generate a compress block or a compressed literals section.
      * note : use same formula for both situations */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint ZSTD_minGain(nuint srcSize, ZSTD_strategy strat)
+    private static nuint ZSTD_minGain(nuint srcSize, ZstdStrategy strat)
     {
-        var minlog = strat >= ZSTD_strategy.ZSTD_btultra ? (uint)strat - 1 : 6;
-        assert(ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_strategy, (int)strat) != 0);
+        var minlog = strat >= ZstdStrategy.ZstdBtultra ? (uint)strat - 1 : 6;
+        assert(ZSTD_cParam_withinBounds(ZstdCParameter.ZstdCStrategy, (int)strat) != 0);
         return (srcSize >> (int)minlog) + 2;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ZSTD_literalsCompressionIsDisabled(ZSTD_CCtx_params_s* cctxParams)
+    private static int ZSTD_literalsCompressionIsDisabled(ZstdCCtxParamsS* cctxParams)
     {
         switch (cctxParams->literalCompressionMode)
         {
-            case ZSTD_paramSwitch_e.ZSTD_ps_enable:
+            case ZstdParamSwitchE.ZstdPsEnable:
                 return 0;
-            case ZSTD_paramSwitch_e.ZSTD_ps_disable:
+            case ZstdParamSwitchE.ZstdPsDisable:
                 return 1;
             default:
                 assert(0 != 0);
-                goto case ZSTD_paramSwitch_e.ZSTD_ps_auto;
-            case ZSTD_paramSwitch_e.ZSTD_ps_auto:
+                goto case ZstdParamSwitchE.ZstdPsAuto;
+            case ZstdParamSwitchE.ZstdPsAuto:
                 return
-                    cctxParams->cParams.strategy == ZSTD_strategy.ZSTD_fast
+                    cctxParams->cParams.strategy == ZstdStrategy.ZstdFast
                     && cctxParams->cParams.targetLength > 0
                         ? 1
                         : 0;
@@ -540,14 +540,14 @@ public static unsafe partial class Methods
      *  Only called when the sequence ends past ilimit_w, so it only needs to be optimized for single
      *  large copies.
      */
-    private static void ZSTD_safecopyLiterals(byte* op, byte* ip, byte* iend, byte* ilimit_w)
+    private static void ZSTD_safecopyLiterals(byte* op, byte* ip, byte* iend, byte* ilimitW)
     {
-        assert(iend > ilimit_w);
-        if (ip <= ilimit_w)
+        assert(iend > ilimitW);
+        if (ip <= ilimitW)
         {
-            ZSTD_wildcopy(op, ip, (nint)(ilimit_w - ip), ZSTD_overlap_e.ZSTD_no_overlap);
-            op += ilimit_w - ip;
-            ip = ilimit_w;
+            ZSTD_wildcopy(op, ip, (nint)(ilimitW - ip), ZstdOverlapE.ZstdNoOverlap);
+            op += ilimitW - ip;
+            ip = ilimitW;
         }
 
         while (ip < iend)
@@ -563,7 +563,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
     private static void ZSTD_storeSeq(
-        seqStore_t* seqStorePtr,
+        SeqStoreT* seqStorePtr,
         nuint litLength,
         byte* literals,
         byte* litLimit,
@@ -571,7 +571,7 @@ public static unsafe partial class Methods
         nuint matchLength
     )
     {
-        var litLimit_w = litLimit - 32;
+        var litLimitW = litLimit - 32;
         var litEnd = literals + litLength;
         assert(
             (nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart) < seqStorePtr->maxNbSeq
@@ -579,7 +579,7 @@ public static unsafe partial class Methods
         assert(seqStorePtr->maxNbLit <= 128 * (1 << 10));
         assert(seqStorePtr->lit + litLength <= seqStorePtr->litStart + seqStorePtr->maxNbLit);
         assert(literals + litLength <= litLimit);
-        if (litEnd <= litLimit_w)
+        if (litEnd <= litLimitW)
         {
             ZSTD_copy16(seqStorePtr->lit, literals);
             if (litLength > 16)
@@ -587,19 +587,19 @@ public static unsafe partial class Methods
                     seqStorePtr->lit + 16,
                     literals + 16,
                     (nint)litLength - 16,
-                    ZSTD_overlap_e.ZSTD_no_overlap
+                    ZstdOverlapE.ZstdNoOverlap
                 );
         }
         else
         {
-            ZSTD_safecopyLiterals(seqStorePtr->lit, literals, litEnd, litLimit_w);
+            ZSTD_safecopyLiterals(seqStorePtr->lit, literals, litEnd, litLimitW);
         }
 
         seqStorePtr->lit += litLength;
         if (litLength > 0xFFFF)
         {
-            assert(seqStorePtr->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_none);
-            seqStorePtr->longLengthType = ZSTD_longLengthType_e.ZSTD_llt_literalLength;
+            assert(seqStorePtr->longLengthType == ZstdLongLengthTypeE.ZstdLltNone);
+            seqStorePtr->longLengthType = ZstdLongLengthTypeE.ZstdLltLiteralLength;
             seqStorePtr->longLengthPos = (uint)(
                 seqStorePtr->sequences - seqStorePtr->sequencesStart
             );
@@ -612,8 +612,8 @@ public static unsafe partial class Methods
             var mlBase = matchLength - 3;
             if (mlBase > 0xFFFF)
             {
-                assert(seqStorePtr->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_none);
-                seqStorePtr->longLengthType = ZSTD_longLengthType_e.ZSTD_llt_matchLength;
+                assert(seqStorePtr->longLengthType == ZstdLongLengthTypeE.ZstdLltNone);
+                seqStorePtr->longLengthType = ZstdLongLengthTypeE.ZstdLltMatchLength;
                 seqStorePtr->longLengthPos = (uint)(
                     seqStorePtr->sequences - seqStorePtr->sequencesStart
                 );
@@ -654,10 +654,10 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static repcodes_s ZSTD_newRep(uint* rep, uint offBase, uint ll0)
+    private static RepcodesS ZSTD_newRep(uint* rep, uint offBase, uint ll0)
     {
-        repcodes_s newReps;
-        memcpy(&newReps, rep, (uint)sizeof(repcodes_s));
+        RepcodesS newReps;
+        memcpy(&newReps, rep, (uint)sizeof(RepcodesS));
         ZSTD_updateRep(newReps.rep, offBase, ll0);
         return newReps;
     }
@@ -733,13 +733,13 @@ public static unsafe partial class Methods
         return matchLength + ZSTD_count(ip + matchLength, iStart, iEnd);
     }
 
-    private const uint prime3bytes = 506832829U;
+    private const uint Prime3Bytes = 506832829U;
 
     [Inline]
     private static uint ZSTD_hash3(uint u, uint h, uint s)
     {
         assert(h <= 32);
-        return (((u << (32 - 24)) * prime3bytes) ^ s) >> (int)(32 - h);
+        return (((u << (32 - 24)) * Prime3Bytes) ^ s) >> (int)(32 - h);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -755,13 +755,13 @@ public static unsafe partial class Methods
         return ZSTD_hash3(MEM_readLE32(ptr), h, s);
     }
 
-    private const uint prime4bytes = 2654435761U;
+    private const uint Prime4Bytes = 2654435761U;
 
     [Inline]
     private static uint ZSTD_hash4(uint u, uint h, uint s)
     {
         assert(h <= 32);
-        return ((u * prime4bytes) ^ s) >> (int)(32 - h);
+        return ((u * Prime4Bytes) ^ s) >> (int)(32 - h);
     }
 
     [Inline]
@@ -776,13 +776,13 @@ public static unsafe partial class Methods
         return ZSTD_hash4(MEM_readLE32(ptr), h, s);
     }
 
-    private const ulong prime5bytes = 889523592379UL;
+    private const ulong Prime5Bytes = 889523592379UL;
 
     [Inline]
     private static nuint ZSTD_hash5(ulong u, uint h, ulong s)
     {
         assert(h <= 64);
-        return (nuint)((((u << (64 - 40)) * prime5bytes) ^ s) >> (int)(64 - h));
+        return (nuint)((((u << (64 - 40)) * Prime5Bytes) ^ s) >> (int)(64 - h));
     }
 
     [Inline]
@@ -797,13 +797,13 @@ public static unsafe partial class Methods
         return ZSTD_hash5(MEM_readLE64(p), h, s);
     }
 
-    private const ulong prime6bytes = 227718039650203UL;
+    private const ulong Prime6Bytes = 227718039650203UL;
 
     [Inline]
     private static nuint ZSTD_hash6(ulong u, uint h, ulong s)
     {
         assert(h <= 64);
-        return (nuint)((((u << (64 - 48)) * prime6bytes) ^ s) >> (int)(64 - h));
+        return (nuint)((((u << (64 - 48)) * Prime6Bytes) ^ s) >> (int)(64 - h));
     }
 
     [Inline]
@@ -818,13 +818,13 @@ public static unsafe partial class Methods
         return ZSTD_hash6(MEM_readLE64(p), h, s);
     }
 
-    private const ulong prime7bytes = 58295818150454627UL;
+    private const ulong Prime7Bytes = 58295818150454627UL;
 
     [Inline]
     private static nuint ZSTD_hash7(ulong u, uint h, ulong s)
     {
         assert(h <= 64);
-        return (nuint)((((u << (64 - 56)) * prime7bytes) ^ s) >> (int)(64 - h));
+        return (nuint)((((u << (64 - 56)) * Prime7Bytes) ^ s) >> (int)(64 - h));
     }
 
     [Inline]
@@ -839,13 +839,13 @@ public static unsafe partial class Methods
         return ZSTD_hash7(MEM_readLE64(p), h, s);
     }
 
-    private const ulong prime8bytes = 0xCF1BBCDCB7A56463UL;
+    private const ulong Prime8Bytes = 0xCF1BBCDCB7A56463UL;
 
     [Inline]
     private static nuint ZSTD_hash8(ulong u, uint h, ulong s)
     {
         assert(h <= 64);
-        return (nuint)(((u * prime8bytes) ^ s) >> (int)(64 - h));
+        return (nuint)(((u * Prime8Bytes) ^ s) >> (int)(64 - h));
     }
 
     [Inline]
@@ -916,7 +916,7 @@ public static unsafe partial class Methods
         nuint pos;
         for (pos = 0; pos < size; ++pos)
         {
-            hash *= prime8bytes;
+            hash *= Prime8Bytes;
             hash += (ulong)(istart[pos] + 10);
         }
 
@@ -939,7 +939,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong ZSTD_rollingHash_primePower(uint length)
     {
-        return ZSTD_ipow(prime8bytes, length - 1);
+        return ZSTD_ipow(Prime8Bytes, length - 1);
     }
 
     /** ZSTD_rollingHash_rotate() :
@@ -954,7 +954,7 @@ public static unsafe partial class Methods
     )
     {
         hash -= (ulong)(toRemove + 10) * primePower;
-        hash *= prime8bytes;
+        hash *= Prime8Bytes;
         hash += (ulong)(toAdd + 10);
         return hash;
     }
@@ -964,7 +964,7 @@ public static unsafe partial class Methods
      * Clears the window containing the history by simply setting it to empty.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_window_clear(ZSTD_window_t* window)
+    private static void ZSTD_window_clear(ZstdWindowT* window)
     {
         var endT = (nuint)(window->nextSrc - window->@base);
         var end = (uint)endT;
@@ -973,7 +973,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_isEmpty(ZSTD_window_t window)
+    private static uint ZSTD_window_isEmpty(ZstdWindowT window)
     {
         return window.dictLimit == 2 && window.lowLimit == 2 && window.nextSrc - window.@base == 2
             ? 1U
@@ -985,7 +985,7 @@ public static unsafe partial class Methods
      * Returns non-zero if the window has a non-empty extDict.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_window_hasExtDict(ZSTD_window_t window)
+    private static uint ZSTD_window_hasExtDict(ZstdWindowT window)
     {
         return window.lowLimit < window.dictLimit ? 1U : 0U;
     }
@@ -996,15 +996,15 @@ public static unsafe partial class Methods
      * passed to the compressor.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ZSTD_dictMode_e ZSTD_matchState_dictMode(ZSTD_matchState_t* ms)
+    private static ZstdDictModeE ZSTD_matchState_dictMode(ZstdMatchStateT* ms)
     {
         return ZSTD_window_hasExtDict(ms->window) != 0
-            ? ZSTD_dictMode_e.ZSTD_extDict
+            ? ZstdDictModeE.ZstdExtDict
             : ms->dictMatchState != null
                 ? ms->dictMatchState->dedicatedDictSearch != 0
-                    ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
-                    : ZSTD_dictMode_e.ZSTD_dictMatchState
-                : ZSTD_dictMode_e.ZSTD_noDict;
+                    ? ZstdDictModeE.ZstdDedicatedDictSearch
+                    : ZstdDictModeE.ZstdDictMatchState
+                : ZstdDictModeE.ZstdNoDict;
     }
 
     /**
@@ -1014,7 +1014,7 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_window_canOverflowCorrect(
-        ZSTD_window_t window,
+        ZstdWindowT window,
         uint cycleLog,
         uint maxDist,
         uint loadedDictEnd,
@@ -1049,7 +1049,7 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_window_needOverflowCorrection(
-        ZSTD_window_t window,
+        ZstdWindowT window,
         uint cycleLog,
         uint maxDist,
         uint loadedDictEnd,
@@ -1072,7 +1072,7 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_window_correctOverflow(
-        ZSTD_window_t* window,
+        ZstdWindowT* window,
         uint cycleLog,
         uint maxDist,
         void* src
@@ -1163,11 +1163,11 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ZSTD_window_enforceMaxDist(
-        ZSTD_window_t* window,
+        ZstdWindowT* window,
         void* blockEnd,
         uint maxDist,
         uint* loadedDictEndPtr,
-        ZSTD_matchState_t** dictMatchStatePtr
+        ZstdMatchStateT** dictMatchStatePtr
     )
     {
         var blockEndIdx = (uint)((byte*)blockEnd - window->@base);
@@ -1195,11 +1195,11 @@ public static unsafe partial class Methods
      *              maxDist is the window size */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ZSTD_checkDictValidity(
-        ZSTD_window_t* window,
+        ZstdWindowT* window,
         void* blockEnd,
         uint maxDist,
         uint* loadedDictEndPtr,
-        ZSTD_matchState_t** dictMatchStatePtr
+        ZstdMatchStateT** dictMatchStatePtr
     )
     {
         assert(loadedDictEndPtr != null);
@@ -1217,22 +1217,22 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> Span_stringToByte_20_00 => new byte[] { 32, 0 };
-    private static byte* stringToByte_20_00 =>
+    private static ReadOnlySpan<byte> SpanStringToByte2000 => new byte[] { 32, 0 };
+    private static byte* StringToByte2000 =>
         (byte*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_stringToByte_20_00)
+            ref MemoryMarshal.GetReference(SpanStringToByte2000)
         );
 #else
     private static readonly byte* stringToByte_20_00 = GetArrayPointer(new byte[] { 32, 0 });
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_window_init(ZSTD_window_t* window)
+    private static void ZSTD_window_init(ZstdWindowT* window)
     {
-        memset(window, 0, (uint)sizeof(ZSTD_window_t));
-        window->@base = stringToByte_20_00;
-        window->dictBase = stringToByte_20_00;
+        memset(window, 0, (uint)sizeof(ZstdWindowT));
+        window->@base = StringToByte2000;
+        window->dictBase = StringToByte2000;
         window->dictLimit = 2;
         window->lowLimit = 2;
         window->nextSrc = window->@base + 2;
@@ -1248,7 +1248,7 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_window_update(
-        ZSTD_window_t* window,
+        ZstdWindowT* window,
         void* src,
         nuint srcSize,
         int forceNonContiguous
@@ -1293,7 +1293,7 @@ public static unsafe partial class Methods
      * Returns the lowest allowed match index. It may either be in the ext-dict or the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_getLowestMatchIndex(ZSTD_matchState_t* ms, uint curr, uint windowLog)
+    private static uint ZSTD_getLowestMatchIndex(ZstdMatchStateT* ms, uint curr, uint windowLog)
     {
         var maxDistance = 1U << (int)windowLog;
         var lowestValid = ms->window.lowLimit;
@@ -1311,7 +1311,7 @@ public static unsafe partial class Methods
      * Returns the lowest allowed match index in the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_getLowestPrefixIndex(ZSTD_matchState_t* ms, uint curr, uint windowLog)
+    private static uint ZSTD_getLowestPrefixIndex(ZstdMatchStateT* ms, uint curr, uint windowLog)
     {
         var maxDistance = 1U << (int)windowLog;
         var lowestValid = ms->window.dictLimit;

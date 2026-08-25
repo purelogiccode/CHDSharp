@@ -4,10 +4,10 @@ namespace VendoredZSTD.Unsafe;
 
 /* Struct containing info needed to make decision about ldm inclusion */
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_optLdm_t
+public struct ZstdOptLdmT
 {
     /* External match candidates store for this block */
-    public rawSeqStore_t seqStore;
+    public RawSeqStoreT seqStore;
 
     /* Start position of the current match candidate */
     public uint startPosInBlock;

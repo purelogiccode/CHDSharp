@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct sortedSymbol_t
+public struct SortedSymbolT
 {
     public byte symbol;
 }

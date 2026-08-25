@@ -12,7 +12,7 @@ public class DecompressionStream : Stream
     private readonly bool leaveOpen;
     private readonly bool checkEndOfStream;
     private Decompressor? decompressor;
-    private ZSTD_inBuffer_s input;
+    private ZstdInBufferS input;
     private nuint lastDecompressResult;
     private bool contextDrained = true;
 
@@ -53,16 +53,16 @@ public class DecompressionStream : Stream
         inputBufferSize =
             bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
         inputBuffer = ArrayPool<byte>.Shared.Rent(inputBufferSize);
-        input = new ZSTD_inBuffer_s { pos = (nuint)inputBufferSize, size = (nuint)inputBufferSize };
+        input = new ZstdInBufferS { pos = (nuint)inputBufferSize, size = (nuint)inputBufferSize };
     }
 
-    public void SetParameter(ZSTD_dParameter parameter, int value)
+    public void SetParameter(ZstdDParameter parameter, int value)
     {
         EnsureNotDisposed();
         decompressor!.SetParameter(parameter, value);
     }
 
-    public int GetParameter(ZSTD_dParameter parameter)
+    public int GetParameter(ZstdDParameter parameter)
     {
         EnsureNotDisposed();
         return decompressor!.GetParameter(parameter);
@@ -112,7 +112,7 @@ public class DecompressionStream : Stream
         if (buffer.Length == 0)
             return 0;
 
-        var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
+        var output = new ZstdOutBufferS { pos = 0, size = (nuint)buffer.Length };
         while (true)
         {
             // If there is still input available, or there might be data buffered in the decompressor context, flush that out
@@ -174,7 +174,7 @@ public class DecompressionStream : Stream
         if (buffer.Length == 0)
             return 0;
 
-        var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
+        var output = new ZstdOutBufferS { pos = 0, size = (nuint)buffer.Length };
         while (true)
         {
             // If there is still input available, or there might be data buffered in the decompressor context, flush that out
@@ -214,7 +214,7 @@ public class DecompressionStream : Stream
         }
     }
 
-    private unsafe nuint DecompressStream(ref ZSTD_outBuffer_s output, Span<byte> outputBuffer)
+    private unsafe nuint DecompressStream(ref ZstdOutBufferS output, Span<byte> outputBuffer)
     {
         fixed (byte* inputBufferPtr = inputBuffer)
         fixed (byte* outputBufferPtr = outputBuffer)

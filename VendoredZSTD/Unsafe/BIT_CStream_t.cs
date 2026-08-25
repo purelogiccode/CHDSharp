@@ -10,7 +10,7 @@ namespace VendoredZSTD.Unsafe;
  * So the first bit sequence you add will be the last to be read, like a LIFO stack.
  */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct BIT_CStream_t
+public unsafe struct BitCStreamT
 {
     public nuint bitContainer;
     public uint bitPos;

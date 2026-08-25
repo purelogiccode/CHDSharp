@@ -3,10 +3,10 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ldmMatchCandidate_t
+public unsafe struct LdmMatchCandidateT
 {
     public byte* split;
     public uint hash;
     public uint checksum;
-    public ldmEntry_t* bucket;
+    public LdmEntryT* bucket;
 }

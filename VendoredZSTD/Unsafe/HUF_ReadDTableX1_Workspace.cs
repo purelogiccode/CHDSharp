@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct HUF_ReadDTableX1_Workspace
+public unsafe struct HufReadDTableX1Workspace
 {
     public fixed uint rankVal[13];
     public fixed uint rankStart[13];

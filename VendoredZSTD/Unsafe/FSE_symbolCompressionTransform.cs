@@ -6,7 +6,7 @@ namespace VendoredZSTD.Unsafe;
  *  Implementation of inlined functions
  *******************************************/
 [StructLayout(LayoutKind.Sequential)]
-public struct FSE_symbolCompressionTransform
+public struct FseSymbolCompressionTransform
 {
     public int deltaFindState;
     public uint deltaNbBits;

@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct roundBuff_t
+public unsafe struct RoundBuffT
 {
     /* The round input buffer. All jobs get references
      * to pieces of the buffer. ZSTDMT_tryGetInputRange()
@@ -22,7 +22,7 @@ public unsafe struct roundBuff_t
      */
     public nuint pos;
 
-    public roundBuff_t(byte* buffer, nuint capacity, nuint pos)
+    public RoundBuffT(byte* buffer, nuint capacity, nuint pos)
     {
         this.buffer = buffer;
         this.capacity = capacity;

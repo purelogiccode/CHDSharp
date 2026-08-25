@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZSTD_frameProgression
+public struct ZstdFrameProgression
 {
     /* nb input bytes read and buffered */
     public ulong ingested;

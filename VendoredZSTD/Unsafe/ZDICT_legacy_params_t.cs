@@ -3,9 +3,9 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ZDICT_legacy_params_t
+public struct ZdictLegacyParamsT
 {
     /* 0 means default; larger => select more => larger dictionary */
     public uint selectivityLevel;
-    public ZDICT_params_t zParams;
+    public ZdictParamsT zParams;
 }

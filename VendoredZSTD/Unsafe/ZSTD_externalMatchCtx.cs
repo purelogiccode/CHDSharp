@@ -4,10 +4,10 @@ namespace VendoredZSTD.Unsafe;
 
 /* Context for block-level external matchfinder API */
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZSTD_externalMatchCtx
+public unsafe struct ZstdExternalMatchCtx
 {
     public void* mState;
     public void* mFinder;
-    public ZSTD_Sequence* seqBuffer;
+    public ZstdSequence* seqBuffer;
     public nuint seqBufferCapacity;
 }

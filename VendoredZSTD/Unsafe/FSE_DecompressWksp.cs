@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct FSE_DecompressWksp
+public unsafe struct FseDecompressWksp
 {
     public fixed short ncount[256];
 
