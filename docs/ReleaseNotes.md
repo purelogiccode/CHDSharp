@@ -19,7 +19,8 @@ With the 1.5.5 tree the encoder matches `chdman` **byte-for-byte on every hunk**
 
 Verified per-hunk against `chdman` for all three previously-failing `cdzs` encode cases
 (cd-mixed, cd-audio, disc-iso) and across the full battle harness: the synthetic corpus
-now passes **2611/2611 checks**.
+now passes **2611/2611 checks**, and a real-world scan of 56 CHDs (`--real`) passes
+**3003/3003 checks** — the first fully clean real-corpus run.
 
 ## CHDSharp v1.4.0
 
@@ -44,7 +45,8 @@ The new `CHDSharpBattleTest` harness exhaustively cross-checks the CHDSharpLib *
 and the CHDSharp.Encoder **encoder** against MAME's `chdman.exe` on a deterministic corpus
 of raw and CD images — `chdman create*`, `verify`, `info`, extract parity, and **byte-identical
 encode** checks for every writable codec, plus delta/parent, CD, and A/V laserdisc scenarios.
-The full suite passes **2611/2611 checks**. It can also scan real-world `*.chd` folders
+The full suite passes **2611/2611 checks** (synthetic corpus); a real-world scan of 56 CHDs
+passes **3003/3003 checks**. It can also scan real-world `*.chd` folders
 (`--real <dir>`) to battle-test any collection. See [Testing](testing.md).
 
 ### Byte-for-byte parity with chdman for all codecs

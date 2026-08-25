@@ -98,7 +98,8 @@ dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidatio
 > The generator is deterministic: regenerating produces byte-identical fixtures.
 
 The **battle harness** (`CHDSharpBattleTest`) cross-checks the decoder and encoder against
-`chdman.exe` (2611/2611 checks on the deterministic corpus), and can also scan real-world CHD
+`chdman.exe` (2611/2611 checks on the deterministic corpus; 3003/3003 on a real-world
+scan of 56 CHDs), and can also scan any real-world CHD
 folders via `--real <dir>`:
 
 ```bash

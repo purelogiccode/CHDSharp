@@ -16,7 +16,7 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 ## What's New in v1.4.0
 
 - **Full `chdman` CLI argument parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand: `info`, `verify`, `createraw`, `createhd`, `createcd`, `createdvd`, `createld`, `extractraw`, `extracthd`, `extractcd`, `extractdvd`, `extractld`, `copy`, `addmeta`, `delmeta`, `dumpmeta`, `listtemplates`.
-- **Full `chdman` battle-test parity (2611/2611)** — the new `CHDSharpBattleTest` harness cross-checks the decoder and encoder against `chdman.exe` on deterministic and real-world CHD corpora.
+- **Full `chdman` battle-test parity (2611/2611 + 3003/3003)** — the new `CHDSharpBattleTest` harness cross-checks the decoder and encoder against `chdman.exe` on deterministic and real-world CHD corpora.
 - **Byte-for-byte parity for *every* codec** — including `createld` (AVHuff), `cdzs`, and `zstd`.
 - **Zero external NuGet dependencies** — `VendoredZSTD` (a pure C# port of MAME's zstd 1.5.5) replaces the `ZstdSharp.Port` package.
 - **38 bugs fixed** from a deep code review.
@@ -281,6 +281,11 @@ CHDSharp createdvd -o out.chd -i in.iso [-c lzma,zlib,huff,flac] [-v]
 CHDSharp copy -o out.chd -i in.chd [-c zlib,zstd,lzma,none] [-np 8] [-ip parent.chd] [-op parent.chd] [-v]
 ```
 
+`-np N` sets the parallel worker count (1-64, default 8): it tunes encode/verify *speed*
+only and never changes the output bytes — any value keeps the byte-for-byte `chdman`
+parity. (`chdman`'s own compression queue caps at 16 workers and its `verify` is
+single-threaded.)
+
 ---
 
 ## Features
@@ -520,7 +525,7 @@ The full wiki lives in [`docs/`](docs/README.md):
 |---------|------|-------------|
 | `CHDSharpTest` | xUnit | Unit + corpus tests (602 tests, 30 CHD fixtures) |
 | `CHDSharpEncoderTest` | xUnit | Encoder tests (434 tests, chdman cross-validation) |
-| `CHDSharpBattleTest` | Console | Battle harness: 2611/2611 checks vs `chdman` on deterministic + real-world corpora |
+| `CHDSharpBattleTest` | Console | Battle harness: 2611/2611 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator |
 

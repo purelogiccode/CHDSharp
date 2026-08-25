@@ -128,6 +128,22 @@ CHDSharp copy -o out.chd -i in.chd [-c zlib,zstd,lzma,none] [-np 8] [-ip parent.
 
 All commands deep-verify the result with CHDSharpLib before exiting.
 
+### Threads and `-np`
+
+`-np N` (legacy alias `-t N`) sets the parallel worker count for the current command
+(**1-64**, default `Chd.TaskCount` = 8). It only affects *speed*:
+
+- encode commands (`createraw`, `createhd`, `createcd`, `createdvd`, `createld`, `copy`)
+  run the hunk pipeline with `N` compression workers;
+- `verify` uses the same knob for its parallel decompression + hashing workers;
+- `info`, `extract*`, and metadata commands are single-threaded and ignore `-np`.
+
+The worker count **never changes the output bytes** — hunks compress independently and
+`ParallelEncodeTests` asserts byte-identical output across task counts, so any `-np`
+value keeps `chdman` byte parity. For reference, `chdman` caps its own compression queue
+at 16 workers (`WORK_MAX_THREADS`) and its `verify` is single-threaded, so CHDSharp's
+default of 8 (and its 64 ceiling) already matches or exceeds it on any machine.
+
 ## Status
 
 All chdman-reachable features are implemented: all 10 writable codecs (including `avhu`

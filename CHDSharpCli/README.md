@@ -126,7 +126,7 @@ CHDSharp listtemplates
 | `--compression` | `-c` | Codecs (comma-separated: `zlib,zstd,lzma,huff,flac,cdzl,cdlz,cdzs,cdfl,avhu,none`) |
 | `--hunksize` | `-hs` | Hunk size in bytes |
 | `--unitsize` | `-us` | Unit size in bytes |
-| `--numprocessors` | `-np` | Parallel worker count |
+| `--numprocessors` | `-np` | Parallel worker count (default 8, range 1-64; speed only — never changes output bytes) |
 | `--verbose` | `-v` | Per-hunk compression logging |
 | `--force` | `-f` | Overwrite existing output |
 | `--tag` | `-t` | 4-character metadata tag |
