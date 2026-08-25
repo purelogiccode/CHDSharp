@@ -183,13 +183,13 @@ namespace VendoredZSTD.Unsafe
                 @params->hashLog = 6 > @params->windowLog - 7 ? 6 : @params->windowLog - 7;
                 assert(
                     @params->hashLog
-                        <= (uint)(
-                            (sizeof(nuint) == 4 ? 30 : 31) < 30
-                                ? sizeof(nuint) == 4
-                                    ? 30
-                                    : 31
-                                : 30
-                        )
+                    <= (uint)(
+                        (sizeof(nuint) == 4 ? 30 : 31) < 30
+                            ? sizeof(nuint) == 4
+                                ? 30
+                                : 31
+                            : 30
+                    )
                 );
             }
 
@@ -646,7 +646,7 @@ namespace VendoredZSTD.Unsafe
             nuint leftoverSize = 0;
             assert(
                 unchecked((uint)-1) - ((3U << 29) + (1U << (sizeof(nuint) == 4 ? 30 : 31)))
-                    >= kMaxChunkSize
+                >= kMaxChunkSize
             );
             assert(ldmState->window.nextSrc >= (byte*)src + srcSize);
             assert(sequences->pos <= sequences->size);

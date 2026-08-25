@@ -314,6 +314,7 @@ namespace VendoredZSTD.Unsafe
                     nextStep += kStepIncr;
                 }
             } while (ip3 < ilimit);
+
             _cleanup:
             offsetSaved2 = offsetSaved1 != 0 && rep_offset1 != 0 ? offsetSaved1 : offsetSaved2;
             rep[0] = rep_offset1 != 0 ? rep_offset1 : offsetSaved1;
@@ -1054,6 +1055,7 @@ namespace VendoredZSTD.Unsafe
                     nextStep += kStepIncr;
                 }
             } while (ip3 < ilimit);
+
             _cleanup:
             offsetSaved2 = offsetSaved1 != 0 && offset_1 != 0 ? offsetSaved1 : offsetSaved2;
             rep[0] = offset_1 != 0 ? offset_1 : offsetSaved1;

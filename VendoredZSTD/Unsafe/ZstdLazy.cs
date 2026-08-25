@@ -527,7 +527,7 @@ namespace VendoredZSTD.Unsafe
 
                     if (count == cacheSize)
                     {
-                        for (count = 0; count < chainLimit; )
+                        for (count = 0; count < chainLimit;)
                         {
                             if (i < minChain)
                             {
@@ -565,7 +565,7 @@ namespace VendoredZSTD.Unsafe
                 assert(chainPos <= chainSize);
             }
 
-            for (hashIdx = (uint)(1 << (int)hashLog); hashIdx != 0; )
+            for (hashIdx = (uint)(1 << (int)hashLog); hashIdx != 0;)
             {
                 uint bucketIdx = --hashIdx << 2;
                 uint chainPackedPointer = tmpHashTable[hashIdx];
@@ -1083,12 +1083,12 @@ namespace VendoredZSTD.Unsafe
                 uint pos = ZSTD_row_nextIndex(tagRow, rowMask);
                 assert(
                     hash
-                        == ZSTD_hashPtrSalted(
-                            @base + updateStartIdx,
-                            hashLog + 8,
-                            mls,
-                            ms->hashSalt
-                        )
+                    == ZSTD_hashPtrSalted(
+                        @base + updateStartIdx,
+                        hashLog + 8,
+                        mls,
+                        ms->hashSalt
+                    )
                 );
                 tagRow[pos] = (byte)(hash & (1U << 8) - 1);
                 row[pos] = updateStartIdx;

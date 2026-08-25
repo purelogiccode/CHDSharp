@@ -28,9 +28,11 @@ namespace VendoredZSTD.Unsafe
         private static readonly nuint* ZSTD_fcs_fieldSize = GetArrayPointer(
             new nuint[4] { 0, 2, 4, 8 }
         );
+
         private static readonly nuint* ZSTD_did_fieldSize = GetArrayPointer(
             new nuint[4] { 0, 1, 2, 4 }
         );
+
         private const uint ZSTD_blockHeaderSize = 3;
 #if NET7_0_OR_GREATER
         private static ReadOnlySpan<byte> Span_LL_bits =>

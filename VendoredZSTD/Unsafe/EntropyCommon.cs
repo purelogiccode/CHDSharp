@@ -92,7 +92,7 @@ namespace VendoredZSTD.Unsafe
             remaining = (1 << nbBits) + 1;
             threshold = 1 << nbBits;
             nbBits++;
-            for (; ; )
+            for (;;)
             {
                 if (previous0 != 0)
                 {

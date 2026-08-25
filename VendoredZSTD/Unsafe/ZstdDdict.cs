@@ -282,7 +282,7 @@ namespace VendoredZSTD.Unsafe
         )
         {
             return (nuint)sizeof(ZSTD_DDict_s)
-                + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
+                   + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
         }
 
         public static nuint ZSTD_sizeof_DDict(ZSTD_DDict_s* ddict)

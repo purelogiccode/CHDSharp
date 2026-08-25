@@ -443,9 +443,9 @@ namespace VendoredZSTD.Unsafe
                     nuint error;
                     assert(
                         seqStore.seq != null
-                            && seqStore.pos == 0
-                            && seqStore.size == 0
-                            && seqStore.capacity > 0
+                        && seqStore.pos == 0
+                        && seqStore.size == 0
+                        && seqStore.capacity > 0
                     );
                     assert(src.size <= serialState->@params.jobSize);
                     ZSTD_window_update(&serialState->ldmState.window, src.start, src.size, 0);
@@ -972,13 +972,13 @@ namespace VendoredZSTD.Unsafe
             if (mtctx == null)
                 return 0;
             return (nuint)sizeof(ZSTDMT_CCtx_s)
-                + POOL_sizeof(mtctx->factory)
-                + ZSTDMT_sizeof_bufferPool(mtctx->bufPool)
-                + (mtctx->jobIDMask + 1) * (uint)sizeof(ZSTDMT_jobDescription)
-                + ZSTDMT_sizeof_CCtxPool(mtctx->cctxPool)
-                + ZSTDMT_sizeof_seqPool(mtctx->seqPool)
-                + ZSTD_sizeof_CDict(mtctx->cdictLocal)
-                + mtctx->roundBuff.capacity;
+                   + POOL_sizeof(mtctx->factory)
+                   + ZSTDMT_sizeof_bufferPool(mtctx->bufPool)
+                   + (mtctx->jobIDMask + 1) * (uint)sizeof(ZSTDMT_jobDescription)
+                   + ZSTDMT_sizeof_CCtxPool(mtctx->cctxPool)
+                   + ZSTDMT_sizeof_seqPool(mtctx->seqPool)
+                   + ZSTD_sizeof_CDict(mtctx->cdictLocal)
+                   + mtctx->roundBuff.capacity;
         }
 
         /* ZSTDMT_resize() :
@@ -1521,7 +1521,7 @@ namespace VendoredZSTD.Unsafe
                         memcpy(
                             (sbyte*)output->dst + output->pos,
                             (sbyte*)mtctx->jobs[wJobID].dstBuff.start
-                                + mtctx->jobs[wJobID].dstFlushed,
+                            + mtctx->jobs[wJobID].dstFlushed,
                             (uint)toFlush
                         );
                     }
@@ -1619,8 +1619,8 @@ namespace VendoredZSTD.Unsafe
             return
                 ZSTDMT_isOverlapped(buffer, extDict) != 0
                 || ZSTDMT_isOverlapped(buffer, prefix) != 0
-                ? 1
-                : 0;
+                    ? 1
+                    : 0;
         }
 
         private static void ZSTDMT_waitForLdmComplete(ZSTDMT_CCtx_s* mtctx, buffer_s buffer)
@@ -1828,8 +1828,8 @@ namespace VendoredZSTD.Unsafe
             {
                 assert(
                     mtctx->inBuff.filled == 0
-                        || mtctx->inBuff.filled == mtctx->targetSectionSize
-                        || mtctx->@params.rsyncable != 0
+                    || mtctx->inBuff.filled == mtctx->targetSectionSize
+                    || mtctx->@params.rsyncable != 0
                 );
                 endOp = ZSTD_EndDirective.ZSTD_e_flush;
             }

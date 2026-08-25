@@ -330,8 +330,8 @@ namespace VendoredZSTD.Unsafe
             uint regMask = (uint)(sizeof(nuint) * 8 - 1);
             assert(nbBits >= 1);
             return bitD->bitContainer
-                << (int)(bitD->bitsConsumed & regMask)
-                >> (int)(regMask + 1 - nbBits & regMask);
+                   << (int)(bitD->bitsConsumed & regMask)
+                   >> (int)(regMask + 1 - nbBits & regMask);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -430,8 +430,8 @@ namespace VendoredZSTD.Unsafe
         {
             return
                 DStream->ptr == DStream->start && DStream->bitsConsumed == (uint)(sizeof(nuint) * 8)
-                ? 1U
-                : 0U;
+                    ? 1U
+                    : 0U;
         }
 
         /*-********************************************************
@@ -533,8 +533,8 @@ namespace VendoredZSTD.Unsafe
             uint regMask = (uint)(sizeof(nuint) * 8 - 1);
             assert(nbBits >= 1);
             return bitD.bitContainer
-                << (int)(bitD.bitsConsumed & regMask)
-                >> (int)(regMask + 1 - nbBits & regMask);
+                   << (int)(bitD.bitsConsumed & regMask)
+                   >> (int)(regMask + 1 - nbBits & regMask);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

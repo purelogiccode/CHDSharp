@@ -485,7 +485,7 @@ namespace VendoredZSTD.Unsafe
 
                 if ((nuint)(oend - op4) >= (nuint)sizeof(nuint))
                 {
-                    for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0; )
+                    for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0;)
                     {
                         if (MEM_64bits)
                             *op1++ = HUF_decodeSymbolX1(&bitD1, dt, dtLog);
@@ -614,7 +614,7 @@ namespace VendoredZSTD.Unsafe
             op3 = args->op.e3;
             assert(BitConverter.IsLittleEndian);
             assert(!MEM_32bits);
-            for (; ; )
+            for (;;)
             {
                 byte* olimit;
                 {
@@ -1213,16 +1213,16 @@ namespace VendoredZSTD.Unsafe
                         memcpy(DTable + 2, &DEltX2, sizeof(ulong));
                         break;
                     default:
+                    {
+                        int i;
+                        for (i = 0; i < skipSize; i += 8)
                         {
-                            int i;
-                            for (i = 0; i < skipSize; i += 8)
-                            {
-                                memcpy(DTable + i + 0, &DEltX2, sizeof(ulong));
-                                memcpy(DTable + i + 2, &DEltX2, sizeof(ulong));
-                                memcpy(DTable + i + 4, &DEltX2, sizeof(ulong));
-                                memcpy(DTable + i + 6, &DEltX2, sizeof(ulong));
-                            }
+                            memcpy(DTable + i + 0, &DEltX2, sizeof(ulong));
+                            memcpy(DTable + i + 2, &DEltX2, sizeof(ulong));
+                            memcpy(DTable + i + 4, &DEltX2, sizeof(ulong));
+                            memcpy(DTable + i + 6, &DEltX2, sizeof(ulong));
                         }
+                    }
 
                         break;
                 }
@@ -1357,7 +1357,9 @@ namespace VendoredZSTD.Unsafe
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
             if (tableLog <= 11 && maxTableLog > 11)
                 maxTableLog = 11;
-            for (maxW = tableLog; wksp->rankStats[maxW] == 0; maxW--) { }
+            for (maxW = tableLog; wksp->rankStats[maxW] == 0; maxW--)
+            {
+            }
 
             {
                 uint w,
@@ -1648,7 +1650,7 @@ namespace VendoredZSTD.Unsafe
 
                 if ((nuint)(oend - op4) >= (nuint)sizeof(nuint))
                 {
-                    for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0; )
+                    for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0;)
                     {
                         if (MEM_64bits)
                             op1 += HUF_decodeSymbolX2(op1, &bitD1, dt, dtLog);
@@ -1784,7 +1786,7 @@ namespace VendoredZSTD.Unsafe
             oend3 = args->oend;
             assert(BitConverter.IsLittleEndian);
             assert(!MEM_32bits);
-            for (; ; )
+            for (;;)
             {
                 byte* olimit;
                 {

@@ -12,22 +12,20 @@ namespace VendoredZSTD.Unsafe
     public static unsafe partial class Methods
     {
         /*-**************************************************************
-        *  Memory I/O API
+         *  Memory I/O API
          * Can be rewritten with System.Runtime.CompilerServices.Unsafe
          * ReadUnaligned / WriteUnaligned
          * but unfortunately reduces inlining in .NET 5 or below
-        *****************************************************************/
+         *****************************************************************/
         /*=== Static platform detection ===*/
         public static bool MEM_32bits
         {
-            [InlineMethod.Inline]
-            get => sizeof(nint) == 4;
+            [InlineMethod.Inline] get => sizeof(nint) == 4;
         }
 
         public static bool MEM_64bits
         {
-            [InlineMethod.Inline]
-            get => sizeof(nint) == 8;
+            [InlineMethod.Inline] get => sizeof(nint) == 8;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

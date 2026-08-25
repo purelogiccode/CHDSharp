@@ -185,7 +185,7 @@ namespace VendoredZSTD.Unsafe
             for (
                 ;
                 BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_unfinished
-                    && op < olimit;
+                && op < olimit;
                 op += 4
             )
             {
@@ -311,7 +311,7 @@ namespace VendoredZSTD.Unsafe
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
             assert(
                 (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
-                    <= wkspSize
+                <= wkspSize
             );
             workSpace =
                 (byte*)workSpace

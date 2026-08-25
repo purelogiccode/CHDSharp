@@ -26,7 +26,9 @@ namespace VendoredZSTD
             bool checkEndOfStream = true,
             bool leaveOpen = true
         )
-            : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen) { }
+            : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen)
+        {
+        }
 
         public DecompressionStream(
             Stream stream,
@@ -91,6 +93,7 @@ namespace VendoredZSTD
             {
                 decompressor.Dispose();
             }
+
             decompressor = null;
 
             ArrayPool<byte>.Shared.Return(inputBuffer);
@@ -131,6 +134,7 @@ namespace VendoredZSTD
                         // Keep result from last decompress call that made some progress, so we known if we're at end of frame
                         lastDecompressResult = result;
                     }
+
                     // If decompression filled the output buffer, there might still be data buffered in the decompressor context
                     contextDrained = output.pos < output.size;
                     // If we have data to return, return it immediately, so we won't stall on Read
@@ -197,6 +201,7 @@ namespace VendoredZSTD
                         // Keep result from last decompress call that made some progress, so we known if we're at end of frame
                         lastDecompressResult = result;
                     }
+
                     // If decompression filled the output buffer, there might still be data buffered in the decompressor context
                     contextDrained = output.pos < output.size;
                     // If we have data to return, return it immediately, so we won't stall on Read

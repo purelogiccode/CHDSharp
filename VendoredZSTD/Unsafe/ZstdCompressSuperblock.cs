@@ -61,7 +61,7 @@ namespace VendoredZSTD.Unsafe
             assert(litSize > 0);
             assert(
                 hufMetadata->hType == symbolEncodingType_e.set_compressed
-                    || hufMetadata->hType == symbolEncodingType_e.set_repeat
+                || hufMetadata->hType == symbolEncodingType_e.set_repeat
             );
             if (writeEntropy != 0 && hufMetadata->hType == symbolEncodingType_e.set_compressed)
             {
@@ -764,6 +764,7 @@ namespace VendoredZSTD.Unsafe
                     }
                 }
             } while (lastSequence == 0);
+
             if (writeLitEntropy != 0)
             {
                 memcpy(

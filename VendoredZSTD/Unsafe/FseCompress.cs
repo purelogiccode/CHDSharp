@@ -37,10 +37,10 @@ namespace VendoredZSTD.Unsafe
             assert(((nuint)workSpace & 1) == 0);
             if (
                 sizeof(uint)
-                    * (
-                        (maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2
-                        + sizeof(ulong) / sizeof(uint)
-                    )
+                * (
+                    (maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2
+                    + sizeof(ulong) / sizeof(uint)
+                )
                 > wkspSize
             )
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
@@ -164,16 +164,16 @@ namespace VendoredZSTD.Unsafe
                         default:
                             assert(normalizedCounter[s] > 1);
 
-                            {
-                                uint maxBitsOut =
-                                    tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
-                                uint minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
-                                symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
-                                symbolTT[s].deltaFindState = (int)(
-                                    total - (uint)normalizedCounter[s]
-                                );
-                                total += (uint)normalizedCounter[s];
-                            }
+                        {
+                            uint maxBitsOut =
+                                tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
+                            uint minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
+                            symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
+                            symbolTT[s].deltaFindState = (int)(
+                                total - (uint)normalizedCounter[s]
+                            );
+                            total += (uint)normalizedCounter[s];
+                        }
 
                             break;
                     }

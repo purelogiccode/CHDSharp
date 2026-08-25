@@ -481,12 +481,12 @@ namespace VendoredZSTD.Unsafe
             {
                 uint llCode = ZSTD_LLcode(litLength);
                 return (uint)(LL_bits[llCode] * (1 << 8))
-                    + optPtr->litLengthSumBasePrice
-                    - (
-                        optLevel != 0
-                            ? ZSTD_fracWeight(optPtr->litLengthFreq[llCode])
-                            : ZSTD_bitWeight(optPtr->litLengthFreq[llCode])
-                    );
+                       + optPtr->litLengthSumBasePrice
+                       - (
+                           optLevel != 0
+                               ? ZSTD_fracWeight(optPtr->litLengthFreq[llCode])
+                               : ZSTD_bitWeight(optPtr->litLengthFreq[llCode])
+                       );
             }
         }
 
@@ -510,7 +510,7 @@ namespace VendoredZSTD.Unsafe
             assert(matchLength >= 3);
             if (optPtr->priceType == ZSTD_OptPrice_e.zop_predef)
                 return (optLevel != 0 ? ZSTD_fracWeight(mlBase) : ZSTD_bitWeight(mlBase))
-                    + (16 + offCode) * (1 << 8);
+                       + (16 + offCode) * (1 << 8);
             price =
                 offCode * (1 << 8)
                 + (
@@ -880,7 +880,7 @@ namespace VendoredZSTD.Unsafe
                         if (
                             repIndex >= windowLow
                             && ZSTD_readMINMATCH(ip, minMatch)
-                                == ZSTD_readMINMATCH(ip - repOffset, minMatch)
+                            == ZSTD_readMINMATCH(ip - repOffset, minMatch)
                         )
                         {
                             repLen =
@@ -900,7 +900,7 @@ namespace VendoredZSTD.Unsafe
                             && repOffset - 1 < curr - windowLow
                             && dictLimit - 1 - repIndex >= 3
                             && ZSTD_readMINMATCH(ip, minMatch)
-                                == ZSTD_readMINMATCH(repMatch, minMatch)
+                            == ZSTD_readMINMATCH(repMatch, minMatch)
                         )
                         {
                             repLen =
@@ -918,7 +918,7 @@ namespace VendoredZSTD.Unsafe
                             && repOffset - 1 < curr - (dmsLowLimit + dmsIndexDelta)
                             && dictLimit - 1 - repIndex >= 3
                             && ZSTD_readMINMATCH(ip, minMatch)
-                                == ZSTD_readMINMATCH(repMatch, minMatch)
+                            == ZSTD_readMINMATCH(repMatch, minMatch)
                         )
                         {
                             repLen =
@@ -1685,7 +1685,7 @@ namespace VendoredZSTD.Unsafe
             matchBytesRemaining =
                 literalsBytesRemaining == 0
                     ? currSeq.matchLength
-                        - ((uint)optLdm->seqStore.posInSequence - currSeq.litLength)
+                      - ((uint)optLdm->seqStore.posInSequence - currSeq.litLength)
                     : currSeq.matchLength;
             if (literalsBytesRemaining >= blockBytesRemaining)
             {

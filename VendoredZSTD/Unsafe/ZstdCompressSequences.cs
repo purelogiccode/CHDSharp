@@ -787,13 +787,13 @@ namespace VendoredZSTD.Unsafe
             switch (type)
             {
                 case symbolEncodingType_e.set_rle:
+                {
+                    nuint err_code = FSE_buildCTable_rle(nextCTable, (byte)max);
+                    if (ERR_isError(err_code))
                     {
-                        nuint err_code = FSE_buildCTable_rle(nextCTable, (byte)max);
-                        if (ERR_isError(err_code))
-                        {
-                            return err_code;
-                        }
+                        return err_code;
                     }
+                }
 
                     if (dstCapacity == 0)
                     {
@@ -806,20 +806,20 @@ namespace VendoredZSTD.Unsafe
                     memcpy(nextCTable, prevCTable, (uint)prevCTableSize);
                     return 0;
                 case symbolEncodingType_e.set_basic:
+                {
+                    nuint err_code = FSE_buildCTable_wksp(
+                        nextCTable,
+                        defaultNorm,
+                        defaultMax,
+                        defaultNormLog,
+                        entropyWorkspace,
+                        entropyWorkspaceSize
+                    );
+                    if (ERR_isError(err_code))
                     {
-                        nuint err_code = FSE_buildCTable_wksp(
-                            nextCTable,
-                            defaultNorm,
-                            defaultMax,
-                            defaultNormLog,
-                            entropyWorkspace,
-                            entropyWorkspaceSize
-                        );
-                        if (ERR_isError(err_code))
-                        {
-                            return err_code;
-                        }
+                        return err_code;
                     }
+                }
 
                     return 0;
                 case symbolEncodingType_e.set_compressed:
@@ -890,9 +890,9 @@ namespace VendoredZSTD.Unsafe
                 default:
                     assert(0 != 0);
 
-                    {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-                    }
+                {
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                }
             }
         }
 

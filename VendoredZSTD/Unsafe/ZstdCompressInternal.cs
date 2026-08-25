@@ -541,8 +541,8 @@ namespace VendoredZSTD.Unsafe
                     return
                         cctxParams->cParams.strategy == ZSTD_strategy.ZSTD_fast
                         && cctxParams->cParams.targetLength > 0
-                        ? 1
-                        : 0;
+                            ? 1
+                            : 0;
             }
         }
 
@@ -586,7 +586,7 @@ namespace VendoredZSTD.Unsafe
             byte* litEnd = literals + litLength;
             assert(
                 (nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart)
-                    < seqStorePtr->maxNbSeq
+                < seqStorePtr->maxNbSeq
             );
             assert(seqStorePtr->maxNbLit <= 128 * (1 << 10));
             assert(seqStorePtr->lit + litLength <= seqStorePtr->litStart + seqStorePtr->maxNbLit);
@@ -990,8 +990,8 @@ namespace VendoredZSTD.Unsafe
         {
             return
                 window.dictLimit == 2 && window.lowLimit == 2 && window.nextSrc - window.@base == 2
-                ? 1U
-                : 0U;
+                    ? 1U
+                    : 0U;
         }
 
         /**
@@ -1012,12 +1012,13 @@ namespace VendoredZSTD.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ZSTD_dictMode_e ZSTD_matchState_dictMode(ZSTD_matchState_t* ms)
         {
-            return ZSTD_window_hasExtDict(ms->window) != 0 ? ZSTD_dictMode_e.ZSTD_extDict
+            return ZSTD_window_hasExtDict(ms->window) != 0
+                ? ZSTD_dictMode_e.ZSTD_extDict
                 : ms->dictMatchState != null
                     ? ms->dictMatchState->dedicatedDictSearch != 0
-                            ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+                        ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
                         : ZSTD_dictMode_e.ZSTD_dictMatchState
-                : ZSTD_dictMode_e.ZSTD_noDict;
+                    : ZSTD_dictMode_e.ZSTD_noDict;
         }
 
         /**

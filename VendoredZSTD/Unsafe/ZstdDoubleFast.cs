@@ -247,6 +247,7 @@ namespace VendoredZSTD.Unsafe
                     idxl0 = idxl1;
                     matchl0 = matchl1;
                 } while (ip1 <= ilimit);
+
                 _cleanup:
                 offsetSaved2 = offsetSaved1 != 0 && offset_1 != 0 ? offsetSaved1 : offsetSaved2;
                 rep[0] = offset_1 != 0 ? offset_1 : offsetSaved1;

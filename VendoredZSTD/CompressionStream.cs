@@ -22,7 +22,9 @@ namespace VendoredZSTD
             int bufferSize = 0,
             bool leaveOpen = true
         )
-            : this(stream, new Compressor(level), bufferSize, false, leaveOpen) { }
+            : this(stream, new Compressor(level), bufferSize, false, leaveOpen)
+        {
+        }
 
         public CompressionStream(
             Stream stream,
@@ -116,6 +118,7 @@ namespace VendoredZSTD
             {
                 compressor?.Dispose();
             }
+
             compressor = null;
 
             ArrayPool<byte>.Shared.Return(outputBuffer);

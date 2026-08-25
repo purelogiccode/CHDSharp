@@ -61,6 +61,7 @@ namespace VendoredZSTD
                         .ZSTD_DCtx_loadDictionary(dctx, dictPtr, (nuint)dict.Length)
                         .EnsureZstdSuccess();
             }
+
             GC.KeepAlive(this);
         }
 

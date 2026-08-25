@@ -177,6 +177,7 @@ namespace VendoredZSTD.Unsafe
                     v4 = XXH32_round(v4, XXH_readLE32_align(input, align));
                     input += 4;
                 } while (input < limit);
+
                 h32 =
                     BitOperations.RotateLeft(v1, 1)
                     + BitOperations.RotateLeft(v2, 7)
@@ -461,6 +462,7 @@ namespace VendoredZSTD.Unsafe
                     v4 = XXH64_round(v4, XXH_readLE64_align(input, align));
                     input += 8;
                 } while (input < limit);
+
                 h64 =
                     BitOperations.RotateLeft(v1, 1)
                     + BitOperations.RotateLeft(v2, 7)

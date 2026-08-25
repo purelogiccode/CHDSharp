@@ -567,7 +567,9 @@ namespace VendoredZSTD.Unsafe
                     nbFinalizeSamples,
                     coverParams.zParams
                 );
-                if (!ERR_isError(dictionarySize)) { }
+                if (!ERR_isError(dictionarySize))
+                {
+                }
 
                 FASTCOVER_ctx_destroy(&ctx);
                 free(segmentFreqs);

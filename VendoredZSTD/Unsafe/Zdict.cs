@@ -241,7 +241,9 @@ namespace VendoredZSTD.Unsafe
 
             if (notificationLevel >= 4)
             {
-                for (u = 0; u <= offcodeMax; u++) { }
+                for (u = 0; u <= offcodeMax; u++)
+                {
+                }
             }
 
             {
