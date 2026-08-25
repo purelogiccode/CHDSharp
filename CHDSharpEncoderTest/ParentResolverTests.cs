@@ -17,7 +17,7 @@ public class ParentResolverTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -43,7 +43,7 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -99,7 +99,7 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -117,10 +117,7 @@ public class ParentResolverTests : IDisposable
         {
             // Read multiple parent hunks (0..19 are parent-referenced).
             var buffer = new byte[chd.HunkBytes];
-            for (uint i = 0; i < 10; i++)
-            {
-                chd.ReadHunk(i, buffer);
-            }
+            for (uint i = 0; i < 10; i++) chd.ReadHunk(i, buffer);
 
             Assert.True(resolverCallCount == 1, "Resolver should be called only once (cached)");
         }
@@ -146,7 +143,7 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -191,12 +188,12 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(wrongParentData))
         {
-            ChdEncoder.EncodeRaw(ms, wrongParentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, wrongParentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -235,7 +232,7 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -264,7 +261,7 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -299,7 +296,7 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))

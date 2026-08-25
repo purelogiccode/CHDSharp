@@ -97,7 +97,8 @@ internal static partial class Inflater
     };
 
     // permutation of code lengths
-    private static readonly ushort[] SOrder = new ushort[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+    private static readonly ushort[] SOrder = new ushort[]
+        { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
     internal static void Init()
     {
@@ -113,9 +114,7 @@ internal static partial class Inflater
 
         var state = strm.InflateState;
         if (state.Mode == InflateMode.Type) // Skip check
-        {
             state.Mode = InflateMode.Typedo;
-        }
 
         ref var next = ref // next input
 #if NET7_0_OR_GREATER
@@ -182,14 +181,14 @@ internal static partial class Inflater
                         bits += 8;
                     }
 
-                    if ((((hold & ((1U << (8)) - 1)) << 8) + (hold >> 8)) % 31 != 0)
+                    if ((((hold & ((1U << 8) - 1)) << 8) + (hold >> 8)) % 31 != 0)
                     {
                         strm.Msg = "incorrect header check";
                         state.Mode = InflateMode.Bad;
                         break;
                     }
 
-                    if ((hold & ((1U << (4)) - 1)) != ZDeflated)
+                    if ((hold & ((1U << 4) - 1)) != ZDeflated)
                     {
                         strm.Msg = "unknown compression method";
                         state.Mode = InflateMode.Bad;
@@ -198,11 +197,8 @@ internal static partial class Inflater
 
                     hold >>= 4;
                     bits -= 4;
-                    len = (hold & ((1U << (4)) - 1)) + 8;
-                    if (state.Wbits == 0)
-                    {
-                        state.Wbits = len;
-                    }
+                    len = (hold & ((1U << 4) - 1)) + 8;
+                    if (state.Wbits == 0) state.Wbits = len;
 
                     if (len > 15 || len > state.Wbits)
                     {
@@ -278,10 +274,10 @@ internal static partial class Inflater
                         bits += 8;
                     }
 
-                    state.Last = (int)(hold & ((1U << (1)) - 1));
+                    state.Last = (int)(hold & ((1U << 1) - 1));
                     hold >>= 1;
                     bits--;
-                    switch (hold & ((1U << (2)) - 1))
+                    switch (hold & ((1U << 2) - 1))
                     {
                         case 0: // stored block
                             Trace.Tracev($"inflate:     stored block{(state.Last != 0 ? " (last)" : "")}\n");
@@ -354,15 +350,9 @@ internal static partial class Inflater
                     copy = state.Length;
                     if (copy != 0)
                     {
-                        if (copy > have)
-                        {
-                            copy = have;
-                        }
+                        if (copy > have) copy = have;
 
-                        if (copy > left)
-                        {
-                            copy = left;
-                        }
+                        if (copy > left) copy = left;
 
                         if (copy == 0)
                             goto inf_leave;
@@ -394,13 +384,13 @@ internal static partial class Inflater
                         bits += 8;
                     }
 
-                    state.Nlen = (hold & ((1U << (5)) - 1)) + 257;
+                    state.Nlen = (hold & ((1U << 5) - 1)) + 257;
                     hold >>= 5;
                     bits -= 5;
-                    state.Ndist = (hold & ((1U << (5)) - 1)) + 1;
+                    state.Ndist = (hold & ((1U << 5) - 1)) + 1;
                     hold >>= 5;
                     bits -= 5;
-                    state.Ncode = (hold & ((1U << (4)) - 1)) + 4;
+                    state.Ncode = (hold & ((1U << 4) - 1)) + 4;
                     hold >>= 4;
                     bits -= 4;
                     if (state.Nlen > 286 || state.Ndist > 30)
@@ -421,11 +411,9 @@ internal static partial class Inflater
 #endif
                                 Lens))
 #if NET7_0_OR_GREATER
-                    {
                         refs.
 #endif
                             Lens = ref MemoryMarshal.GetReference(state.Lens);
-                    }
 
                     if (netUnsafe.IsNullRef(ref
 #if NET7_0_OR_GREATER
@@ -433,11 +421,9 @@ internal static partial class Inflater
 #endif
                                 Order))
 #if NET7_0_OR_GREATER
-                    {
                         refs.
 #endif
                             Order = ref MemoryMarshal.GetReference(SOrder);
-                    }
 
                     while (state.Have < state.Ncode)
                     {
@@ -461,13 +447,12 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Order, state.Have++)) = (ushort)(hold & ((1U << (3)) - 1));
+                                    Order, state.Have++)) = (ushort)(hold & ((1U << 3) - 1));
                         hold >>= 3;
                         bits -= 3;
                     }
 
                     while (state.Have < 19)
-                    {
                         Unsafe.Add(ref
 #if NET7_0_OR_GREATER
                             refs.
@@ -477,7 +462,6 @@ internal static partial class Inflater
                                 refs.
 #endif
                                     Order, state.Have++)) = 0;
-                    }
 
                     state.Next = 0;
                     state.Lencode = state.Codes;
@@ -553,11 +537,9 @@ internal static partial class Inflater
 #endif
                                 Lencode))
 #if NET7_0_OR_GREATER
-                    {
                         refs.
 #endif
                             Lencode = ref MemoryMarshal.GetReference(state.Lencode);
-                    }
 
                     while (state.Have < state.Nlen + state.Ndist)
                     {
@@ -567,7 +549,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Lencode, hold & ((1U << (state.Lenbits)) - 1));
+                                    Lencode, hold & ((1U << state.Lenbits) - 1));
                             if (here.bits <= bits)
                                 break;
 
@@ -628,7 +610,7 @@ internal static partial class Inflater
                                     refs.
 #endif
                                         Lens, state.Have - 1);
-                                copy = 3 + (hold & ((1U << (2)) - 1));
+                                copy = 3 + (hold & ((1U << 2) - 1));
                                 hold >>= 2;
                                 bits -= 2;
                             }
@@ -649,7 +631,7 @@ internal static partial class Inflater
                                 hold >>= here.bits;
                                 bits -= here.bits;
                                 len = 0;
-                                copy = 3 + (hold & ((1U << (3)) - 1));
+                                copy = 3 + (hold & ((1U << 3) - 1));
                                 hold >>= 3;
                                 bits -= 3;
                             }
@@ -670,7 +652,7 @@ internal static partial class Inflater
                                 hold >>= here.bits;
                                 bits -= here.bits;
                                 len = 0;
-                                copy = 11 + (hold & ((1U << (7)) - 1));
+                                copy = 11 + (hold & ((1U << 7) - 1));
                                 hold >>= 7;
                                 bits -= 7;
                             }
@@ -683,13 +665,11 @@ internal static partial class Inflater
                             }
 
                             while (copy-- != 0)
-                            {
                                 Unsafe.Add(ref
 #if NET7_0_OR_GREATER
                                     refs.
 #endif
                                         Lens, state.Have++) = (ushort)len;
-                            }
                         }
                     }
 
@@ -797,11 +777,9 @@ internal static partial class Inflater
 #endif
                                 Lencode))
 #if NET7_0_OR_GREATER
-                    {
                         refs.
 #endif
                             Lencode = ref MemoryMarshal.GetReference(state.Lencode);
-                    }
 
                     if (netUnsafe.IsNullRef(ref
 #if NET7_0_OR_GREATER
@@ -809,11 +787,9 @@ internal static partial class Inflater
 #endif
                                 Distcode))
 #if NET7_0_OR_GREATER
-                    {
                         refs.
 #endif
                             Distcode = ref MemoryMarshal.GetReference(state.Distcode);
-                    }
 
                     if (have >= 6 && left >= 258)
                     {
@@ -829,11 +805,9 @@ internal static partial class Inflater
 #endif
                                     Window))
 #if NET7_0_OR_GREATER
-                        {
                             refs.
 #endif
                                 Window = ref MemoryMarshal.GetReference(state.Window);
-                        }
 
                         InflateFast(ref strm, @out, ref
 #if NET7_0_OR_GREATER
@@ -867,10 +841,7 @@ internal static partial class Inflater
                         hold = strm.InflateState.Hold;
                         bits = strm.InflateState.Bits;
 #pragma warning disable CA1508
-                        if (state.Mode == InflateMode.Type)
-                        {
-                            state.Back = -1;
-                        }
+                        if (state.Mode == InflateMode.Type) state.Back = -1;
 #pragma warning restore CA1508
                         break;
                     }
@@ -882,7 +853,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lencode, hold & ((1U << (state.Lenbits)) - 1));
+                                Lencode, hold & ((1U << state.Lenbits) - 1));
                         if (here.bits <= bits)
                             break;
 
@@ -944,7 +915,9 @@ internal static partial class Inflater
                     state.Length = here.val;
                     if (here.op == 0)
                     {
-                        Trace.Tracevv(here.val is >= 0x20 and < 0x7f ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n" : $"inflate:         literal 0x{here.val:X2}\n");
+                        Trace.Tracevv(here.val is >= 0x20 and < 0x7f
+                            ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n"
+                            : $"inflate:         literal 0x{here.val:X2}\n");
                         state.Mode = InflateMode.Lit;
                         break;
                     }
@@ -982,7 +955,7 @@ internal static partial class Inflater
                             bits += 8;
                         }
 
-                        state.Length += hold & ((1U << ((int)state.Extra)) - 1);
+                        state.Length += hold & ((1U << (int)state.Extra) - 1);
                         hold >>= (int)state.Extra;
                         bits -= state.Extra;
                         state.Back += (int)state.Extra;
@@ -999,11 +972,9 @@ internal static partial class Inflater
 #endif
                                 Distcode))
 #if NET7_0_OR_GREATER
-                    {
                         refs.
 #endif
                             Distcode = ref MemoryMarshal.GetReference(state.Distcode);
-                    }
 
                     for (;;)
                     {
@@ -1011,7 +982,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Distcode, state.Diststart + (hold & ((1U << (state.Distbits)) - 1)));
+                                Distcode, state.Diststart + (hold & ((1U << state.Distbits) - 1)));
                         if (here.bits <= bits)
                             break;
 
@@ -1097,7 +1068,7 @@ internal static partial class Inflater
                             bits += 8;
                         }
 
-                        state.Offset += hold & ((1U << ((int)state.Extra)) - 1);
+                        state.Offset += hold & ((1U << (int)state.Extra) - 1);
                         hold >>= (int)state.Extra;
                         bits -= state.Extra;
                         state.Back += (int)state.Extra;
@@ -1127,11 +1098,9 @@ internal static partial class Inflater
 #endif
                                     Window))
 #if NET7_0_OR_GREATER
-                        {
                             refs.
 #endif
                                 Window = ref MemoryMarshal.GetReference(state.Window);
-                        }
 
                         if (copy > state.Wnext)
                         {
@@ -1151,10 +1120,7 @@ internal static partial class Inflater
                                     Window, state.Wnext - copy);
                         }
 
-                        if (copy > state.Length)
-                        {
-                            copy = state.Length;
-                        }
+                        if (copy > state.Length) copy = state.Length;
                     }
                     else // copy from output
                     {
@@ -1162,10 +1128,7 @@ internal static partial class Inflater
                         copy = state.Length;
                     }
 
-                    if (copy > left)
-                    {
-                        copy = left;
-                    }
+                    if (copy > left) copy = left;
 
                     left -= copy;
                     state.Length -= copy;
@@ -1177,10 +1140,7 @@ internal static partial class Inflater
                         from = ref Unsafe.Add(ref from, 1U);
                     } while (--copy != 0);
 
-                    if (state.Length == 0)
-                    {
-                        state.Mode = InflateMode.Len;
-                    }
+                    if (state.Length == 0) state.Mode = InflateMode.Len;
 
                     break;
                 case InflateMode.Lit:
@@ -1212,9 +1172,8 @@ internal static partial class Inflater
                         strm.total_out += @out;
                         state.Total += @out;
                         if ((state.Wrap & 4) != 0 && @out != 0)
-                        {
-                            strm.Adler = state.Check = Adler32.Update(state.Check, ref Unsafe.Subtract(ref put, @out), @out);
-                        }
+                            strm.Adler = state.Check =
+                                Adler32.Update(state.Check, ref Unsafe.Subtract(ref put, @out), @out);
 
                         @out = left;
                         if ((state.Wrap & 4) != 0 && ZSwap32(hold) != state.Check)
@@ -1252,7 +1211,6 @@ internal static partial class Inflater
         strm.InflateState.Bits = bits;
         if (state.Wsize != 0 || (@out != strm.AvailOut && state.Mode < InflateMode.Bad &&
                                  (state.Mode < InflateMode.Check || flush != ZFinish)))
-        {
             try
             {
                 UpdateWindow(ref strm, ref put, @out - strm.AvailOut, ref
@@ -1266,7 +1224,6 @@ internal static partial class Inflater
                 state.Mode = InflateMode.Mem;
                 return ZMemError;
             }
-        }
 
         @in -= strm.AvailIn;
         @out -= strm.AvailOut;
@@ -1274,17 +1231,12 @@ internal static partial class Inflater
         strm.total_out += @out;
         state.Total += @out;
         if ((state.Wrap & 4) != 0 && @out != 0)
-        {
             strm.Adler = state.Check = Adler32.Update(state.Check, ref Unsafe.Subtract(ref put, @out), @out);
-        }
 
         strm.DataType2 = (int)state.Bits + (state.Last != 0 ? 64 : 0) +
                          (state.Mode == InflateMode.Type ? 128 : 0) +
                          (state.Mode is InflateMode.Len2 or InflateMode.Copy2 ? 256 : 0);
-        if (((@in == 0 && @out == 0) || flush == ZFinish) && ret == ZOk)
-        {
-            ret = ZBufError;
-        }
+        if (((@in == 0 && @out == 0) || flush == ZFinish) && ret == ZOk) ret = ZBufError;
 
         return ret;
     }
@@ -1298,7 +1250,7 @@ internal static partial class Inflater
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSwap32(uint q)
     {
-        return (((q) >> 24) & 0xff) + (((q) >> 8) & 0xff00)
-                                    + (((q) & 0xff00) << 8) + (((q) & 0xff) << 24);
+        return ((q >> 24) & 0xff) + ((q >> 8) & 0xff00)
+                                  + ((q & 0xff00) << 8) + ((q & 0xff) << 24);
     }
 }

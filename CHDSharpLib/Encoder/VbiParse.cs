@@ -3,11 +3,11 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Port of MAME's <c>vbiparse</c> (src/lib/util/vbiparse.cpp): parses Philips codes and the
-/// "white flag" from laserdisc VBI lines, and packs the per-frame results into the 16-byte
-/// form stored in 'AVLD' metadata. Input is a YUY2 frame in serialized byte order; each
-/// 16-bit pixel is read little-endian and shifted right by <c>sourceShift</c> (= 8 selects
-/// the luma byte), exactly like MAME reading its native bitmap.
+///     Port of MAME's <c>vbiparse</c> (src/lib/util/vbiparse.cpp): parses Philips codes and the
+///     "white flag" from laserdisc VBI lines, and packs the per-frame results into the 16-byte
+///     form stored in 'AVLD' metadata. Input is a YUY2 frame in serialized byte order; each
+///     16-bit pixel is read little-endian and shifted right by <c>sourceShift</c> (= 8 selects
+///     the luma byte), exactly like MAME reading its native bitmap.
 /// </summary>
 public static class VbiParse
 {
@@ -18,8 +18,8 @@ public static class VbiParse
     private const int MaxClockDiff = 3;
 
     /// <summary>
-    /// Parses everything from a video frame (MAME's <c>vbi_parse_all</c>): the white flag
-    /// from line 11 and Manchester codes from lines 16/17/18, then reconciles lines 17/18.
+    ///     Parses everything from a video frame (MAME's <c>vbi_parse_all</c>): the white flag
+    ///     from line 11 and Manchester codes from lines 16/17/18, then reconciles lines 17/18.
     /// </summary>
     /// <param name="source">Frame bytes (YUY2 order).</param>
     /// <param name="sourceRowPixels">Row stride in pixels.</param>
@@ -37,23 +37,17 @@ public static class VbiParse
         // parse line 16
         if (ParseManchesterCode(source, 16 * sourceRowPixels * 2, sourceWidth, sourceShift, 24, bits0) == 24)
             for (var bitNum = 0; bitNum < 24; bitNum++)
-            {
                 vbi.Line16 = (vbi.Line16 << 1) | (bits0[bitNum] & 1);
-            }
 
         // parse line 17
         if (ParseManchesterCode(source, 17 * sourceRowPixels * 2, sourceWidth, sourceShift, 24, bits0) == 24)
             for (var bitNum = 0; bitNum < 24; bitNum++)
-            {
                 vbi.Line17 = (vbi.Line17 << 1) | (bits0[bitNum] & 1);
-            }
 
         // parse line 18
         if (ParseManchesterCode(source, 18 * sourceRowPixels * 2, sourceWidth, sourceShift, 24, bits1) == 24)
             for (var bitNum = 0; bitNum < 24; bitNum++)
-            {
                 vbi.Line18 = (vbi.Line18 << 1) | (bits1[bitNum] & 1);
-            }
 
         // pick the best out of lines 17/18
         if (vbi.Line17 == 0)
@@ -70,30 +64,26 @@ public static class VbiParse
             const uint cavMask = 0xf00000, cavCode = 0xf00000;
             if ((vbi.Line17 & cavMask) == cavCode && (vbi.Line18 & cavMask) == cavCode)
             {
-                if ((vbi.Line17 & 0xf000) > 0x9000 || (vbi.Line17 & 0xf00) > 0x900 || (vbi.Line17 & 0xf0) > 0x90 || (vbi.Line17 & 0xf) > 0x9)
-                {
+                if ((vbi.Line17 & 0xf000) > 0x9000 || (vbi.Line17 & 0xf00) > 0x900 || (vbi.Line17 & 0xf0) > 0x90 ||
+                    (vbi.Line17 & 0xf) > 0x9)
                     vbi.Line1718 = vbi.Line18;
-                }
-                else if ((vbi.Line18 & 0xf000) > 0x9000 || (vbi.Line18 & 0xf00) > 0x900 || (vbi.Line18 & 0xf0) > 0x90 || (vbi.Line18 & 0xf) > 0x9)
-                {
-                    vbi.Line1718 = vbi.Line17;
-                }
+                else if ((vbi.Line18 & 0xf000) > 0x9000 || (vbi.Line18 & 0xf00) > 0x900 || (vbi.Line18 & 0xf0) > 0x90 ||
+                         (vbi.Line18 & 0xf) > 0x9) vbi.Line1718 = vbi.Line17;
             }
 
             // if still nothing, scan through the bits and pick the ones with the most confidence
             if (vbi.Line1718 == 0)
                 for (var bitNum = 0; bitNum < 24; bitNum++)
-                {
-                    vbi.Line1718 = (vbi.Line1718 << 1) | (bits0[bitNum] > bits1[bitNum] ? (bits0[bitNum] & 1) : (bits1[bitNum] & 1));
-                }
+                    vbi.Line1718 = (vbi.Line1718 << 1) |
+                                   (bits0[bitNum] > bits1[bitNum] ? bits0[bitNum] & 1 : bits1[bitNum] & 1);
         }
 
         return vbi;
     }
 
     /// <summary>
-    /// Packs the VBI data down into the 16-byte storage form (MAME's
-    /// <c>vbi_metadata_pack</c>): u24be frame number, white flag, then four u24be codes.
+    ///     Packs the VBI data down into the 16-byte storage form (MAME's
+    ///     <c>vbi_metadata_pack</c>): u24be frame number, white flag, then four u24be codes.
     /// </summary>
     public static void MetadataPack(Span<byte> dest, uint frameNum, in VbiMetadata vbi)
     {
@@ -106,9 +96,9 @@ public static class VbiParse
     }
 
     /// <summary>
-    /// Parses a Manchester code from a line of video data (MAME's
-    /// <c>vbi_parse_manchester_code</c>). Returns the number of bits extracted (0 on failure);
-    /// each result entry holds (confidence &lt;&lt; 1) | bit.
+    ///     Parses a Manchester code from a line of video data (MAME's
+    ///     <c>vbi_parse_manchester_code</c>). Returns the number of bits extracted (0 on failure);
+    ///     each result entry holds (confidence &lt;&lt; 1) | bit.
     /// </summary>
     public static int ParseManchesterCode(byte[] source, int sourceOffsetBytes, int sourceWidth, int sourceShift,
         int expectedBits, uint[] result)
@@ -142,13 +132,8 @@ public static class VbiParse
         {
             var rawSrc = Sample(source, sourceOffsetBytes, x, sourceShift);
             if (rawSrc >= max)
-            {
                 srcAbsVal = 1;
-            }
-            else if (rawSrc <= min)
-            {
-                srcAbsVal = 0;
-            }
+            else if (rawSrc <= min) srcAbsVal = 0;
 
             srcAbs[x] = (byte)srcAbsVal;
         }
@@ -156,13 +141,11 @@ public static class VbiParse
         // find the first transition; this is assumed to be the middle of the first bit
         var firstEdge = -1;
         for (var x = 0; x < sourceWidth - 1; x++)
-        {
             if (srcAbs[x] != srcAbs[x + 1])
             {
                 firstEdge = x;
                 break;
             }
-        }
 
         if (firstEdge < 0)
             return 0;
@@ -225,18 +208,14 @@ public static class VbiParse
             // compute left and right average values
             var leftAvg = 0;
             for (var tx = leftStart; tx <= leftEnd; tx++)
-            {
                 leftAvg += Sample(source, sourceOffsetBytes, tx, sourceShift) - mid;
-            }
 
             var leftAbs = leftAvg >= 0 ? 1 : 0;
             leftAvg = Math.Abs(leftAvg);
 
             var rightAvg = 0;
             for (var tx = rightStart; tx <= rightEnd; tx++)
-            {
                 rightAvg += Sample(source, sourceOffsetBytes, tx, sourceShift) - mid;
-            }
 
             var rightAbs = rightAvg >= 0 ? 1 : 0;
             rightAvg = Math.Abs(rightAvg);
@@ -254,19 +233,16 @@ public static class VbiParse
     }
 
     /// <summary>
-    /// Computes the "white flag" from a line of video data (MAME's
-    /// <c>vbi_parse_white_flag</c>): true when the histogram peak sits above 90% of the
-    /// noise-trimmed dynamic range.
+    ///     Computes the "white flag" from a line of video data (MAME's
+    ///     <c>vbi_parse_white_flag</c>): true when the histogram peak sits above 90% of the
+    ///     noise-trimmed dynamic range.
     /// </summary>
     public static bool ParseWhiteFlag(byte[] source, int sourceOffsetBytes, int sourceWidth, int sourceShift)
     {
         var histo = new int[256];
 
         // compute a histogram of values
-        for (var x = 0; x < sourceWidth; x++)
-        {
-            histo[Sample(source, sourceOffsetBytes, x, sourceShift)]++;
-        }
+        for (var x = 0; x < sourceWidth; x++) histo[Sample(source, sourceOffsetBytes, x, sourceShift)]++;
 
         // remove the lowest 1% of the values to account for noise and determine the minimum
         var subtract = sourceWidth / 100;
@@ -290,9 +266,7 @@ public static class VbiParse
         var peakVal = 0;
         for (var x = 1; x < 256; x++)
             if (histo[x] > histo[peakVal])
-            {
                 peakVal = x;
-            }
 
         // return true if it is above the 90% mark
         return peakVal > minVal + 9 * (maxVal - minVal) / 10;

@@ -3,11 +3,11 @@ using CHDSharp.Encoder.Interfaces;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// MAME generic Huffman codec ('huff'), matching <c>chd_huffman_compressor</c> /
-/// <c>huffman_8bit_encoder</c>: the hunk is histogrammed, a canonical tree with codes of
-/// at most 16 bits is built (weight-scaled), the tree is exported Huffman-encoded via a
-/// 24-symbol/6-bit small tree, and the data follows. Decodable by CHDSharpLib's
-/// <c>ChdReaders.Huffman</c> and chdman.
+///     MAME generic Huffman codec ('huff'), matching <c>chd_huffman_compressor</c> /
+///     <c>huffman_8bit_encoder</c>: the hunk is histogrammed, a canonical tree with codes of
+///     at most 16 bits is built (weight-scaled), the tree is exported Huffman-encoded via a
+///     24-symbol/6-bit small tree, and the data follows. Decodable by CHDSharpLib's
+///     <c>ChdReaders.Huffman</c> and chdman.
 /// </summary>
 public sealed class HuffCodec : IChdCodec
 {
@@ -19,10 +19,10 @@ public sealed class HuffCodec : IChdCodec
 
     private readonly HuffmanEncoder _encoder = new(NumCodes, MaxBits);
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public uint Tag => CodecTags.Huff;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
         // worst case: 16 bits per symbol + tree export overhead

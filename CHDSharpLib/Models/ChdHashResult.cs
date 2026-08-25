@@ -8,7 +8,14 @@ namespace CHDSharp.Models;
 /// <param name="Sha256">SHA-256 of the region, or <c>null</c> if not requested.</param>
 /// <param name="Crc32">CRC-32 of the region, or <c>null</c> if not requested.</param>
 /// <param name="Xxh3">XXH3-64 of the region, or <c>null</c> if not requested.</param>
-public sealed record ChdHashResult(int? TrackNumber, ulong StartOffset, long Length, byte[]? Sha1, byte[]? Sha256, uint? Crc32, ulong? Xxh3)
+public sealed record ChdHashResult(
+    int? TrackNumber,
+    ulong StartOffset,
+    long Length,
+    byte[]? Sha1,
+    byte[]? Sha256,
+    uint? Crc32,
+    ulong? Xxh3)
 {
     /// <summary>Formats a hex string for one of the hashes, or <c>null</c> when unavailable.</summary>
     public string? ToHex(ChdHashType type)

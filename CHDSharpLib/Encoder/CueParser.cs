@@ -1,17 +1,18 @@
 using System.Globalization;
+using System.Text;
 using CHDSharp.Encoder.Models;
 
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Parses CUE sheets (CUE/BIN, CUE/ISO, CUE/WAV) into a <see cref="CdToc"/>.
-/// The parsing logic mirrors MAME's <c>cdrom_file::parse_cue</c> (src/lib/util/cdrom.cpp),
-/// including track length and file offset resolution.
+///     Parses CUE sheets (CUE/BIN, CUE/ISO, CUE/WAV) into a <see cref="CdToc" />.
+///     The parsing logic mirrors MAME's <c>cdrom_file::parse_cue</c> (src/lib/util/cdrom.cpp),
+///     including track length and file offset resolution.
 /// </summary>
 public static class CueParser
 {
     /// <summary>
-    /// Parses a CUE sheet file into a table of contents.
+    ///     Parses a CUE sheet file into a table of contents.
     /// </summary>
     /// <param name="cueFilePath">Path to the .cue file.</param>
     /// <returns>The parsed table of contents.</returns>
@@ -68,7 +69,8 @@ public static class CueParser
                 {
                     if (tokens.Count < 3)
                         throw new InvalidDataException($"Malformed TRACK command: {rawLine}");
-                    if (!int.TryParse(tokens[1], NumberStyles.None, CultureInfo.InvariantCulture, out var trackNumber) ||
+                    if (!int.TryParse(tokens[1], NumberStyles.None, CultureInfo.InvariantCulture,
+                            out var trackNumber) ||
                         trackNumber < 1 || trackNumber > CdConstants.MaxTracks)
                         throw new InvalidDataException($"Invalid track number [{tokens[1]}]");
 
@@ -98,7 +100,8 @@ public static class CueParser
                     {
                         var frames = wavLength / CdConstants.MaxSectorData;
                         if (frames > int.MaxValue)
-                            throw new InvalidDataException($"WAV file frame count ({frames}) exceeds the maximum supported value");
+                            throw new InvalidDataException(
+                                $"WAV file frame count ({frames}) exceeds the maximum supported value");
 
                         track.Frames = (int)frames;
                         track.FileOffset = wavOffset;
@@ -116,7 +119,8 @@ public static class CueParser
                         throw new InvalidDataException($"INDEX command without a preceding TRACK: {rawLine}");
                     if (tokens.Count < 3)
                         throw new InvalidDataException($"Malformed INDEX command: {rawLine}");
-                    if (!int.TryParse(tokens[1], NumberStyles.None, CultureInfo.InvariantCulture, out var indexNumber) ||
+                    if (!int.TryParse(tokens[1], NumberStyles.None, CultureInfo.InvariantCulture,
+                            out var indexNumber) ||
                         indexNumber < 0 || indexNumber > CdConstants.MaxIndex)
                         throw new InvalidDataException($"Encountered invalid index [{tokens[1]}]");
 
@@ -187,8 +191,8 @@ public static class CueParser
     }
 
     /// <summary>
-    /// Converts an MM:SS:FF (or bare frame count) token into a frame count.
-    /// Matches MAME's <c>msf_to_frames</c>.
+    ///     Converts an MM:SS:FF (or bare frame count) token into a frame count.
+    ///     Matches MAME's <c>msf_to_frames</c>.
     /// </summary>
     public static int ParseMsfToFrames(string token)
     {
@@ -222,10 +226,7 @@ public static class CueParser
                 throw new InvalidDataException($"Track {track.Number} is missing INDEX 01 marker");
 
             // audio data must be byte-swapped for CHD storage
-            if (track.TrackType == CdTrackType.Audio)
-            {
-                track.Swap = true;
-            }
+            if (track.TrackType == CdTrackType.Audio) track.Swap = true;
 
             // WAV tracks already have their length and offset resolved
             if (track.FileOffset != 0)
@@ -234,21 +235,25 @@ public static class CueParser
                 continue;
             }
 
-            var sameFileAsPrev = i > 0 && string.Equals(track.FileName, tracks[i - 1].FileName, StringComparison.Ordinal);
-            var sameFileAsNext = i + 1 < tracks.Count && string.Equals(track.FileName, tracks[i + 1].FileName, StringComparison.Ordinal);
+            var sameFileAsPrev =
+                i > 0 && string.Equals(track.FileName, tracks[i - 1].FileName, StringComparison.Ordinal);
+            var sameFileAsNext = i + 1 < tracks.Count &&
+                                 string.Equals(track.FileName, tracks[i + 1].FileName, StringComparison.Ordinal);
 
             if (i + 1 >= tracks.Count && sameFileAsPrev)
             {
                 // last track in a shared file: remainder of the file
                 var prevSize = (long)tracks[i - 1].Frames * (tracks[i - 1].DataSize + tracks[i - 1].SubSize);
                 track.FileOffset = tracks[i - 1].FileOffset + prevSize;
-                track.Frames = (int)((GetFileSize(track.FileName!) - track.FileOffset) / (track.DataSize + track.SubSize));
+                track.Frames = (int)((GetFileSize(track.FileName!) - track.FileOffset) /
+                                     (track.DataSize + track.SubSize));
             }
             else if (sameFileAsNext)
             {
                 track.Frames = tracks[i + 1].Index00 - track.Index00;
                 if (track.Frames == 0)
-                    throw new InvalidDataException($"Unable to determine size of track {track.Number}, missing INDEX 01 markers?");
+                    throw new InvalidDataException(
+                        $"Unable to determine size of track {track.Number}, missing INDEX 01 markers?");
 
                 if (i > 0)
                 {
@@ -276,9 +281,9 @@ public static class CueParser
     }
 
     /// <summary>
-    /// Parses a CUE sheet track type string (e.g. "MODE1/2048", "AUDIO", "MODE2_RAW") and sets
-    /// the track's <see cref="CdTrack.TrackType"/> and <see cref="CdTrack.DataSize"/> accordingly.
-    /// Matches MAME's <c>parse_track_type</c>.
+    ///     Parses a CUE sheet track type string (e.g. "MODE1/2048", "AUDIO", "MODE2_RAW") and sets
+    ///     the track's <see cref="CdTrack.TrackType" /> and <see cref="CdTrack.DataSize" /> accordingly.
+    ///     Matches MAME's <c>parse_track_type</c>.
     /// </summary>
     /// <param name="typeString">The track type token from the CUE sheet.</param>
     /// <param name="track">The track to update.</param>
@@ -332,9 +337,9 @@ public static class CueParser
     }
 
     /// <summary>
-    /// Parses a CUE sheet subcode type string ("RW" or "RW_RAW") and sets the track's
-    /// <see cref="CdTrack.SubType"/> and <see cref="CdTrack.SubSize"/> accordingly.
-    /// Matches MAME's <c>parse_subtype</c>.
+    ///     Parses a CUE sheet subcode type string ("RW" or "RW_RAW") and sets the track's
+    ///     <see cref="CdTrack.SubType" /> and <see cref="CdTrack.SubSize" /> accordingly.
+    ///     Matches MAME's <c>parse_subtype</c>.
     /// </summary>
     /// <param name="subTypeString">The subcode type token from the CUE sheet.</param>
     /// <param name="track">The track to update.</param>
@@ -358,9 +363,9 @@ public static class CueParser
     }
 
     /// <summary>
-    /// Validates a .WAV file (PCM, stereo, 44100 Hz, 16-bit) and returns the audio
-    /// data length in bytes and its offset within the file. Matches MAME's
-    /// <c>parse_wav_sample</c>.
+    ///     Validates a .WAV file (PCM, stereo, 44100 Hz, 16-bit) and returns the audio
+    ///     data length in bytes and its offset within the file. Matches MAME's
+    ///     <c>parse_wav_sample</c>.
     /// </summary>
     private static (long Length, long Offset) ParseWavSample(string fileName)
     {
@@ -434,7 +439,7 @@ public static class CueParser
         if (stream.Read(buffer, 0, 4) != 4)
             throw new InvalidDataException("Unexpected end of WAV file");
 
-        return System.Text.Encoding.ASCII.GetString(buffer);
+        return Encoding.ASCII.GetString(buffer);
     }
 
     private static uint ReadU32Le(Stream stream, ref long offset)
@@ -460,8 +465,8 @@ public static class CueParser
     }
 
     /// <summary>
-    /// Splits a CUE line into tokens, honoring single and double quotes
-    /// (matching MAME's <c>tokenize</c> helper).
+    ///     Splits a CUE line into tokens, honoring single and double quotes
+    ///     (matching MAME's <c>tokenize</c> helper).
     /// </summary>
     private static List<string> Tokenize(string line)
     {

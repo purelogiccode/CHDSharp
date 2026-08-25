@@ -4,10 +4,10 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Verifies raw-encode metadata support: user-supplied metadata entries
-/// (<see cref="ChdEncodeOptions.Metadata"/>) and automatic classification
-/// (<see cref="ChdEncodeOptions.AutoClassify"/>: 'DVD ' for ISO-9660 images,
-/// synthesized 'GDDD' hard-disk geometry otherwise).
+///     Verifies raw-encode metadata support: user-supplied metadata entries
+///     (<see cref="ChdEncodeOptions.Metadata" />) and automatic classification
+///     (<see cref="ChdEncodeOptions.AutoClassify" />: 'DVD ' for ISO-9660 images,
+///     synthesized 'GDDD' hard-disk geometry otherwise).
 /// </summary>
 public class RawEncodeMetadataTests : IDisposable
 {
@@ -23,7 +23,7 @@ public class RawEncodeMetadataTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -46,7 +46,7 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "user.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { Metadata = [userEntry] });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = [userEntry] });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -70,7 +70,7 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "user_only.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions
         {
             Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)]
         });
@@ -94,7 +94,7 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "hdd.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { AutoClassify = true });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { AutoClassify = true });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -123,7 +123,7 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "dvd.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { AutoClassify = true });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { AutoClassify = true });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -173,7 +173,7 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "plain.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+        ChdEncoder.EncodeRaw(ms, chdPath);
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -195,7 +195,7 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "sha1.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions
         {
             AutoClassify = true,
             Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)]
@@ -231,7 +231,9 @@ public class RawEncodeMetadataTests : IDisposable
         {
             var meta = file!.Metadata;
             Assert.Contains(meta, m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal));
-            Assert.Contains(meta, m => string.Equals(m.Tag, "TEST", StringComparison.Ordinal) && string.Equals(m.GetText(), "extra\0", StringComparison.Ordinal));
+            Assert.Contains(meta,
+                m => string.Equals(m.Tag, "TEST", StringComparison.Ordinal) &&
+                     string.Equals(m.GetText(), "extra\0", StringComparison.Ordinal));
         }
     }
 
@@ -239,10 +241,10 @@ public class RawEncodeMetadataTests : IDisposable
     {
         var cuePath = Path.Combine(_dir, "cd.cue");
         File.WriteAllText(cuePath, """
-            FILE "cd.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-            """);
+                                   FILE "cd.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                   """);
         return cuePath;
     }
 }

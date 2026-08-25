@@ -1,11 +1,14 @@
 using System.Buffers.Binary;
+using System.Text;
 
 namespace CHDSharpTestGen;
 
-/// <summary>Converts a V1 CHD into a V2 CHD. No stock MAME tool ever wrote V2 by default
-/// (V2 only added an explicit seclen field), so the V2 corpus entry is synthesized from a V1 file:
-/// header grows 76 -> 80 bytes (seclen appended), version bumped, and all absolute file offsets
-/// in the map are shifted by +4.</summary>
+/// <summary>
+///     Converts a V1 CHD into a V2 CHD. No stock MAME tool ever wrote V2 by default
+///     (V2 only added an explicit seclen field), so the V2 corpus entry is synthesized from a V1 file:
+///     header grows 76 -> 80 bytes (seclen appended), version bumped, and all absolute file offsets
+///     in the map are shifted by +4.
+/// </summary>
 internal static class V2Patcher
 {
     private const int V1HeaderSize = 76;
@@ -17,7 +20,7 @@ internal static class V2Patcher
         var src = File.ReadAllBytes(v1Path);
 
         if (src.Length < V1HeaderSize ||
-            !string.Equals(System.Text.Encoding.ASCII.GetString(src, 0, 8), "MComprHD", StringComparison.Ordinal) ||
+            !string.Equals(Encoding.ASCII.GetString(src, 0, 8), "MComprHD", StringComparison.Ordinal) ||
             BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(12)) != 1)
             throw new InvalidDataException($"{v1Path} is not a V1 CHD");
 

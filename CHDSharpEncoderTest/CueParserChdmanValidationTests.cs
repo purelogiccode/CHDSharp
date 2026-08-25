@@ -4,9 +4,9 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Validates CueParser against the authoritative pipeline: chdman.exe (parse_cue)
-/// writes CHT2 metadata into a CD CHD; we compare the metadata produced from
-/// chdman's own TOC against the metadata our parser would produce.
+///     Validates CueParser against the authoritative pipeline: chdman.exe (parse_cue)
+///     writes CHT2 metadata into a CD CHD; we compare the metadata produced from
+///     chdman's own TOC against the metadata our parser would produce.
 /// </summary>
 public class CueParserChdmanValidationTests : IDisposable
 {
@@ -23,7 +23,7 @@ public class CueParserChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -63,7 +63,8 @@ public class CueParserChdmanValidationTests : IDisposable
             fs.SetLength(2352L * 54550);
         }
 
-        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
+        var (exitCode, stdout, stderr) =
+            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
         Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
 
         // parse the CUE with our parser and build the CHT2 metadata strings it implies
@@ -113,7 +114,8 @@ public class CueParserChdmanValidationTests : IDisposable
             fs.SetLength(2352L * 100);
         }
 
-        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
+        var (exitCode, stdout, stderr) =
+            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
         Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
 
         var toc = CueParser.Parse(cuePath);

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #if !NETCOREAPP3_0_OR_GREATER
-
 using System.Runtime.CompilerServices;
 using static VendoredZSTD.UnsafeHelper;
 

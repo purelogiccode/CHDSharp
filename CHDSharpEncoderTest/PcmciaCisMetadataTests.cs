@@ -17,7 +17,7 @@ public class PcmciaCisMetadataTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -41,7 +41,7 @@ public class PcmciaCisMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "cis.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { Metadata = [cisEntry] });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = [cisEntry] });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -60,7 +60,7 @@ public class PcmciaCisMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "no_cis.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+        ChdEncoder.EncodeRaw(ms, chdPath);
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -89,7 +89,7 @@ public class PcmciaCisMetadataTests : IDisposable
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, sourcePath, 4096, 512, options: new ChdEncodeOptions { Metadata = [cisEntry] });
+            ChdEncoder.EncodeRaw(ms, sourcePath, options: new ChdEncodeOptions { Metadata = [cisEntry] });
         }
 
         ChdEncoder.Copy(sourcePath, copyPath);
@@ -112,7 +112,7 @@ public class PcmciaCisMetadataTests : IDisposable
         var chdPath = Path.Combine(_dir, "set_del.chd");
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
         }
 
         var err = ChdFile.Open(chdPath, out var file);
@@ -152,7 +152,7 @@ public class PcmciaCisMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "empty_cis.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { Metadata = [cisEntry] });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = [cisEntry] });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -190,7 +190,7 @@ public class PcmciaCisMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "multi.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { Metadata = entries });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = entries });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);

@@ -1,9 +1,9 @@
 namespace VendoredFlac.Encoder;
 
 /// <summary>
-/// Bit-width helpers mirroring libFLAC's private/bitmath.h (ilog2, silog2) and the FLAC
-/// format constants used by the stream encoder. All functions must match the C semantics
-/// exactly because they feed the LPC coefficient quantization and partition search.
+///     Bit-width helpers mirroring libFLAC's private/bitmath.h (ilog2, silog2) and the FLAC
+///     format constants used by the stream encoder. All functions must match the C semantics
+///     exactly because they feed the LPC coefficient quantization and partition search.
 /// </summary>
 internal static class FlacBitMath
 {
@@ -38,10 +38,7 @@ internal static class FlacBitMath
     public static uint ILog2(uint v)
     {
         uint l = 0;
-        while ((v >>= 1) != 0)
-        {
-            l++;
-        }
+        while ((v >>= 1) != 0) l++;
 
         return l;
     }
@@ -50,15 +47,15 @@ internal static class FlacBitMath
     public static uint ILog2Wide(ulong v)
     {
         uint l = 0;
-        while ((v >>= 1) != 0)
-        {
-            l++;
-        }
+        while ((v >>= 1) != 0) l++;
 
         return l;
     }
 
-    /// <summary>Signed log2: silog2(v) = ilog2(|v|) + 2 for |v| &gt; 1; silog2(0)=0, silog2(±1)=2. Matches FLAC__bitmath_silog2.</summary>
+    /// <summary>
+    ///     Signed log2: silog2(v) = ilog2(|v|) + 2 for |v| &gt; 1; silog2(0)=0, silog2(±1)=2. Matches
+    ///     FLAC__bitmath_silog2.
+    /// </summary>
     public static uint Silog2(long v)
     {
         switch (v)
@@ -69,7 +66,7 @@ internal static class FlacBitMath
                 return 2;
             default:
             {
-                var av = (v < 0) ? (ulong)(-(v + 1)) : (ulong)v;
+                var av = v < 0 ? (ulong)-(v + 1) : (ulong)v;
                 return ILog2Wide(av) + 2;
             }
         }
@@ -92,10 +89,7 @@ internal static class FlacBitMath
     public static uint MaxRicePartitionOrderLimited(uint limit, uint blocksize, uint predictorOrder)
     {
         var maxOrder = limit;
-        while (maxOrder > 0 && (blocksize >> (int)maxOrder) <= predictorOrder)
-        {
-            maxOrder--;
-        }
+        while (maxOrder > 0 && blocksize >> (int)maxOrder <= predictorOrder) maxOrder--;
 
         return maxOrder;
     }

@@ -24,10 +24,7 @@ internal readonly struct BitTreeDecoder
     internal uint Decode(Decoder rangeDecoder)
     {
         uint m = 1;
-        for (var bitIndex = _numBitLevels; bitIndex > 0; bitIndex--)
-        {
-            m = (m << 1) + _models[m].Decode(rangeDecoder);
-        }
+        for (var bitIndex = _numBitLevels; bitIndex > 0; bitIndex--) m = (m << 1) + _models[m].Decode(rangeDecoder);
 
         return m - ((uint)1 << _numBitLevels);
     }

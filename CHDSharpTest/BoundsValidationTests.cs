@@ -7,7 +7,8 @@ public class BoundsValidationTests
 {
     private static readonly byte[] Magic = "MComprHD"u8.ToArray();
 
-    private static MemoryStream MakeV3Stream(uint totalblocks, uint blocksize, uint totalbytes, Action<MemoryStream> writeMapEntries)
+    private static MemoryStream MakeV3Stream(uint totalblocks, uint blocksize, uint totalbytes,
+        Action<MemoryStream> writeMapEntries)
     {
         var ms = new MemoryStream();
         ms.Write(Magic, 0, Magic.Length);
@@ -28,7 +29,8 @@ public class BoundsValidationTests
         return ms;
     }
 
-    private static void WriteMapEntryV3(Stream ms, ulong offset, uint crc, byte lenByte0, byte lenByte1, byte lenByte2, byte flags)
+    private static void WriteMapEntryV3(Stream ms, ulong offset, uint crc, byte lenByte0, byte lenByte1, byte lenByte2,
+        byte flags)
     {
         ms.Write(EndianHelpers.Be64(offset));
         ms.Write(EndianHelpers.Be(crc));
@@ -263,10 +265,7 @@ public class BoundsValidationTests
         ms.SetLength(256);
         ms.Position = 256;
         ms.Write(data, 0, data.Length);
-        if (ms.Length < 256L + length)
-        {
-            ms.SetLength(256L + length);
-        }
+        if (ms.Length < 256L + length) ms.SetLength(256L + length);
 
         ms.Position = 0;
         return ms;
@@ -326,7 +325,7 @@ public class BoundsValidationTests
     public void ReadHunk_claims_compressed_length_over_cap_via_corpus_style_large_hunk_returns_invalid_data()
     {
         // Same as above but exercising a larger hunk size: blocksize 4096 → default cap 8192.
-        var stream = MakeV3CompressedHunkStream(20000, _ => new byte[] { 0 }, blocksize: 4096);
+        var stream = MakeV3CompressedHunkStream(20000, _ => new byte[] { 0 }, 4096);
         var err = ChdFile.Open(stream, true, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
         Assert.Equal(8192u, chd!.MaxCompressedBlockBytes);
@@ -372,7 +371,7 @@ public class BoundsValidationTests
         var stream = MakeV3CompressedHunkStream(2000, _ => new byte[] { 0 });
         stream.Position = 0;
 
-        var err = Chd.CheckFile(stream, "oversized.chd", deepCheck: true, out _, out _, out _);
+        var err = Chd.CheckFile(stream, "oversized.chd", true, out _, out _, out _);
         Assert.Equal(ChdError.Chderrinvaliddata, err);
     }
 }

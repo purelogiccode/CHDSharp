@@ -1,197 +1,45 @@
 using VendoredLZMA.LZ;
-using VendoredLZMA.RangeCoder;
 using VendoredLZMA.Models;
+using VendoredLZMA.RangeCoder;
 
 namespace VendoredLZMA;
 
-/// <summary>Core LZMA range-coder decoder, ported from the LZMA SDK. Decodes a raw LZMA stream using adaptive probability models.</summary>
+/// <summary>
+///     Core LZMA range-coder decoder, ported from the LZMA SDK. Decodes a raw LZMA stream using adaptive probability
+///     models.
+/// </summary>
 internal class Decoder
 {
-    private class LenDecoder
-    {
-        private BitDecoder _mChoice;
-        private BitDecoder _mChoice2;
-        private readonly BitTreeDecoder[] _mLowCoder = new BitTreeDecoder[Base.KNumPosStatesMax];
-        private readonly BitTreeDecoder[] _mMidCoder = new BitTreeDecoder[Base.KNumPosStatesMax];
-        private readonly BitTreeDecoder _mHighCoder = new(Base.KNumHighLenBits);
-        private uint _mNumPosStates;
-
-        public void Create(uint numPosStates)
-        {
-            for (var posState = _mNumPosStates; posState < numPosStates; posState++)
-            {
-                _mLowCoder[posState] = new BitTreeDecoder(Base.KNumLowLenBits);
-                _mMidCoder[posState] = new BitTreeDecoder(Base.KNumMidLenBits);
-            }
-
-            _mNumPosStates = numPosStates;
-        }
-
-        public void Init()
-        {
-            _mChoice.Init();
-            for (uint posState = 0; posState < _mNumPosStates; posState++)
-            {
-                _mLowCoder[posState].Init();
-                _mMidCoder[posState].Init();
-            }
-
-            _mChoice2.Init();
-            _mHighCoder.Init();
-        }
-
-        public uint Decode(RangeCoder.Decoder rangeDecoder, uint posState)
-        {
-            if (_mChoice.Decode(rangeDecoder) == 0)
-            {
-                return _mLowCoder[posState].Decode(rangeDecoder);
-            }
-            else
-            {
-                var symbol = Base.KNumLowLenSymbols;
-                if (_mChoice2.Decode(rangeDecoder) == 0)
-                {
-                    symbol += _mMidCoder[posState].Decode(rangeDecoder);
-                }
-                else
-                {
-                    symbol += Base.KNumMidLenSymbols;
-                    symbol += _mHighCoder.Decode(rangeDecoder);
-                }
-
-                return symbol;
-            }
-        }
-    }
-
-    private class LiteralDecoder
-    {
-        private struct Decoder2
-        {
-            private BitDecoder[] _mDecoders;
-
-            public void Create()
-            {
-                _mDecoders = new BitDecoder[0x300];
-            }
-
-            public readonly void Init()
-            {
-                for (var i = 0; i < 0x300; i++) _mDecoders[i].Init();
-            }
-
-            public byte DecodeNormal(RangeCoder.Decoder rangeDecoder)
-            {
-                uint symbol = 1;
-                do
-                {
-                    symbol = (symbol << 1) | _mDecoders[symbol].Decode(rangeDecoder);
-                } while (symbol < 0x100);
-
-                // ReSharper disable once IntVariableOverflowInUncheckedContext
-                return (byte)symbol;
-            }
-
-            public byte DecodeWithMatchByte(RangeCoder.Decoder rangeDecoder, byte matchByte)
-            {
-                uint symbol = 1;
-                do
-                {
-                    var matchBit = (uint)(matchByte >> 7) & 1;
-                    matchByte <<= 1;
-                    var bit = _mDecoders[((1 + matchBit) << 8) + symbol].Decode(rangeDecoder);
-                    symbol = (symbol << 1) | bit;
-                    if (matchBit != bit)
-                    {
-                        while (symbol < 0x100)
-                        {
-                            symbol = (symbol << 1) | _mDecoders[symbol].Decode(rangeDecoder);
-                        }
-
-                        break;
-                    }
-                } while (symbol < 0x100);
-
-                // ReSharper disable once IntVariableOverflowInUncheckedContext
-                return (byte)symbol;
-            }
-        }
-
-        private Decoder2[] _mCoders = [];
-        private int _mNumPrevBits;
-        private int _mNumPosBits;
-        private uint _mPosMask;
-
-        public void Create(int numPosBits, int numPrevBits)
-        {
-            if (_mNumPrevBits == numPrevBits &&
-                _mNumPosBits == numPosBits)
-                return;
-
-            _mNumPosBits = numPosBits;
-            _mPosMask = ((uint)1 << numPosBits) - 1;
-            _mNumPrevBits = numPrevBits;
-            var numStates = 1u << (_mNumPrevBits + _mNumPosBits);
-            _mCoders = new Decoder2[numStates];
-            for (uint i = 0; i < numStates; i++)
-                _mCoders[i].Create();
-        }
-
-        public void Init()
-        {
-            var numStates = 1u << (_mNumPrevBits + _mNumPosBits);
-            for (uint i = 0; i < numStates; i++)
-                _mCoders[i].Init();
-        }
-
-        private uint GetState(uint pos, byte prevByte)
-        {
-            return ((pos & _mPosMask) << _mNumPrevBits) + (uint)(prevByte >> (8 - _mNumPrevBits));
-        }
-
-        public byte DecodeNormal(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte)
-        {
-            return _mCoders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
-        }
-
-        public byte DecodeWithMatchByte(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte, byte matchByte)
-        {
-            return _mCoders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
-        }
-    }
-
     private readonly BitDecoder[] _mIsMatchDecoders = new BitDecoder[Base.KNumStates << Base.KNumPosStatesBitsMax];
+    private readonly BitDecoder[] _mIsRep0LongDecoders = new BitDecoder[Base.KNumStates << Base.KNumPosStatesBitsMax];
     private readonly BitDecoder[] _mIsRepDecoders = new BitDecoder[Base.KNumStates];
     private readonly BitDecoder[] _mIsRepG0Decoders = new BitDecoder[Base.KNumStates];
     private readonly BitDecoder[] _mIsRepG1Decoders = new BitDecoder[Base.KNumStates];
     private readonly BitDecoder[] _mIsRepG2Decoders = new BitDecoder[Base.KNumStates];
-    private readonly BitDecoder[] _mIsRep0LongDecoders = new BitDecoder[Base.KNumStates << Base.KNumPosStatesBitsMax];
-
-    private readonly BitTreeDecoder[] _mPosSlotDecoder = new BitTreeDecoder[Base.KNumLenToPosStates];
-    private readonly BitDecoder[] _mPosDecoders = new BitDecoder[Base.KNumFullDistances - Base.KEndPosModelIndex];
-
-    private readonly BitTreeDecoder _mPosAlignDecoder = new(Base.KNumAlignBits);
 
     private readonly LenDecoder _mLenDecoder = new();
-    private readonly LenDecoder _mRepLenDecoder = new();
 
     private readonly LiteralDecoder _mLiteralDecoder = new();
+
+    private readonly BitTreeDecoder _mPosAlignDecoder = new(Base.KNumAlignBits);
+    private readonly BitDecoder[] _mPosDecoders = new BitDecoder[Base.KNumFullDistances - Base.KEndPosModelIndex];
+
+    private readonly BitTreeDecoder[] _mPosSlotDecoder = new BitTreeDecoder[Base.KNumLenToPosStates];
+    private readonly LenDecoder _mRepLenDecoder = new();
 
     private int _mDictionarySize;
 
     private uint _mPosStateMask;
+    private uint _rep0, _rep1, _rep2, _rep3;
 
     private State _state;
-    private uint _rep0, _rep1, _rep2, _rep3;
 
     /// <summary>Initialises a new LZMA decoder with all probability models set to their default states.</summary>
     internal Decoder()
     {
         _mDictionarySize = -1;
         for (var i = 0; i < Base.KNumLenToPosStates; i++)
-        {
             _mPosSlotDecoder[i] = new BitTreeDecoder(Base.KNumPosSlotBits);
-        }
     }
 
     private void SetLiteralProperties(int lp, int lc)
@@ -263,14 +111,10 @@ internal class Decoder
                 byte b;
                 var prevByte = outWindow.GetByte(0);
                 if (!_state.IsCharState())
-                {
                     b = _mLiteralDecoder.DecodeWithMatchByte(rangeDecoder,
                         (uint)outWindow.Total, prevByte, outWindow.GetByte((int)_rep0));
-                }
                 else
-                {
                     b = _mLiteralDecoder.DecodeNormal(rangeDecoder, (uint)outWindow.Total, prevByte);
-                }
 
                 outWindow.PutByte(b);
                 _state.UpdateChar();
@@ -282,7 +126,8 @@ internal class Decoder
                 {
                     if (_mIsRepG0Decoders[_state.Index].Decode(rangeDecoder) == 0)
                     {
-                        if (_mIsRep0LongDecoders[(_state.Index << Base.KNumPosStatesBitsMax) + posState].Decode(rangeDecoder) == 0)
+                        if (_mIsRep0LongDecoders[(_state.Index << Base.KNumPosStatesBitsMax) + posState]
+                                .Decode(rangeDecoder) == 0)
                         {
                             _state.UpdateShortRep();
                             outWindow.PutByte(outWindow.GetByte((int)_rep0));
@@ -382,9 +227,151 @@ internal class Decoder
         if (properties.Length >= 5)
         {
             _mDictionarySize = 0;
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < 4; i++) _mDictionarySize += properties[1 + i] << (i * 8);
+        }
+    }
+
+    private class LenDecoder
+    {
+        private readonly BitTreeDecoder _mHighCoder = new(Base.KNumHighLenBits);
+        private readonly BitTreeDecoder[] _mLowCoder = new BitTreeDecoder[Base.KNumPosStatesMax];
+        private readonly BitTreeDecoder[] _mMidCoder = new BitTreeDecoder[Base.KNumPosStatesMax];
+        private BitDecoder _mChoice;
+        private BitDecoder _mChoice2;
+        private uint _mNumPosStates;
+
+        public void Create(uint numPosStates)
+        {
+            for (var posState = _mNumPosStates; posState < numPosStates; posState++)
             {
-                _mDictionarySize += properties[1 + i] << (i * 8);
+                _mLowCoder[posState] = new BitTreeDecoder(Base.KNumLowLenBits);
+                _mMidCoder[posState] = new BitTreeDecoder(Base.KNumMidLenBits);
+            }
+
+            _mNumPosStates = numPosStates;
+        }
+
+        public void Init()
+        {
+            _mChoice.Init();
+            for (uint posState = 0; posState < _mNumPosStates; posState++)
+            {
+                _mLowCoder[posState].Init();
+                _mMidCoder[posState].Init();
+            }
+
+            _mChoice2.Init();
+            _mHighCoder.Init();
+        }
+
+        public uint Decode(RangeCoder.Decoder rangeDecoder, uint posState)
+        {
+            if (_mChoice.Decode(rangeDecoder) == 0) return _mLowCoder[posState].Decode(rangeDecoder);
+
+            var symbol = Base.KNumLowLenSymbols;
+            if (_mChoice2.Decode(rangeDecoder) == 0)
+            {
+                symbol += _mMidCoder[posState].Decode(rangeDecoder);
+            }
+            else
+            {
+                symbol += Base.KNumMidLenSymbols;
+                symbol += _mHighCoder.Decode(rangeDecoder);
+            }
+
+            return symbol;
+        }
+    }
+
+    private class LiteralDecoder
+    {
+        private Decoder2[] _mCoders = [];
+        private int _mNumPosBits;
+        private int _mNumPrevBits;
+        private uint _mPosMask;
+
+        public void Create(int numPosBits, int numPrevBits)
+        {
+            if (_mNumPrevBits == numPrevBits &&
+                _mNumPosBits == numPosBits)
+                return;
+
+            _mNumPosBits = numPosBits;
+            _mPosMask = ((uint)1 << numPosBits) - 1;
+            _mNumPrevBits = numPrevBits;
+            var numStates = 1u << (_mNumPrevBits + _mNumPosBits);
+            _mCoders = new Decoder2[numStates];
+            for (uint i = 0; i < numStates; i++)
+                _mCoders[i].Create();
+        }
+
+        public void Init()
+        {
+            var numStates = 1u << (_mNumPrevBits + _mNumPosBits);
+            for (uint i = 0; i < numStates; i++)
+                _mCoders[i].Init();
+        }
+
+        private uint GetState(uint pos, byte prevByte)
+        {
+            return ((pos & _mPosMask) << _mNumPrevBits) + (uint)(prevByte >> (8 - _mNumPrevBits));
+        }
+
+        public byte DecodeNormal(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte)
+        {
+            return _mCoders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
+        }
+
+        public byte DecodeWithMatchByte(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte, byte matchByte)
+        {
+            return _mCoders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
+        }
+
+        private struct Decoder2
+        {
+            private BitDecoder[] _mDecoders;
+
+            public void Create()
+            {
+                _mDecoders = new BitDecoder[0x300];
+            }
+
+            public readonly void Init()
+            {
+                for (var i = 0; i < 0x300; i++) _mDecoders[i].Init();
+            }
+
+            public byte DecodeNormal(RangeCoder.Decoder rangeDecoder)
+            {
+                uint symbol = 1;
+                do
+                {
+                    symbol = (symbol << 1) | _mDecoders[symbol].Decode(rangeDecoder);
+                } while (symbol < 0x100);
+
+                // ReSharper disable once IntVariableOverflowInUncheckedContext
+                return (byte)symbol;
+            }
+
+            public byte DecodeWithMatchByte(RangeCoder.Decoder rangeDecoder, byte matchByte)
+            {
+                uint symbol = 1;
+                do
+                {
+                    var matchBit = (uint)(matchByte >> 7) & 1;
+                    matchByte <<= 1;
+                    var bit = _mDecoders[((1 + matchBit) << 8) + symbol].Decode(rangeDecoder);
+                    symbol = (symbol << 1) | bit;
+                    if (matchBit != bit)
+                    {
+                        while (symbol < 0x100) symbol = (symbol << 1) | _mDecoders[symbol].Decode(rangeDecoder);
+
+                        break;
+                    }
+                } while (symbol < 0x100);
+
+                // ReSharper disable once IntVariableOverflowInUncheckedContext
+                return (byte)symbol;
             }
         }
     }

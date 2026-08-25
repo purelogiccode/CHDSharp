@@ -6,8 +6,8 @@ public class ChdImageStreamTests
     private const ulong TotalBytes = 4 * 512; // 2048 bytes = 4 hunks
 
     /// <summary>
-    /// Builds an uncompressed V5 CHD with 4 hunks of known data.
-    /// Hunk N contains bytes (N*Blocksize + i) &amp; 0xFF.
+    ///     Builds an uncompressed V5 CHD with 4 hunks of known data.
+    ///     Hunk N contains bytes (N*Blocksize + i) &amp; 0xFF.
     /// </summary>
     private static MemoryStream BuildTestChd()
     {
@@ -35,10 +35,7 @@ public class ChdImageStreamTests
         {
             ms.Seek((long)(dataStart + h * Blocksize), SeekOrigin.Begin);
             var data = new byte[Blocksize];
-            for (var i = 0; i < data.Length; i++)
-            {
-                data[i] = (byte)((h * Blocksize + (ulong)i) & 0xFF);
-            }
+            for (var i = 0; i < data.Length; i++) data[i] = (byte)((h * Blocksize + (ulong)i) & 0xFF);
 
             Write(data);
         }
@@ -405,7 +402,7 @@ public class ChdImageStreamTests
         var ms = BuildTestChd();
         var err = ChdFile.Open(ms, true, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
-        var streamErr = ChdFile.OpenAsStream(chd!, ownsChd: true, out var stream);
+        var streamErr = ChdFile.OpenAsStream(chd!, true, out var stream);
         Assert.Equal(ChdError.Chderrnone, streamErr);
         stream.Dispose();
 

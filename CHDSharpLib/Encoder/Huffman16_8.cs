@@ -29,20 +29,14 @@ internal class Huffman168
     /// <param name="symbol">The symbol whose count is incremented.</param>
     public void CountSymbol(uint symbol)
     {
-        if (symbol < NumCodes)
-        {
-            _histogram[symbol]++;
-        }
+        if (symbol < NumCodes) _histogram[symbol]++;
     }
 
     /// <summary>Builds a canonical Huffman tree from the accumulated histogram and assigns codes.</summary>
     public void BuildTree()
     {
         var totalData = 0;
-        for (var i = 0; i < NumCodes; i++)
-        {
-            totalData += _histogram[i];
-        }
+        for (var i = 0; i < NumCodes; i++) totalData += _histogram[i];
 
         Array.Clear(Codes);
 
@@ -68,10 +62,7 @@ internal class Huffman168
             if (maxbits <= MaxBits)
             {
                 lower = curWeight;
-                if (curWeight == totalData || upper - lower <= 1)
-                {
-                    break;
-                }
+                if (curWeight == totalData || upper - lower <= 1) break;
             }
             else
             {
@@ -136,14 +127,10 @@ internal class Huffman168
         var activeIndices = new List<int>(16);
 
         for (var i = 0; i < NumCodes; i++)
-        {
             if (_histogram[i] != 0)
             {
                 var w = (int)(_histogram[i] * (long)totalWeight / totalData);
-                if (w == 0)
-                {
-                    w = 1;
-                }
+                if (w == 0) w = 1;
 
                 nodes[i].Weight = w;
                 nodes[i].Parent = -1;
@@ -153,7 +140,6 @@ internal class Huffman168
             {
                 NumBits[i] = 0;
             }
-        }
 
         SortByWeight(nodes, activeIndices);
 
@@ -174,16 +160,13 @@ internal class Huffman168
             var insertPos = 0;
             while (insertPos < activeIndices.Count &&
                    nodes[newIdx].Weight <= nodes[activeIndices[insertPos]].Weight)
-            {
                 insertPos++;
-            }
 
             activeIndices.Insert(insertPos, newIdx);
         }
 
         var maxBits = 0;
         for (var i = 0; i < NumCodes; i++)
-        {
             if (_histogram[i] != 0)
             {
                 var depth = 0;
@@ -195,12 +178,8 @@ internal class Huffman168
                 }
 
                 NumBits[i] = depth == 0 ? 1 : depth;
-                if (NumBits[i] > maxBits)
-                {
-                    maxBits = NumBits[i];
-                }
+                if (NumBits[i] > maxBits) maxBits = NumBits[i];
             }
-        }
 
         return maxBits;
     }
@@ -223,10 +202,7 @@ internal class Huffman168
         for (var i = 0; i < NumCodes; i++)
         {
             var nb = NumBits[i];
-            if (nb is > 0 and <= 32)
-            {
-                bithisto[nb]++;
-            }
+            if (nb is > 0 and <= 32) bithisto[nb]++;
         }
 
         uint curstart = 0;
@@ -238,18 +214,13 @@ internal class Huffman168
         }
 
         for (var i = 0; i < NumCodes; i++)
-        {
             if (NumBits[i] > 0)
-            {
                 Codes[i] = (uint)bithisto[NumBits[i]]++;
-            }
-        }
     }
 
     private static void WriteRleTreeBits(BitStreamOut bs, int value, int repCount, int numbits)
     {
         while (repCount > 0)
-        {
             if (value == 1)
             {
                 bs.Write(1, numbits);
@@ -269,7 +240,6 @@ internal class Huffman168
                 bs.Write((uint)reps, numbits);
                 repCount -= reps + 3;
             }
-        }
     }
 
     [StructLayout(LayoutKind.Auto)]

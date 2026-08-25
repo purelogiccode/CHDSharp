@@ -66,8 +66,8 @@ public class HuffmanDecoderTests
     private class BitStreamWrite
     {
         private readonly List<byte> _data = new();
-        private uint _buffer;
         private int _bits;
+        private uint _buffer;
 
         public void Write(uint value, int numbits)
         {

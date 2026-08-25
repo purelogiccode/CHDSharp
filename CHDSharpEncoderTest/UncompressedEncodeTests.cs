@@ -4,12 +4,12 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Verifies Phase 4.2: uncompressed CHD creation (<c>-c none</c>, chdman parity). The
-/// output must be byte-identical to chdman's <c>createraw -c none</c>, round-trip through
-/// CHDSharpLib, skip all-zero hunks (not stored, reads as zeros), write metadata between
-/// the map and the data, and (for CD sources) preserve track layout. Like chdman, no SHA-1
-/// is written for uncompressed CHDs, so header hash fields stay zero and chdman verify
-/// reports "no verification needed" with exit code 0.
+///     Verifies Phase 4.2: uncompressed CHD creation (<c>-c none</c>, chdman parity). The
+///     output must be byte-identical to chdman's <c>createraw -c none</c>, round-trip through
+///     CHDSharpLib, skip all-zero hunks (not stored, reads as zeros), write metadata between
+///     the map and the data, and (for CD sources) preserve track layout. Like chdman, no SHA-1
+///     is written for uncompressed CHDs, so header hash fields stay zero and chdman verify
+///     reports "no verification needed" with exit code 0.
 /// </summary>
 public class UncompressedEncodeTests : IDisposable
 {
@@ -25,7 +25,7 @@ public class UncompressedEncodeTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -42,7 +42,6 @@ public class UncompressedEncodeTests : IDisposable
         var source = new byte[4096 * 9];
         var rng = new Random(2026);
         for (var h = 0; h < 9; h++)
-        {
             switch (h % 3)
             {
                 case 0:
@@ -54,7 +53,6 @@ public class UncompressedEncodeTests : IDisposable
                     Array.Fill(source, (byte)(h & 0xFF), h * 4096, 4096);
                     break;
             }
-        }
 
         var srcPath = Path.Combine(_dir, "none_src.bin");
         var chdmanPath = Path.Combine(_dir, "chdman_none.chd");
@@ -204,12 +202,13 @@ public class UncompressedEncodeTests : IDisposable
         var childPath = Path.Combine(_dir, "n_child.chd");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, [CodecTags.None], new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, [CodecTags.None],
+                new ChdEncodeOptions { ParentPath = parentPath });
         }
 
         // the child header must carry the parent's SHA-1
@@ -221,10 +220,8 @@ public class UncompressedEncodeTests : IDisposable
         // (2-5) carry the child's own data
         var expected = (byte[])childData.Clone();
         for (var h = 0; h < 8; h++)
-        {
             if (h is 0 or 1 or 6 or 7)
                 Array.Copy(parentData, h * 4096, expected, h * 4096, 4096);
-        }
 
         var openErr = ChdFile.Open(childPath, parentPath, out var chd);
         Assert.Equal(ChdError.Chderrnone, openErr);
@@ -240,12 +237,12 @@ public class UncompressedEncodeTests : IDisposable
     {
         var cuePath = Path.Combine(_dir, "none.cue");
         File.WriteAllText(cuePath, """
-            FILE "none.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 00:00:16
-            """);
+                                   FILE "none.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                     TRACK 02 AUDIO
+                                       INDEX 01 00:00:16
+                                   """);
         var bin = new byte[64 * CdConstants.MaxSectorData];
         var rng = new Random(36);
         rng.NextBytes(bin);

@@ -33,7 +33,6 @@ internal static partial class Inflater
         byte[] window = null;
         var wsize = 0;
         if (state.Window != null)
-        {
             try
             {
                 wsize = 1 << (int)state.Wbits;
@@ -43,7 +42,6 @@ internal static partial class Inflater
             {
                 return ZMemError;
             }
-        }
 
         // copy state
         dest.AvailIn = source.AvailIn;
@@ -140,22 +138,12 @@ internal static partial class Inflater
             ref netUnsafe.As<Code, byte>(ref sourceCodes), (uint)(state.Codes.Length * Code.Size));
 
         if (state.Lencode == SLenfix)
-        {
             copy.Lencode = SLenfix;
-        }
-        else if (state.Lencode == state.Codes)
-        {
-            copy.Lencode = copy.Codes;
-        }
+        else if (state.Lencode == state.Codes) copy.Lencode = copy.Codes;
 
         if (state.Distcode == SDistfix)
-        {
             copy.Distcode = SDistfix;
-        }
-        else if (state.Distcode == state.Codes)
-        {
-            copy.Distcode = copy.Codes;
-        }
+        else if (state.Distcode == state.Codes) copy.Distcode = copy.Codes;
 
         copy.Next = state.Next;
         copy.Diststart = state.Diststart;
@@ -171,10 +159,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
     private static void InitRefFields(InflateState s, ref InflateRefs refs)
     {
-        if (netUnsafe.IsNullRef(ref refs.Lens))
-        {
-            refs.Lens = ref MemoryMarshal.GetReference(s.Lens);
-        }
+        if (netUnsafe.IsNullRef(ref refs.Lens)) refs.Lens = ref MemoryMarshal.GetReference(s.Lens);
 
         if (netUnsafe.IsNullRef(ref refs.Codes))
         {

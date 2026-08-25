@@ -1,23 +1,22 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct ZSTDMT_bufferPool_s
 {
+    public void* poolMutex;
+    public nuint bufferSize;
+    public uint totalBuffers;
+    public uint nbBuffers;
+    public ZSTD_customMem cMem;
+
+    /* variable size */
+    public _bTable_e__FixedBuffer bTable;
+
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ZSTDMT_bufferPool_s
+    public struct _bTable_e__FixedBuffer
     {
-        public void* poolMutex;
-        public nuint bufferSize;
-        public uint totalBuffers;
-        public uint nbBuffers;
-        public ZSTD_customMem cMem;
-
-        /* variable size */
-        public _bTable_e__FixedBuffer bTable;
-
-        [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct _bTable_e__FixedBuffer
-        {
-            public buffer_s e0;
-        }
+        public buffer_s e0;
     }
 }

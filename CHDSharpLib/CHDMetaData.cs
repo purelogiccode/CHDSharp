@@ -1,12 +1,19 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 using CHDSharp.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace CHDSharp;
 
-/// <summary>Reads, validates, and hashes CHD metadata entries from the metadata chain, and computes the combined (overall) SHA-1 for V4/V5 CHDs.</summary>
+/// <summary>
+///     Reads, validates, and hashes CHD metadata entries from the metadata chain, and computes the combined (overall)
+///     SHA-1 for V4/V5 CHDs.
+/// </summary>
 internal static class ChdMetaData
 {
+    private const uint ChdMdflagsChecksum = 0x01;
+
+    private const uint MaxMetadataEntryBytes = 64 * 1024;
     private static readonly ILogger Log = ChdLogger.GetLogger(nameof(ChdMetaData));
 
     private static readonly Action<ILogger, string, uint, Exception?> LogMetaTag =
@@ -18,14 +25,13 @@ internal static class ChdMetaData
     private static readonly Action<ILogger, int, Exception?> LogMetaDataBinary =
         LoggerMessage.Define<int>(LogLevel.Debug, new EventId(3), "Data: Binary Data Length {Length}");
 
-    private const uint ChdMdflagsChecksum = 0x01;
-
-    private const uint MaxMetadataEntryBytes = 64 * 1024;
-
     /// <summary>Reads all metadata entries and validates the combined SHA-1 hash stored in the header (V4/V5).</summary>
     /// <param name="file">The stream containing the CHD file.</param>
     /// <param name="chd">The parsed CHD header with metadata offset and hash fields.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; <see cref="ChdError.Chderrinvalidmetadata"/> if the combined hash does not match; otherwise a read/parse error code.</returns>
+    /// <returns>
+    ///     <see cref="ChdError.Chderrnone" /> on success; <see cref="ChdError.Chderrinvalidmetadata" /> if the combined
+    ///     hash does not match; otherwise a read/parse error code.
+    /// </returns>
     internal static ChdError ReadMetaData(Stream file, ChdHeader chd)
     {
         if (chd.Rawsha1 is not { Length: 20 } || chd.Sha1 is not { Length: 20 } || Util.IsAllZeroArray(chd.Sha1))
@@ -38,10 +44,8 @@ internal static class ChdMetaData
             return metaErr;
 
         foreach (var entry in entries)
-        {
             if (entry.Hash != null)
                 metaHashes.Add(entry.Hash);
-        }
 
         metaHashes.Sort(Util.ByteArrCompare);
 
@@ -63,8 +67,11 @@ internal static class ChdMetaData
     /// <summary>Reads all metadata entries from the chain without validating the combined SHA-1 hash.</summary>
     /// <param name="file">The stream containing the CHD file.</param>
     /// <param name="chd">The parsed CHD header with the metadata offset.</param>
-    /// <param name="entries">When this method returns, contains the list of parsed metadata entries on success, or an empty list on error.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise a read/parse error code.</returns>
+    /// <param name="entries">
+    ///     When this method returns, contains the list of parsed metadata entries on success, or an empty
+    ///     list on error.
+    /// </param>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise a read/parse error code.</returns>
     internal static ChdError ReadMetaDataEntries(Stream file, ChdHeader chd,
         out List<ChdMetadataEntry> entries)
     {
@@ -73,20 +80,17 @@ internal static class ChdMetaData
         if (metaErr != ChdError.Chderrnone)
             return metaErr;
 
-        foreach (var e in internalEntries)
-        {
-            entries.Add(new ChdMetadataEntry(e.Tag, e.Data) { Flags = e.Flags });
-        }
+        foreach (var e in internalEntries) entries.Add(new ChdMetadataEntry(e.Tag, e.Data) { Flags = e.Flags });
 
         return ChdError.Chderrnone;
     }
 
     /// <summary>
-    /// Computes the combined (overall) SHA-1 of a V4/V5 CHD: <c>SHA1(rawsha1 ‖ sorted hashes)</c>
-    /// where each hash is the big-endian 4-byte metadata tag followed by the SHA-1 of the entry
-    /// payload (checksummed entries only, sorted byte-wise) — MAME <c>compute_overall_sha1</c>
-    /// parity. Returns <c>null</c> when the header has no SHA-1 fields to anchor the computation
-    /// (V1/V2, or V3 whose "sha1" is the raw hash), or when the metadata chain cannot be read.
+    ///     Computes the combined (overall) SHA-1 of a V4/V5 CHD: <c>SHA1(rawsha1 ‖ sorted hashes)</c>
+    ///     where each hash is the big-endian 4-byte metadata tag followed by the SHA-1 of the entry
+    ///     payload (checksummed entries only, sorted byte-wise) — MAME <c>compute_overall_sha1</c>
+    ///     parity. Returns <c>null</c> when the header has no SHA-1 fields to anchor the computation
+    ///     (V1/V2, or V3 whose "sha1" is the raw hash), or when the metadata chain cannot be read.
     /// </summary>
     internal static byte[]? ComputeOverallSha1(Stream file, ChdHeader chd, byte[] rawSha1)
     {
@@ -99,10 +103,8 @@ internal static class ChdMetaData
             return null;
 
         foreach (var entry in entries)
-        {
             if (entry.Hash != null)
                 metaHashes.Add(entry.Hash);
-        }
 
         metaHashes.Sort(Util.ByteArrCompare);
 
@@ -120,7 +122,7 @@ internal static class ChdMetaData
         bool collectHashes, out List<InternalEntry> entries)
     {
         entries = [];
-        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
+        using var br = new BinaryReader(file, Encoding.UTF8, true);
 
         var currentOffset = chd.Metaoffset;
         var visitedOffsets = new HashSet<ulong>();
@@ -142,19 +144,17 @@ internal static class ChdMetaData
             var metaData = new byte[metaLength];
             file.ReadExactly(metaData, 0, metaData.Length);
 
-            var tag = $"{(char)((metaTag >> 24) & 0xFF)}{(char)((metaTag >> 16) & 0xFF)}{(char)((metaTag >> 8) & 0xFF)}{(char)((metaTag >> 0) & 0xFF)}";
+            var tag =
+                $"{(char)((metaTag >> 24) & 0xFF)}{(char)((metaTag >> 16) & 0xFF)}{(char)((metaTag >> 8) & 0xFF)}{(char)((metaTag >> 0) & 0xFF)}";
 
             LogMetaTag(Log, tag, metaLength, null);
             if (Util.IsAscii(metaData))
-                LogMetaDataText(Log, System.Text.Encoding.ASCII.GetString(metaData), null);
+                LogMetaDataText(Log, Encoding.ASCII.GetString(metaData), null);
             else
                 LogMetaDataBinary(Log, metaData.Length, null);
 
             byte[]? hash = null;
-            if (collectHashes && (metaFlags & ChdMdflagsChecksum) != 0)
-            {
-                hash = metadata_hash(metaTag, metaData);
-            }
+            if (collectHashes && (metaFlags & ChdMdflagsChecksum) != 0) hash = metadata_hash(metaTag, metaData);
 
             entries.Add(new InternalEntry { Tag = tag, Data = metaData, Hash = hash, Flags = (byte)metaFlags });
 
@@ -173,19 +173,16 @@ internal static class ChdMetaData
         metaHash[3] = (byte)((metaTag >> 0) & 0xff);
         var metaDataHash = SHA1.HashData(metaData);
 
-        for (var i = 0; i < 20; i++)
-        {
-            metaHash[4 + i] = metaDataHash[i];
-        }
+        for (var i = 0; i < 20; i++) metaHash[4 + i] = metaDataHash[i];
 
         return metaHash;
     }
 
     private sealed class InternalEntry
     {
-        public required string Tag;
         public required byte[] Data;
-        public byte[]? Hash;
         public byte Flags;
+        public byte[]? Hash;
+        public required string Tag;
     }
 }

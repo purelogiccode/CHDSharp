@@ -3,8 +3,8 @@ using CHDSharp.Utils;
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Pure unit tests for the checksum utilities used during hunk validation.
-/// These require no external files and always run.
+///     Pure unit tests for the checksum utilities used during hunk validation.
+///     These require no external files and always run.
 /// </summary>
 public class ChecksumTests
 {

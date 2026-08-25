@@ -182,13 +182,11 @@ public class UtilityTests
         var pool = new ArrayPool(64);
         var tasks = new Task[100];
         for (var i = 0; i < 100; i++)
-        {
             tasks[i] = Task.Run(() =>
             {
                 var arr = pool.Rent();
                 pool.Return(arr);
             }, TestContext.Current.CancellationToken);
-        }
 
         await Task.WhenAll(tasks);
         pool.ReadStats(out var issued, out var returned);

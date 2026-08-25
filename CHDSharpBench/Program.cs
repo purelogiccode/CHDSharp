@@ -6,11 +6,11 @@ namespace CHDSharpBench;
 public static class Program
 {
     /// <summary>
-    /// CHDSharp benchmark suite (Phase 7.4). Run without arguments to benchmark all groups;
-    /// pass BenchmarkDotNet filters (e.g. <c>*Decode*</c>) to select, or use
-    /// <c>--chdman &lt;chdman.exe&gt; [--corpus &lt;dir&gt;]</c> to run the external chdman
-    /// comparison harness. The corpus directory defaults to <c>CHDSharpTest/TestData</c>
-    /// (repo layout); override with <c>--corpus &lt;dir&gt;</c>.
+    ///     CHDSharp benchmark suite (Phase 7.4). Run without arguments to benchmark all groups;
+    ///     pass BenchmarkDotNet filters (e.g. <c>*Decode*</c>) to select, or use
+    ///     <c>--chdman &lt;chdman.exe&gt; [--corpus &lt;dir&gt;]</c> to run the external chdman
+    ///     comparison harness. The corpus directory defaults to <c>CHDSharpTest/TestData</c>
+    ///     (repo layout); override with <c>--corpus &lt;dir&gt;</c>.
     /// </summary>
     public static void Main(string[] args)
     {
@@ -22,7 +22,6 @@ public static class Program
             // Strip our own switches before handing the rest to BenchmarkDotNet.
             var runnerArgs = new List<string>();
             for (var i = 0; i < args.Length; i++)
-            {
                 switch (args[i])
                 {
                     case "--corpus" when i + 1 < args.Length:
@@ -33,19 +32,14 @@ public static class Program
                         break;
                     default:
                         if (args[i].StartsWith("--corpus:", StringComparison.Ordinal))
-                        {
                             corpusDir = args[i]["--corpus:".Length..];
-                        }
                         else if (args[i].StartsWith("--chdman=", StringComparison.Ordinal))
-                        {
                             chdmanExe = args[i]["--chdman=".Length..];
-                        }
                         else
                             runnerArgs.Add(args[i]);
 
                         break;
                 }
-            }
 
             if (chdmanExe != null)
             {

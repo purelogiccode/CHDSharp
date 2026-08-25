@@ -1,15 +1,15 @@
 using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Jobs;
 using CHDSharp.Encoder;
 
 namespace CHDSharpBench.Models;
 
 /// <summary>
-/// Shared BenchmarkDotNet configuration: ShortRun (3 warmup + 3 measurement iterations × 1
-/// launch) keeps the suite finishable in CI, and MemoryDiagnoser reports managed allocation
-/// (the proxy for encode "peak memory"). Override the job with command-line
-/// <c>--job LongRun</c> etc. for publishing-grade measurements.
+///     Shared BenchmarkDotNet configuration: ShortRun (3 warmup + 3 measurement iterations × 1
+///     launch) keeps the suite finishable in CI, and MemoryDiagnoser reports managed allocation
+///     (the proxy for encode "peak memory"). Override the job with command-line
+///     <c>--job LongRun</c> etc. for publishing-grade measurements.
 /// </summary>
 public class BenchConfig : ManualConfig
 {
@@ -20,8 +20,10 @@ public class BenchConfig : ManualConfig
     }
 }
 
-/// <summary>Maps a codec name (lib <see cref="ChdCodec"/>) to the encoder tag used by
-/// <see cref="CodecTags"/> (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl/none).</summary>
+/// <summary>
+///     Maps a codec name (lib <see cref="ChdCodec" />) to the encoder tag used by
+///     <see cref="CodecTags" /> (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl/none).
+/// </summary>
 public static class CodecMap
 {
     public static readonly (string Name, ChdCodec Decode, uint Encode)[] All =

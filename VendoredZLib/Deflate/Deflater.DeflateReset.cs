@@ -33,10 +33,7 @@ internal static partial class Deflater
         refs.PendingOut = ref refs.PendingBuf;
 #endif
 
-        if (s.Wrap < 0)
-        {
-            s.Wrap = -s.Wrap; // was made negative by deflate(..., Z_FINISH);
-        }
+        if (s.Wrap < 0) s.Wrap = -s.Wrap; // was made negative by deflate(..., Z_FINISH);
 
         s.Status = InitState;
 

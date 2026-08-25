@@ -1,3 +1,4 @@
+using System.Text;
 using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
@@ -13,12 +14,12 @@ public class ChdEncoderTests
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
             Assert.True(chd.Length > 124);
 
-            var magic = System.Text.Encoding.ASCII.GetString(chd, 0, 8);
+            var magic = Encoding.ASCII.GetString(chd, 0, 8);
             Assert.Equal("MComprHD", magic);
 
             var version = ReadU32Be(chd, 12);
@@ -42,7 +43,7 @@ public class ChdEncoderTests
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
             var logical = ReadU64Be(chd, 32);
@@ -63,7 +64,7 @@ public class ChdEncoderTests
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
             var mapOffset = ReadU64Be(chd, 40);
@@ -84,7 +85,7 @@ public class ChdEncoderTests
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
 
@@ -109,7 +110,7 @@ public class ChdEncoderTests
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
             Assert.True(chd.Length > ChdHeaderV5.Length);
@@ -124,22 +125,19 @@ public class ChdEncoderTests
     public void FileHasExpectedLayout()
     {
         var source = new byte[8192];
-        for (var i = 0; i < source.Length; i++)
-        {
-            source[i] = (byte)((i * 7) & 0xFF);
-        }
+        for (var i = 0; i < source.Length; i++) source[i] = (byte)((i * 7) & 0xFF);
 
         var chdPath = Path.GetTempFileName();
 
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
 
             // Header should be at offset 0
-            var magic = System.Text.Encoding.ASCII.GetString(chd, 0, 8);
+            var magic = Encoding.ASCII.GetString(chd, 0, 8);
             Assert.Equal("MComprHD", magic);
 
             // Map offset should point past all hunk data
@@ -162,7 +160,7 @@ public class ChdEncoderTests
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
             Assert.True(chd.Length > ChdHeaderV5.Length);
@@ -182,17 +180,14 @@ public class ChdEncoderTests
         // the raw SHA-1 must cover the actual source bytes, not the zero-padded
         // final hunk, so that chdman verify succeeds for non-aligned sizes
         var source = new byte[10000];
-        for (var i = 0; i < source.Length; i++)
-        {
-            source[i] = (byte)((i * 13) & 0xFF);
-        }
+        for (var i = 0; i < source.Length; i++) source[i] = (byte)((i * 13) & 0xFF);
 
         var chdPath = Path.GetTempFileName();
 
         try
         {
             using var ms = new MemoryStream(source);
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
             var storedRawSha1 = chd.AsSpan(64, 20).ToArray();
@@ -222,17 +217,14 @@ public class ChdEncoderTests
         try
         {
             var source = new byte[4096];
-            for (var i = 0; i < source.Length; i++)
-            {
-                source[i] = (byte)((i * 3 + 1) & 0xFF);
-            }
+            for (var i = 0; i < source.Length; i++) source[i] = (byte)((i * 3 + 1) & 0xFF);
 
             File.WriteAllBytes(srcPath, source);
 
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
-            Assert.Equal("MComprHD", System.Text.Encoding.ASCII.GetString(chd, 0, 8));
+            Assert.Equal("MComprHD", Encoding.ASCII.GetString(chd, 0, 8));
         }
         finally
         {

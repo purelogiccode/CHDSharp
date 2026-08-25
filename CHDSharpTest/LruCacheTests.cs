@@ -1,18 +1,18 @@
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Tests for the configurable multi-hunk LRU cache (libchdr #36): <c>ChdFile.CacheSize</c> /
-/// <c>ConfigureCache</c>. Uses a synthetic uncompressed V5 CHD with several distinct data hunks
-/// so cache eviction and cross-hunk correctness can be verified deterministically.
+///     Tests for the configurable multi-hunk LRU cache (libchdr #36): <c>ChdFile.CacheSize</c> /
+///     <c>ConfigureCache</c>. Uses a synthetic uncompressed V5 CHD with several distinct data hunks
+///     so cache eviction and cross-hunk correctness can be verified deterministically.
 /// </summary>
 public class LruCacheTests
 {
     private const uint Blocksize = 512;
 
     /// <summary>
-    /// Builds an uncompressed V5 CHD with <paramref name="hunkCount"/> hunks, each hunk cached as
-    /// its own physical block and holding a distinct byte pattern. Hunk <c>h</c> contains
-    /// <c>(byte)(h + i)</c> for <c>i</c> in [0, Blocksize).
+    ///     Builds an uncompressed V5 CHD with <paramref name="hunkCount" /> hunks, each hunk cached as
+    ///     its own physical block and holding a distinct byte pattern. Hunk <c>h</c> contains
+    ///     <c>(byte)(h + i)</c> for <c>i</c> in [0, Blocksize).
     /// </summary>
     private static MemoryStream BuildV5Chd(uint hunkCount)
     {
@@ -36,10 +36,7 @@ public class LruCacheTests
         for (uint h = 0; h < hunkCount; h++)
         {
             var block = new byte[Blocksize];
-            for (var i = 0; i < Blocksize; i++)
-            {
-                block[i] = (byte)(h + i);
-            }
+            for (var i = 0; i < Blocksize; i++) block[i] = (byte)(h + i);
 
             ms.Seek((h + 1) * Blocksize, SeekOrigin.Begin);
             Write(block);
@@ -62,10 +59,7 @@ public class LruCacheTests
     private static byte[] ExpectedPattern(uint h, int count = (int)Blocksize)
     {
         var data = new byte[count];
-        for (var i = 0; i < count; i++)
-        {
-            data[i] = (byte)(h + i);
-        }
+        for (var i = 0; i < count; i++) data[i] = (byte)(h + i);
 
         return data;
     }

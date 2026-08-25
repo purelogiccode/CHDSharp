@@ -1,21 +1,21 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct HUF_buildCTable_wksp_tables
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct HUF_buildCTable_wksp_tables
-    {
-        public _huffNodeTbl_e__FixedBuffer huffNodeTbl;
-        public _rankPosition_e__FixedBuffer rankPosition;
+    public _huffNodeTbl_e__FixedBuffer huffNodeTbl;
+    public _rankPosition_e__FixedBuffer rankPosition;
 
 #if NET8_0_OR_GREATER
-        [InlineArray(512)]
-        [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct _huffNodeTbl_e__FixedBuffer
-        {
-            public nodeElt_s e0;
-        }
+    [InlineArray(512)]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct _huffNodeTbl_e__FixedBuffer
+    {
+        public nodeElt_s e0;
+    }
 
 #else
         [StructLayout(LayoutKind.Sequential)]
@@ -537,12 +537,12 @@ namespace VendoredZSTD.Unsafe
 #endif
 
 #if NET8_0_OR_GREATER
-        [InlineArray(192)]
-        [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct _rankPosition_e__FixedBuffer
-        {
-            public rankPos e0;
-        }
+    [InlineArray(192)]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct _rankPosition_e__FixedBuffer
+    {
+        public rankPos e0;
+    }
 
 #else
         [StructLayout(LayoutKind.Sequential)]
@@ -742,5 +742,4 @@ namespace VendoredZSTD.Unsafe
             public rankPos e191;
         }
 #endif
-    }
 }

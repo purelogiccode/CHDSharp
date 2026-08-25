@@ -4,13 +4,13 @@ using CHDSharp.Encoder;
 namespace CHDSharpBench.Benchmarks;
 
 /// <summary>
-/// Encode throughput per codec: a deterministic 64 MiB synthetic image (roughly 50% random,
-/// 50% compressible patterns — zlib lands around 2.5:1, so every codec gets real work) is
-/// encoded with each codec in turn through <see cref="ChdEncoder"/> into a temp CHD.
-/// 1 vs 8 workers shows the parallel pipeline win. Bytes processed per operation = 64 MiB;
-/// MB/s = value ÷ Mean; Allocated reports the per-op managed peak. CD codecs (cdzl/cdlz/cdzs/
-/// cdfl) run on CD-sized hunks (8 frames); the flac path additionally benefits from
-/// audio-like content, so its synthetic data pair alternates 16-bit samples.
+///     Encode throughput per codec: a deterministic 64 MiB synthetic image (roughly 50% random,
+///     50% compressible patterns — zlib lands around 2.5:1, so every codec gets real work) is
+///     encoded with each codec in turn through <see cref="ChdEncoder" /> into a temp CHD.
+///     1 vs 8 workers shows the parallel pipeline win. Bytes processed per operation = 64 MiB;
+///     MB/s = value ÷ Mean; Allocated reports the per-op managed peak. CD codecs (cdzl/cdlz/cdzs/
+///     cdfl) run on CD-sized hunks (8 frames); the flac path additionally benefits from
+///     audio-like content, so its synthetic data pair alternates 16-bit samples.
 /// </summary>
 [Config(typeof(BenchConfig))]
 public class EncodeBenchmarks
@@ -24,24 +24,26 @@ public class EncodeBenchmarks
     private readonly Dictionary<uint, byte[]> _images = new();
     private readonly Dictionary<uint, string> _tempDirs = new();
 
+    [ParamsSource(nameof(WorkerCounts))] public int TaskCount { get; set; }
+
     [GlobalSetup]
     public void Setup()
     {
-        _images[CodecTags.Zlib] = BuildRawImage(ImageBytes, seed: 0xC0DEC1B, randomRatio: 0.40);
-        _images[CodecTags.Zstd] = BuildRawImage(ImageBytes, seed: 0xC0DEC2B, randomRatio: 0.40);
-        _images[CodecTags.Lzma] = BuildRawImage(ImageBytes, seed: 0xC0DEC3B, randomRatio: 0.40);
+        _images[CodecTags.Zlib] = BuildRawImage(ImageBytes, 0xC0DEC1B, 0.40);
+        _images[CodecTags.Zstd] = BuildRawImage(ImageBytes, 0xC0DEC2B, 0.40);
+        _images[CodecTags.Lzma] = BuildRawImage(ImageBytes, 0xC0DEC3B, 0.40);
         // huff crushes repetitive data; feed it the most compressible pattern mix.
-        _images[CodecTags.Huff] = BuildRawImage(ImageBytes, seed: 0xC0DEC4B, randomRatio: 0.15);
+        _images[CodecTags.Huff] = BuildRawImage(ImageBytes, 0xC0DEC4B, 0.15);
         // flac drives 16-bit little-endian sample pairs; audio-like content compresses best.
-        _images[CodecTags.Flac] = BuildAudioImage(ImageBytes, seed: 0xC0DEC5B);
-        _images[CodecTags.None] = BuildRawImage(ImageBytes, seed: 0xC0DEC6B, randomRatio: 0.40);
+        _images[CodecTags.Flac] = BuildAudioImage(ImageBytes, 0xC0DEC5B);
+        _images[CodecTags.None] = BuildRawImage(ImageBytes, 0xC0DEC6B, 0.40);
 
         // CD codecs encode CD-sized hunks (8 frames of 2448): a frame-major image with
         // mode-1-ish sector headers so the ECC path is exercised.
-        _images[CodecTags.Cdzl] = BuildCdImage(ImageBytes, seed: 0xC0DEC7B);
-        _images[CodecTags.Cdlz] = BuildCdImage(ImageBytes, seed: 0xC0DEC8B);
-        _images[CodecTags.Cdzs] = BuildCdImage(ImageBytes, seed: 0xC0DEC9B);
-        _images[CodecTags.Cdfl] = BuildCdAudioImage(ImageBytes, seed: 0xC0DECAB);
+        _images[CodecTags.Cdzl] = BuildCdImage(ImageBytes, 0xC0DEC7B);
+        _images[CodecTags.Cdlz] = BuildCdImage(ImageBytes, 0xC0DEC8B);
+        _images[CodecTags.Cdzs] = BuildCdImage(ImageBytes, 0xC0DEC9B);
+        _images[CodecTags.Cdfl] = BuildCdAudioImage(ImageBytes, 0xC0DECAB);
     }
 
     public static IEnumerable<int> WorkerCounts()
@@ -49,17 +51,15 @@ public class EncodeBenchmarks
         return [1, 8];
     }
 
-    [ParamsSource(nameof(WorkerCounts))]
-    public int TaskCount { get; set; }
-
     private string RunEncode(uint codec, bool parallel)
     {
         if (!_images.TryGetValue(codec, out var image))
-            throw new InvalidOperationException($"Benchmark image for codec {CodecTags.ToString(codec)} was not created (setup failed)");
+            throw new InvalidOperationException(
+                $"Benchmark image for codec {CodecTags.ToString(codec)} was not created (setup failed)");
 
         var outDir = GetTempDir(codec);
         var outPath = Path.Combine(outDir, "bench.chd");
-        using var src = new MemoryStream(image, writable: false);
+        using var src = new MemoryStream(image, false);
 
         var options = new ChdEncodeOptions { TaskCount = parallel ? TaskCount : 1 };
         var isCd = codec is CodecTags.Cdzl or CodecTags.Cdlz or CodecTags.Cdzs or CodecTags.Cdfl;
@@ -73,61 +73,61 @@ public class EncodeBenchmarks
     [Benchmark]
     public string Encode_Zlib()
     {
-        return RunEncode(CodecTags.Zlib, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Zlib, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Zstd()
     {
-        return RunEncode(CodecTags.Zstd, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Zstd, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Lzma()
     {
-        return RunEncode(CodecTags.Lzma, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Lzma, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Huff()
     {
-        return RunEncode(CodecTags.Huff, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Huff, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Flac()
     {
-        return RunEncode(CodecTags.Flac, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Flac, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_None()
     {
-        return RunEncode(CodecTags.None, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.None, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Cdzl()
     {
-        return RunEncode(CodecTags.Cdzl, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Cdzl, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Cdlz()
     {
-        return RunEncode(CodecTags.Cdlz, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Cdlz, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Cdzs()
     {
-        return RunEncode(CodecTags.Cdzs, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Cdzs, TaskCount > 1);
     }
 
     [Benchmark]
     public string Encode_Cdfl()
     {
-        return RunEncode(CodecTags.Cdfl, parallel: TaskCount > 1);
+        return RunEncode(CodecTags.Cdfl, TaskCount > 1);
     }
 
     private string GetTempDir(uint codec)
@@ -150,10 +150,8 @@ public class EncodeBenchmarks
         rng.NextBytes(data);
         var runStart = (int)(sizeBytes * (1.0 - randomRatio));
         for (var i = runStart; i < sizeBytes; i++)
-        {
             // Compressible runs: repeating word + zeros.
             data[i] = (byte)((i & 0x3FF) == 0 ? 0 : (i / 96) & 0xFF);
-        }
 
         return data;
     }
@@ -186,10 +184,7 @@ public class EncodeBenchmarks
         {
             var off = frame * frameSize;
             var len = Math.Min(frameSize, sizeBytes - off);
-            for (var i = 0; i < len; i++)
-            {
-                data[off + i] = (byte)rng.Next(256);
-            }
+            for (var i = 0; i < len; i++) data[off + i] = (byte)rng.Next(256);
         }
 
         return data;
@@ -209,10 +204,7 @@ public class EncodeBenchmarks
             {
                 sample = (sample + rng.Next(64000)) & 0xFFFF;
                 data[off + i] = (byte)sample;
-                if (i + 1 < len)
-                {
-                    data[off + i + 1] = (byte)(sample >> 8);
-                }
+                if (i + 1 < len) data[off + i + 1] = (byte)(sample >> 8);
             }
         }
 

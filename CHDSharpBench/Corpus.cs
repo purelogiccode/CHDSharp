@@ -1,19 +1,31 @@
+using System.Text.Json;
+using CHDSharp;
+
 namespace CHDSharpBench;
 
 /// <summary>
-/// Resolves the benchmark corpus directory (CHD files to decode/verify and, when present,
-/// cue/bin pairs for CD encode benchmarks). Defaults to the repo's <c>CHDSharpTest/TestData</c>
-/// folder — walk up from the working directory until the repo root is found — and can be
-/// overridden with <c>--corpus &lt;dir&gt;</c>. Any CHD files in the corpus are used; codec
-/// benchmarks pick files whose header declares the matching compressor.
+///     Resolves the benchmark corpus directory (CHD files to decode/verify and, when present,
+///     cue/bin pairs for CD encode benchmarks). Defaults to the repo's <c>CHDSharpTest/TestData</c>
+///     folder — walk up from the working directory until the repo root is found — and can be
+///     overridden with <c>--corpus &lt;dir&gt;</c>. Any CHD files in the corpus are used; codec
+///     benchmarks pick files whose header declares the matching compressor.
 /// </summary>
 public static class Corpus
 {
     private const string EnvVar = "CHDSHARP_BENCH_CORPUS";
 
-    /// <summary>The configured corpus directory (absolute). Resolved lazily so that the
-    /// BenchmarkDotNet child process (which re-enters <see cref="Corpus"/> without a fresh
-    /// Configure call) still finds it: explicit value → environment variable → repo layout.</summary>
+    private static string _dir = "";
+
+    // ---- manifest.json integration (CHDSharpTest's TestData files carry a manifest that
+    // marks intentionally-invalid files and child→parent links) ----
+
+    private static readonly Dictionary<string, (string? Parent, bool Ok)> Manifest = LoadManifest();
+
+    /// <summary>
+    ///     The configured corpus directory (absolute). Resolved lazily so that the
+    ///     BenchmarkDotNet child process (which re-enters <see cref="Corpus" /> without a fresh
+    ///     Configure call) still finds it: explicit value → environment variable → repo layout.
+    /// </summary>
     public static string Dir
     {
         get
@@ -33,8 +45,6 @@ public static class Corpus
             return resolved;
         }
     }
-
-    private static string _dir = "";
 
     public static void Configure(string corpusDir)
     {
@@ -65,38 +75,35 @@ public static class Corpus
     /// <summary>All .chd files in the corpus, sorted by name.</summary>
     public static IReadOnlyList<string> ChdFiles()
     {
-        return [.. Directory.EnumerateFiles(Dir, "*.chd", SearchOption.TopDirectoryOnly).OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)];
+        return
+        [
+            .. Directory.EnumerateFiles(Dir, "*.chd", SearchOption.TopDirectoryOnly)
+                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+        ];
     }
 
-    /// <summary>Finds a corpus CHD whose V5 header declares the given compressor slot (single codec
-    /// files like <c>v5_zlib.chd</c> or <c>v5_cd_cdzs.chd</c>), or null when absent.</summary>
+    /// <summary>
+    ///     Finds a corpus CHD whose V5 header declares the given compressor slot (single codec
+    ///     files like <c>v5_zlib.chd</c> or <c>v5_cd_cdzs.chd</c>), or null when absent.
+    /// </summary>
     public static string? FindChdForCodec(uint codecTag)
     {
         foreach (var file in ChdFiles())
-        {
             try
             {
-                CHDSharp.Chd.ReadHeader(file, out var header);
+                Chd.ReadHeader(file, out var header);
                 if (header?.Compression is { Length: > 0 } comps &&
                     comps[0] == (ChdCodec)codecTag &&
                     comps.Skip(1).All(c => c == ChdCodec.None))
-                {
                     return file;
-                }
             }
             catch (Exception)
             {
                 // skip files that do not parse
             }
-        }
 
         return null;
     }
-
-    // ---- manifest.json integration (CHDSharpTest's TestData files carry a manifest that
-    // marks intentionally-invalid files and child→parent links) ----
-
-    private static readonly Dictionary<string, (string? Parent, bool Ok)> Manifest = LoadManifest();
 
     private static Dictionary<string, (string? Parent, bool Ok)> LoadManifest()
     {
@@ -108,14 +115,17 @@ public static class Corpus
             if (!File.Exists(path))
                 return result;
 
-            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+            using var doc = JsonDocument.Parse(File.ReadAllText(path));
             foreach (var e in doc.RootElement.EnumerateArray())
             {
                 if (!e.TryGetProperty("file", out var f) || f.GetString() is not { } name)
                     continue;
 
-                var parent = e.TryGetProperty("parent", out var p) && p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() : null;
-                var ok = e.TryGetProperty("expect", out var x) && string.Equals(x.GetString(), "ok", StringComparison.Ordinal);
+                var parent = e.TryGetProperty("parent", out var p) && p.ValueKind == JsonValueKind.String
+                    ? p.GetString()
+                    : null;
+                var ok = e.TryGetProperty("expect", out var x) &&
+                         string.Equals(x.GetString(), "ok", StringComparison.Ordinal);
                 result[name] = (parent, ok);
             }
         }
@@ -147,8 +157,10 @@ public static class Corpus
         return null;
     }
 
-    /// <summary>True when the file is expected to verify (manifest "ok"), or when the manifest
-    /// carries no entry for it (all files assumed ok).</summary>
+    /// <summary>
+    ///     True when the file is expected to verify (manifest "ok"), or when the manifest
+    ///     carries no entry for it (all files assumed ok).
+    /// </summary>
     public static bool IsExpectedOk(string file)
     {
         var name = Path.GetFileName(file);

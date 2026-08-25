@@ -1,12 +1,13 @@
 namespace VendoredFlac.Models.FlacDeps;
 
 /// <summary>
-/// Represents the configuration of an audio PCM stream, including sample rate, bit depth, channel count, and speaker layout.
+///     Represents the configuration of an audio PCM stream, including sample rate, bit depth, channel count, and speaker
+///     layout.
 /// </summary>
 internal class AudioPcmConfig
 {
     /// <summary>
-    /// Flags representing speaker positions and predefined speaker configurations.
+    ///     Flags representing speaker positions and predefined speaker configurations.
     /// </summary>
     [Flags]
     public enum SpeakerConfig
@@ -82,16 +83,28 @@ internal class AudioPcmConfig
         Ksaudiospeakersurround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerbackcenter,
 
         /// <summary>5.1 surround speaker configuration (front left/right/center + LFE + back left/right).</summary>
-        Ksaudiospeaker5Point1 = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency | Speakerbackleft | Speakerbackright,
+        Ksaudiospeaker5Point1 = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency |
+                                Speakerbackleft | Speakerbackright,
 
         /// <summary>5.1 surround speaker configuration using side speakers (front left/right/center + LFE + side left/right).</summary>
-        Ksaudiospeaker5Point1Surround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency | Speakersideleft | Speakersideright,
+        Ksaudiospeaker5Point1Surround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter |
+                                        Speakerlowfrequency | Speakersideleft | Speakersideright,
 
-        /// <summary>7.1 surround speaker configuration (front left/right/center + LFE + back left/right + front left/right of center).</summary>
-        Ksaudiospeaker7Point1 = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency | Speakerbackleft | Speakerbackright | Speakerfrontleftofcenter | Speakerfrontrightofcenter,
+        /// <summary>
+        ///     7.1 surround speaker configuration (front left/right/center + LFE + back left/right + front left/right of
+        ///     center).
+        /// </summary>
+        Ksaudiospeaker7Point1 = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency |
+                                Speakerbackleft | Speakerbackright | Speakerfrontleftofcenter |
+                                Speakerfrontrightofcenter,
 
-        /// <summary>7.1 surround speaker configuration using side speakers (front left/right/center + LFE + back left/right + side left/right).</summary>
-        Ksaudiospeaker7Point1Surround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency | Speakerbackleft | Speakerbackright | Speakersideleft | Speakersideright,
+        /// <summary>
+        ///     7.1 surround speaker configuration using side speakers (front left/right/center + LFE + back left/right + side
+        ///     left/right).
+        /// </summary>
+        Ksaudiospeaker7Point1Surround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter |
+                                        Speakerlowfrequency | Speakerbackleft | Speakerbackright | Speakersideleft |
+                                        Speakersideright,
 
         /// <summary>DVD Audio channel group 1, channel 0 (front center).</summary>
         Dvdaudiogr10 = Speakerfrontcenter,
@@ -221,37 +234,56 @@ internal class AudioPcmConfig
     }
 
     /// <summary>
-    /// Gets the number of bits per sample.
+    ///     Initializes a new instance of the <see cref="AudioPcmConfig" /> class.
+    /// </summary>
+    /// <param name="bitsPerSample">The number of bits per sample.</param>
+    /// <param name="channelCount">The number of audio channels.</param>
+    /// <param name="sampleRate">The sample rate in Hz.</param>
+    /// <param name="channelMask">
+    ///     The speaker configuration mask. If <see cref="SpeakerConfig.Directout" />, a default mask is
+    ///     assigned based on channel count.
+    /// </param>
+    public AudioPcmConfig(int bitsPerSample, int channelCount, int sampleRate,
+        SpeakerConfig channelMask = SpeakerConfig.Directout)
+    {
+        BitsPerSample = bitsPerSample;
+        ChannelCount = channelCount;
+        SampleRate = sampleRate;
+        ChannelMask = channelMask == SpeakerConfig.Directout ? GetDefaultChannelMask(channelCount) : channelMask;
+    }
+
+    /// <summary>
+    ///     Gets the number of bits per sample.
     /// </summary>
     public int BitsPerSample { get; }
 
     /// <summary>
-    /// Gets the number of channels.
+    ///     Gets the number of channels.
     /// </summary>
     public int ChannelCount { get; }
 
     /// <summary>
-    /// Gets the sample rate in Hz.
+    ///     Gets the sample rate in Hz.
     /// </summary>
     public int SampleRate { get; }
 
     /// <summary>
-    /// Gets the block alignment in bytes (calculated from channel count and bits per sample).
+    ///     Gets the block alignment in bytes (calculated from channel count and bits per sample).
     /// </summary>
     public int BlockAlign => ChannelCount * ((BitsPerSample + 7) / 8);
 
     /// <summary>
-    /// Gets the speaker channel mask.
+    ///     Gets the speaker channel mask.
     /// </summary>
     public SpeakerConfig ChannelMask { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the configuration matches Red Book audio CD format (16-bit, 2-channel, 44100 Hz).
+    ///     Gets a value indicating whether the configuration matches Red Book audio CD format (16-bit, 2-channel, 44100 Hz).
     /// </summary>
     public bool IsRedBook => BitsPerSample == 16 && ChannelCount == 2 && SampleRate == 44100;
 
     /// <summary>
-    /// Counts the number of set bits in the speaker mask, which represents the number of channels.
+    ///     Counts the number of set bits in the speaker mask, which represents the number of channels.
     /// </summary>
     /// <param name="mask">The speaker configuration mask.</param>
     /// <returns>The number of channels represented by the mask.</returns>
@@ -268,10 +300,10 @@ internal class AudioPcmConfig
     }
 
     /// <summary>
-    /// Gets the default speaker configuration mask for a given channel count.
+    ///     Gets the default speaker configuration mask for a given channel count.
     /// </summary>
     /// <param name="channelCount">The number of audio channels.</param>
-    /// <returns>A <see cref="SpeakerConfig"/> value representing the default speaker layout.</returns>
+    /// <returns>A <see cref="SpeakerConfig" /> value representing the default speaker layout.</returns>
     public static SpeakerConfig GetDefaultChannelMask(int channelCount)
     {
         switch (channelCount)
@@ -295,20 +327,5 @@ internal class AudioPcmConfig
         }
 
         return (SpeakerConfig)((1 << channelCount) - 1);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AudioPcmConfig"/> class.
-    /// </summary>
-    /// <param name="bitsPerSample">The number of bits per sample.</param>
-    /// <param name="channelCount">The number of audio channels.</param>
-    /// <param name="sampleRate">The sample rate in Hz.</param>
-    /// <param name="channelMask">The speaker configuration mask. If <see cref="SpeakerConfig.Directout"/>, a default mask is assigned based on channel count.</param>
-    public AudioPcmConfig(int bitsPerSample, int channelCount, int sampleRate, SpeakerConfig channelMask = SpeakerConfig.Directout)
-    {
-        BitsPerSample = bitsPerSample;
-        ChannelCount = channelCount;
-        SampleRate = sampleRate;
-        ChannelMask = channelMask == SpeakerConfig.Directout ? GetDefaultChannelMask(channelCount) : channelMask;
     }
 }

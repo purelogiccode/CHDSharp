@@ -1,9 +1,9 @@
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Tests for libchdr parity features: the public metadata query API
-/// (chd_get_metadata), Precache (chd_precache), V1/V2 synthesized GDDD
-/// metadata, and metadata flags exposure.
+///     Tests for libchdr parity features: the public metadata query API
+///     (chd_get_metadata), Precache (chd_precache), V1/V2 synthesized GDDD
+///     metadata, and metadata flags exposure.
 /// </summary>
 public class ParityFeaturesTests
 {
@@ -153,11 +153,9 @@ public class ParityFeaturesTests
         using (chd)
         {
             foreach (var entry in chd!.Metadata)
-            {
                 // Flag bit 0 = checksummed. Whatever the stored value, the
                 // property must round-trip from the entry header.
                 Assert.True(entry.Flags is 0 or 1);
-            }
         }
     }
 

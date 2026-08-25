@@ -1,228 +1,241 @@
-using System;
 using VendoredZSTD.Unsafe;
 
-namespace VendoredZSTD
+namespace VendoredZSTD;
+
+public unsafe class Compressor : IDisposable
 {
-    public unsafe class Compressor : IDisposable
+    public const int DefaultCompressionLevel = 0;
+
+    /*
+     * We have a finalizer that releases cctx (to prevent memory leaks if Disposed is not called),
+     * so we need to delay running the object's finalizer when dealing with cctx inside our methods.
+     * For this purpose we use GC.KeepAlive(this)
+     * For reference: https://devblogs.microsoft.com/oldnewthing/20100813-00/?p=13153
+     */
+    private ZSTD_CCtx_s* cctx;
+
+    private int level = DefaultCompressionLevel;
+
+    public Compressor(int level = DefaultCompressionLevel)
     {
-        public static int MinCompressionLevel => Methods.ZSTD_minCLevel();
-        public static int MaxCompressionLevel => Methods.ZSTD_maxCLevel();
-        public const int DefaultCompressionLevel = 0;
+        cctx = Methods.ZSTD_createCCtx();
+        if (cctx == null)
+            throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
 
-        private int level = DefaultCompressionLevel;
+        Level = level;
+    }
 
-        /*
-         * We have a finalizer that releases cctx (to prevent memory leaks if Disposed is not called),
-         * so we need to delay running the object's finalizer when dealing with cctx inside our methods.
-         * For this purpose we use GC.KeepAlive(this)
-         * For reference: https://devblogs.microsoft.com/oldnewthing/20100813-00/?p=13153
-         */
-        private ZSTD_CCtx_s* cctx;
+    public static int MinCompressionLevel => Methods.ZSTD_minCLevel();
+    public static int MaxCompressionLevel => Methods.ZSTD_maxCLevel();
 
-        public int Level
+    public int Level
+    {
+        get => level;
+        set
         {
-            get => level;
-            set
+            if (level != value)
             {
-                if (level != value)
-                {
-                    level = value;
-                    SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, value);
-                }
+                level = value;
+                SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, value);
             }
         }
+    }
 
-        public void SetParameter(ZSTD_cParameter parameter, int value)
-        {
-            EnsureNotDisposed();
-            Methods.ZSTD_CCtx_setParameter(cctx, parameter, value).EnsureZstdSuccess();
-            GC.KeepAlive(this);
-        }
+    public void Dispose()
+    {
+        ReleaseUnmanagedResources();
+        GC.SuppressFinalize(this);
+    }
 
-        public int GetParameter(ZSTD_cParameter parameter)
-        {
-            EnsureNotDisposed();
-            int value;
-            Methods.ZSTD_CCtx_getParameter(cctx, parameter, &value).EnsureZstdSuccess();
-            GC.KeepAlive(this);
-            return value;
-        }
+    public void SetParameter(ZSTD_cParameter parameter, int value)
+    {
+        EnsureNotDisposed();
+        Methods.ZSTD_CCtx_setParameter(cctx, parameter, value).EnsureZstdSuccess();
+        GC.KeepAlive(this);
+    }
 
-        public void LoadDictionary(byte[] dict)
-        {
-            var dictReadOnlySpan = new ReadOnlySpan<byte>(dict);
-            LoadDictionary(dictReadOnlySpan);
-        }
+    public int GetParameter(ZSTD_cParameter parameter)
+    {
+        EnsureNotDisposed();
+        int value;
+        Methods.ZSTD_CCtx_getParameter(cctx, parameter, &value).EnsureZstdSuccess();
+        GC.KeepAlive(this);
+        return value;
+    }
 
-        public void LoadDictionary(ReadOnlySpan<byte> dict)
-        {
-            EnsureNotDisposed();
-            if (dict.IsEmpty)
+    public void LoadDictionary(byte[] dict)
+    {
+        var dictReadOnlySpan = new ReadOnlySpan<byte>(dict);
+        LoadDictionary(dictReadOnlySpan);
+    }
+
+    public void LoadDictionary(ReadOnlySpan<byte> dict)
+    {
+        EnsureNotDisposed();
+        if (dict.IsEmpty)
+            Methods.ZSTD_CCtx_loadDictionary(cctx, null, 0).EnsureZstdSuccess();
+        else
+            fixed (byte* dictPtr = dict)
             {
-                Methods.ZSTD_CCtx_loadDictionary(cctx, null, 0).EnsureZstdSuccess();
-            }
-            else
-            {
-                fixed (byte* dictPtr = dict)
-                    Methods
-                        .ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
-                        .EnsureZstdSuccess();
-            }
-
-            GC.KeepAlive(this);
-        }
-
-        public Compressor(int level = DefaultCompressionLevel)
-        {
-            cctx = Methods.ZSTD_createCCtx();
-            if (cctx == null)
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
-
-            Level = level;
-        }
-
-        ~Compressor()
-        {
-            ReleaseUnmanagedResources();
-        }
-
-        public static int GetCompressBound(int length) =>
-            (int)Methods.ZSTD_compressBound((nuint)length);
-
-        public static ulong GetCompressBoundLong(ulong length) =>
-            Methods.ZSTD_compressBound((nuint)length);
-
-        public Span<byte> Wrap(ReadOnlySpan<byte> src)
-        {
-            var dest = new byte[GetCompressBound(src.Length)];
-            var length = Wrap(src, dest);
-            return new Span<byte>(dest, 0, length);
-        }
-
-        public int Wrap(byte[] src, byte[] dest, int offset) =>
-            Wrap(src, new Span<byte>(dest, offset, dest.Length - offset));
-
-        public int Wrap(ReadOnlySpan<byte> src, Span<byte> dest)
-        {
-            EnsureNotDisposed();
-            fixed (byte* srcPtr = src)
-            fixed (byte* destPtr = dest)
-            {
-                var returnValue = (int)
-                    Methods
-                        .ZSTD_compress2(
-                            cctx,
-                            destPtr,
-                            (nuint)dest.Length,
-                            srcPtr,
-                            (nuint)src.Length
-                        )
-                        .EnsureZstdSuccess();
-                GC.KeepAlive(this);
-                return returnValue;
-            }
-        }
-
-        public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest) =>
-            Wrap((ReadOnlySpan<byte>)src, dest);
-
-        public int Wrap(
-            byte[] src,
-            int srcOffset,
-            int srcLength,
-            byte[] dst,
-            int dstOffset,
-            int dstLength
-        ) =>
-            Wrap(
-                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
-                new Span<byte>(dst, dstOffset, dstLength)
-            );
-
-        public bool TryWrap(byte[] src, byte[] dest, int offset, out int written) =>
-            TryWrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
-
-        public bool TryWrap(ReadOnlySpan<byte> src, Span<byte> dest, out int written)
-        {
-            EnsureNotDisposed();
-            fixed (byte* srcPtr = src)
-            fixed (byte* destPtr = dest)
-            {
-                var returnValue = Methods.ZSTD_compress2(
-                    cctx,
-                    destPtr,
-                    (nuint)dest.Length,
-                    srcPtr,
-                    (nuint)src.Length
-                );
-                GC.KeepAlive(this);
-
-                if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
-                {
-                    written = default;
-                    return false;
-                }
-
-                returnValue.EnsureZstdSuccess();
-                written = (int)returnValue;
-                return true;
-            }
-        }
-
-        public bool TryWrap(ArraySegment<byte> src, ArraySegment<byte> dest, out int written) =>
-            TryWrap((ReadOnlySpan<byte>)src, dest, out written);
-
-        public bool TryWrap(
-            byte[] src,
-            int srcOffset,
-            int srcLength,
-            byte[] dst,
-            int dstOffset,
-            int dstLength,
-            out int written
-        ) =>
-            TryWrap(
-                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
-                new Span<byte>(dst, dstOffset, dstLength),
-                out written
-            );
-
-        private void ReleaseUnmanagedResources()
-        {
-            if (cctx != null)
-            {
-                Methods.ZSTD_freeCCtx(cctx);
-                cctx = null;
-            }
-        }
-
-        public void Dispose()
-        {
-            ReleaseUnmanagedResources();
-            GC.SuppressFinalize(this);
-        }
-
-        private void EnsureNotDisposed()
-        {
-            if (cctx == null)
-                throw new ObjectDisposedException(nameof(Compressor));
-        }
-
-        internal nuint CompressStream(
-            ref ZSTD_inBuffer_s input,
-            ref ZSTD_outBuffer_s output,
-            ZSTD_EndDirective directive
-        )
-        {
-            fixed (ZSTD_inBuffer_s* inputPtr = &input)
-            fixed (ZSTD_outBuffer_s* outputPtr = &output)
-            {
-                var returnValue = Methods
-                    .ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)
+                Methods
+                    .ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
                     .EnsureZstdSuccess();
-                GC.KeepAlive(this);
-                return returnValue;
             }
+
+        GC.KeepAlive(this);
+    }
+
+    ~Compressor()
+    {
+        ReleaseUnmanagedResources();
+    }
+
+    public static int GetCompressBound(int length)
+    {
+        return (int)Methods.ZSTD_compressBound((nuint)length);
+    }
+
+    public static ulong GetCompressBoundLong(ulong length)
+    {
+        return Methods.ZSTD_compressBound((nuint)length);
+    }
+
+    public Span<byte> Wrap(ReadOnlySpan<byte> src)
+    {
+        var dest = new byte[GetCompressBound(src.Length)];
+        var length = Wrap(src, dest);
+        return new Span<byte>(dest, 0, length);
+    }
+
+    public int Wrap(byte[] src, byte[] dest, int offset)
+    {
+        return Wrap(src, new Span<byte>(dest, offset, dest.Length - offset));
+    }
+
+    public int Wrap(ReadOnlySpan<byte> src, Span<byte> dest)
+    {
+        EnsureNotDisposed();
+        fixed (byte* srcPtr = src)
+        fixed (byte* destPtr = dest)
+        {
+            var returnValue = (int)
+                Methods
+                    .ZSTD_compress2(
+                        cctx,
+                        destPtr,
+                        (nuint)dest.Length,
+                        srcPtr,
+                        (nuint)src.Length
+                    )
+                    .EnsureZstdSuccess();
+            GC.KeepAlive(this);
+            return returnValue;
+        }
+    }
+
+    public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest)
+    {
+        return Wrap((ReadOnlySpan<byte>)src, dest);
+    }
+
+    public int Wrap(
+        byte[] src,
+        int srcOffset,
+        int srcLength,
+        byte[] dst,
+        int dstOffset,
+        int dstLength
+    )
+    {
+        return Wrap(
+            new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+            new Span<byte>(dst, dstOffset, dstLength)
+        );
+    }
+
+    public bool TryWrap(byte[] src, byte[] dest, int offset, out int written)
+    {
+        return TryWrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
+    }
+
+    public bool TryWrap(ReadOnlySpan<byte> src, Span<byte> dest, out int written)
+    {
+        EnsureNotDisposed();
+        fixed (byte* srcPtr = src)
+        fixed (byte* destPtr = dest)
+        {
+            var returnValue = Methods.ZSTD_compress2(
+                cctx,
+                destPtr,
+                (nuint)dest.Length,
+                srcPtr,
+                (nuint)src.Length
+            );
+            GC.KeepAlive(this);
+
+            if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
+            {
+                written = default;
+                return false;
+            }
+
+            returnValue.EnsureZstdSuccess();
+            written = (int)returnValue;
+            return true;
+        }
+    }
+
+    public bool TryWrap(ArraySegment<byte> src, ArraySegment<byte> dest, out int written)
+    {
+        return TryWrap((ReadOnlySpan<byte>)src, dest, out written);
+    }
+
+    public bool TryWrap(
+        byte[] src,
+        int srcOffset,
+        int srcLength,
+        byte[] dst,
+        int dstOffset,
+        int dstLength,
+        out int written
+    )
+    {
+        return TryWrap(
+            new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+            new Span<byte>(dst, dstOffset, dstLength),
+            out written
+        );
+    }
+
+    private void ReleaseUnmanagedResources()
+    {
+        if (cctx != null)
+        {
+            Methods.ZSTD_freeCCtx(cctx);
+            cctx = null;
+        }
+    }
+
+    private void EnsureNotDisposed()
+    {
+        if (cctx == null)
+            throw new ObjectDisposedException(nameof(Compressor));
+    }
+
+    internal nuint CompressStream(
+        ref ZSTD_inBuffer_s input,
+        ref ZSTD_outBuffer_s output,
+        ZSTD_EndDirective directive
+    )
+    {
+        fixed (ZSTD_inBuffer_s* inputPtr = &input)
+        fixed (ZSTD_outBuffer_s* outputPtr = &output)
+        {
+            var returnValue = Methods
+                .ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)
+                .EnsureZstdSuccess();
+            GC.KeepAlive(this);
+            return returnValue;
         }
     }
 }

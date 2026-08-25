@@ -3,19 +3,6 @@ namespace VendoredLZMA.LZ;
 /// <summary>Binary-tree match finder for the LZMA encoder, ported from the LZMA SDK (public domain).</summary>
 internal class BinTree : InWindow, IMatchFinder
 {
-    private uint _cyclicBufferPos;
-    private uint _cyclicBufferSize;
-    private uint _matchMaxLen;
-
-    private uint[] _son = [];
-    private uint[] _hash = [];
-
-    private uint _cutValue = 0xFF;
-    private uint _hashMask;
-    private uint _hashSizeSum;
-
-    private bool _hashArray = true;
-
     private const uint KHash2Size = 1 << 10;
     private const uint KHash3Size = 1 << 16;
     private const uint KBt2HashSize = 1 << 16;
@@ -24,26 +11,21 @@ internal class BinTree : InWindow, IMatchFinder
     private const uint KEmptyHashValue = 0;
     private const uint KMaxValForNormalize = ((uint)1 << 31) - 1;
 
-    private uint _numHashDirectBytes;
-    private uint _minMatchCheck = 4;
+    private uint _cutValue = 0xFF;
+    private uint _cyclicBufferPos;
+    private uint _cyclicBufferSize;
     private uint _fixHashSize = KHash2Size + KHash3Size;
+    private uint[] _hash = [];
 
-    internal void SetType(int numHashBytes)
-    {
-        _hashArray = numHashBytes > 2;
-        if (_hashArray)
-        {
-            _numHashDirectBytes = 0;
-            _minMatchCheck = 4;
-            _fixHashSize = KHash2Size + KHash3Size;
-        }
-        else
-        {
-            _numHashDirectBytes = 2;
-            _minMatchCheck = 2 + 1;
-            _fixHashSize = 0;
-        }
-    }
+    private bool _hashArray = true;
+    private uint _hashMask;
+    private uint _hashSizeSum;
+    private uint _matchMaxLen;
+    private uint _minMatchCheck = 4;
+
+    private uint _numHashDirectBytes;
+
+    private uint[] _son = [];
 
     public new void SetStream(Stream stream)
     {
@@ -58,27 +40,10 @@ internal class BinTree : InWindow, IMatchFinder
     public new void Init()
     {
         base.Init();
-        for (uint i = 0; i < _hashSizeSum; i++)
-        {
-            _hash[i] = KEmptyHashValue;
-        }
+        for (uint i = 0; i < _hashSizeSum; i++) _hash[i] = KEmptyHashValue;
 
         _cyclicBufferPos = 0;
         ReduceOffsets(-1);
-    }
-
-    internal new void MovePos()
-    {
-        if (++_cyclicBufferPos >= _cyclicBufferSize)
-        {
-            _cyclicBufferPos = 0;
-        }
-
-        base.MovePos();
-        if (Pos == KMaxValForNormalize)
-        {
-            Normalize();
-        }
     }
 
     public new byte GetIndexByte(int index)
@@ -99,10 +64,7 @@ internal class BinTree : InWindow, IMatchFinder
     public void Create(uint historySize, uint keepAddBufferBefore,
         uint matchMaxLen, uint keepAddBufferAfter)
     {
-        if (historySize > KMaxValForNormalize - 256)
-        {
-            throw new Exception();
-        }
+        if (historySize > KMaxValForNormalize - 256) throw new Exception();
 
         _cutValue = 16 + (matchMaxLen >> 1);
 
@@ -114,10 +76,7 @@ internal class BinTree : InWindow, IMatchFinder
         _matchMaxLen = matchMaxLen;
 
         var cyclicBufferSize = historySize + 1;
-        if (_cyclicBufferSize != cyclicBufferSize)
-        {
-            _son = new uint[(_cyclicBufferSize = cyclicBufferSize) * 2];
-        }
+        if (_cyclicBufferSize != cyclicBufferSize) _son = new uint[(_cyclicBufferSize = cyclicBufferSize) * 2];
 
         var hs = KBt2HashSize;
 
@@ -130,20 +89,14 @@ internal class BinTree : InWindow, IMatchFinder
             hs |= hs >> 8;
             hs >>= 1;
             hs |= 0xFFFF;
-            if (hs > 1 << 24)
-            {
-                hs >>= 1;
-            }
+            if (hs > 1 << 24) hs >>= 1;
 
             _hashMask = hs;
             hs++;
             hs += _fixHashSize;
         }
 
-        if (hs != _hashSizeSum)
-        {
-            _hash = new uint[_hashSizeSum = hs];
-        }
+        if (hs != _hashSizeSum) _hash = new uint[_hashSizeSum = hs];
     }
 
     public uint GetMatches(uint[] distances)
@@ -218,10 +171,7 @@ internal class BinTree : InWindow, IMatchFinder
                     var limIdx = cur + (int)lenLimit;
                     while (cIdx != limIdx)
                     {
-                        if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx])
-                        {
-                            break;
-                        }
+                        if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx]) break;
 
                         cIdx++;
                     }
@@ -245,10 +195,7 @@ internal class BinTree : InWindow, IMatchFinder
                 var limIdx = cur + (int)lenLimit;
                 while (cIdx != limIdx)
                 {
-                    if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx])
-                    {
-                        break;
-                    }
+                    if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx]) break;
 
                     cIdx++;
                 }
@@ -274,17 +221,13 @@ internal class BinTree : InWindow, IMatchFinder
         var len0 = len1 = _numHashDirectBytes;
 
         if (_numHashDirectBytes != 0)
-        {
             if (curMatch > matchMinPos)
-            {
                 if (BufferBase[BufferOffset + curMatch + _numHashDirectBytes] !=
                     BufferBase[cur + _numHashDirectBytes])
                 {
                     distances[offset++] = maxLen = _numHashDirectBytes;
                     distances[offset++] = Pos - curMatch - 1;
                 }
-            }
-        }
 
         var count = _cutValue;
 
@@ -297,19 +240,17 @@ internal class BinTree : InWindow, IMatchFinder
             }
 
             var delta = Pos - curMatch;
-            var cyclicPos = (delta <= _cyclicBufferPos ? _cyclicBufferPos - delta : _cyclicBufferPos - delta + _cyclicBufferSize) << 1;
+            var cyclicPos = (delta <= _cyclicBufferPos
+                ? _cyclicBufferPos - delta
+                : _cyclicBufferPos - delta + _cyclicBufferSize) << 1;
 
             var pby1 = BufferOffset + curMatch;
             var len = Math.Min(len0, len1);
             if (BufferBase[pby1 + len] == BufferBase[cur + len])
             {
                 while (++len != lenLimit)
-                {
                     if (BufferBase[pby1 + len] != BufferBase[cur + len])
-                    {
                         break;
-                    }
-                }
 
                 if (maxLen < len)
                 {
@@ -402,19 +343,17 @@ internal class BinTree : InWindow, IMatchFinder
                 }
 
                 var delta = Pos - curMatch;
-                var cyclicPos = (delta <= _cyclicBufferPos ? _cyclicBufferPos - delta : _cyclicBufferPos - delta + _cyclicBufferSize) << 1;
+                var cyclicPos = (delta <= _cyclicBufferPos
+                    ? _cyclicBufferPos - delta
+                    : _cyclicBufferPos - delta + _cyclicBufferSize) << 1;
 
                 var pby1 = BufferOffset + curMatch;
                 var len = Math.Min(len0, len1);
                 if (BufferBase[pby1 + len] == BufferBase[cur + len])
                 {
                     while (++len != lenLimit)
-                    {
                         if (BufferBase[pby1 + len] != BufferBase[cur + len])
-                        {
                             break;
-                        }
-                    }
 
                     if (len == lenLimit)
                     {
@@ -442,6 +381,31 @@ internal class BinTree : InWindow, IMatchFinder
 
             MovePos();
         } while (--num != 0);
+    }
+
+    internal void SetType(int numHashBytes)
+    {
+        _hashArray = numHashBytes > 2;
+        if (_hashArray)
+        {
+            _numHashDirectBytes = 0;
+            _minMatchCheck = 4;
+            _fixHashSize = KHash2Size + KHash3Size;
+        }
+        else
+        {
+            _numHashDirectBytes = 2;
+            _minMatchCheck = 2 + 1;
+            _fixHashSize = 0;
+        }
+    }
+
+    internal new void MovePos()
+    {
+        if (++_cyclicBufferPos >= _cyclicBufferSize) _cyclicBufferPos = 0;
+
+        base.MovePos();
+        if (Pos == KMaxValForNormalize) Normalize();
     }
 
     private static void NormalizeLinks(uint[] items, uint numItems, uint subValue)

@@ -6,14 +6,14 @@ public class ChdHeaderV5
     /// <summary>The CHD header tag as a string.</summary>
     public const string TagString = "MComprHD";
 
-    /// <summary>The CHD header tag as a byte array.</summary>
-    public static readonly byte[] Tag = "MComprHD"u8.ToArray();
-
     /// <summary>The serialized header length in bytes.</summary>
     public const uint Length = 124;
 
     /// <summary>The CHD format version (5).</summary>
     public const uint Version = 5;
+
+    /// <summary>The CHD header tag as a byte array.</summary>
+    public static readonly byte[] Tag = "MComprHD"u8.ToArray();
 
     /// <summary>Gets or sets the four compressor codec tags.</summary>
     public uint[] Compressors { get; set; } = new uint[4];
@@ -84,7 +84,7 @@ public class ChdHeaderV5
 
     /// <summary>Deserializes a CHD v5 header from a byte array.</summary>
     /// <param name="data">The raw header bytes (at least 124 bytes).</param>
-    /// <returns>A <see cref="ChdHeaderV5"/> populated from the data.</returns>
+    /// <returns>A <see cref="ChdHeaderV5" /> populated from the data.</returns>
     public static ChdHeaderV5 Deserialize(byte[] data)
     {
         if (data.Length < Length)
@@ -115,27 +115,24 @@ public class ChdHeaderV5
     /// <param name="logicalBytes">The total logical size in bytes.</param>
     /// <param name="hunkBytes">The hunk size in bytes.</param>
     /// <param name="unitBytes">The unit size in bytes.</param>
-    /// <returns>A new <see cref="ChdHeaderV5"/> configured for a raw image.</returns>
+    /// <returns>A new <see cref="ChdHeaderV5" /> configured for a raw image.</returns>
     public static ChdHeaderV5 CreateRaw(uint compressors0, ulong logicalBytes, uint hunkBytes, uint unitBytes)
     {
         return CreateRaw(new[] { compressors0, 0u, 0u, 0u }, logicalBytes, hunkBytes, unitBytes);
     }
 
     /// <summary>Creates a header for a compressed CHD image with up to 4 codecs.</summary>
-    /// <param name="compressors">The compressor codec tags (up to 4; empty slots use <see cref="CodecTags.None"/>).</param>
+    /// <param name="compressors">The compressor codec tags (up to 4; empty slots use <see cref="CodecTags.None" />).</param>
     /// <param name="logicalBytes">The total logical size in bytes.</param>
     /// <param name="hunkBytes">The hunk size in bytes.</param>
     /// <param name="unitBytes">The unit size in bytes.</param>
-    /// <returns>A new <see cref="ChdHeaderV5"/> configured for the image.</returns>
+    /// <returns>A new <see cref="ChdHeaderV5" /> configured for the image.</returns>
     public static ChdHeaderV5 CreateRaw(uint[] compressors, ulong logicalBytes, uint hunkBytes, uint unitBytes)
     {
         ArgumentNullException.ThrowIfNull(compressors);
 
         var codecArray = new uint[4];
-        for (var i = 0; i < 4; i++)
-        {
-            codecArray[i] = i < compressors.Length ? compressors[i] : CodecTags.None;
-        }
+        for (var i = 0; i < 4; i++) codecArray[i] = i < compressors.Length ? compressors[i] : CodecTags.None;
 
         return new ChdHeaderV5
         {

@@ -5,7 +5,7 @@
 namespace VendoredZLib.Inflate;
 
 /// <summary>
-/// Possible inflate modes between <see cref="Inflater.Inflate(ref ZStream, int)"/> calls.
+///     Possible inflate modes between <see cref="Inflater.Inflate(ref ZStream, int)" /> calls.
 /// </summary>
 internal enum InflateMode : ushort
 {

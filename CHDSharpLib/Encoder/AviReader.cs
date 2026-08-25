@@ -1,19 +1,19 @@
 using System.Buffers.Binary;
+using System.Text;
 
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Minimal AVI container reader for laserdisc CHD creation (chdman's <c>avi_file</c> read
-/// path, src/lib/util/aviio.cpp). Parses RIFF/AVIX headers, stream descriptions ('strh'/
-/// 'strf') and frame indexes ('idx1', or a sequential 'movi' scan when no index exists),
-/// and serves YUY-family video frames and PCM sound samples.
-///
-/// Supported video: uncompressed YUY2/VYUY (bytes pass through unchanged) and UYVY
-/// (byte-swapped per pixel pair to YUY2 order), matching MAME's <c>yuv_decompress_to_yuy16</c>
-/// output stored via <c>put_u16be</c> into the CHD video bitstream. On entry the encoder
-/// expects YUY2 byte order [Y0,Cb,Y1,Cr] per pixel pair so that Y occupies even byte
-/// offsets and Cb/Cr occupy the interleaved odd offsets.
-/// Supported audio: uncompressed PCM, 8 or 16 bits per sample.
+///     Minimal AVI container reader for laserdisc CHD creation (chdman's <c>avi_file</c> read
+///     path, src/lib/util/aviio.cpp). Parses RIFF/AVIX headers, stream descriptions ('strh'/
+///     'strf') and frame indexes ('idx1', or a sequential 'movi' scan when no index exists),
+///     and serves YUY-family video frames and PCM sound samples.
+///     Supported video: uncompressed YUY2/VYUY (bytes pass through unchanged) and UYVY
+///     (byte-swapped per pixel pair to YUY2 order), matching MAME's <c>yuv_decompress_to_yuy16</c>
+///     output stored via <c>put_u16be</c> into the CHD video bitstream. On entry the encoder
+///     expects YUY2 byte order [Y0,Cb,Y1,Cr] per pixel pair so that Y occupies even byte
+///     offsets and Cb/Cr occupy the interleaved odd offsets.
+///     Supported audio: uncompressed PCM, 8 or 16 bits per sample.
 /// </summary>
 public sealed class AviReader : IDisposable
 {
@@ -45,58 +45,14 @@ public sealed class AviReader : IDisposable
         _file = file;
     }
 
-    /// <summary>Describes one parsed AVI stream.</summary>
-    private sealed class AviStream
-    {
-        public uint Type; // 'vids' / 'auds'
-        public uint Scale = 1;
-        public uint Rate;
-        public uint SamplesFromHeader; // dwLength from 'strh'
-
-        public int Width, Height; // video
-        public uint Depth; // video
-        public uint Format; // video fourcc
-
-        public ushort Channels; // audio
-        public uint SampleRate; // audio
-        public ushort SampleBits; // audio
-
-        public readonly List<(long Offset, int Length)> Chunks = [];
-    }
-
-    /// <summary>Movie description (MAME's <c>avi_file::movie_info</c> subset).</summary>
-    public sealed class MovieInfo
-    {
-        /// <summary>Video timescale ('strh' rate).</summary>
-        public uint VideoTimescale { get; internal set; }
-
-        /// <summary>Duration of a single video frame ('strh' scale).</summary>
-        public uint VideoSampletime { get; internal set; }
-
-        /// <summary>Total number of video frames.</summary>
-        public uint VideoNumsamples { get; internal set; }
-
-        /// <summary>Video width in pixels.</summary>
-        public int Width { get; internal set; }
-
-        /// <summary>Video height in lines (as stored; may describe a field for interlaced sources).</summary>
-        public int Height { get; internal set; }
-
-        /// <summary>Video format fourcc ('YUY2', 'UYVY', ...).</summary>
-        public uint VideoFormat { get; internal set; }
-
-        /// <summary>Total audio channels across all audio streams.</summary>
-        public uint AudioChannels { get; internal set; }
-
-        /// <summary>Audio sample rate.</summary>
-        public uint AudioSamplerate { get; internal set; }
-
-        /// <summary>Audio bits per sample (8 or 16).</summary>
-        public uint AudioSamplebits { get; internal set; }
-    }
-
     /// <summary>Gets the parsed movie information.</summary>
     public MovieInfo Info { get; } = new();
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _file.Dispose();
+    }
 
     /// <summary>Opens and parses an AVI file.</summary>
     /// <exception cref="FileNotFoundException">The file does not exist.</exception>
@@ -118,13 +74,15 @@ public sealed class AviReader : IDisposable
     }
 
     /// <summary>
-    /// Reads one video frame as YUY2-ordered bytes (Cb,Y,Cr,Y pixel pairs), the exact layout
-    /// of the raw 'chav' video payload. For interlaced laserdisc sources the caller slices
-    /// fields from the full-size frame.
+    ///     Reads one video frame as YUY2-ordered bytes (Cb,Y,Cr,Y pixel pairs), the exact layout
+    ///     of the raw 'chav' video payload. For interlaced laserdisc sources the caller slices
+    ///     fields from the full-size frame.
     /// </summary>
     /// <param name="frameNum">Zero-based frame number.</param>
-    /// <param name="dest">Destination buffer of at least <c>width * height * 2</c> bytes;
-    /// short chunks leave the remainder untouched.</param>
+    /// <param name="dest">
+    ///     Destination buffer of at least <c>width * height * 2</c> bytes;
+    ///     short chunks leave the remainder untouched.
+    /// </param>
     /// <exception cref="ArgumentOutOfRangeException">The frame number is out of range.</exception>
     /// <exception cref="NotSupportedException">The video format is not YUY2/VYUY/UYVY.</exception>
     public void ReadVideoFrame(uint frameNum, Span<byte> dest)
@@ -134,7 +92,8 @@ public sealed class AviReader : IDisposable
             throw new NotSupportedException(
                 $"Unsupported AVI video format '{FourCcToString(stream.Format)}'; YUY2, VYUY or UYVY is required");
         if (frameNum >= (uint)stream.Chunks.Count)
-            throw new ArgumentOutOfRangeException(nameof(frameNum), $"AVI frame {frameNum} is out of range (0..{stream.Chunks.Count - 1})");
+            throw new ArgumentOutOfRangeException(nameof(frameNum),
+                $"AVI frame {frameNum} is out of range (0..{stream.Chunks.Count - 1})");
 
         var chunk = stream.Chunks[(int)frameNum];
         var data = ReadChunkData(chunk.Offset, chunk.Length);
@@ -153,44 +112,40 @@ public sealed class AviReader : IDisposable
         var count = Math.Min(payloadLen, dest.Length);
         var src = data.AsSpan(chunkHeaderSize, count);
         if (stream.Format == FormatUyvy)
-        {
             for (var i = 0; i + 1 < count; i += 2)
             {
                 dest[i] = src[i + 1];
                 dest[i + 1] = src[i];
             }
-        }
         else
-        {
             src.CopyTo(dest);
-        }
     }
 
     /// <summary>
-    /// Reads PCM sound samples of one logical channel (MAME's
-    /// <c>avi_file::read_sound_samples</c>). Channels are numbered across all audio streams.
+    ///     Reads PCM sound samples of one logical channel (MAME's
+    ///     <c>avi_file::read_sound_samples</c>). Channels are numbered across all audio streams.
     /// </summary>
     /// <param name="channel">Logical channel index.</param>
     /// <param name="firstSample">First sample to read (per channel).</param>
     /// <param name="numSamples">Number of samples to read; clamped at the end of the stream.</param>
-    /// <param name="output">Destination array of <paramref name="numSamples"/> entries.</param>
+    /// <param name="output">Destination array of <paramref name="numSamples" /> entries.</param>
     /// <exception cref="ArgumentOutOfRangeException">The channel or first sample is out of range.</exception>
     /// <exception cref="NotSupportedException">The audio format is not 8/16-bit PCM.</exception>
     public void ReadSoundSamples(int channel, uint firstSample, uint numSamples, Span<short> output)
     {
         var stream = GetAudioStream(channel, out var offset)
-                     ?? throw new ArgumentOutOfRangeException(nameof(channel), $"AVI file has no audio channel {channel}");
+                     ?? throw new ArgumentOutOfRangeException(nameof(channel),
+                         $"AVI file has no audio channel {channel}");
         if (stream.Format != 0 || (stream.SampleBits != 8 && stream.SampleBits != 16))
-            throw new NotSupportedException($"Unsupported AVI audio format (PCM 8/16-bit required, got {stream.SampleBits}-bit)");
+            throw new NotSupportedException(
+                $"Unsupported AVI audio format (PCM 8/16-bit required, got {stream.SampleBits}-bit)");
 
         var totalSamples = (uint)stream.Chunks.Count > 0 ? PerChannelSampleCount(stream) : 0;
         if (firstSample >= totalSamples)
-            throw new ArgumentOutOfRangeException(nameof(firstSample), $"AVI sample {firstSample} is out of range (0..{totalSamples - 1})");
+            throw new ArgumentOutOfRangeException(nameof(firstSample),
+                $"AVI sample {firstSample} is out of range (0..{totalSamples - 1})");
 
-        if (firstSample + numSamples > totalSamples)
-        {
-            numSamples = totalSamples - firstSample;
-        }
+        if (firstSample + numSamples > totalSamples) numSamples = totalSamples - firstSample;
 
         var bytesPerSample = (uint)(stream.SampleBits / 8) * stream.Channels;
         var outPos = 0;
@@ -221,19 +176,11 @@ public sealed class AviReader : IDisposable
 
             var baseIndex = (int)(stream.Channels * (firstSample - chunkBase) + offset);
             if (stream.SampleBits == 16)
-            {
                 for (var i = 0; i < samplesThisChunk; i++, baseIndex += stream.Channels)
-                {
                     output[outPos++] = BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(8 + baseIndex * 2));
-                }
-            }
             else
-            {
                 for (var i = 0; i < samplesThisChunk; i++, baseIndex += stream.Channels)
-                {
                     output[outPos++] = (short)((data[8 + baseIndex] << 8) - 0x8000);
-                }
-            }
 
             firstSample += samplesThisChunk;
             numSamples -= samplesThisChunk;
@@ -245,9 +192,7 @@ public sealed class AviReader : IDisposable
     {
         ulong total = 0;
         foreach (var (_, length) in stream.Chunks)
-        {
-            total += (ulong)((length - 8) / ((stream.SampleBits / 8) * stream.Channels));
-        }
+            total += (ulong)((length - 8) / (stream.SampleBits / 8 * stream.Channels));
 
         return (uint)Math.Min(total, uint.MaxValue);
     }
@@ -298,11 +243,9 @@ public sealed class AviReader : IDisposable
                                 break;
                             case ListTypeMovi:
                                 if (firstMoviData < 0)
-                                {
                                     // idx1 chunk offsets are relative to the 'movi' fourcc
                                     // (mame aviio.cpp: parse_idx1_chunk base = movi.offset + 8)
                                     firstMoviData = dataPos;
-                                }
 
                                 ScanMoviList(dataPos + 4, size - 4);
                                 break;
@@ -438,8 +381,8 @@ public sealed class AviReader : IDisposable
     }
 
     /// <summary>
-    /// Fallback when no 'idx1' exists: assigns 'movi' data chunks to their streams in
-    /// encounter order (one chunk = one frame/sample-block).
+    ///     Fallback when no 'idx1' exists: assigns 'movi' data chunks to their streams in
+    ///     encounter order (one chunk = one frame/sample-block).
     /// </summary>
     private void ScanMoviList(long pos, long size)
     {
@@ -453,15 +396,13 @@ public sealed class AviReader : IDisposable
             var streamNum = (int)(((chunkId >> 8) & 0xff) - '0') + 10 * (int)((chunkId & 0xff) - '0');
             var kind = (char)((chunkId >> 24) & 0xff); // 'dc'/'db' video, 'wb' audio
             if (streamNum >= 0 && streamNum < _streams.Count && kind is 'd' or 'c' or 'w')
-            {
                 _streams[streamNum].Chunks.Add((pos, (int)(chunkSize + 8)));
-            }
 
             pos += 8 + chunkSize + (chunkSize & 1);
         }
     }
 
-    /// <summary>Fills <see cref="Info"/> from the parsed streams (MAME's <c>extract_movie_info</c>).</summary>
+    /// <summary>Fills <see cref="Info" /> from the parsed streams (MAME's <c>extract_movie_info</c>).</summary>
     private void ExtractMovieInfo()
     {
         var video = GetVideoStream();
@@ -559,12 +500,55 @@ public sealed class AviReader : IDisposable
             (byte)((fourcc >> 16) & 0xFF),
             (byte)((fourcc >> 24) & 0xFF)
         ];
-        return System.Text.Encoding.ASCII.GetString(bytes);
+        return Encoding.ASCII.GetString(bytes);
     }
 
-    /// <inheritdoc/>
-    public void Dispose()
+    /// <summary>Describes one parsed AVI stream.</summary>
+    private sealed class AviStream
     {
-        _file.Dispose();
+        public readonly List<(long Offset, int Length)> Chunks = [];
+
+        public ushort Channels; // audio
+        public uint Depth; // video
+        public uint Format; // video fourcc
+        public uint Rate;
+        public ushort SampleBits; // audio
+        public uint SampleRate; // audio
+        public uint SamplesFromHeader; // dwLength from 'strh'
+        public uint Scale = 1;
+        public uint Type; // 'vids' / 'auds'
+
+        public int Width, Height; // video
+    }
+
+    /// <summary>Movie description (MAME's <c>avi_file::movie_info</c> subset).</summary>
+    public sealed class MovieInfo
+    {
+        /// <summary>Video timescale ('strh' rate).</summary>
+        public uint VideoTimescale { get; internal set; }
+
+        /// <summary>Duration of a single video frame ('strh' scale).</summary>
+        public uint VideoSampletime { get; internal set; }
+
+        /// <summary>Total number of video frames.</summary>
+        public uint VideoNumsamples { get; internal set; }
+
+        /// <summary>Video width in pixels.</summary>
+        public int Width { get; internal set; }
+
+        /// <summary>Video height in lines (as stored; may describe a field for interlaced sources).</summary>
+        public int Height { get; internal set; }
+
+        /// <summary>Video format fourcc ('YUY2', 'UYVY', ...).</summary>
+        public uint VideoFormat { get; internal set; }
+
+        /// <summary>Total audio channels across all audio streams.</summary>
+        public uint AudioChannels { get; internal set; }
+
+        /// <summary>Audio sample rate.</summary>
+        public uint AudioSamplerate { get; internal set; }
+
+        /// <summary>Audio bits per sample (8 or 16).</summary>
+        public uint AudioSamplebits { get; internal set; }
     }
 }

@@ -42,7 +42,8 @@ internal static partial class Inflater
         28, 28, 29, 29, 64, 64
     };
 
-    internal static int InflateTable(CodeType type, ref ushort lens, uint codes, ref Code table, ref int bits, ref ushort work, ref uint offset,
+    internal static int InflateTable(CodeType type, ref ushort lens, uint codes, ref Code table, ref int bits,
+        ref ushort work, ref uint offset,
         ref ushort lbase, ref ushort lext, ref ushort dbase, ref ushort dext)
     {
         Code here; // table entry for duplication
@@ -54,10 +55,7 @@ internal static partial class Inflater
         netUnsafe.InitBlock(ref netUnsafe.As<ushort, byte>(ref ptrToCount), 0, length * sizeof(ushort));
 
         uint sym = 0; // index of code symbols
-        for (; sym < codes; sym++)
-        {
-            Unsafe.Add(ref ptrToCount, (uint)Unsafe.Add(ref lens, sym))++;
-        }
+        for (; sym < codes; sym++) Unsafe.Add(ref ptrToCount, (uint)Unsafe.Add(ref lens, sym))++;
 
         // bound code lengths, force root to be within code lengths
         var root = bits; // number of index bits for root table
@@ -66,10 +64,7 @@ internal static partial class Inflater
             if (Unsafe.Add(ref ptrToCount, max) != 0)
                 break;
 
-        if (root > max)
-        {
-            root = (int)max;
-        }
+        if (root > max) root = (int)max;
 
         if (max == 0) // no symbols to code at all
         {
@@ -88,10 +83,7 @@ internal static partial class Inflater
             if (Unsafe.Add(ref ptrToCount, min) != 0)
                 break;
 
-        if (root < min)
-        {
-            root = (int)min;
-        }
+        if (root < min) root = (int)min;
 
         // check for an over-subscribed or incomplete set of lengths
         var left = 1; // number of prefix codes available
@@ -112,16 +104,13 @@ internal static partial class Inflater
         ref var ptrToOffs = ref MemoryMarshal.GetReference(offs);
         Unsafe.Add(ref ptrToOffs, 1U) = 0;
         for (len = 1; len < MaxBits; len++)
-        {
-            Unsafe.Add(ref ptrToOffs, len + 1) = (ushort)(Unsafe.Add(ref ptrToOffs, len) + Unsafe.Add(ref ptrToCount, len));
-        }
+            Unsafe.Add(ref ptrToOffs, len + 1) =
+                (ushort)(Unsafe.Add(ref ptrToOffs, len) + Unsafe.Add(ref ptrToCount, len));
 
         // sort symbols by length, by symbol order within each length
         for (sym = 0; sym < codes; sym++)
             if (Unsafe.Add(ref lens, sym) != 0)
-            {
                 Unsafe.Add(ref work, (uint)Unsafe.Add(ref ptrToOffs, (uint)Unsafe.Add(ref lens, sym))++) = (ushort)sym;
-            }
 
         ref var @base = ref dbase; // base value table to use
         ref var extra = ref dext; // extra bits table to use
@@ -165,17 +154,11 @@ internal static partial class Inflater
             var wsym = Unsafe.Add(ref work, sym);
             var diff = wsym - match;
             if (wsym + 1 < match)
-            {
                 here = new Code(0, temp, wsym);
-            }
             else if (wsym >= match)
-            {
                 here = new Code((byte)Unsafe.Add(ref extra, diff), temp, Unsafe.Add(ref @base, diff));
-            }
             else
-            {
                 here = new Code(32 + 64, temp, 0); // end of block
-            }
 
             // replicate for those indices with low len bits equal to huff
             var incr = 1U << (int)(len - drop); // for incrementing code, index
@@ -189,10 +172,7 @@ internal static partial class Inflater
 
             // backwards increment the len-bit code huff
             incr = 1U << (int)(len - 1);
-            while ((huff & incr) != 0)
-            {
-                incr >>= 1;
-            }
+            while ((huff & incr) != 0) incr >>= 1;
 
             if (incr != 0)
             {
@@ -218,10 +198,7 @@ internal static partial class Inflater
             if (len > root && (huff & mask) != low)
             {
                 // if first time, transition to sub-tables
-                if (drop == 0)
-                {
-                    drop = (uint)root;
-                }
+                if (drop == 0) drop = (uint)root;
 
                 // increment past last table
                 next += min; // here min is 1 << curr
@@ -251,13 +228,11 @@ internal static partial class Inflater
             }
         }
 
-        /* Fill in remaining table entry if code is incomplete (guaranteed to have 
-         * at most one remaining entry, since if the code is incomplete, the 
+        /* Fill in remaining table entry if code is incomplete (guaranteed to have
+         * at most one remaining entry, since if the code is incomplete, the
          * maximum code length that was allowed to get this far is one bit) */
         if (huff != 0)
-        {
             Unsafe.Add(ref table, next + huff) = new Code(64 /* invalid code marker */, (byte)(len - drop), 0);
-        }
 
         // set return parameters
         offset += used;

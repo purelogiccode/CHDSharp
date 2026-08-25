@@ -20,7 +20,8 @@ internal static partial class Deflater
     private const int PresetDict = 0x20; // preset dictionary flag in zlib header
     private const int MaxStored = 65535; // maximum stored block length in deflate format (not including header)
 
-    private const uint MinLookAhead = MaxMatch + MinMatch + 1; // Minimum amount of lookahead, except at the end of the input file.
+    private const uint
+        MinLookAhead = MaxMatch + MinMatch + 1; // Minimum amount of lookahead, except at the end of the input file.
 #if DEBUG
     private const ushort Literals = 256; // number of literal bytes 0..255
 #endif
@@ -119,8 +120,9 @@ internal static partial class Deflater
         64, 80, 96, 112, 128, 160, 192, 224, 0
     };
 
-    private static readonly ushort[] SBlOrder = // The lengths of the bit length codes are sent in order of decreasing probability, to avoid transmitting the lengths for unused bit length codes.
-        new ushort[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+    private static readonly ushort[]
+        SBlOrder = // The lengths of the bit length codes are sent in order of decreasing probability, to avoid transmitting the lengths for unused bit length codes.
+            new ushort[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
     private static readonly int[] SExtraDbits = // extra bits for each distance code
         new[] { 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13 };
@@ -217,9 +219,7 @@ internal static partial class Deflater
             uint levelFlags;
 
             if (s.Strategy >= ZHuffmanOnly || s.Level < 2)
-            {
                 levelFlags = 0;
-            }
             else
                 switch (s.Level)
                 {
@@ -235,10 +235,7 @@ internal static partial class Deflater
                 }
 
             header |= levelFlags << 6;
-            if (s.Strstart != 0)
-            {
-                header |= PresetDict;
-            }
+            if (s.Strstart != 0) header |= PresetDict;
 
             header += 31 - header % 31;
 
@@ -270,11 +267,8 @@ internal static partial class Deflater
         {
             BlockState bstate;
             if (s.Level == 0)
-            {
                 bstate = DeflateStored(ref strm, flush, ref pendingBuf, ref pendingOut);
-            }
             else
-            {
                 switch (s.Strategy)
                 {
                     case ZHuffmanOnly:
@@ -301,21 +295,14 @@ internal static partial class Deflater
                         };
                         break;
                 }
-            }
 
-            if (bstate is BlockState.FinishStarted or BlockState.FinishDone)
-            {
-                s.Status = FinishState;
-            }
+            if (bstate is BlockState.FinishStarted or BlockState.FinishDone) s.Status = FinishState;
 
             switch (bstate)
             {
                 case BlockState.NeedMore or BlockState.FinishStarted:
                 {
-                    if (strm.AvailOut == 0)
-                    {
-                        s.LastFlush = -1; // avoid BUF_ERROR next call, see above
-                    }
+                    if (strm.AvailOut == 0) s.LastFlush = -1; // avoid BUF_ERROR next call, see above
 
                     return ZOk;
                     /* If flush != Z_NO_FLUSH && avail_out == 0, the next call
@@ -332,9 +319,7 @@ internal static partial class Deflater
                     {
 #if NET7_0_OR_GREATER
                         if (netUnsafe.IsNullRef(ref refs.StaLtree))
-                        {
                             refs.StaLtree = ref MemoryMarshal.GetReference(Tree.SLtree);
-                        }
 #endif
                         Tree.Align(s, ref pendingBuf, ref
 #if NET7_0_OR_GREATER
@@ -386,10 +371,7 @@ internal static partial class Deflater
         FlushPending(ref strm, ref pendingBuf, ref pendingOut);
 
         // If avail_out is zero, the application will call deflate again to flush the rest.
-        if (s.Wrap > 0)
-        {
-            s.Wrap = -s.Wrap; // write the trailer only once!
-        }
+        if (s.Wrap > 0) s.Wrap = -s.Wrap; // write the trailer only once!
 
         return s.Pending != 0 ? ZOk : ZStreamEnd;
     }
@@ -450,10 +432,7 @@ internal static partial class Deflater
         var s = strm.DeflateState;
         Tree.FlushBits(s, ref pendingBuf);
         var len = s.Pending;
-        if (len > strm.AvailOut)
-        {
-            len = strm.AvailOut;
-        }
+        if (len > strm.AvailOut) len = strm.AvailOut;
 
         if (len == 0)
             return;
@@ -471,17 +450,15 @@ internal static partial class Deflater
         s.PendingOutOffset += len;
         s.Pending -= len;
         if (s.Pending == 0)
-        {
             //s.pending_out = s.pending_buf;
             s.PendingOutOffset = 0;
-        }
 
         strm.total_out += len;
         strm.AvailOut -= len;
     }
 
     /// <summary>
-    /// Rank Z_BLOCK between Z_NO_FLUSH and Z_PARTIAL_FLUSH.
+    ///     Rank Z_BLOCK between Z_NO_FLUSH and Z_PARTIAL_FLUSH.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int Rank(int f)
@@ -514,10 +491,7 @@ internal static partial class Deflater
         var used = strm.AvailIn;
 #if NET7_0_OR_GREATER
         ref var refs = ref strm.DeflateRefs;
-        if (netUnsafe.IsNullRef(ref refs.Window))
-        {
-            refs.Window = ref MemoryMarshal.GetReference(s.Window);
-        }
+        if (netUnsafe.IsNullRef(ref refs.Window)) refs.Window = ref MemoryMarshal.GetReference(s.Window);
 #endif
         ref var window = ref
 #if NET7_0_OR_GREATER
@@ -544,15 +518,9 @@ internal static partial class Deflater
             // maximum stored block length that will fit in avail_out:
             have = strm.AvailOut - have;
             left = (uint)(s.Strstart - s.BlockStart); // bytes left in window
-            if (len > left + strm.AvailIn)
-            {
-                len = left + strm.AvailIn; // limit len to the input
-            }
+            if (len > left + strm.AvailIn) len = left + strm.AvailIn; // limit len to the input
 
-            if (len > have)
-            {
-                len = have; // limit len to the output
-            }
+            if (len > have) len = have; // limit len to the output
 
             /* If the stored block would be less than min_block in length, or if
              * unable to copy all of the available input when flushing, then try
@@ -586,10 +554,7 @@ internal static partial class Deflater
             // Copy uncompressed bytes from the window to NextOutput.
             if (left != 0)
             {
-                if (left > len)
-                {
-                    left = len;
-                }
+                if (left > len) left = len;
 
                 netUnsafe.CopyBlockUnaligned(ref Unsafe.Add(ref nextOut, strm.NextOutput),
                     ref Unsafe.Add(ref window, (uint)s.BlockStart), left);
@@ -643,18 +608,13 @@ internal static partial class Deflater
                     // Slide the window down
                     s.Strstart -= s.WSize;
                     netUnsafe.CopyBlockUnaligned(ref window, ref Unsafe.Add(ref window, s.WSize), s.Strstart);
-                    if (s.Matches < 2)
-                    {
-                        s.Matches++; // add a pending SlideHash()
-                    }
+                    if (s.Matches < 2) s.Matches++; // add a pending SlideHash()
 
-                    if (s.Insert > s.Strstart)
-                    {
-                        s.Insert = s.Strstart;
-                    }
+                    if (s.Insert > s.Strstart) s.Insert = s.Strstart;
                 }
 
-                netUnsafe.CopyBlockUnaligned(ref Unsafe.Add(ref window, s.Strstart), ref Unsafe.Subtract(ref nextIn, used), used);
+                netUnsafe.CopyBlockUnaligned(ref Unsafe.Add(ref window, s.Strstart),
+                    ref Unsafe.Subtract(ref nextIn, used), used);
                 s.Strstart += used;
                 s.Insert += Math.Min(used, s.WSize - s.Insert);
             }
@@ -662,10 +622,7 @@ internal static partial class Deflater
             s.BlockStart = (int)s.Strstart;
         }
 
-        if (s.HighWater < s.Strstart)
-        {
-            s.HighWater = s.Strstart;
-        }
+        if (s.HighWater < s.Strstart) s.HighWater = s.Strstart;
 
         // If the last block was written to NextOutput, then done.
         if (last != 0)
@@ -684,22 +641,13 @@ internal static partial class Deflater
             s.BlockStart -= (int)s.WSize;
             s.Strstart -= s.WSize;
             netUnsafe.CopyBlockUnaligned(ref window, ref Unsafe.Add(ref window, s.WSize), s.Strstart);
-            if (s.Matches < 2)
-            {
-                s.Matches++; // add a pending SlideHash()
-            }
+            if (s.Matches < 2) s.Matches++; // add a pending SlideHash()
 
             have += s.WSize; // more space now
-            if (s.Insert > s.Strstart)
-            {
-                s.Insert = s.Strstart;
-            }
+            if (s.Insert > s.Strstart) s.Insert = s.Strstart;
         }
 
-        if (have > strm.AvailIn)
-        {
-            have = strm.AvailIn;
-        }
+        if (have > strm.AvailIn) have = strm.AvailIn;
 
         if (have != 0)
         {
@@ -708,10 +656,7 @@ internal static partial class Deflater
             s.Insert += Math.Min(have, s.WSize - s.Insert);
         }
 
-        if (s.HighWater < s.Strstart)
-        {
-            s.HighWater = s.Strstart;
-        }
+        if (s.HighWater < s.Strstart) s.HighWater = s.Strstart;
 
         /* There was not enough avail_out to write a complete worthy or flushed
          * stored block to NextOutput. Write a stored block to pending instead, if we
@@ -742,10 +687,7 @@ internal static partial class Deflater
     {
         var len = strm.AvailIn;
 
-        if (len > size)
-        {
-            len = size;
-        }
+        if (len > size) len = size;
 
         if (len == 0)
             return 0;
@@ -759,10 +701,7 @@ internal static partial class Deflater
             MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput)),
 #endif
             len);
-        if (strm.DeflateState.Wrap == 1)
-        {
-            strm.Adler = Adler32.Update(strm.Adler, ref buf, len);
-        }
+        if (strm.DeflateState.Wrap == 1) strm.Adler = Adler32.Update(strm.Adler, ref buf, len);
 
         strm.NextInput += len;
         strm.TotalInput += len;
@@ -967,10 +906,7 @@ internal static partial class Deflater
                 s.MatchStart -= wsize;
                 s.Strstart -= wsize; // we now have strstart >= MaxDist
                 s.BlockStart -= (int)wsize;
-                if (s.Insert > s.Strstart)
-                {
-                    s.Insert = s.Strstart;
-                }
+                if (s.Insert > s.Strstart) s.Insert = s.Strstart;
 
                 SlideHash(s, ref prev, ref head);
                 more += wsize;
@@ -1037,10 +973,7 @@ internal static partial class Deflater
                  * bytes or up to end of window, whichever is less.
                  */
                 init = s.WindowSize - curr;
-                if (init > WinInit)
-                {
-                    init = WinInit;
-                }
+                if (init > WinInit) init = WinInit;
 
                 netUnsafe.InitBlockUnaligned(ref Unsafe.Add(ref window, curr), 0, init);
                 s.HighWater = curr + init;
@@ -1052,10 +985,7 @@ internal static partial class Deflater
                  * to end of window, whichever is less.
                  */
                 init = curr + WinInit - s.HighWater;
-                if (init > s.WindowSize - s.HighWater)
-                {
-                    init = s.WindowSize - s.HighWater;
-                }
+                if (init > s.WindowSize - s.HighWater) init = s.WindowSize - s.HighWater;
 
                 netUnsafe.InitBlockUnaligned(ref Unsafe.Add(ref window, s.HighWater), 0, init);
                 s.HighWater += init;
@@ -1101,25 +1031,28 @@ internal static partial class Deflater
     }
 
     /// <summary>
-    /// Updates a hash value with the given input byte
+    ///     Updates a hash value with the given input byte
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void UpdateHash(DeflateState s, ref uint h, byte c)
     {
-        h = (((h) << s.HashShift) ^ c) & s.HashMask;
+        h = ((h << s.HashShift) ^ c) & s.HashMask;
     }
 
     private static void FlushBlockOnly(ref ZStream strm, uint last, ref byte pendingBuf, ref byte pendingOut,
         ref byte window, ref TreeNode staLtree, ref TreeNode staDtree, ref TreeNode dynLtree, ref TreeNode dynDtree,
         ref TreeNode blTree, ref ushort blCount, ref int heap, ref byte depth, ref ushort blOrder, ref byte distCode,
-        ref byte lengthCode, ref int baseDist, ref int baseLength, ref int extraDbits, ref int extraLbits, ref int extraBlbits)
+        ref byte lengthCode, ref int baseDist, ref int baseLength, ref int extraDbits, ref int extraLbits,
+        ref int extraBlbits)
     {
         var s = strm.DeflateState;
         var blockStart = (uint)s.BlockStart;
         ref var buf = ref s.BlockStart >= 0L ? ref Unsafe.Add(ref window, blockStart) : ref netUnsafe.NullRef<byte>();
         Tree.FlushBlock(ref strm, ref buf, s.Strstart - blockStart, last,
-            ref pendingBuf, ref staLtree, ref staDtree, ref dynLtree, ref dynDtree, ref blTree, ref blCount, ref heap, ref depth, ref blOrder,
-            ref distCode, ref lengthCode, ref baseDist, ref baseLength, ref extraDbits, ref extraLbits, ref extraBlbits);
+            ref pendingBuf, ref staLtree, ref staDtree, ref dynLtree, ref dynDtree, ref blTree, ref blCount, ref heap,
+            ref depth, ref blOrder,
+            ref distCode, ref lengthCode, ref baseDist, ref baseLength, ref extraDbits, ref extraLbits,
+            ref extraBlbits);
         s.BlockStart = (int)s.Strstart;
         FlushPending(ref strm, ref pendingBuf, ref pendingOut);
         Trace.Tracev("[FLUSH]");
@@ -1128,7 +1061,8 @@ internal static partial class Deflater
     private static bool FlushBlock(ref ZStream strm, uint last, ref byte window, out BlockState state,
         ref byte pendingBuf, ref byte pendingOut, ref TreeNode staLtree, ref TreeNode staDtree,
         ref TreeNode dynLtree, ref TreeNode dynDtree, ref TreeNode blTree, ref ushort blCount, ref int heap,
-        ref byte depth, ref ushort blOrder, ref byte distCode, ref byte lengthCode, ref int baseDist, ref int baseLength,
+        ref byte depth, ref ushort blOrder, ref byte distCode, ref byte lengthCode, ref int baseDist,
+        ref int baseLength,
         ref int extraDbits, ref int extraLbits, ref int extraBlbits)
     {
         FlushBlockOnly(ref strm, last, ref pendingBuf, ref pendingOut, ref window, ref staLtree, ref staDtree,
@@ -1136,7 +1070,7 @@ internal static partial class Deflater
             ref lengthCode, ref baseDist, ref baseLength, ref extraDbits, ref extraLbits, ref extraBlbits);
         if (strm.AvailOut == 0)
         {
-            state = (last != 0) ? BlockState.FinishStarted : BlockState.NeedMore;
+            state = last != 0 ? BlockState.FinishStarted : BlockState.NeedMore;
             return true;
         }
 
@@ -1327,13 +1261,11 @@ internal static partial class Deflater
                              && netUnsafe.IsAddressLessThan(ref scan, ref strend));
 
                     s.MatchLength = MaxMatch - (uint)netUnsafe.ByteOffset(ref scan, ref strend);
-                    if (s.MatchLength > s.Lookahead)
-                    {
-                        s.MatchLength = s.Lookahead;
-                    }
+                    if (s.MatchLength > s.Lookahead) s.MatchLength = s.Lookahead;
                 }
 
-                Debug.Assert(netUnsafe.IsAddressGreaterThan(ref Unsafe.Add(ref window, s.WindowSize - 1), ref scan), "wild scan");
+                Debug.Assert(netUnsafe.IsAddressGreaterThan(ref Unsafe.Add(ref window, s.WindowSize - 1), ref scan),
+                    "wild scan");
             }
 
             // Emit match if have run of MinMatch or longer, else emit literal
@@ -1561,24 +1493,18 @@ internal static partial class Deflater
              * dictionary, and set hash_head to the head of the hash chain:
              */
             uint hashHead = 0; // head of the hash chain
-            if (s.Lookahead >= MinMatch)
-            {
-                hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
-            }
+            if (s.Lookahead >= MinMatch) hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
 
             /* Find the longest match, discarding those <= prev_length.
              * At this point we have always match_length < MinMatch
              */
             if (hashHead != 0 && s.Strstart - hashHead <= MaxDist(s))
-            {
                 /* To simplify the code, we prevent matches with the string
                  * of window index 0 (in particular we have to avoid a match
                  * of the string with itself at the start of the input file).
                  */
                 s.MatchLength = LongestMatch(s, hashHead, ref window, ref prev);
-                // LongestMatch() sets match_start
-            }
-
+            // LongestMatch() sets match_start
             bool bflush; // set if current block must be flushed
             if (s.MatchLength >= MinMatch)
             {
@@ -1661,7 +1587,7 @@ internal static partial class Deflater
     {
         UpdateHash(s, ref s.InsH, Unsafe.Add(ref window, str + (MinMatch - 1)));
         ref var temp = ref Unsafe.Add(ref head, s.InsH);
-        var matchHead = Unsafe.Add(ref prev, (str) & s.WMask) = temp;
+        var matchHead = Unsafe.Add(ref prev, str & s.WMask) = temp;
         temp = (ushort)str;
         return matchHead;
     }
@@ -1693,18 +1619,12 @@ internal static partial class Deflater
         Debug.Assert(s.HashBits >= 8, "Code too clever");
 
         // Do not waste too much time if we already have a good match:
-        if (s.PrevLength >= s.GoodMatch)
-        {
-            chainLength >>= 2;
-        }
+        if (s.PrevLength >= s.GoodMatch) chainLength >>= 2;
 
         /* Do not look for matches beyond the end of the input. This is necessary
          * to make deflate deterministic.
          */
-        if (niceMatch > s.Lookahead)
-        {
-            niceMatch = (int)s.Lookahead;
-        }
+        if (niceMatch > s.Lookahead) niceMatch = (int)s.Lookahead;
 
         Debug.Assert(s.Strstart <= s.WindowSize - MinLookAhead, "need lookahead");
 
@@ -1911,10 +1831,7 @@ internal static partial class Deflater
             if (s.Lookahead < MinLookAhead)
             {
                 FillWindow(ref strm, ref window, ref prev, ref head);
-                if (s.Lookahead < MinLookAhead && flush == ZNoFlush)
-                {
-                    return BlockState.NeedMore;
-                }
+                if (s.Lookahead < MinLookAhead && flush == ZNoFlush) return BlockState.NeedMore;
 
                 if (s.Lookahead == 0)
                     break; // flush the current block
@@ -1924,10 +1841,7 @@ internal static partial class Deflater
              * dictionary, and set hash_head to the head of the hash chain:
              */
             uint hashHead = 0; // head of hash chain
-            if (s.Lookahead >= MinMatch)
-            {
-                hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
-            }
+            if (s.Lookahead >= MinMatch) hashHead = InsertString(s, s.Strstart, ref window, ref prev, ref head);
 
             // Find the longest match, discarding those <= prev_length.
             s.PrevLength = s.MatchLength;
@@ -1946,12 +1860,10 @@ internal static partial class Deflater
 
                 if (s.MatchLength <= 5 && (s.Strategy == ZFiltered
                                            || (s.MatchLength == MinMatch && s.Strstart - s.MatchStart > TooFar)))
-                {
                     /* If prev_match is also MinMatch, match_start is garbage
                      * but we will ignore the current match anyway.
                      */
                     s.MatchLength = MinMatch - 1;
-                }
             }
 
             /* If there was a match at the previous step and the current
@@ -1975,10 +1887,7 @@ internal static partial class Deflater
                 s.PrevLength -= 2;
                 do
                 {
-                    if (++s.Strstart <= maxInsert)
-                    {
-                        InsertString(s, s.Strstart, ref window, ref prev, ref head);
-                    }
+                    if (++s.Strstart <= maxInsert) InsertString(s, s.Strstart, ref window, ref prev, ref head);
                 } while (--s.PrevLength != 0);
 
                 s.MatchAvailable = false;

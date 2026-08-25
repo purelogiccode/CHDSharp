@@ -7,7 +7,7 @@ namespace VendoredZLib;
 internal static class Adler32
 {
     /// <summary>
-    /// Computes the Adler-32 checksum of a data stream.
+    ///     Computes the Adler-32 checksum of a data stream.
     /// </summary>
     internal static uint Update(uint adler, ref byte buf, uint len)
     {
@@ -21,16 +21,10 @@ internal static class Adler32
         if (len == 1)
         {
             adler += buf;
-            if (adler >= @base)
-            {
-                adler -= @base;
-            }
+            if (adler >= @base) adler -= @base;
 
             sum2 += adler;
-            if (sum2 >= @base)
-            {
-                sum2 -= @base;
-            }
+            if (sum2 >= @base) sum2 -= @base;
 
             return adler | (sum2 << 16);
         }
@@ -49,10 +43,7 @@ internal static class Adler32
                 sum2 += adler;
             }
 
-            if (adler >= @base)
-            {
-                adler -= @base;
-            }
+            if (adler >= @base) adler -= @base;
 
             sum2 %= @base; // only added so many BASE's
             return adler | (sum2 << 16);

@@ -6,7 +6,10 @@ using Serilog;
 
 namespace CHDSharpTester.Services;
 
-/// <summary>Executes a multi-test verification suite against a list of CHD files, cross-checking the C# reader against chdman when available.</summary>
+/// <summary>
+///     Executes a multi-test verification suite against a list of CHD files, cross-checking the C# reader against
+///     chdman when available.
+/// </summary>
 internal class ChdTestRunner
 {
     /// <summary>Gets the detected chdman version string from the last run, or null if not yet detected.</summary>
@@ -17,7 +20,7 @@ internal class ChdTestRunner
     /// <param name="chdmanPath">The path to the chdman executable (can be empty if chdman is unavailable).</param>
     /// <param name="progress">An optional progress reporter for UI updates.</param>
     /// <param name="cancellationToken">A token to cancel the test run.</param>
-    /// <returns>A <see cref="TestSessionResult"/> containing aggregated results for all files.</returns>
+    /// <returns>A <see cref="TestSessionResult" /> containing aggregated results for all files.</returns>
     public async Task<TestSessionResult> RunAsync(
         List<ChdFileEntry> files,
         string chdmanPath,
@@ -32,7 +35,6 @@ internal class ChdTestRunner
             var chdman = chdmanAvailable ? new ChdmanWrapper(chdmanPath) : null;
 
             if (chdman != null)
-            {
                 try
                 {
                     var r = chdman.Run("info");
@@ -46,7 +48,6 @@ internal class ChdTestRunner
                 {
                     Log.Warning(ex, "chdman version detection failed");
                 }
-            }
 
             for (var i = 0; i < files.Count; i++)
             {
@@ -55,7 +56,8 @@ internal class ChdTestRunner
                 progress?.Report(new TestProgress(file.FileName, i + 1, files.Count,
                     "Starting", $"Testing {file.FileName}..."));
 
-                var result = await Task.Run(() => TestSingleFile(file, chdman, progress, i, files.Count), cancellationToken);
+                var result = await Task.Run(() => TestSingleFile(file, chdman, progress, i, files.Count),
+                    cancellationToken);
                 session.FileResults.Add(result);
             }
 
@@ -238,7 +240,6 @@ internal class ChdTestRunner
             {
                 var openErr = ChdFile.Open(path, out var chd);
                 if (openErr == ChdError.Chderrnone && chd != null)
-                {
                     using (chd)
                     {
                         var details = new List<string>();
@@ -300,7 +301,8 @@ internal class ChdTestRunner
                         }
 
                         var libDataSha1 = HashUtil.ToHex(chd.RawSha1);
-                        if (info.DataSha1 != null && string.Equals(libDataSha1, info.DataSha1, StringComparison.Ordinal))
+                        if (info.DataSha1 != null &&
+                            string.Equals(libDataSha1, info.DataSha1, StringComparison.Ordinal))
                         {
                             details.Add($"DataSHA1: {libDataSha1} ✓");
                         }
@@ -309,7 +311,8 @@ internal class ChdTestRunner
                             details.Add($"DataSHA1: lib={libDataSha1} chdman={info.DataSha1} ✗");
                             allMatch = false;
                         }
-                        else if (!string.Equals(libDataSha1, "(none)", StringComparison.Ordinal) && !HashUtil.IsAllZero(chd.RawSha1))
+                        else if (!string.Equals(libDataSha1, "(none)", StringComparison.Ordinal) &&
+                                 !HashUtil.IsAllZero(chd.RawSha1))
                         {
                             details.Add($"DataSHA1: {libDataSha1}");
                         }
@@ -322,9 +325,7 @@ internal class ChdTestRunner
                             ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         });
                     }
-                }
                 else
-                {
                     result.SubTests.Add(new SubTestResult
                     {
                         TestName = "Header vs chdman",
@@ -332,7 +333,6 @@ internal class ChdTestRunner
                         Detail = $"Failed to open with CHDSharp: {openErr}",
                         ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                     });
-                }
             }
             else
             {
@@ -464,18 +464,14 @@ internal class ChdTestRunner
 
         // Test 6: Random Access
         if (chdman is { Available: true })
-        {
             RunRandomAccessTest(entry, chdman, progress, fileIndex, totalFiles, result);
-        }
         else
-        {
             result.SubTests.Add(new SubTestResult
             {
                 TestName = "Random Access",
                 Status = TestStatus.Skipped,
                 Detail = "chdman.exe not available."
             });
-        }
 
         // Tests 7-15: ReadHunk / Read API tests + Track info (shared file open)
         RunReadHunkAndTrackInfoTests(entry, progress, fileIndex, totalFiles, result);
@@ -551,44 +547,38 @@ internal class ChdTestRunner
             detail.Add($"Track count: {tracks.Count}");
 
             foreach (var t in tracks)
-            {
                 detail.Add($"  Track {t.TrackNumber}: {t.GetTypeString()} " +
                            $"{t.Frames:N0} frames @ offset {t.StartFrame} " +
                            $"(pregap={t.PreGap}, postgap={t.PostGap}, extra={t.ExtraFrames})");
-            }
 
             // Validate track ordering
             for (var i = 1; i < tracks.Count; i++)
-            {
                 if (tracks[i].StartFrame <= tracks[i - 1].StartFrame)
                 {
                     detail.Add($"ERROR: Track {i + 1} StartFrame not monotonic");
                     failures++;
                 }
-            }
 
             // Validate 4-frame alignment
             foreach (var t in tracks)
-            {
                 if ((t.Frames + t.ExtraFrames) % 4 != 0)
                 {
                     detail.Add($"ERROR: Track {t.TrackNumber} not aligned to 4-frame boundary");
                     failures++;
                 }
-            }
 
             // Validate total frames vs image size
             var totalFrames = tracks.Aggregate(0UL, (acc, t) => acc + (ulong)(t.Frames + t.ExtraFrames));
             var totalBytes = totalFrames * chd.UnitBytes;
             if (totalBytes != chd.TotalBytes)
             {
-                detail.Add($"ERROR: Track frame total ({totalFrames}) * unit ({chd.UnitBytes}) = {totalBytes} != TotalBytes ({chd.TotalBytes})");
+                detail.Add(
+                    $"ERROR: Track frame total ({totalFrames}) * unit ({chd.UnitBytes}) = {totalBytes} != TotalBytes ({chd.TotalBytes})");
                 failures++;
             }
 
             // Generate CUE sheet and validate
             if (isCd && !isGdRom)
-            {
                 try
                 {
                     var cue = chd.GenerateCueSheet("test.bin");
@@ -609,7 +599,6 @@ internal class ChdTestRunner
                     detail.Add($"ERROR: GenerateCueSheet threw: {ex.Message}");
                     failures++;
                 }
-            }
 
             // Generate ExportToc and validate
             var toc = chd.ExportToc();
@@ -849,10 +838,7 @@ internal class ChdTestRunner
                 }
             }
 
-            if (hunkPass)
-            {
-                detail.Add("ReadHunk first/middle/last: OK");
-            }
+            if (hunkPass) detail.Add("ReadHunk first/middle/last: OK");
 
             // Test: ReadHunk determinism (same hunk twice)
             var a = new byte[hb];
@@ -879,13 +865,11 @@ internal class ChdTestRunner
             {
                 var match = true;
                 for (var i = 0; i < firstLen; i++)
-                {
                     if (viaHunk[i] != viaRead[i])
                     {
                         match = false;
                         break;
                     }
-                }
 
                 if (match)
                 {
@@ -919,15 +903,11 @@ internal class ChdTestRunner
                     var crossOk = true;
                     for (var i = 0; i < half && crossOk; i++)
                         if (h0[half + i] != window[i])
-                        {
                             crossOk = false;
-                        }
 
                     for (var i = 0; i < len - half && crossOk; i++)
                         if (h1[i] != window[half + i])
-                        {
                             crossOk = false;
-                        }
 
                     if (crossOk)
                     {
@@ -979,10 +959,12 @@ internal class ChdTestRunner
             if (chd.HunkCount == 0)
                 headerIssues.Add("HunkCount=0");
             if ((ulong)chd.HunkCount * chd.HunkBytes < chd.TotalBytes)
-                headerIssues.Add($"Hunks*HunkBytes ({(ulong)chd.HunkCount * chd.HunkBytes}) < TotalBytes ({chd.TotalBytes})");
+                headerIssues.Add(
+                    $"Hunks*HunkBytes ({(ulong)chd.HunkCount * chd.HunkBytes}) < TotalBytes ({chd.TotalBytes})");
             if (headerIssues.Count == 0)
             {
-                detail.Add($"Header properties: V{chd.Version}, {chd.HunkBytes} hunk bytes, {chd.HunkCount} hunks, {chd.TotalBytes} total: OK");
+                detail.Add(
+                    $"Header properties: V{chd.Version}, {chd.HunkBytes} hunk bytes, {chd.HunkCount} hunks, {chd.TotalBytes} total: OK");
             }
             else
             {
@@ -1066,14 +1048,15 @@ internal class ChdTestRunner
                 var openErr = ChdFile.Open(cdzsPath, out var cdzsChd);
                 t1Sw.Stop();
                 if (openErr == ChdError.Chderrnone && cdzsChd != null)
-                {
                     using (cdzsChd)
                     {
                         var computed = ComputeFullImageSha1(cdzsChd);
                         subTests.Add(new SubTestResult
                         {
                             TestName = "cdzs decode",
-                            Status = string.Equals(computed, srcRawSha1, StringComparison.Ordinal) ? TestStatus.Passed : TestStatus.Failed,
+                            Status = string.Equals(computed, srcRawSha1, StringComparison.Ordinal)
+                                ? TestStatus.Passed
+                                : TestStatus.Failed,
                             Detail = string.Equals(computed, srcRawSha1
                                 , StringComparison.Ordinal)
                                 ? $"SHA1={computed} ✓"
@@ -1081,9 +1064,7 @@ internal class ChdTestRunner
                             ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         });
                     }
-                }
                 else
-                {
                     subTests.Add(new SubTestResult
                     {
                         TestName = "cdzs decode",
@@ -1091,7 +1072,6 @@ internal class ChdTestRunner
                         Detail = $"Failed to open cdzs CHD: {openErr}",
                         ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                     });
-                }
 
                 t1Sw.Restart();
                 using (var fs = File.OpenRead(cdzsPath))
@@ -1156,14 +1136,15 @@ internal class ChdTestRunner
                     var openErr = ChdFile.Open(zstdPath, out var zstdChd);
                     t1Sw.Stop();
                     if (openErr == ChdError.Chderrnone && zstdChd != null)
-                    {
                         using (zstdChd)
                         {
                             var computed = ComputeFullImageSha1(zstdChd);
                             subTests.Add(new SubTestResult
                             {
                                 TestName = "zstd decode",
-                                Status = string.Equals(computed, zstdRawSha1, StringComparison.Ordinal) ? TestStatus.Passed : TestStatus.Failed,
+                                Status = string.Equals(computed, zstdRawSha1, StringComparison.Ordinal)
+                                    ? TestStatus.Passed
+                                    : TestStatus.Failed,
                                 Detail = string.Equals(computed, zstdRawSha1
                                     , StringComparison.Ordinal)
                                     ? $"SHA1={computed} ✓"
@@ -1171,9 +1152,7 @@ internal class ChdTestRunner
                                 ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                             });
                         }
-                    }
                     else
-                    {
                         subTests.Add(new SubTestResult
                         {
                             TestName = "zstd decode",
@@ -1181,7 +1160,6 @@ internal class ChdTestRunner
                             Detail = $"Failed to open zstd CHD: {openErr}",
                             ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         });
-                    }
 
                     t1Sw.Restart();
                     using (var fs = File.OpenRead(zstdPath))
@@ -1325,13 +1303,11 @@ internal class ChdTestRunner
             // Wrong parent: best-effort find any other file that recompresses
             var hasWrongParent = false;
             foreach (var other in candidates.Where(f => f != source))
-            {
                 if (chdman.Copy(other.FilePath, wrongParentPath, "cdzl,cdfl"))
                 {
                     hasWrongParent = true;
                     break;
                 }
-            }
 
             var srcRawSha1 = RawSha1(source.FilePath);
             var sw = Stopwatch.StartNew();
@@ -1420,7 +1396,9 @@ internal class ChdTestRunner
                     subTests.Add(new SubTestResult
                     {
                         TestName = "Child full read matches source",
-                        Status = string.Equals(computed, srcRawSha1, StringComparison.Ordinal) ? TestStatus.Passed : TestStatus.Failed,
+                        Status = string.Equals(computed, srcRawSha1, StringComparison.Ordinal)
+                            ? TestStatus.Passed
+                            : TestStatus.Failed,
                         Detail = string.Equals(computed, srcRawSha1
                             , StringComparison.Ordinal)
                             ? $"SHA1={computed} ✓"
@@ -1474,7 +1452,8 @@ internal class ChdTestRunner
             {
                 FileName = "[Chain] Parent/Child",
                 FilePath = $"{parentPath}, {childPath}",
-                FileSize = $"{FormatFileSize(new FileInfo(parentPath).Length)} + {FormatFileSize(new FileInfo(childPath).Length)}",
+                FileSize =
+                    $"{FormatFileSize(new FileInfo(parentPath).Length)} + {FormatFileSize(new FileInfo(childPath).Length)}",
                 SubTests = subTests,
                 ElapsedSeconds = sw.Elapsed.TotalSeconds
             });

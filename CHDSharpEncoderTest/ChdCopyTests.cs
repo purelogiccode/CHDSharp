@@ -4,11 +4,11 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Verifies Phase 4.1: CHD→CHD copy / re-compression via <see cref="ChdEncoder.Copy"/>.
-/// The logical content of the copy must be byte-identical to the source (verified with
-/// chdman extractraw and CHDSharpLib reads), the source's metadata must be cloned, child
-/// sources resolve through <see cref="ChdEncodeOptions.SourceParentPath"/>, and the output
-/// can be a delta against a different output parent (<see cref="ChdEncodeOptions.ParentPath"/>).
+///     Verifies Phase 4.1: CHD→CHD copy / re-compression via <see cref="ChdEncoder.Copy" />.
+///     The logical content of the copy must be byte-identical to the source (verified with
+///     chdman extractraw and CHDSharpLib reads), the source's metadata must be cloned, child
+///     sources resolve through <see cref="ChdEncodeOptions.SourceParentPath" />, and the output
+///     can be a delta against a different output parent (<see cref="ChdEncodeOptions.ParentPath" />).
 /// </summary>
 public class ChdCopyTests : IDisposable
 {
@@ -24,7 +24,7 @@ public class ChdCopyTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -103,12 +103,12 @@ public class ChdCopyTests : IDisposable
         // Create a CHD with CD tracks using CHT2 metadata first
         var cuePath = Path.Combine(_dir, "legacy_cd.cue");
         File.WriteAllText(cuePath, """
-            FILE "legacy_cd.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 00:00:40
-            """);
+                                   FILE "legacy_cd.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                     TRACK 02 AUDIO
+                                       INDEX 01 00:00:40
+                                   """);
         var bin = new byte[80 * CdConstants.MaxSectorData];
         var rng = new Random(200);
         rng.NextBytes(bin);
@@ -163,10 +163,10 @@ public class ChdCopyTests : IDisposable
         // Create a CHD with CD tracks and additional GAME metadata
         var cuePath = Path.Combine(_dir, "mixed_cd.cue");
         File.WriteAllText(cuePath, """
-            FILE "mixed_cd.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-            """);
+                                   FILE "mixed_cd.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                   """);
         var bin = new byte[40 * CdConstants.MaxSectorData];
         var rng = new Random(201);
         rng.NextBytes(bin);
@@ -213,12 +213,12 @@ public class ChdCopyTests : IDisposable
         // Create a CHD with CD tracks
         var cuePath = Path.Combine(_dir, "no_upgrade_cd.cue");
         File.WriteAllText(cuePath, """
-            FILE "no_upgrade_cd.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 00:00:40
-            """);
+                                   FILE "no_upgrade_cd.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                     TRACK 02 AUDIO
+                                       INDEX 01 00:00:40
+                                   """);
         var bin = new byte[80 * CdConstants.MaxSectorData];
         var rng = new Random(202);
         rng.NextBytes(bin);
@@ -257,7 +257,7 @@ public class ChdCopyTests : IDisposable
         var copyPath = Path.Combine(_dir, "child_copy.chd");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -285,7 +285,7 @@ public class ChdCopyTests : IDisposable
         var childPath = Path.Combine(_dir, "c.chd");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(parentData))
@@ -318,7 +318,7 @@ public class ChdCopyTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         // re-encode the standalone CHD as a delta child of another parent
@@ -355,12 +355,12 @@ public class ChdCopyTests : IDisposable
     {
         var cuePath = Path.Combine(_dir, "cd.cue");
         File.WriteAllText(cuePath, """
-            FILE "cd.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 00:00:40
-            """);
+                                   FILE "cd.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                     TRACK 02 AUDIO
+                                       INDEX 01 00:00:40
+                                   """);
         var bin = new byte[80 * CdConstants.MaxSectorData];
         var rng = new Random(48);
         rng.NextBytes(bin);
@@ -460,7 +460,7 @@ public class ChdCopyTests : IDisposable
         var extractPath = Path.Combine(_dir, "cm_copy.raw");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))

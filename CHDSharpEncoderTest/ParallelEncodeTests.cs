@@ -5,9 +5,9 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Verifies the parallel hunk-compression pipeline (producer→worker→consumer): byte-identical
-/// output across worker counts, ordered delivery, in-order progress, cancellation, and the
-/// single-threaded→parallel speedup.
+///     Verifies the parallel hunk-compression pipeline (producer→worker→consumer): byte-identical
+///     output across worker counts, ordered delivery, in-order progress, cancellation, and the
+///     single-threaded→parallel speedup.
 /// </summary>
 public class ParallelEncodeTests : IDisposable
 {
@@ -23,7 +23,7 @@ public class ParallelEncodeTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -39,7 +39,6 @@ public class ParallelEncodeTests : IDisposable
         var source = new byte[4096 * 512];
         var rng = new Random(2024);
         for (var h = 0; h < 512; h++)
-        {
             switch (h % 4)
             {
                 case 0:
@@ -52,18 +51,17 @@ public class ParallelEncodeTests : IDisposable
                     Array.Copy(source, 0, source, h * 4096, 4096); // duplicate of hunk 0 → SELF
                     break;
             }
-        }
 
         var single = Path.Combine(_dir, "single.chd");
         var parallel = Path.Combine(_dir, "parallel.chd");
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, single, 4096, 512, options: new ChdEncodeOptions { TaskCount = 1 });
+            ChdEncoder.EncodeRaw(ms, single, options: new ChdEncodeOptions { TaskCount = 1 });
         }
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, parallel, 4096, 512, options: new ChdEncodeOptions { TaskCount = 8 });
+            ChdEncoder.EncodeRaw(ms, parallel, options: new ChdEncodeOptions { TaskCount = 8 });
         }
 
         Assert.Equal(File.ReadAllBytes(single), File.ReadAllBytes(parallel));
@@ -91,12 +89,12 @@ public class ParallelEncodeTests : IDisposable
         var parallel = Path.Combine(_dir, "multi_parallel.chd");
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, single, 4096, 512, codecTags: tags, options: new ChdEncodeOptions { TaskCount = 1 });
+            ChdEncoder.EncodeRaw(ms, single, 4096, 512, tags, new ChdEncodeOptions { TaskCount = 1 });
         }
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, parallel, 4096, 512, codecTags: tags, options: new ChdEncodeOptions { TaskCount = 8 });
+            ChdEncoder.EncodeRaw(ms, parallel, 4096, 512, tags, new ChdEncodeOptions { TaskCount = 8 });
         }
 
         Assert.Equal(File.ReadAllBytes(single), File.ReadAllBytes(parallel));
@@ -113,22 +111,18 @@ public class ParallelEncodeTests : IDisposable
         // deduplicates into SELF references
         var cuePath = Path.Combine(_dir, "parallel.cue");
         File.WriteAllText(cuePath, """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 00:00:16
-            """);
+                                   FILE "game.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                     TRACK 02 AUDIO
+                                       INDEX 01 00:00:16
+                                   """);
         var bin = new byte[80 * CdConstants.MaxSectorData];
         var rng = new Random(9);
         rng.NextBytes(bin);
         for (var f = 48; f < 80; f++)
-        {
-            for (var j = 0; j < CdConstants.MaxSectorData; j++)
-            {
-                bin[f * CdConstants.MaxSectorData + j] = (byte)(f & 1);
-            }
-        }
+        for (var j = 0; j < CdConstants.MaxSectorData; j++)
+            bin[f * CdConstants.MaxSectorData + j] = (byte)(f & 1);
 
         File.WriteAllBytes(Path.Combine(_dir, "game.bin"), bin);
 
@@ -159,12 +153,10 @@ public class ParallelEncodeTests : IDisposable
         var source = new byte[size];
         var rng = new Random(12345);
         for (long h = 0; h < size; h += hunkBytes)
-        {
             if (h / hunkBytes % 3 == 0)
                 rng.NextBytes(source.AsSpan((int)h, hunkBytes));
             else
                 Array.Fill(source, (byte)((h / hunkBytes) & 0xFF), (int)h, hunkBytes);
-        }
 
         var single = Path.Combine(_dir, "speed_single.chd");
         var parallel = Path.Combine(_dir, "speed_parallel.chd");
@@ -214,10 +206,7 @@ public class ParallelEncodeTests : IDisposable
         processor.CompressAll(64,
             (h, buf) =>
             {
-                for (var i = 0; i < buf.Length; i++)
-                {
-                    buf[i] = (byte)((h * 31 + i) & 0xFF);
-                }
+                for (var i = 0; i < buf.Length; i++) buf[i] = (byte)((h * 31 + i) & 0xFF);
 
                 return buf.Length;
             },
@@ -229,10 +218,7 @@ public class ParallelEncodeTests : IDisposable
                 expectedIndex++;
                 Assert.NotNull(result.Data);
                 var expected = new byte[4096];
-                for (var i = 0; i < 4096; i++)
-                {
-                    expected[i] = (byte)((result.HunkIndex * 31 + i) & 0xFF);
-                }
+                for (var i = 0; i < 4096; i++) expected[i] = (byte)((result.HunkIndex * 31 + i) & 0xFF);
 
                 Assert.Equal(expected, RawDeflate.Decompress(result.Data!, 4096));
             });
@@ -247,12 +233,8 @@ public class ParallelEncodeTests : IDisposable
         var sha1 = new Sha1();
         var expectedRaw = new byte[4096 * 16];
         for (var h = 0; h < 16; h++)
-        {
-            for (var i = 0; i < 4096; i++)
-            {
-                expectedRaw[h * 4096 + i] = (byte)((h * 3 + i) & 0xFF);
-            }
-        }
+        for (var i = 0; i < 4096; i++)
+            expectedRaw[h * 4096 + i] = (byte)((h * 3 + i) & 0xFF);
 
         processor.CompressAll(16,
             (h, buf) =>
@@ -275,7 +257,7 @@ public class ParallelEncodeTests : IDisposable
         var reports = new List<HunkProgress>();
         var chdPath = Path.Combine(_dir, "progress.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions
         {
             TaskCount = 8,
             HunkCompleted = reports.Add
@@ -296,14 +278,11 @@ public class ParallelEncodeTests : IDisposable
     public void TaskCount_64_Works()
     {
         var source = new byte[4096 * 4];
-        for (var i = 0; i < source.Length; i++)
-        {
-            source[i] = (byte)(i & 0xFF);
-        }
+        for (var i = 0; i < source.Length; i++) source[i] = (byte)(i & 0xFF);
 
         var chdPath = Path.Combine(_dir, "many_tasks.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { TaskCount = 64 });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { TaskCount = 64 });
 
         using var fs = File.OpenRead(chdPath);
         Assert.Equal(ChdError.Chderrnone, Chd.CheckFile(fs, chdPath, true, out _, out _, out _));
@@ -320,7 +299,7 @@ public class ParallelEncodeTests : IDisposable
         var chdPath = Path.Combine(_dir, "cancelled.chd");
         using var ms = new MemoryStream(source);
         Assert.Throws<OperationCanceledException>(() =>
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, cancellationToken: cts.Token));
+            ChdEncoder.EncodeRaw(ms, chdPath, cancellationToken: cts.Token));
     }
 
     [Fact]
@@ -334,14 +313,17 @@ public class ParallelEncodeTests : IDisposable
         AssertMidRunCancellation(source, cts);
     }
 
-    /// <summary>Encodes <paramref name="source"/> with 8 workers whose progress handler cancels <paramref name="cts"/> mid-run.</summary>
+    /// <summary>
+    ///     Encodes <paramref name="source" /> with 8 workers whose progress handler cancels <paramref name="cts" />
+    ///     mid-run.
+    /// </summary>
     private void AssertMidRunCancellation(byte[] source, CancellationTokenSource cts)
     {
         var seen = 0;
         var chdPath = Path.Combine(_dir, "mid_cancel.chd");
         using var ms = new MemoryStream(source);
         Assert.Throws<OperationCanceledException>(() =>
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512,
+            ChdEncoder.EncodeRaw(ms, chdPath,
                 options: new ChdEncodeOptions
                 {
                     TaskCount = 8,

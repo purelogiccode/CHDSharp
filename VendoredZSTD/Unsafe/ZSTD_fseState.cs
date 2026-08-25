@@ -1,11 +1,10 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct ZSTD_fseState
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ZSTD_fseState
-    {
-        public nuint state;
-        public ZSTD_seqSymbol* table;
-    }
+    public nuint state;
+    public ZSTD_seqSymbol* table;
 }

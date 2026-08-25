@@ -9,7 +9,7 @@ internal partial class MainWindow
 {
     private bool _isClosing;
 
-    /// <summary>Initializes a new instance of the <see cref="MainWindow"/> WPF window.</summary>
+    /// <summary>Initializes a new instance of the <see cref="MainWindow" /> WPF window.</summary>
     internal MainWindow()
     {
         InitializeComponent();

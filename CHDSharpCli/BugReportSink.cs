@@ -7,23 +7,15 @@ using Serilog.Events;
 namespace CHDSharp;
 
 /// <summary>
-/// A Serilog sink that forwards every log event at <see cref="LogEventLevel.Warning"/> or above to the
-/// Bug Report API. Each report embeds the full environment snapshot and, when present, the exception details.
-/// The HTTP post is fire-and-forget so it never blocks application logging.
+///     A Serilog sink that forwards every log event at <see cref="LogEventLevel.Warning" /> or above to the
+///     Bug Report API. Each report embeds the full environment snapshot and, when present, the exception details.
+///     The HTTP post is fire-and-forget so it never blocks application logging.
 /// </summary>
 internal sealed class BugReportSink : ILogEventSink
 {
-    private static readonly HttpClient Client = new();
-
     private const string Endpoint = "https://www.purelogiccode.com/bugreport/api/send-bug-report";
+    private static readonly HttpClient Client = new();
     private static readonly string ApiKey = DecodeApiKey();
-
-    private static string DecodeApiKey()
-    {
-        // Double-encoded to avoid plain-text in source
-        const string encoded = "aGpoN3l1NnQ1NnR5cjU0MG85dTg3Njc2NzZyNTY3NDUzNDQ1MzIzNTI2NGM3NWI2dDdnZ2doZ2c3NnRyZjU2NGU=";
-        return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-    }
 
     private readonly EnvironmentSnapshot _env;
     private readonly string _environmentLabel;
@@ -52,6 +44,14 @@ internal sealed class BugReportSink : ILogEventSink
 
         // Fire-and-forget: never block the logging pipeline.
         _ = Task.Run(() => SendAsync(message, logEvent));
+    }
+
+    private static string DecodeApiKey()
+    {
+        // Double-encoded to avoid plain-text in source
+        const string encoded =
+            "aGpoN3l1NnQ1NnR5cjU0MG85dTg3Njc2NzZyNTY3NDUzNDQ1MzIzNTI2NGM3NWI2dDdnZ2doZ2c3NnRyZjU2NGU=";
+        return Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
     }
 
     private string BuildMessage(LogEvent logEvent)

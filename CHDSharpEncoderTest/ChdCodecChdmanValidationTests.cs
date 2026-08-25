@@ -4,8 +4,8 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Validates the zstd/lzma/multi-codec CHD output against chdman.exe: files must pass
-/// chdman verify, report the right codec in chdman info, and extract byte-identically.
+///     Validates the zstd/lzma/multi-codec CHD output against chdman.exe: files must pass
+///     chdman verify, report the right codec in chdman info, and extract byte-identically.
 /// </summary>
 public class ChdCodecChdmanValidationTests : IDisposable
 {
@@ -22,7 +22,7 @@ public class ChdCodecChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -115,7 +115,8 @@ public class ChdCodecChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, 4096, 512, [CodecTags.Lzma]);
 
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "lzma", "-hs", "4096", "-us", "512", "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "lzma",
+            "-hs", "4096", "-us", "512", "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         Assert.Equal(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
@@ -149,28 +150,22 @@ public class ChdCodecChdmanValidationTests : IDisposable
         var bin = new byte[(dataFrames + audioFrames) * CdConstants.MaxSectorData];
         var pos = 0;
         for (var f = 0; f < dataFrames; f++)
-        {
-            for (var i = 0; i < CdConstants.MaxSectorData; i++, pos++)
-            {
-                bin[pos] = (byte)("the quick brown fox jumps over the lazy dog "[i % 40] + (f % 7));
-            }
-        }
+        for (var i = 0; i < CdConstants.MaxSectorData; i++, pos++)
+            bin[pos] = (byte)("the quick brown fox jumps over the lazy dog "[i % 40] + f % 7);
 
         for (var f = 0; f < audioFrames; f++)
+        for (var i = 0; i < CdConstants.MaxSectorData / 2; i++)
         {
-            for (var i = 0; i < CdConstants.MaxSectorData / 2; i++)
-            {
-                var v = (short)Math.Round(12000 * Math.Sin((f * CdConstants.MaxSectorData / 2.0 + i) * 0.02));
-                bin[pos++] = (byte)(v & 0xFF);
-                bin[pos++] = (byte)((v >> 8) & 0xFF);
-            }
+            var v = (short)Math.Round(12000 * Math.Sin((f * CdConstants.MaxSectorData / 2.0 + i) * 0.02));
+            bin[pos++] = (byte)(v & 0xFF);
+            bin[pos++] = (byte)((v >> 8) & 0xFF);
         }
 
         File.WriteAllBytes(binPath, bin);
 
         const uint hunkBytes = CdConstants.FramesPerHunk * (uint)CdConstants.FrameSize;
-        ChdEncoder.EncodeCd(cuePath, oursPath, hunkBytes: hunkBytes,
-            unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.Cdzs]);
+        ChdEncoder.EncodeCd(cuePath, oursPath, hunkBytes,
+            CdConstants.FrameSize, [CodecTags.Cdzs]);
 
         var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", refPath, "-c", "cdzs",
             "-hs", hunkBytes.ToString(), "-f");
@@ -181,14 +176,15 @@ public class ChdCodecChdmanValidationTests : IDisposable
 
         using (var fs = File.OpenRead(oursPath))
         {
-            var check = Chd.CheckFile(fs, oursPath, deepCheck: true);
+            var check = Chd.CheckFile(fs, oursPath, true);
             Assert.Equal(ChdError.Chderrnone, check.Error);
         }
 
         // chdman extractcd must reproduce the source BIN exactly from our output
         var extractPath = Path.Combine(_testDataDir, "cdzs.extract.bin");
         var extractCue = Path.Combine(_testDataDir, "cdzs.extract.cue");
-        var (exExit, eOut, eErr) = ChdmanHelper.RunChdman("extractcd", "-i", oursPath, "-o", extractCue, "-ob", extractPath, "-f");
+        var (exExit, eOut, eErr) =
+            ChdmanHelper.RunChdman("extractcd", "-i", oursPath, "-o", extractCue, "-ob", extractPath, "-f");
         Assert.True(exExit == 0, $"extractcd failed (exit={exExit})\n{eOut}{eErr}");
         Assert.Equal(bin, File.ReadAllBytes(extractPath));
     }
@@ -215,7 +211,8 @@ public class ChdCodecChdmanValidationTests : IDisposable
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, 4096, 512, [CodecTags.Flac]);
 
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "flac", "-hs", "4096", "-us", "512", "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "flac",
+            "-hs", "4096", "-us", "512", "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         Assert.Equal(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
@@ -244,20 +241,21 @@ public class ChdCodecChdmanValidationTests : IDisposable
         new Random(1234).NextBytes(bin);
         File.WriteAllBytes(binPath, bin);
 
-        ChdEncoder.EncodeCd(cuePath, chdPath, hunkBytes: CdConstants.FramesPerHunk * CdConstants.FrameSize,
-            unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.Cdfl]);
+        ChdEncoder.EncodeCd(cuePath, chdPath, CdConstants.FramesPerHunk * CdConstants.FrameSize,
+            CdConstants.FrameSize, [CodecTags.Cdfl]);
 
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         using var fs = File.OpenRead(chdPath);
-        var check = Chd.CheckFile(fs, chdPath, deepCheck: true);
+        var check = Chd.CheckFile(fs, chdPath, true);
         Assert.Equal(ChdError.Chderrnone, check.Error);
 
         // chdman extractcd must reproduce the source BIN exactly
         var extractPath = Path.Combine(_testDataDir, "cdfl.extract.bin");
         var extractCue = Path.Combine(_testDataDir, "cdfl.extract.cue");
-        var (exExit, eOut, eErr) = ChdmanHelper.RunChdman("extractcd", "-i", chdPath, "-o", extractCue, "-ob", extractPath, "-f");
+        var (exExit, eOut, eErr) =
+            ChdmanHelper.RunChdman("extractcd", "-i", chdPath, "-o", extractCue, "-ob", extractPath, "-f");
         Assert.True(exExit == 0, $"extractcd failed (exit={exExit})\n{eOut}{eErr}");
         Assert.Equal(bin, File.ReadAllBytes(extractPath));
     }
@@ -307,8 +305,8 @@ public class ChdCodecChdmanValidationTests : IDisposable
             fs.SetLength(2352L * 82);
         }
 
-        ChdEncoder.EncodeCd(cuePath, chdPath, hunkBytes: CdConstants.FramesPerHunk * CdConstants.FrameSize,
-            unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.Zstd]);
+        ChdEncoder.EncodeCd(cuePath, chdPath, CdConstants.FramesPerHunk * CdConstants.FrameSize,
+            CdConstants.FrameSize, [CodecTags.Zstd]);
 
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
@@ -325,15 +323,9 @@ public class ChdCodecChdmanValidationTests : IDisposable
         var source = new byte[4096 * hunkCount];
         for (var h = 0; h < hunkCount; h++)
         {
-            for (var i = 0; i < 4064; i++)
-            {
-                source[h * 4096 + i] = 0;
-            }
+            for (var i = 0; i < 4064; i++) source[h * 4096 + i] = 0;
 
-            for (var i = 4064; i < 4096; i++)
-            {
-                source[h * 4096 + i] = (byte)(h + i);
-            }
+            for (var i = 4064; i < 4096; i++) source[h * 4096 + i] = (byte)(h + i);
         }
 
         return source;

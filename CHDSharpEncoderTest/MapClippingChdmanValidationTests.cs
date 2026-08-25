@@ -5,24 +5,22 @@ using MapEntry = CHDSharp.Encoder.Models.MapEntry;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Pins the map-encoding edge case from the sixth battle run: a compressed codec storing an
-/// individual hunk uncompressed (COMPRESSION_NONE entry inside a compressed CHD's Huffman map)
-/// at small hunk counts.
-///
-/// Root cause found while closing that gap: MAME's <c>compress_v5_map</c> sizes its map
-/// bitstream buffer as <c>nbits_needed/8 + 1</c> bytes <em>including</em> the 16-byte map
-/// header. For small hunk counts that area is smaller than the actual tree + symbols +
-/// auxiliary data, so MAME's <c>bitstream_out</c> silently drops whole trailing bytes (the
-/// zero-filled allocation shows through) while <c>flush()</c> keeps counting them in the
-/// map's compressed-length field. When a dropped byte would have been nonzero, the stored map
-/// no longer matches its header CRC-16 and the resulting CHD cannot be re-opened — not even
-/// by chdman itself (upstream bug, reproducible with a single-hunk <c>createraw</c> at hunk
-/// sizes 18816/19584/65536).
-///
-/// Our encoder replicates chdman's allocation and clipping so outputs stay byte-identical
-/// wherever chdman's file is well-formed, and falls back to the full bitstream when clipping
-/// would corrupt the map (chdman's reference is unreadable in those cases, so there are no
-/// valid reference bytes to match).
+///     Pins the map-encoding edge case from the sixth battle run: a compressed codec storing an
+///     individual hunk uncompressed (COMPRESSION_NONE entry inside a compressed CHD's Huffman map)
+///     at small hunk counts.
+///     Root cause found while closing that gap: MAME's <c>compress_v5_map</c> sizes its map
+///     bitstream buffer as <c>nbits_needed/8 + 1</c> bytes <em>including</em> the 16-byte map
+///     header. For small hunk counts that area is smaller than the actual tree + symbols +
+///     auxiliary data, so MAME's <c>bitstream_out</c> silently drops whole trailing bytes (the
+///     zero-filled allocation shows through) while <c>flush()</c> keeps counting them in the
+///     map's compressed-length field. When a dropped byte would have been nonzero, the stored map
+///     no longer matches its header CRC-16 and the resulting CHD cannot be re-opened — not even
+///     by chdman itself (upstream bug, reproducible with a single-hunk <c>createraw</c> at hunk
+///     sizes 18816/19584/65536).
+///     Our encoder replicates chdman's allocation and clipping so outputs stay byte-identical
+///     wherever chdman's file is well-formed, and falls back to the full bitstream when clipping
+///     would corrupt the map (chdman's reference is unreadable in those cases, so there are no
+///     valid reference bytes to match).
 /// </summary>
 public class MapClippingChdmanValidationTests : IDisposable
 {
@@ -38,7 +36,7 @@ public class MapClippingChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -123,7 +121,7 @@ public class MapClippingChdmanValidationTests : IDisposable
         if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = new byte[hunkBytes];
-        new Random(SeedFor(hunkBytes, oddCrc: false)).NextBytes(source);
+        new Random(SeedFor(hunkBytes, false)).NextBytes(source);
         var tag = $"benign-{hunkBytes}";
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
@@ -149,7 +147,7 @@ public class MapClippingChdmanValidationTests : IDisposable
         if (ChdmanHelper.ChdmanPath == null) return;
 
         var source = new byte[hunkBytes];
-        new Random(SeedFor(hunkBytes, oddCrc: true)).NextBytes(source);
+        new Random(SeedFor(hunkBytes, true)).NextBytes(source);
         var tag = $"corrupt-{hunkBytes}";
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
@@ -199,10 +197,7 @@ public class MapClippingChdmanValidationTests : IDisposable
             }
 
             const string phrase = "the quick brown fox jumps over the lazy dog. ";
-            for (var i = 0; i < span.Length; i++)
-            {
-                span[i] = (byte)phrase[i % phrase.Length];
-            }
+            for (var i = 0; i < span.Length; i++) span[i] = (byte)phrase[i % phrase.Length];
         }
 
         var tag = $"mixed-{hunkBytes}";
@@ -243,7 +238,8 @@ public class MapClippingChdmanValidationTests : IDisposable
                 var readErr = chd.ReadHunk(h, buffer);
                 Assert.Equal(ChdError.Chderrnone, readErr);
                 var valid = (int)Math.Min((ulong)buffer.Length, (ulong)expected.Length - h * (ulong)buffer.Length);
-                Assert.Equal(expected.AsSpan((int)(h * buffer.Length), valid).ToArray(), buffer.AsSpan(0, valid).ToArray());
+                Assert.Equal(expected.AsSpan((int)(h * buffer.Length), valid).ToArray(),
+                    buffer.AsSpan(0, valid).ToArray());
             }
         }
     }

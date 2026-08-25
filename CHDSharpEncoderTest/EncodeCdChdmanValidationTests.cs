@@ -1,10 +1,12 @@
+using System.Text;
 using CHDSharp.Encoder;
+using Xunit.Sdk;
 
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Validates EncodeCd against chdman.exe: the same CUE+BIN is converted with our encoder and
-/// with chdman createcd; extracted data, verification, and metadata must all agree.
+///     Validates EncodeCd against chdman.exe: the same CUE+BIN is converted with our encoder and
+///     with chdman createcd; extracted data, verification, and metadata must all agree.
 /// </summary>
 public class EncodeCdChdmanValidationTests : IDisposable
 {
@@ -21,7 +23,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -53,8 +55,10 @@ public class EncodeCdChdmanValidationTests : IDisposable
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         ChdEncoder.EncodeCd(cuePath, ourChd);
 
-        var (createExit, cstdout, cstderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdmanChd, "-c", "zlib", "-f");
-        Assert.True(createExit == 0, $"chdman createcd failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
+        var (createExit, cstdout, cstderr) =
+            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdmanChd, "-c", "zlib", "-f");
+        Assert.True(createExit == 0,
+            $"chdman createcd failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
 
         var ourExtract = Path.Combine(_testDataDir, "our.raw");
         var chdmanExtract = Path.Combine(_testDataDir, "chdman.raw");
@@ -131,7 +135,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
         const int lastTrackFrames = 50;
         var bin = BuildBin(dataFrames + 6 * audioFrames + lastTrackFrames, dataFrames);
 
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
         sb.AppendLine("FILE \"game.bin\" BINARY");
         sb.AppendLine("  TRACK 01 MODE1/2352");
         sb.AppendLine("    INDEX 01 00:00:00");
@@ -163,32 +167,28 @@ public class EncodeCdChdmanValidationTests : IDisposable
         var expected = new byte[(76 * 7 + 52) * CdConstants.FrameSize];
         var chdStart = 0;
         var binOffsetBytes = 0;
-        PlaceBinFrames(expected, chdStart, bin, dataFrames, binOffsetBytes, swap: false);
+        PlaceBinFrames(expected, chdStart, bin, dataFrames, binOffsetBytes, false);
         chdStart += 76;
         binOffsetBytes += dataFrames * CdConstants.MaxSectorData;
         for (var i = 0; i < 6; i++)
         {
-            PlaceBinFrames(expected, chdStart, bin, audioFrames, binOffsetBytes, swap: true);
+            PlaceBinFrames(expected, chdStart, bin, audioFrames, binOffsetBytes, true);
             chdStart += 76;
             binOffsetBytes += audioFrames * CdConstants.MaxSectorData;
         }
 
-        PlaceBinFrames(expected, chdStart, bin, lastTrackFrames, binOffsetBytes, swap: true);
+        PlaceBinFrames(expected, chdStart, bin, lastTrackFrames, binOffsetBytes, true);
 
         var actual = File.ReadAllBytes(extractPath);
         if (!expected.AsSpan().SequenceEqual(actual))
-        {
             for (var i = 0; i < expected.Length; i++)
-            {
                 if (expected[i] != actual[i])
                 {
                     var frame = i / CdConstants.FrameSize;
-                    throw new Xunit.Sdk.XunitException(
+                    throw new XunitException(
                         $"first difference at byte {i} (frame {frame}, offset {i % CdConstants.FrameSize}): " +
                         $"expected {expected[i]:X2}, actual {actual[i]:X2}");
                 }
-            }
-        }
 
         Assert.Equal(expected, actual);
     }
@@ -210,8 +210,10 @@ public class EncodeCdChdmanValidationTests : IDisposable
         return path;
     }
 
-    /// <summary>Builds a BIN file: 2352-byte sectors; data pattern for the first
-    /// <paramref name="dataFrames"/> sectors, then little-endian audio samples.</summary>
+    /// <summary>
+    ///     Builds a BIN file: 2352-byte sectors; data pattern for the first
+    ///     <paramref name="dataFrames" /> sectors, then little-endian audio samples.
+    /// </summary>
     private static byte[] BuildBin(int frames, int dataFrames = 1)
     {
         var bin = new byte[frames * CdConstants.MaxSectorData];
@@ -219,15 +221,10 @@ public class EncodeCdChdmanValidationTests : IDisposable
         {
             var offset = f * CdConstants.MaxSectorData;
             if (f < dataFrames)
-            {
                 // data track: distinct byte pattern
                 for (var j = 0; j < CdConstants.MaxSectorData; j++)
-                {
                     bin[offset + j] = (byte)((f * 31 + j * 7) & 0xFF);
-                }
-            }
             else
-            {
                 // audio track: little-endian 16-bit samples
                 for (var j = 0; j < CdConstants.MaxSectorData / 2; j++)
                 {
@@ -235,25 +232,21 @@ public class EncodeCdChdmanValidationTests : IDisposable
                     bin[offset + j * 2] = (byte)sample;
                     bin[offset + j * 2 + 1] = (byte)(sample >> 8);
                 }
-            }
         }
 
         return bin;
     }
 
-    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset, bool swap)
+    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
+        bool swap)
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
             Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
             if (swap)
-            {
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
-                {
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);
-                }
-            }
         }
     }
 }

@@ -3,28 +3,57 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using CHDSharpTester.Services;
+using CHDSharpTester.Views;
 using Microsoft.Win32;
 using Serilog;
 
 namespace CHDSharpTester.ViewModels;
 
-/// <summary>The primary view model for the CHDSharp Tester application, managing file selection, test execution, results display, and PDF export.</summary>
+/// <summary>
+///     The primary view model for the CHDSharp Tester application, managing file selection, test execution, results
+///     display, and PDF export.
+/// </summary>
 internal class MainViewModel : INotifyPropertyChanged
 {
-    private readonly ChdTestRunner _runner = new();
-    private CancellationTokenSource? _cts;
 #pragma warning disable MA0158 // Use System.Threading.Lock — not available on net8.0
     private readonly object _ctsLock = new();
 #pragma warning restore MA0158
     private readonly StringBuilder _logBuffer = new();
+    private readonly ChdTestRunner _runner = new();
     private ObservableCollection<PerFileResult>? _cachedFileResults;
+
+    private string _chdmanPath = string.Empty;
+    private CancellationTokenSource? _cts;
+
+    private string _currentTest = string.Empty;
+
+    private string _fileProgress = string.Empty;
+
+    /// <summary>Gets or sets a summary string describing the currently selected files.</summary>
+    private string _filesSummary = "No files selected.";
+
+    /// <summary>Gets or sets whether a test run is currently executing.</summary>
+    private bool _isRunning;
+
+    private string _logText = string.Empty;
+
+    private string _progressText = "Ready.";
+
+    private double _progressValue;
     private Task? _runTask;
 
-    /// <summary>Initializes a new instance of the <see cref="MainViewModel"/> class and binds all commands.</summary>
+    private TestSessionResult? _sessionResult;
+
+    private string _statusText = "Ready.";
+
+    private string _summarySubText = string.Empty;
+
+    /// <summary>Initializes a new instance of the <see cref="MainViewModel" /> class and binds all commands.</summary>
     internal MainViewModel()
     {
         BrowseChdmanCommand = new RelayCommand(_ => BrowseChdman());
@@ -41,17 +70,6 @@ internal class MainViewModel : INotifyPropertyChanged
 
         AutoDetectChdman();
     }
-
-    private void AutoDetectChdman()
-    {
-        var candidate = Path.Combine(AppContext.BaseDirectory, "chdman.exe");
-        if (File.Exists(candidate))
-        {
-            ChdmanPath = candidate;
-        }
-    }
-
-    private string _chdmanPath = string.Empty;
 
     /// <summary>Gets or sets the full path to the chdman executable.</summary>
     public string ChdmanPath
@@ -71,9 +89,6 @@ internal class MainViewModel : INotifyPropertyChanged
 
     /// <summary>Gets the collection of CHD files selected for testing.</summary>
     public ObservableCollection<ChdFileEntry> Files { get; } = [];
-
-    /// <summary>Gets or sets a summary string describing the currently selected files.</summary>
-    private string _filesSummary = "No files selected.";
 
     public string FilesSummary
     {
@@ -121,9 +136,6 @@ internal class MainViewModel : INotifyPropertyChanged
     /// <summary>Gets whether tests can be started (files are selected and no run is in progress).</summary>
     public bool CanRunTests => Files.Count > 0 && !IsRunning;
 
-    /// <summary>Gets or sets whether a test run is currently executing.</summary>
-    private bool _isRunning;
-
     public bool IsRunning
     {
         get => _isRunning;
@@ -147,8 +159,6 @@ internal class MainViewModel : INotifyPropertyChanged
     /// <summary>Gets whether the results pane should be visible.</summary>
     public bool ShowResults => !IsRunning && HasResults;
 
-    private double _progressValue;
-
     /// <summary>Gets or sets the progress bar value (0-100).</summary>
     public double ProgressValue
     {
@@ -159,8 +169,6 @@ internal class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-
-    private string _statusText = "Ready.";
 
     /// <summary>Gets or sets the status bar text shown at the bottom of the window.</summary>
     public string StatusText
@@ -173,8 +181,6 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private string _progressText = "Ready.";
-
     /// <summary>Gets or sets the current progress status text.</summary>
     public string ProgressText
     {
@@ -185,8 +191,6 @@ internal class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-
-    private string _currentTest = string.Empty;
 
     /// <summary>Gets or sets the name of the test currently executing.</summary>
     public string CurrentTest
@@ -199,8 +203,6 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private string _fileProgress = string.Empty;
-
     /// <summary>Gets or sets the file progress display text (e.g., "File 3/10").</summary>
     public string FileProgress
     {
@@ -211,8 +213,6 @@ internal class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-
-    private string _logText = string.Empty;
 
     /// <summary>Gets or sets the accumulated log text with timestamps.</summary>
     public string LogText
@@ -227,8 +227,6 @@ internal class MainViewModel : INotifyPropertyChanged
 
     /// <summary>Gets the collection of structured log entries for data-bound display.</summary>
     public ObservableCollection<LogEntry> LogEntries { get; } = [];
-
-    private TestSessionResult? _sessionResult;
 
     /// <summary>Gets or sets the result of the most recent test session, or null if none has run.</summary>
     public TestSessionResult? SessionResult
@@ -267,8 +265,6 @@ internal class MainViewModel : INotifyPropertyChanged
           $"{SessionResult.TotalElapsedSeconds:N1}s total"
         : string.Empty;
 
-    private string _summarySubText = string.Empty;
-
     /// <summary>Gets or sets the sub-summary text shown below the main summary.</summary>
     public string SummarySubText
     {
@@ -286,14 +282,21 @@ internal class MainViewModel : INotifyPropertyChanged
         get
         {
             if (_cachedFileResults == null)
-            {
                 _cachedFileResults = SessionResult?.FileResults != null
                     ? new ObservableCollection<PerFileResult>(SessionResult.FileResults)
                     : [];
-            }
 
             return _cachedFileResults;
         }
+    }
+
+    /// <summary>Occurs when a property value changes.</summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void AutoDetectChdman()
+    {
+        var candidate = Path.Combine(AppContext.BaseDirectory, "chdman.exe");
+        if (File.Exists(candidate)) ChdmanPath = candidate;
     }
 
     private void BrowseChdman()
@@ -321,10 +324,7 @@ internal class MainViewModel : INotifyPropertyChanged
         };
         if (dlg.ShowDialog() == true)
         {
-            foreach (var path in dlg.FileNames)
-            {
-                AddFileIfNew(path);
-            }
+            foreach (var path in dlg.FileNames) AddFileIfNew(path);
 
             UpdateFilesSummary();
             AddLog($"Added {dlg.FileNames.Length} file(s). Total: {Files.Count}");
@@ -338,14 +338,10 @@ internal class MainViewModel : INotifyPropertyChanged
             Title = "Select folder with CHD files"
         };
         if (dlg.ShowDialog() == true)
-        {
             try
             {
                 var chdFiles = Directory.GetFiles(dlg.FolderName, "*.chd", SearchOption.AllDirectories);
-                foreach (var path in chdFiles)
-                {
-                    AddFileIfNew(path);
-                }
+                foreach (var path in chdFiles) AddFileIfNew(path);
 
                 UpdateFilesSummary();
                 AddLog($"Added {chdFiles.Length} file(s) from folder. Total: {Files.Count}");
@@ -354,15 +350,12 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 AddLog($"Error scanning folder: {ex.Message}");
             }
-        }
     }
 
     private void AddFileIfNew(string path)
     {
         if (!Files.Any(f => string.Equals(f.FilePath, path, StringComparison.OrdinalIgnoreCase)))
-        {
             Files.Add(new ChdFileEntry { FilePath = path });
-        }
     }
 
     private void RemoveFile(object? param)
@@ -379,7 +372,6 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         long totalSize = 0;
         foreach (var f in Files)
-        {
             try
             {
                 totalSize += new FileInfo(f.FilePath).Length;
@@ -392,7 +384,6 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 // File may be inaccessible
             }
-        }
 
         var sizeStr = totalSize switch
         {
@@ -425,10 +416,7 @@ internal class MainViewModel : INotifyPropertyChanged
         var token = _cts.Token;
 
         var chdmanPath = IsChdmanValid ? ChdmanPath : string.Empty;
-        if (!IsChdmanValid)
-        {
-            AddLog("WARNING: chdman.exe not selected. Tests requiring chdman will be skipped.");
-        }
+        if (!IsChdmanValid) AddLog("WARNING: chdman.exe not selected. Tests requiring chdman will be skipped.");
 
         var progress = new Progress<TestProgress>(p =>
         {
@@ -446,9 +434,11 @@ internal class MainViewModel : INotifyPropertyChanged
             SessionResult = session;
 
             ProgressValue = 100;
-            ProgressText = $"Completed: {session.PassedFiles} passed, {session.FailedFiles} failed, {session.SkippedFiles} skipped";
+            ProgressText =
+                $"Completed: {session.PassedFiles} passed, {session.FailedFiles} failed, {session.SkippedFiles} skipped";
             CurrentTest = "Done";
-            StatusText = $"Completed: {session.PassedFiles} passed, {session.FailedFiles} failed, {session.SkippedFiles} skipped";
+            StatusText =
+                $"Completed: {session.PassedFiles} passed, {session.FailedFiles} failed, {session.SkippedFiles} skipped";
 
             SummarySubText = $"Sub-tests: {session.PassedSubTests} passed, {session.FailedSubTests} failed, " +
                              $"{session.SkippedSubTests} skipped | {session.TotalElapsedSeconds:N1}s";
@@ -504,7 +494,6 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         CancelTests();
         if (_runTask is { IsCompleted: false })
-        {
             try
             {
                 await _runTask.ConfigureAwait(false);
@@ -513,7 +502,6 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 // Task may have been cancelled or faulted; we're shutting down
             }
-        }
     }
 
     private async void ExportPdfAsync()
@@ -554,16 +542,14 @@ internal class MainViewModel : INotifyPropertyChanged
     private void CopyLog()
     {
         if (!string.IsNullOrEmpty(LogText))
-        {
             try
             {
                 Clipboard.SetText(LogText);
             }
-            catch (System.Runtime.InteropServices.ExternalException)
+            catch (ExternalException)
             {
                 AddLog("Failed to copy log to clipboard.");
             }
-        }
     }
 
     private void CopyResults()
@@ -581,7 +567,8 @@ internal class MainViewModel : INotifyPropertyChanged
         foreach (var file in SessionResult.FileResults)
         {
             var status = file.AllPassed ? "PASS" : file.Failed > 0 ? "FAIL" : "SKIP";
-            sb.AppendLine(CultureInfo.InvariantCulture, $"--- {file.FileName} ({file.FileSize}) [{status}] {file.ElapsedSeconds:N2}s ---");
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"--- {file.FileName} ({file.FileSize}) [{status}] {file.ElapsedSeconds:N2}s ---");
             foreach (var t in file.SubTests)
             {
                 var icon = t.Status switch
@@ -590,7 +577,8 @@ internal class MainViewModel : INotifyPropertyChanged
                     TestStatus.Failed => "[FAIL]",
                     _ => "[SKIP]"
                 };
-                sb.AppendLine(CultureInfo.InvariantCulture, $"  {icon} {t.TestName,-22} {t.ElapsedSeconds,6:N2}s  {t.Detail}");
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"  {icon} {t.TestName,-22} {t.ElapsedSeconds,6:N2}s  {t.Detail}");
             }
 
             sb.AppendLine();
@@ -600,7 +588,7 @@ internal class MainViewModel : INotifyPropertyChanged
         {
             Clipboard.SetText(sb.ToString());
         }
-        catch (System.Runtime.InteropServices.ExternalException)
+        catch (ExternalException)
         {
             AddLog("Failed to copy results to clipboard.");
         }
@@ -616,7 +604,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private static void ShowAbout()
     {
-        var about = new Views.AboutWindow
+        var about = new AboutWindow
         {
             Owner = Application.Current?.MainWindow
         };
@@ -628,10 +616,7 @@ internal class MainViewModel : INotifyPropertyChanged
         Application.Current.MainWindow?.Close();
     }
 
-    /// <summary>Occurs when a property value changes.</summary>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    /// <summary>Raises the <see cref="PropertyChanged"/> event for the specified property.</summary>
+    /// <summary>Raises the <see cref="PropertyChanged" /> event for the specified property.</summary>
     /// <param name="name">The name of the property that changed. Automatically filled by the caller.</param>
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
@@ -642,10 +627,10 @@ internal class MainViewModel : INotifyPropertyChanged
 /// <summary>A generic relay command implementation for WPF data binding, delegating execution and can-execute logic.</summary>
 public class RelayCommand : ICommand
 {
-    private readonly Action<object?> _execute;
     private readonly Func<object?, bool>? _canExecute;
+    private readonly Action<object?> _execute;
 
-    /// <summary>Initializes a new instance of the <see cref="RelayCommand"/> class.</summary>
+    /// <summary>Initializes a new instance of the <see cref="RelayCommand" /> class.</summary>
     /// <param name="execute">The action to invoke when the command is executed.</param>
     /// <param name="canExecute">An optional function that determines whether the command can execute.</param>
     internal RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)

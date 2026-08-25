@@ -1,32 +1,30 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace CHDSharpTester.Views;
 
-/// <summary>The main page of the CHDSharp Tester, serving as the primary content for the <see cref="MainWindow"/>.</summary>
+/// <summary>The main page of the CHDSharp Tester, serving as the primary content for the <see cref="MainWindow" />.</summary>
 internal partial class MainPage
 {
-    /// <summary>Initializes a new instance of the <see cref="MainPage"/> class.</summary>
+    /// <summary>Initializes a new instance of the <see cref="MainPage" /> class.</summary>
     public MainPage()
     {
         InitializeComponent();
     }
 
-    private void LogTextBox_OnTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    private void LogTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
     {
-        if (sender is System.Windows.Controls.TextBox tb)
-        {
-            tb.ScrollToEnd();
-        }
+        if (sender is TextBox tb) tb.ScrollToEnd();
     }
 }
 
-/// <summary>Converts a <see cref="TestStatus"/> enum value to a display icon string for the WPF view.</summary>
+/// <summary>Converts a <see cref="TestStatus" /> enum value to a display icon string for the WPF view.</summary>
 public class StatusIconConverter : IValueConverter
 {
-    /// <summary>Converts a <see cref="TestStatus"/> value to a single-character status icon.</summary>
-    /// <param name="value">A <see cref="TestStatus"/> value.</param>
+    /// <summary>Converts a <see cref="TestStatus" /> value to a single-character status icon.</summary>
+    /// <param name="value">A <see cref="TestStatus" /> value.</param>
     /// <param name="targetType">The target type (ignored).</param>
     /// <param name="parameter">An optional converter parameter (ignored).</param>
     /// <param name="culture">The culture to use (ignored).</param>

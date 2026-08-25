@@ -36,7 +36,7 @@ public class MetadataWriterTests
     [Fact]
     public void MetadataString_AudioWithPregap_HasValidFlag()
     {
-        var track = MakeTrack(2, CdTrackType.Audio, 13500, pregap: 150, pgType: CdTrackType.Audio, pgDataSize: 2352);
+        var track = MakeTrack(2, CdTrackType.Audio, 13500, 150, CdTrackType.Audio, 2352);
         Assert.Equal(
             "TRACK:2 TYPE:AUDIO SUBTYPE:NONE FRAMES:13500 PREGAP:150 PGTYPE:VAUDIO PGSUB:NONE POSTGAP:0",
             MetadataWriter.BuildChd2String(track));
@@ -45,7 +45,7 @@ public class MetadataWriterTests
     [Fact]
     public void MetadataString_EmptyPregapType()
     {
-        var track = MakeTrack(3, CdTrackType.Audio, 100, pregap: 0);
+        var track = MakeTrack(3, CdTrackType.Audio, 100, 0);
         Assert.Equal(
             "TRACK:3 TYPE:AUDIO SUBTYPE:NONE FRAMES:100 PREGAP:0 PGTYPE:MODE1 PGSUB:NONE POSTGAP:0",
             MetadataWriter.BuildChd2String(track));
@@ -105,7 +105,7 @@ public class MetadataWriterTests
     {
         var toc = new CdToc();
         toc.Tracks.Add(MakeTrack(1, CdTrackType.Mode1Raw, 1000));
-        toc.Tracks.Add(MakeTrack(2, CdTrackType.Audio, 2000, pregap: 150, pgType: CdTrackType.Audio, pgDataSize: 2352));
+        toc.Tracks.Add(MakeTrack(2, CdTrackType.Audio, 2000, 150, CdTrackType.Audio, 2352));
 
         using var ms = new MemoryStream();
         var metaOffset = MetadataWriter.WriteCdMetadata(ms, toc);

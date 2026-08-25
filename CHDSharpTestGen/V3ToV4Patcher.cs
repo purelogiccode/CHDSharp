@@ -1,13 +1,16 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace CHDSharpTestGen;
 
-/// <summary>Converts a standalone (no-parent) V3 CHD into a V4 CHD.
-/// chdman 0.145's A/V compression crashes, so the V4 A/V corpus entry is synthesized from the
-/// V3 file instead. V3 and V4 share identical map and metadata layouts; only the header differs
-/// (120 -> 108 bytes), so all absolute file offsets shift by -12 and the V4 combined SHA1
-/// (rawsha1 + checksummed metadata) is recomputed exactly as MAME 0.145 chd.c does.</summary>
+/// <summary>
+///     Converts a standalone (no-parent) V3 CHD into a V4 CHD.
+///     chdman 0.145's A/V compression crashes, so the V4 A/V corpus entry is synthesized from the
+///     V3 file instead. V3 and V4 share identical map and metadata layouts; only the header differs
+///     (120 -> 108 bytes), so all absolute file offsets shift by -12 and the V4 combined SHA1
+///     (rawsha1 + checksummed metadata) is recomputed exactly as MAME 0.145 chd.c does.
+/// </summary>
 internal static class V3ToV4Patcher
 {
     private const int V3HeaderSize = 120;
@@ -19,7 +22,7 @@ internal static class V3ToV4Patcher
     {
         var src = File.ReadAllBytes(v3Path);
 
-        if (!string.Equals(System.Text.Encoding.ASCII.GetString(src, 0, 8), "MComprHD", StringComparison.Ordinal) ||
+        if (!string.Equals(Encoding.ASCII.GetString(src, 0, 8), "MComprHD", StringComparison.Ordinal) ||
             BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(12)) != 3)
             throw new InvalidDataException($"{v3Path} is not a V3 CHD");
 
@@ -37,7 +40,7 @@ internal static class V3ToV4Patcher
         var dst = new byte[src.Length - Delta];
 
         // V4 header
-        System.Text.Encoding.ASCII.GetBytes("MComprHD", dst);
+        Encoding.ASCII.GetBytes("MComprHD", dst);
         BinaryPrimitives.WriteUInt32BigEndian(dst.AsSpan(8), V4HeaderSize);
         BinaryPrimitives.WriteUInt32BigEndian(dst.AsSpan(12), 4);
         BinaryPrimitives.WriteUInt32BigEndian(dst.AsSpan(16), flags);

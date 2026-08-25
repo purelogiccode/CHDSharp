@@ -6,8 +6,8 @@ using System.Text.Json;
 namespace CHDSharpTester.Services;
 
 /// <summary>
-/// Sends a single usage hit to the ApplicationStats API at application launch.
-/// Fire-and-forget: never blocks startup or throws.
+///     Sends a single usage hit to the ApplicationStats API at application launch.
+///     Fire-and-forget: never blocks startup or throws.
 /// </summary>
 internal static class ApplicationStatsService
 {
@@ -17,7 +17,7 @@ internal static class ApplicationStatsService
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
 
     /// <summary>
-    /// Records a usage hit for the given application. Intended to be called once at startup.
+    ///     Records a usage hit for the given application. Intended to be called once at startup.
     /// </summary>
     /// <param name="applicationId">Unique application identifier (e.g. "chdsharptester").</param>
     public static void TrackLaunch(string applicationId)

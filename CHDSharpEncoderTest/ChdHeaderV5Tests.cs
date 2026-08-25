@@ -1,3 +1,4 @@
+using System.Text;
 using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
@@ -25,7 +26,7 @@ public class ChdHeaderV5Tests
         var header = ChdHeaderV5.CreateRaw(CodecTags.Zlib, 8192, 4096, 512);
         var data = header.Serialize();
 
-        var magic = System.Text.Encoding.ASCII.GetString(data, 0, 8);
+        var magic = Encoding.ASCII.GetString(data, 0, 8);
         Assert.Equal("MComprHD", magic);
     }
 
@@ -171,7 +172,7 @@ public class ChdHeaderV5Tests
         var data = new byte[124];
         ms.ReadExactly(data, 0, 124);
 
-        var magic = System.Text.Encoding.ASCII.GetString(data, 0, 8);
+        var magic = Encoding.ASCII.GetString(data, 0, 8);
         Assert.Equal("MComprHD", magic);
     }
 

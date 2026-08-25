@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace CHDSharp.Tests;
 
 public class ChdTocParserTests
@@ -18,7 +20,7 @@ public class ChdTocParserTests
     public void ParseTracks_cht2_single_track()
     {
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 150";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out var isGdRom);
 
         Assert.NotNull(result);
@@ -35,7 +37,7 @@ public class ChdTocParserTests
     public void ParseTracks_cht2_audio_track()
     {
         const string text = "TRACK: 2 TYPE: AUDIO SUBTYPE: RW FRAMES: 5000";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -49,7 +51,7 @@ public class ChdTocParserTests
     public void ParseTracks_cht2_with_pregap()
     {
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 150 PREGAP: 150";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -63,7 +65,7 @@ public class ChdTocParserTests
     public void ParseTracks_chgd_sets_is_gdrom()
     {
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 150";
-        var entry = new ChdMetadataEntry("CHGD", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHGD", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out var isGdRom);
 
         Assert.NotNull(result);
@@ -76,7 +78,7 @@ public class ChdTocParserTests
     public void ParseTracks_chgt_sets_is_gdrom_and_little_endian()
     {
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 150";
-        var entry = new ChdMetadataEntry("CHGT", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHGT", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out var isGdRom, out var isLegacyGdRom);
 
         Assert.NotNull(result);
@@ -89,7 +91,7 @@ public class ChdTocParserTests
     {
         // The 2-out overload should still classify legacy CHGT as GD-ROM (isGdRom == true).
         const string text = "TRACK: 1 TYPE: AUDIO SUBTYPE: NONE FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHGT", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHGT", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out var isGdRom);
 
         Assert.NotNull(result);
@@ -102,7 +104,7 @@ public class ChdTocParserTests
     {
         // Modern CHGD GD-ROM metadata carries no GDROMLE flag.
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 150";
-        var entry = new ChdMetadataEntry("CHGD", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHGD", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out var isGdRom, out var isLegacyGdRom);
 
         Assert.NotNull(result);
@@ -115,7 +117,7 @@ public class ChdTocParserTests
     {
         // Non-GD-ROM CD metadata must never report the LE flag.
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out var isGdRom, out var isLegacyGdRom);
 
         Assert.NotNull(result);
@@ -129,7 +131,7 @@ public class ChdTocParserTests
     public void ParseTracks_chtr_single_track()
     {
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHTR", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHTR", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -146,8 +148,8 @@ public class ChdTocParserTests
         const string text2 = "TRACK: 2 TYPE: AUDIO SUBTYPE: NONE FRAMES: 5000";
         var entries = new List<ChdMetadataEntry>
         {
-            new("CHT2", System.Text.Encoding.ASCII.GetBytes(text1)),
-            new("CHT2", System.Text.Encoding.ASCII.GetBytes(text2))
+            new("CHT2", Encoding.ASCII.GetBytes(text1)),
+            new("CHT2", Encoding.ASCII.GetBytes(text2))
         };
 
         var result = ChdTocParser.ParseTracks(entries, out _);
@@ -162,7 +164,7 @@ public class ChdTocParserTests
     public void ParseTracks_missing_track_number_skips()
     {
         const string text = "TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 150";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -173,7 +175,7 @@ public class ChdTocParserTests
     public void ParseTracks_missing_type_skips()
     {
         const string text = "TRACK: 1 SUBTYPE: NONE FRAMES: 150";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -184,7 +186,7 @@ public class ChdTocParserTests
     public void ParseTracks_missing_frames_skips()
     {
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -228,7 +230,7 @@ public class ChdTocParserTests
     {
         // 151 frames -> padded to 152 (extra 1 frame)
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 151";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -242,7 +244,7 @@ public class ChdTocParserTests
     {
         // 152 frames -> already aligned to 4, 0 extra
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 152";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -264,7 +266,7 @@ public class ChdTocParserTests
     public void ParseTracks_type_string_variants(string typeStr, ChdTrackType expectedType, int expectedSize)
     {
         var text = $"TRACK: 1 TYPE: {typeStr} SUBTYPE: NONE FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -282,7 +284,7 @@ public class ChdTocParserTests
     public void ParseTracks_subtype_string_variants(string subStr, ChdSubType expectedSub, int expectedSize)
     {
         var text = $"TRACK: 1 TYPE: MODE1/2048 SUBTYPE: {subStr} FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -298,7 +300,7 @@ public class ChdTocParserTests
     {
         // TYPE field is 16 chars (> MaxTrackFieldLength of 15) → track is skipped.
         const string text = "TRACK: 1 TYPE: AAAAAAAAAAAAAAAA SUBTYPE: NONE FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -309,7 +311,7 @@ public class ChdTocParserTests
     public void ParseTracks_oversized_subtype_field_skips_track()
     {
         const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: BBBBBBBBBBBBBBBB FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -319,8 +321,9 @@ public class ChdTocParserTests
     [Fact]
     public void ParseTracks_oversized_pgtype_field_skips_track()
     {
-        const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 100 PREGAP: 150 PGTYPE: AAAAAAAAAAAAAAAA PGSUB: NONE";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        const string text =
+            "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 100 PREGAP: 150 PGTYPE: AAAAAAAAAAAAAAAA PGSUB: NONE";
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -330,8 +333,9 @@ public class ChdTocParserTests
     [Fact]
     public void ParseTracks_oversized_pgsub_field_skips_track()
     {
-        const string text = "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 100 PREGAP: 150 PGTYPE: MODE1/2048 PGSUB: BBBBBBBBBBBBBBBB";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        const string text =
+            "TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 100 PREGAP: 150 PGTYPE: MODE1/2048 PGSUB: BBBBBBBBBBBBBBBB";
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -343,7 +347,7 @@ public class ChdTocParserTests
     {
         // Exactly 15 chars should be accepted.
         const string text = "TRACK: 1 TYPE: AAAAAAAAAAAAAAA SUBTYPE: NONE FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -379,12 +383,12 @@ public class ChdTocParserTests
     public void ParseTracks_oversized_payload_skips_track()
     {
         // Payload > 4 KiB (MaxKeyValueTextLength) → rejected.
-        var sb = new System.Text.StringBuilder(5000);
+        var sb = new StringBuilder(5000);
         sb.Append("TRACK: 1 TYPE: MODE1/2048 SUBTYPE: NONE FRAMES: 100");
         while (sb.Length < 4097)
             sb.Append(' ');
         sb.Append("PAD:0");
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(sb.ToString()));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(sb.ToString()));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -396,7 +400,7 @@ public class ChdTocParserTests
     {
         // A value > 15 chars is dropped by ParseKeyValueFields → missing TYPE → track skipped.
         const string text = "TRACK: 1 TYPE: AAAAAAAAAAAAAAAA SUBTYPE: NONE FRAMES: 100";
-        var entry = new ChdMetadataEntry("CHT2", System.Text.Encoding.ASCII.GetBytes(text));
+        var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out _);
 
         Assert.NotNull(result);
@@ -407,8 +411,9 @@ public class ChdTocParserTests
     public void ParseTracks_gdrom_oversized_type_skips_track()
     {
         // Same protection for GDROM metadata format.
-        const string text = "TRACK: 1 TYPE: AAAAAAAAAAAAAAAA SUBTYPE: NONE FRAMES: 100 PAD: 0 PREGAP: 0 PGTYPE: NONE PGSUB: NONE POSTGAP: 0";
-        var entry = new ChdMetadataEntry("CHGD", System.Text.Encoding.ASCII.GetBytes(text));
+        const string text =
+            "TRACK: 1 TYPE: AAAAAAAAAAAAAAAA SUBTYPE: NONE FRAMES: 100 PAD: 0 PREGAP: 0 PGTYPE: NONE PGSUB: NONE POSTGAP: 0";
+        var entry = new ChdMetadataEntry("CHGD", Encoding.ASCII.GetBytes(text));
         var result = ChdTocParser.ParseTracks([entry], out var isGdRom);
 
         Assert.NotNull(result);

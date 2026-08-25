@@ -8,9 +8,9 @@ namespace CHDSharp.Encoder;
 public static class RawDeflate
 {
     /// <summary>
-    /// Compresses data using raw DEFLATE, stripping any Zlib header/trailer.
-    /// Uses the vendored zlib 1.3.1 C# port with chdman's exact parameters — byte-for-byte
-    /// identical to <c>chdman -c zlib</c> (verified 562/562 hunks vs chdman).
+    ///     Compresses data using raw DEFLATE, stripping any Zlib header/trailer.
+    ///     Uses the vendored zlib 1.3.1 C# port with chdman's exact parameters — byte-for-byte
+    ///     identical to <c>chdman -c zlib</c> (verified 562/562 hunks vs chdman).
     /// </summary>
     /// <param name="data">The uncompressed input data.</param>
     /// <returns>The compressed bytes, or <c>null</c> if compression did not reduce size.</returns>

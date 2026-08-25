@@ -1,36 +1,36 @@
 using System.Buffers.Binary;
+using System.Text;
 
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Minimal AVI 1.0 file writer for <c>extractld</c> output: DIB video frames (YUY2)
-/// + interleaved PCM audio. The output is a valid RIFF/AVI file with an <c>idx1</c> index.
+///     Minimal AVI 1.0 file writer for <c>extractld</c> output: DIB video frames (YUY2)
+///     + interleaved PCM audio. The output is a valid RIFF/AVI file with an <c>idx1</c> index.
 /// </summary>
 internal sealed class AviWriter : IDisposable
 {
-    private readonly Stream _stream;
-    private readonly uint _width;
-    private readonly uint _height;
-    private readonly uint _videoTimescale;
-    private readonly uint _videoSampletime;
-    private readonly uint _audioChannels;
-    private readonly uint _audioSampleRate;
-    private bool _finalized;
-    private uint _videoFrameCount;
-    private uint _audioSampleCount;
-
-    private readonly List<(uint Id, long Offset, uint Size)> _index = [];
-
-    // patch positions
-    private long _riffSizePos;
-    private long _avihFrameCountPos;
-    private long _videoStrhLengthPos;
-    private long _audioStrhLengthPos;
-    private long _moviSizePos;
-
     private static readonly uint FccYuy2 = FourCc("YUY2");
     private static readonly uint Fcc00Dc = FourCc("00dc");
     private static readonly uint Fcc01Wb = FourCc("01wb");
+    private readonly uint _audioChannels;
+    private readonly uint _audioSampleRate;
+    private readonly uint _height;
+
+    private readonly List<(uint Id, long Offset, uint Size)> _index = [];
+    private readonly Stream _stream;
+    private readonly uint _videoSampletime;
+    private readonly uint _videoTimescale;
+    private readonly uint _width;
+    private uint _audioSampleCount;
+    private long _audioStrhLengthPos;
+    private long _avihFrameCountPos;
+    private bool _finalized;
+    private long _moviSizePos;
+
+    // patch positions
+    private long _riffSizePos;
+    private uint _videoFrameCount;
+    private long _videoStrhLengthPos;
 
     private AviWriter(Stream stream, uint width, uint height,
         uint videoTimescale, uint videoSampletime,
@@ -43,6 +43,12 @@ internal sealed class AviWriter : IDisposable
         _videoSampletime = videoSampletime;
         _audioChannels = audioChannels;
         _audioSampleRate = audioSampleRate;
+    }
+
+    public void Dispose()
+    {
+        FinalizeFile();
+        _stream.Dispose();
     }
 
     internal static AviWriter Create(string path, uint width, uint height,
@@ -62,7 +68,8 @@ internal sealed class AviWriter : IDisposable
         if (!stream.CanSeek)
             throw new ArgumentException("Stream must be seekable", nameof(stream));
 
-        var writer = new AviWriter(stream, width, height, videoTimescale, videoSampletime, audioChannels, audioSampleRate);
+        var writer = new AviWriter(stream, width, height, videoTimescale, videoSampletime, audioChannels,
+            audioSampleRate);
         writer.WriteHeaders();
         return writer;
     }
@@ -197,12 +204,6 @@ internal sealed class AviWriter : IDisposable
         PatchU32(_audioStrhLengthPos, _audioSampleCount);
     }
 
-    public void Dispose()
-    {
-        FinalizeFile();
-        _stream.Dispose();
-    }
-
     private void WriteAvih(uint usecPerFrame)
     {
         var buf = new byte[56];
@@ -266,7 +267,7 @@ internal sealed class AviWriter : IDisposable
 
     private void WriteFourCc(string s)
     {
-        var b = System.Text.Encoding.ASCII.GetBytes(s);
+        var b = Encoding.ASCII.GetBytes(s);
         _stream.Write(b, 0, 4);
     }
 
@@ -295,7 +296,7 @@ internal sealed class AviWriter : IDisposable
 
     private static uint FourCc(string s)
     {
-        var b = System.Text.Encoding.ASCII.GetBytes(s);
+        var b = Encoding.ASCII.GetBytes(s);
         return b[0] | ((uint)b[1] << 8) | ((uint)b[2] << 16) | ((uint)b[3] << 24);
     }
 }

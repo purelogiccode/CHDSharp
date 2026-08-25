@@ -3,19 +3,19 @@ using CHDSharp.Encoder.Interfaces;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// MAME A/V Huffman codec ('avhu'), matching <c>chd_avhuff_compressor</c>: each hunk is one
-/// raw 'chav' A/V frame (assembled by <see cref="ChdEncoder.EncodeLaserDisc"/>) compressed as
-/// delta-RLE Huffman video + per-channel mono FLAC audio via <see cref="AvHuffEncoder"/>.
-/// Multi-frame hunks (hunkBytes > bytesPerFrame) are stored raw, matching MAME's codec-chain
-/// behavior where the avhuff compress fails on already-encoded data.
-/// Decodable by CHDSharpLib's <c>ChdReaders.AvHuff</c> and chdman.
+///     MAME A/V Huffman codec ('avhu'), matching <c>chd_avhuff_compressor</c>: each hunk is one
+///     raw 'chav' A/V frame (assembled by <see cref="ChdEncoder.EncodeLaserDisc" />) compressed as
+///     delta-RLE Huffman video + per-channel mono FLAC audio via <see cref="AvHuffEncoder" />.
+///     Multi-frame hunks (hunkBytes > bytesPerFrame) are stored raw, matching MAME's codec-chain
+///     behavior where the avhuff compress fails on already-encoded data.
+///     Decodable by CHDSharpLib's <c>ChdReaders.AvHuff</c> and chdman.
 /// </summary>
 public sealed class AvHuffCodec : IChdCodec
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public uint Tag => CodecTags.Avhu;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
         if (data.Length < 12 || data[0] != 'c' || data[1] != 'h' || data[2] != 'a' || data[3] != 'v')
@@ -35,13 +35,11 @@ public sealed class AvHuffCodec : IChdCodec
         {
             var hasTrailingData = false;
             for (var i = rawFrameSize; i < data.Length; i++)
-            {
                 if (data[(int)i] != 0)
                 {
                     hasTrailingData = true;
                     break;
                 }
-            }
 
             if (hasTrailingData)
                 return null;

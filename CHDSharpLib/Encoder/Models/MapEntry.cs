@@ -21,7 +21,7 @@ public struct MapEntry
     /// <summary>No compression; hunk data is stored verbatim.</summary>
     public const byte CompressionNone = 4;
 
-    /// <summary>Hunk is identical to an earlier hunk in this same image; <see cref="Offset"/> holds the source hunk index.</summary>
+    /// <summary>Hunk is identical to an earlier hunk in this same image; <see cref="Offset" /> holds the source hunk index.</summary>
     public const byte CompressionSelf = 5;
 
     /// <summary>Hunk data is filled from the parent image.</summary>

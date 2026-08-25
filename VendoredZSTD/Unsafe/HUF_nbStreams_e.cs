@@ -1,8 +1,7 @@
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+public enum HUF_nbStreams_e
 {
-    public enum HUF_nbStreams_e
-    {
-        HUF_singleStream,
-        HUF_fourStreams,
-    }
+    HUF_singleStream,
+    HUF_fourStreams
 }

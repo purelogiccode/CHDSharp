@@ -1,16 +1,15 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct ZSTD_blockSplitCtx
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ZSTD_blockSplitCtx
-    {
-        public seqStore_t fullSeqStoreChunk;
-        public seqStore_t firstHalfSeqStore;
-        public seqStore_t secondHalfSeqStore;
-        public seqStore_t currSeqStore;
-        public seqStore_t nextSeqStore;
-        public fixed uint partitions[196];
-        public ZSTD_entropyCTablesMetadata_t entropyMetadata;
-    }
+    public seqStore_t fullSeqStoreChunk;
+    public seqStore_t firstHalfSeqStore;
+    public seqStore_t secondHalfSeqStore;
+    public seqStore_t currSeqStore;
+    public seqStore_t nextSeqStore;
+    public fixed uint partitions[196];
+    public ZSTD_entropyCTablesMetadata_t entropyMetadata;
 }

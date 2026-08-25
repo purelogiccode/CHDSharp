@@ -1,28 +1,28 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe
-{
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ldmState_t
-    {
-        /* State for the window round buffer management */
-        public ZSTD_window_t window;
-        public ldmEntry_t* hashTable;
-        public uint loadedDictEnd;
+namespace VendoredZSTD.Unsafe;
 
-        /* Next position in bucket to insert entry */
-        public byte* bucketOffsets;
-        public _splitIndices_e__FixedBuffer splitIndices;
-        public _matchCandidates_e__FixedBuffer matchCandidates;
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct ldmState_t
+{
+    /* State for the window round buffer management */
+    public ZSTD_window_t window;
+    public ldmEntry_t* hashTable;
+    public uint loadedDictEnd;
+
+    /* Next position in bucket to insert entry */
+    public byte* bucketOffsets;
+    public _splitIndices_e__FixedBuffer splitIndices;
+    public _matchCandidates_e__FixedBuffer matchCandidates;
 
 #if NET8_0_OR_GREATER
-        [InlineArray(64)]
-        [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct _splitIndices_e__FixedBuffer
-        {
-            public nuint e0;
-        }
+    [InlineArray(64)]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct _splitIndices_e__FixedBuffer
+    {
+        public nuint e0;
+    }
 
 #else
         [StructLayout(LayoutKind.Sequential)]
@@ -96,12 +96,12 @@ namespace VendoredZSTD.Unsafe
 #endif
 
 #if NET8_0_OR_GREATER
-        [InlineArray(64)]
-        [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct _matchCandidates_e__FixedBuffer
-        {
-            public ldmMatchCandidate_t e0;
-        }
+    [InlineArray(64)]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct _matchCandidates_e__FixedBuffer
+    {
+        public ldmMatchCandidate_t e0;
+    }
 
 #else
         [StructLayout(LayoutKind.Sequential)]
@@ -173,5 +173,4 @@ namespace VendoredZSTD.Unsafe
             public ldmMatchCandidate_t e63;
         }
 #endif
-    }
 }

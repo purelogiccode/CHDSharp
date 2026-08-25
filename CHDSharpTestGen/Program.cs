@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CHDSharp;
 
 namespace CHDSharpTestGen;
 
@@ -13,6 +14,18 @@ internal static class Program
     private static string _chdmanV3 = "";
     private static string _chdmanV4 = "";
     private static string _chdmanV5 = "";
+
+    private static readonly JsonSerializerOptions ManifestJsonOptions = new() { WriteIndented = true };
+
+    // ----- source images ------------------------------------------------
+
+    private static string Raw => Path.Combine(_work, "raw.img");
+    private static string RawChild => Path.Combine(_work, "raw_child.img");
+    private static string RawTiny => Path.Combine(_work, "raw_tiny.img");
+    private static string RawOdd => Path.Combine(_work, "raw_odd.img");
+    private static string Cue => Path.Combine(_work, "disc.cue");
+    private static string Toc => Path.Combine(_work, "disc.toc");
+    private static string Avi => Path.Combine(_work, "test.avi");
 
     private static int Main(string[] args)
     {
@@ -70,16 +83,16 @@ internal static class Program
         }
     }
 
-    private static CHDSharp.ChdReader GetReaderForCodec(ChdCodec codec)
+    private static ChdReader GetReaderForCodec(ChdCodec codec)
     {
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
         return codec switch
         {
-            ChdCodec.Zlib => CHDSharp.ChdReaders.Zlib,
-            ChdCodec.Lzma => CHDSharp.ChdReaders.Lzma,
-            ChdCodec.Huffman => CHDSharp.ChdReaders.Huffman,
-            ChdCodec.Flac => CHDSharp.ChdReaders.Flac,
-            ChdCodec.Zstd => CHDSharp.ChdReaders.Zstd,
+            ChdCodec.Zlib => ChdReaders.Zlib,
+            ChdCodec.Lzma => ChdReaders.Lzma,
+            ChdCodec.Huffman => ChdReaders.Huffman,
+            ChdCodec.Flac => ChdReaders.Flac,
+            ChdCodec.Zstd => ChdReaders.Zstd,
             _ => throw new NotSupportedException($"Unsupported codec for hunk debug: {codec}")
         };
     }
@@ -90,7 +103,7 @@ internal static class Program
 
         using var fs = File.OpenRead(chdPath);
         fs.Position = 16; // skip magic + length + version
-        CHDSharp.ChdHeaders.ReadHeaderV5(fs, out var hdr);
+        ChdHeaders.ReadHeaderV5(fs, out var hdr);
 
         var codec0 = hdr.Compression[0];
         var reader = GetReaderForCodec(codec0);
@@ -116,7 +129,8 @@ internal static class Program
                 if (h >= SourceData.RawHunks)
                 {
                     failures++;
-                    Console.WriteLine(FormattableString.Invariant($"hunk {h}: hunk index exceeds raw image size ({SourceData.RawHunks} hunks)"));
+                    Console.WriteLine(FormattableString.Invariant(
+                        $"hunk {h}: hunk index exceeds raw image size ({SourceData.RawHunks} hunks)"));
                     continue;
                 }
 
@@ -132,13 +146,15 @@ internal static class Program
                             break;
                         }
 
-                    Console.WriteLine(FormattableString.Invariant($"hunk {h}: err={err} match={match} firstDiff={firstDiff} complen={me.Length}"));
+                    Console.WriteLine(FormattableString.Invariant(
+                        $"hunk {h}: err={err} match={match} firstDiff={firstDiff} complen={me.Length}"));
                 }
             }
             catch (Exception ex)
             {
                 failures++;
-                Console.WriteLine(FormattableString.Invariant($"hunk {h}: EXCEPTION {ex.GetType().Name}: {ex.Message}"));
+                Console.WriteLine(
+                    FormattableString.Invariant($"hunk {h}: EXCEPTION {ex.GetType().Name}: {ex.Message}"));
             }
         }
 
@@ -148,7 +164,8 @@ internal static class Program
 
     private static int AviTest()
     {
-        (int w, int h, int fps)[] variants = [(64, 48, 60), (320, 240, 60), (320, 480, 30), (640, 480, 30), (720, 524, 30)];
+        (int w, int h, int fps)[] variants =
+            [(64, 48, 60), (320, 240, 60), (320, 480, 30), (640, 480, 30), (720, 524, 30)];
         foreach (var (vw, vh, fps) in variants)
         {
             var avi = Path.Combine(_work, $"t{vw}x{vh}_{fps}.avi");
@@ -161,7 +178,8 @@ internal static class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine(FormattableString.Invariant($"  FAIL {vw}x{vh}@{fps}: {ex.Message.Replace("\n", " | ")}"));
+                Console.WriteLine(
+                    FormattableString.Invariant($"  FAIL {vw}x{vh}@{fps}: {ex.Message.Replace("\n", " | ")}"));
             }
         }
 
@@ -171,23 +189,10 @@ internal static class Program
     private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "CSharp_CHDSharp.sln")))
-        {
-            dir = dir.Parent;
-        }
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "CSharp_CHDSharp.sln"))) dir = dir.Parent;
 
         return dir?.FullName ?? throw new InvalidOperationException("repo root not found; pass it as arg[0]");
     }
-
-    // ----- source images ------------------------------------------------
-
-    private static string Raw => Path.Combine(_work, "raw.img");
-    private static string RawChild => Path.Combine(_work, "raw_child.img");
-    private static string RawTiny => Path.Combine(_work, "raw_tiny.img");
-    private static string RawOdd => Path.Combine(_work, "raw_odd.img");
-    private static string Cue => Path.Combine(_work, "disc.cue");
-    private static string Toc => Path.Combine(_work, "disc.toc");
-    private static string Avi => Path.Combine(_work, "test.avi");
 
     private static void BuildSources()
     {
@@ -228,7 +233,8 @@ internal static class Program
 
     private static void Add(string name, uint version, string note, string? parent = null, string expect = "ok")
     {
-        Manifest.Add(new ManifestEntry { File = name, Version = version, Parent = parent, Expect = expect, Note = note });
+        Manifest.Add(
+            new ManifestEntry { File = name, Version = version, Parent = parent, Expect = expect, Note = note });
     }
 
     private static void GenerateV1V2()
@@ -254,8 +260,11 @@ internal static class Program
         ToolRunner.Run(_chdmanV3, $"-createav test.avi \"{Out("v3_av.chd")}\"", _work);
         Add("v3_av.chd", 3, "a/v laserdisc, avhuff legacy codec (comp type 3)");
 
-        ToolRunner.Run(_chdmanV3, $"-createraw raw_child.img \"{Path.Combine(_work, "v3_child_full.chd")}\" 0 4096", _work);
-        ToolRunner.Run(_chdmanV3, $"-diff \"{Out("v3_zlib.chd")}\" \"{Path.Combine(_work, "v3_child_full.chd")}\" \"{Out("v3_child.chd")}\"", _work);
+        ToolRunner.Run(_chdmanV3, $"-createraw raw_child.img \"{Path.Combine(_work, "v3_child_full.chd")}\" 0 4096",
+            _work);
+        ToolRunner.Run(_chdmanV3,
+            $"-diff \"{Out("v3_zlib.chd")}\" \"{Path.Combine(_work, "v3_child_full.chd")}\" \"{Out("v3_child.chd")}\"",
+            _work);
         Add("v3_child.chd", 3, "diff chd, map: parent refs", "v3_zlib.chd");
     }
 
@@ -276,8 +285,11 @@ internal static class Program
         V3ToV4Patcher.Convert(Out("v3_av.chd"), Out("v4_av.chd"));
         Add("v4_av.chd", 4, "a/v laserdisc, avhuff legacy codec (comp type 3)");
 
-        ToolRunner.Run(_chdmanV4, $"-createraw raw_child.img \"{Path.Combine(_work, "v4_child_full.chd")}\" 0 4096", _work);
-        ToolRunner.Run(_chdmanV4, $"-diff \"{Out("v4_zlib.chd")}\" \"{Path.Combine(_work, "v4_child_full.chd")}\" \"{Out("v4_child.chd")}\"", _work);
+        ToolRunner.Run(_chdmanV4, $"-createraw raw_child.img \"{Path.Combine(_work, "v4_child_full.chd")}\" 0 4096",
+            _work);
+        ToolRunner.Run(_chdmanV4,
+            $"-diff \"{Out("v4_zlib.chd")}\" \"{Path.Combine(_work, "v4_child_full.chd")}\" \"{Out("v4_child.chd")}\"",
+            _work);
         Add("v4_child.chd", 4, "diff chd, map: parent refs", "v4_zlib.chd");
     }
 
@@ -292,28 +304,37 @@ internal static class Program
             Add(name, 5, $"raw, single codec: {codec}");
         }
 
-        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw.img -o \"{Out("v5_multi.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
+        ToolRunner.Run(_chdmanV5,
+            $"createraw -f -i raw.img -o \"{Out("v5_multi.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
         Add("v5_multi.chd", 5, "raw, 4 codec slots: lzma,zlib,huff,flac");
 
-        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw.img -o \"{Out("v5_none.chd")}\" -hs 4096 -us 512 -c none", _work);
+        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw.img -o \"{Out("v5_none.chd")}\" -hs 4096 -us 512 -c none",
+            _work);
         Add("v5_none.chd", 5, "raw, uncompressed map (compression none)");
 
-        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw_tiny.img -o \"{Out("v5_tiny.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
+        ToolRunner.Run(_chdmanV5,
+            $"createraw -f -i raw_tiny.img -o \"{Out("v5_tiny.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
         // chdman writes a degenerate single-symbol huffman map for 1-hunk files that neither
         // MAME nor chdman itself can re-read; the library must reject it gracefully.
         Add("v5_tiny.chd", 5, "single hunk file, unreadable map (matches chdman behaviour)", expect: "invalid");
 
-        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw_odd.img -o \"{Out("v5_odd.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
+        ToolRunner.Run(_chdmanV5,
+            $"createraw -f -i raw_odd.img -o \"{Out("v5_odd.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
         Add("v5_odd.chd", 5, "logical size not a hunk multiple (partial last hunk)");
 
         // parent / child chains
-        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw.img -o \"{Out("v5_parent.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
+        ToolRunner.Run(_chdmanV5,
+            $"createraw -f -i raw.img -o \"{Out("v5_parent.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac", _work);
         Add("v5_parent.chd", 5, "parent for v5 children");
 
-        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw_child.img -o \"{Out("v5_child.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac -op \"{Out("v5_parent.chd")}\"", _work);
+        ToolRunner.Run(_chdmanV5,
+            $"createraw -f -i raw_child.img -o \"{Out("v5_child.chd")}\" -hs 4096 -us 512 -c lzma,zlib,huff,flac -op \"{Out("v5_parent.chd")}\"",
+            _work);
         Add("v5_child.chd", 5, "compressed map child, parent refs (parent0/1/self)", "v5_parent.chd");
 
-        ToolRunner.Run(_chdmanV5, $"createraw -f -i raw_child.img -o \"{Out("v5_child_none.chd")}\" -hs 4096 -us 512 -c none -op \"{Out("v5_parent.chd")}\"", _work);
+        ToolRunner.Run(_chdmanV5,
+            $"createraw -f -i raw_child.img -o \"{Out("v5_child_none.chd")}\" -hs 4096 -us 512 -c none -op \"{Out("v5_parent.chd")}\"",
+            _work);
         Add("v5_child_none.chd", 5, "uncompressed map child, offset-0 parent refs", "v5_parent.chd");
 
         TryUnalignedChild();
@@ -344,15 +365,14 @@ internal static class Program
             ToolRunner.Run(_chdmanV5,
                 $"createraw -f -i raw_child.img -o \"{Out("v5_child_hs2560.chd")}\" -hs 2560 -us 512 -c lzma,zlib,huff,flac -op \"{Out("v5_parent.chd")}\"",
                 _work);
-            Add("v5_child_hs2560.chd", 5, "child hunk size 2560 vs parent 4096 (unaligned parent refs)", "v5_parent.chd");
+            Add("v5_child_hs2560.chd", 5, "child hunk size 2560 vs parent 4096 (unaligned parent refs)",
+                "v5_parent.chd");
         }
         catch (Exception ex)
         {
             Console.WriteLine(FormattableString.Invariant($"  (skipped unaligned child: {ex.Message.Split('\n')[0]})"));
         }
     }
-
-    private static readonly JsonSerializerOptions ManifestJsonOptions = new() { WriteIndented = true };
 
     private static void WriteManifest()
     {

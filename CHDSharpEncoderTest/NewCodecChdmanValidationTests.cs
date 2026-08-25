@@ -3,9 +3,9 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Validates the Phase-1 codecs ('huff', 'flac', 'cdzl', 'cdlz', 'cdzs') against
-/// chdman.exe: files must pass chdman verify, report the right codec in chdman info,
-/// and extract byte-identically.
+///     Validates the Phase-1 codecs ('huff', 'flac', 'cdzl', 'cdlz', 'cdzs') against
+///     chdman.exe: files must pass chdman verify, report the right codec in chdman info,
+///     and extract byte-identically.
 /// </summary>
 public class NewCodecChdmanValidationTests : IDisposable
 {
@@ -21,7 +21,7 @@ public class NewCodecChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -90,10 +90,7 @@ public class NewCodecChdmanValidationTests : IDisposable
         for (var f = 0; f < 20; f++)
         {
             var offset = f * CdConstants.MaxSectorData;
-            for (var i = 0; i < CdConstants.MaxSectorData; i++)
-            {
-                bin[offset + i] = (byte)(i & 0xFF);
-            }
+            for (var i = 0; i < CdConstants.MaxSectorData; i++) bin[offset + i] = (byte)(i & 0xFF);
         }
 
         for (var f = 20; f < 40; f++)
@@ -112,8 +109,8 @@ public class NewCodecChdmanValidationTests : IDisposable
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), bin);
 
         var chdPath = Path.Combine(_testDataDir, $"{codecName}.chd");
-        ChdEncoder.EncodeCd(cuePath, chdPath, hunkBytes: CdConstants.FramesPerHunk * CdConstants.FrameSize,
-            unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.FromName(codecName)]);
+        ChdEncoder.EncodeCd(cuePath, chdPath, CdConstants.FramesPerHunk * CdConstants.FrameSize,
+            CdConstants.FrameSize, [CodecTags.FromName(codecName)]);
 
         var (infoExit, infoOut, infoErr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         var info = infoOut + infoErr;
@@ -129,25 +126,22 @@ public class NewCodecChdmanValidationTests : IDisposable
 
         // expected logical image: 20 data frames + 20 audio frames (byte-swapped) + zero padding
         var expected = new byte[40 * CdConstants.FrameSize];
-        PlaceBinFrames(expected, 0, bin, 20, 0, swap: false);
-        PlaceBinFrames(expected, 20, bin, 20, 20 * CdConstants.MaxSectorData, swap: true);
+        PlaceBinFrames(expected, 0, bin, 20, 0, false);
+        PlaceBinFrames(expected, 20, bin, 20, 20 * CdConstants.MaxSectorData, true);
 
         Assert.Equal(expected, File.ReadAllBytes(extractPath));
     }
 
-    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset, bool swap)
+    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
+        bool swap)
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
             Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
             if (swap)
-            {
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
-                {
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);
-                }
-            }
         }
     }
 }

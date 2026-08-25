@@ -4,8 +4,10 @@ using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
 
-/// <summary>Verifies <see cref="ChdFile.ReadRawHunk"/>/<see cref="ChdFile.ReadRawHunkAsync"/>
-/// (raw on-disk hunk access, chd-rs <c>read_raw_in</c> parity).</summary>
+/// <summary>
+///     Verifies <see cref="ChdFile.ReadRawHunk" />/<see cref="ChdFile.ReadRawHunkAsync" />
+///     (raw on-disk hunk access, chd-rs <c>read_raw_in</c> parity).
+/// </summary>
 public class ReadRawHunkTests : IDisposable
 {
     private readonly string _dir;
@@ -20,7 +22,7 @@ public class ReadRawHunkTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -59,10 +61,7 @@ public class ReadRawHunkTests : IDisposable
         // compressible data compresses with zlib: the raw bytes are the raw-DEFLATE stream
         // stored on disk; inflating them must reproduce the original hunk
         var source = new byte[4096];
-        for (var i = 0; i < source.Length; i++)
-        {
-            source[i] = (byte)(i % 37 == 0 ? 0xFF : 0);
-        }
+        for (var i = 0; i < source.Length; i++) source[i] = (byte)(i % 37 == 0 ? 0xFF : 0);
 
         var chdPath = Encode(source, [CodecTags.Zlib]);
 
@@ -88,10 +87,7 @@ public class ReadRawHunkTests : IDisposable
         for (var h = 0; h < 4; h++)
         {
             var pattern = h % 2; // hunk 0 == hunk 2, hunk 1 == hunk 3
-            for (var i = 0; i < 4096; i++)
-            {
-                source[h * 4096 + i] = (byte)(pattern * 31 + i % 17);
-            }
+            for (var i = 0; i < 4096; i++) source[h * 4096 + i] = (byte)(pattern * 31 + i % 17);
         }
 
         var chdPath = Encode(source, [CodecTags.Zlib]);
@@ -207,12 +203,10 @@ public class ReadRawHunkTests : IDisposable
         var source = new byte[4096 * hunkCount];
         var rng = new Random(1234);
         for (var h = 0; h < hunkCount; h++)
-        {
             if (h % 3 == 0)
                 Array.Fill(source, (byte)(h & 0xFF), h * 4096, 4096);
             else
                 rng.NextBytes(source.AsSpan(h * 4096, 4096));
-        }
 
         return source;
     }

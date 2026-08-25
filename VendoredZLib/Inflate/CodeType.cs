@@ -4,7 +4,10 @@
 namespace VendoredZLib.Inflate;
 
 /// <summary>
-/// Type of code to build for <see cref="Inflater.InflateTable(CodeType, ref ushort, uint, ref Code, ref int, ref ushort, ref uint, ref ushort, ref ushort, ref ushort, ref ushort)"/>.
+///     Type of code to build for
+///     <see
+///         cref="Inflater.InflateTable(CodeType, ref ushort, uint, ref Code, ref int, ref ushort, ref uint, ref ushort, ref ushort, ref ushort, ref ushort)" />
+///     .
 /// </summary>
 internal enum CodeType : byte
 {

@@ -62,27 +62,42 @@
                        Margin="0,16,0,6" />
             <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,0,0,4"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                Built with <Hyperlink NavigateUri="https://github.com/nicoco007/WPF-UI" RequestNavigate="Hyperlink_RequestNavigate"
-                                      Foreground="{DynamicResource AccentFillColorDefaultBrush}">
-                    WPF-UI</Hyperlink> for the Fluent Design interface.
+                Built with
+                <Hyperlink NavigateUri="https://github.com/nicoco007/WPF-UI"
+                           RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="{DynamicResource AccentFillColorDefaultBrush}">
+                    WPF-UI
+                </Hyperlink>
+                for the Fluent Design interface.
             </TextBlock>
             <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,0,0,4"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                Uses <Hyperlink NavigateUri="https://www.nuget.org/packages/Serilog" RequestNavigate="Hyperlink_RequestNavigate"
-                                Foreground="{DynamicResource AccentFillColorDefaultBrush}">
-                    Serilog</Hyperlink> for structured logging.
+                Uses
+                <Hyperlink NavigateUri="https://www.nuget.org/packages/Serilog"
+                           RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="{DynamicResource AccentFillColorDefaultBrush}">
+                    Serilog
+                </Hyperlink>
+                for structured logging.
             </TextBlock>
             <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,0,0,4"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                Uses <Hyperlink NavigateUri="https://www.nuget.org/packages/QuestPDF" RequestNavigate="Hyperlink_RequestNavigate"
-                                Foreground="{DynamicResource AccentFillColorDefaultBrush}">
-                    QuestPDF</Hyperlink> for PDF report export.
+                Uses
+                <Hyperlink NavigateUri="https://www.nuget.org/packages/QuestPDF"
+                           RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="{DynamicResource AccentFillColorDefaultBrush}">
+                    QuestPDF
+                </Hyperlink>
+                for PDF report export.
             </TextBlock>
             <TextBlock FontSize="12" TextWrapping="Wrap"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                Cross-validates against <Hyperlink NavigateUri="https://www.mamedev.org/" RequestNavigate="Hyperlink_RequestNavigate"
-                                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}">
-                    MAME chdman</Hyperlink> for verification.
+                Cross-validates against
+                <Hyperlink NavigateUri="https://www.mamedev.org/" RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="{DynamicResource AccentFillColorDefaultBrush}">
+                    MAME chdman
+                </Hyperlink>
+                for verification.
             </TextBlock>
         </StackPanel>
 

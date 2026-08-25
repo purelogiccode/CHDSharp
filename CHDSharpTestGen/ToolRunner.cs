@@ -34,14 +34,16 @@ internal static class ToolRunner
                 // ignored
             }
 
-            throw new InvalidOperationException($"{Path.GetFileName(exe)} timed out after {DefaultTimeout.TotalMinutes} minutes");
+            throw new InvalidOperationException(
+                $"{Path.GetFileName(exe)} timed out after {DefaultTimeout.TotalMinutes} minutes");
         }
 
         var stdout = stdoutTask.GetAwaiter().GetResult();
         var stderr = stderrTask.GetAwaiter().GetResult();
 
         if (p.ExitCode != 0)
-            throw new InvalidOperationException($"{Path.GetFileName(exe)} {args}\nexit {p.ExitCode}\n{stdout}\n{stderr}");
+            throw new InvalidOperationException(
+                $"{Path.GetFileName(exe)} {args}\nexit {p.ExitCode}\n{stdout}\n{stderr}");
 
         return stdout + stderr;
     }

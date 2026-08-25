@@ -1,13 +1,14 @@
 using System.Buffers.Binary;
+using System.Text;
 
 namespace CHDSharp;
 
 /// <summary>
-/// Detects the game platform of a disc image by probing sector-0 magic bytes, the ISO-9660
-/// filesystem (PS1/PS2 SYSTEM.CNF, PSP PARAM.SFO, Neo Geo IPL.TXT, DVD Video), and the PC Engine
-/// IPL header heuristic (CHDlite <c>detect_game_platform</c> parity,
-/// <c>detect_game_platform.cpp:51-318</c>). Sector access is abstracted so both CHD files and
-/// raw/disc images can be probed.
+///     Detects the game platform of a disc image by probing sector-0 magic bytes, the ISO-9660
+///     filesystem (PS1/PS2 SYSTEM.CNF, PSP PARAM.SFO, Neo Geo IPL.TXT, DVD Video), and the PC Engine
+///     IPL header heuristic (CHDlite <c>detect_game_platform</c> parity,
+///     <c>detect_game_platform.cpp:51-318</c>). Sector access is abstracted so both CHD files and
+///     raw/disc images can be probed.
 /// </summary>
 public static class DiscDetector
 {
@@ -18,8 +19,8 @@ public static class DiscDetector
     private const string Ps2BootKey = "BOOT2";
 
     /// <summary>
-    /// Detects the platform of a CHD file on disk: opens it (optionally with a parent) and runs
-    /// the sector-based detection over its decompressed content.
+    ///     Detects the platform of a CHD file on disk: opens it (optionally with a parent) and runs
+    ///     the sector-based detection over its decompressed content.
     /// </summary>
     /// <param name="filename">Path to the CHD file.</param>
     /// <param name="parentFilename">Parent CHD path for a child CHD, or <c>null</c> for standalone.</param>
@@ -37,7 +38,7 @@ public static class DiscDetector
         }
     }
 
-    /// <summary>Detects the platform of an already-open <see cref="ChdFile"/>.</summary>
+    /// <summary>Detects the platform of an already-open <see cref="ChdFile" />.</summary>
     /// <param name="chd">An open CHD file (CD, DVD, or raw image).</param>
     public static DiscPlatformInfo Detect(ChdFile chd)
     {
@@ -47,7 +48,8 @@ public static class DiscDetector
         if (chd.IsGdRom)
         {
             const DiscPlatform platform = DiscPlatform.Dreamcast;
-            return new DiscPlatformInfo(platform, ExtractTitle(ReadCooked, platform, null, 0), ExtractManufacturerId(ReadCooked, platform, null), "GD-ROM metadata");
+            return new DiscPlatformInfo(platform, ExtractTitle(ReadCooked, platform, null, 0),
+                ExtractManufacturerId(ReadCooked, platform, null), "GD-ROM metadata");
         }
 
         if (chd.IsDvd)
@@ -61,8 +63,10 @@ public static class DiscDetector
         }
     }
 
-    /// <summary>Runs the DVD detection dispatch over a sector reader: ISO-9660 filesystem checks
-    /// (PSP/PS1/PS2/DVD-Video), falling back to the DVD platform with the volume ID as title.</summary>
+    /// <summary>
+    ///     Runs the DVD detection dispatch over a sector reader: ISO-9660 filesystem checks
+    ///     (PSP/PS1/PS2/DVD-Video), falling back to the DVD platform with the volume ID as title.
+    /// </summary>
     /// <param name="readSector">Reads cooked 2048-byte sectors by LBA.</param>
     /// <param name="source">Human-readable description of the data source.</param>
     public static DiscPlatformInfo DetectDvdFromSectors(SectorReader readSector, string source)
@@ -72,23 +76,23 @@ public static class DiscDetector
         {
             var platform = CheckIsoFiles(readSector, pvd.Value);
             if (platform != DiscPlatform.Unknown)
-            {
                 return new DiscPlatformInfo(platform,
                     ExtractTitle(readSector, platform, pvd.Value, 0),
                     ExtractManufacturerId(readSector, platform, pvd.Value),
                     source + ", ISO-9660 filesystem");
-            }
         }
 
         return new DiscPlatformInfo(DiscPlatform.Dvd,
-            pvd != null ? TrimRight(System.Text.Encoding.ASCII.GetString(pvd.Value.VolumeId)) : null,
+            pvd != null ? TrimRight(Encoding.ASCII.GetString(pvd.Value.VolumeId)) : null,
             null,
             source);
     }
 
-    /// <summary>Runs the CD detection dispatch over a sector reader: sector-0 magic checks
-    /// (3DO/Mega CD/Saturn/Dreamcast), ISO-9660 filesystem checks (PS1/PS2/PSP/Neo Geo/DVD-Video),
-    /// then the PC Engine IPL heuristic; falls back to <see cref="DiscPlatform.GenericCd"/>.</summary>
+    /// <summary>
+    ///     Runs the CD detection dispatch over a sector reader: sector-0 magic checks
+    ///     (3DO/Mega CD/Saturn/Dreamcast), ISO-9660 filesystem checks (PS1/PS2/PSP/Neo Geo/DVD-Video),
+    ///     then the PC Engine IPL heuristic; falls back to <see cref="DiscPlatform.GenericCd" />.
+    /// </summary>
     /// <param name="readSector">Reads cooked 2048-byte sectors by LBA.</param>
     /// <param name="source">Human-readable description of the data source.</param>
     public static DiscPlatformInfo DetectCdFromSectors(SectorReader readSector, string source)
@@ -101,35 +105,29 @@ public static class DiscDetector
         {
             var platform = CheckSector0Magics(sector0);
             if (platform != DiscPlatform.Unknown)
-            {
                 return new DiscPlatformInfo(platform,
                     ExtractTitle(readSector, platform, null, 0),
                     ExtractManufacturerId(readSector, platform, null),
                     source + ", sector 0 magic");
-            }
         }
 
         if (pvd != null)
         {
             var isoPlatform = CheckIsoFiles(readSector, pvd.Value);
             if (isoPlatform != DiscPlatform.Unknown)
-            {
                 return new DiscPlatformInfo(isoPlatform,
                     ExtractTitle(readSector, isoPlatform, pvd.Value, 0),
                     ExtractManufacturerId(readSector, isoPlatform, pvd.Value),
                     source + ", ISO-9660 filesystem");
-            }
         }
 
         // PC Engine heuristic: IPL header at the second sector of the first data track.
         var pceSource = CheckPcEngine(readSector);
         if (pceSource != null)
-        {
             return new DiscPlatformInfo(DiscPlatform.PcEngine,
                 ExtractTitle(readSector, DiscPlatform.PcEngine, pvd, 1),
                 ExtractManufacturerId(readSector, DiscPlatform.PcEngine, pvd),
                 source + ", " + pceSource);
-        }
 
         return new DiscPlatformInfo(DiscPlatform.GenericCd,
             ExtractTitle(readSector, DiscPlatform.GenericCd, pvd, 0),
@@ -137,9 +135,11 @@ public static class DiscDetector
             source + ", no platform markers found");
     }
 
-    /// <summary>Reads a cooked 2048-byte sector from a CHD by LBA. For CD images the sector is
-    /// taken from the first data track (the ISO-9660 area): Mode 1/2 sync+header bytes are
-    /// stripped from 2352-byte frames. For DVD/raw images the LBA maps directly to bytes.</summary>
+    /// <summary>
+    ///     Reads a cooked 2048-byte sector from a CHD by LBA. For CD images the sector is
+    ///     taken from the first data track (the ISO-9660 area): Mode 1/2 sync+header bytes are
+    ///     stripped from 2352-byte frames. For DVD/raw images the LBA maps directly to bytes.
+    /// </summary>
     private static byte[]? ReadChdCookedSector(ChdFile chd, uint lba)
     {
         ulong startByte;
@@ -150,13 +150,11 @@ public static class DiscDetector
         {
             ChdTrackInfo? dataTrack = null;
             foreach (var t in tracks)
-            {
                 if (t.TrackType != ChdTrackType.Audio)
                 {
                     dataTrack = t;
                     break;
                 }
-            }
 
             if (dataTrack == null)
                 return null;
@@ -233,10 +231,6 @@ public static class DiscDetector
         return data.Length >= prefix.Length && data.AsSpan(0, prefix.Length).SequenceEqual(prefix);
     }
 
-    // ── ISO-9660 filesystem checks ──
-
-    private readonly record struct Pvd(byte[] VolumeId, uint RootExtent, uint RootLength);
-
     private static Pvd? ReadPvd(SectorReader readSector, uint baseLba)
     {
         var sector = readSector(baseLba + 16);
@@ -254,7 +248,8 @@ public static class DiscDetector
             ReadLe32(root[10..]));
     }
 
-    private static List<(string Name, uint Extent, uint Length, bool IsDirectory)> ReadDirectory(SectorReader readSector, uint extentLba, uint length)
+    private static List<(string Name, uint Extent, uint Length, bool IsDirectory)> ReadDirectory(
+        SectorReader readSector, uint extentLba, uint length)
     {
         var entries = new List<(string, uint, uint, bool)>();
         var sectors = Math.Min((length + 2047) / 2048, 32u);
@@ -276,17 +271,11 @@ public static class DiscDetector
                 var flags = rec[25];
                 if (nameLen > 1)
                 {
-                    var rawName = System.Text.Encoding.ASCII.GetString(rec.Slice(33, nameLen));
+                    var rawName = Encoding.ASCII.GetString(rec.Slice(33, nameLen));
                     var semi = rawName.IndexOf(';');
-                    if (semi >= 0)
-                    {
-                        rawName = rawName[..semi];
-                    }
+                    if (semi >= 0) rawName = rawName[..semi];
 
-                    if (rawName.EndsWith(".", StringComparison.Ordinal))
-                    {
-                        rawName = rawName[..^1];
-                    }
+                    if (rawName.EndsWith(".", StringComparison.Ordinal)) rawName = rawName[..^1];
 
                     entries.Add((rawName, ReadLe32(rec[2..]), ReadLe32(rec[10..]), (flags & 0x02) != 0));
                 }
@@ -298,13 +287,12 @@ public static class DiscDetector
         return entries;
     }
 
-    private static (uint Extent, uint Length, bool IsDirectory)? FindInDirectory(SectorReader readSector, uint dirExtent, uint dirLength, string name)
+    private static (uint Extent, uint Length, bool IsDirectory)? FindInDirectory(SectorReader readSector,
+        uint dirExtent, uint dirLength, string name)
     {
         foreach (var entry in ReadDirectory(readSector, dirExtent, dirLength))
-        {
             if (string.Equals(entry.Name, name, StringComparison.OrdinalIgnoreCase))
                 return (entry.Extent, entry.Length, entry.IsDirectory);
-        }
 
         return null;
     }
@@ -385,7 +373,7 @@ public static class DiscDetector
         var cnf = IsoReadFile(readSector, pvd, "SYSTEM.CNF");
         if (cnf is { Length: > 0 })
         {
-            var text = System.Text.Encoding.ASCII.GetString(cnf);
+            var text = Encoding.ASCII.GetString(cnf);
             if (text.Contains(Ps2BootKey, StringComparison.Ordinal))
                 return DiscPlatform.Ps2;
             if (text.Contains(Ps1BootKey, StringComparison.Ordinal))
@@ -434,10 +422,8 @@ public static class DiscDetector
             return false;
 
         for (var i = 0; i < 5; i++)
-        {
             if (sector[0x08 + i] > 0x7F)
                 return false;
-        }
 
         return true;
     }
@@ -453,29 +439,29 @@ public static class DiscDetector
             case DiscPlatform.Saturn:
             {
                 var sector0 = readSector(0);
-                return sector0 != null ? TrimRight(System.Text.Encoding.ASCII.GetString(sector0, 0x60, 112)) : null;
+                return sector0 != null ? TrimRight(Encoding.ASCII.GetString(sector0, 0x60, 112)) : null;
             }
             case DiscPlatform.MegaCd:
             {
                 var sector0 = readSector(0);
-                return sector0 != null ? TrimRight(System.Text.Encoding.ASCII.GetString(sector0, 0x120, 48)) : null;
+                return sector0 != null ? TrimRight(Encoding.ASCII.GetString(sector0, 0x120, 48)) : null;
             }
             case DiscPlatform.Dreamcast:
             {
                 var sector0 = readSector(0);
-                return sector0 != null ? TrimRight(System.Text.Encoding.ASCII.GetString(sector0, 0x80, 128)) : null;
+                return sector0 != null ? TrimRight(Encoding.ASCII.GetString(sector0, 0x80, 128)) : null;
             }
             case DiscPlatform.ThreeDo:
             {
                 var sector0 = readSector(0);
-                return sector0 != null ? TrimRight(System.Text.Encoding.ASCII.GetString(sector0, 0x28, 32)) : null;
+                return sector0 != null ? TrimRight(Encoding.ASCII.GetString(sector0, 0x28, 32)) : null;
             }
             case DiscPlatform.NeoGeoCd:
             {
                 var ipl = pvd != null ? IsoReadFile(readSector, pvd.Value, "IPL.TXT", 1024) : null;
                 if (ipl is { Length: > 0 })
                 {
-                    var text = System.Text.Encoding.ASCII.GetString(ipl);
+                    var text = Encoding.ASCII.GetString(ipl);
                     var nl = text.IndexOfAny('\r', '\n');
                     var firstLine = nl >= 0 ? text[..nl] : text;
                     var trimmed = TrimRight(firstLine);
@@ -491,7 +477,7 @@ public static class DiscDetector
                 if (sector1 is { Length: >= 128 } &&
                     sector1.AsSpan(32, 23).SequenceEqual("PC Engine CD-ROM SYSTEM"u8))
                 {
-                    var title = TrimRight(System.Text.Encoding.ASCII.GetString(sector1, 106, 22));
+                    var title = TrimRight(Encoding.ASCII.GetString(sector1, 106, 22));
                     if (title.Length > 0)
                         return title;
                 }
@@ -502,7 +488,7 @@ public static class DiscDetector
 
         if (pvd != null)
         {
-            var volumeId = TrimRight(System.Text.Encoding.ASCII.GetString(pvd.Value.VolumeId));
+            var volumeId = TrimRight(Encoding.ASCII.GetString(pvd.Value.VolumeId));
             if (volumeId.Length > 0)
                 return volumeId;
         }
@@ -520,7 +506,7 @@ public static class DiscDetector
                 var cnf = pvd != null ? IsoReadFile(readSector, pvd.Value, "SYSTEM.CNF") : null;
                 if (cnf is { Length: > 0 })
                 {
-                    var text = System.Text.Encoding.ASCII.GetString(cnf);
+                    var text = Encoding.ASCII.GetString(cnf);
                     var bootKey = platform == DiscPlatform.Ps2 ? Ps2BootKey : Ps1BootKey;
                     var pos = text.IndexOf(bootKey, StringComparison.Ordinal);
                     if (pos >= 0)
@@ -530,10 +516,7 @@ public static class DiscDetector
                         {
                             start++;
                             var end = text.IndexOfAny([';', '\r', '\n'], start);
-                            if (end < 0)
-                            {
-                                end = text.Length;
-                            }
+                            if (end < 0) end = text.Length;
 
                             if (end > start)
                                 return TrimRight(text[start..end]);
@@ -548,17 +531,17 @@ public static class DiscDetector
             case DiscPlatform.Saturn:
             {
                 var sector0 = readSector(0);
-                return sector0 != null ? TrimRight(System.Text.Encoding.ASCII.GetString(sector0, 0x20, 10)) : null;
+                return sector0 != null ? TrimRight(Encoding.ASCII.GetString(sector0, 0x20, 10)) : null;
             }
             case DiscPlatform.Dreamcast:
             {
                 var sector0 = readSector(0);
-                return sector0 != null ? TrimRight(System.Text.Encoding.ASCII.GetString(sector0, 0x40, 10)) : null;
+                return sector0 != null ? TrimRight(Encoding.ASCII.GetString(sector0, 0x40, 10)) : null;
             }
             case DiscPlatform.MegaCd:
             {
                 var sector0 = readSector(0);
-                return sector0 != null ? TrimRight(System.Text.Encoding.ASCII.GetString(sector0, 0x183, 11)) : null;
+                return sector0 != null ? TrimRight(Encoding.ASCII.GetString(sector0, 0x183, 11)) : null;
             }
         }
 
@@ -597,16 +580,13 @@ public static class DiscDetector
             if (keyEnd < 0)
                 continue;
 
-            var keyName = System.Text.Encoding.ASCII.GetString(sfo, keyPos, keyEnd - keyPos);
+            var keyName = Encoding.ASCII.GetString(sfo, keyPos, keyEnd - keyPos);
             if (string.Equals(keyName, key, StringComparison.Ordinal))
             {
                 var valueEnd = Array.IndexOf(sfo, (byte)0, dataPos);
-                if (valueEnd < 0)
-                {
-                    valueEnd = sfo.Length;
-                }
+                if (valueEnd < 0) valueEnd = sfo.Length;
 
-                return TrimRight(System.Text.Encoding.ASCII.GetString(sfo, dataPos, valueEnd - dataPos));
+                return TrimRight(Encoding.ASCII.GetString(sfo, dataPos, valueEnd - dataPos));
             }
         }
 
@@ -616,10 +596,8 @@ public static class DiscDetector
     private static string TrimRight(string s)
     {
         var end = s.Length;
-        while (end > 0 && (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\r' || s[end - 1] == '\n' || s[end - 1] == '\0'))
-        {
-            end--;
-        }
+        while (end > 0 && (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\r' || s[end - 1] == '\n' ||
+                           s[end - 1] == '\0')) end--;
 
         return s[..end];
     }
@@ -633,4 +611,8 @@ public static class DiscDetector
     {
         return BinaryPrimitives.ReadUInt16LittleEndian(b);
     }
+
+    // ── ISO-9660 filesystem checks ──
+
+    private readonly record struct Pvd(byte[] VolumeId, uint RootExtent, uint RootLength);
 }

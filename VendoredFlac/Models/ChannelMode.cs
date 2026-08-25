@@ -1,7 +1,7 @@
 namespace VendoredFlac.Models;
 
 /// <summary>
-/// Stereo encoding mode for FLAC frames.
+///     Stereo encoding mode for FLAC frames.
 /// </summary>
 internal enum ChannelMode
 {

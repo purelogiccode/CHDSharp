@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
+
 namespace CHDSharp.Encoder.Models;
 
 /// <summary>Parsed VBI metadata for one frame.</summary>
-[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Auto)]
+[StructLayout(LayoutKind.Auto)]
 public struct VbiMetadata
 {
     /// <summary>White flag: on or off.</summary>

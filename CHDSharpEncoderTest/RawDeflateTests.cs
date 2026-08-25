@@ -8,10 +8,7 @@ public class RawDeflateTests
     public void CompressDecompress_RoundTrip()
     {
         var original = new byte[4096];
-        for (var i = 0; i < original.Length; i++)
-        {
-            original[i] = (byte)((i * 3 + 7) & 0xFF);
-        }
+        for (var i = 0; i < original.Length; i++) original[i] = (byte)((i * 3 + 7) & 0xFF);
 
         var compressed = RawDeflate.Compress(original);
         Assert.NotNull(compressed);
@@ -41,10 +38,7 @@ public class RawDeflateTests
     public void PatternData_CompressesAndDecompresses()
     {
         var original = new byte[4096];
-        for (var i = 0; i < original.Length; i++)
-        {
-            original[i] = (byte)(i & 0xFF);
-        }
+        for (var i = 0; i < original.Length; i++) original[i] = (byte)(i & 0xFF);
 
         var compressed = RawDeflate.Compress(original);
         Assert.NotNull(compressed);
@@ -56,10 +50,7 @@ public class RawDeflateTests
     public void RepeatedPattern_decompressesCorrectly()
     {
         var original = new byte[4096];
-        for (var i = 0; i < original.Length; i++)
-        {
-            original[i] = (byte)(i / 16);
-        }
+        for (var i = 0; i < original.Length; i++) original[i] = (byte)(i / 16);
 
         var compressed = RawDeflate.Compress(original);
         Assert.NotNull(compressed);
@@ -71,10 +62,7 @@ public class RawDeflateTests
     public void OutputHasNoZlibHeader()
     {
         var data = new byte[2048];
-        for (var i = 0; i < data.Length; i++)
-        {
-            data[i] = (byte)((i * 3 + 7) & 0xFF);
-        }
+        for (var i = 0; i < data.Length; i++) data[i] = (byte)((i * 3 + 7) & 0xFF);
 
         var compressed = RawDeflate.Compress(data);
         Assert.NotNull(compressed);
@@ -89,10 +77,7 @@ public class RawDeflateTests
     public void HunkSizedBlock_roundtrips()
     {
         var original = new byte[18816]; // 8 CD frames, 2352 each
-        for (var i = 0; i < original.Length; i++)
-        {
-            original[i] = (byte)((i * 17 + 31) & 0xFF);
-        }
+        for (var i = 0; i < original.Length; i++) original[i] = (byte)((i * 17 + 31) & 0xFF);
 
         var compressed = RawDeflate.Compress(original);
         Assert.NotNull(compressed);

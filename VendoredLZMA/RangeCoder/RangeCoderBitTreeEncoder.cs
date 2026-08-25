@@ -1,6 +1,9 @@
 namespace VendoredLZMA.RangeCoder;
 
-/// <summary>Bit-tree encoder using adaptive probability models, ported from the LZMA SDK (public domain). Supports forward and reverse bit ordering.</summary>
+/// <summary>
+///     Bit-tree encoder using adaptive probability models, ported from the LZMA SDK (public domain). Supports forward
+///     and reverse bit ordering.
+/// </summary>
 internal readonly struct BitTreeEncoder
 {
     private readonly BitEncoder[] _models;
@@ -14,10 +17,7 @@ internal readonly struct BitTreeEncoder
 
     internal void Init()
     {
-        for (uint i = 1; i < 1 << _numBitLevels; i++)
-        {
-            _models[i].Init();
-        }
+        for (uint i = 1; i < 1 << _numBitLevels; i++) _models[i].Init();
     }
 
     internal void Encode(Encoder rangeEncoder, uint symbol)

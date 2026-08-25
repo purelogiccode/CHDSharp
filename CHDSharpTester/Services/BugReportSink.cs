@@ -8,16 +8,15 @@ using Serilog.Events;
 namespace CHDSharpTester.Services;
 
 /// <summary>
-/// A Serilog sink that forwards every log event at <see cref="LogEventLevel.Warning"/> or above to the
-/// Bug Report API. Each report embeds the full environment snapshot and, when present, the exception details.
-/// The HTTP post is fire-and-forget so it never blocks application logging.
+///     A Serilog sink that forwards every log event at <see cref="LogEventLevel.Warning" /> or above to the
+///     Bug Report API. Each report embeds the full environment snapshot and, when present, the exception details.
+///     The HTTP post is fire-and-forget so it never blocks application logging.
 /// </summary>
 internal sealed class BugReportSink : ILogEventSink
 {
-    private static readonly HttpClient Client = new();
-
     private const string Endpoint = "https://www.purelogiccode.com/bugreport/api/send-bug-report";
     private const string ApiKey = "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
+    private static readonly HttpClient Client = new();
 
     private readonly EnvironmentSnapshot _env;
     private readonly string _environmentLabel;

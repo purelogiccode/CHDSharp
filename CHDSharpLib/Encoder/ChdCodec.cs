@@ -86,7 +86,7 @@ public sealed class ZlibCodec : IChdCodec
     /// <summary>The codec tag.</summary>
     public uint Tag => CodecTags.Zlib;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
         return RawDeflate.Compress(data);
@@ -94,15 +94,15 @@ public sealed class ZlibCodec : IChdCodec
 }
 
 /// <summary>
-/// Zstandard compression at zstd's maximum level, matching MAME's
-/// <c>chd_zstd_compressor</c> (<c>ZSTD_maxCLevel()</c>).
+///     Zstandard compression at zstd's maximum level, matching MAME's
+///     <c>chd_zstd_compressor</c> (<c>ZSTD_maxCLevel()</c>).
 /// </summary>
 /// <remarks>
-/// Backed by the managed <c>ZstdSharp.Port</c> 0.7.6 port of libzstd 1.5.5 - the exact version
-/// MAME 0.288 ships - keeping the encoder 100% pure C# and cross-platform. Compression is
-/// one-shot via <c>ZSTD_compress2</c>, which writes the single-segment frame header with the
-/// declared content size; the 1.5.5 encoder emits frames byte-identical to chdman for both raw
-/// and CD compound ('cdzs') hunks (verified per-hunk against chdman on the battle-test corpus).
+///     Backed by the managed <c>ZstdSharp.Port</c> 0.7.6 port of libzstd 1.5.5 - the exact version
+///     MAME 0.288 ships - keeping the encoder 100% pure C# and cross-platform. Compression is
+///     one-shot via <c>ZSTD_compress2</c>, which writes the single-segment frame header with the
+///     declared content size; the 1.5.5 encoder emits frames byte-identical to chdman for both raw
+///     and CD compound ('cdzs') hunks (verified per-hunk against chdman on the battle-test corpus).
 /// </remarks>
 public sealed class ZstdCodec : IChdCodec
 {
@@ -113,10 +113,10 @@ public sealed class ZstdCodec : IChdCodec
     {
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public uint Tag => CodecTags.Zstd;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
         var dest = new byte[Compressor.GetCompressBound(data.Length)];
@@ -128,19 +128,19 @@ public sealed class ZstdCodec : IChdCodec
 }
 
 /// <summary>
-/// LZMA compression matching MAME's <c>chd_lzma_compressor</c>: raw headerless LZMA with
-/// no end marker, properties lc=3/lp=0/pb=2, dictionary size = hunk bytes and
-/// numFastBytes=64 (the LZMA "level 8" profile that chdman configures via
-/// <c>LzmaEncProps</c>; the match-finder cycle count 16 + fb/2 = 48 follows automatically).
-/// Backed by Igor Pavlov's official LZMA SDK C# encoder (public domain, ported into this
-/// project); the encoder never writes the 5-byte property header, so the stream is already
-/// in CHD's raw format; the decoder synthesizes the properties (see CHDSharpLib's
-/// CHDReaders.Lzma). The port matches the C encoder's byte emission: the price table uses
-/// the C's kNumMoveReducingBits/kNumBitPriceShiftBits = 4/4 (the SDK C# line still uses
-/// 2/6, which flips near-tie optimal-parser decisions) and the BT4 match finder walks the
-/// btree with maxLen = 3 like MAME's <c>Bt4_MatchFinder_GetMatches</c>. Output is
-/// byte-identical to chdman on the battle-test corpus (verified per-hunk on 1,664 raw
-/// hunks and the cdlz CD hunks).
+///     LZMA compression matching MAME's <c>chd_lzma_compressor</c>: raw headerless LZMA with
+///     no end marker, properties lc=3/lp=0/pb=2, dictionary size = hunk bytes and
+///     numFastBytes=64 (the LZMA "level 8" profile that chdman configures via
+///     <c>LzmaEncProps</c>; the match-finder cycle count 16 + fb/2 = 48 follows automatically).
+///     Backed by Igor Pavlov's official LZMA SDK C# encoder (public domain, ported into this
+///     project); the encoder never writes the 5-byte property header, so the stream is already
+///     in CHD's raw format; the decoder synthesizes the properties (see CHDSharpLib's
+///     CHDReaders.Lzma). The port matches the C encoder's byte emission: the price table uses
+///     the C's kNumMoveReducingBits/kNumBitPriceShiftBits = 4/4 (the SDK C# line still uses
+///     2/6, which flips near-tie optimal-parser decisions) and the BT4 match finder walks the
+///     btree with maxLen = 3 like MAME's <c>Bt4_MatchFinder_GetMatches</c>. Output is
+///     byte-identical to chdman on the battle-test corpus (verified per-hunk on 1,664 raw
+///     hunks and the cdlz CD hunks).
 /// </summary>
 public sealed class LzmaCodec : IChdCodec
 {
@@ -176,10 +176,10 @@ public sealed class LzmaCodec : IChdCodec
         _ms = new MemoryStream((int)hunkBytes / 2);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public uint Tag => CodecTags.Lzma;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
         // Reuse the encoder and output buffer across hunks: the SDK encoder reinitialises
@@ -188,7 +188,7 @@ public sealed class LzmaCodec : IChdCodec
         // the encoder is never shared across threads).
         _ms.SetLength(0);
         _ms.Position = 0;
-        using (var input = new MemoryStream(data, writable: false))
+        using (var input = new MemoryStream(data, false))
         {
             _encoder.Code(input, _ms, data.Length, -1, null);
         }
@@ -205,27 +205,31 @@ public static class ChdCodecs
     public const string SupportedCodecNames = "zlib, zstd, lzma, huff, flac, cdzl, cdlz, cdzs, cdfl, avhu, none";
 
     /// <summary>
-    /// Creates one codec instance per tag, in order (up to 4, per the CHD header).
-    /// The single tag <see cref="CodecTags.None"/> produces an empty codec list (uncompressed
-    /// CHD: hunks are stored raw and the encoder writes the V5 raw map instead of the
-    /// Huffman-compressed one). Any other request that the encoder does not implement throws
-    /// instead of silently degrading: a requested codec that the encoder cannot write would
-    /// otherwise store every hunk uncompressed while the header claims the codec is in use.
+    ///     Creates one codec instance per tag, in order (up to 4, per the CHD header).
+    ///     The single tag <see cref="CodecTags.None" /> produces an empty codec list (uncompressed
+    ///     CHD: hunks are stored raw and the encoder writes the V5 raw map instead of the
+    ///     Huffman-compressed one). Any other request that the encoder does not implement throws
+    ///     instead of silently degrading: a requested codec that the encoder cannot write would
+    ///     otherwise store every hunk uncompressed while the header claims the codec is in use.
     /// </summary>
     /// <param name="codecTags">The codec tags to instantiate.</param>
     /// <param name="hunkBytes">The hunk size in bytes (codec configuration).</param>
-    /// <returns>An array of codec instances (empty when the single tag is <see cref="CodecTags.None"/>).</returns>
-    /// <exception cref="ArgumentException">A tag is unknown, not implemented by the encoder, combined
-    /// with other codecs, or (<see cref="CodecTags.Cdfl"/>) used on non-CD-sized hunks.</exception>
+    /// <returns>An array of codec instances (empty when the single tag is <see cref="CodecTags.None" />).</returns>
+    /// <exception cref="ArgumentException">
+    ///     A tag is unknown, not implemented by the encoder, combined
+    ///     with other codecs, or (<see cref="CodecTags.Cdfl" />) used on non-CD-sized hunks.
+    /// </exception>
     public static IChdCodec[] CreateAll(IReadOnlyList<uint> codecTags, uint hunkBytes)
     {
         ArgumentNullException.ThrowIfNull(codecTags);
         switch (codecTags.Count)
         {
             case 0:
-                throw new ArgumentException("At least one codec is required; use 'zlib', 'zstd', 'lzma', 'cdfl' or 'none'", nameof(codecTags));
+                throw new ArgumentException(
+                    "At least one codec is required; use 'zlib', 'zstd', 'lzma', 'cdfl' or 'none'", nameof(codecTags));
             case > 4:
-                throw new ArgumentException($"At most 4 codecs are supported, got {codecTags.Count}", nameof(codecTags));
+                throw new ArgumentException($"At most 4 codecs are supported, got {codecTags.Count}",
+                    nameof(codecTags));
         }
 
         if (codecTags is [CodecTags.None])
@@ -283,8 +287,8 @@ public static class ChdCodecs
             return [CodecTags.Zlib];
 
         var tags = new List<uint>();
-        foreach (var name in codecString.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
+        foreach (var name in codecString.Split(',',
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             tags.Add(name.ToLowerInvariant() switch
             {
                 "zlib" => CodecTags.Zlib,
@@ -300,7 +304,6 @@ public static class ChdCodecs
                 "none" => CodecTags.None,
                 _ => throw new ArgumentException($"Unknown codec [{name}]")
             });
-        }
 
         return tags.ToArray();
     }

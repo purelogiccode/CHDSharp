@@ -4,10 +4,10 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Validates MetadataWriter against chdman.exe: a CUE+BIN is converted to a CD CHD with
-/// chdman, then the raw metadata chain (16-byte headers, payloads, and 'next' links) written
-/// by chdman is compared byte-for-byte against the chain produced by our writer from the
-/// same CUE parsed by our CueParser.
+///     Validates MetadataWriter against chdman.exe: a CUE+BIN is converted to a CD CHD with
+///     chdman, then the raw metadata chain (16-byte headers, payloads, and 'next' links) written
+///     by chdman is compared byte-for-byte against the chain produced by our writer from the
+///     same CUE parsed by our CueParser.
 /// </summary>
 public class MetadataWriterChdmanValidationTests : IDisposable
 {
@@ -24,7 +24,7 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -63,7 +63,8 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             fs.SetLength(2352L * 54550);
         }
 
-        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
+        var (exitCode, stdout, stderr) =
+            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
         Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
 
         // our metadata chain, from the same CUE through CueParser + MetadataWriter
@@ -117,7 +118,8 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             fs.SetLength(2352L * (4500 + 4650 + 8));
         }
 
-        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
+        var (exitCode, stdout, stderr) =
+            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
         Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
 
         // build the expected entries from our parser + writer
@@ -198,15 +200,6 @@ public class MetadataWriterChdmanValidationTests : IDisposable
         return entries;
     }
 
-    private sealed class MetaEntry
-    {
-        public uint Tag;
-        public byte Flags;
-        public uint Length;
-        public ulong Next;
-        public byte[] Payload = Array.Empty<byte>();
-    }
-
     private static uint ReadU32Be(byte[] data, int offset)
     {
         return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
@@ -221,5 +214,14 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     private static ulong ReadU64Be(byte[] data, int offset)
     {
         return ((ulong)ReadU32Be(data, offset) << 32) | ReadU32Be(data, offset + 4);
+    }
+
+    private sealed class MetaEntry
+    {
+        public byte Flags;
+        public uint Length;
+        public ulong Next;
+        public byte[] Payload = Array.Empty<byte>();
+        public uint Tag;
     }
 }

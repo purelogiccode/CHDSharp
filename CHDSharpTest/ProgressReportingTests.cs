@@ -11,31 +11,6 @@ public class ProgressReportingTests
         return Path.Combine(TestDataDir, name);
     }
 
-    /// <summary>An <see cref="IProgress{T}"/> that records reports thread-safely.</summary>
-    private sealed class CollectingProgress : IProgress<ChdProgress>
-    {
-        private readonly List<ChdProgress> _reports = [];
-
-        public IReadOnlyList<ChdProgress> Reports
-        {
-            get
-            {
-                lock (_reports)
-                {
-                    return _reports.ToArray();
-                }
-            }
-        }
-
-        public void Report(ChdProgress value)
-        {
-            lock (_reports)
-            {
-                _reports.Add(value);
-            }
-        }
-    }
-
     private static void AssertMonotonic(IReadOnlyList<ChdProgress> reports)
     {
         for (var i = 1; i < reports.Count; i++)
@@ -168,10 +143,7 @@ public class ProgressReportingTests
         {
             var progress = new CollectingProgress();
             var count = 0;
-            foreach (var _ in chd!.EnumerateHunks(progress))
-            {
-                count++;
-            }
+            foreach (var _ in chd!.EnumerateHunks(progress)) count++;
 
             var reports = progress.Reports;
             Assert.Equal((long)chd.HunkCount, count);
@@ -251,5 +223,30 @@ public class ProgressReportingTests
     {
         var p = new ChdProgress(0, 0, 0, 0, TimeSpan.Zero);
         Assert.Equal(100.0, p.Percent, 3);
+    }
+
+    /// <summary>An <see cref="IProgress{T}" /> that records reports thread-safely.</summary>
+    private sealed class CollectingProgress : IProgress<ChdProgress>
+    {
+        private readonly List<ChdProgress> _reports = [];
+
+        public IReadOnlyList<ChdProgress> Reports
+        {
+            get
+            {
+                lock (_reports)
+                {
+                    return _reports.ToArray();
+                }
+            }
+        }
+
+        public void Report(ChdProgress value)
+        {
+            lock (_reports)
+            {
+                _reports.Add(value);
+            }
+        }
     }
 }

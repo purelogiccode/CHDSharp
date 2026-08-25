@@ -3,26 +3,32 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using System.Text;
 using CHDSharp.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace CHDSharp;
 
 /// <summary>
-/// Provides static methods for validating, inspecting, and verifying CHD (Compressed Hunks of Data)
-/// files using parallel decompression. Supports CHD format versions 1-5 and all MAME codecs
-/// (zlib, LZMA, Huffman, FLAC, Zstd, AVHuff and the CD variants).
+///     Provides static methods for validating, inspecting, and verifying CHD (Compressed Hunks of Data)
+///     files using parallel decompression. Supports CHD format versions 1-5 and all MAME codecs
+///     (zlib, LZMA, Huffman, FLAC, Zstd, AVHuff and the CD variants).
 /// </summary>
 /// <remarks>
-/// Use <see cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/> for full (parallel) verification of a standalone CHD,
-/// <see cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/> for child (differential) CHDs,
-/// <see cref="IsChdFile(string)"/> / <see cref="CheckHeader"/> for fast header-only checks, and
-/// <see cref="ReadHeader(string,out CHDSharp.Models.ChdHeaderInfo?)"/> for the full parsed header without
-/// opening the file for reads.
-/// For random access to decompressed data use <see cref="ChdFile"/> instead.
+///     Use
+///     <see
+///         cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+///     for full (parallel) verification of a standalone CHD,
+///     <see
+///         cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+///     for child (differential) CHDs,
+///     <see cref="IsChdFile(string)" /> / <see cref="CheckHeader" /> for fast header-only checks, and
+///     <see cref="ReadHeader(string,out CHDSharp.Models.ChdHeaderInfo?)" /> for the full parsed header without
+///     opening the file for reads.
+///     For random access to decompressed data use <see cref="ChdFile" /> instead.
 /// </remarks>
 /// <example>
-/// <code>
+///     <code>
 /// using Stream s = File.OpenRead("game.chd");
 /// ChdResult result = Chd.CheckFile(s, "game.chd", deepCheck: true);
 /// if (result.IsSuccess)
@@ -51,7 +57,8 @@ public static partial class Chd
         LoggerMessage.Define<ulong, ulong>(LogLevel.Debug, new EventId(4), "{BlocksXSize} != {TotalBytes}");
 
     private static readonly Action<ILogger, string, uint, string, Exception?> LogFileInfo =
-        LoggerMessage.Define<string, uint, string>(LogLevel.Information, new EventId(5), "{Filename}, V:{Version} {Compression}");
+        LoggerMessage.Define<string, uint, string>(LogLevel.Information, new EventId(5),
+            "{Filename}, V:{Version} {Compression}");
 
     private static readonly Action<ILogger, ChdError, Exception?> LogDecompressFailed =
         LoggerMessage.Define<ChdError>(LogLevel.Error, new EventId(6), "Data Decompress Failed: {Error}");
@@ -66,12 +73,19 @@ public static partial class Chd
         LoggerMessage.Define(LogLevel.Debug, new EventId(10), "Verifying, 100% complete");
 
     private static readonly Action<ILogger, string, int, int, uint, Exception?> LogArrayStats =
-        LoggerMessage.Define<string, int, int, uint>(LogLevel.Debug, new EventId(11), "{Where}: Issued Arrays Total {Issued}, returned Arrays Total {Returned}, block size {BlockSize}");
+        LoggerMessage.Define<string, int, int, uint>(LogLevel.Debug, new EventId(11),
+            "{Where}: Issued Arrays Total {Issued}, returned Arrays Total {Returned}, block size {BlockSize}");
+
+    private static volatile int _taskCount = 8;
+
+    private static readonly uint[] HeaderLengths = [0, 76, 80, 120, 108, 124];
+
+    private static readonly byte[] Id = "MComprHD"u8.ToArray();
 
     /// <summary>
-    /// Gets or sets the <see cref="ILoggerFactory"/> used for internal logging.
-    /// Can be set (or changed) at any time; loggers resolve the factory lazily.
-    /// If not set, logging is silently discarded.
+    ///     Gets or sets the <see cref="ILoggerFactory" /> used for internal logging.
+    ///     Can be set (or changed) at any time; loggers resolve the factory lazily.
+    ///     If not set, logging is silently discarded.
     /// </summary>
     public static ILoggerFactory? LoggerFactory
     {
@@ -79,12 +93,12 @@ public static partial class Chd
         set => ChdLogger.Factory = value;
     }
 
-    private static volatile int _taskCount = 8;
-
     /// <summary>
-    /// Number of parallel decompression tasks used during verification (default 8).
-    /// Must be between 1 and 64. Changing it affects subsequent <see cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/>
-    /// calls; verifications already in progress keep the value they started with.
+    ///     Number of parallel decompression tasks used during verification (default 8).
+    ///     Must be between 1 and 64. Changing it affects subsequent
+    ///     <see
+    ///         cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+    ///     calls; verifications already in progress keep the value they started with.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is less than 1 or greater than 64.</exception>
     public static int TaskCount
@@ -100,48 +114,68 @@ public static partial class Chd
     }
 
     /// <summary>
-    /// Validates a CHD file from a <see cref="Stream"/> using parallel decompression and hash verification.
-    /// Returns a <see cref="ChdResult"/> with version, SHA1, and MD5 hashes.
+    ///     Validates a CHD file from a <see cref="Stream" /> using parallel decompression and hash verification.
+    ///     Returns a <see cref="ChdResult" /> with version, SHA1, and MD5 hashes.
     /// </summary>
     /// <param name="s">A readable, seekable stream positioned at the start of the CHD file.</param>
     /// <param name="filename">The filename associated with the stream, used only for logging.</param>
-    /// <param name="deepCheck">If <c>true</c>, performs full decompression of every hunk plus SHA1/MD5 hash
-    /// verification (using up to <see cref="TaskCount"/> parallel workers); if <c>false</c>, only the header is validated.</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each decompressed hunk during deep verification. <c>null</c> (default) disables progress reporting.</param>
-    /// <param name="cancellationToken">A token to cancel deep verification. <see cref="OperationCanceledException"/>
-    /// is thrown if cancellation is requested while hunks are being decompressed or hashed.</param>
-    /// <returns>A <see cref="ChdResult"/> with the verification result, CHD version, and header hashes.</returns>
+    /// <param name="deepCheck">
+    ///     If <c>true</c>, performs full decompression of every hunk plus SHA1/MD5 hash
+    ///     verification (using up to <see cref="TaskCount" /> parallel workers); if <c>false</c>, only the header is
+    ///     validated.
+    /// </param>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each decompressed hunk during deep verification. <c>null</c> (default) disables progress reporting.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to cancel deep verification. <see cref="OperationCanceledException" />
+    ///     is thrown if cancellation is requested while hunks are being decompressed or hashed.
+    /// </param>
+    /// <returns>A <see cref="ChdResult" /> with the verification result, CHD version, and header hashes.</returns>
     /// <remarks>
-    /// This method does not handle differential (parent/child) CHDs; it returns
-    /// <see cref="ChdError.Chderrrequiresparent"/> for those. Use <see cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/> instead.
+    ///     This method does not handle differential (parent/child) CHDs; it returns
+    ///     <see cref="ChdError.Chderrrequiresparent" /> for those. Use
+    ///     <see
+    ///         cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+    ///     instead.
     /// </remarks>
-    public static ChdResult CheckFile(Stream s, string filename, bool deepCheck, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public static ChdResult CheckFile(Stream s, string filename, bool deepCheck,
+        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
     {
-        var err = CheckFile(s, filename, deepCheck, out var ver, out var sha1, out var md5, progress, cancellationToken);
+        var err = CheckFile(s, filename, deepCheck, out var ver, out var sha1, out var md5, progress,
+            cancellationToken);
         return new ChdResult(err, ver, sha1, md5);
     }
 
     /// <summary>
-    /// Fully verifies a CHD and, when the header SHA-1 hash fields are present but do not match
-    /// the recomputed values, repairs them in place (chdman <c>verify --fix</c> parity):
-    /// V3's <c>sha1</c> field (raw data hash), V4/V5's <c>rawsha1</c> field, and V4/V5's combined
-    /// <c>sha1</c> field (recomputed as SHA-1 of the raw hash plus the sorted checksummed
-    /// metadata hashes, MAME <c>compute_overall_sha1</c> parity). Only the header hash fields are
-    /// patched — the rest of the file is untouched, exactly like chdman. V1/V2 files (MD5 only)
-    /// and V5 uncompressed CHDs (no hash fields) are reported as verified with nothing to fix.
+    ///     Fully verifies a CHD and, when the header SHA-1 hash fields are present but do not match
+    ///     the recomputed values, repairs them in place (chdman <c>verify --fix</c> parity):
+    ///     V3's <c>sha1</c> field (raw data hash), V4/V5's <c>rawsha1</c> field, and V4/V5's combined
+    ///     <c>sha1</c> field (recomputed as SHA-1 of the raw hash plus the sorted checksummed
+    ///     metadata hashes, MAME <c>compute_overall_sha1</c> parity). Only the header hash fields are
+    ///     patched — the rest of the file is untouched, exactly like chdman. V1/V2 files (MD5 only)
+    ///     and V5 uncompressed CHDs (no hash fields) are reported as verified with nothing to fix.
     /// </summary>
     /// <param name="filename">Path to the CHD file to verify and repair.</param>
-    /// <param name="repaired">When this method returns, <c>true</c> if a hash mismatch was found
-    /// and the header was rewritten; <c>false</c> when the hashes already matched (or no hash
-    /// fields exist to repair).</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each decompressed hunk during the full verification.</param>
+    /// <param name="repaired">
+    ///     When this method returns, <c>true</c> if a hash mismatch was found
+    ///     and the header was rewritten; <c>false</c> when the hashes already matched (or no hash
+    ///     fields exist to repair).
+    /// </param>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each decompressed hunk during the full verification.
+    /// </param>
     /// <param name="cancellationToken">A token to cancel the verification.</param>
-    /// <returns>A <see cref="ChdResult"/> with the verification result. On success the computed
-    /// (repaired) hashes are available in <see cref="ChdResult.Sha1"/>.</returns>
-    /// <exception cref="OperationCanceledException">Thrown when <paramref name="cancellationToken"/>
-    /// is cancelled while hunks are being decompressed or hashed.</exception>
+    /// <returns>
+    ///     A <see cref="ChdResult" /> with the verification result. On success the computed
+    ///     (repaired) hashes are available in <see cref="ChdResult.Sha1" />.
+    /// </returns>
+    /// <exception cref="OperationCanceledException">
+    ///     Thrown when <paramref name="cancellationToken" />
+    ///     is cancelled while hunks are being decompressed or hashed.
+    /// </exception>
     public static ChdResult CheckFileAndRepair(string filename, out bool repaired,
         IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -218,10 +252,7 @@ public static partial class Chd
                 return new ChdResult(ChdError.Chderrreaderror, ver, headerSha1, headerMd5);
             }
 
-            if (Util.ByteArrEquals(storedRaw, computedRawSha1))
-            {
-                needRaw = false;
-            }
+            if (Util.ByteArrEquals(storedRaw, computedRawSha1)) needRaw = false;
 
             if (needCombined)
             {
@@ -231,9 +262,7 @@ public static partial class Chd
                     fs.Position = 16;
                     var hErr = ChdHeaders.ReadHeaderByVersion(fs, version, out var header);
                     if (hErr == ChdError.Chderrnone)
-                    {
                         combined = ChdMetaData.ComputeOverallSha1(fs, header, computedRawSha1);
-                    }
                 }
                 catch (Exception)
                 {
@@ -241,9 +270,7 @@ public static partial class Chd
                 }
 
                 if (combined != null && storedCombined != null && Util.ByteArrEquals(combined, storedCombined))
-                {
                     needCombined = false;
-                }
             }
 
             if (!needRaw && !needCombined)
@@ -287,20 +314,39 @@ public static partial class Chd
         return new ChdResult(ChdError.Chderrnone, ver, combined ?? computedRawSha1, headerMd5);
     }
 
-    /// <inheritdoc cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/>
+    /// <inheritdoc
+    ///     cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
     /// <param name="s">A readable, seekable stream positioned at the start of the CHD file.</param>
     /// <param name="filename">The filename associated with the stream, used only for logging.</param>
-    /// <param name="deepCheck">If <c>true</c>, performs full decompression of every hunk plus SHA1/MD5 hash
-    /// verification (using up to <see cref="TaskCount"/> parallel workers); if <c>false</c>, only the header is validated.</param>
-    /// <param name="chdVersion">When this method returns, contains the CHD version (1-5), or <c>null</c> if the header was invalid.</param>
-    /// <param name="chdSha1">When this method returns, contains the SHA1 hash from the header, or <c>null</c> if not available (V1/V2).</param>
-    /// <param name="chdMd5">When this method returns, contains the MD5 hash from the header, or <c>null</c> if not available (V4/V5).</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each decompressed hunk during deep verification. <c>null</c> (default) disables progress reporting.</param>
-    /// <param name="cancellationToken">A token to cancel deep verification. <see cref="OperationCanceledException"/>
-    /// is thrown if cancellation is requested while hunks are being decompressed or hashed.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise an error code describing the failure.</returns>
-    public static ChdError CheckFile(Stream s, string filename, bool deepCheck, out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    /// <param name="deepCheck">
+    ///     If <c>true</c>, performs full decompression of every hunk plus SHA1/MD5 hash
+    ///     verification (using up to <see cref="TaskCount" /> parallel workers); if <c>false</c>, only the header is
+    ///     validated.
+    /// </param>
+    /// <param name="chdVersion">
+    ///     When this method returns, contains the CHD version (1-5), or <c>null</c> if the header was
+    ///     invalid.
+    /// </param>
+    /// <param name="chdSha1">
+    ///     When this method returns, contains the SHA1 hash from the header, or <c>null</c> if not available
+    ///     (V1/V2).
+    /// </param>
+    /// <param name="chdMd5">
+    ///     When this method returns, contains the MD5 hash from the header, or <c>null</c> if not available
+    ///     (V4/V5).
+    /// </param>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each decompressed hunk during deep verification. <c>null</c> (default) disables progress reporting.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to cancel deep verification. <see cref="OperationCanceledException" />
+    ///     is thrown if cancellation is requested while hunks are being decompressed or hashed.
+    /// </param>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
+    public static ChdError CheckFile(Stream s, string filename, bool deepCheck, out uint? chdVersion,
+        out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         chdSha1 = null;
         chdMd5 = null;
@@ -381,15 +427,10 @@ public static partial class Chd
                 return ChdError.Chderrnone;
 
             if (chd.Totalblocks * (ulong)chd.Blocksize != chd.Totalbytes)
-            {
                 LogBlockSizeMismatch(Log, chd.Totalblocks * (ulong)chd.Blocksize, chd.Totalbytes, null);
-            }
 
             var strComp = "";
-            foreach (var t in chd.Compression)
-            {
-                strComp += $", {t}";
-            }
+            foreach (var t in chd.Compression) strComp += $", {t}";
 
             LogFileInfo(Log, Path.GetFileName(filename), version, strComp, null);
 
@@ -421,10 +462,10 @@ public static partial class Chd
     }
 
     /// <summary>
-    /// Runs the full deep-verification pipeline (decompress every hunk, compute raw SHA-1/MD5)
-    /// without comparing the computed hashes against the header and without validating the
-    /// combined metadata SHA-1 — used by <see cref="CheckFileAndRepair"/> so that a corrupt
-    /// header hash field is reported as repairable instead of as a verification failure.
+    ///     Runs the full deep-verification pipeline (decompress every hunk, compute raw SHA-1/MD5)
+    ///     without comparing the computed hashes against the header and without validating the
+    ///     combined metadata SHA-1 — used by <see cref="CheckFileAndRepair" /> so that a corrupt
+    ///     header hash field is reported as repairable instead of as a verification failure.
     /// </summary>
     private static ChdError VerifyDeep(Stream s, uint version,
         IProgress<ChdProgress>? progress, CancellationToken cancellationToken,
@@ -466,7 +507,7 @@ public static partial class Chd
         var blocksToKeep = 1024 * 1024 * 512 / (int)chd.Blocksize;
         ChdBlockRead.KeepMostRepeatedBlocks(chd, blocksToKeep);
 
-        var err = DecompressDataParallel(s, chd, out computedRawSha1, progress, cancellationToken, verifyHashes: false);
+        var err = DecompressDataParallel(s, chd, out computedRawSha1, progress, cancellationToken, false);
         if (err != ChdError.Chderrnone)
             return err;
 
@@ -475,42 +516,63 @@ public static partial class Chd
     }
 
     /// <summary>
-    /// Fully verifies a (possibly child/differential) CHD by decompressing the whole image and
-    /// comparing the computed hashes against the values stored in the header, resolving parent
-    /// references against the CHD at <paramref name="parentFilename"/>.
+    ///     Fully verifies a (possibly child/differential) CHD by decompressing the whole image and
+    ///     comparing the computed hashes against the values stored in the header, resolving parent
+    ///     references against the CHD at <paramref name="parentFilename" />.
     /// </summary>
     /// <param name="filename">Path to the CHD file to verify.</param>
     /// <param name="parentFilename">Path to the parent CHD, or <c>null</c>/empty for a standalone CHD.</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each decompressed hunk. <c>null</c> (default) disables progress reporting.</param>
-    /// <param name="cancellationToken">A token to cancel verification. <see cref="OperationCanceledException"/>
-    /// is thrown if cancellation is requested while hunks are being read.</param>
-    /// <returns>A <see cref="ChdResult"/> with the verification result, CHD version, and header hashes.</returns>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each decompressed hunk. <c>null</c> (default) disables progress reporting.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to cancel verification. <see cref="OperationCanceledException" />
+    ///     is thrown if cancellation is requested while hunks are being read.
+    /// </param>
+    /// <returns>A <see cref="ChdResult" /> with the verification result, CHD version, and header hashes.</returns>
     /// <remarks>
-    /// Unlike <see cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/>, this method is single-threaded but supports
-    /// parent/child CHD chains. Returns <see cref="ChdError.Chderrinvalidparent"/> when the supplied
-    /// parent does not match, and <see cref="ChdError.Chderrrequiresparent"/> when the CHD is a child
-    /// and no parent was supplied.
+    ///     Unlike
+    ///     <see
+    ///         cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+    ///     , this method is single-threaded but supports
+    ///     parent/child CHD chains. Returns <see cref="ChdError.Chderrinvalidparent" /> when the supplied
+    ///     parent does not match, and <see cref="ChdError.Chderrrequiresparent" /> when the CHD is a child
+    ///     and no parent was supplied.
     /// </remarks>
-    public static ChdResult CheckFileWithParent(string filename, string? parentFilename, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public static ChdResult CheckFileWithParent(string filename, string? parentFilename,
+        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
     {
-        var err = CheckFileWithParent(filename, parentFilename, out var ver, out var sha1, out var md5, progress, cancellationToken);
+        var err = CheckFileWithParent(filename, parentFilename, out var ver, out var sha1, out var md5, progress,
+            cancellationToken);
         return new ChdResult(err, ver, sha1, md5);
     }
 
-    /// <inheritdoc cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/>
+    /// <inheritdoc
+    ///     cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
     /// <param name="filename">Path to the CHD file to verify.</param>
     /// <param name="parentFilename">Path to the parent CHD, or <c>null</c>/empty for a standalone CHD.</param>
-    /// <param name="chdVersion">When this method returns, contains the CHD version (1-5), or <c>null</c> if the file could not be opened.</param>
-    /// <param name="chdSha1">When this method returns, contains the SHA1 hash from the header, or <c>null</c> if not available.</param>
+    /// <param name="chdVersion">
+    ///     When this method returns, contains the CHD version (1-5), or <c>null</c> if the file could not
+    ///     be opened.
+    /// </param>
+    /// <param name="chdSha1">
+    ///     When this method returns, contains the SHA1 hash from the header, or <c>null</c> if not
+    ///     available.
+    /// </param>
     /// <param name="chdMd5">When this method returns, contains the MD5 hash from the header, or <c>null</c> if not available.</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each decompressed hunk. <c>null</c> (default) disables progress reporting.</param>
-    /// <param name="cancellationToken">A token to cancel verification. <see cref="OperationCanceledException"/>
-    /// is thrown if cancellation is requested while hunks are being read.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise an error code describing the failure.</returns>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each decompressed hunk. <c>null</c> (default) disables progress reporting.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to cancel verification. <see cref="OperationCanceledException" />
+    ///     is thrown if cancellation is requested while hunks are being read.
+    /// </param>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
     public static ChdError CheckFileWithParent(string filename, string? parentFilename,
-        out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+        out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         chdVersion = null;
         chdSha1 = null;
@@ -555,12 +617,10 @@ public static partial class Chd
                 {
                     var processed = (long)offset;
                     var currentHunk = processed / chd.HunkBytes;
-                    if (processed % chd.HunkBytes != 0)
-                    {
-                        currentHunk++;
-                    }
+                    if (processed % chd.HunkBytes != 0) currentHunk++;
 
-                    progress.Report(new ChdProgress(currentHunk, chd.HunkCount, processed, (long)chd.TotalBytes, sw!.Elapsed));
+                    progress.Report(new ChdProgress(currentHunk, chd.HunkCount, processed, (long)chd.TotalBytes,
+                        sw!.Elapsed));
                 }
             }
 
@@ -570,41 +630,51 @@ public static partial class Chd
 
             var md5Mismatch = haveMd5 && md5Check?.Hash != null && !Util.ByteArrEquals(expectedMd5, md5Check.Hash);
             var sha1Mismatch = haveSha1 && sha1Check?.Hash != null && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
-            if (md5Mismatch || sha1Mismatch)
-            {
-                return ChdError.Chderrdecompressionerror;
-            }
+            if (md5Mismatch || sha1Mismatch) return ChdError.Chderrdecompressionerror;
 
             return ChdError.Chderrnone;
         }
     }
 
     /// <summary>
-    /// Verifies a (possibly child) CHD file by decompressing all hunks and comparing hashes,
-    /// resolving parent references lazily via a <see cref="ParentResolver"/> callback.
+    ///     Verifies a (possibly child) CHD file by decompressing all hunks and comparing hashes,
+    ///     resolving parent references lazily via a <see cref="ParentResolver" /> callback.
     /// </summary>
     /// <param name="filename">Path to the CHD file to verify.</param>
-    /// <param name="parentResolver">A callback that resolves parent CHDs by SHA1/MD5 hash, or <c>null</c> to fail on child CHDs.</param>
+    /// <param name="parentResolver">
+    ///     A callback that resolves parent CHDs by SHA1/MD5 hash, or <c>null</c> to fail on child
+    ///     CHDs.
+    /// </param>
     /// <param name="progress">An optional progress reporter, or <c>null</c>.</param>
     /// <param name="cancellationToken">A token to cancel verification.</param>
-    /// <returns>A <see cref="ChdResult"/> with the verification result, CHD version, and header hashes.</returns>
-    public static ChdResult CheckFileWithParent(string filename, ParentResolver? parentResolver, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    /// <returns>A <see cref="ChdResult" /> with the verification result, CHD version, and header hashes.</returns>
+    public static ChdResult CheckFileWithParent(string filename, ParentResolver? parentResolver,
+        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
     {
-        var err = CheckFileWithParent(filename, parentResolver, out var ver, out var sha1, out var md5, progress, cancellationToken);
+        var err = CheckFileWithParent(filename, parentResolver, out var ver, out var sha1, out var md5, progress,
+            cancellationToken);
         return new ChdResult(err, ver, sha1, md5);
     }
 
-    /// <inheritdoc cref="CheckFileWithParent(string,ParentResolver?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/>
+    /// <inheritdoc
+    ///     cref="CheckFileWithParent(string,ParentResolver?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
     /// <param name="filename">Path to the CHD file to verify.</param>
     /// <param name="parentResolver">A callback that resolves parent CHDs by SHA1/MD5 hash, or <c>null</c>.</param>
-    /// <param name="chdVersion">When this method returns, contains the CHD version (1-5), or <c>null</c> if the file could not be opened.</param>
-    /// <param name="chdSha1">When this method returns, contains the SHA1 hash from the header, or <c>null</c> if not available.</param>
+    /// <param name="chdVersion">
+    ///     When this method returns, contains the CHD version (1-5), or <c>null</c> if the file could not
+    ///     be opened.
+    /// </param>
+    /// <param name="chdSha1">
+    ///     When this method returns, contains the SHA1 hash from the header, or <c>null</c> if not
+    ///     available.
+    /// </param>
     /// <param name="chdMd5">When this method returns, contains the MD5 hash from the header, or <c>null</c> if not available.</param>
     /// <param name="progress">An optional progress reporter, or <c>null</c>.</param>
     /// <param name="cancellationToken">A token to cancel verification.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise an error code describing the failure.</returns>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
     public static ChdError CheckFileWithParent(string filename, ParentResolver? parentResolver,
-        out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+        out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         chdVersion = null;
         chdSha1 = null;
@@ -649,12 +719,10 @@ public static partial class Chd
                 {
                     var processed = (long)offset;
                     var currentHunk = processed / chd.HunkBytes;
-                    if (processed % chd.HunkBytes != 0)
-                    {
-                        currentHunk++;
-                    }
+                    if (processed % chd.HunkBytes != 0) currentHunk++;
 
-                    progress.Report(new ChdProgress(currentHunk, chd.HunkCount, processed, (long)chd.TotalBytes, sw!.Elapsed));
+                    progress.Report(new ChdProgress(currentHunk, chd.HunkCount, processed, (long)chd.TotalBytes,
+                        sw!.Elapsed));
                 }
             }
 
@@ -664,18 +732,15 @@ public static partial class Chd
 
             var md5Mismatch = haveMd5 && md5Check?.Hash != null && !Util.ByteArrEquals(expectedMd5, md5Check.Hash);
             var sha1Mismatch = haveSha1 && sha1Check?.Hash != null && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
-            if (md5Mismatch || sha1Mismatch)
-            {
-                return ChdError.Chderrdecompressionerror;
-            }
+            if (md5Mismatch || sha1Mismatch) return ChdError.Chderrdecompressionerror;
 
             return ChdError.Chderrnone;
         }
     }
 
     /// <summary>
-    /// Quickly checks whether a file at the given path has a valid CHD header.
-    /// Only the 16-byte header signature is read; no decompression is performed.
+    ///     Quickly checks whether a file at the given path has a valid CHD header.
+    ///     Only the 16-byte header signature is read; no decompression is performed.
     /// </summary>
     /// <param name="path">Filesystem path to a potential CHD file.</param>
     /// <param name="version">When this method returns, contains the CHD version number (1-5) if valid; otherwise 0.</param>
@@ -698,7 +763,7 @@ public static partial class Chd
         }
     }
 
-    /// <inheritdoc cref="IsChdFile(string,out uint)"/>
+    /// <inheritdoc cref="IsChdFile(string,out uint)" />
     public static bool IsChdFile(string path)
     {
         return IsChdFile(path, out _);
@@ -706,8 +771,11 @@ public static partial class Chd
 
     /// <summary>Quickly classify a CHD file as CD, DVD, HDD, GD-ROM, or unknown without full decompression.</summary>
     /// <param name="filename">Path to the CHD file.</param>
-    /// <param name="classification">When this method returns, contains "cd", "dvd", "hdd", "gd-rom", or <c>null</c> for unknown types.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise an error code.</returns>
+    /// <param name="classification">
+    ///     When this method returns, contains "cd", "dvd", "hdd", "gd-rom", or <c>null</c> for
+    ///     unknown types.
+    /// </param>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
     public static ChdError Classify(string filename, out string? classification)
     {
         classification = null;
@@ -717,41 +785,32 @@ public static partial class Chd
         using (chd)
         {
             if (chd.IsGdRom)
-            {
                 classification = "gd-rom";
-            }
             else if (chd.IsCd)
-            {
                 classification = "cd";
-            }
             else if (chd.IsDvd)
-            {
                 classification = "dvd";
-            }
             else if (chd.IsHdd)
-            {
                 classification = "hdd";
-            }
             else
-            {
                 classification = null;
-            }
         }
 
         return ChdError.Chderrnone;
     }
 
-    private static readonly uint[] HeaderLengths = [0, 76, 80, 120, 108, 124];
-
-    private static readonly byte[] Id = "MComprHD"u8.ToArray();
-
     /// <summary>Reads and validates the CHD file header signature ("MComprHD") and version.</summary>
     /// <param name="file">The stream, positioned at the start of the CHD file (byte 0).</param>
     /// <param name="length">When this method returns, contains the header length in bytes declared by the file; 0 if invalid.</param>
     /// <param name="version">When this method returns, contains the CHD version number (1-5); 0 if invalid.</param>
-    /// <returns><c>true</c> if the signature is valid, the version is recognized (1-5), and the declared
-    /// header length matches that version; otherwise <c>false</c>.</returns>
-    /// <remarks>The stream is advanced past the 16-byte signature. Unknown versions and truncated streams return <c>false</c> rather than throwing.</remarks>
+    /// <returns>
+    ///     <c>true</c> if the signature is valid, the version is recognized (1-5), and the declared
+    ///     header length matches that version; otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    ///     The stream is advanced past the 16-byte signature. Unknown versions and truncated streams return <c>false</c>
+    ///     rather than throwing.
+    /// </remarks>
     public static bool CheckHeader(Stream file, out uint length, out uint version)
     {
         foreach (var t in Id)
@@ -765,7 +824,7 @@ public static partial class Chd
             }
         }
 
-        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
+        using var br = new BinaryReader(file, Encoding.UTF8, true);
         try
         {
             length = br.ReadUInt32Be();
@@ -785,21 +844,26 @@ public static partial class Chd
     }
 
     /// <summary>
-    /// Reads and parses the full CHD header from the file at <paramref name="filename"/> without
-    /// opening it for hunk reads (libchdr <c>chd_read_header</c> parity). The file is opened,
-    /// the header is parsed, and the file is closed again — no file handle is kept alive.
+    ///     Reads and parses the full CHD header from the file at <paramref name="filename" /> without
+    ///     opening it for hunk reads (libchdr <c>chd_read_header</c> parity). The file is opened,
+    ///     the header is parsed, and the file is closed again — no file handle is kept alive.
     /// </summary>
     /// <param name="filename">Path to the CHD file to read.</param>
-    /// <param name="header">When this method returns, contains the parsed header information on
-    /// success, or <c>null</c> on error.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; <see cref="ChdError.Chderrinvalidparameter"/>
-    /// if <paramref name="filename"/> is null/empty; <see cref="ChdError.Chderrfilenotfound"/> if the file
-    /// does not exist; <see cref="ChdError.Chderrcannotopenfile"/> if it cannot be opened;
-    /// <see cref="ChdError.Chderrinvalidfile"/> if it is not a CHD; otherwise a header parse/validation error.</returns>
+    /// <param name="header">
+    ///     When this method returns, contains the parsed header information on
+    ///     success, or <c>null</c> on error.
+    /// </param>
+    /// <returns>
+    ///     <see cref="ChdError.Chderrnone" /> on success; <see cref="ChdError.Chderrinvalidparameter" />
+    ///     if <paramref name="filename" /> is null/empty; <see cref="ChdError.Chderrfilenotfound" /> if the file
+    ///     does not exist; <see cref="ChdError.Chderrcannotopenfile" /> if it cannot be opened;
+    ///     <see cref="ChdError.Chderrinvalidfile" /> if it is not a CHD; otherwise a header parse/validation error.
+    /// </returns>
     /// <remarks>
-    /// Unlike <see cref="ChdFile.Open(string, out ChdFile, System.Threading.CancellationToken)"/>, this performs no hunk-map linking,
-    /// codec setup, or parent resolution, and does not retain a stream. Use it to inspect a CHD
-    /// (version, sizes, codecs, hashes, parent linkage) cheaply.
+    ///     Unlike <see cref="ChdFile.Open(string, out ChdFile, System.Threading.CancellationToken)" />, this performs no
+    ///     hunk-map linking,
+    ///     codec setup, or parent resolution, and does not retain a stream. Use it to inspect a CHD
+    ///     (version, sizes, codecs, hashes, parent linkage) cheaply.
     /// </remarks>
     public static ChdError ReadHeader(string filename, out ChdHeaderInfo? header)
     {
@@ -833,17 +897,21 @@ public static partial class Chd
         return err;
     }
 
-    /// <inheritdoc cref="ReadHeader(string,out ChdHeaderInfo?)"/>
+    /// <inheritdoc cref="ReadHeader(string,out ChdHeaderInfo?)" />
     /// <summary>
-    /// Reads and parses the full CHD header from an existing seekable stream
-    /// (libchdr <c>chd_read_header_file</c> parity). The stream is seeked as needed and left open.
+    ///     Reads and parses the full CHD header from an existing seekable stream
+    ///     (libchdr <c>chd_read_header_file</c> parity). The stream is seeked as needed and left open.
     /// </summary>
     /// <param name="stream">A readable, seekable stream containing a CHD file.</param>
-    /// <param name="header">When this method returns, contains the parsed header information on
-    /// success, or <c>null</c> on error.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; <see cref="ChdError.Chderrinvalidparameter"/>
-    /// if the stream is not readable/seekable; <see cref="ChdError.Chderrinvalidfile"/> if it is not a CHD;
-    /// <see cref="ChdError.Chderrreaderror"/> on IO failure; otherwise a header parse/validation error.</returns>
+    /// <param name="header">
+    ///     When this method returns, contains the parsed header information on
+    ///     success, or <c>null</c> on error.
+    /// </param>
+    /// <returns>
+    ///     <see cref="ChdError.Chderrnone" /> on success; <see cref="ChdError.Chderrinvalidparameter" />
+    ///     if the stream is not readable/seekable; <see cref="ChdError.Chderrinvalidfile" /> if it is not a CHD;
+    ///     <see cref="ChdError.Chderrreaderror" /> on IO failure; otherwise a header parse/validation error.
+    /// </returns>
     public static ChdError ReadHeader(Stream stream, out ChdHeaderInfo? header)
     {
         header = null;
@@ -905,11 +973,15 @@ public static partial class Chd
         return ChdError.Chderrnone;
     }
 
-    /// <inheritdoc cref="ReadHeader(string,out ChdHeaderInfo?)"/>
-    /// <summary>Asynchronously reads and parses the full CHD header from the file at <paramref name="filename"/>
-    /// (see <see cref="ReadHeader(string,out ChdHeaderInfo?)"/>).</summary>
-    /// <returns>A task producing a tuple of the <see cref="ChdError"/> result and the parsed
-    /// <see cref="ChdHeaderInfo"/> (or <c>null</c> on error).</returns>
+    /// <inheritdoc cref="ReadHeader(string,out ChdHeaderInfo?)" />
+    /// <summary>
+    ///     Asynchronously reads and parses the full CHD header from the file at <paramref name="filename" />
+    ///     (see <see cref="ReadHeader(string,out ChdHeaderInfo?)" />).
+    /// </summary>
+    /// <returns>
+    ///     A task producing a tuple of the <see cref="ChdError" /> result and the parsed
+    ///     <see cref="ChdHeaderInfo" /> (or <c>null</c> on error).
+    /// </returns>
     public static Task<(ChdError error, ChdHeaderInfo? header)> ReadHeaderAsync(string filename)
     {
         return Task.Run(() =>
@@ -949,10 +1021,10 @@ public static partial class Chd
     }
 
     /// <summary>
-    /// Guesses the unit size for pre-V5 CHDs from metadata, mirroring <see cref="ChdFile.UnitBytes"/>
-    /// and libchdr's <c>header_guess_unitbytes</c>. For V1/V2 the obsolete header geometry is
-    /// synthesized into a "GDDD" entry; for V3/V4 the metadata chain is read from the stream.
-    /// Falls back to the hunk size on error or when no metadata is present.
+    ///     Guesses the unit size for pre-V5 CHDs from metadata, mirroring <see cref="ChdFile.UnitBytes" />
+    ///     and libchdr's <c>header_guess_unitbytes</c>. For V1/V2 the obsolete header geometry is
+    ///     synthesized into a "GDDD" entry; for V3/V4 the metadata chain is read from the stream.
+    ///     Falls back to the hunk size on error or when no metadata is present.
     /// </summary>
     private static uint GuessUnitBytes(ChdHeader chd, uint version, Stream stream)
     {
@@ -962,7 +1034,7 @@ public static partial class Chd
         {
             var bps = chd.Blocksize / chd.ObsoleteHunksize;
             var gddd = $"CYLS:{chd.ObsoleteCylinders},HEADS:{chd.ObsoleteHeads},SECS:{chd.ObsoleteSectors},BPS:{bps}";
-            metadata.Add(new ChdMetadataEntry("GDDD", System.Text.Encoding.ASCII.GetBytes(gddd)));
+            metadata.Add(new ChdMetadataEntry("GDDD", Encoding.ASCII.GetBytes(gddd)));
         }
         else if (chd.Metaoffset != 0)
         {
@@ -981,23 +1053,36 @@ public static partial class Chd
     }
 
 
-    /// <summary>Reads and decompresses all hunk data from the CHD file in parallel, validating CRC and building SHA1/MD5 checksums.</summary>
+    /// <summary>
+    ///     Reads and decompresses all hunk data from the CHD file in parallel, validating CRC and building SHA1/MD5
+    ///     checksums.
+    /// </summary>
     /// <param name="file">The stream positioned at the start of the compressed data section.</param>
     /// <param name="chd">The parsed CHD header containing compression and hunk information.</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each hunk is hashed (in order). <c>null</c> disables progress reporting.</param>
-    /// <param name="cancellationToken">A token to cancel the pipeline; linked into the internal
-    /// cancellation source so workers stop on caller cancellation. <see cref="OperationCanceledException"/>
-    /// is thrown after the pipeline drains if cancellation was requested.</param>
-    /// <param name="verifyHashes">When <c>true</c> (default), the computed hashes are compared
-    /// against the header and <see cref="ChdError.Chderrdecompressionerror"/> is returned on
-    /// mismatch. When <c>false</c>, the mismatch check is skipped and only data corruption fails
-    /// (used by <see cref="CheckFileAndRepair"/> so a corrupt header hash can be repaired).</param>
-    /// <param name="computedRawSha1">The SHA-1 of the decompressed raw data (20 bytes), or
-    /// <c>null</c> if the pipeline was cancelled or failed before hashing completed.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise an error code.</returns>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each hunk is hashed (in order). <c>null</c> disables progress reporting.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to cancel the pipeline; linked into the internal
+    ///     cancellation source so workers stop on caller cancellation. <see cref="OperationCanceledException" />
+    ///     is thrown after the pipeline drains if cancellation was requested.
+    /// </param>
+    /// <param name="verifyHashes">
+    ///     When <c>true</c> (default), the computed hashes are compared
+    ///     against the header and <see cref="ChdError.Chderrdecompressionerror" /> is returned on
+    ///     mismatch. When <c>false</c>, the mismatch check is skipped and only data corruption fails
+    ///     (used by <see cref="CheckFileAndRepair" /> so a corrupt header hash can be repaired).
+    /// </param>
+    /// <param name="computedRawSha1">
+    ///     The SHA-1 of the decompressed raw data (20 bytes), or
+    ///     <c>null</c> if the pipeline was cancelled or failed before hashing completed.
+    /// </param>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-    private static ChdError DecompressDataParallel(Stream file, ChdHeader chd, out byte[]? computedRawSha1, IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default, bool verifyHashes = true)
+    private static ChdError DecompressDataParallel(Stream file, ChdHeader chd, out byte[]? computedRawSha1,
+        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default,
+        bool verifyHashes = true)
     {
         computedRawSha1 = null;
 
@@ -1032,10 +1117,7 @@ public static partial class Chd
                 try
                 {
                     var blockPercent = chd.Totalblocks / 100;
-                    if (blockPercent == 0)
-                    {
-                        blockPercent = 1;
-                    }
+                    if (blockPercent == 0) blockPercent = 1;
 
                     for (var block = 0; block < chd.Totalblocks; block++)
                     {
@@ -1044,9 +1126,7 @@ public static partial class Chd
 
                         /* progress */
                         if (block % blockPercent == 0)
-                        {
                             LogVerifyingPercent(Log, (long)block * 100 / chd.Totalblocks, null);
-                        }
 
                         var mapEntry = chd.Map[block];
 
@@ -1059,9 +1139,11 @@ public static partial class Chd
                             // the cancelled token additionally unblocks any in-flight Wait/Take.
                             if (mapEntry.Length > chd.MaxCompressedBlockCap)
                             {
-                                Log.LogWarning("Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}", block, mapEntry.Length, chd.MaxCompressedBlockCap);
+                                Log.LogWarning("Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}", block,
+                                    mapEntry.Length, chd.MaxCompressedBlockCap);
                                 ts.Cancel();
-                                Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvaliddata, (long)ChdError.Chderrnone);
+                                Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvaliddata,
+                                    (long)ChdError.Chderrnone);
 
                                 break;
                             }
@@ -1085,7 +1167,8 @@ public static partial class Chd
                 }
                 catch (Exception)
                 {
-                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvalidfile, (long)ChdError.Chderrnone);
+                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvalidfile,
+                        (long)ChdError.Chderrnone);
                     ts.Cancel();
                 }
             }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -1108,7 +1191,8 @@ public static partial class Chd
                             var mapEntry = chd.Map[block];
                             var outBuf = arrPoolOut.Rent();
                             mapEntry.BuffOut = outBuf;
-                            var err = ChdBlockRead.ReadBlock(mapEntry, arrPoolCache, chd.ChdReader, codec, outBuf, (int)chd.Blocksize);
+                            var err = ChdBlockRead.ReadBlock(mapEntry, arrPoolCache, chd.ChdReader, codec, outBuf,
+                                (int)chd.Blocksize);
                             if (err != ChdError.Chderrnone)
                             {
                                 arrPoolOut.Return(outBuf);
@@ -1132,7 +1216,8 @@ public static partial class Chd
                     }
                     catch (Exception)
                     {
-                        Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror, (long)ChdError.Chderrnone);
+                        Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror,
+                            (long)ChdError.Chderrnone);
                         ts.Cancel();
                     }
                 }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -1169,14 +1254,12 @@ public static partial class Chd
 
                             proc++;
                             if (progress != null)
-                            {
                                 progress.Report(new ChdProgress(
                                     proc,
                                     chd.Totalblocks,
                                     (long)(chd.Totalbytes - sizetoGo),
                                     (long)chd.Totalbytes,
                                     sw!.Elapsed));
-                            }
 
                             if (proc == chd.Totalblocks)
                                 return;
@@ -1188,7 +1271,8 @@ public static partial class Chd
                 }
                 catch (Exception)
                 {
-                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror, (long)ChdError.Chderrnone);
+                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror,
+                        (long)ChdError.Chderrnone);
                     ts.Cancel();
                 }
             }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -1225,14 +1309,10 @@ public static partial class Chd
 
             // here it is now using the rawsha1 value from the header to validate the raw binary data.
             if (!Util.IsAllZeroArray(chd.Md5) && computedMd5 is not null && !Util.ByteArrEquals(chd.Md5, computedMd5))
-            {
                 return ChdError.Chderrdecompressionerror;
-            }
 
-            if (!Util.IsAllZeroArray(chd.Rawsha1) && computedRawSha1 is not null && !Util.ByteArrEquals(chd.Rawsha1, computedRawSha1))
-            {
-                return ChdError.Chderrdecompressionerror;
-            }
+            if (!Util.IsAllZeroArray(chd.Rawsha1) && computedRawSha1 is not null &&
+                !Util.ByteArrEquals(chd.Rawsha1, computedRawSha1)) return ChdError.Chderrdecompressionerror;
 
             return ChdError.Chderrnone;
         }

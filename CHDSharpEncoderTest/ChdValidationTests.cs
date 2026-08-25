@@ -18,7 +18,7 @@ public class ChdValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -36,7 +36,7 @@ public class ChdValidationTests : IDisposable
 
         try
         {
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var err = ChdFile.Open(chdPath, out var chdFile);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -66,7 +66,7 @@ public class ChdValidationTests : IDisposable
 
         try
         {
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var err = ChdFile.Open(chdPath, out var chdFile);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -115,9 +115,7 @@ public class ChdValidationTests : IDisposable
             {
                 var hunk = new byte[chdFile.HunkBytes];
                 for (uint h = 0; h < chdFile.HunkCount && h < 10; h++)
-                {
                     Assert.Equal(ChdError.Chderrnone, chdFile.ReadHunk(h, hunk));
-                }
 
                 // Spot check last hunk
                 var last = chdFile.HunkCount - 1;
@@ -144,7 +142,7 @@ public class ChdValidationTests : IDisposable
 
         try
         {
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var err = ChdFile.Open(chdPath, out var chdFile);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -173,7 +171,7 @@ public class ChdValidationTests : IDisposable
 
         try
         {
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var err = ChdFile.Open(chdPath, out var chdFile);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -204,7 +202,7 @@ public class ChdValidationTests : IDisposable
 
         try
         {
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var err = ChdFile.Open(chdPath, out var chdFile);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -237,7 +235,7 @@ public class ChdValidationTests : IDisposable
 
         try
         {
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var err = ChdFile.Open(chdPath, out var chdFile);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -271,15 +269,12 @@ public class ChdValidationTests : IDisposable
 
         try
         {
-            ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(srcPath, chdPath);
 
             var chd = File.ReadAllBytes(chdPath);
 
             // Check that data at offset 124 matches source (for uncompressed hunk)
-            for (var i = 0; i < 20; i++)
-            {
-                Assert.Equal(source[i], chd[124 + i]);
-            }
+            for (var i = 0; i < 20; i++) Assert.Equal(source[i], chd[124 + i]);
         }
         finally
         {

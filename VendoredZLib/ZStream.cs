@@ -9,7 +9,7 @@ using VendoredZLib.Inflate;
 namespace VendoredZLib;
 
 /// <summary>
-/// Represents a stream of data that can be compressed and uncompressed using the zlib data format.
+///     Represents a stream of data that can be compressed and uncompressed using the zlib data format.
 /// </summary>
 #pragma warning disable CA1711
 public ref struct ZStream
@@ -30,7 +30,8 @@ public ref struct ZStream
     internal InflateState InflateState;
     internal DeflateState DeflateState;
 
-    internal int DataType2; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
+    internal int
+        DataType2; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
 
     internal ReadOnlySpan<byte> Input2;
     internal Span<byte> Output2;
@@ -43,9 +44,12 @@ public ref struct ZStream
 #endif
 
     /// <summary>
-    /// Gets or sets the input buffer.
+    ///     Gets or sets the input buffer.
     /// </summary>
-    /// <remarks>Setting the <see cref="Input"/> property resets the <see cref="AvailableIn"/> and <see cref="NextIn"/> properties to their default values.</remarks>
+    /// <remarks>
+    ///     Setting the <see cref="Input" /> property resets the <see cref="AvailableIn" /> and <see cref="NextIn" />
+    ///     properties to their default values.
+    /// </remarks>
     public ReadOnlySpan<byte> Input
     {
         readonly get => Input2;
@@ -61,11 +65,18 @@ public ref struct ZStream
     }
 
     /// <summary>
-    /// Gets or sets number of bytes available in <see cref="Input"/>, starting from an offset specified by the <see cref="NextIn"/> property.
+    ///     Gets or sets number of bytes available in <see cref="Input" />, starting from an offset specified by the
+    ///     <see cref="NextIn" /> property.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="AvailableIn"/> is set to a negative value.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="AvailableIn"/> is set to a value that is greater than the length of the <see cref="Input"/> buffer minus the value of the <see cref="NextIn"/> property.</exception>
-    /// <remarks>If you choose to set this optional property, you should set it after you have set the <see cref="Input"/> property.</remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="AvailableIn" /> is set to a negative value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <see cref="AvailableIn" /> is set to a value that is greater than the
+    ///     length of the <see cref="Input" /> buffer minus the value of the <see cref="NextIn" /> property.
+    /// </exception>
+    /// <remarks>
+    ///     If you choose to set this optional property, you should set it after you have set the <see cref="Input" />
+    ///     property.
+    /// </remarks>
     public int AvailableIn
     {
         readonly get => (int)AvailIn;
@@ -77,12 +88,21 @@ public ref struct ZStream
     }
 
     /// <summary>
-    /// Gets or sets the index of the next input byte in <see cref="Input"/>.
+    ///     Gets or sets the index of the next input byte in <see cref="Input" />.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextIn"/> is set to a negative value.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextIn"/> is set to a value that is equal to or greater than the size of the <see cref="Input"/> buffer.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextIn"/> is set to a value that is not within the range of available bytes in the <see cref="Input"/> buffer.</exception>
-    /// <remarks>If you choose to set this optional property, you should set it after you have set the <see cref="Input"/> property.</remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextIn" /> is set to a negative value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <see cref="NextIn" /> is set to a value that is equal to or greater than
+    ///     the size of the <see cref="Input" /> buffer.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <see cref="NextIn" /> is set to a value that is not within the range of
+    ///     available bytes in the <see cref="Input" /> buffer.
+    /// </exception>
+    /// <remarks>
+    ///     If you choose to set this optional property, you should set it after you have set the <see cref="Input" />
+    ///     property.
+    /// </remarks>
     public int NextIn
     {
         readonly get => (int)NextInput;
@@ -94,14 +114,17 @@ public ref struct ZStream
     }
 
     /// <summary>
-    /// Gets the total number of input bytes read so far.
+    ///     Gets the total number of input bytes read so far.
     /// </summary>
     public readonly uint TotalIn => TotalInput;
 
     /// <summary>
-    /// Gets or sets the output buffer.
+    ///     Gets or sets the output buffer.
     /// </summary>
-    /// <remarks>Setting the <see cref="Output"/> property resets the <see cref="AvailableOut"/> and <see cref="NextOut"/> properties to their default values.</remarks>
+    /// <remarks>
+    ///     Setting the <see cref="Output" /> property resets the <see cref="AvailableOut" /> and <see cref="NextOut" />
+    ///     properties to their default values.
+    /// </remarks>
 #pragma warning disable CA1819
     public Span<byte> Output
 #pragma warning restore CA1819
@@ -119,11 +142,18 @@ public ref struct ZStream
     }
 
     /// <summary>
-    /// Gets or sets the remaining free space in <see cref="Output"/>, starting from an offset specified by the <see cref="NextOut"/> property.
+    ///     Gets or sets the remaining free space in <see cref="Output" />, starting from an offset specified by the
+    ///     <see cref="NextOut" /> property.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="AvailableOut"/> is set to a negative value.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="AvailableOut"/> is set to a value that is greater than the length of the <see cref="Output"/> buffer minus the value of the <see cref="NextOut"/> property.</exception>
-    /// <remarks>If you choose to set this optional property, you should set it after you have set the <see cref="Output"/> property.</remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="AvailableOut" /> is set to a negative value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <see cref="AvailableOut" /> is set to a value that is greater than the
+    ///     length of the <see cref="Output" /> buffer minus the value of the <see cref="NextOut" /> property.
+    /// </exception>
+    /// <remarks>
+    ///     If you choose to set this optional property, you should set it after you have set the <see cref="Output" />
+    ///     property.
+    /// </remarks>
     public int AvailableOut
     {
         readonly get => (int)AvailOut;
@@ -135,12 +165,21 @@ public ref struct ZStream
     }
 
     /// <summary>
-    /// Gets or sets the index of the next output byte in <see cref="Output"/>.
+    ///     Gets or sets the index of the next output byte in <see cref="Output" />.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextOut"/> is set to a negative value.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextOut"/> is set to a value that is equal to or greater than the size of the <see cref="Output"/> buffer.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextOut"/> is set to a value that is not within the range of available bytes in the <see cref="Output"/> buffer.</exception>
-    /// <remarks>If you choose to set this optional property, you should set it after you have set the <see cref="Output"/> property.</remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="NextOut" /> is set to a negative value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <see cref="NextOut" /> is set to a value that is equal to or greater than
+    ///     the size of the <see cref="Output" /> buffer.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <see cref="NextOut" /> is set to a value that is not within the range of
+    ///     available bytes in the <see cref="Output" /> buffer.
+    /// </exception>
+    /// <remarks>
+    ///     If you choose to set this optional property, you should set it after you have set the <see cref="Output" />
+    ///     property.
+    /// </remarks>
     public int NextOut
     {
         readonly get => (int)NextOutput;
@@ -152,26 +191,28 @@ public ref struct ZStream
     }
 
     /// <summary>
-    /// Gets the total number of bytes output so far.
+    ///     Gets the total number of bytes output so far.
     /// </summary>
     public readonly uint TotalOut => total_out;
 
     /// <summary>
-    /// Gets the last error message, or <see langword="null"/> if no error.
+    ///     Gets the last error message, or <see langword="null" /> if no error.
     /// </summary>
     public readonly string Message => Msg;
 
     /// <summary>
-    /// Gets a value that represents a best guess about the data type: binary or text for deflate, or the decoding state for inflate.
+    ///     Gets a value that represents a best guess about the data type: binary or text for deflate, or the decoding state
+    ///     for inflate.
     /// </summary>
     public readonly int DataType => DataType2;
 
     /// <summary>
-    /// Gets the Adler-32 value of the uncompressed data.
+    ///     Gets the Adler-32 value of the uncompressed data.
     /// </summary>
     public uint Adler { get; internal set; }
 
-    private static void ValidateAvailableBytes(int value, uint offset, ReadOnlySpan<byte> buffer, string bufferName, string offsetPropertyName)
+    private static void ValidateAvailableBytes(int value, uint offset, ReadOnlySpan<byte> buffer, string bufferName,
+        string offsetPropertyName)
     {
         if (value < 0 || value > buffer.Length - offset)
             throw new ArgumentOutOfRangeException(nameof(value),

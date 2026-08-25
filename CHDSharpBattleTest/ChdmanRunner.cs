@@ -5,20 +5,20 @@ using System.Text.RegularExpressions;
 namespace CHDSharpBattleTest;
 
 /// <summary>
-/// Thin wrapper around chdman.exe (MAME): runs commands, captures output, and parses
-/// <c>chdman info</c> output into strongly typed fields for cross-checking against
-/// CHDSharpLib's <see cref="CHDSharp.Chd.ReadHeader(string, out CHDSharp.Models.ChdHeaderInfo?)"/>.
+///     Thin wrapper around chdman.exe (MAME): runs commands, captures output, and parses
+///     <c>chdman info</c> output into strongly typed fields for cross-checking against
+///     CHDSharpLib's <see cref="CHDSharp.Chd.ReadHeader(string, out CHDSharp.Models.ChdHeaderInfo?)" />.
 /// </summary>
 internal sealed class ChdmanRunner
 {
-    internal string ExePath { get; }
-    internal int TimeoutMs { get; }
-
     internal ChdmanRunner(string exePath, int timeoutMs = 300_000)
     {
         ExePath = exePath;
         TimeoutMs = timeoutMs;
     }
+
+    internal string ExePath { get; }
+    internal int TimeoutMs { get; }
 
     /// <summary>Runs <c>chdman &lt;command&gt; [args...]</c> and captures stdout/stderr.</summary>
     internal RunResult Run(string command, params string[] args)
@@ -42,7 +42,7 @@ internal sealed class ChdmanRunner
         {
             try
             {
-                p.Kill(entireProcessTree: true);
+                p.Kill(true);
             }
             catch
             {
@@ -59,7 +59,8 @@ internal sealed class ChdmanRunner
     internal string VersionBanner()
     {
         var r = Run("help", "createraw");
-        var first = r.Combined.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
+        var first = r.Combined.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault();
         return string.IsNullOrEmpty(first) ? "(unknown chdman version)" : first;
     }
 
@@ -91,19 +92,19 @@ internal sealed class ChdmanRunner
             return null;
 
         return new ChdmanInfo(
-            Version: version,
-            LogicalBytes: fields.TryGetValue("Logical size", out var ls) ? ParseNum(ls) : 0,
-            HunkBytes: fields.TryGetValue("Hunk Size", out var hs) ? (uint)ParseNum(hs) : 0,
-            TotalHunks: fields.TryGetValue("Total Hunks", out var th) ? (uint)ParseNum(th) : 0,
-            UnitBytes: fields.TryGetValue("Unit Size", out var us) ? (uint)ParseNum(us) : 0,
-            TotalUnits: fields.TryGetValue("Total Units", out var tu) ? (uint)ParseNum(tu) : 0,
-            Compression: fields.GetValueOrDefault("Compression", "none"),
-            ChdSize: fields.TryGetValue("CHD size", out var cs) ? (long)ParseNum(cs) : 0,
-            Sha1: NormalizeHash(fields, "SHA1"),
-            DataSha1: NormalizeHash(fields, "Data SHA1"),
-            Md5: NormalizeHash(fields, "MD5"),
-            ParentSha1: NormalizeHash(fields, "Parent SHA1"),
-            ParentMd5: NormalizeHash(fields, "Parent MD5"));
+            version,
+            fields.TryGetValue("Logical size", out var ls) ? ParseNum(ls) : 0,
+            fields.TryGetValue("Hunk Size", out var hs) ? (uint)ParseNum(hs) : 0,
+            fields.TryGetValue("Total Hunks", out var th) ? (uint)ParseNum(th) : 0,
+            fields.TryGetValue("Unit Size", out var us) ? (uint)ParseNum(us) : 0,
+            fields.TryGetValue("Total Units", out var tu) ? (uint)ParseNum(tu) : 0,
+            fields.GetValueOrDefault("Compression", "none"),
+            fields.TryGetValue("CHD size", out var cs) ? (long)ParseNum(cs) : 0,
+            NormalizeHash(fields, "SHA1"),
+            NormalizeHash(fields, "Data SHA1"),
+            NormalizeHash(fields, "MD5"),
+            NormalizeHash(fields, "Parent SHA1"),
+            NormalizeHash(fields, "Parent MD5"));
 
         static ulong ParseNum(string text)
         {
@@ -118,6 +119,8 @@ internal sealed class ChdmanRunner
             return null;
 
         v = v.Trim();
-        return string.IsNullOrEmpty(v) || v.Equals("(none)", StringComparison.OrdinalIgnoreCase) ? null : v.ToLowerInvariant();
+        return string.IsNullOrEmpty(v) || v.Equals("(none)", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : v.ToLowerInvariant();
     }
 }

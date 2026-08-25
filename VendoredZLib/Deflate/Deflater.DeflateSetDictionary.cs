@@ -22,10 +22,7 @@ internal static partial class Deflater
 
         var dictLength = (uint)dictionary.Length;
         // when using zlib wrappers, compute Adler-32 for provided dictionary
-        if (wrap == 1)
-        {
-            strm.Adler = Adler32.Update(strm.Adler, ref MemoryMarshal.GetReference(dictionary), dictLength);
-        }
+        if (wrap == 1) strm.Adler = Adler32.Update(strm.Adler, ref MemoryMarshal.GetReference(dictionary), dictLength);
 
         s.Wrap = 0; // avoid computing Adler-32 in ReadBuf
 
@@ -53,15 +50,9 @@ internal static partial class Deflater
         ref var inputPtr = ref strm.InputPtr;
         strm.Input = dictionary;
         ref var refs = ref strm.DeflateRefs;
-        if (netUnsafe.IsNullRef(ref refs.Window))
-        {
-            refs.Window = ref MemoryMarshal.GetReference(s.Window);
-        }
+        if (netUnsafe.IsNullRef(ref refs.Window)) refs.Window = ref MemoryMarshal.GetReference(s.Window);
 
-        if (netUnsafe.IsNullRef(ref refs.Prev))
-        {
-            refs.Prev = ref MemoryMarshal.GetReference(s.Prev);
-        }
+        if (netUnsafe.IsNullRef(ref refs.Prev)) refs.Prev = ref MemoryMarshal.GetReference(s.Prev);
 #else
         strm.avail_in = dictLength;
         strm.Input2 = dictionary;

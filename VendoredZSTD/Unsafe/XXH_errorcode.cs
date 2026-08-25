@@ -1,8 +1,7 @@
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+public enum XXH_errorcode
 {
-    public enum XXH_errorcode
-    {
-        XXH_OK = 0,
-        XXH_ERROR,
-    }
+    XXH_OK = 0,
+    XXH_ERROR
 }

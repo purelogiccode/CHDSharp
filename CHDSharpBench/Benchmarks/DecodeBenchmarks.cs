@@ -4,16 +4,16 @@ using CHDSharp;
 namespace CHDSharpBench.Benchmarks;
 
 /// <summary>
-/// Decode throughput per codec: opens the corpus CHD whose header declares the codec as its
-/// sole compressor and reads every hunk (the dominant emulator workload). The corpus ships
-/// single-codec V5 files for zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdfl/cdzs, V4 for avhu.
-/// Bytes processed per operation = <c>HunkBytes × HunkCount</c>; MB/s = value ÷ Mean.
+///     Decode throughput per codec: opens the corpus CHD whose header declares the codec as its
+///     sole compressor and reads every hunk (the dominant emulator workload). The corpus ships
+///     single-codec V5 files for zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdfl/cdzs, V4 for avhu.
+///     Bytes processed per operation = <c>HunkBytes × HunkCount</c>; MB/s = value ÷ Mean.
 /// </summary>
 [Config(typeof(BenchConfig))]
 public class DecodeBenchmarks
 {
-    private string[] _files = [];
     private byte[] _buffer = [];
+    private string[] _files = [];
 
     [GlobalSetup]
     public void Setup()
@@ -89,8 +89,11 @@ public class DecodeBenchmarks
         return bytes;
     }
 
-    /// <summary>Sequential full-image read through <see cref="ChdFile.Read(ulong, byte[], int, int, System.Threading.CancellationToken)"/> (byte-granular,
-    /// the path used by extraction/verification tools).</summary>
+    /// <summary>
+    ///     Sequential full-image read through
+    ///     <see cref="ChdFile.Read(ulong, byte[], int, int, System.Threading.CancellationToken)" /> (byte-granular,
+    ///     the path used by extraction/verification tools).
+    /// </summary>
     private static ChdHeaderInfo ReadHeader(string file)
     {
         Chd.ReadHeader(file, out var header);

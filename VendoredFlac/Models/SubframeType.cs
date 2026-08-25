@@ -1,7 +1,7 @@
 namespace VendoredFlac.Models;
 
 /// <summary>
-/// FLAC subframe types.
+///     FLAC subframe types.
 /// </summary>
 internal enum SubframeType
 {

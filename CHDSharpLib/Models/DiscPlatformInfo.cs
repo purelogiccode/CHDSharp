@@ -1,7 +1,9 @@
 namespace CHDSharp.Models;
 
-/// <summary>Disc game platforms detected by <see cref="CHDSharp.DiscDetector"/> (CHDlite
-/// <c>GamePlatform</c> parity, <c>detect_game_platform.cpp</c>).</summary>
+/// <summary>
+///     Disc game platforms detected by <see cref="CHDSharp.DiscDetector" /> (CHDlite
+///     <c>GamePlatform</c> parity, <c>detect_game_platform.cpp</c>).
+/// </summary>
 public enum DiscPlatform
 {
     /// <summary>Not detected / not a game disc.</summary>
@@ -41,18 +43,26 @@ public enum DiscPlatform
     Dvd = 11
 }
 
-/// <summary>The result of <see cref="CHDSharp.DiscDetector"/>: detected platform plus optional
-/// title and manufacturer (product) ID extracted from the disc's filesystem.</summary>
-/// <param name="Platform">The detected platform (see <see cref="DiscPlatform"/>).</param>
+/// <summary>
+///     The result of <see cref="CHDSharp.DiscDetector" />: detected platform plus optional
+///     title and manufacturer (product) ID extracted from the disc's filesystem.
+/// </summary>
+/// <param name="Platform">The detected platform (see <see cref="DiscPlatform" />).</param>
 /// <param name="Title">Extracted game title, or <c>null</c> when unavailable.</param>
-/// <param name="ManufacturerId">Extracted product/serial number (e.g. "SCPS_100.50",
-/// "T-9527G", "ULJM05325"), or <c>null</c> when unavailable.</param>
-/// <param name="Source">Human-readable description of how the platform was detected
-/// (sector 0 magic, ISO-9660 path, IPL header, ...).</param>
+/// <param name="ManufacturerId">
+///     Extracted product/serial number (e.g. "SCPS_100.50",
+///     "T-9527G", "ULJM05325"), or <c>null</c> when unavailable.
+/// </param>
+/// <param name="Source">
+///     Human-readable description of how the platform was detected
+///     (sector 0 magic, ISO-9660 path, IPL header, ...).
+/// </param>
 public sealed record DiscPlatformInfo(DiscPlatform Platform, string? Title, string? ManufacturerId, string Source)
 {
-    /// <summary>The platform as a lowercase string ("cd", "dvd", "ps1", "dreamcast", ...),
-    /// or "unknown".</summary>
+    /// <summary>
+    ///     The platform as a lowercase string ("cd", "dvd", "ps1", "dreamcast", ...),
+    ///     or "unknown".
+    /// </summary>
     public string Name => Platform switch
     {
         DiscPlatform.GenericCd => "cd",
@@ -69,19 +79,13 @@ public sealed record DiscPlatformInfo(DiscPlatform Platform, string? Title, stri
         _ => "unknown"
     };
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override string ToString()
     {
         var result = Name;
-        if (Title is { Length: > 0 })
-        {
-            result += $" \"{Title}\"";
-        }
+        if (Title is { Length: > 0 }) result += $" \"{Title}\"";
 
-        if (ManufacturerId is { Length: > 0 })
-        {
-            result += $" [{ManufacturerId}]";
-        }
+        if (ManufacturerId is { Length: > 0 }) result += $" [{ManufacturerId}]";
 
         return result;
     }

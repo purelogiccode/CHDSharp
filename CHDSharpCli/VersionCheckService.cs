@@ -6,8 +6,8 @@ using Serilog;
 namespace CHDSharp;
 
 /// <summary>
-/// Checks GitHub for a newer release and prints a notification to the console if one is available.
-/// Fire-and-forget: never blocks startup or throws.
+///     Checks GitHub for a newer release and prints a notification to the console if one is available.
+///     Fire-and-forget: never blocks startup or throws.
 /// </summary>
 internal static class VersionCheckService
 {
@@ -17,8 +17,8 @@ internal static class VersionCheckService
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
 
     /// <summary>
-    /// Checks for a newer version on GitHub and prints a notification if available.
-    /// Intended to be called once at startup, fire-and-forget.
+    ///     Checks for a newer version on GitHub and prints a notification if available.
+    ///     Intended to be called once at startup, fire-and-forget.
     /// </summary>
     public static void CheckAndNotify()
     {
@@ -57,7 +57,8 @@ internal static class VersionCheckService
                 ?.BrowserDownloadUrl;
 
             Log.Logger.Information("");
-            Log.Logger.Information("  *** A new version of CHDSharp is available: v{Major}.{Minor}.{Build} ***", latestVersion.Major, latestVersion.Minor, latestVersion.Build);
+            Log.Logger.Information("  *** A new version of CHDSharp is available: v{Major}.{Minor}.{Build} ***",
+                latestVersion.Major, latestVersion.Minor, latestVersion.Build);
             if (downloadUrl != null)
                 Log.Logger.Information("  *** Download: {Url} ***", downloadUrl);
             else

@@ -3,109 +3,21 @@ using VendoredFlac.FlacDeps;
 namespace VendoredFlac;
 
 /// <summary>
-/// Low-level bit-level reader for FLAC bitstreams. Operates on raw byte pointers.
-/// This class is unsafe and requires pointer manipulation.
+///     Low-level bit-level reader for FLAC bitstreams. Operates on raw byte pointers.
+///     This class is unsafe and requires pointer manipulation.
 /// </summary>
 internal unsafe class BitReader
 {
-    #region Static Methods
-
-    /// <summary>
-    /// Computes the base-2 logarithm of a signed integer by casting to unsigned.
-    /// </summary>
-    /// <param name="v">The input value.</param>
-    /// <returns>The floor of log2 of the value.</returns>
-    internal static int Log2I(int v)
-    {
-        return Log2I((uint)v);
-    }
-
-    /// <summary>
-    /// De Bruijn sequence lookup table used for fast integer log2 computation.
-    /// </summary>
-    private static readonly byte[] MultiplyDeBruijnBitPosition =
-    [
-        0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
-        8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
-    ];
-
-    /// <summary>
-    /// Computes the base-2 logarithm of a 64-bit unsigned integer.
-    /// </summary>
-    /// <param name="v">The input value.</param>
-    /// <returns>The floor of log2 of the value.</returns>
-    internal static int Log2I(ulong v)
-    {
-        v |= v >> 1; // first round down to one less than a power of 2
-        v |= v >> 2;
-        v |= v >> 4;
-        v |= v >> 8;
-        v |= v >> 16;
-        if (v >> 32 == 0)
-            return MultiplyDeBruijnBitPosition[((uint)v * 0x07C4ACDDU) >> 27];
-
-        return 32 + MultiplyDeBruijnBitPosition[((uint)(v >> 32) * 0x07C4ACDDU) >> 27];
-    }
-
-    /// <summary>
-    /// Computes the base-2 logarithm of a 32-bit unsigned integer using the De Bruijn sequence.
-    /// </summary>
-    /// <param name="v">The input value.</param>
-    /// <returns>The floor of log2 of the value.</returns>
-    private static int Log2I(uint v)
-    {
-        v |= v >> 1; // first round down to one less than a power of 2
-        v |= v >> 2;
-        v |= v >> 4;
-        v |= v >> 8;
-        v |= v >> 16;
-        return MultiplyDeBruijnBitPosition[(v * 0x07C4ACDDU) >> 27];
-    }
-
-    /// <summary>
-    /// Lookup table mapping a byte value to the number of leading zero bits, used for unary decoding.
-    /// </summary>
-    private static readonly byte[] ByteToUnaryTable =
-    [
-        8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    ];
-
-    #endregion
+    private byte* _bendM;
 
     private byte* _bptrM;
-    private byte* _bendM;
     private int _bufferLenM;
-    private int _haveBitsM;
     private ulong _cacheM;
     private ushort _crc16M;
+    private int _haveBitsM;
 
     /// <summary>
-    /// Gets the current read position in bytes from the start of the buffer.
-    /// </summary>
-    internal int Position => (int)(_bptrM - Buffer - (_haveBitsM >> 3));
-
-    /// <summary>
-    /// Gets a pointer to the underlying byte buffer.
-    /// </summary>
-    internal byte* Buffer { get; private set; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BitReader"/> class with default values.
+    ///     Initializes a new instance of the <see cref="BitReader" /> class with default values.
     /// </summary>
     internal BitReader()
     {
@@ -119,7 +31,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BitReader"/> class and resets it to read from the specified buffer.
+    ///     Initializes a new instance of the <see cref="BitReader" /> class and resets it to read from the specified buffer.
     /// </summary>
     /// <param name="buffer">Pointer to the byte buffer.</param>
     /// <param name="pos">Starting position in the buffer.</param>
@@ -130,11 +42,21 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Resets the bit reader to read from a new buffer location.
+    ///     Gets the current read position in bytes from the start of the buffer.
+    /// </summary>
+    internal int Position => (int)(_bptrM - Buffer - (_haveBitsM >> 3));
+
+    /// <summary>
+    ///     Gets a pointer to the underlying byte buffer.
+    /// </summary>
+    internal byte* Buffer { get; private set; }
+
+    /// <summary>
+    ///     Resets the bit reader to read from a new buffer location.
     /// </summary>
     /// <param name="buffer">Pointer to the byte buffer.</param>
     /// <param name="pos">Starting position in the buffer.</param>
-    /// <param name="len">Number of bytes available starting at <paramref name="pos"/>.</param>
+    /// <param name="len">Number of bytes available starting at <paramref name="pos" />.</param>
     internal void Reset(byte* buffer, int pos, int len)
     {
         Buffer = buffer;
@@ -148,9 +70,9 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Fills the internal cache with up to 56 bits of data from the buffer, updating CRC16.
-    /// Bytes past the end of the buffer are supplied as zero (safe lookahead padding);
-    /// corrupt/truncated streams are then rejected by the frame CRC check.
+    ///     Fills the internal cache with up to 56 bits of data from the buffer, updating CRC16.
+    ///     Bytes past the end of the buffer are supplied as zero (safe lookahead padding);
+    ///     corrupt/truncated streams are then rejected by the frame CRC check.
     /// </summary>
     private void Fill()
     {
@@ -165,7 +87,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Skips the specified number of bits by advancing the bit position.
+    ///     Skips the specified number of bits by advancing the bit position.
     /// </summary>
     /// <param name="bits">Number of bits to skip.</param>
     internal void Skipbits(int bits)
@@ -183,7 +105,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a 64-bit signed integer (big-endian).
+    ///     Reads a 64-bit signed integer (big-endian).
     /// </summary>
     /// <returns>The decoded value.</returns>
     internal long ReadLong()
@@ -192,7 +114,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a 64-bit unsigned integer (big-endian).
+    ///     Reads a 64-bit unsigned integer (big-endian).
     /// </summary>
     /// <returns>The decoded value.</returns>
     internal ulong ReadUlong()
@@ -201,7 +123,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a 32-bit signed integer (big-endian).
+    ///     Reads a 32-bit signed integer (big-endian).
     /// </summary>
     /// <returns>The decoded value.</returns>
     internal int ReadInt()
@@ -210,7 +132,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a 32-bit unsigned integer (big-endian).
+    ///     Reads a 32-bit unsigned integer (big-endian).
     /// </summary>
     /// <returns>The decoded value.</returns>
     internal uint ReadUint()
@@ -219,7 +141,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a 16-bit signed integer (big-endian).
+    ///     Reads a 16-bit signed integer (big-endian).
     /// </summary>
     /// <returns>The decoded value.</returns>
     internal short ReadShort()
@@ -228,7 +150,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a 16-bit unsigned integer (big-endian).
+    ///     Reads a 16-bit unsigned integer (big-endian).
     /// </summary>
     /// <returns>The decoded value.</returns>
     internal ushort ReadUshort()
@@ -237,7 +159,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads 1 to 32 bits from the stream in big-endian format.
+    ///     Reads 1 to 32 bits from the stream in big-endian format.
     /// </summary>
     /// <param name="bits">Number of bits to read (1-32).</param>
     /// <returns>The value as a 32-bit unsigned integer.</returns>
@@ -250,7 +172,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads 1 to 64 bits from the stream in big-endian format.
+    ///     Reads 1 to 64 bits from the stream in big-endian format.
     /// </summary>
     /// <param name="bits">Number of bits to read (1-64).</param>
     /// <returns>The value as a 64-bit unsigned integer.</returns>
@@ -263,7 +185,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a single bit from the stream.
+    ///     Reads a single bit from the stream.
     /// </summary>
     /// <returns>The bit value (0 or 1).</returns>
     internal uint Readbit()
@@ -272,7 +194,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a unary-coded value from the stream (count of leading zero bits followed by a one).
+    ///     Reads a unary-coded value from the stream (count of leading zero bits followed by a one).
     /// </summary>
     /// <returns>The decoded unary value.</returns>
     internal uint ReadUnary()
@@ -304,7 +226,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Flushes any remaining partial byte from the bit cache, aligning to a byte boundary.
+    ///     Flushes any remaining partial byte from the bit cache, aligning to a byte boundary.
     /// </summary>
     internal void Flush()
     {
@@ -316,7 +238,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Gets the CRC16 checksum of the data read so far.
+    ///     Gets the CRC16 checksum of the data read so far.
     /// </summary>
     /// <returns>The CRC16 checksum.</returns>
     internal ushort GetCrc16()
@@ -327,15 +249,13 @@ internal unsafe class BitReader
         ushort crc = 0;
         var n = _haveBitsM >> 3;
         for (var i = 0; i < n; i++)
-        {
             crc = (ushort)((crc << 8) ^ Crc16.Table[(crc >> 8) ^ (byte)(_cacheM >> (56 - (i << 3)))]);
-        }
 
         return Crc16.Subtract(_crc16M, crc, n);
     }
 
     /// <summary>
-    /// Reads a signed value from the specified number of bits, performing sign extension.
+    ///     Reads a signed value from the specified number of bits, performing sign extension.
     /// </summary>
     /// <param name="bits">Number of bits to read.</param>
     /// <returns>The sign-extended signed integer value.</returns>
@@ -348,7 +268,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a UTF-8 encoded variable-length integer from the stream.
+    ///     Reads a UTF-8 encoded variable-length integer from the stream.
     /// </summary>
     /// <returns>The decoded unsigned integer.</returns>
     internal uint ReadUtf8()
@@ -410,7 +330,7 @@ internal unsafe class BitReader
     }
 
     /// <summary>
-    /// Reads a block of Rice-coded signed residuals.
+    ///     Reads a block of Rice-coded signed residuals.
     /// </summary>
     /// <param name="n">Number of values to read.</param>
     /// <param name="k">Rice parameter.</param>
@@ -470,4 +390,83 @@ internal unsafe class BitReader
             _crc16M = crc;
         }
     }
+
+    #region Static Methods
+
+    /// <summary>
+    ///     Computes the base-2 logarithm of a signed integer by casting to unsigned.
+    /// </summary>
+    /// <param name="v">The input value.</param>
+    /// <returns>The floor of log2 of the value.</returns>
+    internal static int Log2I(int v)
+    {
+        return Log2I((uint)v);
+    }
+
+    /// <summary>
+    ///     De Bruijn sequence lookup table used for fast integer log2 computation.
+    /// </summary>
+    private static readonly byte[] MultiplyDeBruijnBitPosition =
+    [
+        0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+        8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+    ];
+
+    /// <summary>
+    ///     Computes the base-2 logarithm of a 64-bit unsigned integer.
+    /// </summary>
+    /// <param name="v">The input value.</param>
+    /// <returns>The floor of log2 of the value.</returns>
+    internal static int Log2I(ulong v)
+    {
+        v |= v >> 1; // first round down to one less than a power of 2
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        if (v >> 32 == 0)
+            return MultiplyDeBruijnBitPosition[((uint)v * 0x07C4ACDDU) >> 27];
+
+        return 32 + MultiplyDeBruijnBitPosition[((uint)(v >> 32) * 0x07C4ACDDU) >> 27];
+    }
+
+    /// <summary>
+    ///     Computes the base-2 logarithm of a 32-bit unsigned integer using the De Bruijn sequence.
+    /// </summary>
+    /// <param name="v">The input value.</param>
+    /// <returns>The floor of log2 of the value.</returns>
+    private static int Log2I(uint v)
+    {
+        v |= v >> 1; // first round down to one less than a power of 2
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        return MultiplyDeBruijnBitPosition[(v * 0x07C4ACDDU) >> 27];
+    }
+
+    /// <summary>
+    ///     Lookup table mapping a byte value to the number of leading zero bits, used for unary decoding.
+    /// </summary>
+    private static readonly byte[] ByteToUnaryTable =
+    [
+        8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
+        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ];
+
+    #endregion
 }

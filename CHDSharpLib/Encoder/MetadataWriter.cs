@@ -1,12 +1,13 @@
+using System.Text;
 using CHDSharp.Encoder.Models;
 
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Writes CHD metadata entries (linked list at the end of the file, before the map).
-/// The on-disk format mirrors MAME's <c>chd_file::write_metadata</c> (src/lib/util/chd.cpp):
-/// each entry is a 16-byte header (tag, flags, 24-bit length, 64-bit next) followed by the
-/// payload. The first entry's file offset is stored in the CHD header's <c>metaoffset</c> field.
+///     Writes CHD metadata entries (linked list at the end of the file, before the map).
+///     The on-disk format mirrors MAME's <c>chd_file::write_metadata</c> (src/lib/util/chd.cpp):
+///     each entry is a 16-byte header (tag, flags, 24-bit length, 64-bit next) followed by the
+///     payload. The first entry's file offset is stored in the CHD header's <c>metaoffset</c> field.
 /// </summary>
 public static class MetadataWriter
 {
@@ -52,10 +53,12 @@ public static class MetadataWriter
     /// <summary>CHD_MDFLAGS_CHECKSUM: the entry is covered by the combined SHA-1 verification.</summary>
     public const byte ChdMdflagsChecksum = 0x01;
 
-    /// <summary>Converts a four-character metadata tag string ("CHT2", "GDDD", ...) to its
-    /// big-endian <see cref="MetadataEntry.Tag"/> value.</summary>
+    /// <summary>
+    ///     Converts a four-character metadata tag string ("CHT2", "GDDD", ...) to its
+    ///     big-endian <see cref="MetadataEntry.Tag" /> value.
+    /// </summary>
     /// <param name="tag">The four-character tag.</param>
-    /// <exception cref="ArgumentException"><paramref name="tag"/> is not exactly 4 characters.</exception>
+    /// <exception cref="ArgumentException"><paramref name="tag" /> is not exactly 4 characters.</exception>
     public static uint TagFromString(string tag)
     {
         ArgumentNullException.ThrowIfNull(tag);
@@ -65,25 +68,29 @@ public static class MetadataWriter
         return ((uint)tag[0] << 24) | ((uint)tag[1] << 16) | ((uint)tag[2] << 8) | tag[3];
     }
 
-    /// <summary>Returns <c>true</c> if the tag is a legacy CD/GD-ROM metadata tag
-    /// (<c>CHCD</c>, <c>CHTR</c>, or <c>CHGT</c>) that should be upgraded during copy.</summary>
+    /// <summary>
+    ///     Returns <c>true</c> if the tag is a legacy CD/GD-ROM metadata tag
+    ///     (<c>CHCD</c>, <c>CHTR</c>, or <c>CHGT</c>) that should be upgraded during copy.
+    /// </summary>
     public static bool IsLegacyCdMetadata(uint tag)
     {
         return tag is CdRomOldMetadataTag or CdRomTrackMetadataTag or GdRomOldMetadataTag;
     }
 
-    /// <summary>Returns <c>true</c> if the tag is a legacy GD-ROM metadata tag (<c>CHGT</c>)
-    /// whose CDDA audio is stored in little-endian byte order.</summary>
+    /// <summary>
+    ///     Returns <c>true</c> if the tag is a legacy GD-ROM metadata tag (<c>CHGT</c>)
+    ///     whose CDDA audio is stored in little-endian byte order.
+    /// </summary>
     public static bool IsLegacyGdRomMetadata(uint tag)
     {
         return tag == GdRomOldMetadataTag;
     }
 
     /// <summary>
-    /// Builds the 'GDDD' hard-disk geometry metadata entry, matching MAME's
-    /// <c>HARD_DISK_METADATA_FORMAT</c> (<c>"%u/%u/%u/%u"</c>, written by
-    /// <c>chdman createhd</c>). Uses fixed 16 heads and 63 sectors/track to compute
-    /// the cylinder count from <paramref name="totalBytes"/>, exactly like MAME.
+    ///     Builds the 'GDDD' hard-disk geometry metadata entry, matching MAME's
+    ///     <c>HARD_DISK_METADATA_FORMAT</c> (<c>"%u/%u/%u/%u"</c>, written by
+    ///     <c>chdman createhd</c>). Uses fixed 16 heads and 63 sectors/track to compute
+    ///     the cylinder count from <paramref name="totalBytes" />, exactly like MAME.
     /// </summary>
     /// <param name="totalBytes">The logical image size in bytes.</param>
     /// <param name="bytesPerSector">The sector size in bytes (BPS; normally the unit size).</param>
@@ -94,7 +101,6 @@ public static class MetadataWriter
         // largest number of sectors per track (63 down to 2) and largest heads (16 down to 2).
         uint cylinders = 0, heads = 0, sectorsPerTrack = 0;
         if (bytesPerSector > 0)
-        {
             for (var totalSectors = totalBytes / bytesPerSector;; totalSectors++)
             {
                 var found = false;
@@ -124,15 +130,14 @@ public static class MetadataWriter
                 if (found)
                     break;
             }
-        }
 
         return BuildHardDiskMetadata(cylinders, heads, sectorsPerTrack, bytesPerSector);
     }
 
     /// <summary>
-    /// Builds the 'GDDD' hard-disk geometry metadata entry with explicit CHS values.
-    /// Used when a template (<see cref="HardDiskTemplates"/>) supplies the geometry instead
-    /// of guessing from the file size. Matches MAME's <c>HARD_DISK_METADATA_FORMAT</c>.
+    ///     Builds the 'GDDD' hard-disk geometry metadata entry with explicit CHS values.
+    ///     Used when a template (<see cref="HardDiskTemplates" />) supplies the geometry instead
+    ///     of guessing from the file size. Matches MAME's <c>HARD_DISK_METADATA_FORMAT</c>.
     /// </summary>
     /// <param name="cylinders">Number of cylinders.</param>
     /// <param name="heads">Number of heads.</param>
@@ -145,23 +150,24 @@ public static class MetadataWriter
         {
             Tag = HardDiskMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = System.Text.Encoding.ASCII.GetBytes(text + '\0')
+            Payload = Encoding.ASCII.GetBytes(text + '\0')
         };
     }
 
     /// <summary>
-    /// Builds the 'IDNT' metadata entry for an ATA IDENTIFY DEVICE response (512 bytes).
-    /// Used by OG Xbox and other platforms that need to preserve the original drive's
-    /// model, serial, CHS geometry, and firmware revision.
+    ///     Builds the 'IDNT' metadata entry for an ATA IDENTIFY DEVICE response (512 bytes).
+    ///     Used by OG Xbox and other platforms that need to preserve the original drive's
+    ///     model, serial, CHS geometry, and firmware revision.
     /// </summary>
     /// <param name="identData">The 512-byte ATA IDENTIFY DEVICE response data.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="identData"/> is null.</exception>
-    /// <exception cref="ArgumentException"><paramref name="identData"/> is not exactly 512 bytes.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="identData" /> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="identData" /> is not exactly 512 bytes.</exception>
     public static MetadataEntry BuildIdentMetadata(byte[] identData)
     {
         ArgumentNullException.ThrowIfNull(identData);
         if (identData.Length != 512)
-            throw new ArgumentException($"ATA IDENTIFY DEVICE data must be exactly 512 bytes, got {identData.Length}", nameof(identData));
+            throw new ArgumentException($"ATA IDENTIFY DEVICE data must be exactly 512 bytes, got {identData.Length}",
+                nameof(identData));
 
         return new MetadataEntry
         {
@@ -172,8 +178,8 @@ public static class MetadataWriter
     }
 
     /// <summary>
-    /// Builds the 'DVD ' metadata entry for a DVD-ROM image, matching chdman <c>createdvd</c>
-    /// (<c>write_metadata(DVD_METADATA_TAG, 0, "")</c>): the payload is a single null byte.
+    ///     Builds the 'DVD ' metadata entry for a DVD-ROM image, matching chdman <c>createdvd</c>
+    ///     (<c>write_metadata(DVD_METADATA_TAG, 0, "")</c>): the payload is a single null byte.
     /// </summary>
     public static MetadataEntry BuildDvdMetadata()
     {
@@ -186,10 +192,10 @@ public static class MetadataWriter
     }
 
     /// <summary>
-    /// Builds the 'AVAV' A/V metadata entry for a laserdisc image, matching chdman
-    /// <c>createld</c> and MAME's <c>AV_METADATA_FORMAT</c>:
-    /// <c>FPS:%d.%06d WIDTH:%d HEIGHT:%d INTERLACED:%d CHANNELS:%d SAMPLERATE:%d</c>
-    /// (null-terminated, checksummed).
+    ///     Builds the 'AVAV' A/V metadata entry for a laserdisc image, matching chdman
+    ///     <c>createld</c> and MAME's <c>AV_METADATA_FORMAT</c>:
+    ///     <c>FPS:%d.%06d WIDTH:%d HEIGHT:%d INTERLACED:%d CHANNELS:%d SAMPLERATE:%d</c>
+    ///     (null-terminated, checksummed).
     /// </summary>
     /// <param name="fpsTimes1Million">Frame rate in frames per 1,000,000 seconds.</param>
     /// <param name="width">Video width in pixels.</param>
@@ -207,14 +213,14 @@ public static class MetadataWriter
         {
             Tag = AvMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = System.Text.Encoding.ASCII.GetBytes(text + '\0')
+            Payload = Encoding.ASCII.GetBytes(text + '\0')
         };
     }
 
     /// <summary>
-    /// Builds the 'AVLD' laserdisc VBI metadata entry from packed per-frame records
-    /// (16 bytes each, see <see cref="VbiParse.MetadataPack"/>). Matches chdman
-    /// <c>createld</c>'s post-compression write with flags 0 (not covered by the SHA-1).
+    ///     Builds the 'AVLD' laserdisc VBI metadata entry from packed per-frame records
+    ///     (16 bytes each, see <see cref="VbiParse.MetadataPack" />). Matches chdman
+    ///     <c>createld</c>'s post-compression write with flags 0 (not covered by the SHA-1).
     /// </summary>
     /// <param name="packedFrames">The concatenated per-frame VBI records.</param>
     public static MetadataEntry BuildAvLdMetadata(byte[] packedFrames)
@@ -232,9 +238,9 @@ public static class MetadataWriter
     }
 
     /// <summary>
-    /// Appends one CHT2 metadata entry per track at the current stream position, linking them
-    /// into a forward linked list (each entry's <c>next</c> points at the following entry; the
-    /// last entry has <c>next = 0</c>).
+    ///     Appends one CHT2 metadata entry per track at the current stream position, linking them
+    ///     into a forward linked list (each entry's <c>next</c> points at the following entry; the
+    ///     last entry has <c>next = 0</c>).
     /// </summary>
     /// <param name="stream">The output stream; entries are appended at the current position.</param>
     /// <param name="toc">The CD table of contents to serialize.</param>
@@ -246,9 +252,9 @@ public static class MetadataWriter
     }
 
     /// <summary>
-    /// Appends the given metadata entries at the current stream position, linking them into a
-    /// forward linked list (each entry's <c>next</c> points at the following entry; the last
-    /// entry has <c>next = 0</c>).
+    ///     Appends the given metadata entries at the current stream position, linking them into a
+    ///     forward linked list (each entry's <c>next</c> points at the following entry; the last
+    ///     entry has <c>next = 0</c>).
     /// </summary>
     /// <param name="stream">The output stream; entries are appended at the current position.</param>
     /// <param name="entries">The metadata entries to write.</param>
@@ -286,9 +292,9 @@ public static class MetadataWriter
     }
 
     /// <summary>
-    /// Builds the metadata entries (tag, checksum flag, null-terminated payload) for a
-    /// CD or GD-ROM table of contents, in track order: 'CHT2' entries for CDs, 'CHGD'
-    /// entries (with the PAD field) for GD-ROMs.
+    ///     Builds the metadata entries (tag, checksum flag, null-terminated payload) for a
+    ///     CD or GD-ROM table of contents, in track order: 'CHT2' entries for CDs, 'CHGD'
+    ///     entries (with the PAD field) for GD-ROMs.
     /// </summary>
     public static List<MetadataEntry> BuildCdMetadataEntries(CdToc toc)
     {
@@ -305,7 +311,7 @@ public static class MetadataWriter
             {
                 Tag = tag,
                 Flags = ChdMdflagsChecksum,
-                Payload = System.Text.Encoding.ASCII.GetBytes(text + '\0')
+                Payload = Encoding.ASCII.GetBytes(text + '\0')
             });
         }
 
@@ -313,22 +319,23 @@ public static class MetadataWriter
     }
 
     /// <summary>
-    /// Builds the GD-ROM metadata string for a track, matching MAME's
-    /// <c>GDROM_TRACK_METADATA_FORMAT</c>:
-    /// <c>TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PAD:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d</c>.
+    ///     Builds the GD-ROM metadata string for a track, matching MAME's
+    ///     <c>GDROM_TRACK_METADATA_FORMAT</c>:
+    ///     <c>TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PAD:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d</c>.
     /// </summary>
     public static string BuildGdRomString(CdTrack track)
     {
-        return $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} " +
-               $"FRAMES:{track.Frames} PAD:{track.PadFrames} PREGAP:{track.Pregap} PGTYPE:{GetTypeString(track.PgType)} " +
-               $"PGSUB:{GetSubtypeString(track.PgSub)} POSTGAP:{track.Postgap}";
+        return
+            $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} " +
+            $"FRAMES:{track.Frames} PAD:{track.PadFrames} PREGAP:{track.Pregap} PGTYPE:{GetTypeString(track.PgType)} " +
+            $"PGSUB:{GetSubtypeString(track.PgSub)} POSTGAP:{track.Postgap}";
     }
 
     /// <summary>
-    /// Computes the combined SHA-1 of a compressed CHD: <c>SHA1(rawsha1 ‖ sorted hashes)</c>
-    /// where each hash is the big-endian 4-byte metadata tag followed by the SHA-1 of the
-    /// entry payload (checksummed entries only, sorted byte-wise). Matches MAME's
-    /// <c>compute_overall_sha1</c> (src/lib/util/chd.cpp) and the CHDSharpLib reader.
+    ///     Computes the combined SHA-1 of a compressed CHD: <c>SHA1(rawsha1 ‖ sorted hashes)</c>
+    ///     where each hash is the big-endian 4-byte metadata tag followed by the SHA-1 of the
+    ///     entry payload (checksummed entries only, sorted byte-wise). Matches MAME's
+    ///     <c>compute_overall_sha1</c> (src/lib/util/chd.cpp) and the CHDSharpLib reader.
     /// </summary>
     public static byte[] ComputeCombinedSha1(byte[] rawSha1, IEnumerable<MetadataEntry> entries)
     {
@@ -373,11 +380,11 @@ public static class MetadataWriter
     }
 
     /// <summary>
-    /// Builds the CHT2 metadata string for a track, matching MAME's
-    /// <c>CDROM_TRACK_METADATA2_FORMAT</c>:
-    /// <c>TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d</c>.
-    /// When the track has pregap data (<c>PgDataSize &gt; 0</c>), the pregap type is prefixed
-    /// with 'V' to indicate the pregap sectors are physically present.
+    ///     Builds the CHT2 metadata string for a track, matching MAME's
+    ///     <c>CDROM_TRACK_METADATA2_FORMAT</c>:
+    ///     <c>TRACK:%d TYPE:%s SUBTYPE:%s FRAMES:%d PREGAP:%d PGTYPE:%s PGSUB:%s POSTGAP:%d</c>.
+    ///     When the track has pregap data (<c>PgDataSize &gt; 0</c>), the pregap type is prefixed
+    ///     with 'V' to indicate the pregap sectors are physically present.
     /// </summary>
     public static string BuildChd2String(CdTrack track)
     {
@@ -385,9 +392,10 @@ public static class MetadataWriter
             ? "V" + GetTypeString(track.PgType)
             : GetTypeString(track.PgType);
 
-        return $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} " +
-               $"FRAMES:{track.Frames} PREGAP:{track.Pregap} PGTYPE:{pgType} PGSUB:{GetSubtypeString(track.PgSub)} " +
-               $"POSTGAP:{track.Postgap}";
+        return
+            $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} " +
+            $"FRAMES:{track.Frames} PREGAP:{track.Pregap} PGTYPE:{pgType} PGSUB:{GetSubtypeString(track.PgSub)} " +
+            $"POSTGAP:{track.Postgap}";
     }
 
     /// <summary>Returns the metadata string for a track type (MAME's <c>get_type_string</c>).</summary>

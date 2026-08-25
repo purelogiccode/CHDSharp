@@ -1,6 +1,6 @@
 namespace CHDSharp.Models;
 
-/// <summary>Hash algorithms that <see cref="Chd.ComputeHashes"/> can compute over CHD content.</summary>
+/// <summary>Hash algorithms that <see cref="Chd.ComputeHashes" /> can compute over CHD content.</summary>
 [Flags]
 public enum ChdHashType
 {

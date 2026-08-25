@@ -4,12 +4,12 @@ using VendoredFlac.Encoder;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Raw FLAC codec ('flac'), matching MAME's <c>chd_flac_compressor</c>: the hunk is
-/// treated as interleaved 2-channel 16-bit 44100 Hz samples and encoded twice (as
-/// little-endian and big-endian samples); the smaller result wins and a leading marker
-/// byte ('L'/'B') records the stored endianness. The block size follows MAME's formula
-/// (hunk samples halved until ≤ 2048). Decodable by CHDSharpLib's <c>ChdReaders.Flac</c>
-/// and chdman.
+///     Raw FLAC codec ('flac'), matching MAME's <c>chd_flac_compressor</c>: the hunk is
+///     treated as interleaved 2-channel 16-bit 44100 Hz samples and encoded twice (as
+///     little-endian and big-endian samples); the smaller result wins and a leading marker
+///     byte ('L'/'B') records the stored endianness. The block size follows MAME's formula
+///     (hunk samples halved until ≤ 2048). Decodable by CHDSharpLib's <c>ChdReaders.Flac</c>
+///     and chdman.
 /// </summary>
 public sealed class FlacCodec : IChdCodec
 {
@@ -25,18 +25,15 @@ public sealed class FlacCodec : IChdCodec
 
         // MAME's chd_flac_compressor::blocksize: samples per hunk, halved until ≤ 2048
         _blockSize = (int)(hunkBytes / 4);
-        while (_blockSize > 2048)
-        {
-            _blockSize /= 2;
-        }
+        while (_blockSize > 2048) _blockSize /= 2;
 
         _swappedBuffer = new byte[hunkBytes];
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public uint Tag => CodecTags.Flac;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
         // worst case: verbatim subframes + frame headers

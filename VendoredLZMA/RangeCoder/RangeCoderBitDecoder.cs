@@ -17,13 +17,9 @@ internal struct BitDecoder
     internal void UpdateModel(int numMoveBits, uint symbol)
     {
         if (symbol == 0)
-        {
             _prob += (KBitModelTotal - _prob) >> numMoveBits;
-        }
         else
-        {
             _prob -= _prob >> numMoveBits;
-        }
     }
 
     /// <summary>Initialises the probability to the midpoint.</summary>
@@ -49,19 +45,17 @@ internal struct BitDecoder
 
             return 0;
         }
-        else
-        {
-            rangeDecoder.Range -= newBound;
-            rangeDecoder.Code -= newBound;
-            _prob -= _prob >> KNumMoveBits;
-            if (rangeDecoder.Range < Decoder.KTopValue)
-            {
-                rangeDecoder.Code = (rangeDecoder.Code << 8) | rangeDecoder.ReadByteChecked();
-                rangeDecoder.Range <<= 8;
-                rangeDecoder.Total++;
-            }
 
-            return 1;
+        rangeDecoder.Range -= newBound;
+        rangeDecoder.Code -= newBound;
+        _prob -= _prob >> KNumMoveBits;
+        if (rangeDecoder.Range < Decoder.KTopValue)
+        {
+            rangeDecoder.Code = (rangeDecoder.Code << 8) | rangeDecoder.ReadByteChecked();
+            rangeDecoder.Range <<= 8;
+            rangeDecoder.Total++;
         }
+
+        return 1;
     }
 }

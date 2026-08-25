@@ -3,14 +3,14 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Parses a raw ISO image into a single-track table of contents, matching MAME's
-/// <c>cdrom_file::parse_iso</c>: MODE1/2048 when the size is divisible by 2048,
-/// MODE2/2336, or MODE2_RAW/2352.
+///     Parses a raw ISO image into a single-track table of contents, matching MAME's
+///     <c>cdrom_file::parse_iso</c>: MODE1/2048 when the size is divisible by 2048,
+///     MODE2/2336, or MODE2_RAW/2352.
 /// </summary>
 public class IsoParser
 {
     /// <summary>
-    /// Parses an ISO image into a single-track table of contents.
+    ///     Parses an ISO image into a single-track table of contents.
     /// </summary>
     /// <param name="isoPath">Path to the .iso/.cdr/.toast file.</param>
     /// <returns>The parsed table of contents.</returns>
@@ -71,7 +71,8 @@ public class IsoParser
         }
         else
         {
-            throw new InvalidDataException($"Unrecognized ISO sector size ({size} bytes is not a multiple of 2048, 2336 or 2352)");
+            throw new InvalidDataException(
+                $"Unrecognized ISO sector size ({size} bytes is not a multiple of 2048, 2336 or 2352)");
         }
 
         var toc = new CdToc();

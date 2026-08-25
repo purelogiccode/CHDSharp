@@ -1,22 +1,22 @@
 namespace VendoredLZMA;
 
 /// <summary>
-/// The exception that is thrown when an error in input stream occurs during decoding.
+///     The exception that is thrown when an error in input stream occurs during decoding.
 /// </summary>
 internal class DataErrorException : Exception
 {
-    /// <summary>Initializes a new instance of the <see cref="DataErrorException"/> class with a default message.</summary>
+    /// <summary>Initializes a new instance of the <see cref="DataErrorException" /> class with a default message.</summary>
     internal DataErrorException() : base("Data Error")
     {
     }
 }
 
 /// <summary>
-/// The exception that is thrown when the value of an argument is outside the allowable range.
+///     The exception that is thrown when the value of an argument is outside the allowable range.
 /// </summary>
 internal class InvalidParamException : Exception
 {
-    /// <summary>Initializes a new instance of the <see cref="InvalidParamException"/> class.</summary>
+    /// <summary>Initializes a new instance of the <see cref="InvalidParamException" /> class.</summary>
     internal InvalidParamException() : base("Invalid Parameter")
     {
     }

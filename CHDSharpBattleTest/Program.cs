@@ -3,34 +3,34 @@ using System.Diagnostics;
 namespace CHDSharpBattleTest;
 
 /// <summary>
-/// CHDSharp battle test: exhaustively cross-checks the CHDSharpLib decoder and the
-/// CHDSharp.Encoder encoder against MAME's chdman.exe on a deterministic corpus of raw
-/// and CD images. Produces a report and an exit code (0 = all passed).
+///     CHDSharp battle test: exhaustively cross-checks the CHDSharpLib decoder and the
+///     CHDSharp.Encoder encoder against MAME's chdman.exe on a deterministic corpus of raw
+///     and CD images. Produces a report and an exit code (0 = all passed).
 /// </summary>
 internal static class Program
 {
     private static void PrintUsage()
     {
         Console.WriteLine("""
-            CHDSharpBattleTest — battle-test CHDSharp decode/encode against chdman.exe
+                          CHDSharpBattleTest — battle-test CHDSharp decode/encode against chdman.exe
 
-            Usage: CHDSharpBattleTest [options]
+                          Usage: CHDSharpBattleTest [options]
 
-              --chdman <path>   chdman executable (default: repo-root chdman.exe or PATH)
-              --cli <path>      CHDSharpCli executable (default: auto-resolve from repo)
-              --out <dir>       artifact + report root (default: <repo>/TestResults/battle)
-              --real <dir>      scan a folder recursively for real *.chd files and battle-test
-                                each one (chdman vs CLI vs library). Repeatable.
-              --real-timeout <secs>
-                                per-command timeout for real-file checks (default 900s; large
-                                CHDs need more time for verify/extract than synthetic ones)
-              --quick           reduced corpus (faster smoke battle)
-              --seed <n>        RNG seed for the corpus (default 1337)
-              --no-keep         delete artifacts at the end when everything passed
-              --help            show this help
+                            --chdman <path>   chdman executable (default: repo-root chdman.exe or PATH)
+                            --cli <path>      CHDSharpCli executable (default: auto-resolve from repo)
+                            --out <dir>       artifact + report root (default: <repo>/TestResults/battle)
+                            --real <dir>      scan a folder recursively for real *.chd files and battle-test
+                                              each one (chdman vs CLI vs library). Repeatable.
+                            --real-timeout <secs>
+                                              per-command timeout for real-file checks (default 900s; large
+                                              CHDs need more time for verify/extract than synthetic ones)
+                            --quick           reduced corpus (faster smoke battle)
+                            --seed <n>        RNG seed for the corpus (default 1337)
+                            --no-keep         delete artifacts at the end when everything passed
+                            --help            show this help
 
-            Exit code: 0 when every check passed, 1 when any failed, 2 on usage errors.
-            """);
+                          Exit code: 0 when every check passed, 1 when any failed, 2 on usage errors.
+                          """);
     }
 
     private static int Main(string[] args)
@@ -45,7 +45,6 @@ internal static class Program
         var realTimeoutMs = 900_000;
 
         for (var i = 0; i < args.Length; i++)
-        {
             switch (args[i])
             {
                 case "--chdman" when i + 1 < args.Length:
@@ -91,7 +90,6 @@ internal static class Program
                     PrintUsage();
                     return 2;
             }
-        }
 
         chdmanPath ??= ResolveChdmanPath();
         if (chdmanPath == null || !File.Exists(chdmanPath))
@@ -115,7 +113,8 @@ internal static class Program
             sw.Stop();
             Console.WriteLine();
             harness.PrintSummary();
-            Console.WriteLine($"Battle finished in {sw.Elapsed.TotalSeconds:N1}s. Result: {(failed == 0 ? "ALL PASSED" : $"{failed} FAILED")}");
+            Console.WriteLine(
+                $"Battle finished in {sw.Elapsed.TotalSeconds:N1}s. Result: {(failed == 0 ? "ALL PASSED" : $"{failed} FAILED")}");
 
             if (failed == 0 && noKeep)
                 harness.Cleanup();

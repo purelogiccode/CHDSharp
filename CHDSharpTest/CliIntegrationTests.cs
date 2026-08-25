@@ -19,7 +19,8 @@ public sealed class CliIntegrationTests
             if (testBinIdx >= 0)
             {
                 var slnRoot = baseDir[..testBinIdx];
-                var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ?? "Debug";
+                var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ??
+                             "Debug";
                 var tfm = Path.GetFileName(baseDir.TrimEnd(Path.DirectorySeparatorChar));
                 return Path.Combine(slnRoot, "CHDSharpCli", "bin", config, tfm, "CHDSharp.dll");
             }

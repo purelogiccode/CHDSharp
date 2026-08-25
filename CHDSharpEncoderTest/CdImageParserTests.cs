@@ -17,7 +17,7 @@ public class CdImageParserTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -217,7 +217,7 @@ public class CdImageParserTests : IDisposable
         Assert.Equal(CdTrackType.Audio, toc.Tracks[0].TrackType);
         Assert.Equal(50, toc.Tracks[0].Frames);
         Assert.Equal(150, toc.Tracks[0].Pregap);
-        Assert.True(toc.Tracks[0].Swap == false, "TOC files must not be byte-swapped by default");
+        Assert.True(!toc.Tracks[0].Swap, "TOC files must not be byte-swapped by default");
     }
 
     [Fact]
@@ -346,4 +346,3 @@ public class CdImageParserTests : IDisposable
         return path;
     }
 }
-

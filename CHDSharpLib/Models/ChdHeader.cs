@@ -1,46 +1,65 @@
 namespace CHDSharp.Models;
 
-/// <summary>Represents the fully parsed header of a CHD file including compression codecs, block map, checksums, and metadata offsets.</summary>
+/// <summary>
+///     Represents the fully parsed header of a CHD file including compression codecs, block map, checksums, and
+///     metadata offsets.
+/// </summary>
 internal class ChdHeader
 {
-    /// <summary>Raw CHD global flags field (V1-V4). Bit 0 = has parent, bit 1 = writable. V5 has no flags field on disk (0).</summary>
-    internal uint Flags;
+    /// <summary>The size of each hunk (block) in bytes.</summary>
+    internal uint Blocksize;
 
-    /// <summary>File offset of the block map. Only populated for V5 headers; 0 otherwise.</summary>
-    internal ulong Mapoffset;
+    /// <summary>
+    ///     The array of decompression delegate readers corresponding to each compression slot. Populated by
+    ///     <c>ChdBlockRead.FindBlockReaders</c>.
+    /// </summary>
+    internal ChdReader[] ChdReader = [];
 
     /// <summary>The array of compression codecs used by this CHD (up to 4 slots in V5). Populated by the header parsers.</summary>
     internal ChdCodec[] Compression = [];
 
-    /// <summary>The array of decompression delegate readers corresponding to each compression slot. Populated by <c>ChdBlockRead.FindBlockReaders</c>.</summary>
-    internal ChdReader[] ChdReader = [];
-
-    /// <summary>The total decompressed size of the image, in bytes.</summary>
-    internal ulong Totalbytes;
-
-    /// <summary>The size of each hunk (block) in bytes.</summary>
-    internal uint Blocksize;
-
-    /// <summary>The total number of hunks in the image.</summary>
-    internal uint Totalblocks;
-
-    /// <summary>The size of a unit used for V5 parent block address translation. For V1-V4 this is set to <see cref="Blocksize"/>.</summary>
-    internal uint Unitbytes;
-
-    /// <summary>Whether the V5 map is the uncompressed variant (offset word 0 means read from parent).</summary>
-    internal bool UncompressedMap;
+    /// <summary>Raw CHD global flags field (V1-V4). Bit 0 = has parent, bit 1 = writable. V5 has no flags field on disk (0).</summary>
+    internal uint Flags;
 
     /// <summary>The parsed array of map entries describing each hunk's compression type, offset, and length.</summary>
     internal MapEntry[] Map = [];
 
+    /// <summary>File offset of the block map. Only populated for V5 headers; 0 otherwise.</summary>
+    internal ulong Mapoffset;
+
+    /// <summary>
+    ///     The maximum allowed length (in bytes) of a compressed hunk on disk.
+    ///     A compressed hunk larger than the decompressed hunk is legal (codec headers/footers
+    ///     can push the compressed size over <see cref="Blocksize" /> at low compression levels),
+    ///     but it is attacker-controlled data from the hunk map. This cap bounds the size of the
+    ///     <c>BuffIn</c> allocation so a malicious file cannot request an unbounded (OOM) allocation.
+    ///     Defaults to <c>Blocksize * 2</c>, normalized during validation.
+    /// </summary>
+    internal uint MaxCompressedBlockCap;
+
     /// <summary>MD5 hash of the raw compressed data (V1-V3). <c>null</c> for V4/V5, which dropped MD5.</summary>
     internal byte[]? Md5;
 
-    /// <summary>SHA1 hash of only the raw decompressed image data (V3-V5). <c>null</c> for V1/V2.</summary>
-    internal byte[]? Rawsha1;
+    /// <summary>File offset of the first metadata entry, or 0 if none.</summary>
+    internal ulong Metaoffset;
 
-    /// <summary>SHA1 hash of the full image including metadata (V4/V5), or the raw SHA1 for V3. <c>null</c> for V1/V2.</summary>
-    internal byte[]? Sha1;
+    /// <summary>
+    ///     Obsolete hard-disk geometry fields, only populated for V1/V2 headers. Used to synthesize GDDD metadata
+    ///     (libchdr parity).
+    /// </summary>
+    internal uint ObsoleteCylinders;
+
+    /// <summary>Obsolete hard-disk geometry: number of heads. Only populated for V1/V2 headers.</summary>
+    internal uint ObsoleteHeads;
+
+    /// <summary>
+    ///     Obsolete hunk size in sectors, only populated for V1/V2 headers. Bytes per sector = <see cref="Blocksize" /> /
+    ///     <see cref="ObsoleteHunksize" />.
+    /// </summary>
+    internal uint ObsoleteHunksize;
+
+    /// <summary>Obsolete hard-disk geometry: sectors per track. Only populated for V1/V2 headers.</summary>
+    internal uint ObsoleteSectors;
 
     /// <summary>MD5 hash of the expected parent file (V1-V3). <c>null</c> for V4/V5.</summary>
     internal byte[]? Parentmd5;
@@ -48,34 +67,33 @@ internal class ChdHeader
     /// <summary>SHA1 hash of the expected parent file (V3-V5). <c>null</c> for V1/V2.</summary>
     internal byte[]? Parentsha1;
 
-    /// <summary>File offset of the first metadata entry, or 0 if none.</summary>
-    internal ulong Metaoffset;
-
-    /// <summary>
-    /// The maximum allowed length (in bytes) of a compressed hunk on disk.
-    /// A compressed hunk larger than the decompressed hunk is legal (codec headers/footers
-    /// can push the compressed size over <see cref="Blocksize"/> at low compression levels),
-    /// but it is attacker-controlled data from the hunk map. This cap bounds the size of the
-    /// <c>BuffIn</c> allocation so a malicious file cannot request an unbounded (OOM) allocation.
-    /// Defaults to <c>Blocksize * 2</c>, normalized during validation.
-    /// </summary>
-    internal uint MaxCompressedBlockCap;
-
-    /// <summary>The secondary compression codec used by V3/V4 <c>CHDCOMPRESSION_ZLIB_PLUS</c> files for type-6 (2ND_COMPRESSED) map entries.</summary>
-    internal ChdCodec SecondaryCodec;
+    /// <summary>SHA1 hash of only the raw decompressed image data (V3-V5). <c>null</c> for V1/V2.</summary>
+    internal byte[]? Rawsha1;
 
     /// <summary>The decompression delegate for the secondary codec used by type-6 map entries.</summary>
     internal ChdReader? SecondaryChdReader;
 
-    /// <summary>Obsolete hard-disk geometry fields, only populated for V1/V2 headers. Used to synthesize GDDD metadata (libchdr parity).</summary>
-    internal uint ObsoleteCylinders;
+    /// <summary>
+    ///     The secondary compression codec used by V3/V4 <c>CHDCOMPRESSION_ZLIB_PLUS</c> files for type-6
+    ///     (2ND_COMPRESSED) map entries.
+    /// </summary>
+    internal ChdCodec SecondaryCodec;
 
-    /// <summary>Obsolete hard-disk geometry: number of heads. Only populated for V1/V2 headers.</summary>
-    internal uint ObsoleteHeads;
+    /// <summary>SHA1 hash of the full image including metadata (V4/V5), or the raw SHA1 for V3. <c>null</c> for V1/V2.</summary>
+    internal byte[]? Sha1;
 
-    /// <summary>Obsolete hard-disk geometry: sectors per track. Only populated for V1/V2 headers.</summary>
-    internal uint ObsoleteSectors;
+    /// <summary>The total number of hunks in the image.</summary>
+    internal uint Totalblocks;
 
-    /// <summary>Obsolete hunk size in sectors, only populated for V1/V2 headers. Bytes per sector = <see cref="Blocksize"/> / <see cref="ObsoleteHunksize"/>.</summary>
-    internal uint ObsoleteHunksize;
+    /// <summary>The total decompressed size of the image, in bytes.</summary>
+    internal ulong Totalbytes;
+
+    /// <summary>Whether the V5 map is the uncompressed variant (offset word 0 means read from parent).</summary>
+    internal bool UncompressedMap;
+
+    /// <summary>
+    ///     The size of a unit used for V5 parent block address translation. For V1-V4 this is set to
+    ///     <see cref="Blocksize" />.
+    /// </summary>
+    internal uint Unitbytes;
 }

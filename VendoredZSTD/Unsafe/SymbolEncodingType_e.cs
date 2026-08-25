@@ -1,10 +1,9 @@
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+public enum symbolEncodingType_e
 {
-    public enum symbolEncodingType_e
-    {
-        set_basic,
-        set_rle,
-        set_compressed,
-        set_repeat,
-    }
+    set_basic,
+    set_rle,
+    set_compressed,
+    set_repeat
 }

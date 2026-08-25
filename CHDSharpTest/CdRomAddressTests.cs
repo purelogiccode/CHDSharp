@@ -3,7 +3,7 @@ using CHDSharp.Utils;
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Tests for <see cref="CdRomAddress"/>: BCD MSF ↔ LBA conversion (FutureEnhancements #10).
+///     Tests for <see cref="CdRomAddress" />: BCD MSF ↔ LBA conversion (FutureEnhancements #10).
 /// </summary>
 public class CdRomAddressTests
 {

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using QuestPDF;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -6,12 +7,12 @@ using Serilog;
 
 namespace CHDSharpTester.Services;
 
-/// <summary>Generates a PDF report from a <see cref="TestSessionResult"/> using QuestPDF.</summary>
+/// <summary>Generates a PDF report from a <see cref="TestSessionResult" /> using QuestPDF.</summary>
 internal static class PdfExporter
 {
     static PdfExporter()
     {
-        QuestPDF.Settings.License = LicenseType.Community;
+        Settings.License = LicenseType.Community;
     }
 
     /// <summary>Exports the test session results to a PDF file at the specified output path.</summary>
@@ -37,10 +38,7 @@ internal static class PdfExporter
                             .Bold().FontSize(16).FontColor(Colors.Blue.Darken3);
 
                         var genText = $"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
-                        if (chdmanVersion != null)
-                        {
-                            genText += $"    chdman: {chdmanVersion}";
-                        }
+                        if (chdmanVersion != null) genText += $"    chdman: {chdmanVersion}";
 
                         header.Item().Text(genText).FontSize(8).FontColor(Colors.Grey.Medium);
 

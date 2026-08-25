@@ -3,23 +3,23 @@ using System.Runtime.InteropServices;
 namespace VendoredFlac.Models;
 
 /// <summary>
-/// Represents a single entry in a FLAC seek table, mapping sample numbers to byte offsets.
+///     Represents a single entry in a FLAC seek table, mapping sample numbers to byte offsets.
 /// </summary>
 [StructLayout(LayoutKind.Auto)]
 internal struct SeekPoint
 {
     /// <summary>
-    /// The sample number at which this seek point is positioned.
+    ///     The sample number at which this seek point is positioned.
     /// </summary>
     public long Number;
 
     /// <summary>
-    /// The byte offset from the first frame header to the target frame.
+    ///     The byte offset from the first frame header to the target frame.
     /// </summary>
     public long Offset;
 
     /// <summary>
-    /// The number of samples in the target frame.
+    ///     The number of samples in the target frame.
     /// </summary>
     public int Framesize;
 }

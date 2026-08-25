@@ -4,14 +4,14 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Dispatches CD image descriptor parsing by file extension, mirroring MAME's
-/// <c>cdrom_file::parse_toc</c>: .cue, .gdi, .iso/.cdr/.toast, .toc, and a cdrdao-style
-/// fallback for unknown extensions.
+///     Dispatches CD image descriptor parsing by file extension, mirroring MAME's
+///     <c>cdrom_file::parse_toc</c>: .cue, .gdi, .iso/.cdr/.toast, .toc, and a cdrdao-style
+///     fallback for unknown extensions.
 /// </summary>
 public static class CdImageParser
 {
     /// <summary>
-    /// Parses a CD image descriptor (CUE, GDI, ISO or cdrdao TOC) into a table of contents.
+    ///     Parses a CD image descriptor (CUE, GDI, ISO or cdrdao TOC) into a table of contents.
     /// </summary>
     /// <param name="descriptorPath">Path to the descriptor file.</param>
     /// <returns>The parsed table of contents.</returns>
@@ -41,8 +41,8 @@ public static class CdImageParser
     }
 
     /// <summary>
-    /// Splits a descriptor line into tokens, honoring single and double quotes
-    /// (matching MAME's <c>tokenize</c> helper).
+    ///     Splits a descriptor line into tokens, honoring single and double quotes
+    ///     (matching MAME's <c>tokenize</c> helper).
     /// </summary>
     internal static List<string> Tokenize(string line)
     {
@@ -71,10 +71,7 @@ public static class CdImageParser
                     sb.Clear();
                 }
 
-                while (i + 1 < line.Length && char.IsWhiteSpace(line[i + 1]))
-                {
-                    i++;
-                }
+                while (i + 1 < line.Length && char.IsWhiteSpace(line[i + 1])) i++;
             }
             else
             {
@@ -90,8 +87,8 @@ public static class CdImageParser
     }
 
     /// <summary>
-    /// Resolves a descriptor-relative file name against the descriptor's directory
-    /// (matching MAME's <c>get_file_path</c> + append).
+    ///     Resolves a descriptor-relative file name against the descriptor's directory
+    ///     (matching MAME's <c>get_file_path</c> + append).
     /// </summary>
     internal static string ResolveFileName(string descriptorPath, string fileName)
     {

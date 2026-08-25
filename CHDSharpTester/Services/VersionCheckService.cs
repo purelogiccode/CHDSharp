@@ -7,8 +7,8 @@ using System.Text.Json.Serialization;
 namespace CHDSharpTester.Services;
 
 /// <summary>
-/// Checks GitHub for a newer release and returns version info if available.
-/// Fire-and-forget: never blocks startup or throws.
+///     Checks GitHub for a newer release and returns version info if available.
+///     Fire-and-forget: never blocks startup or throws.
 /// </summary>
 internal static class VersionCheckService
 {
@@ -18,7 +18,8 @@ internal static class VersionCheckService
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
 
     /// <summary>
-    /// Checks for a newer version on GitHub. Returns a notification message if a new version is available, or null if up-to-date.
+    ///     Checks for a newer version on GitHub. Returns a notification message if a new version is available, or null if
+    ///     up-to-date.
     /// </summary>
     public static async Task<string?> CheckAsync()
     {
@@ -52,7 +53,8 @@ internal static class VersionCheckService
                 ?.BrowserDownloadUrl;
 
             var url = downloadUrl ?? RepoReleasesUrl;
-            return $"A new version of CHDSharpTester is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}\nDownload: {url}";
+            return
+                $"A new version of CHDSharpTester is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}\nDownload: {url}";
         }
         catch
         {
@@ -83,17 +85,14 @@ internal static class VersionCheckService
 
 internal sealed class GitHubRelease
 {
-    [JsonPropertyName("tag_name")]
-    public string? TagName { get; set; }
+    [JsonPropertyName("tag_name")] public string? TagName { get; set; }
 
-    [JsonPropertyName("assets")]
-    public List<GitHubAsset>? Assets { get; set; }
+    [JsonPropertyName("assets")] public List<GitHubAsset>? Assets { get; set; }
 }
 
 internal sealed class GitHubAsset
 {
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
+    [JsonPropertyName("name")] public string? Name { get; set; }
 
     [JsonPropertyName("browser_download_url")]
     public string? BrowserDownloadUrl { get; set; }

@@ -4,11 +4,11 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Parses Nero .NRG disc images (DAO/CUE layout) into a <see cref="CdToc"/> (CHDlite
-/// <c>cdrom_file::parse_nero</c> parity, <c>cdrom.cpp:1839-2004</c>). The image is a chain of
-/// big-endian chunks; the DAOX chunk holds the track table. Supported sector modes: 2048-byte
-/// Mode 1, 2352-byte Mode 2 raw, and 2352-byte audio (byte-swapped for CHD storage). Pregaps
-/// whose sectors are not physically stored are zero-filled when encoded.
+///     Parses Nero .NRG disc images (DAO/CUE layout) into a <see cref="CdToc" /> (CHDlite
+///     <c>cdrom_file::parse_nero</c> parity, <c>cdrom.cpp:1839-2004</c>). The image is a chain of
+///     big-endian chunks; the DAOX chunk holds the track table. Supported sector modes: 2048-byte
+///     Mode 1, 2352-byte Mode 2 raw, and 2352-byte audio (byte-swapped for CHD storage). Pregaps
+///     whose sectors are not physically stored are zero-filled when encoded.
 /// </summary>
 public sealed class NrgParser
 {
@@ -16,8 +16,10 @@ public sealed class NrgParser
     /// <param name="nrgPath">Path to the .nrg file (track data is read from this same file).</param>
     /// <returns>The parsed table of contents.</returns>
     /// <exception cref="FileNotFoundException">The NRG file does not exist.</exception>
-    /// <exception cref="InvalidDataException">The image is not a Nero 5.x image, its chain is
-    /// malformed, or it uses an unsupported track mode.</exception>
+    /// <exception cref="InvalidDataException">
+    ///     The image is not a Nero 5.x image, its chain is
+    ///     malformed, or it uses an unsupported track mode.
+    /// </exception>
     public CdToc Parse(string nrgPath)
     {
         ArgumentNullException.ThrowIfNull(nrgPath);
@@ -131,13 +133,9 @@ public sealed class NrgParser
             }
 
             if (chunkHeader[..4].SequenceEqual("END!"u8))
-            {
                 done = true;
-            }
             else
-            {
                 chainOffset += chunkSize + 8;
-            }
         }
 
         if (tracks is not { Count: > 0 })

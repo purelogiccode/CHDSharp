@@ -3,9 +3,9 @@ using CHDSharp.Utils;
 namespace CHDSharp.Models;
 
 /// <summary>
-/// Snapshot of a CHD file header, parsed without opening the file for hunk reads
-/// (libchdr <c>chd_read_header</c> parity). Returned by
-/// <see cref="CHDSharp.Chd.ReadHeader(string, out ChdHeaderInfo?)"/> and its overloads.
+///     Snapshot of a CHD file header, parsed without opening the file for hunk reads
+///     (libchdr <c>chd_read_header</c> parity). Returned by
+///     <see cref="CHDSharp.Chd.ReadHeader(string, out ChdHeaderInfo?)" /> and its overloads.
 /// </summary>
 public sealed record ChdHeaderInfo
 {
@@ -16,14 +16,14 @@ public sealed record ChdHeaderInfo
     public uint Version { get; init; }
 
     /// <summary>
-    /// Raw CHD global flags field (V1-V4): bit 0 (<c>0x01</c>) = has parent, bit 1 (<c>0x02</c>) = writable.
-    /// V5 has no flags field on disk, so this is always 0 for V5.
+    ///     Raw CHD global flags field (V1-V4): bit 0 (<c>0x01</c>) = has parent, bit 1 (<c>0x02</c>) = writable.
+    ///     V5 has no flags field on disk, so this is always 0 for V5.
     /// </summary>
     public uint Flags { get; init; }
 
     /// <summary>
-    /// The compression codec slots used by this CHD (up to 4 for V5; V1-V4 use slot 0 only).
-    /// An uncompressed V5 CHD has all slots <see cref="ChdCodec.None"/>.
+    ///     The compression codec slots used by this CHD (up to 4 for V5; V1-V4 use slot 0 only).
+    ///     An uncompressed V5 CHD has all slots <see cref="ChdCodec.None" />.
     /// </summary>
     public ChdCodec[] Compression { get; init; } = [];
 
@@ -58,19 +58,19 @@ public sealed record ChdHeaderInfo
     public byte[]? ParentSha1 { get; init; }
 
     /// <summary>
-    /// Size of a unit in bytes, used for parent block address translation. For V5 this is read
-    /// from the header; for V1-V4 it is derived from metadata (GDDD <c>BPS</c>, CD frame size 2448,
-    /// or <see cref="HunkBytes"/>), matching <see cref="ChdFile.UnitBytes"/> and libchdr's
-    /// <c>header_guess_unitbytes</c>.
+    ///     Size of a unit in bytes, used for parent block address translation. For V5 this is read
+    ///     from the header; for V1-V4 it is derived from metadata (GDDD <c>BPS</c>, CD frame size 2448,
+    ///     or <see cref="HunkBytes" />), matching <see cref="ChdFile.UnitBytes" /> and libchdr's
+    ///     <c>header_guess_unitbytes</c>.
     /// </summary>
     public uint UnitBytes { get; init; }
 
-    /// <summary>Total number of units in the image (<c>ceil(TotalBytes / UnitBytes)</c>); 0 if <see cref="UnitBytes"/> is 0.</summary>
+    /// <summary>Total number of units in the image (<c>ceil(TotalBytes / UnitBytes)</c>); 0 if <see cref="UnitBytes" /> is 0.</summary>
     public ulong UnitCount { get; init; }
 
     /// <summary>
-    /// <c>true</c> if this CHD is a differential child that requires a parent CHD to read
-    /// (derived from the parent MD5/SHA1 hashes).
+    ///     <c>true</c> if this CHD is a differential child that requires a parent CHD to read
+    ///     (derived from the parent MD5/SHA1 hashes).
     /// </summary>
     public bool HasParent => !Util.IsAllZeroArray(ParentMd5) || !Util.IsAllZeroArray(ParentSha1);
 

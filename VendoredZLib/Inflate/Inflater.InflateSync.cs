@@ -56,13 +56,9 @@ internal static partial class Inflater
             return ZDataError;
 
         if (state.Flags == -1)
-        {
             state.Wrap = 0; // if no header yet, treat as raw
-        }
         else
-        {
             state.Wrap &= ~4; // no point in computing a check value now */
-        }
 
         var flags = state.Flags; // temporary to save header status
 
@@ -84,17 +80,11 @@ internal static partial class Inflater
         {
             var b = Unsafe.Add(ref buf, next);
             if (b == (got < 2 ? 0 : 0xff))
-            {
                 got++;
-            }
             else if (b != 0)
-            {
                 got = 0;
-            }
             else
-            {
                 got = 4 - got;
-            }
 
             next++;
         }

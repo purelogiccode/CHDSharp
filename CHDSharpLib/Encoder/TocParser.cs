@@ -4,15 +4,15 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Parses a cdrdao-style .toc descriptor into a table of contents, matching MAME's
-/// fallback TOC parser in <c>cdrom_file::parse_toc</c>. Supports TRACK, DATAFILE/
-/// AUDIOFILE/FILE (with SWAP, #decimal and MSF offsets/lengths), START, and the
-/// COPY/PRE_EMPHASIS/CHANNEL control lines.
+///     Parses a cdrdao-style .toc descriptor into a table of contents, matching MAME's
+///     fallback TOC parser in <c>cdrom_file::parse_toc</c>. Supports TRACK, DATAFILE/
+///     AUDIOFILE/FILE (with SWAP, #decimal and MSF offsets/lengths), START, and the
+///     COPY/PRE_EMPHASIS/CHANNEL control lines.
 /// </summary>
 public class TocParser
 {
     /// <summary>
-    /// Parses a .toc descriptor into a table of contents.
+    ///     Parses a .toc descriptor into a table of contents.
     /// </summary>
     /// <param name="tocPath">Path to the .toc file; referenced data files are resolved relative to it.</param>
     /// <returns>The parsed table of contents.</returns>
@@ -57,7 +57,8 @@ public class TocParser
                     track.FileName = CdImageParser.ResolveFileName(tocPath, tokens[1]);
 
                     var tokenIndex = 2;
-                    if (tokenIndex < tokens.Count && string.Equals(tokens[tokenIndex], "SWAP", StringComparison.Ordinal))
+                    if (tokenIndex < tokens.Count &&
+                        string.Equals(tokens[tokenIndex], "SWAP", StringComparison.Ordinal))
                     {
                         track.Swap = true;
                         tokenIndex++;
@@ -72,15 +73,12 @@ public class TocParser
                     {
                         var offsetToken = tokens[tokenIndex++];
                         if (offsetToken.StartsWith('#'))
-                        {
                             // decimal byte offset
                             fileOffset = long.Parse(offsetToken.AsSpan(1), CultureInfo.InvariantCulture);
-                        }
                         else if (char.IsDigit(offsetToken[0]))
-                        {
                             // MSF offset in bytes
-                            fileOffset = (long)CueParser.ParseMsfToFrames(offsetToken) * (track.DataSize + track.SubSize);
-                        }
+                            fileOffset = (long)CueParser.ParseMsfToFrames(offsetToken) *
+                                         (track.DataSize + track.SubSize);
                     }
 
                     track.FileOffset = fileOffset;

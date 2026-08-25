@@ -3,19 +3,19 @@ using System.Diagnostics;
 namespace CHDSharpBattleTest;
 
 /// <summary>
-/// Thin wrapper around the CHDSharpCli executable: runs commands, captures output, and
-/// returns exit codes for cross-checking against chdman.exe.
+///     Thin wrapper around the CHDSharpCli executable: runs commands, captures output, and
+///     returns exit codes for cross-checking against chdman.exe.
 /// </summary>
 internal sealed class CliRunner
 {
-    internal string ExePath { get; }
-    internal int TimeoutMs { get; }
-
     internal CliRunner(string exePath, int timeoutMs = 300_000)
     {
         ExePath = exePath;
         TimeoutMs = timeoutMs;
     }
+
+    internal string ExePath { get; }
+    internal int TimeoutMs { get; }
 
     /// <summary>Runs <c>CHDSharp &lt;command&gt; [args...]</c> and captures stdout/stderr.</summary>
     internal RunResult Run(string command, params string[] args)
@@ -39,7 +39,7 @@ internal sealed class CliRunner
         {
             try
             {
-                p.Kill(entireProcessTree: true);
+                p.Kill(true);
             }
             catch
             {

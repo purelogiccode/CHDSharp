@@ -4,11 +4,19 @@ using VendoredFlac.Interfaces.FlacDeps;
 namespace VendoredFlac.Models;
 
 /// <summary>
-/// FLAC decoder settings implementing <see cref="IAudioDecoderSettings"/>.
-/// Configured for the "cuetools" FLAC decoder with a priority of 2.
+///     FLAC decoder settings implementing <see cref="IAudioDecoderSettings" />.
+///     Configured for the "cuetools" FLAC decoder with a priority of 2.
 /// </summary>
 internal class DecoderSettings : IAudioDecoderSettings
 {
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="DecoderSettings" /> class.
+    /// </summary>
+    public DecoderSettings()
+    {
+        this.Init();
+    }
+
     #region IAudioDecoderSettings implementation
 
     /// <summary>Gets the file extension associated with this decoder ("flac").</summary>
@@ -19,7 +27,7 @@ internal class DecoderSettings : IAudioDecoderSettings
     [Browsable(false)]
     public string Name => "cuetools";
 
-    /// <summary>Gets the <see cref="Type"/> of the decoder implementation (<see cref="AudioDecoder"/>).</summary>
+    /// <summary>Gets the <see cref="Type" /> of the decoder implementation (<see cref="AudioDecoder" />).</summary>
     [Browsable(false)]
     public Type DecoderType => typeof(AudioDecoder);
 
@@ -28,21 +36,13 @@ internal class DecoderSettings : IAudioDecoderSettings
     public int Priority => 2;
 
     /// <summary>
-    /// Creates a shallow copy of the decoder settings.
+    ///     Creates a shallow copy of the decoder settings.
     /// </summary>
-    /// <returns>A new <see cref="IAudioDecoderSettings"/> instance with the same values.</returns>
+    /// <returns>A new <see cref="IAudioDecoderSettings" /> instance with the same values.</returns>
     public IAudioDecoderSettings Clone()
     {
         return (IAudioDecoderSettings)MemberwiseClone();
     }
 
     #endregion
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DecoderSettings"/> class.
-    /// </summary>
-    public DecoderSettings()
-    {
-        this.Init();
-    }
 }

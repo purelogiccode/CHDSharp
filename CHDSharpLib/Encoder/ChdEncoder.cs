@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using CHDSharp.Encoder.Interfaces;
 using CHDSharp.Encoder.Models;
 using MapEntry = CHDSharp.Encoder.Models.MapEntry;
@@ -5,20 +6,29 @@ using MapEntry = CHDSharp.Encoder.Models.MapEntry;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Creates CHD v5 files from raw binary data (<see cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>), from CD
-/// CUE/BIN sources (<see cref="EncodeCd(string, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>), or by re-compressing an existing CHD
-/// (<see cref="Copy(string, string, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>). Uses the zlib codec by default, matching chdman's
-/// <c>--compression zlib</c> output; produced files pass <c>chdman verify</c> and
-/// extract byte-identically via <c>chdman extractraw</c>.
+///     Creates CHD v5 files from raw binary data (
+///     <see
+///         cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)" />
+///     ), from CD
+///     CUE/BIN sources (
+///     <see
+///         cref="EncodeCd(string, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)" />
+///     ), or by re-compressing an existing CHD
+///     (
+///     <see
+///         cref="Copy(string, string, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)" />
+///     ). Uses the zlib codec by default, matching chdman's
+///     <c>--compression zlib</c> output; produced files pass <c>chdman verify</c> and
+///     extract byte-identically via <c>chdman extractraw</c>.
 /// </summary>
 /// <remarks>
-/// Encoding runs a producer→worker→consumer pipeline (<see cref="HunkProcessor.CompressAll"/>):
-/// hunks are read and hashed on one thread, compressed in parallel by <c>TaskCount</c> workers
-/// (each with private, persistent codec instances), and written back strictly in hunk order by a
-/// single consumer. The output is byte-identical to a single-threaded encode regardless of the
-/// worker count, because codec outputs are deterministic and dedup/offset assignment stays
-/// sequential. <c>-c none</c> (uncompressed CHD) uses a dedicated sequential path that writes the
-/// V5 raw map (4-byte hunk-index entries, chdman-parity layout).
+///     Encoding runs a producer→worker→consumer pipeline (<see cref="HunkProcessor.CompressAll" />):
+///     hunks are read and hashed on one thread, compressed in parallel by <c>TaskCount</c> workers
+///     (each with private, persistent codec instances), and written back strictly in hunk order by a
+///     single consumer. The output is byte-identical to a single-threaded encode regardless of the
+///     worker count, because codec outputs are deterministic and dedup/offset assignment stays
+///     sequential. <c>-c none</c> (uncompressed CHD) uses a dedicated sequential path that writes the
+///     V5 raw map (4-byte hunk-index entries, chdman-parity layout).
 /// </remarks>
 public static class ChdEncoder
 {
@@ -28,24 +38,32 @@ public static class ChdEncoder
     private const ulong Iso9660PvdOffset = 16 * DvdSectorSize;
 
     /// <summary>
-    /// Encodes a raw binary stream into a compressed CHD v5 file. The last hunk is
-    /// zero-padded in the file when the source size is not a multiple of
-    /// <paramref name="hunkBytes"/>; the stored raw SHA-1 covers only the actual source
-    /// bytes, so <c>chdman verify</c> succeeds for any input size.
+    ///     Encodes a raw binary stream into a compressed CHD v5 file. The last hunk is
+    ///     zero-padded in the file when the source size is not a multiple of
+    ///     <paramref name="hunkBytes" />; the stored raw SHA-1 covers only the actual source
+    ///     bytes, so <c>chdman verify</c> succeeds for any input size.
     /// </summary>
     /// <param name="sourceStream">The raw source data; the full stream is consumed from its start.</param>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
     /// <param name="hunkBytes">Hunk size in bytes (default 4096).</param>
-    /// <param name="unitBytes">Unit size in bytes (default 512; 2048 when
-    /// <see cref="ChdEncodeOptions.AutoClassify"/> detects an ISO-9660 DVD image).</param>
-    /// <param name="codecTags">The codec tags to use, tried per hunk in order (default zlib;
-    /// the single tag <see cref="CodecTags.None"/> produces an uncompressed CHD).</param>
-    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions"/>).</param>
-    /// <param name="cancellationToken">Cancels the encode; <see cref="OperationCanceledException"/>
-    /// is thrown when cancellation is requested.</param>
-    /// <exception cref="ArgumentException"><paramref name="hunkBytes"/> is not a multiple of <paramref name="unitBytes"/>.</exception>
-    public static void EncodeRaw(Stream sourceStream, string chdPath, uint hunkBytes = DefaultHunkBytes, uint unitBytes = DefaultUnitBytes,
-        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null, CancellationToken cancellationToken = default)
+    /// <param name="unitBytes">
+    ///     Unit size in bytes (default 512; 2048 when
+    ///     <see cref="ChdEncodeOptions.AutoClassify" /> detects an ISO-9660 DVD image).
+    /// </param>
+    /// <param name="codecTags">
+    ///     The codec tags to use, tried per hunk in order (default zlib;
+    ///     the single tag <see cref="CodecTags.None" /> produces an uncompressed CHD).
+    /// </param>
+    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions" />).</param>
+    /// <param name="cancellationToken">
+    ///     Cancels the encode; <see cref="OperationCanceledException" />
+    ///     is thrown when cancellation is requested.
+    /// </param>
+    /// <exception cref="ArgumentException"><paramref name="hunkBytes" /> is not a multiple of <paramref name="unitBytes" />.</exception>
+    public static void EncodeRaw(Stream sourceStream, string chdPath, uint hunkBytes = DefaultHunkBytes,
+        uint unitBytes = DefaultUnitBytes,
+        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(sourceStream);
         if (hunkBytes == 0 || unitBytes == 0 || hunkBytes % unitBytes != 0)
@@ -69,10 +87,7 @@ public static class ChdEncoder
             if (IsIso9660Image(sourceStream, startBytes, logicalBytes))
             {
                 metadataEntries.Add(MetadataWriter.BuildDvdMetadata());
-                if (unitBytes == DefaultUnitBytes && hunkBytes % DvdSectorSize == 0)
-                {
-                    unitBytes = DvdSectorSize;
-                }
+                if (unitBytes == DefaultUnitBytes && hunkBytes % DvdSectorSize == 0) unitBytes = DvdSectorSize;
             }
             else
             {
@@ -86,22 +101,28 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Creates a blank, zero-filled CHD v5 file without reading from an input stream.
-    /// Equivalent to chdman <c>createhd --size</c>. All hunks are written as zero-filled
-    /// data, and the file is verifiable by <c>chdman verify</c>.
+    ///     Creates a blank, zero-filled CHD v5 file without reading from an input stream.
+    ///     Equivalent to chdman <c>createhd --size</c>. All hunks are written as zero-filled
+    ///     data, and the file is verifiable by <c>chdman verify</c>.
     /// </summary>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
     /// <param name="totalBytes">Total size of the blank disk in bytes.</param>
     /// <param name="hunkBytes">Hunk size in bytes (default 4096).</param>
     /// <param name="unitBytes">Unit size in bytes (default 512).</param>
-    /// <param name="codecTags">The codec tags to use (default zlib; <see cref="CodecTags.None"/> for uncompressed).</param>
-    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions"/>).</param>
-    /// <param name="cancellationToken">Cancels the encode; <see cref="OperationCanceledException"/>
-    /// is thrown when cancellation is requested.</param>
-    /// <exception cref="ArgumentException"><paramref name="totalBytes"/> is zero, or
-    /// <paramref name="hunkBytes"/> is not a multiple of <paramref name="unitBytes"/>.</exception>
-    public static void CreateBlank(string chdPath, ulong totalBytes, uint hunkBytes = DefaultHunkBytes, uint unitBytes = DefaultUnitBytes,
-        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null, CancellationToken cancellationToken = default)
+    /// <param name="codecTags">The codec tags to use (default zlib; <see cref="CodecTags.None" /> for uncompressed).</param>
+    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions" />).</param>
+    /// <param name="cancellationToken">
+    ///     Cancels the encode; <see cref="OperationCanceledException" />
+    ///     is thrown when cancellation is requested.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="totalBytes" /> is zero, or
+    ///     <paramref name="hunkBytes" /> is not a multiple of <paramref name="unitBytes" />.
+    /// </exception>
+    public static void CreateBlank(string chdPath, ulong totalBytes, uint hunkBytes = DefaultHunkBytes,
+        uint unitBytes = DefaultUnitBytes,
+        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         if (totalBytes == 0)
             throw new ArgumentException("totalBytes must be greater than zero", nameof(totalBytes));
@@ -117,9 +138,7 @@ public static class ChdEncoder
 
         // Auto-generate GDDD metadata if not explicitly provided
         if (metadataEntries.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
-        {
             metadataEntries.Add(MetadataWriter.BuildHardDiskMetadata(totalBytes, unitBytes));
-        }
 
         EncodeCore(chdPath, hunkBytes, unitBytes, codecTags, options, totalBytes, metadataEntries,
             ReadZeroHunk, cancellationToken);
@@ -133,8 +152,8 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Creates a blank, zero-filled CHD v5 file with explicit CHS geometry metadata.
-    /// Equivalent to chdman <c>createhd --size --chs</c>.
+    ///     Creates a blank, zero-filled CHD v5 file with explicit CHS geometry metadata.
+    ///     Equivalent to chdman <c>createhd --size --chs</c>.
     /// </summary>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
     /// <param name="cylinders">Number of cylinders.</param>
@@ -143,11 +162,12 @@ public static class ChdEncoder
     /// <param name="sectorSize">Bytes per sector (default 512).</param>
     /// <param name="hunkBytes">Hunk size in bytes (default 4096).</param>
     /// <param name="codecTags">The codec tags to use (default zlib).</param>
-    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions"/>).</param>
+    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions" />).</param>
     /// <param name="cancellationToken">Cancels the encode.</param>
     public static void CreateBlankWithChs(string chdPath, uint cylinders, uint heads, uint sectors,
         uint sectorSize = DefaultUnitBytes, uint hunkBytes = DefaultHunkBytes,
-        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null, CancellationToken cancellationToken = default)
+        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         if (cylinders == 0 || heads == 0 || sectors == 0 || sectorSize == 0)
             throw new ArgumentException("CHS geometry values must be greater than zero");
@@ -175,30 +195,42 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Encodes a laserdisc CHD from an AVI file (chdman <c>createld</c> parity). Each output
-    /// hunk holds one or more whole video frames; every frame is assembled into MAME's raw
-    /// 'chav' layout and compressed with the 'avhu' codec (delta-RLE Huffman video + per-channel
-    /// mono 48 kHz FLAC audio). The file carries 'AVAV' A/V metadata, plus 'AVLD' VBI metadata
-    /// (16 packed bytes per frame) when the field height is 262 or 312 — appended after the
-    /// map exactly like chdman.
+    ///     Encodes a laserdisc CHD from an AVI file (chdman <c>createld</c> parity). Each output
+    ///     hunk holds one or more whole video frames; every frame is assembled into MAME's raw
+    ///     'chav' layout and compressed with the 'avhu' codec (delta-RLE Huffman video + per-channel
+    ///     mono 48 kHz FLAC audio). The file carries 'AVAV' A/V metadata, plus 'AVLD' VBI metadata
+    ///     (16 packed bytes per frame) when the field height is 262 or 312 — appended after the
+    ///     map exactly like chdman.
     /// </summary>
     /// <param name="aviPath">Path of the source AVI file (YUY2/VYUY/UYVY video + PCM audio).</param>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
-    /// <param name="hunkBytes">Hunk size in bytes; must be a whole multiple of the frame size.
-    /// Default 0 = one frame per hunk (chdman's default).</param>
-    /// <param name="codecTags">The codec tags to use, tried per hunk in order (default
-    /// <see cref="CodecTags.Avhu"/>; chdman rejects uncompressed for laserdiscs).</param>
-    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions"/>).</param>
-    /// <param name="inputStartFrame">First input frame to encode (chdman <c>-isf</c>, in whole
-    /// frames of the source; doubled with the field range for interlaced sources).</param>
-    /// <param name="inputLengthFrames">Number of input frames to encode (chdman <c>-if</c>);
-    /// <c>null</c> encodes through the last frame.</param>
-    /// <param name="cancellationToken">Cancels the encode; <see cref="OperationCanceledException"/>
-    /// is thrown when cancellation is requested.</param>
-    /// <exception cref="InvalidDataException">The AVI has no usable video stream, an unsupported
-    /// format, or an out-of-range frame selection.</exception>
+    /// <param name="hunkBytes">
+    ///     Hunk size in bytes; must be a whole multiple of the frame size.
+    ///     Default 0 = one frame per hunk (chdman's default).
+    /// </param>
+    /// <param name="codecTags">
+    ///     The codec tags to use, tried per hunk in order (default
+    ///     <see cref="CodecTags.Avhu" />; chdman rejects uncompressed for laserdiscs).
+    /// </param>
+    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions" />).</param>
+    /// <param name="inputStartFrame">
+    ///     First input frame to encode (chdman <c>-isf</c>, in whole
+    ///     frames of the source; doubled with the field range for interlaced sources).
+    /// </param>
+    /// <param name="inputLengthFrames">
+    ///     Number of input frames to encode (chdman <c>-if</c>);
+    ///     <c>null</c> encodes through the last frame.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     Cancels the encode; <see cref="OperationCanceledException" />
+    ///     is thrown when cancellation is requested.
+    /// </param>
+    /// <exception cref="InvalidDataException">
+    ///     The AVI has no usable video stream, an unsupported
+    ///     format, or an out-of-range frame selection.
+    /// </exception>
     /// <exception cref="NotSupportedException">The AVI video format is not YUY2/VYUY/UYVY.</exception>
-    /// <exception cref="ArgumentException"><paramref name="hunkBytes"/> is not a multiple of the frame size.</exception>
+    /// <exception cref="ArgumentException"><paramref name="hunkBytes" /> is not a multiple of the frame size.</exception>
     public static LaserDiscEncodingInfo EncodeLaserDisc(string aviPath, string chdPath,
         uint hunkBytes = 0, IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null,
         long inputStartFrame = 0, long? inputLengthFrames = null,
@@ -232,7 +264,8 @@ public static class ChdEncoder
             if (start >= totalFrames)
                 throw new InvalidDataException($"Input start frame ({start}) is beyond end of input ({totalFrames})");
             if (end > totalFrames)
-                throw new InvalidDataException($"Input length is larger than available input from start offset ({totalFrames - start} frames)");
+                throw new InvalidDataException(
+                    $"Input length is larger than available input from start offset ({totalFrames - start} frames)");
 
             if (interlaced)
             {
@@ -246,9 +279,11 @@ public static class ChdEncoder
             var rate = aviInfo.AudioSamplerate;
 
             // bytes per frame: worst-case raw 'chav' block (max samples via ceil-div)
-            var maxSamplesPerFrameLong = rate > 0 ? ((ulong)rate * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million : 0;
+            var maxSamplesPerFrameLong =
+                rate > 0 ? ((ulong)rate * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million : 0;
             if (maxSamplesPerFrameLong > ushort.MaxValue)
-                throw new InvalidDataException($"Audio samples per frame ({maxSamplesPerFrameLong}) exceeds the AVHuff limit (65535)");
+                throw new InvalidDataException(
+                    $"Audio samples per frame ({maxSamplesPerFrameLong}) exceeds the AVHuff limit (65535)");
 
             var maxSamplesPerFrame = (uint)maxSamplesPerFrameLong;
             if (width == 0 || height == 0 || width > ushort.MaxValue || height > ushort.MaxValue)
@@ -256,27 +291,23 @@ public static class ChdEncoder
             if (width % 2 != 0)
                 throw new InvalidDataException($"Video width {width} must be even for YUY2 video");
             if (channels > 0 && maxSamplesPerFrame < 16)
-                throw new InvalidDataException($"Audio samples per frame ({maxSamplesPerFrame}) is below the FLAC minimum (16)");
+                throw new InvalidDataException(
+                    $"Audio samples per frame ({maxSamplesPerFrame}) is below the FLAC minimum (16)");
 
             var bytesPerFrame = AvHuffEncoder.RawDataSize(width, height, channels, maxSamplesPerFrame);
 
             // process hunk size (parse_hunk_size granularity: whole multiples of the frame size)
-            if (hunkBytes == 0)
-            {
-                hunkBytes = bytesPerFrame;
-            }
+            if (hunkBytes == 0) hunkBytes = bytesPerFrame;
 
             if (hunkBytes % bytesPerFrame != 0)
                 throw new ArgumentException(
-                    $"Hunk size ({hunkBytes}) must be a whole multiple of the frame size ({bytesPerFrame})", nameof(hunkBytes));
+                    $"Hunk size ({hunkBytes}) must be a whole multiple of the frame size ({bytesPerFrame})",
+                    nameof(hunkBytes));
 
             var frames = end - start;
             var logicalBytes = frames * hunkBytes;
             var hunkCount = (uint)(logicalBytes / hunkBytes);
-            if (hunkCount == 0)
-            {
-                hunkCount = 1;
-            }
+            if (hunkCount == 0) hunkCount = 1;
 
             // laserdisc VBI metadata is captured only for NTSC/PAL field heights (524/2, 624/2)
             var captureVbi = height is 524 / 2 or 624 / 2;
@@ -299,10 +330,7 @@ public static class ChdEncoder
             var fieldFrame = new byte[(int)((ulong)width * height * 2)];
             var rawFrame = new byte[bytesPerFrame];
             var audioPlanes = new short[channels][];
-            for (var ch = 0; ch < channels; ch++)
-            {
-                audioPlanes[ch] = new short[maxSamplesPerFrame];
-            }
+            for (var ch = 0; ch < channels; ch++) audioPlanes[ch] = new short[maxSamplesPerFrame];
 
             var codecs = ChdCodecs.CreateAll(codecTags, hunkBytes);
             var entries = new MapEntry[hunkCount];
@@ -316,10 +344,7 @@ public static class ChdEncoder
             using (var fs = new FileStream(chdPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             {
                 var header = ChdHeaderV5.CreateRaw(codecTags.ToArray(), logicalBytes, hunkBytes, bytesPerFrame);
-                if (parentMap != null)
-                {
-                    header.ParentSha1 = parentMap.ParentSha1;
-                }
+                if (parentMap != null) header.ParentSha1 = parentMap.ParentSha1;
 
                 header.WriteToStream(fs);
 
@@ -339,7 +364,8 @@ public static class ChdEncoder
                 // finished), linked as the successor of the 'AVAV' entry, flags 0 (not hashed)
                 if (ldFrameData != null)
                 {
-                    var avldOffset = MetadataWriter.WriteCdMetadata(fs, [MetadataWriter.BuildAvLdMetadata(ldFrameData)]);
+                    var avldOffset =
+                        MetadataWriter.WriteCdMetadata(fs, [MetadataWriter.BuildAvLdMetadata(ldFrameData)]);
                     var patchNext = new BigEndianWriter();
                     patchNext.WriteU64((ulong)avldOffset);
                     fs.Position = metaOffset + 8;
@@ -404,10 +430,10 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Extracts a laserdisc CHD back to an AVI file (chdman <c>extractld</c> parity). Reads
-    /// each AVHuff hunk, parses the raw 'chav' layout, byte-swaps audio from big-endian
-    /// planar to little-endian interleaved, and writes YUY2 video frames + PCM audio to
-    /// a standard AVI file.
+    ///     Extracts a laserdisc CHD back to an AVI file (chdman <c>extractld</c> parity). Reads
+    ///     each AVHuff hunk, parses the raw 'chav' layout, byte-swaps audio from big-endian
+    ///     planar to little-endian interleaved, and writes YUY2 video frames + PCM audio to
+    ///     a standard AVI file.
     /// </summary>
     /// <param name="chdPath">Path to the input laserdisc CHD file.</param>
     /// <param name="aviPath">Path for the output AVI file (created/overwritten).</param>
@@ -418,12 +444,12 @@ public static class ChdEncoder
         long startFrame = 0, long? lengthFrames = null,
         CancellationToken cancellationToken = default)
     {
-        ExtractLaserDisc(chdPath, aviPath, parentPath: null, startFrame, lengthFrames, cancellationToken);
+        ExtractLaserDisc(chdPath, aviPath, null, startFrame, lengthFrames, cancellationToken);
     }
 
     /// <summary>
-    /// Extracts a laserdisc CHD back to an AVI file, optionally resolving a parent CHD for
-    /// differential (child) images.
+    ///     Extracts a laserdisc CHD back to an AVI file, optionally resolving a parent CHD for
+    ///     differential (child) images.
     /// </summary>
     /// <param name="chdPath">Path to the input laserdisc CHD file.</param>
     /// <param name="aviPath">Path for the output AVI file (created/overwritten).</param>
@@ -499,10 +525,7 @@ public static class ChdEncoder
         var endHunk = lengthFrames.HasValue
             ? startHunk + (ulong)lengthFrames.Value * (uint)interlaceFactor
             : totalHunks;
-        if (endHunk > totalHunks)
-        {
-            endHunk = totalHunks;
-        }
+        if (endHunk > totalHunks) endHunk = totalHunks;
 
         if (startHunk >= endHunk)
             throw new ArgumentException("Start frame is beyond end of CHD");
@@ -531,9 +554,9 @@ public static class ChdEncoder
 
             uint metaLen = hunkBuf[4];
             uint avCh = hunkBuf[5];
-            uint samplesPerBlock = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(6));
-            uint vidW = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(8));
-            uint vidH = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(10));
+            uint samplesPerBlock = BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(6));
+            uint vidW = BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(8));
+            uint vidH = BinaryPrimitives.ReadUInt16BigEndian(hunkBuf.AsSpan(10));
 
             var dataOffset = 12 + metaLen;
 
@@ -543,15 +566,13 @@ public static class ChdEncoder
             {
                 var planeSize = samplesPerBlock * 2;
                 for (uint s = 0; s < samplesPerBlock; s++)
+                for (uint c = 0; c < avCh; c++)
                 {
-                    for (uint c = 0; c < avCh; c++)
-                    {
-                        var srcOff = dataOffset + c * planeSize + s * 2;
-                        var dstOff = (s * avCh + c) * 2;
-                        // big-endian in 'chav' → little-endian for AVI: swap bytes
-                        audioInterleaved[dstOff + 0] = hunkBuf[srcOff + 1];
-                        audioInterleaved[dstOff + 1] = hunkBuf[srcOff + 0];
-                    }
+                    var srcOff = dataOffset + c * planeSize + s * 2;
+                    var dstOff = (s * avCh + c) * 2;
+                    // big-endian in 'chav' → little-endian for AVI: swap bytes
+                    audioInterleaved[dstOff + 0] = hunkBuf[srcOff + 1];
+                    audioInterleaved[dstOff + 1] = hunkBuf[srcOff + 0];
                 }
 
                 var audioBytes = (int)(samplesPerBlock * avCh * 2);
@@ -577,12 +598,13 @@ public static class ChdEncoder
                     if (err != ChdError.Chderrnone)
                         throw new InvalidDataException($"Failed to read hunk {hunkIdx - 1}: {err}");
 
-                    if (prevBuf.Length < 12 || prevBuf[0] != 'c' || prevBuf[1] != 'h' || prevBuf[2] != 'a' || prevBuf[3] != 'v')
+                    if (prevBuf.Length < 12 || prevBuf[0] != 'c' || prevBuf[1] != 'h' || prevBuf[2] != 'a' ||
+                        prevBuf[3] != 'v')
                         throw new InvalidDataException($"Hunk {hunkIdx - 1}: not a 'chav' block");
 
                     uint prevMetaLen = prevBuf[4];
                     uint prevAvCh = prevBuf[5];
-                    uint prevSamplesPerBlock = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(prevBuf.AsSpan(6));
+                    uint prevSamplesPerBlock = BinaryPrimitives.ReadUInt16BigEndian(prevBuf.AsSpan(6));
                     var prevVideoOff = 12 + prevMetaLen + prevAvCh * prevSamplesPerBlock * 2;
 
                     var fullFrame = new byte[vidW * vidH * 4]; // full interlaced frame (2x field height)
@@ -612,10 +634,10 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Reads and decodes one AVI frame into encode-ready pieces: planar native-endian audio
-    /// (<paramref name="audioPlanes"/>, filled with this frame's sample count) and the
-    /// YUY2-ordered field slice (<paramref name="fieldFrame"/>). Captures the packed VBI record
-    /// when <paramref name="ldFrameData"/> is non-null. Returns the frame's sample count.
+    ///     Reads and decodes one AVI frame into encode-ready pieces: planar native-endian audio
+    ///     (<paramref name="audioPlanes" />, filled with this frame's sample count) and the
+    ///     YUY2-ordered field slice (<paramref name="fieldFrame" />). Captures the packed VBI record
+    ///     when <paramref name="ldFrameData" /> is non-null. Returns the frame's sample count.
     /// </summary>
     private static int AssembleAvFrame(AviReader avi, ulong effFrame, int interlaceFactor, uint width, uint height,
         uint channels, uint rate, ulong fpsTimes1Million, uint maxSamplesPerFrame,
@@ -635,7 +657,6 @@ public static class ChdEncoder
         {
             var plane = audioPlanes[ch];
             if (samples > 0)
-            {
                 try
                 {
                     avi.ReadSoundSamples(ch, (uint)Math.Min(firstSample, uint.MaxValue), (uint)samples, plane);
@@ -645,11 +666,8 @@ public static class ChdEncoder
                     // beyond the end of the audio stream: silence
                     Array.Clear(plane, 0, samples);
                 }
-            }
             else
-            {
                 Array.Clear(plane, 0, plane.Length);
-            }
         }
 
         // read the video data and slice the field for interlaced sources
@@ -658,9 +676,7 @@ public static class ChdEncoder
         var fullStride = (int)width * interlaceFactor * 2;
         var srcRow = (int)(effFrame % (ulong)interlaceFactor) * rowBytes;
         for (int y = 0, src = srcRow, dst = 0; y < (int)height; y++, src += fullStride, dst += rowBytes)
-        {
             Buffer.BlockCopy(fullFrame, src, fieldFrame, dst, rowBytes);
-        }
 
         // update VBI metadata for this frame
         if (ldFrameData != null)
@@ -672,8 +688,10 @@ public static class ChdEncoder
         return samples;
     }
 
-    /// <summary>Computes the logical image length for a raw encode, honoring
-    /// <see cref="ChdEncodeOptions.InputStartBytes"/> / <see cref="ChdEncodeOptions.InputLengthBytes"/>.</summary>
+    /// <summary>
+    ///     Computes the logical image length for a raw encode, honoring
+    ///     <see cref="ChdEncodeOptions.InputStartBytes" /> / <see cref="ChdEncodeOptions.InputLengthBytes" />.
+    /// </summary>
     private static ulong ComputeLogicalLength(Stream sourceStream, long startBytes, long? inputLength)
     {
         if (startBytes < 0)
@@ -707,10 +725,13 @@ public static class ChdEncoder
         return total;
     }
 
-    /// <summary>Builds a hunk reader for a raw stream: seekable sources are read by offset,
-    /// non-seekable sources are drained sequentially (the pipeline reads hunks strictly in
-    /// order on a single producer thread, so no rewinding is ever needed).</summary>
-    private static Func<uint, byte[], int> CreateRawStreamReader(Stream source, long startBytes, ulong logicalBytes, uint hunkBytes, bool seekable)
+    /// <summary>
+    ///     Builds a hunk reader for a raw stream: seekable sources are read by offset,
+    ///     non-seekable sources are drained sequentially (the pipeline reads hunks strictly in
+    ///     order on a single producer thread, so no rewinding is ever needed).
+    /// </summary>
+    private static Func<uint, byte[], int> CreateRawStreamReader(Stream source, long startBytes, ulong logicalBytes,
+        uint hunkBytes, bool seekable)
     {
         if (seekable)
         {
@@ -722,71 +743,10 @@ public static class ChdEncoder
         return (hunkIndex, buffer) => reader.ReadHunk(hunkIndex, buffer, logicalBytes, hunkBytes);
     }
 
-    /// <summary>Reads hunks sequentially from a non-seekable stream, skipping
-    /// <see cref="ChdEncodeOptions.InputStartBytes"/> upfront.</summary>
-    private sealed class SequentialStreamReader
-    {
-        private readonly Stream _source;
-        private readonly long _skipBytes;
-        private ulong _position;
-        private bool _skipDone;
-
-        internal SequentialStreamReader(Stream source, long skipBytes)
-        {
-            _source = source;
-            _skipBytes = skipBytes;
-        }
-
-        internal int ReadHunk(uint hunkIndex, byte[] buffer, ulong logicalBytes, uint hunkBytes)
-        {
-            // The pipeline always asks in order; any other access pattern cannot be served
-            // from a forward-only stream.
-            var expected = _position / hunkBytes;
-            if (hunkIndex != expected)
-                throw new InvalidDataException(
-                    $"Non-seekable source cannot rewind: pipeline requested hunk {hunkIndex}, stream is at {expected}");
-
-            var valid = logicalBytes - (ulong)hunkIndex * hunkBytes;
-            if ((long)valid <= 0)
-                return 0;
-
-            var count = (int)Math.Min(hunkBytes, valid);
-
-            // Drain the skip prefix once, on the first hunk.
-            if (!_skipDone)
-            {
-                _skipDone = true;
-                var skip = _skipBytes;
-                var skipBuf = new byte[Math.Min(skip, 256 * 1024)];
-                while (skip > 0)
-                {
-                    var read = _source.Read(skipBuf, 0, (int)Math.Min(skip, skipBuf.Length));
-                    if (read == 0)
-                        throw new EndOfStreamException("Non-seekable source ended before InputStartBytes");
-
-                    skip -= read;
-                }
-            }
-
-            var total = 0;
-            while (total < count)
-            {
-                var read = _source.Read(buffer, total, count - total);
-                if (read == 0)
-                    break;
-
-                total += read;
-            }
-
-            _position += (ulong)count;
-            return total;
-        }
-    }
-
     /// <summary>
-    /// Detects an ISO-9660 filesystem image: the primary volume descriptor at sector 16
-    /// (byte offset 0x8000 from the image start) starts with the "CD001" magic. Restores the
-    /// stream position. Only seekable streams can be probed.
+    ///     Detects an ISO-9660 filesystem image: the primary volume descriptor at sector 16
+    ///     (byte offset 0x8000 from the image start) starts with the "CD001" magic. Restores the
+    ///     stream position. Only seekable streams can be probed.
     /// </summary>
     private static bool IsIso9660Image(Stream sourceStream, long imageStart, ulong length)
     {
@@ -810,46 +770,59 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Encodes a raw binary file into a compressed CHD v5 file.
+    ///     Encodes a raw binary file into a compressed CHD v5 file.
     /// </summary>
     /// <param name="sourcePath">Path of the raw input file.</param>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
     /// <param name="hunkBytes">Hunk size in bytes (default 4096).</param>
     /// <param name="unitBytes">Unit size in bytes (default 512).</param>
-    /// <param name="codecTags">The codec tags to use, tried per hunk in order (default zlib;
-    /// the single tag <see cref="CodecTags.None"/> produces an uncompressed CHD).</param>
-    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions"/>).</param>
-    /// <param name="cancellationToken">Cancels the encode; <see cref="OperationCanceledException"/>
-    /// is thrown when cancellation is requested.</param>
-    /// <exception cref="ArgumentException"><paramref name="hunkBytes"/> is not a multiple of <paramref name="unitBytes"/>.</exception>
-    public static void EncodeRaw(string sourcePath, string chdPath, uint hunkBytes = DefaultHunkBytes, uint unitBytes = DefaultUnitBytes,
-        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null, CancellationToken cancellationToken = default)
+    /// <param name="codecTags">
+    ///     The codec tags to use, tried per hunk in order (default zlib;
+    ///     the single tag <see cref="CodecTags.None" /> produces an uncompressed CHD).
+    /// </param>
+    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions" />).</param>
+    /// <param name="cancellationToken">
+    ///     Cancels the encode; <see cref="OperationCanceledException" />
+    ///     is thrown when cancellation is requested.
+    /// </param>
+    /// <exception cref="ArgumentException"><paramref name="hunkBytes" /> is not a multiple of <paramref name="unitBytes" />.</exception>
+    public static void EncodeRaw(string sourcePath, string chdPath, uint hunkBytes = DefaultHunkBytes,
+        uint unitBytes = DefaultUnitBytes,
+        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         using var fs = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         EncodeRaw(fs, chdPath, hunkBytes, unitBytes, codecTags, options, cancellationToken);
     }
 
     /// <summary>
-    /// Encodes a CD image from a CUE sheet into a compressed CHD v5 file. Tracks are
-    /// padded to 4-frame boundaries, audio sectors are byte-swapped to big-endian (as on
-    /// the physical disc), and one CHT2 metadata entry is written per track.
+    ///     Encodes a CD image from a CUE sheet into a compressed CHD v5 file. Tracks are
+    ///     padded to 4-frame boundaries, audio sectors are byte-swapped to big-endian (as on
+    ///     the physical disc), and one CHT2 metadata entry is written per track.
     /// </summary>
     /// <param name="cuePath">Path of the .cue file; referenced BIN/WAV files are resolved relative to it.</param>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
     /// <param name="hunkBytes">Hunk size in bytes (default 19584 = 8 CD frames).</param>
     /// <param name="unitBytes">Unit size in bytes (default 2448 = CD frame with subcode).</param>
-    /// <param name="codecTags">The codec tags to use, tried per hunk in order (default zlib;
-    /// the single tag <see cref="CodecTags.None"/> produces an uncompressed CHD).</param>
-    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions"/>).</param>
-    /// <param name="cancellationToken">Cancels the encode; <see cref="OperationCanceledException"/>
-    /// is thrown when cancellation is requested.</param>
-    /// <exception cref="ArgumentException"><paramref name="unitBytes"/> is not the CD frame size, or
-    /// <paramref name="hunkBytes"/> is not a multiple of it.</exception>
+    /// <param name="codecTags">
+    ///     The codec tags to use, tried per hunk in order (default zlib;
+    ///     the single tag <see cref="CodecTags.None" /> produces an uncompressed CHD).
+    /// </param>
+    /// <param name="options">Optional encoding configuration (see <see cref="ChdEncodeOptions" />).</param>
+    /// <param name="cancellationToken">
+    ///     Cancels the encode; <see cref="OperationCanceledException" />
+    ///     is thrown when cancellation is requested.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="unitBytes" /> is not the CD frame size, or
+    ///     <paramref name="hunkBytes" /> is not a multiple of it.
+    /// </exception>
     /// <exception cref="FileNotFoundException">The CUE file or a referenced data file does not exist.</exception>
     /// <exception cref="InvalidDataException">The CUE sheet is malformed or contains no tracks.</exception>
     public static void EncodeCd(string cuePath, string chdPath,
         uint hunkBytes = CdConstants.FramesPerHunk * CdConstants.FrameSize, uint unitBytes = CdConstants.FrameSize,
-        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null, CancellationToken cancellationToken = default)
+        IReadOnlyList<uint>? codecTags = null, ChdEncodeOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(cuePath);
         if (unitBytes != CdConstants.FrameSize)
@@ -869,7 +842,8 @@ public static class ChdEncoder
         for (var i = 0; i < toc.Tracks.Count; i++)
         {
             var track = toc.Tracks[i];
-            var extraFrames = (CdConstants.TrackPadding - track.Frames % CdConstants.TrackPadding) % CdConstants.TrackPadding;
+            var extraFrames = (CdConstants.TrackPadding - track.Frames % CdConstants.TrackPadding) %
+                              CdConstants.TrackPadding;
             track.PaddedFrames = track.Frames + extraFrames;
             track.LogicalFrameStart = (long)totalFrames;
             totalFrames += (ulong)track.PaddedFrames;
@@ -902,30 +876,38 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Re-compresses an existing CHD file into a new CHD (chdman <c>copy</c> / CHDlite
-    /// <c>ChdArchiver::copy</c> parity): every hunk of the source is read (through its parent
-    /// when the source is a child) and re-encoded with the target codec list. All metadata
-    /// entries of the source are cloned into the output. The output uses the source's hunk and
-    /// unit sizes. Runs through the same parallel producer→worker→consumer pipeline as
-    /// <see cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>,
-    /// so output is byte-identical regardless of the worker count.
+    ///     Re-compresses an existing CHD file into a new CHD (chdman <c>copy</c> / CHDlite
+    ///     <c>ChdArchiver::copy</c> parity): every hunk of the source is read (through its parent
+    ///     when the source is a child) and re-encoded with the target codec list. All metadata
+    ///     entries of the source are cloned into the output. The output uses the source's hunk and
+    ///     unit sizes. Runs through the same parallel producer→worker→consumer pipeline as
+    ///     <see
+    ///         cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)" />
+    ///     ,
+    ///     so output is byte-identical regardless of the worker count.
     /// </summary>
     /// <remarks>
-    /// Legacy CD/GD-ROM metadata tags (<c>CHCD</c>, <c>CHTR</c>, <c>CHGT</c>) are automatically
-    /// upgraded to their modern equivalents (<c>CHT2</c>, <c>CHGD</c>) during the copy, matching
-    /// MAME chdman's <c>copy</c> command behavior. For legacy GD-ROMs (<c>CHGT</c>), CDDA audio
-    /// tracks are byte-swapped from little-endian to big-endian during the copy. Set
-    /// <see cref="ChdEncodeOptions.NoMetadataUpgrade"/> to <c>true</c> to preserve legacy tags.
+    ///     Legacy CD/GD-ROM metadata tags (<c>CHCD</c>, <c>CHTR</c>, <c>CHGT</c>) are automatically
+    ///     upgraded to their modern equivalents (<c>CHT2</c>, <c>CHGD</c>) during the copy, matching
+    ///     MAME chdman's <c>copy</c> command behavior. For legacy GD-ROMs (<c>CHGT</c>), CDDA audio
+    ///     tracks are byte-swapped from little-endian to big-endian during the copy. Set
+    ///     <see cref="ChdEncodeOptions.NoMetadataUpgrade" /> to <c>true</c> to preserve legacy tags.
     /// </remarks>
     /// <param name="sourcePath">Path of the source CHD file (V1-V5, standalone or child).</param>
     /// <param name="chdPath">Path of the output .chd file (created/overwritten).</param>
-    /// <param name="codecTags">The codec tags for the output, tried per hunk in order (default
-    /// zlib; the single tag <see cref="CodecTags.None"/> produces an uncompressed CHD).</param>
-    /// <param name="options">Optional encoding configuration. <see cref="ChdEncodeOptions.SourceParentPath"/>
-    /// supplies the parent of a child source; <see cref="ChdEncodeOptions.ParentPath"/> creates the
-    /// output as a delta child of a different parent (chdman <c>-op</c>).</param>
-    /// <param name="cancellationToken">Cancels the copy; <see cref="OperationCanceledException"/>
-    /// is thrown when cancellation is requested.</param>
+    /// <param name="codecTags">
+    ///     The codec tags for the output, tried per hunk in order (default
+    ///     zlib; the single tag <see cref="CodecTags.None" /> produces an uncompressed CHD).
+    /// </param>
+    /// <param name="options">
+    ///     Optional encoding configuration. <see cref="ChdEncodeOptions.SourceParentPath" />
+    ///     supplies the parent of a child source; <see cref="ChdEncodeOptions.ParentPath" /> creates the
+    ///     output as a delta child of a different parent (chdman <c>-op</c>).
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     Cancels the copy; <see cref="OperationCanceledException" />
+    ///     is thrown when cancellation is requested.
+    /// </param>
     /// <exception cref="IOException">The source (or its parent) cannot be opened.</exception>
     public static void Copy(string sourcePath, string chdPath, IReadOnlyList<uint>? codecTags = null,
         ChdEncodeOptions? options = null, CancellationToken cancellationToken = default)
@@ -960,10 +942,7 @@ public static class ChdEncoder
                 {
                     // Detect legacy CD/GD metadata tags and schedule for upgrade
                     hasLegacyCdMetadata = true;
-                    if (MetadataWriter.IsLegacyGdRomMetadata(tag))
-                    {
-                        isLegacyGdRom = true;
-                    }
+                    if (MetadataWriter.IsLegacyGdRomMetadata(tag)) isLegacyGdRom = true;
 
                     continue; // skip - do NOT clone legacy tag
                 }
@@ -986,24 +965,18 @@ public static class ChdEncoder
             // For legacy GD-ROMs, create a reader that byte-swaps CDDA audio hunks
             Func<uint, byte[], int> readHunk;
             if (isLegacyGdRom)
-            {
                 readHunk = (hunkIndex, buffer) =>
                 {
                     var valid = ReadSourceHunk(source, hunkIndex, buffer, logicalBytes, hunkBytes);
                     if (valid > 0)
-                    {
                         // Byte-swap the 2352-byte sector-data portion of each 2448-byte frame
                         // for CDDA audio tracks (matching MAME's cdrom.cpp:402 behavior)
                         SwapCdda16(buffer, valid, CdConstants.MaxSectorData, CdConstants.FrameSize);
-                    }
 
                     return valid;
                 };
-            }
             else
-            {
                 readHunk = CreateSourceReader(source, logicalBytes, hunkBytes);
-            }
 
             EncodeCore(chdPath, hunkBytes, unitBytes, codecTags, options, logicalBytes, metadataEntries,
                 readHunk,
@@ -1012,16 +985,13 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Builds a <see cref="CdToc"/> from parsed <see cref="ChdTrackInfo"/> records, converting
-    /// the CHDSharpLib track model to the CHDSharpEncoder track model for metadata generation.
+    ///     Builds a <see cref="CdToc" /> from parsed <see cref="ChdTrackInfo" /> records, converting
+    ///     the CHDSharpLib track model to the CHDSharpEncoder track model for metadata generation.
     /// </summary>
     private static CdToc BuildTocFromTracks(IReadOnlyList<ChdTrackInfo> tracks, bool isGdRom)
     {
         var toc = new CdToc();
-        if (isGdRom)
-        {
-            toc.Flags |= CdTocFlags.GdRom;
-        }
+        if (isGdRom) toc.Flags |= CdTocFlags.GdRom;
 
         foreach (var src in tracks)
         {
@@ -1049,10 +1019,10 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Wraps <see cref="ReadSourceHunk"/> for the compression pipeline. The delegate captures
-    /// <paramref name="source"/> only as this method's parameter (never disposed here), so it
-    /// stays valid for the synchronous pipeline run that the caller performs inside its
-    /// <c>using (source)</c> block.
+    ///     Wraps <see cref="ReadSourceHunk" /> for the compression pipeline. The delegate captures
+    ///     <paramref name="source" /> only as this method's parameter (never disposed here), so it
+    ///     stays valid for the synchronous pipeline run that the caller performs inside its
+    ///     <c>using (source)</c> block.
     /// </summary>
     private static Func<uint, byte[], int> CreateSourceReader(ChdFile source, ulong logicalBytes, uint hunkBytes)
     {
@@ -1060,11 +1030,14 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Shared encoding core used by <see cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)"/>,
-    /// <see cref="EncodeCd"/> and <see cref="Copy"/>: writes the header, runs the parallel
-    /// hunk pipeline over <paramref name="readHunk"/>, then writes metadata and the compressed
-    /// map and patches the header hashes. The single tag <see cref="CodecTags.None"/> diverts to
-    /// the uncompressed map writer (<see cref="EncodeUncompressed"/>).
+    ///     Shared encoding core used by
+    ///     <see
+    ///         cref="EncodeRaw(System.IO.Stream, string, uint, uint, System.Collections.Generic.IReadOnlyList{uint}, ChdEncodeOptions, System.Threading.CancellationToken)" />
+    ///     ,
+    ///     <see cref="EncodeCd" /> and <see cref="Copy" />: writes the header, runs the parallel
+    ///     hunk pipeline over <paramref name="readHunk" />, then writes metadata and the compressed
+    ///     map and patches the header hashes. The single tag <see cref="CodecTags.None" /> diverts to
+    ///     the uncompressed map writer (<see cref="EncodeUncompressed" />).
     /// </summary>
     /// <param name="chdPath">Path of the output .chd file.</param>
     /// <param name="hunkBytes">Hunk size in bytes.</param>
@@ -1073,9 +1046,11 @@ public static class ChdEncoder
     /// <param name="options">Optional encoding configuration.</param>
     /// <param name="logicalBytes">The logical (uncompressed) image size in bytes.</param>
     /// <param name="metadataEntries">Metadata entries to write before the map.</param>
-    /// <param name="readHunk">Reads hunk <c>hunkIndex</c> into <c>buffer</c> (exactly
-    /// <c>hunkBytes</c> bytes; the tail of a partial final hunk must be zero-filled) and returns
-    /// the number of valid bytes to fold into the raw SHA-1.</param>
+    /// <param name="readHunk">
+    ///     Reads hunk <c>hunkIndex</c> into <c>buffer</c> (exactly
+    ///     <c>hunkBytes</c> bytes; the tail of a partial final hunk must be zero-filled) and returns
+    ///     the number of valid bytes to fold into the raw SHA-1.
+    /// </param>
     /// <param name="cancellationToken">Cancels the encode.</param>
     private static void EncodeCore(string chdPath, uint hunkBytes, uint unitBytes,
         IReadOnlyList<uint> codecTags, ChdEncodeOptions? options, ulong logicalBytes,
@@ -1084,17 +1059,15 @@ public static class ChdEncoder
     {
         if (codecTags is [CodecTags.None])
         {
-            EncodeUncompressed(chdPath, hunkBytes, unitBytes, options, logicalBytes, metadataEntries, readHunk, cancellationToken);
+            EncodeUncompressed(chdPath, hunkBytes, unitBytes, options, logicalBytes, metadataEntries, readHunk,
+                cancellationToken);
             return;
         }
 
         var codecs = ChdCodecs.CreateAll(codecTags, hunkBytes);
 
         var hunkCount = (uint)((logicalBytes + hunkBytes - 1) / hunkBytes);
-        if (hunkCount == 0)
-        {
-            hunkCount = 1;
-        }
+        if (hunkCount == 0) hunkCount = 1;
 
         var entries = new MapEntry[hunkCount];
         using var sha1 = new Sha1();
@@ -1106,10 +1079,7 @@ public static class ChdEncoder
 
         using var fs = new FileStream(chdPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
         var header = ChdHeaderV5.CreateRaw(codecTags.ToArray(), logicalBytes, hunkBytes, unitBytes);
-        if (parentMap != null)
-        {
-            header.ParentSha1 = parentMap.ParentSha1;
-        }
+        if (parentMap != null) header.ParentSha1 = parentMap.ParentSha1;
 
         header.WriteToStream(fs);
 
@@ -1117,10 +1087,7 @@ public static class ChdEncoder
         // appends metadata via file_append() before compressing any hunks, so byte parity
         // requires this order (the header's metaoffset is patched below).
         long? metaOffset = null;
-        if (metadataEntries.Count > 0)
-        {
-            metaOffset = MetadataWriter.WriteCdMetadata(fs, metadataEntries);
-        }
+        if (metadataEntries.Count > 0) metaOffset = MetadataWriter.WriteCdMetadata(fs, metadataEntries);
 
         var currentOffset = RunCompressionPipeline(processor, hunkCount, readHunk, sha1, entries, selfMap, fs,
             codecs, options, hunkBytes, parentMap, cancellationToken);
@@ -1159,22 +1126,19 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    /// Writes an uncompressed CHD (<c>-c none</c>) with chdman's exact layout: header with
-    /// mapoffset at 124 (right after the header), the V5 raw map (one big-endian u32 hunk index
-    /// per hunk; 0 = not stored, reads as zeroes or from the parent), metadata between the map
-    /// and the data, and each non-zero hunk stored raw at a hunk-aligned offset in hunk order.
-    /// All-zero hunks are not stored. Like chdman, no SHA-1 is written for uncompressed CHDs
-    /// (there is nothing to verify); the header hash fields stay zero.
+    ///     Writes an uncompressed CHD (<c>-c none</c>) with chdman's exact layout: header with
+    ///     mapoffset at 124 (right after the header), the V5 raw map (one big-endian u32 hunk index
+    ///     per hunk; 0 = not stored, reads as zeroes or from the parent), metadata between the map
+    ///     and the data, and each non-zero hunk stored raw at a hunk-aligned offset in hunk order.
+    ///     All-zero hunks are not stored. Like chdman, no SHA-1 is written for uncompressed CHDs
+    ///     (there is nothing to verify); the header hash fields stay zero.
     /// </summary>
     private static void EncodeUncompressed(string chdPath, uint hunkBytes, uint unitBytes,
         ChdEncodeOptions? options, ulong logicalBytes, IReadOnlyList<MetadataEntry> metadataEntries,
         Func<uint, byte[], int> readHunk, CancellationToken cancellationToken)
     {
         var hunkCount = (uint)((logicalBytes + hunkBytes - 1) / hunkBytes);
-        if (hunkCount == 0)
-        {
-            hunkCount = 1;
-        }
+        if (hunkCount == 0) hunkCount = 1;
 
         ChdFile? parent = null;
         if (options?.ParentPath is { Length: > 0 } parentPath)
@@ -1196,10 +1160,7 @@ public static class ChdEncoder
         using (parent)
         {
             var header = ChdHeaderV5.CreateRaw(new[] { CodecTags.None }, logicalBytes, hunkBytes, unitBytes);
-            if (parent != null)
-            {
-                header.ParentSha1 = parent.Sha1;
-            }
+            if (parent != null) header.ParentSha1 = parent.Sha1;
 
             header.WriteToStream(fs);
 
@@ -1211,10 +1172,7 @@ public static class ChdEncoder
 
             // metadata between the map and the data (chdman writes metadata before compression)
             long? metaOffset = null;
-            if (metadataEntries.Count > 0)
-            {
-                metaOffset = MetadataWriter.WriteCdMetadata(fs, metadataEntries);
-            }
+            if (metadataEntries.Count > 0) metaOffset = MetadataWriter.WriteCdMetadata(fs, metadataEntries);
 
             var buffer = new byte[hunkBytes];
             for (uint h = 0; h < hunkCount; h++)
@@ -1232,10 +1190,7 @@ public static class ChdEncoder
 
                 // align the append to a hunk boundary and compute the hunk index
                 var aligned = (fs.Position + hunkBytes - 1) / hunkBytes * hunkBytes;
-                if (aligned != fs.Position)
-                {
-                    fs.Position = aligned;
-                }
+                if (aligned != fs.Position) fs.Position = aligned;
 
                 var entry = (uint)(fs.Position / hunkBytes);
                 map[h * 4] = (byte)(entry >> 24);
@@ -1264,7 +1219,8 @@ public static class ChdEncoder
     }
 
     /// <summary>Reports per-hunk progress for the uncompressed encode path.</summary>
-    private static void ReportNoneHunkProgress(ChdEncodeOptions? options, uint hunkIndex, uint hunkCount, uint hunkBytes, int storedBytes)
+    private static void ReportNoneHunkProgress(ChdEncodeOptions? options, uint hunkIndex, uint hunkCount,
+        uint hunkBytes, int storedBytes)
     {
         if (options?.HunkCompleted is not { } callback)
             return;
@@ -1273,9 +1229,11 @@ public static class ChdEncoder
             MapEntry.CompressionNone, "none", storedBytes / (double)hunkBytes));
     }
 
-    /// <summary>Reads hunk <paramref name="hunkIndex"/> from a raw stream; returns the number of
-    /// valid bytes (the tail of a partial final hunk stays zero-filled for the file, but is
-    /// excluded from the raw SHA-1 — matching chdman's verify semantics).</summary>
+    /// <summary>
+    ///     Reads hunk <paramref name="hunkIndex" /> from a raw stream; returns the number of
+    ///     valid bytes (the tail of a partial final hunk stays zero-filled for the file, but is
+    ///     excluded from the raw SHA-1 — matching chdman's verify semantics).
+    /// </summary>
     private static int ReadRawHunk(Stream source, uint hunkIndex, byte[] buffer, ulong logicalBytes, uint hunkBytes)
     {
         var streamOffset = (long)hunkIndex * hunkBytes;
@@ -1286,24 +1244,29 @@ public static class ChdEncoder
         return source.Read(buffer, 0, (int)hunkBytes);
     }
 
-    /// <summary>Reads hunk <paramref name="hunkIndex"/> from a source CHD file; returns the number
-    /// of valid bytes (the final partial hunk of the source is padded to a full hunk in the file,
-    /// but only its real bytes are folded into the raw SHA-1).</summary>
+    /// <summary>
+    ///     Reads hunk <paramref name="hunkIndex" /> from a source CHD file; returns the number
+    ///     of valid bytes (the final partial hunk of the source is padded to a full hunk in the file,
+    ///     but only its real bytes are folded into the raw SHA-1).
+    /// </summary>
     private static int ReadSourceHunk(ChdFile source, uint hunkIndex, byte[] buffer, ulong logicalBytes, uint hunkBytes)
     {
         var err = source.ReadHunk(hunkIndex, buffer);
         if (err != ChdError.Chderrnone)
-            throw new InvalidDataException($"Failed to read hunk {hunkIndex} from source CHD: {err.GetMessage()} ({err})");
+            throw new InvalidDataException(
+                $"Failed to read hunk {hunkIndex} from source CHD: {err.GetMessage()} ({err})");
 
         var valid = logicalBytes - (ulong)hunkIndex * hunkBytes;
         return (int)Math.Min(hunkBytes, valid);
     }
 
-    /// <summary>Reads hunk <paramref name="hunkIndex"/> of a CD image: track-aware reads from the
-    /// BIN/WAV file(s), zero-filled padding frames, and little-endian→big-endian audio swapping.
-    /// The full padded buffer is what gets compressed and CRC-16'd; only the valid frames (all
-    /// of them except the last hunk's excess zero padding past <paramref name="totalFrames"/>)
-    /// are folded into the raw SHA-1, matching chdman.</summary>
+    /// <summary>
+    ///     Reads hunk <paramref name="hunkIndex" /> of a CD image: track-aware reads from the
+    ///     BIN/WAV file(s), zero-filled padding frames, and little-endian→big-endian audio swapping.
+    ///     The full padded buffer is what gets compressed and CRC-16'd; only the valid frames (all
+    ///     of them except the last hunk's excess zero padding past <paramref name="totalFrames" />)
+    ///     are folded into the raw SHA-1, matching chdman.
+    /// </summary>
     private static int ReadCdHunk(uint hunkIndex, byte[] buffer, CdToc toc, int framesPerHunk, ulong totalFrames,
         Dictionary<string, FileStream> files)
     {
@@ -1344,28 +1307,24 @@ public static class ChdEncoder
         // hash only the valid frames; the last hunk's excess zero padding is stored (and
         // CRC-16'd) but must not be folded into the raw SHA-1, exactly like ReadSourceHunk
         var validFrames = (long)totalFrames - hunkStartFrame;
-        if (validFrames > framesPerHunk)
-        {
-            validFrames = framesPerHunk;
-        }
+        if (validFrames > framesPerHunk) validFrames = framesPerHunk;
 
-        if (validFrames < 0)
-        {
-            validFrames = 0;
-        }
+        if (validFrames < 0) validFrames = 0;
 
         return (int)(validFrames * CdConstants.FrameSize);
     }
 
     /// <summary>
-    /// Runs the compression pipeline for one encode. The consumer callback appends compressed
-    /// blocks to <paramref name="fs"/> in hunk order; offsets and the dedup map advance in the
-    /// same order, so the output is byte-identical to the sequential path.
+    ///     Runs the compression pipeline for one encode. The consumer callback appends compressed
+    ///     blocks to <paramref name="fs" /> in hunk order; offsets and the dedup map advance in the
+    ///     same order, so the output is byte-identical to the sequential path.
     /// </summary>
     /// <returns>The byte offset just past the last compressed block (the map's base offset).</returns>
-    /// <remarks><paramref name="fs"/> and <paramref name="parentMap"/> are owned by the caller and
-    /// disposed only after this method returns (<see cref="HunkProcessor.CompressAll"/> is
-    /// synchronous), so the consumer closure never outlives them.</remarks>
+    /// <remarks>
+    ///     <paramref name="fs" /> and <paramref name="parentMap" /> are owned by the caller and
+    ///     disposed only after this method returns (<see cref="HunkProcessor.CompressAll" /> is
+    ///     synchronous), so the consumer closure never outlives them.
+    /// </remarks>
     private static long RunCompressionPipeline(HunkProcessor processor, uint hunkCount,
         Func<uint, byte[], int> readHunk, Sha1 sha1, MapEntry[] entries, Dictionary<string, uint> selfMap,
         Stream fs, IReadOnlyList<IChdCodec> codecs, ChdEncodeOptions? options, uint hunkBytes,
@@ -1376,18 +1335,19 @@ public static class ChdEncoder
             hunkCount,
             readHunk,
             sha1,
-            result => ConsumeHunk(result, entries, selfMap, fs, ref currentOffset, codecs, options, hunkCount, hunkBytes, parentMap),
+            result => ConsumeHunk(result, entries, selfMap, fs, ref currentOffset, codecs, options, hunkCount,
+                hunkBytes, parentMap),
             cancellationToken);
         return currentOffset;
     }
 
     /// <summary>
-    /// Single-consumer hunk sink, invoked by the pipeline in hunk order: performs SELF-dedup
-    /// (the map is only ever updated with already-consumed hunks, so references never chain),
-    /// then parent-hunk dedup against <paramref name="parentMap"/> (chdman priority: a hunk
-    /// found in the same image is a SELF reference; otherwise a matching parent unit becomes
-    /// a PARENT reference), assigns the sequential file offset, appends the block to the
-    /// output, and reports progress.
+    ///     Single-consumer hunk sink, invoked by the pipeline in hunk order: performs SELF-dedup
+    ///     (the map is only ever updated with already-consumed hunks, so references never chain),
+    ///     then parent-hunk dedup against <paramref name="parentMap" /> (chdman priority: a hunk
+    ///     found in the same image is a SELF reference; otherwise a matching parent unit becomes
+    ///     a PARENT reference), assigns the sequential file offset, appends the block to the
+    ///     output, and reports progress.
     /// </summary>
     private static void ConsumeHunk(HunkResult result, MapEntry[] entries, Dictionary<string, uint> selfMap,
         Stream output, ref long currentOffset, IReadOnlyList<IChdCodec> codecs, ChdEncodeOptions? options,
@@ -1445,10 +1405,8 @@ public static class ChdEncoder
     private static CdTrack FindTrackContainingFrame(CdToc toc, long frame)
     {
         foreach (var track in toc.Tracks)
-        {
             if (frame >= track.LogicalFrameStart && frame < track.LogicalFrameStart + track.PaddedFrames)
                 return track;
-        }
 
         throw new InvalidDataException($"Frame {frame} falls outside all tracks");
     }
@@ -1466,16 +1424,14 @@ public static class ChdEncoder
     private static void SwapPairs(byte[] buffer, int offset, int length)
     {
         for (var i = 0; i < length; i += 2)
-        {
             (buffer[offset + i], buffer[offset + i + 1]) = (buffer[offset + i + 1], buffer[offset + i]);
-        }
     }
 
     /// <summary>
-    /// Byte-swaps (little-endian) the 16-bit CDDA audio samples of a data chunk. For legacy
-    /// GD-ROMs (<c>CD_FLAG_GDROMLE</c>) whose AUDIO track data is stored little-endian, each
-    /// 16-bit sample byte pair must be reversed. Only the first <paramref name="sectorBytes"/>
-    /// bytes of each frame are swapped, leaving subcode intact.
+    ///     Byte-swaps (little-endian) the 16-bit CDDA audio samples of a data chunk. For legacy
+    ///     GD-ROMs (<c>CD_FLAG_GDROMLE</c>) whose AUDIO track data is stored little-endian, each
+    ///     16-bit sample byte pair must be reversed. Only the first <paramref name="sectorBytes" />
+    ///     bytes of each frame are swapped, leaving subcode intact.
     /// </summary>
     private static void SwapCdda16(byte[] buffer, int bufferLength, int sectorBytes, int frameBytes)
     {
@@ -1485,14 +1441,11 @@ public static class ChdEncoder
         for (var frameStart = 0; frameStart + sectorBytes <= bufferLength; frameStart += frameBytes)
         {
             var end = frameStart + sectorBytes;
-            for (var i = frameStart; i < end; i += 2)
-            {
-                (buffer[i], buffer[i + 1]) = (buffer[i + 1], buffer[i]);
-            }
+            for (var i = frameStart; i < end; i += 2) (buffer[i], buffer[i + 1]) = (buffer[i + 1], buffer[i]);
         }
     }
 
-    /// <summary>Raises <see cref="ChdEncodeOptions.HunkCompleted"/> for one hunk (no-op when unset).</summary>
+    /// <summary>Raises <see cref="ChdEncodeOptions.HunkCompleted" /> for one hunk (no-op when unset).</summary>
     private static void ReportHunkProgress(ChdEncodeOptions? options, IReadOnlyList<IChdCodec> codecs,
         MapEntry entry, uint hunkIndex, uint hunkCount, uint hunkBytes)
     {
@@ -1525,5 +1478,68 @@ public static class ChdEncoder
 
         callback(new HunkProgress(hunkIndex, hunkCount, (int)hunkBytes, storedBytes, entry.Compression,
             codecName, storedBytes / (double)hunkBytes));
+    }
+
+    /// <summary>
+    ///     Reads hunks sequentially from a non-seekable stream, skipping
+    ///     <see cref="ChdEncodeOptions.InputStartBytes" /> upfront.
+    /// </summary>
+    private sealed class SequentialStreamReader
+    {
+        private readonly long _skipBytes;
+        private readonly Stream _source;
+        private ulong _position;
+        private bool _skipDone;
+
+        internal SequentialStreamReader(Stream source, long skipBytes)
+        {
+            _source = source;
+            _skipBytes = skipBytes;
+        }
+
+        internal int ReadHunk(uint hunkIndex, byte[] buffer, ulong logicalBytes, uint hunkBytes)
+        {
+            // The pipeline always asks in order; any other access pattern cannot be served
+            // from a forward-only stream.
+            var expected = _position / hunkBytes;
+            if (hunkIndex != expected)
+                throw new InvalidDataException(
+                    $"Non-seekable source cannot rewind: pipeline requested hunk {hunkIndex}, stream is at {expected}");
+
+            var valid = logicalBytes - (ulong)hunkIndex * hunkBytes;
+            if ((long)valid <= 0)
+                return 0;
+
+            var count = (int)Math.Min(hunkBytes, valid);
+
+            // Drain the skip prefix once, on the first hunk.
+            if (!_skipDone)
+            {
+                _skipDone = true;
+                var skip = _skipBytes;
+                var skipBuf = new byte[Math.Min(skip, 256 * 1024)];
+                while (skip > 0)
+                {
+                    var read = _source.Read(skipBuf, 0, (int)Math.Min(skip, skipBuf.Length));
+                    if (read == 0)
+                        throw new EndOfStreamException("Non-seekable source ended before InputStartBytes");
+
+                    skip -= read;
+                }
+            }
+
+            var total = 0;
+            while (total < count)
+            {
+                var read = _source.Read(buffer, total, count - total);
+                if (read == 0)
+                    break;
+
+                total += read;
+            }
+
+            _position += (ulong)count;
+            return total;
+        }
     }
 }

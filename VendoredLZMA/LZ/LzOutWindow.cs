@@ -1,21 +1,33 @@
 namespace VendoredLZMA.LZ;
 
-/// <summary>Sliding-window output buffer for LZMA decompression. Handles literal bytes, LZ77 copy blocks, and streaming to the output stream.</summary>
+/// <summary>
+///     Sliding-window output buffer for LZMA decompression. Handles literal bytes, LZ77 copy blocks, and streaming to
+///     the output stream.
+/// </summary>
 internal class OutWindow
 {
-    private byte[] _buffer = [];
-    private int _windowSize;
-    private int _pos;
-    private int _streamPos;
-    private int _pendingLen;
-    private int _pendingDist;
-    private Stream? _stream;
+    /// <summary>Maximum number of bytes allowed to be written.</summary>
+    internal long Limit;
 
     /// <summary>Total number of bytes written so far.</summary>
     internal long Total;
 
-    /// <summary>Maximum number of bytes allowed to be written.</summary>
-    internal long Limit;
+    private byte[] _buffer = [];
+    private int _pendingDist;
+    private int _pendingLen;
+    private int _pos;
+    private Stream? _stream;
+    private int _streamPos;
+    private int _windowSize;
+
+    /// <summary>Gets whether the window has space to write more data.</summary>
+    internal bool HasSpace => _pos < _windowSize && Total < Limit;
+
+    /// <summary>Gets whether there is a pending copy-block operation.</summary>
+    internal bool HasPending => _pendingLen > 0;
+
+    /// <summary>Gets the number of bytes available for reading from the window.</summary>
+    internal int AvailableBytes => _pos - _streamPos;
 
     /// <summary>Initialises or resizes the output window buffer.</summary>
     internal void Create(int windowSize, byte[]? buffer = null)
@@ -27,13 +39,9 @@ internal class OutWindow
         }
 
         if (_windowSize != windowSize)
-        {
             _buffer = new byte[windowSize];
-        }
         else
-        {
             _buffer[windowSize - 1] = 0;
-        }
 
         _windowSize = windowSize;
         _pos = 0;
@@ -66,10 +74,7 @@ internal class OutWindow
         Limit = size;
         _pos = _windowSize - size;
         CopyStream(stream, size);
-        if (_pos == _windowSize)
-        {
-            _pos = 0;
-        }
+        if (_pos == _windowSize) _pos = 0;
 
         _streamPos = _pos;
     }
@@ -92,10 +97,7 @@ internal class OutWindow
             return;
 
         _stream.Write(_buffer, _streamPos, size);
-        if (_pos >= _windowSize)
-        {
-            _pos = 0;
-        }
+        if (_pos >= _windowSize) _pos = 0;
 
         _streamPos = _pos;
     }
@@ -105,17 +107,11 @@ internal class OutWindow
     {
         var size = len;
         var pos = _pos - distance - 1;
-        if (pos < 0)
-        {
-            pos += _windowSize;
-        }
+        if (pos < 0) pos += _windowSize;
 
         for (; size > 0 && _pos < _windowSize && Total < Limit; size--)
         {
-            if (pos >= _windowSize)
-            {
-                pos = 0;
-            }
+            if (pos >= _windowSize) pos = 0;
 
             _buffer[_pos++] = _buffer[pos++];
             Total++;
@@ -140,10 +136,7 @@ internal class OutWindow
     internal byte GetByte(int distance)
     {
         var pos = _pos - distance - 1;
-        if (pos < 0)
-        {
-            pos += _windowSize;
-        }
+        if (pos < 0) pos += _windowSize;
 
         return _buffer[pos];
     }
@@ -155,15 +148,9 @@ internal class OutWindow
         while (size > 0 && _pos < _windowSize && Total < Limit)
         {
             var curSize = _windowSize - _pos;
-            if (curSize > Limit - Total)
-            {
-                curSize = (int)(Limit - Total);
-            }
+            if (curSize > Limit - Total) curSize = (int)(Limit - Total);
 
-            if (curSize > size)
-            {
-                curSize = size;
-            }
+            if (curSize > size) curSize = size;
 
             var numReadBytes = stream.Read(_buffer, _pos, curSize);
             if (numReadBytes == 0)
@@ -185,12 +172,6 @@ internal class OutWindow
         Limit = Total + size;
     }
 
-    /// <summary>Gets whether the window has space to write more data.</summary>
-    internal bool HasSpace => _pos < _windowSize && Total < Limit;
-
-    /// <summary>Gets whether there is a pending copy-block operation.</summary>
-    internal bool HasPending => _pendingLen > 0;
-
     /// <summary>Reads decoded data from the window into a byte array.</summary>
     internal int Read(byte[] buffer, int offset, int count)
     {
@@ -198,10 +179,7 @@ internal class OutWindow
             return 0;
 
         var size = _pos - _streamPos;
-        if (size > count)
-        {
-            size = count;
-        }
+        if (size > count) size = count;
 
         Buffer.BlockCopy(_buffer, _streamPos, buffer, offset, size);
         _streamPos += size;
@@ -214,13 +192,10 @@ internal class OutWindow
         return size;
     }
 
-    /// <summary>Completes any pending copy-block operation from a previous <see cref="CopyBlock"/> call.</summary>
+    /// <summary>Completes any pending copy-block operation from a previous <see cref="CopyBlock" /> call.</summary>
     internal void CopyPending()
     {
         if (_pendingLen > 0)
             CopyBlock(_pendingDist, _pendingLen);
     }
-
-    /// <summary>Gets the number of bytes available for reading from the window.</summary>
-    internal int AvailableBytes => _pos - _streamPos;
 }

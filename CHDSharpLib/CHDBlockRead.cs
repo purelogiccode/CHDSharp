@@ -12,15 +12,20 @@ internal static class ChdBlockRead
         LoggerMessage.Define<CompressionType>(LogLevel.Error, new EventId(1), "Unexpected compression type {CompType}");
 
     private static readonly Action<ILogger, int, int, uint, Exception?> LogBlockSummary =
-        LoggerMessage.Define<int, int, uint>(LogLevel.Debug, new EventId(2), "Total Blocks {TotalBlocks}, Repeat Blocks {RepeatBlocks}, Output Block Size {BlockSize}");
+        LoggerMessage.Define<int, int, uint>(LogLevel.Debug, new EventId(2),
+            "Total Blocks {TotalBlocks}, Repeat Blocks {RepeatBlocks}, Output Block Size {BlockSize}");
 
     private static readonly Action<ILogger, int, string, int, int, int, Exception?> LogCompressionStats =
-        LoggerMessage.Define<int, string, int, int, int>(LogLevel.Debug, new EventId(3), "Compression {Index} : {Compression} : Block Count {Count}, Repeat Source Block Count {UniqueCount}, Repeat Total Block Count {SelfCount}");
+        LoggerMessage.Define<int, string, int, int, int>(LogLevel.Debug, new EventId(3),
+            "Compression {Index} : {Compression} : Block Count {Count}, Repeat Source Block Count {UniqueCount}, Repeat Total Block Count {SelfCount}");
 
     private static readonly Action<ILogger, int, Exception?> LogRepeatedBlocksCount =
         LoggerMessage.Define<int>(LogLevel.Debug, new EventId(4), "{Count} repeated used blocks");
 
-    /// <summary>Scans the map for <see cref="CompressionType.Compressionself"/> entries and builds usage counts for referenced source blocks.</summary>
+    /// <summary>
+    ///     Scans the map for <see cref="CompressionType.Compressionself" /> entries and builds usage counts for
+    ///     referenced source blocks.
+    /// </summary>
     /// <param name="chd">The parsed CHD header containing the block map.</param>
     internal static void FindRepeatedBlocks(ChdHeader chd)
     {
@@ -92,9 +97,7 @@ internal static class ChdBlockRead
 
             var comp = "";
             if (i < chd.Compression.Length)
-            {
                 comp = chd.Compression[i].ToString();
-            }
             else
                 switch (i)
                 {
@@ -106,24 +109,26 @@ internal static class ChdBlockRead
                         break;
                 }
 
-            LogCompressionStats(Log, i, comp, compressionCount[i], compressionUniqueCount[i], compressionSelfCount[i], null);
+            LogCompressionStats(Log, i, comp, compressionCount[i], compressionUniqueCount[i], compressionSelfCount[i],
+                null);
         }
     }
 
-    /// <summary>Retains the most frequently used blocks for caching, promoting them to keep their decompressed buffers, and flattens remaining self-references.</summary>
+    /// <summary>
+    ///     Retains the most frequently used blocks for caching, promoting them to keep their decompressed buffers, and
+    ///     flattens remaining self-references.
+    /// </summary>
     /// <param name="chd">The parsed CHD header containing the block map.</param>
     /// <param name="blocksToKeep">The maximum number of blocks to keep cached in memory.</param>
     internal static void KeepMostRepeatedBlocks(ChdHeader chd, int blocksToKeep)
     {
         var mapentries = new List<MapEntry>();
         foreach (var me in chd.Map)
-        {
             if (me.UseCount > 0)
             {
                 me.UsageWeight = GetWeigth(chd, me) * me.UseCount;
                 mapentries.Add(me);
             }
-        }
 
         LogRepeatedBlocksCount(Log, mapentries.Count, null);
         if (mapentries.Count < blocksToKeep)
@@ -166,7 +171,10 @@ internal static class ChdBlockRead
         });
     }
 
-    /// <summary>Computes a relative weight for a map entry based on its compression type, used to prioritize blocks for caching.</summary>
+    /// <summary>
+    ///     Computes a relative weight for a map entry based on its compression type, used to prioritize blocks for
+    ///     caching.
+    /// </summary>
     /// <param name="chd">The parsed CHD header.</param>
     /// <param name="me">The map entry to evaluate.</param>
     /// <returns>An integer weight where higher values indicate more expensive decompression.</returns>
@@ -207,21 +215,14 @@ internal static class ChdBlockRead
     internal static void FindBlockReaders(ChdHeader chd)
     {
         chd.ChdReader = new ChdReader[chd.Compression.Length];
-        for (var i = 0; i < chd.Compression.Length; i++)
-        {
-            chd.ChdReader[i] = GetReaderFromCodec(chd.Compression[i]);
-        }
+        for (var i = 0; i < chd.Compression.Length; i++) chd.ChdReader[i] = GetReaderFromCodec(chd.Compression[i]);
 
         if (chd.SecondaryCodec != ChdCodec.None)
         {
             chd.SecondaryChdReader = GetReaderFromCodec(chd.SecondaryCodec);
             foreach (var me in chd.Map)
-            {
                 if (me.Comptype == CompressionType.Compressiontype2Nd)
-                {
                     me.SecondaryReader = chd.SecondaryChdReader;
-                }
-            }
         }
     }
 
@@ -245,19 +246,25 @@ internal static class ChdBlockRead
         }
     }
 
-    /// <summary>Decompresses a single map entry into the output buffer, handling compression, caching, self-references, and CRC validation.</summary>
+    /// <summary>
+    ///     Decompresses a single map entry into the output buffer, handling compression, caching, self-references, and
+    ///     CRC validation.
+    /// </summary>
     /// <param name="mapEntry">The map entry describing the compressed block.</param>
     /// <param name="arrPool">The array pool used for buffer rental and caching.</param>
     /// <param name="compression">The array of decompression delegates indexed by compression type.</param>
     /// <param name="codec">The codec-specific state and settings.</param>
     /// <param name="buffOut">The pre-allocated output buffer to receive decompressed data.</param>
     /// <param name="buffOutLength">The expected length of the decompressed data.</param>
-    /// <param name="buffInOverride">Optional caller-owned compressed input buffer; when non-null
-    /// it is used instead of <paramref name="mapEntry"/>'s shared <c>BuffIn</c> slot. This lets
-    /// concurrent readers (which load compressed data into private buffers) avoid racing on the
-    /// shared slot. <c>null</c> (default) keeps the shared-slot behavior of the sync path.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise an error code.</returns>
-    internal static ChdError ReadBlock(MapEntry mapEntry, ArrayPool arrPool, ChdReader[] compression, ChdCodecState codec, byte[] buffOut, int buffOutLength, byte[]? buffInOverride = null)
+    /// <param name="buffInOverride">
+    ///     Optional caller-owned compressed input buffer; when non-null
+    ///     it is used instead of <paramref name="mapEntry" />'s shared <c>BuffIn</c> slot. This lets
+    ///     concurrent readers (which load compressed data into private buffers) avoid racing on the
+    ///     shared slot. <c>null</c> (default) keeps the shared-slot behavior of the sync path.
+    /// </param>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
+    internal static ChdError ReadBlock(MapEntry mapEntry, ArrayPool arrPool, ChdReader[] compression,
+        ChdCodecState codec, byte[] buffOut, int buffOutLength, byte[]? buffInOverride = null)
     {
         var checkCrc = true;
 
@@ -276,7 +283,8 @@ internal static class ChdBlockRead
                         if (buffIn is null)
                             return ChdError.Chderrcodecerror;
 
-                        var ret = compression[(int)mapEntry.Comptype].Invoke(buffIn, (int)mapEntry.Length, buffOut, buffOutLength, codec);
+                        var ret = compression[(int)mapEntry.Comptype]
+                            .Invoke(buffIn, (int)mapEntry.Length, buffOut, buffOutLength, codec);
 
                         if (ret != ChdError.Chderrnone)
                             return ret;
@@ -343,15 +351,9 @@ internal static class ChdBlockRead
             case CompressionType.Compressionmini:
             {
                 var tmp = BitConverter.GetBytes(mapEntry.Offset);
-                for (var i = 0; i < 8; i++)
-                {
-                    buffOut[i] = tmp[7 - i];
-                }
+                for (var i = 0; i < 8; i++) buffOut[i] = tmp[7 - i];
 
-                for (var i = 8; i < buffOutLength; i++)
-                {
-                    buffOut[i] = buffOut[i - 8];
-                }
+                for (var i = 8; i < buffOutLength; i++) buffOut[i] = buffOut[i - 8];
 
                 break;
             }
@@ -390,7 +392,8 @@ internal static class ChdBlockRead
                         if (buffIn is null)
                             return ChdError.Chderrcodecerror;
 
-                        var ret = mapEntry.SecondaryReader.Invoke(buffIn, (int)mapEntry.Length, buffOut, buffOutLength, codec);
+                        var ret = mapEntry.SecondaryReader.Invoke(buffIn, (int)mapEntry.Length, buffOut, buffOutLength,
+                            codec);
 
                         if (ret != ChdError.Chderrnone)
                             return ret;
@@ -424,12 +427,9 @@ internal static class ChdBlockRead
         }
 
         if (checkCrc)
-        {
-            if ((mapEntry.Crc != null && !Crc.VerifyDigest((uint)mapEntry.Crc, buffOut, 0, (uint)buffOutLength)) || (mapEntry.Crc16 != null && Crc16.Calc(buffOut, buffOutLength) != mapEntry.Crc16))
-            {
+            if ((mapEntry.Crc != null && !Crc.VerifyDigest((uint)mapEntry.Crc, buffOut, 0, (uint)buffOutLength)) ||
+                (mapEntry.Crc16 != null && Crc16.Calc(buffOut, buffOutLength) != mapEntry.Crc16))
                 return ChdError.Chderrdecompressionerror;
-            }
-        }
 
         return ChdError.Chderrnone;
     }

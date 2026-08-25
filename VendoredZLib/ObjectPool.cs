@@ -4,27 +4,29 @@ using System.Collections.Concurrent;
 namespace VendoredZLib;
 
 /// <summary>
-/// An implementation of <see cref="ObjectPool{T}"/> based on the one in dotnet/aspnetcore GitHub repository.
+///     An implementation of <see cref="ObjectPool{T}" /> based on the one in dotnet/aspnetcore GitHub repository.
 /// </summary>
 /// <typeparam name="T">The type to pool objects for.</typeparam>
-/// <remarks>This implementation keeps a cache of retained objects. This means that if objects are returned when the pool has already reached "maximumRetained" objects they will be available to be garbage collected.</remarks>
+/// <remarks>
+///     This implementation keeps a cache of retained objects. This means that if objects are returned when the pool
+///     has already reached "maximumRetained" objects they will be available to be garbage collected.
+/// </remarks>
 internal class ObjectPool<T> where T : class, new()
 {
+    private protected readonly ConcurrentQueue<T> Items = new();
     private readonly int _maxCapacity;
+    private protected T FastItem;
     private int _numItems;
 
-    private protected readonly ConcurrentQueue<T> Items = new();
-    private protected T FastItem;
-
     /// <summary>
-    /// Creates an instance of <see cref="ObjectPool{T}"/>.
+    ///     Creates an instance of <see cref="ObjectPool{T}" />.
     /// </summary>
     public ObjectPool() : this(Environment.ProcessorCount * 2)
     {
     }
 
     /// <summary>
-    /// Creates an instance of <see cref="ObjectPool{T}"/>.
+    ///     Creates an instance of <see cref="ObjectPool{T}" />.
     /// </summary>
     /// <param name="maximumRetained">The maximum number of objects to retain in the pool.</param>
     public ObjectPool(int maximumRetained)
@@ -34,9 +36,9 @@ internal class ObjectPool<T> where T : class, new()
     }
 
     /// <summary>
-    /// Gets an object from the pool if one is available, otherwise creates one.
+    ///     Gets an object from the pool if one is available, otherwise creates one.
     /// </summary>
-    /// <returns>A <typeparamref name="T"/>.</returns>
+    /// <returns>A <typeparamref name="T" />.</returns>
     public T Get()
     {
         var item = FastItem;
@@ -56,7 +58,7 @@ internal class ObjectPool<T> where T : class, new()
     }
 
     /// <summary>
-    /// Return an object to the pool.
+    ///     Return an object to the pool.
     /// </summary>
     /// <param name="obj">The object to add to the pool.</param>
     public void Return(T obj)

@@ -1,12 +1,18 @@
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Tests for <see cref="ChdFile.ReadSector"/> / <see cref="ChdFile.ReadSectorMsf"/> /
-/// <see cref="ChdFile.ReadFrame"/> (FutureEnhancements #10): LBA/MSF-addressed sector and
-/// frame reads against the real corpus CD CHDs.
+///     Tests for <see cref="ChdFile.ReadSector" /> / <see cref="ChdFile.ReadSectorMsf" /> /
+///     <see cref="ChdFile.ReadFrame" /> (FutureEnhancements #10): LBA/MSF-addressed sector and
+///     frame reads against the real corpus CD CHDs.
 /// </summary>
 public class ReadSectorTests
 {
+    /// <summary>The corpus CD: 1000 frames (2 tracks: 600 MODE1 + 400 AUDIO), no pregap.</summary>
+    private const string CorpusCd = "v5_cd_default.chd";
+
+    private const int CdSectorBytes = 2352;
+    private const int CdFrameBytes = 2448;
+
     private static string TestDataDir
     {
         get
@@ -24,12 +30,6 @@ public class ReadSectorTests
         Assert.NotNull(chd);
         return chd;
     }
-
-    /// <summary>The corpus CD: 1000 frames (2 tracks: 600 MODE1 + 400 AUDIO), no pregap.</summary>
-    private const string CorpusCd = "v5_cd_default.chd";
-
-    private const int CdSectorBytes = 2352;
-    private const int CdFrameBytes = 2448;
 
     [Fact]
     public void ReadSector_MatchesDecompressedImage()

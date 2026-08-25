@@ -41,7 +41,7 @@ public static class Crc16
 
     /// <summary>Calculates a CCITT CRC-16 checksum over the specified data.</summary>
     /// <param name="data">The byte array containing the data to process.</param>
-    /// <param name="length">The number of bytes to process from the start of <paramref name="data"/>.</param>
+    /// <param name="length">The number of bytes to process from the start of <paramref name="data" />.</param>
     /// <returns>The computed 16-bit CRC checksum.</returns>
     internal static ushort Calc(byte[] data, int length)
     {
@@ -49,10 +49,7 @@ public static class Crc16
 
         var index = 0;
         /* fetch the current value into a local and rip through the source data */
-        while (index != length)
-        {
-            crc = (ushort)((crc << 8) ^ STable[(crc >> 8) ^ data[index++]]);
-        }
+        while (index != length) crc = (ushort)((crc << 8) ^ STable[(crc >> 8) ^ data[index++]]);
 
         return crc;
     }
@@ -63,10 +60,7 @@ public static class Crc16
     public static ushort Compute(ReadOnlySpan<byte> data)
     {
         ushort crc = 0xFFFF;
-        for (var i = 0; i < data.Length; i++)
-        {
-            crc = (ushort)((crc << 8) ^ STable[(crc >> 8) ^ data[i]]);
-        }
+        for (var i = 0; i < data.Length; i++) crc = (ushort)((crc << 8) ^ STable[(crc >> 8) ^ data[i]]);
 
         return crc;
     }

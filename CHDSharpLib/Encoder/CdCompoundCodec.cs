@@ -4,26 +4,23 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Shared implementation for the CD compound codecs ('cdzl', 'cdlz', 'cdzs'), matching
-/// MAME's <c>chd_cd_compressor&lt;BaseCompressor, SubcodeCompressor&gt;</c>: frames are
-/// deinterleaved into a data portion (frames × 2352) and a subcode portion (frames × 96);
-/// sectors with a valid sync header and ECC get their sync header + ECC cleared and a
-/// bitmap bit set (the decompressor regenerates them). The result is
-/// <c>[ecc bitmap][2/3-byte base length][base compressed][subcode compressed]</c>.
+///     Shared implementation for the CD compound codecs ('cdzl', 'cdlz', 'cdzs'), matching
+///     MAME's <c>chd_cd_compressor&lt;BaseCompressor, SubcodeCompressor&gt;</c>: frames are
+///     deinterleaved into a data portion (frames × 2352) and a subcode portion (frames × 96);
+///     sectors with a valid sync header and ECC get their sync header + ECC cleared and a
+///     bitmap bit set (the decompressor regenerates them). The result is
+///     <c>[ecc bitmap][2/3-byte base length][base compressed][subcode compressed]</c>.
 /// </summary>
 public abstract class CdCompoundCodec : IChdCodec
 {
-    private readonly int _framesPerHunk;
-    private readonly int _dataBytes;
-    private readonly int _subcodeBytes;
     private readonly IChdCodec _baseCodec;
-    private readonly IChdCodec _subcodeCodec;
     private readonly byte[] _dataBuffer;
-    private readonly byte[] _subcodeBuffer;
+    private readonly int _dataBytes;
     private readonly byte[] _eccBitmap;
-
-    /// <inheritdoc/>
-    public abstract uint Tag { get; }
+    private readonly int _framesPerHunk;
+    private readonly byte[] _subcodeBuffer;
+    private readonly int _subcodeBytes;
+    private readonly IChdCodec _subcodeCodec;
 
     /// <summary>Creates a CD compound codec for CD-sized hunks.</summary>
     /// <param name="hunkBytes">Hunk size in bytes; must be a multiple of the CD frame size.</param>
@@ -32,7 +29,8 @@ public abstract class CdCompoundCodec : IChdCodec
     protected CdCompoundCodec(uint hunkBytes, IChdCodec baseCodec, IChdCodec subcodeCodec)
     {
         if (hunkBytes % CdConstants.FrameSize != 0)
-            throw new ArgumentException($"hunkBytes ({hunkBytes}) must be a multiple of the CD frame size ({CdConstants.FrameSize})");
+            throw new ArgumentException(
+                $"hunkBytes ({hunkBytes}) must be a multiple of the CD frame size ({CdConstants.FrameSize})");
 
         _framesPerHunk = (int)(hunkBytes / CdConstants.FrameSize);
         _dataBytes = _framesPerHunk * CdConstants.MaxSectorData;
@@ -44,11 +42,15 @@ public abstract class CdCompoundCodec : IChdCodec
         _eccBitmap = new byte[(_framesPerHunk + 7) / 8];
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
+    public abstract uint Tag { get; }
+
+    /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
         if (data.Length != _framesPerHunk * CdConstants.FrameSize)
-            throw new ArgumentException($"hunk size mismatch: expected {_framesPerHunk * CdConstants.FrameSize}, got {data.Length}");
+            throw new ArgumentException(
+                $"hunk size mismatch: expected {_framesPerHunk * CdConstants.FrameSize}, got {data.Length}");
 
         var complenBytes = data.Length < 65536 ? 2 : 3;
         var eccBytes = _eccBitmap.Length;
@@ -62,7 +64,8 @@ public abstract class CdCompoundCodec : IChdCodec
         {
             var src = f * CdConstants.FrameSize;
             Array.Copy(data, src, _dataBuffer, f * CdConstants.MaxSectorData, CdConstants.MaxSectorData);
-            Array.Copy(data, src + CdConstants.MaxSectorData, _subcodeBuffer, f * CdConstants.MaxSubcodeData, CdConstants.MaxSubcodeData);
+            Array.Copy(data, src + CdConstants.MaxSectorData, _subcodeBuffer, f * CdConstants.MaxSubcodeData,
+                CdConstants.MaxSubcodeData);
 
             if (data.AsSpan(src, CdEcc.SyncHeader.Length).SequenceEqual(CdEcc.SyncHeader) && CdEcc.EccVerify(data, src))
             {
@@ -117,7 +120,7 @@ public sealed class CdzlCodec : CdCompoundCodec
     {
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override uint Tag => CodecTags.Cdzl;
 }
 
@@ -131,7 +134,7 @@ public sealed class CdlzCodec : CdCompoundCodec
     {
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override uint Tag => CodecTags.Cdlz;
 }
 
@@ -145,6 +148,6 @@ public sealed class CdzsCodec : CdCompoundCodec
     {
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override uint Tag => CodecTags.Cdzs;
 }

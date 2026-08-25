@@ -1,6 +1,9 @@
 namespace CHDSharp.Models;
 
-/// <summary>Represents a single track in a CD/GD-ROM CHD image, including type, size, pregap/postgap, and frame offset information.</summary>
+/// <summary>
+///     Represents a single track in a CD/GD-ROM CHD image, including type, size, pregap/postgap, and frame offset
+///     information.
+/// </summary>
 public sealed class ChdTrackInfo
 {
     /// <summary>1-based track number.</summary>

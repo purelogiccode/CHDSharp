@@ -157,11 +157,11 @@ public enum CompressionType
     Compressionrlelarge = 8,
 
     /* same as the last COMPRESSION_SELF block */
-    /// <summary>Same as the most recent <see cref="Compressionself"/> block.</summary>
+    /// <summary>Same as the most recent <see cref="Compressionself" /> block.</summary>
     Compressionself0 = 9,
 
     /* same as the last COMPRESSION_SELF block + 1 */
-    /// <summary>Same as the most recent <see cref="Compressionself"/> block plus one.</summary>
+    /// <summary>Same as the most recent <see cref="Compressionself" /> block plus one.</summary>
     Compressionself1 = 10,
 
     /* same block in the parent */
@@ -169,11 +169,11 @@ public enum CompressionType
     Compressionparentself = 11,
 
     /* same as the last COMPRESSION_PARENT block */
-    /// <summary>Same as the most recent <see cref="Compressionparent"/> block.</summary>
+    /// <summary>Same as the most recent <see cref="Compressionparent" /> block.</summary>
     Compressionparent0 = 12,
 
     /* same as the last COMPRESSION_PARENT block + 1 */
-    /// <summary>Same as the most recent <see cref="Compressionparent"/> block plus one.</summary>
+    /// <summary>Same as the most recent <see cref="Compressionparent" /> block plus one.</summary>
     Compressionparent1 = 13,
 
     /* ADDED HERE: used in CHD V3 and V4 */
@@ -189,7 +189,10 @@ public enum CompressionType
     Compressionzero = 102,
 
     /* ADDED HERE: V3/V4 secondary compressed hunk (type 6) */
-    /// <summary>Secondary compressed hunk in V3/V4 CHDs (type 6 map entry). Decompressed using the secondary codec (typically FLAC for CDDA audio).</summary>
+    /// <summary>
+    ///     Secondary compressed hunk in V3/V4 CHDs (type 6 map entry). Decompressed using the secondary codec (typically
+    ///     FLAC for CDDA audio).
+    /// </summary>
     Compressiontype2Nd = 103
 }
 

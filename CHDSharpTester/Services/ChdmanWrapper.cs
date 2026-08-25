@@ -7,12 +7,15 @@ using Serilog;
 
 namespace CHDSharpTester.Services;
 
-/// <summary>Wraps the chdman.exe command-line tool to cross-check the C# CHD reader via info, verify, and extractraw operations.</summary>
+/// <summary>
+///     Wraps the chdman.exe command-line tool to cross-check the C# CHD reader via info, verify, and extractraw
+///     operations.
+/// </summary>
 internal class ChdmanWrapper
 {
     private readonly string _chdmanPath;
 
-    /// <summary>Initializes a new instance of the <see cref="ChdmanWrapper"/> class with the path to the chdman executable.</summary>
+    /// <summary>Initializes a new instance of the <see cref="ChdmanWrapper" /> class with the path to the chdman executable.</summary>
     /// <param name="chdmanPath">The full path to chdman.exe.</param>
     public ChdmanWrapper(string chdmanPath)
     {
@@ -22,50 +25,9 @@ internal class ChdmanWrapper
     /// <summary>Gets whether the configured chdman executable exists on disk.</summary>
     public bool Available => File.Exists(_chdmanPath);
 
-    /// <summary>Represents parsed header information returned by chdman's info command.</summary>
-    public sealed class Info
-    {
-        /// <summary>The CHD file format version.</summary>
-        internal int Version;
-
-        /// <summary>The logical (decompressed) size of the CHD image, in bytes.</summary>
-        internal ulong LogicalBytes;
-
-        /// <summary>The size of each hunk, in bytes.</summary>
-        internal uint HunkBytes;
-
-        /// <summary>The total number of hunks in the image.</summary>
-        internal uint TotalHunks;
-
-        /// <summary>The string description of compression codec(s) used by the CHD (e.g. "zstd", "cdzs", "cdzl,cdfl").</summary>
-        internal string Compression = "";
-
-        /// <summary>The overall SHA1 hash (raw data + metadata), or null if not present.</summary>
-        internal string? Sha1;
-
-        /// <summary>The raw data SHA1 hash, or null if not present.</summary>
-        internal string? DataSha1;
-    }
-
-    /// <summary>Represents the result of a chdman process execution.</summary>
-    public sealed class Result
-    {
-        /// <summary>The process exit code.</summary>
-        internal int ExitCode;
-
-        /// <summary>The captured standard output text.</summary>
-        internal string StdOut = "";
-
-        /// <summary>The captured standard error text.</summary>
-        internal string StdErr = "";
-
-        /// <summary>Gets the combined standard output and standard error text.</summary>
-        internal string All => StdOut + "\n" + StdErr;
-    }
-
     /// <summary>Runs chdman with the specified arguments and returns the captured process result.</summary>
     /// <param name="args">The arguments to pass to chdman.</param>
-    /// <returns>A <see cref="Result"/> containing the exit code and output streams.</returns>
+    /// <returns>A <see cref="Result" /> containing the exit code and output streams.</returns>
     public Result Run(params string[] args)
     {
         try
@@ -83,7 +45,8 @@ internal class ChdmanWrapper
             foreach (var a in args)
                 psi.ArgumentList.Add(a);
 
-            using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+            using var p = Process.Start(psi) ??
+                          throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
             var tOut = p.StandardOutput.ReadToEndAsync();
             var tErr = p.StandardError.ReadToEndAsync();
             p.WaitForExit();
@@ -99,7 +62,7 @@ internal class ChdmanWrapper
 
     /// <summary>Runs chdman info on a CHD file and parses key header fields. Returns null on failure.</summary>
     /// <param name="file">The path to the CHD file.</param>
-    /// <returns>An <see cref="Info"/> instance with parsed fields, or null if chdman failed.</returns>
+    /// <returns>An <see cref="Info" /> instance with parsed fields, or null if chdman failed.</returns>
     public Info? GetInfo(string file)
     {
         var r = Run("info", "-i", file);
@@ -142,7 +105,8 @@ internal class ChdmanWrapper
             psi.ArgumentList.Add(parent);
         }
 
-        using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+        using var p = Process.Start(psi) ??
+                      throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
         p.WaitForExit();
@@ -179,7 +143,8 @@ internal class ChdmanWrapper
             psi.ArgumentList.Add(length.ToString(CultureInfo.InvariantCulture));
             psi.ArgumentList.Add("-f");
 
-            using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+            using var p = Process.Start(psi) ??
+                          throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
             var tOut = p.StandardOutput.ReadToEndAsync();
             var tErr = p.StandardError.ReadToEndAsync();
             p.WaitForExit();
@@ -206,7 +171,10 @@ internal class ChdmanWrapper
     }
 
 
-    /// <summary>Copies (recompresses) a CHD file using chdman copy. Optionally writes the parent to a separate file for delta CHD chains.</summary>
+    /// <summary>
+    ///     Copies (recompresses) a CHD file using chdman copy. Optionally writes the parent to a separate file for delta
+    ///     CHD chains.
+    /// </summary>
     /// <param name="input">The source CHD file path.</param>
     /// <param name="output">The destination CHD file path.</param>
     /// <param name="compression">The compression codec(s) to apply (e.g. "cdzs", "zstd", "cdzl,cdfl").</param>
@@ -225,12 +193,12 @@ internal class ChdmanWrapper
         return r.ExitCode == 0 && File.Exists(output);
     }
 
-    /// <summary>Same as <see cref="Copy"/> but returns the full chdman result for diagnostics.</summary>
+    /// <summary>Same as <see cref="Copy" /> but returns the full chdman result for diagnostics.</summary>
     /// <param name="input">The source CHD file path.</param>
     /// <param name="output">The destination CHD file path.</param>
     /// <param name="compression">The compression codec(s) to apply.</param>
     /// <param name="parentOut">Optional parent output path for delta CHDs.</param>
-    /// <returns>A <see cref="Result"/> containing the exit code and output streams.</returns>
+    /// <returns>A <see cref="Result" /> containing the exit code and output streams.</returns>
     public Result CopyVerbose(string input, string output, string compression, string? parentOut = null)
     {
         var args = new List<string> { "copy", "-i", input, "-o", output, "-c", compression, "-f" };
@@ -266,5 +234,45 @@ internal class ChdmanWrapper
         var m = Regex.Match(text, pattern);
         return m.Success ? m.Groups[1].Value.ToLowerInvariant() : null;
     }
-}
 
+    /// <summary>Represents parsed header information returned by chdman's info command.</summary>
+    public sealed class Info
+    {
+        /// <summary>The string description of compression codec(s) used by the CHD (e.g. "zstd", "cdzs", "cdzl,cdfl").</summary>
+        internal string Compression = "";
+
+        /// <summary>The raw data SHA1 hash, or null if not present.</summary>
+        internal string? DataSha1;
+
+        /// <summary>The size of each hunk, in bytes.</summary>
+        internal uint HunkBytes;
+
+        /// <summary>The logical (decompressed) size of the CHD image, in bytes.</summary>
+        internal ulong LogicalBytes;
+
+        /// <summary>The overall SHA1 hash (raw data + metadata), or null if not present.</summary>
+        internal string? Sha1;
+
+        /// <summary>The total number of hunks in the image.</summary>
+        internal uint TotalHunks;
+
+        /// <summary>The CHD file format version.</summary>
+        internal int Version;
+    }
+
+    /// <summary>Represents the result of a chdman process execution.</summary>
+    public sealed class Result
+    {
+        /// <summary>The process exit code.</summary>
+        internal int ExitCode;
+
+        /// <summary>The captured standard error text.</summary>
+        internal string StdErr = "";
+
+        /// <summary>The captured standard output text.</summary>
+        internal string StdOut = "";
+
+        /// <summary>Gets the combined standard output and standard error text.</summary>
+        internal string All => StdOut + "\n" + StdErr;
+    }
+}

@@ -1,10 +1,10 @@
 namespace CHDSharpBattleTest;
 
 /// <summary>
-/// Deterministic corpus generator for the battle test: every input is produced from a
-/// seeded RNG, so runs are reproducible. Produces raw binary inputs with different
-/// compression profiles (zeros, random, pattern, text, PCM audio, mixed, repeated hunks)
-/// plus CD images (CUE+BIN and ISO) with mixed track types.
+///     Deterministic corpus generator for the battle test: every input is produced from a
+///     seeded RNG, so runs are reproducible. Produces raw binary inputs with different
+///     compression profiles (zeros, random, pattern, text, PCM audio, mixed, repeated hunks)
+///     plus CD images (CUE+BIN and ISO) with mixed track types.
 /// </summary>
 internal static class TestDataGenerator
 {
@@ -29,10 +29,7 @@ internal static class TestDataGenerator
         rng.NextBytes(block);
 
         var b = new byte[size];
-        for (var i = 0; i < b.Length; i++)
-        {
-            b[i] = block[i % block.Length];
-        }
+        for (var i = 0; i < b.Length; i++) b[i] = block[i % block.Length];
 
         return b;
     }
@@ -89,10 +86,7 @@ internal static class TestDataGenerator
         double phase = 0;
         for (var i = 0; i < samples; i++)
         {
-            if (i % 4096 == 0)
-            {
-                freq = 180 + rng.NextDouble() * 1200;
-            }
+            if (i % 4096 == 0) freq = 180 + rng.NextDouble() * 1200;
 
             phase += 2 * Math.PI * freq / 44100.0;
             var sample = (short)(Math.Sin(phase) * 11000 + (rng.NextDouble() - 0.5) * 400);
@@ -166,9 +160,9 @@ internal static class TestDataGenerator
 
         // track 2: audio — 150 pregap frames then 300 data frames
         for (var f = 0; f < 150; f++, lba++)
-            WriteAudioFrame(fs, lba, rng, silent: true);
+            WriteAudioFrame(fs, lba, rng, true);
         for (var f = 0; f < track2Frames; f++, lba++)
-            WriteAudioFrame(fs, lba, rng, silent: false);
+            WriteAudioFrame(fs, lba, rng, false);
 
         // track 3: Mode2 formless (2336-byte user data)
         for (var f = 0; f < track3Frames; f++, lba++)
@@ -181,15 +175,15 @@ internal static class TestDataGenerator
         var track3Index = FramesToMsf(track1Frames + 150 + track2Frames);
 
         File.WriteAllText(cuePath, $"""
-            FILE "cd-mixed.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                PREGAP 00:02:00
-                INDEX 01 {track2Index}
-              TRACK 03 MODE2/2352
-                INDEX 01 {track3Index}
-            """);
+                                    FILE "cd-mixed.bin" BINARY
+                                      TRACK 01 MODE1/2352
+                                        INDEX 01 00:00:00
+                                      TRACK 02 AUDIO
+                                        PREGAP 00:02:00
+                                        INDEX 01 {track2Index}
+                                      TRACK 03 MODE2/2352
+                                        INDEX 01 {track3Index}
+                                    """);
     }
 
     /// <summary>Creates a single audio-track CD (byte-swap exercise: LE BIN → BE CHD).</summary>
@@ -202,7 +196,7 @@ internal static class TestDataGenerator
         const int frames = 800;
         using var fs = File.Create(binPath);
         for (var f = 0; f < frames; f++)
-            WriteAudioFrame(fs, f, rng, silent: false);
+            WriteAudioFrame(fs, f, rng, false);
 
         fs.Flush();
         File.WriteAllText(cuePath, """
@@ -252,10 +246,7 @@ internal static class TestDataGenerator
         var data = new byte[length];
         rng.NextBytes(data);
         // a recognizable marker so track contents can be eyeballed in extracts
-        for (var i = 0; i < data.Length; i += 137)
-        {
-            data[i] = (byte)(i ^ salt);
-        }
+        for (var i = 0; i < data.Length; i += 137) data[i] = (byte)(i ^ salt);
 
         return data;
     }
@@ -263,7 +254,7 @@ internal static class TestDataGenerator
     private static void WriteMode1Frame(Stream fs, int lba, byte[] data)
     {
         var frame = new byte[2352];
-        WriteSyncHeader(frame, lba, mode: 0x01);
+        WriteSyncHeader(frame, lba, 0x01);
         Array.Copy(data, 0, frame, 16, 2048);
         // EDC + 8 zero + ECC: intentionally garbage; CD codecs recompute it
         fs.Write(frame);
@@ -272,7 +263,7 @@ internal static class TestDataGenerator
     private static void WriteMode2Frame(Stream fs, int lba, byte[] data)
     {
         var frame = new byte[2352];
-        WriteSyncHeader(frame, lba, mode: 0x02);
+        WriteSyncHeader(frame, lba, 0x02);
         Array.Copy(data, 0, frame, 16, 2336);
         fs.Write(frame);
     }
@@ -296,10 +287,7 @@ internal static class TestDataGenerator
     private static void WriteSyncHeader(byte[] frame, int lba, byte mode)
     {
         frame[0] = 0x00;
-        for (var i = 1; i < 11; i++)
-        {
-            frame[i] = 0xFF;
-        }
+        for (var i = 1; i < 11; i++) frame[i] = 0xFF;
 
         frame[11] = 0x00;
 

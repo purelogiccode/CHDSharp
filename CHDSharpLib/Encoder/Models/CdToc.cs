@@ -79,10 +79,10 @@ public struct CdTrack
     /// <summary>The 1-based track number.</summary>
     public int Number;
 
-    /// <summary>The track type (see <see cref="CdTrackType"/>).</summary>
+    /// <summary>The track type (see <see cref="CdTrackType" />).</summary>
     public int TrackType;
 
-    /// <summary>The subcode data type (see <see cref="CdSubType"/>).</summary>
+    /// <summary>The subcode data type (see <see cref="CdSubType" />).</summary>
     public int SubType;
 
     /// <summary>Size of data in each sector of this track.</summary>
@@ -143,6 +143,6 @@ public class CdToc
     /// <summary>Gets the tracks in playback order.</summary>
     public List<CdTrack> Tracks { get; } = new();
 
-    /// <summary>Gets or sets the disc-level flags (see <see cref="CdTocFlags"/>).</summary>
+    /// <summary>Gets or sets the disc-level flags (see <see cref="CdTocFlags" />).</summary>
     public uint Flags { get; set; }
 }

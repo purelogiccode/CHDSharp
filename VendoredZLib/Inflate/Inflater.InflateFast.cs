@@ -67,7 +67,9 @@ internal static partial class Inflater
             op = here.op;
             if (op == 0) // literal
             {
-                Trace.Tracevv(here.val is >= 0x20 and < 0x7f ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n" : $"inflate:         literal 0x{here.val:X2}\n");
+                Trace.Tracevv(here.val is >= 0x20 and < 0x7f
+                    ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n"
+                    : $"inflate:         literal 0x{here.val:X2}\n");
                 @out = (byte)here.val;
                 @out = ref Unsafe.Add(ref @out, 1U);
                 strm.NextOutput++;
@@ -144,14 +146,12 @@ internal static partial class Inflater
                     {
                         op = dist - op; // distance back in window
                         if (op > whave)
-                        {
                             if (state.Sane != 0)
                             {
                                 strm.Msg = "invalid distance too far back";
                                 state.Mode = InflateMode.Bad;
                                 break;
                             }
-                        }
 
                         ref var from = ref window; // where to copy match from
                         if (wnext == 0) // very common case

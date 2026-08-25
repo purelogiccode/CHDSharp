@@ -3,11 +3,11 @@ using System.Diagnostics;
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Deterministic mutation testing (Phase 6.1): applies thousands of seeded byte mutations,
-/// truncations, and header field corruptions to real CHD files and asserts that the library
-/// fails gracefully — a <see cref="ChdError"/> or a small bounded set of exceptions, never an
-/// <see cref="OutOfMemoryException"/>, a crash, or a hang. This is the CI-visible equivalent of
-/// a fuzzer: with a fixed seed the corpus is identical on every run.
+///     Deterministic mutation testing (Phase 6.1): applies thousands of seeded byte mutations,
+///     truncations, and header field corruptions to real CHD files and asserts that the library
+///     fails gracefully — a <see cref="ChdError" /> or a small bounded set of exceptions, never an
+///     <see cref="OutOfMemoryException" />, a crash, or a hang. This is the CI-visible equivalent of
+///     a fuzzer: with a fixed seed the corpus is identical on every run.
 /// </summary>
 public class MutationTests
 {
@@ -47,12 +47,8 @@ public class MutationTests
         const int mutationsPerFile = 500;
         var seed = 0x5EED;
         foreach (var file in CorpusFiles())
-        {
             for (var i = 0; i < mutationsPerFile; i++)
-            {
                 yield return new object[] { file, seed++ };
-            }
-        }
     }
 
     /// <summary>Applies one deterministic mutation of a corpus file and asserts graceful failure.</summary>
@@ -71,10 +67,7 @@ public class MutationTests
             case 0:
                 // random byte flips (1-8 flips)
                 var flips = rng.Next(1, 9);
-                for (var i = 0; i < flips; i++)
-                {
-                    bytes[rng.Next(bytes.Length)] ^= (byte)(1 << rng.Next(8));
-                }
+                for (var i = 0; i < flips; i++) bytes[rng.Next(bytes.Length)] ^= (byte)(1 << rng.Next(8));
 
                 break;
             case 1:
@@ -85,10 +78,7 @@ public class MutationTests
                 // header field corruption (bytes 8..124 are header fields)
                 var start = rng.Next(8, Math.Min(bytes.Length, 124));
                 var length = Math.Min(rng.Next(1, 20), bytes.Length - start);
-                for (var i = 0; i < length; i++)
-                {
-                    bytes[start + i] = (byte)rng.Next(256);
-                }
+                for (var i = 0; i < length; i++) bytes[start + i] = (byte)rng.Next(256);
 
                 break;
             case 3:
@@ -121,7 +111,10 @@ public class MutationTests
                 {
                     Assert.True(sw.Elapsed < TimeSpan.FromSeconds(60), $"Read hung on seed {seed} at hunk {h}");
                     var hunkErr = chd.ReadHunk(h, buffer, cts.Token);
-                    Assert.True(hunkErr is ChdError.Chderrnone or ChdError.Chderrdecompressionerror or ChdError.Chderrinvaliddata or ChdError.Chderrrequiresparent or ChdError.Chderrinvalidparent,
+                    Assert.True(
+                        hunkErr is ChdError.Chderrnone or ChdError.Chderrdecompressionerror
+                            or ChdError.Chderrinvaliddata or ChdError.Chderrrequiresparent
+                            or ChdError.Chderrinvalidparent,
                         $"Unexpected hunk error {hunkErr} on seed {seed} at hunk {h}");
                 }
 
@@ -152,7 +145,8 @@ public class MutationTests
                         for (uint h = 0; h < chd2.HunkCount; h++)
                         {
                             var e = await chd2.ReadHunkAsync(h, b, token);
-                            if (e is not (ChdError.Chderrnone or ChdError.Chderrdecompressionerror or ChdError.Chderrinvaliddata))
+                            if (e is not (ChdError.Chderrnone or ChdError.Chderrdecompressionerror
+                                or ChdError.Chderrinvaliddata))
                                 return e;
                         }
                     }
@@ -175,9 +169,11 @@ public class MutationTests
         }
         catch (AggregateException ex)
         {
-            Assert.Fail($"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.InnerException?.Message}");
+            Assert.Fail(
+                $"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.InnerException?.Message}");
         }
-        catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException or IndexOutOfRangeException or EndOfStreamException)
+        catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException
+                                       or IndexOutOfRangeException or EndOfStreamException)
         {
             Assert.Fail($"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.Message}");
         }
@@ -194,8 +190,10 @@ public class MutationTests
         }
     }
 
-    /// <summary>The pristine corpus files must still open and read cleanly (guard against a
-    /// test bug making every mutation "pass" trivially).</summary>
+    /// <summary>
+    ///     The pristine corpus files must still open and read cleanly (guard against a
+    ///     test bug making every mutation "pass" trivially).
+    /// </summary>
     [Fact]
     public void Pristine_corpus_still_reads()
     {
@@ -210,10 +208,7 @@ public class MutationTests
             using (chd)
             {
                 var buffer = new byte[chd!.HunkBytes];
-                for (uint h = 0; h < chd.HunkCount; h++)
-                {
-                    Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(h, buffer));
-                }
+                for (uint h = 0; h < chd.HunkCount; h++) Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(h, buffer));
             }
         }
     }

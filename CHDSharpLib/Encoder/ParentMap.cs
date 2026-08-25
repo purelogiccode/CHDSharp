@@ -3,29 +3,31 @@ using CHDSharp.Utils;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Builds the parent-hunk hash map used to create differential (delta) CHDs. The parent CHD
-/// is decompressed once, and every unit-aligned window of its data (one hunk's worth of bytes
-/// starting at each unit boundary) is hashed; during encoding, a child hunk whose full-hunk
-/// (CRC-16, SHA-1) matches a window is emitted as a <c>CompressionParent</c>
-/// reference to that parent unit — mirroring MAME's <c>chd_file_compressor</c> parent walk
-/// (<c>chd.cpp</c>: hashes every parent unit window, then matches child hunks against it).
+///     Builds the parent-hunk hash map used to create differential (delta) CHDs. The parent CHD
+///     is decompressed once, and every unit-aligned window of its data (one hunk's worth of bytes
+///     starting at each unit boundary) is hashed; during encoding, a child hunk whose full-hunk
+///     (CRC-16, SHA-1) matches a window is emitted as a <c>CompressionParent</c>
+///     reference to that parent unit — mirroring MAME's <c>chd_file_compressor</c> parent walk
+///     (<c>chd.cpp</c>: hashes every parent unit window, then matches child hunks against it).
 /// </summary>
 /// <remarks>
-/// The walk is sequential (the parent's hunks must be decompressed once; each read is cached
-/// by the reader). The map itself is read-only after construction, so it is safe to consult
-/// from the encoder's single consumer thread during the parallel pipeline.
+///     The walk is sequential (the parent's hunks must be decompressed once; each read is cached
+///     by the reader). The map itself is read-only after construction, so it is safe to consult
+///     from the encoder's single consumer thread during the parallel pipeline.
 /// </remarks>
 public sealed class ParentMap : IDisposable
 {
-    private readonly ChdFile? _parent;
     private readonly Dictionary<(ushort Crc16, string Sha1Hex), uint> _map;
+    private readonly ChdFile? _parent;
 
     /// <summary>Initializes a new parent map by decompressing and hashing the parent CHD.</summary>
     /// <param name="parentPath">Path of the parent CHD file.</param>
     /// <param name="hunkBytes">The hunk size of the child being created.</param>
     /// <param name="unitBytes">The unit size of the child being created.</param>
-    /// <exception cref="ArgumentException"><paramref name="parentPath"/> is <c>null</c> or the
-    /// parent's hunk/unit sizes do not match <paramref name="hunkBytes"/>/<paramref name="unitBytes"/>.</exception>
+    /// <exception cref="ArgumentException">
+    ///     <paramref name="parentPath" /> is <c>null</c> or the
+    ///     parent's hunk/unit sizes do not match <paramref name="hunkBytes" />/<paramref name="unitBytes" />.
+    /// </exception>
     /// <exception cref="IOException">The parent CHD cannot be opened.</exception>
     public ParentMap(string parentPath, uint hunkBytes, uint unitBytes)
     {
@@ -40,11 +42,9 @@ public sealed class ParentMap : IDisposable
         try
         {
             if (parent.HunkBytes != hunkBytes || parent.UnitBytes != unitBytes)
-            {
                 throw new ArgumentException(
                     $"Parent CHD hunk/unit size mismatch: parent is {parent.HunkBytes}/{parent.UnitBytes} bytes, " +
                     $"requested {hunkBytes}/{unitBytes} bytes. The parent's hunk and unit sizes must match the child's.");
-            }
 
             _parent = parent;
             HunkCount = parent.HunkCount;
@@ -77,11 +77,19 @@ public sealed class ParentMap : IDisposable
     /// <summary>The parent's overall SHA-1 (header field), stored in the child's parent-SHA-1 field.</summary>
     public byte[] ParentSha1 { get; }
 
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _parent?.Dispose();
+    }
+
     /// <summary>Looks up a child hunk's (CRC-16, SHA-1) in the parent map.</summary>
     /// <param name="crc16">CRC-16 of the child hunk's data.</param>
     /// <param name="sha1Hex">Hexadecimal SHA-1 of the child hunk's data.</param>
-    /// <param name="parentUnit">When <c>true</c> is returned, the parent unit index (0-based,
-    /// in units) whose data matches the child hunk.</param>
+    /// <param name="parentUnit">
+    ///     When <c>true</c> is returned, the parent unit index (0-based,
+    ///     in units) whose data matches the child hunk.
+    /// </param>
     /// <returns><c>true</c> if a matching parent unit exists; otherwise <c>false</c>.</returns>
     public bool TryGetParentUnit(ushort crc16, string sha1Hex, out uint parentUnit)
     {
@@ -128,11 +136,5 @@ public sealed class ParentMap : IDisposable
         }
 
         return map;
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _parent?.Dispose();
     }
 }

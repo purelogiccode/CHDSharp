@@ -25,10 +25,12 @@ public static class MapCompressor
     private const byte CompressionParent1 = 13;
 
     /// <summary>Compresses the hunk map entries into a compact binary representation.</summary>
-    /// <param name="entries">The array of map entries to compress. SELF entries must carry the source
-    /// hunk index in <see cref="MapEntry.Offset"/> with <see cref="MapEntry.CompLength"/> and
-    /// <see cref="MapEntry.Crc16"/> set to zero; PARENT entries carry the parent unit index
-    /// (0-based, in units) in <see cref="MapEntry.Offset"/>, likewise with zero length and CRC.</param>
+    /// <param name="entries">
+    ///     The array of map entries to compress. SELF entries must carry the source
+    ///     hunk index in <see cref="MapEntry.Offset" /> with <see cref="MapEntry.CompLength" /> and
+    ///     <see cref="MapEntry.Crc16" /> set to zero; PARENT entries carry the parent unit index
+    ///     (0-based, in units) in <see cref="MapEntry.Offset" />, likewise with zero length and CRC.
+    /// </param>
     /// <param name="hunkCount">The number of hunks in the image.</param>
     /// <param name="hunkBytes">The size of each hunk in bytes.</param>
     /// <param name="unitBytes">The unit size in bytes.</param>
@@ -39,15 +41,11 @@ public static class MapCompressor
 
         uint maxCompLen = 0;
         for (uint i = 0; i < hunkCount; i++)
-        {
             // MAME tracks the maximum length over every entry that is not a SELF or PARENT
             // reference (compress_v5_map's else branch): COMPRESSION_NONE entries carry the
             // hunk size, compressed entries their stored length, promoted pseudo-types zero.
             if (entries[i].Compression is not (MapEntry.CompressionSelf or MapEntry.CompressionParent))
-            {
                 maxCompLen = Math.Max(maxCompLen, entries[i].CompLength);
-            }
-        }
 
         var lengthBits = BitsForValue(maxCompLen);
         var selfBits = BitsForValue(maxSelf);
@@ -161,18 +159,12 @@ public static class MapCompressor
                     case MapEntry.CompressionType3:
                         stream.Write(entry.CompLength, lengthBits);
                         stream.Write(entry.Crc16, 16);
-                        if (first == 0)
-                        {
-                            first = entry.Offset;
-                        }
+                        if (first == 0) first = entry.Offset;
 
                         break;
                     case MapEntry.CompressionNone:
                         stream.Write(entry.Crc16, 16);
-                        if (first == 0)
-                        {
-                            first = entry.Offset;
-                        }
+                        if (first == 0) first = entry.Offset;
 
                         break;
                     case MapEntry.CompressionSelf:
@@ -199,13 +191,13 @@ public static class MapCompressor
     }
 
     /// <summary>
-    /// RLE-encodes the compression types, promoting SELF references to the compact
-    /// SELF_0/SELF_1 forms and PARENT references to the compact PARENT_SELF/PARENT_0/PARENT_1
-    /// forms, and tracking the maximum referenced source hunk and parent unit indices.
-    /// Mirrors MAME's <c>compress_v5_map</c> RLE loop exactly: the run type is only written
-    /// when it changes (the decoder starts with <c>lastcomp = 0</c>), and the RLE count is the
-    /// full run length, so an all-<c>COMPRESSION_TYPE_0</c> image encodes as
-    /// <c>[RLE_LARGE, hi, lo]</c> with no leading type symbol.
+    ///     RLE-encodes the compression types, promoting SELF references to the compact
+    ///     SELF_0/SELF_1 forms and PARENT references to the compact PARENT_SELF/PARENT_0/PARENT_1
+    ///     forms, and tracking the maximum referenced source hunk and parent unit indices.
+    ///     Mirrors MAME's <c>compress_v5_map</c> RLE loop exactly: the run type is only written
+    ///     when it changes (the decoder starts with <c>lastcomp = 0</c>), and the RLE count is the
+    ///     full run length, so an all-<c>COMPRESSION_TYPE_0</c> image encodes as
+    ///     <c>[RLE_LARGE, hi, lo]</c> with no leading type symbol.
     /// </summary>
     private static List<byte> RleEncode(MapEntry[] entries, uint hunkCount, uint hunkBytes, uint unitBytes,
         out uint maxSelf, out ulong maxParent)
@@ -230,17 +222,11 @@ public static class MapCompressor
                     // promote self references to the previous reference's form
                     var refHunk = (uint)entries[hunknum].Offset;
                     if (refHunk == lastSelf)
-                    {
                         curcomp = CompressionSelf0;
-                    }
                     else if (refHunk == lastSelf + 1)
-                    {
                         curcomp = CompressionSelf1;
-                    }
                     else
-                    {
                         maxSelf = Math.Max(maxSelf, refHunk);
-                    }
 
                     lastSelf = refHunk;
                     break;
@@ -251,21 +237,13 @@ public static class MapCompressor
                     // reference is a unit index into the parent (like MAME)
                     var refUnit = entries[hunknum].Offset;
                     if (refUnit == (ulong)hunknum * hunkBytes / unitBytes)
-                    {
                         curcomp = CompressionParentSelf;
-                    }
                     else if (refUnit == lastParent)
-                    {
                         curcomp = CompressionParent0;
-                    }
                     else if (refUnit == lastParent + unitsPerHunk)
-                    {
                         curcomp = CompressionParent1;
-                    }
                     else
-                    {
                         maxParent = Math.Max(maxParent, refUnit);
-                    }
 
                     lastParent = refUnit;
                     break;
@@ -273,16 +251,12 @@ public static class MapCompressor
             }
 
             // track repeats
-            if (curcomp == lastcomp)
-            {
-                count++;
-            }
+            if (curcomp == lastcomp) count++;
 
             // if no repeat, or we're at the end, flush it
             if (curcomp != lastcomp || hunknum == hunkCount - 1)
             {
                 while (count != 0)
-                {
                     switch (count)
                     {
                         case < 3:
@@ -304,7 +278,6 @@ public static class MapCompressor
                             break;
                         }
                     }
-                }
 
                 if (curcomp != lastcomp)
                 {

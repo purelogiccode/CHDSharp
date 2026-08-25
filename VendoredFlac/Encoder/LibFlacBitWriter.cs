@@ -1,9 +1,9 @@
 namespace VendoredFlac.Encoder;
 
 /// <summary>
-/// MSB-first bit writer replicating libFLAC's bitwriter.c (64-bit words, big-endian byte order).
-/// The exact bit ordering matters because the Rice-coded residuals and frame headers must be
-/// byte-identical to libFLAC's output.
+///     MSB-first bit writer replicating libFLAC's bitwriter.c (64-bit words, big-endian byte order).
+///     The exact bit ordering matters because the Rice-coded residuals and frame headers must be
+///     byte-identical to libFLAC's output.
 /// </summary>
 internal sealed class LibFlacBitWriter
 {
@@ -31,10 +31,7 @@ internal sealed class LibFlacBitWriter
         if (neededBytes <= _buffer.Length) return;
 
         var newSize = _buffer.Length;
-        while (newSize < neededBytes)
-        {
-            newSize = Math.Max(newSize * 2, 64);
-        }
+        while (newSize < neededBytes) newSize = Math.Max(newSize * 2, 64);
 
         Array.Resize(ref _buffer, newSize);
     }
@@ -58,10 +55,7 @@ internal sealed class LibFlacBitWriter
         {
             var bytePos = BitCount >> 3;
             var bitPos = 7 - (BitCount & 7);
-            if (((v >> i) & 1) != 0)
-            {
-                _buffer[bytePos] |= (byte)(1 << bitPos);
-            }
+            if (((v >> i) & 1) != 0) _buffer[bytePos] |= (byte)(1 << bitPos);
 
             BitCount++;
         }

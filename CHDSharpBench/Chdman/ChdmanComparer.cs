@@ -1,15 +1,20 @@
 using System.Diagnostics;
+using CHDSharp;
 using CHDSharp.Encoder;
 
 namespace CHDSharpBench.Chdman;
 
 /// <summary>
-/// External-tool comparison harness (Phase 7.4): runs the stock <c>chdman.exe</c> from MAME
-/// side-by-side with the library on the same corpus and a synthetic image, then prints a
-/// wall-clock comparison table (median of N runs). Usage:
-/// <c>CHDSharpBench --chdman &lt;path-to-chdman.exe&gt; [--corpus &lt;dir&gt;] [--codecs zlib,zstd,...] [--size-mb N] [--runs N]</c>.
-/// BenchmarkDotNet covers precise in-process timings; this harness adds the cross-tool
-/// comparison the doc asks for (chdman vs. CHDSharp on identical inputs).
+///     External-tool comparison harness (Phase 7.4): runs the stock <c>chdman.exe</c> from MAME
+///     side-by-side with the library on the same corpus and a synthetic image, then prints a
+///     wall-clock comparison table (median of N runs). Usage:
+///     <c>
+///         CHDSharpBench --chdman &lt;path-to-chdman.exe&gt; [--corpus &lt;dir&gt;] [--codecs zlib,zstd,...] [--size-mb N]
+///         [--runs N]
+///     </c>
+///     .
+///     BenchmarkDotNet covers precise in-process timings; this harness adds the cross-tool
+///     comparison the doc asks for (chdman vs. CHDSharp on identical inputs).
 /// </summary>
 public static class ChdmanComparer
 {
@@ -32,7 +37,8 @@ public static class ChdmanComparer
         {
             Console.WriteLine($"chdman      : {Path.GetFullPath(chdmanExe)}");
             Console.WriteLine($"corpus      : {Corpus.Dir}");
-            Console.WriteLine($"synthetic   : {sizeMb} MiB, codecs [{string.Join(", ", codecs)}], median of {runs} runs");
+            Console.WriteLine(
+                $"synthetic   : {sizeMb} MiB, codecs [{string.Join(", ", codecs)}], median of {runs} runs");
             Console.WriteLine();
 
             var failures = new List<string>();
@@ -84,7 +90,7 @@ public static class ChdmanComparer
         {
             try
             {
-                Directory.Delete(outDir, recursive: true);
+                Directory.Delete(outDir, true);
             }
             catch (IOException)
             {
@@ -92,8 +98,10 @@ public static class ChdmanComparer
         }
     }
 
-    /// <summary>Runs an action <c>runs</c> times; returns the median elapsed ms. Exceptions are recorded
-    /// in <paramref name="failures"/> and the median of whatever completed is returned.</summary>
+    /// <summary>
+    ///     Runs an action <c>runs</c> times; returns the median elapsed ms. Exceptions are recorded
+    ///     in <paramref name="failures" /> and the median of whatever completed is returned.
+    /// </summary>
     private static double Time(Action action, int runs, List<string> failures)
     {
         var samples = new List<double>(runs);
@@ -137,7 +145,7 @@ public static class ChdmanComparer
 
     private static void RunLibVerify(string file, string? parent)
     {
-        var result = CHDSharp.Chd.CheckFileWithParent(file, parent);
+        var result = Chd.CheckFileWithParent(file, parent);
         if (result.Error != ChdError.Chderrnone)
             throw new InvalidOperationException($"library verify {Path.GetFileName(file)}: {result.Error}");
     }
@@ -178,7 +186,7 @@ public static class ChdmanComparer
         {
             try
             {
-                proc.Kill(entireProcessTree: true);
+                proc.Kill(true);
             }
             catch
             {
@@ -191,18 +199,17 @@ public static class ChdmanComparer
         return proc.ExitCode;
     }
 
-    /// <summary>Deterministic mixed-content image (same generator the encode benchmarks use):
-    /// ~50% pseudo-random, ~50% arithmetic runs.</summary>
+    /// <summary>
+    ///     Deterministic mixed-content image (same generator the encode benchmarks use):
+    ///     ~50% pseudo-random, ~50% arithmetic runs.
+    /// </summary>
     private static byte[] CreateImage(int sizeBytes)
     {
         var rng = new Random(0x5EED);
         var data = new byte[sizeBytes];
         rng.NextBytes(data);
         var half = sizeBytes / 2;
-        for (var i = half; i < sizeBytes; i++)
-        {
-            data[i] = (byte)((i / 97) & 0xFF);
-        }
+        for (var i = half; i < sizeBytes; i++) data[i] = (byte)((i / 97) & 0xFF);
 
         return data;
     }
@@ -219,12 +226,12 @@ public static class ChdmanComparer
         var widthLib = Math.Max(rows.Count == 0 ? 12 : rows.Max(r => r.lib.Length), 12);
         var rule = new string('-', widthName + widthCm + widthLib + 12);
         Console.WriteLine(rule);
-        Console.WriteLine($"  {"target".PadRight(widthName)}{"chdman".PadLeft(widthCm + 2)}{"library".PadLeft(widthLib + 2)}");
+        Console.WriteLine(
+            $"  {"target".PadRight(widthName)}{"chdman".PadLeft(widthCm + 2)}{"library".PadLeft(widthLib + 2)}");
         Console.WriteLine(rule);
         foreach (var (name, chdman, lib) in rows)
-        {
-            Console.WriteLine($"  {name.PadRight(widthName)}{(" " + chdman).PadLeft(widthCm + 2)}{(" " + lib).PadLeft(widthLib + 2)}");
-        }
+            Console.WriteLine(
+                $"  {name.PadRight(widthName)}{(" " + chdman).PadLeft(widthCm + 2)}{(" " + lib).PadLeft(widthLib + 2)}");
 
         Console.WriteLine(rule);
     }
@@ -234,7 +241,8 @@ public static class ChdmanComparer
         for (var i = 0; i < args.Count; i++)
         {
             if (args[i].StartsWith("--codec=", StringComparison.Ordinal))
-                return args[i]["--codec=".Length..].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return args[i]["--codec=".Length..].Split(',',
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (string.Equals(args[i], "--codecs", StringComparison.Ordinal) && i + 1 < args.Count)
                 return args[++i].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
@@ -245,10 +253,11 @@ public static class ChdmanComparer
     private static int ParseIntArg(IReadOnlyList<string> args, string prefix, string flag, int dflt)
     {
         for (var i = 0; i < args.Count; i++)
-        {
-            if ((args[i].StartsWith(prefix, StringComparison.Ordinal) && int.TryParse(args[i][prefix.Length..], out var n) && n > 0) || (string.Equals(args[i], flag, StringComparison.Ordinal) && i + 1 < args.Count && int.TryParse(args[i + 1], out n) && n > 0))
+            if ((args[i].StartsWith(prefix, StringComparison.Ordinal) &&
+                 int.TryParse(args[i][prefix.Length..], out var n) && n > 0) ||
+                (string.Equals(args[i], flag, StringComparison.Ordinal) && i + 1 < args.Count &&
+                 int.TryParse(args[i + 1], out n) && n > 0))
                 return n;
-        }
 
         return dflt;
     }

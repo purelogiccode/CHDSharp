@@ -6,11 +6,20 @@ using System.Runtime.InteropServices;
 namespace CHDSharpTester.Services;
 
 /// <summary>
-/// Captures the static environment details that must accompany every forwarded bug report.
-/// Computed once at construction from the running process and operating system.
+///     Captures the static environment details that must accompany every forwarded bug report.
+///     Computed once at construction from the running process and operating system.
 /// </summary>
 internal sealed class EnvironmentSnapshot
 {
+    /// <summary>Initializes a new snapshot for the given application name.</summary>
+    /// <param name="applicationName">The application name to embed in reports.</param>
+    public EnvironmentSnapshot(string applicationName)
+    {
+        ApplicationName = applicationName;
+        ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
+        WindowsVersion = GetWindowsVersion();
+    }
+
     /// <summary>Local timestamp when the snapshot was created.</summary>
     public string Date => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
@@ -41,16 +50,8 @@ internal sealed class EnvironmentSnapshot
     /// <summary>The system temporary directory path.</summary>
     public string TempPath => Path.GetTempPath();
 
-    /// <summary>Initializes a new snapshot for the given application name.</summary>
-    /// <param name="applicationName">The application name to embed in reports.</param>
-    public EnvironmentSnapshot(string applicationName)
-    {
-        ApplicationName = applicationName;
-        ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
-        WindowsVersion = GetWindowsVersion();
-    }
-
-    [SuppressMessage("ReSharper", "CA1031", Justification = "Best-effort environment detection; fall back to OS version.")]
+    [SuppressMessage("ReSharper", "CA1031",
+        Justification = "Best-effort environment detection; fall back to OS version.")]
     private static string GetWindowsVersion()
     {
         try

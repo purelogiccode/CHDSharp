@@ -6,8 +6,8 @@ public class ReadAheadTests
     private const ulong TotalBytes = 8 * 512; // 4096 bytes = 8 hunks
 
     /// <summary>
-    /// Builds an uncompressed V5 CHD with 8 hunks of known data.
-    /// Hunk N contains bytes (N*Blocksize + i) &amp; 0xFF.
+    ///     Builds an uncompressed V5 CHD with 8 hunks of known data.
+    ///     Hunk N contains bytes (N*Blocksize + i) &amp; 0xFF.
     /// </summary>
     private static MemoryStream BuildTestChd()
     {
@@ -32,10 +32,7 @@ public class ReadAheadTests
         {
             ms.Seek((long)(dataStart + h * Blocksize), SeekOrigin.Begin);
             var data = new byte[Blocksize];
-            for (var i = 0; i < data.Length; i++)
-            {
-                data[i] = (byte)((h * Blocksize + (ulong)i) & 0xFF);
-            }
+            for (var i = 0; i < data.Length; i++) data[i] = (byte)((h * Blocksize + (ulong)i) & 0xFF);
 
             Write(data);
         }

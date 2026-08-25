@@ -1,8 +1,8 @@
 namespace CHDSharp.Encoder.Models;
 
 /// <summary>
-/// Summary of a completed <see cref="ChdEncoder.EncodeLaserDisc"/> run: the derived A/V
-/// parameters and output geometry (mirrors chdman <c>createld</c>'s console report).
+///     Summary of a completed <see cref="ChdEncoder.EncodeLaserDisc" /> run: the derived A/V
+///     parameters and output geometry (mirrors chdman <c>createld</c>'s console report).
 /// </summary>
 public sealed record LaserDiscEncodingInfo(
     ulong FpsTimes1Million,

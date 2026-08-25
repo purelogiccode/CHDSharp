@@ -4,11 +4,13 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Verifies Phase 3: differential (delta) CHD creation via <see cref="ChdEncodeOptions.ParentPath"/>.
-/// Children reference parent hunks with COMPRESSION_PARENT map entries; the read side
-/// (CHDSharpLib) resolves them, so round trips must return the exact source data and
-/// <see cref="CHDSharp.Chd.CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)"/> must pass. The parent map, RLE parent promotion
-/// (PARENT_SELF/PARENT_0/PARENT_1) and the unit-split read path are all exercised.
+///     Verifies Phase 3: differential (delta) CHD creation via <see cref="ChdEncodeOptions.ParentPath" />.
+///     Children reference parent hunks with COMPRESSION_PARENT map entries; the read side
+///     (CHDSharpLib) resolves them, so round trips must return the exact source data and
+///     <see
+///         cref="CHDSharp.Chd.CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+///     must pass. The parent map, RLE parent promotion
+///     (PARENT_SELF/PARENT_0/PARENT_1) and the unit-split read path are all exercised.
 /// </summary>
 public class DeltaEncodeTests : IDisposable
 {
@@ -24,7 +26,7 @@ public class DeltaEncodeTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -49,12 +51,12 @@ public class DeltaEncodeTests : IDisposable
         var standalonePath = Path.Combine(_dir, "standalone.chd");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, standalonePath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, standalonePath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -96,7 +98,7 @@ public class DeltaEncodeTests : IDisposable
         var childPath = Path.Combine(_dir, "identical_child.chd");
         using (var ms = new MemoryStream(data))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(data))
@@ -131,7 +133,7 @@ public class DeltaEncodeTests : IDisposable
         var childPath = Path.Combine(_dir, "shift_child.chd");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -178,7 +180,7 @@ public class DeltaEncodeTests : IDisposable
         var childPath = Path.Combine(_dir, "prio_child.chd");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
@@ -214,17 +216,19 @@ public class DeltaEncodeTests : IDisposable
         var parallelPath = Path.Combine(_dir, "par_parallel.chd");
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, singlePath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath, TaskCount = 1 });
+            ChdEncoder.EncodeRaw(ms, singlePath, 4096, 512, null,
+                new ChdEncodeOptions { ParentPath = parentPath, TaskCount = 1 });
         }
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, parallelPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath, TaskCount = 8 });
+            ChdEncoder.EncodeRaw(ms, parallelPath, 4096, 512, null,
+                new ChdEncodeOptions { ParentPath = parentPath, TaskCount = 8 });
         }
 
         Assert.Equal(File.ReadAllBytes(singlePath), File.ReadAllBytes(parallelPath));
@@ -237,7 +241,7 @@ public class DeltaEncodeTests : IDisposable
         var parentPath = Path.Combine(_dir, "hs_parent.chd");
         using (var ms = new MemoryStream(data))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         // hunk 8192 vs parent 4096
@@ -257,7 +261,7 @@ public class DeltaEncodeTests : IDisposable
         var parentPath = Path.Combine(_dir, "us_parent.chd");
         using (var ms = new MemoryStream(data))
         {
-            ChdEncoder.EncodeRaw(ms, parentPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, parentPath);
         }
 
         var ex = Assert.Throws<ArgumentException>(() =>
@@ -294,7 +298,7 @@ public class DeltaEncodeTests : IDisposable
         var parentPath = Path.Combine(_dir, "chain_parent.chd");
         using (var ms = new MemoryStream(grandData))
         {
-            ChdEncoder.EncodeRaw(ms, grandPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, grandPath);
         }
 
         using (var ms = new MemoryStream(data))
@@ -315,10 +319,10 @@ public class DeltaEncodeTests : IDisposable
         // one MODE1/2352 data track, 40 frames (multiple of 4, so no padding)
         var cuePath = Path.Combine(_dir, "cd.cue");
         File.WriteAllText(cuePath, """
-            FILE "cd.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-            """);
+                                   FILE "cd.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                   """);
         var bin = BuildBinFrames(40, 555);
         File.WriteAllBytes(Path.Combine(_dir, "cd.bin"), bin);
 
@@ -371,7 +375,8 @@ public class DeltaEncodeTests : IDisposable
 
         var (createExit, cstdout, cstderr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", parentPath,
             "-c", "zlib", "-hs", "4096", "-us", "512", "-f");
-        Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
+        Assert.True(createExit == 0,
+            $"chdman createraw failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
 
         using (var ms = new MemoryStream(childData))
         {
@@ -383,15 +388,17 @@ public class DeltaEncodeTests : IDisposable
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\nstdout: {vstdout}\nstderr: {vstderr}");
 
         // chdman must extract the child back to the exact source bytes
-        var (extractExit, estdout, estderr) = ChdmanHelper.RunChdman("extractraw", "-i", childPath, "-ip", parentPath, "-o", extractedPath, "-f");
-        Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\nstdout: {estdout}\nstderr: {estderr}");
+        var (extractExit, estdout, estderr) = ChdmanHelper.RunChdman("extractraw", "-i", childPath, "-ip", parentPath,
+            "-o", extractedPath, "-f");
+        Assert.True(extractExit == 0,
+            $"chdman extractraw failed (exit={extractExit})\nstdout: {estdout}\nstderr: {estderr}");
         Assert.Equal(childData, File.ReadAllBytes(extractedPath));
 
         // the delta must be far smaller than a standalone encode (most hunks are parent refs)
         var standalonePath = Path.Combine(_dir, "chdman_standalone.chd");
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, standalonePath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, standalonePath);
         }
 
         Assert.True(new FileInfo(childPath).Length < new FileInfo(standalonePath).Length / 2,

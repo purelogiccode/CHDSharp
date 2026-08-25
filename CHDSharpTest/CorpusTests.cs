@@ -5,8 +5,6 @@ namespace CHDSharp.Tests;
 [Collection("TestData")]
 public sealed class CorpusTests
 {
-    public sealed record Entry(string File, uint Version, string? Parent, string Expect, string Note);
-
     private static readonly string TestDataDir =
         Path.Combine(AppContext.BaseDirectory, "TestData");
 
@@ -111,4 +109,6 @@ public sealed class CorpusTests
         var err = Chd.CheckFile(fs, path, false, out _, out _, out _);
         Assert.NotEqual(ChdError.Chderrnone, err);
     }
+
+    public sealed record Entry(string File, uint Version, string? Parent, string Expect, string Note);
 }

@@ -3,8 +3,8 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Validates SELF-hunk deduplication output against chdman.exe: deduplicated CHDs must
-/// pass chdman verify, extract byte-identically, and report repeat blocks in chdman info.
+///     Validates SELF-hunk deduplication output against chdman.exe: deduplicated CHDs must
+///     pass chdman verify, extract byte-identically, and report repeat blocks in chdman info.
 /// </summary>
 public class SelfDedupChdmanValidationTests : IDisposable
 {
@@ -21,7 +21,7 @@ public class SelfDedupChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -36,10 +36,7 @@ public class SelfDedupChdmanValidationTests : IDisposable
 
         // 1 MiB made of 256 identical 4 KiB hunks
         var source = new byte[4096 * 256];
-        for (var i = 0; i < 4096; i++)
-        {
-            source[i] = (byte)(i & 0xFF);
-        }
+        for (var i = 0; i < 4096; i++) source[i] = (byte)(i & 0xFF);
 
         for (var h = 1; h < 256; h++)
             Array.Copy(source, 0, source, h * 4096, 4096);
@@ -49,7 +46,7 @@ public class SelfDedupChdmanValidationTests : IDisposable
         var extractPath = Path.Combine(_testDataDir, "repeated.raw");
         File.WriteAllBytes(srcPath, source);
 
-        ChdEncoder.EncodeRaw(srcPath, chdPath, 4096, 512);
+        ChdEncoder.EncodeRaw(srcPath, chdPath);
 
         // dedup proof: 255 of 256 hunks are SELF references, so the CHD is tiny
         Assert.True(new FileInfo(chdPath).Length < 4096 * 4,
@@ -86,9 +83,10 @@ public class SelfDedupChdmanValidationTests : IDisposable
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         File.WriteAllBytes(srcPath, source);
 
-        ChdEncoder.EncodeRaw(srcPath, ourChd, 4096, 512);
+        ChdEncoder.EncodeRaw(srcPath, ourChd);
 
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", chdmanChd, "-c", "zlib", "-hs", "4096", "-us", "512", "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", chdmanChd, "-c", "zlib",
+            "-hs", "4096", "-us", "512", "-f");
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         // strongest check: byte-for-byte identical CHD files (dedup + map encoding parity)

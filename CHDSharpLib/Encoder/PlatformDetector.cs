@@ -3,20 +3,23 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Detects the game platform of a raw disc image (CHDlite <c>detect_input</c> parity) and picks
-/// smart per-platform codec presets (CHDlite <c>smart_compression_for</c>,
-/// <c>chd_archiver.cpp:124-165</c>). Works on raw .bin/.iso/.img files and on CUE/GDI/NRG
-/// descriptors before archiving.
+///     Detects the game platform of a raw disc image (CHDlite <c>detect_input</c> parity) and picks
+///     smart per-platform codec presets (CHDlite <c>smart_compression_for</c>,
+///     <c>chd_archiver.cpp:124-165</c>). Works on raw .bin/.iso/.img files and on CUE/GDI/NRG
+///     descriptors before archiving.
 /// </summary>
 public static class PlatformDetector
 {
+    private static ReadOnlySpan<byte> CdSync => new byte[]
+        { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
+
     /// <summary>
-    /// Detects the platform of a disc image file. For CUE/GDI/NRG descriptors the track layout
-    /// is parsed and sectors are read from the underlying track files; for raw .bin/.iso/.img
-    /// files the sector size is inferred from the content.
+    ///     Detects the platform of a disc image file. For CUE/GDI/NRG descriptors the track layout
+    ///     is parsed and sectors are read from the underlying track files; for raw .bin/.iso/.img
+    ///     files the sector size is inferred from the content.
     /// </summary>
     /// <param name="inputPath">Path to the disc image (cue/gdi/nrg/iso/bin/img).</param>
-    /// <returns>The detection result; on parse failure the platform is <see cref="DiscPlatform.Unknown"/>.</returns>
+    /// <returns>The detection result; on parse failure the platform is <see cref="DiscPlatform.Unknown" />.</returns>
     public static DiscPlatformInfo Detect(string inputPath)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputPath);
@@ -39,10 +42,10 @@ public static class PlatformDetector
     }
 
     /// <summary>
-    /// Selects the smart default codec list for a detected platform and content format
-    /// (CHDlite <c>smart_compression_for</c> parity): PS2 DVD → zlib; PS2 CD → cdzl+cdfl;
-    /// other DVD → zstd; other CD/GD-ROM → cdzs+cdfl. Returns <c>null</c> when no smart default
-    /// applies (caller falls back to its own defaults).
+    ///     Selects the smart default codec list for a detected platform and content format
+    ///     (CHDlite <c>smart_compression_for</c> parity): PS2 DVD → zlib; PS2 CD → cdzl+cdfl;
+    ///     other DVD → zstd; other CD/GD-ROM → cdzs+cdfl. Returns <c>null</c> when no smart default
+    ///     applies (caller falls back to its own defaults).
     /// </summary>
     public static uint[]? AutoCodecs(DiscPlatform platform, string format)
     {
@@ -147,9 +150,7 @@ public static class PlatformDetector
     {
         // GD-ROM images are always Dreamcast.
         if (string.Equals(format, "gd", StringComparison.Ordinal))
-        {
             return new DiscPlatformInfo(DiscPlatform.Dreamcast, null, null, source + ", GD-ROM");
-        }
 
         // 2048-byte sectors are DVDs; anything else is a CD.
         return string.Equals(format, "dvd", StringComparison.Ordinal)
@@ -162,10 +163,7 @@ public static class PlatformDetector
         // CD sync pattern: 00 FF FF FF FF FF FF FF FF FF FF 00
         Span<byte> header = stackalloc byte[16];
         fs.Position = 0;
-        if (fs.Read(header) == header.Length && header[..12].SequenceEqual(CdSync))
-        {
-            return 2352;
-        }
+        if (fs.Read(header) == header.Length && header[..12].SequenceEqual(CdSync)) return 2352;
 
         if (length % 2048 == 0) return 2048;
         if (length % 2336 == 0) return 2336;
@@ -173,8 +171,6 @@ public static class PlatformDetector
 
         return 2048; // fallback
     }
-
-    private static ReadOnlySpan<byte> CdSync => new byte[] { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
 
     private static byte[]? ExtractCooked(byte[] raw, uint frameSize)
     {

@@ -3,15 +3,15 @@ using System.IO.Compression;
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Fuzz tests for deflate decoder hardening (libchdr #168).
-/// Feeds crafted deflate streams to ChdFile.Open + ReadHunk and asserts no hang.
+///     Fuzz tests for deflate decoder hardening (libchdr #168).
+///     Feeds crafted deflate streams to ChdFile.Open + ReadHunk and asserts no hang.
 /// </summary>
 public class DeflateInfiniteLoopTests
 {
     private static readonly byte[] Magic = "MComprHD"u8.ToArray();
 
     /// <summary>
-    /// Creates a V3 CHD with a single compressed hunk whose payload is the given bytes.
+    ///     Creates a V3 CHD with a single compressed hunk whose payload is the given bytes.
     /// </summary>
     private static MemoryStream MakeV3WithCompressedHunk(byte[] compressedPayload, uint blocksize = 512)
     {
@@ -49,7 +49,7 @@ public class DeflateInfiniteLoopTests
     }
 
     /// <summary>
-    /// Wraps raw deflate bytes in a zlib wrapper (2-byte header + deflate data + adler32).
+    ///     Wraps raw deflate bytes in a zlib wrapper (2-byte header + deflate data + adler32).
     /// </summary>
     private static byte[] WrapInZlib(byte[] deflateBytes)
     {
@@ -69,8 +69,8 @@ public class DeflateInfiniteLoopTests
     }
 
     /// <summary>
-    /// Attempts to open a CHD and read hunk 0 with a timeout.
-    /// Returns true if the operation completed (success or error), false if it hung.
+    ///     Attempts to open a CHD and read hunk 0 with a timeout.
+    ///     Returns true if the operation completed (success or error), false if it hung.
     /// </summary>
     private static (ChdError openErr, bool completed) TryReadHunkWithTimeout(
         MemoryStream chdStream, int timeoutMs = 5000)

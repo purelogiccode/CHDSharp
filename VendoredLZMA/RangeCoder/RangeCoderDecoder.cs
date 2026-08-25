@@ -6,19 +6,25 @@ internal class Decoder
     /// <summary>Top value used for range normalisation.</summary>
     internal const uint KTopValue = 1 << 24;
 
-    /// <summary>Current range value.</summary>
-    internal uint Range;
-
     /// <summary>Current code (compressed data) being decoded.</summary>
     internal uint Code;
 
-    /// <summary>Input stream providing compressed data; <c>null</c> before <see cref="Init"/> or after <see cref="ReleaseStream"/>.</summary>
+    /// <summary>Current range value.</summary>
+    internal uint Range;
+
+    /// <summary>
+    ///     Input stream providing compressed data; <c>null</c> before <see cref="Init" /> or after
+    ///     <see cref="ReleaseStream" />.
+    /// </summary>
     internal Stream? Stream;
 
     /// <summary>Total number of bytes consumed from the stream.</summary>
     internal long Total;
 
-    /// <summary>Reads the next byte from the stream, throwing <see cref="DataErrorException"/> on EOF (truncated stream).</summary>
+    /// <summary>Gets whether the decoder has finished (all data has been consumed).</summary>
+    internal bool IsFinished => Code == 0;
+
+    /// <summary>Reads the next byte from the stream, throwing <see cref="DataErrorException" /> on EOF (truncated stream).</summary>
     internal byte ReadByteChecked()
     {
         var stream = Stream;
@@ -39,10 +45,7 @@ internal class Decoder
 
         Code = 0;
         Range = 0xFFFFFFFF;
-        for (var i = 0; i < 5; i++)
-        {
-            Code = (Code << 8) | ReadByteChecked();
-        }
+        for (var i = 0; i < 5; i++) Code = (Code << 8) | ReadByteChecked();
 
         Total = 5;
     }
@@ -59,7 +62,7 @@ internal class Decoder
         Stream?.Dispose();
     }
 
-    /// <summary>Normalises the range by reading bytes from the stream until <see cref="Range"/> >= <see cref="KTopValue"/>.</summary>
+    /// <summary>Normalises the range by reading bytes from the stream until <see cref="Range" /> >= <see cref="KTopValue" />.</summary>
     internal void Normalize()
     {
         while (Range < KTopValue)
@@ -144,7 +147,4 @@ internal class Decoder
         Normalize();
         return symbol;
     }
-
-    /// <summary>Gets whether the decoder has finished (all data has been consumed).</summary>
-    internal bool IsFinished => Code == 0;
 }

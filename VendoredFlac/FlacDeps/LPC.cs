@@ -1,36 +1,36 @@
 namespace VendoredFlac.FlacDeps;
 
 /// <summary>
-/// Provides static methods for Linear Predictive Coding (LPC) analysis and residual decoding used in FLAC encoding and decoding.
+///     Provides static methods for Linear Predictive Coding (LPC) analysis and residual decoding used in FLAC encoding and
+///     decoding.
 /// </summary>
 internal static class Lpc
 {
     /// <summary>
-    /// Maximum LPC order.
+    ///     Maximum LPC order.
     /// </summary>
     internal const int Maxlpcorder = 32;
 
     /// <summary>
-    /// Maximum number of LPC windows.
+    ///     Maximum number of LPC windows.
     /// </summary>
     internal const int Maxlpcwindows = 16;
 
     /// <summary>
-    /// Maximum number of LPC precisions.
+    ///     Maximum number of LPC precisions.
     /// </summary>
     internal const int Maxlpcprecisions = 4;
 
     /// <summary>
-    /// Maximum number of LPC sections.
+    ///     Maximum number of LPC sections.
     /// </summary>
     internal const int Maxlpcsections = 128;
 
-    /**
-     * Calculates autocorrelation data from audio samples
-     * A window function is applied before calculation.
-     */
+    /// Calculates autocorrelation data from audio samples
+    /// A window function is applied before calculation.
     /// <summary>
-    /// Calculates autocorrelation data from audio samples. A window function is applied before calculation. Operates on raw pointers.
+    ///     Calculates autocorrelation data from audio samples. A window function is applied before calculation. Operates on
+    ///     raw pointers.
     /// </summary>
     /// <param name="data">Pointer to sample data.</param>
     /// <param name="window">Pointer to the window function values.</param>
@@ -44,10 +44,7 @@ internal static class Lpc
         var data1 = stackalloc double[len];
         int i;
 
-        for (i = 0; i < len; i++)
-        {
-            data1[i] = data[i] * window[i];
-        }
+        for (i = 0; i < len; i++) data1[i] = data[i] * window[i];
 
         for (i = min; i <= lag; ++i)
         {
@@ -62,17 +59,14 @@ internal static class Lpc
                 temp2 += pdata[i] * *pdata++;
             }
 
-            if (pdata <= finish)
-            {
-                temp += pdata[i] * *pdata;
-            }
+            if (pdata <= finish) temp += pdata[i] * *pdata;
 
             autoc[i] += temp + temp2;
         }
     }
 
     /// <summary>
-    /// Calculates autocorrelation data from audio samples without applying a window function. Operates on raw pointers.
+    ///     Calculates autocorrelation data from audio samples without applying a window function. Operates on raw pointers.
     /// </summary>
     /// <param name="data">Pointer to sample data.</param>
     /// <param name="len">Number of samples.</param>
@@ -94,17 +88,15 @@ internal static class Lpc
                 temp2 += (long)pdata[i] * *pdata++;
             }
 
-            if (pdata <= finish)
-            {
-                temp += (long)pdata[i] * *pdata;
-            }
+            if (pdata <= finish) temp += (long)pdata[i] * *pdata;
 
             autoc[i] += temp + temp2;
         }
     }
 
     /// <summary>
-    /// Calculates autocorrelation data from audio samples without a window, using double-precision accumulation for large sample values. Operates on raw pointers.
+    ///     Calculates autocorrelation data from audio samples without a window, using double-precision accumulation for large
+    ///     sample values. Operates on raw pointers.
     /// </summary>
     /// <param name="data">Pointer to sample data.</param>
     /// <param name="len">Number of samples.</param>
@@ -126,17 +118,15 @@ internal static class Lpc
                 temp2 += (long)pdata[i] * *pdata++;
             }
 
-            if (pdata <= finish)
-            {
-                temp += (long)pdata[i] * *pdata;
-            }
+            if (pdata <= finish) temp += (long)pdata[i] * *pdata;
 
             autoc[i] += temp + temp2;
         }
     }
 
     /// <summary>
-    /// Calculates autocorrelation across a boundary between two windowed sections using the window function. Operates on raw pointers.
+    ///     Calculates autocorrelation across a boundary between two windowed sections using the window function. Operates on
+    ///     raw pointers.
     /// </summary>
     /// <param name="data">Pointer to sample data.</param>
     /// <param name="window">Pointer to the window function values.</param>
@@ -150,26 +140,21 @@ internal static class Lpc
     {
         var data1 = stackalloc double[lag + lag];
         for (var i = -lag; i < lag; i++)
-        {
             data1[i + lag] = offs + i >= 0 && offs + i < offs1 ? data[offs + i] * window[offs + i] : 0;
-        }
 
         for (var i = min; i <= lag; ++i)
         {
             double temp = 0;
             var pdata = data1 + lag - i;
             var finish = data1 + lag;
-            while (pdata < finish)
-            {
-                temp += pdata[i] * *pdata++;
-            }
+            while (pdata < finish) temp += pdata[i] * *pdata++;
 
             autoc[i] += temp;
         }
     }
 
     /// <summary>
-    /// Calculates autocorrelation across a boundary between two unwindowed sections. Operates on raw pointers.
+    ///     Calculates autocorrelation across a boundary between two unwindowed sections. Operates on raw pointers.
     /// </summary>
     /// <param name="data">Pointer to sample data, positioned at the boundary.</param>
     /// <param name="min">Minimum lag to compute.</param>
@@ -183,26 +168,25 @@ internal static class Lpc
             long temp = 0;
             var pdata = data - i;
             var finish = data;
-            while (pdata < finish)
-            {
-                temp += (long)pdata[i] * *pdata++;
-            }
+            while (pdata < finish) temp += (long)pdata[i] * *pdata++;
 
             autoc[i] += temp;
         }
     }
 
-    /**
-     * Levinson-Durbin recursion.
-     * Produces LPC coefficients from autocorrelation data.
-     */
+    /// Levinson-Durbin recursion.
+    /// Produces LPC coefficients from autocorrelation data.
     /// <summary>
-    /// Produces LPC coefficients from reflection coefficients using the Levinson-Durbin recursion. Operates on raw pointers.
+    ///     Produces LPC coefficients from reflection coefficients using the Levinson-Durbin recursion. Operates on raw
+    ///     pointers.
     /// </summary>
     /// <param name="maxOrder">Maximum LPC order.</param>
     /// <param name="reff">Pointer to reflection coefficients.</param>
-    /// <param name="lpc">Destination buffer for LPC coefficients, stored as a flat array indexed by [order * MAX_LPC_ORDER + coefficient].</param>
-    /// <exception cref="Exception">Thrown if <paramref name="maxOrder"/> exceeds <see cref="Maxlpcorder"/>.</exception>
+    /// <param name="lpc">
+    ///     Destination buffer for LPC coefficients, stored as a flat array indexed by [order * MAX_LPC_ORDER +
+    ///     coefficient].
+    /// </param>
+    /// <exception cref="Exception">Thrown if <paramref name="maxOrder" /> exceeds <see cref="Maxlpcorder" />.</exception>
     internal static unsafe void
         ComputeLpcCoefs(uint maxOrder, double* reff, float* lpc /*[][MAX_LPC_ORDER]*/)
     {
@@ -211,10 +195,7 @@ internal static class Lpc
         if (maxOrder > Maxlpcorder)
             throw new InvalidOperationException("weird");
 
-        for (var i = 0; i < maxOrder; i++)
-        {
-            lpcTmp[i] = 0;
-        }
+        for (var i = 0; i < maxOrder; i++) lpcTmp[i] = 0;
 
         for (var i = 0; i < maxOrder; i++)
         {
@@ -228,20 +209,15 @@ internal static class Lpc
                 lpcTmp[i - 1 - j] += r * tmp;
             }
 
-            if (0 != (i & 1))
-            {
-                lpcTmp[i2] += lpcTmp[i2] * r;
-            }
+            if (0 != (i & 1)) lpcTmp[i2] += lpcTmp[i2] * r;
 
-            for (var j = 0; j <= i; j++)
-            {
-                lpc[i * Maxlpcorder + j] = (float)-lpcTmp[j];
-            }
+            for (var j = 0; j <= i; j++) lpc[i * Maxlpcorder + j] = (float)-lpcTmp[j];
         }
     }
 
     /// <summary>
-    /// Computes Schur recursion to produce reflection coefficients and prediction errors from autocorrelation data. Operates on raw pointers.
+    ///     Computes Schur recursion to produce reflection coefficients and prediction errors from autocorrelation data.
+    ///     Operates on raw pointers.
     /// </summary>
     /// <param name="autoc">Pointer to autocorrelation values.</param>
     /// <param name="maxOrder">Maximum LPC order to compute.</param>
@@ -255,10 +231,7 @@ internal static class Lpc
         var gen1 = stackalloc double[Maxlpcorder];
 
         // Schur recursion
-        for (uint i = 0; i < maxOrder; i++)
-        {
-            gen0[i] = gen1[i] = autoc[i + 1];
-        }
+        for (uint i = 0; i < maxOrder; i++) gen0[i] = gen1[i] = autoc[i + 1];
 
         var error = autoc[0];
         reff[0] = -gen1[0] / error;
@@ -279,7 +252,7 @@ internal static class Lpc
     }
 
     /// <summary>
-    /// Decodes an LPC residual back into audio samples using the given coefficients and shift. Operates on raw pointers.
+    ///     Decodes an LPC residual back into audio samples using the given coefficients and shift. Operates on raw pointers.
     /// </summary>
     /// <param name="res">Pointer to the residual samples.</param>
     /// <param name="smp">Destination buffer for decoded samples.</param>
@@ -291,10 +264,7 @@ internal static class Lpc
         DecodeResidual(int* res, int* smp, int n, int order,
             int* coefs, int shift)
     {
-        for (var i = 0; i < order; i++)
-        {
-            smp[i] = res[i];
-        }
+        for (var i = 0; i < order; i++) smp[i] = res[i];
 
         var s = smp;
         var r = res + order;
@@ -465,10 +435,7 @@ internal static class Lpc
                     var pred = 0;
                     var co = coefs + order - 1;
                     var c7 = coefs + 7;
-                    while (co > c7)
-                    {
-                        pred += *co-- * *s++;
-                    }
+                    while (co > c7) pred += *co-- * *s++;
 
                     pred += coefs[7] * *s++;
                     pred += coefs[6] * *s++;
@@ -486,7 +453,8 @@ internal static class Lpc
     }
 
     /// <summary>
-    /// Decodes an LPC residual into audio samples using 64-bit intermediate prediction values to avoid overflow. Operates on raw pointers.
+    ///     Decodes an LPC residual into audio samples using 64-bit intermediate prediction values to avoid overflow. Operates
+    ///     on raw pointers.
     /// </summary>
     /// <param name="res">Pointer to the residual samples.</param>
     /// <param name="smp">Destination buffer for decoded samples.</param>
@@ -498,10 +466,7 @@ internal static class Lpc
         DecodeResidualLong(int* res, int* smp, int n, int order,
             int* coefs, int shift)
     {
-        for (var i = 0; i < order; i++)
-        {
-            smp[i] = res[i];
-        }
+        for (var i = 0; i < order; i++) smp[i] = res[i];
 
         var s = smp;
         var r = res + order;
@@ -614,10 +579,7 @@ internal static class Lpc
                     long pred = 0;
                     var co = coefs + order - 1;
                     var c7 = coefs + 7;
-                    while (co > c7)
-                    {
-                        pred += *co-- * (long)*s++;
-                    }
+                    while (co > c7) pred += *co-- * (long)*s++;
 
                     pred += coefs[7] * (long)*s++;
                     pred += coefs[6] * (long)*s++;

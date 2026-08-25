@@ -4,26 +4,30 @@ using CHDSharp;
 namespace CHDSharpBench.Benchmarks;
 
 /// <summary>
-/// Byte-granular <see cref="ChdFile.Read(ulong, byte[], int, int, System.Threading.CancellationToken)"/> throughput (the random-access path emulators use):
-/// sequential full-image reads and uniformly random 4 KiB reads over the largest corpus CHD.
-/// The hunk cache is configured per-benchmark to show its effect on repeated-access workloads.
-/// Bytes read per op is returned; MB/s = value ÷ Mean.
+///     Byte-granular <see cref="ChdFile.Read(ulong, byte[], int, int, System.Threading.CancellationToken)" /> throughput
+///     (the random-access path emulators use):
+///     sequential full-image reads and uniformly random 4 KiB reads over the largest corpus CHD.
+///     The hunk cache is configured per-benchmark to show its effect on repeated-access workloads.
+///     Bytes read per op is returned; MB/s = value ÷ Mean.
 /// </summary>
 [Config(typeof(BenchConfig))]
 public class ReadBenchmarks
 {
-    private ChdFile? _chd;
     private readonly byte[] _buf = new byte[4096];
+    private ChdFile? _chd;
     private ulong _imageBytes;
     private string _path = "";
+
+    // Deterministic pseudo-random offsets: a fixed stride sequence avoids opening the same
+    // addresses every op (RNG state would otherwise make results order-dependent).
+    private ulong _xor;
+
+    [ParamsSource(nameof(CacheSizes))] public int CacheSize { get; set; }
 
     public static IEnumerable<int> CacheSizes()
     {
         return [1, 8, 128];
     }
-
-    [ParamsSource(nameof(CacheSizes))]
-    public int CacheSize { get; set; }
 
     [GlobalSetup]
     public void Setup()
@@ -70,10 +74,6 @@ public class ReadBenchmarks
 
         return bytes;
     }
-
-    // Deterministic pseudo-random offsets: a fixed stride sequence avoids opening the same
-    // addresses every op (RNG state would otherwise make results order-dependent).
-    private ulong _xor;
 
     [Benchmark]
     public ulong Read_Random4KiB()

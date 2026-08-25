@@ -24,16 +24,6 @@ internal abstract class Base
     /// <summary>Minimum match length.</summary>
     internal const uint KMatchMinLen = 2;
 
-    /// <summary>Maps a length value to a position state index.</summary>
-    internal static uint GetLenToPosState(uint len)
-    {
-        len -= KMatchMinLen;
-        if (len < KNumLenToPosStates)
-            return len;
-
-        return KNumLenToPosStates - 1;
-    }
-
     /// <summary>Number of alignment bits.</summary>
     internal const int KNumAlignBits = 4;
 
@@ -94,4 +84,14 @@ internal abstract class Base
 
     /// <summary>Maximum match length.</summary>
     internal const uint KMatchMaxLen = KMatchMinLen + KNumLenSymbols - 1;
+
+    /// <summary>Maps a length value to a position state index.</summary>
+    internal static uint GetLenToPosState(uint len)
+    {
+        len -= KMatchMinLen;
+        if (len < KNumLenToPosStates)
+            return len;
+
+        return KNumLenToPosStates - 1;
+    }
 }

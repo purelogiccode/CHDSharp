@@ -1,15 +1,15 @@
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// A growable big-endian byte buffer used internally for serializing CHD header fields,
-/// map entries, and metadata entries. All multi-byte values are written in big-endian
-/// (network) byte order, matching the CHD on-disk format.
+///     A growable big-endian byte buffer used internally for serializing CHD header fields,
+///     map entries, and metadata entries. All multi-byte values are written in big-endian
+///     (network) byte order, matching the CHD on-disk format.
 /// </summary>
 internal class BigEndianWriter
 {
     private byte[] _buffer;
 
-    /// <summary>Initializes a new <see cref="BigEndianWriter"/> with the given initial capacity.</summary>
+    /// <summary>Initializes a new <see cref="BigEndianWriter" /> with the given initial capacity.</summary>
     /// <param name="capacity">The initial buffer size in bytes (default 256).</param>
     internal BigEndianWriter(int capacity = 256)
     {
@@ -100,7 +100,7 @@ internal class BigEndianWriter
         Position += data.Length;
     }
 
-    /// <summary>Writes zero bytes at the current position and advances by <paramref name="count"/>.</summary>
+    /// <summary>Writes zero bytes at the current position and advances by <paramref name="count" />.</summary>
     /// <param name="count">The number of zero bytes to write.</param>
     internal void WriteZeroes(int count)
     {
@@ -109,7 +109,7 @@ internal class BigEndianWriter
         Position += count;
     }
 
-    /// <summary>Returns a copy of the written bytes as a new array sized to <see cref="Position"/>.</summary>
+    /// <summary>Returns a copy of the written bytes as a new array sized to <see cref="Position" />.</summary>
     /// <returns>A byte array containing the written data.</returns>
     internal byte[] ToArray()
     {
@@ -118,8 +118,8 @@ internal class BigEndianWriter
         return result;
     }
 
-    /// <summary>Returns a span over the written bytes (from the start of the internal buffer to <see cref="Position"/>).</summary>
-    /// <returns>A <see cref="Span{T}"/> of the written data.</returns>
+    /// <summary>Returns a span over the written bytes (from the start of the internal buffer to <see cref="Position" />).</summary>
+    /// <returns>A <see cref="Span{T}" /> of the written data.</returns>
     internal Span<byte> AsSpan()
     {
         return _buffer.AsSpan(0, Position);
@@ -132,10 +132,7 @@ internal class BigEndianWriter
             return;
 
         var newSize = _buffer.Length * 2;
-        while (newSize < needed)
-        {
-            newSize *= 2;
-        }
+        while (newSize < needed) newSize *= 2;
 
         Array.Resize(ref _buffer, newSize);
     }

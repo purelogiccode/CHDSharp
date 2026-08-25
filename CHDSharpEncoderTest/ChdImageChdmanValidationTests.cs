@@ -3,8 +3,8 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Validates ISO/GDI/TOC encoding against chdman.exe: our EncodeCd output must pass
-/// chdman verify and extract byte-identically to chdman's own createcd output.
+///     Validates ISO/GDI/TOC encoding against chdman.exe: our EncodeCd output must pass
+///     chdman verify and extract byte-identically to chdman's own createcd output.
 /// </summary>
 public class ChdImageChdmanValidationTests : IDisposable
 {
@@ -21,7 +21,7 @@ public class ChdImageChdmanValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_testDataDir, recursive: true);
+            Directory.Delete(_testDataDir, true);
         }
         catch
         {
@@ -37,9 +37,7 @@ public class ChdImageChdmanValidationTests : IDisposable
         var iso = new byte[2048 * 120];
         for (var s = 0; s < 120; s++)
         for (var i = 0; i < 2048; i++)
-        {
             iso[s * 2048 + i] = (byte)((s * 13 + i) & 0xFF);
-        }
 
         var isoPath = Path.Combine(_testDataDir, "game.iso");
         File.WriteAllBytes(isoPath, iso);
@@ -48,7 +46,8 @@ public class ChdImageChdmanValidationTests : IDisposable
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         ChdEncoder.EncodeCd(isoPath, ourChd);
 
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createcd", "-i", isoPath, "-o", chdmanChd, "-c", "zlib", "-f");
+        var (createExit, cOut, cErr) =
+            ChdmanHelper.RunChdman("createcd", "-i", isoPath, "-o", chdmanChd, "-c", "zlib", "-f");
         Assert.True(createExit == 0, $"chdman createcd failed (exit={createExit})\n{cOut}{cErr}");
 
         var ourExtract = Path.Combine(_testDataDir, "our.raw");
@@ -80,27 +79,25 @@ public class ChdImageChdmanValidationTests : IDisposable
         var dataBin = new byte[2352 * 80];
         var audio1 = BuildAudio(40, 100);
         var audio2 = BuildAudio(40, 200);
-        for (var i = 0; i < dataBin.Length; i++)
-        {
-            dataBin[i] = (byte)(i & 0xFF);
-        }
+        for (var i = 0; i < dataBin.Length; i++) dataBin[i] = (byte)(i & 0xFF);
 
         File.WriteAllBytes(Path.Combine(_testDataDir, "track01.bin"), dataBin);
         File.WriteAllBytes(Path.Combine(_testDataDir, "track02.raw"), audio1);
         File.WriteAllBytes(Path.Combine(_testDataDir, "track03.raw"), audio2);
         var gdiPath = Path.Combine(_testDataDir, "game.gdi");
         File.WriteAllText(gdiPath, """
-            3
-            1 0 4 2352 "track01.bin" 0
-            2 45000 0 2352 "track02.raw" 0
-            3 45100 0 2352 "track03.raw" 0
-            """);
+                                   3
+                                   1 0 4 2352 "track01.bin" 0
+                                   2 45000 0 2352 "track02.raw" 0
+                                   3 45100 0 2352 "track03.raw" 0
+                                   """);
 
         var ourChd = Path.Combine(_testDataDir, "our.chd");
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         ChdEncoder.EncodeCd(gdiPath, ourChd);
 
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createcd", "-i", gdiPath, "-o", chdmanChd, "-c", "zlib", "-f");
+        var (createExit, cOut, cErr) =
+            ChdmanHelper.RunChdman("createcd", "-i", gdiPath, "-o", chdmanChd, "-c", "zlib", "-f");
         Assert.True(createExit == 0, $"chdman createcd failed (exit={createExit})\n{cOut}{cErr}");
 
         var (infoExit, infoOut, infoErr) = ChdmanHelper.RunChdman("info", "-i", ourChd);
@@ -124,9 +121,9 @@ public class ChdImageChdmanValidationTests : IDisposable
         // expected image: track1 = 80 data + 44920 pad (→ 45000), track2 = 40 + 60 pad (→ 45100),
         // track3 = 40; all 4-frame aligned already
         var expected = new byte[(45000 + 100 + 40) * CdConstants.FrameSize];
-        PlaceTrack(expected, 0, dataBin, 80, 0, swap: false);
-        PlaceTrack(expected, 45000, audio1, 40, 0, swap: true);
-        PlaceTrack(expected, 45100, audio2, 40, 0, swap: true);
+        PlaceTrack(expected, 0, dataBin, 80, 0, false);
+        PlaceTrack(expected, 45000, audio1, 40, 0, true);
+        PlaceTrack(expected, 45100, audio2, 40, 0, true);
         Assert.Equal(expected, File.ReadAllBytes(ourExtract));
     }
 
@@ -137,27 +134,25 @@ public class ChdImageChdmanValidationTests : IDisposable
 
         var data = new byte[2352 * 60];
         var audio = BuildAudio(60, 300);
-        for (var i = 0; i < data.Length; i++)
-        {
-            data[i] = (byte)((i * 7) & 0xFF);
-        }
+        for (var i = 0; i < data.Length; i++) data[i] = (byte)((i * 7) & 0xFF);
 
         File.WriteAllBytes(Path.Combine(_testDataDir, "data.bin"), data);
         File.WriteAllBytes(Path.Combine(_testDataDir, "audio.wav"), audio);
         var tocPath = Path.Combine(_testDataDir, "disc.toc");
         File.WriteAllText(tocPath, """
-            TRACK MODE1/2352
-            DATAFILE "data.bin" 0 00:00:60
-            TRACK AUDIO
-            AUDIOFILE "audio.wav" 0 00:00:60
-            START 00:00:02
-            """);
+                                   TRACK MODE1/2352
+                                   DATAFILE "data.bin" 0 00:00:60
+                                   TRACK AUDIO
+                                   AUDIOFILE "audio.wav" 0 00:00:60
+                                   START 00:00:02
+                                   """);
 
         var ourChd = Path.Combine(_testDataDir, "our.chd");
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         ChdEncoder.EncodeCd(tocPath, ourChd);
 
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createcd", "-i", tocPath, "-o", chdmanChd, "-c", "zlib", "-f");
+        var (createExit, cOut, cErr) =
+            ChdmanHelper.RunChdman("createcd", "-i", tocPath, "-o", chdmanChd, "-c", "zlib", "-f");
         Assert.True(createExit == 0, $"chdman createcd failed (exit={createExit})\n{cOut}{cErr}");
 
         var ourExtract = Path.Combine(_testDataDir, "our.raw");
@@ -195,19 +190,16 @@ public class ChdImageChdmanValidationTests : IDisposable
     }
 
     /// <summary>Places a track's real frames into the logical image; pad frames stay zero.</summary>
-    private static void PlaceTrack(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset, bool swap)
+    private static void PlaceTrack(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
+        bool swap)
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
             Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
             if (swap)
-            {
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
-                {
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);
-                }
-            }
         }
     }
 }

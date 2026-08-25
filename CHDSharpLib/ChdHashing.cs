@@ -1,26 +1,32 @@
 using System.Diagnostics;
-using System.Security.Cryptography;
 using System.IO.Hashing;
+using System.Security.Cryptography;
 
 namespace CHDSharp;
 
 public static partial class Chd
 {
     /// <summary>
-    /// Computes hash digests over a CHD's decompressed content, returning a <see cref="ChdHashComputeResult"/>
-    /// with the error code instead of throwing on failure. For CD/GD-ROM images with <paramref name="perTrack"/>
-    /// set, one hash per track is returned; otherwise a single whole-image hash is returned.
+    ///     Computes hash digests over a CHD's decompressed content, returning a <see cref="ChdHashComputeResult" />
+    ///     with the error code instead of throwing on failure. For CD/GD-ROM images with <paramref name="perTrack" />
+    ///     set, one hash per track is returned; otherwise a single whole-image hash is returned.
     /// </summary>
-    /// <param name="filename">Path to the CHD file (standalone; child CHDs need
-    /// <paramref name="parentFilename"/>).</param>
-    /// <param name="types">The hash algorithms to compute (bitwise OR of <see cref="ChdHashType"/>).</param>
+    /// <param name="filename">
+    ///     Path to the CHD file (standalone; child CHDs need
+    ///     <paramref name="parentFilename" />).
+    /// </param>
+    /// <param name="types">The hash algorithms to compute (bitwise OR of <see cref="ChdHashType" />).</param>
     /// <param name="parentFilename">Parent CHD path for a child CHD, or <c>null</c> for standalone.</param>
     /// <param name="perTrack">For CD/GD-ROM images, hash each track separately instead of the whole image.</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each decompressed hunk.</param>
-    /// <param name="cancellationToken">A token to cancel the hashing. <see cref="OperationCanceledException"/>
-    /// is thrown if cancellation is requested.</param>
-    /// <returns>A <see cref="ChdHashComputeResult"/> with the error code and hash results.</returns>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each decompressed hunk.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to cancel the hashing. <see cref="OperationCanceledException" />
+    ///     is thrown if cancellation is requested.
+    /// </param>
+    /// <returns>A <see cref="ChdHashComputeResult" /> with the error code and hash results.</returns>
     public static ChdHashComputeResult ComputeHashesWithReporting(string filename, ChdHashType types,
         string? parentFilename = null, bool perTrack = false, IProgress<ChdProgress>? progress = null,
         CancellationToken cancellationToken = default)
@@ -55,7 +61,8 @@ public static partial class Chd
             foreach (var (track, offset, length) in regions)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var hashResult = HashRegionWithReporting(chd, offset, (ulong)length, types, track, progress, cancellationToken);
+                var hashResult = HashRegionWithReporting(chd, offset, (ulong)length, types, track, progress,
+                    cancellationToken);
                 if (hashResult.Error != ChdError.Chderrnone)
                     return new ChdHashComputeResult(hashResult.Error, []);
 
@@ -67,22 +74,30 @@ public static partial class Chd
     }
 
     /// <summary>
-    /// Computes hash digests over a CHD's decompressed content (CHDlite <c>hash_content</c>
-    /// parity). For CD/GD-ROM images with <paramref name="perTrack"/> set, one hash per track is
-    /// returned (track boundaries from <see cref="ChdFile.Tracks"/>); otherwise a single
-    /// whole-image hash is returned. Reading and hashing happen in one sequential pass.
+    ///     Computes hash digests over a CHD's decompressed content (CHDlite <c>hash_content</c>
+    ///     parity). For CD/GD-ROM images with <paramref name="perTrack" /> set, one hash per track is
+    ///     returned (track boundaries from <see cref="ChdFile.Tracks" />); otherwise a single
+    ///     whole-image hash is returned. Reading and hashing happen in one sequential pass.
     /// </summary>
-    /// <param name="filename">Path to the CHD file (standalone; child CHDs need
-    /// <paramref name="parentFilename"/>).</param>
-    /// <param name="types">The hash algorithms to compute (bitwise OR of <see cref="ChdHashType"/>).</param>
+    /// <param name="filename">
+    ///     Path to the CHD file (standalone; child CHDs need
+    ///     <paramref name="parentFilename" />).
+    /// </param>
+    /// <param name="types">The hash algorithms to compute (bitwise OR of <see cref="ChdHashType" />).</param>
     /// <param name="parentFilename">Parent CHD path for a child CHD, or <c>null</c> for standalone.</param>
     /// <param name="perTrack">For CD/GD-ROM images, hash each track separately instead of the whole image.</param>
-    /// <param name="progress">An optional <see cref="IProgress{T}"/> receiving a <see cref="ChdProgress"/>
-    /// report after each decompressed hunk.</param>
-    /// <param name="cancellationToken">A token to cancel the hashing. <see cref="OperationCanceledException"/>
-    /// is thrown if cancellation is requested.</param>
-    /// <returns>One <see cref="ChdHashResult"/> per hashed region (track or whole image), in order.
-    /// Empty when <paramref name="types"/> is <see cref="ChdHashType.None"/>.</returns>
+    /// <param name="progress">
+    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
+    ///     report after each decompressed hunk.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to cancel the hashing. <see cref="OperationCanceledException" />
+    ///     is thrown if cancellation is requested.
+    /// </param>
+    /// <returns>
+    ///     One <see cref="ChdHashResult" /> per hashed region (track or whole image), in order.
+    ///     Empty when <paramref name="types" /> is <see cref="ChdHashType.None" />.
+    /// </returns>
     /// <exception cref="InvalidDataException">The CHD cannot be opened or a hunk fails to decompress.</exception>
     public static IReadOnlyList<ChdHashResult> ComputeHashes(string filename, ChdHashType types,
         string? parentFilename = null, bool perTrack = false, IProgress<ChdProgress>? progress = null,
@@ -90,16 +105,22 @@ public static partial class Chd
     {
         var result = ComputeHashesWithReporting(filename, types, parentFilename, perTrack, progress, cancellationToken);
         if (result.Error != ChdError.Chderrnone)
-            throw new InvalidDataException($"Cannot open CHD '{filename}' ({result.Error.GetMessage()} ({result.Error}))");
+            throw new InvalidDataException(
+                $"Cannot open CHD '{filename}' ({result.Error.GetMessage()} ({result.Error}))");
 
         return result.Results;
     }
 
-    private static (ChdError Error, ChdHashResult? Result) HashRegionWithReporting(ChdFile chd, ulong offset, ulong length, ChdHashType types,
+    private static (ChdError Error, ChdHashResult? Result) HashRegionWithReporting(ChdFile chd, ulong offset,
+        ulong length, ChdHashType types,
         int? trackNumber, IProgress<ChdProgress>? progress, CancellationToken cancellationToken)
     {
-        using var sha1 = (types & ChdHashType.Sha1) != ChdHashType.None ? IncrementalHash.CreateHash(HashAlgorithmName.SHA1) : null;
-        using var sha256 = (types & ChdHashType.Sha256) != ChdHashType.None ? IncrementalHash.CreateHash(HashAlgorithmName.SHA256) : null;
+        using var sha1 = (types & ChdHashType.Sha1) != ChdHashType.None
+            ? IncrementalHash.CreateHash(HashAlgorithmName.SHA1)
+            : null;
+        using var sha256 = (types & ChdHashType.Sha256) != ChdHashType.None
+            ? IncrementalHash.CreateHash(HashAlgorithmName.SHA256)
+            : null;
         var crc32 = (types & ChdHashType.Crc32) != ChdHashType.None ? new Crc32() : null;
         var xxh3 = (types & ChdHashType.Xxh3) != ChdHashType.None ? new XxHash3() : null;
 

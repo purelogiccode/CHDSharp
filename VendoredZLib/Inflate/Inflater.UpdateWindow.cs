@@ -42,12 +42,10 @@ internal static partial class Inflater
         else
         {
             var dist = state.Wsize - state.Wnext;
-            if (dist > copy)
-            {
-                dist = copy;
-            }
+            if (dist > copy) dist = copy;
 
-            netUnsafe.CopyBlockUnaligned(ref Unsafe.Add(ref window, state.Wnext), ref Unsafe.Subtract(ref end, copy), dist);
+            netUnsafe.CopyBlockUnaligned(ref Unsafe.Add(ref window, state.Wnext), ref Unsafe.Subtract(ref end, copy),
+                dist);
             copy -= dist;
             if (copy != 0)
             {
@@ -58,15 +56,9 @@ internal static partial class Inflater
             else
             {
                 state.Wnext += dist;
-                if (state.Wnext == state.Wsize)
-                {
-                    state.Wnext = 0;
-                }
+                if (state.Wnext == state.Wsize) state.Wnext = 0;
 
-                if (state.Whave < state.Wsize)
-                {
-                    state.Whave += dist;
-                }
+                if (state.Whave < state.Wsize) state.Whave += dist;
             }
         }
     }

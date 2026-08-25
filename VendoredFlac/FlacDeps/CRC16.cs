@@ -1,22 +1,48 @@
 namespace VendoredFlac.FlacDeps;
 
 /// <summary>
-/// Static class for computing 16-bit CRC checksums used in FLAC audio frames.
-/// Supports combining and subtracting CRCs for efficient multi-block operations.
+///     Static class for computing 16-bit CRC checksums used in FLAC audio frames.
+///     Supports combining and subtracting CRCs for efficient multi-block operations.
 /// </summary>
 internal static class Crc16
 {
     private const int Gf2Dim = 16;
 
+    private const ushort Polynomial = 0x8005;
+    private const ushort ReversePolynomial = 0x4003;
+
     /// <summary>
-    /// Precomputed CRC-16 lookup table (256 entries).
+    ///     Precomputed CRC-16 lookup table (256 entries).
     /// </summary>
     internal static readonly ushort[] Table = new ushort[256];
 
     private static readonly ushort[,] SubstractTable = new ushort[Gf2Dim, Gf2Dim];
 
+    static unsafe Crc16()
+    {
+        for (ushort i = 0; i < Table.Length; i++)
+        {
+            int crc = i;
+            for (var j = 0; j < Gf2Dim; j++)
+                if ((crc & (1U << (Gf2Dim - 1))) != 0)
+                    crc = (crc << 1) ^ Polynomial;
+                else
+                    crc <<= 1;
+
+            Table[i] = (ushort)(crc & ((1 << Gf2Dim) - 1));
+        }
+
+        SubstractTable[0, Gf2Dim - 1] = ReversePolynomial;
+        for (var n = 1; n < Gf2Dim; n++) SubstractTable[0, n - 1] = (ushort)(1 << n);
+
+        fixed (ushort* st = &SubstractTable[0, 0])
+        {
+            for (var i = 1; i < Gf2Dim; i++) gf2_matrix_square(st + i * Gf2Dim, st + (i - 1) * Gf2Dim);
+        }
+    }
+
     /// <summary>
-    /// Computes a 16-bit CRC checksum over a portion of a byte array, continuing from a previous CRC value.
+    ///     Computes a 16-bit CRC checksum over a portion of a byte array, continuing from a previous CRC value.
     /// </summary>
     /// <param name="crc">The initial CRC value.</param>
     /// <param name="bytes">The source byte array.</param>
@@ -32,7 +58,8 @@ internal static class Crc16
     }
 
     /// <summary>
-    /// Computes a 16-bit CRC checksum over a raw byte buffer, continuing from a previous CRC value. Operates on raw pointers.
+    ///     Computes a 16-bit CRC checksum over a raw byte buffer, continuing from a previous CRC value. Operates on raw
+    ///     pointers.
     /// </summary>
     /// <param name="crc">The initial CRC value.</param>
     /// <param name="bytes">The source byte pointer.</param>
@@ -42,51 +69,10 @@ internal static class Crc16
     {
         fixed (ushort* t = Table)
         {
-            for (var i = count; i > 0; i--)
-            {
-                crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ *bytes++]);
-            }
+            for (var i = count; i > 0; i--) crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ *bytes++]);
         }
 
         return crc;
-    }
-
-    private const ushort Polynomial = 0x8005;
-    private const ushort ReversePolynomial = 0x4003;
-
-    static unsafe Crc16()
-    {
-        for (ushort i = 0; i < Table.Length; i++)
-        {
-            int crc = i;
-            for (var j = 0; j < Gf2Dim; j++)
-            {
-                if ((crc & (1U << (Gf2Dim - 1))) != 0)
-                {
-                    crc = (crc << 1) ^ Polynomial;
-                }
-                else
-                {
-                    crc <<= 1;
-                }
-            }
-
-            Table[i] = (ushort)(crc & ((1 << Gf2Dim) - 1));
-        }
-
-        SubstractTable[0, Gf2Dim - 1] = ReversePolynomial;
-        for (var n = 1; n < Gf2Dim; n++)
-        {
-            SubstractTable[0, n - 1] = (ushort)(1 << n);
-        }
-
-        fixed (ushort* st = &SubstractTable[0, 0])
-        {
-            for (var i = 1; i < Gf2Dim; i++)
-            {
-                gf2_matrix_square(st + i * Gf2Dim, st + (i - 1) * Gf2Dim);
-            }
-        }
     }
 
     private static unsafe ushort gf2_matrix_times(ushort* mat, ushort uvec)
@@ -113,14 +99,11 @@ internal static class Crc16
 
     private static unsafe void gf2_matrix_square(ushort* square, ushort* mat)
     {
-        for (var n = 0; n < Gf2Dim; n++)
-        {
-            square[n] = gf2_matrix_times(mat, mat[n]);
-        }
+        for (var n = 0; n < Gf2Dim; n++) square[n] = gf2_matrix_times(mat, mat[n]);
     }
 
     /// <summary>
-    /// Reflects the lower 16 bits of a CRC value (used for reversing bit order).
+    ///     Reflects the lower 16 bits of a CRC value (used for reversing bit order).
     /// </summary>
     /// <param name="crc">The CRC value to reflect.</param>
     /// <returns>The reflected 16-bit value.</returns>
@@ -130,13 +113,13 @@ internal static class Crc16
     }
 
     /// <summary>
-    /// Subtracts a 16-bit CRC checksum as if a block of data was removed.
+    ///     Subtracts a 16-bit CRC checksum as if a block of data was removed.
     /// </summary>
     /// <param name="crc1">The CRC of the combined data.</param>
     /// <param name="crc2">The CRC of the data block to subtract.</param>
     /// <param name="len2">The length of the data block to subtract in bytes.</param>
     /// <returns>The resulting CRC value after subtraction.</returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="len2"/> is negative.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="len2" /> is negative.</exception>
     internal static unsafe ushort Subtract(ushort crc1, ushort crc2, long len2)
     {
         crc1 = Reflect(crc1);
@@ -158,10 +141,7 @@ internal static class Crc16
             do
             {
                 /* apply zeros operator for this bit of len2 */
-                if ((len2 & 1) != 0)
-                {
-                    crc1 = gf2_matrix_times(st + Gf2Dim * n, crc1);
-                }
+                if ((len2 & 1) != 0) crc1 = gf2_matrix_times(st + Gf2Dim * n, crc1);
 
                 len2 >>= 1;
                 n = (n + 1) & (Gf2Dim - 1);

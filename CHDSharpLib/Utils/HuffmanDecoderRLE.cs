@@ -1,13 +1,14 @@
 ﻿namespace CHDSharp.Utils;
 
-/// <summary>Extends <see cref="HuffmanDecoder"/> with run-length encoding support for repeated symbol sequences.</summary>
+/// <summary>Extends <see cref="HuffmanDecoder" /> with run-length encoding support for repeated symbol sequences.</summary>
 internal class HuffmanDecoderRle : HuffmanDecoder
 {
-    private int _rlecount;
     private uint _prevdata;
+    private int _rlecount;
 
-    /// <summary>Initializes a new instance of the <see cref="HuffmanDecoderRle"/> class.</summary>
-    public HuffmanDecoderRle(uint numcodes, byte maxbits, BitStream bitbuf, ushort[] buffLookup) : base(numcodes, maxbits, bitbuf, buffLookup)
+    /// <summary>Initializes a new instance of the <see cref="HuffmanDecoderRle" /> class.</summary>
+    public HuffmanDecoderRle(uint numcodes, byte maxbits, BitStream bitbuf, ushort[] buffLookup) : base(numcodes,
+        maxbits, bitbuf, buffLookup)
     {
     }
 

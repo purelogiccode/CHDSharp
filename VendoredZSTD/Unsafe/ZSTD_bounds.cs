@@ -1,12 +1,11 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ZSTD_bounds
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ZSTD_bounds
-    {
-        public nuint error;
-        public int lowerBound;
-        public int upperBound;
-    }
+    public nuint error;
+    public int lowerBound;
+    public int upperBound;
 }

@@ -1,26 +1,27 @@
 namespace CHDSharp;
 
 /// <summary>
-/// A read-only, seekable <see cref="Stream"/> that wraps a <see cref="ChdFile"/>, providing
-/// sequential or random access to the decompressed image as a flat byte stream.
+///     A read-only, seekable <see cref="Stream" /> that wraps a <see cref="ChdFile" />, providing
+///     sequential or random access to the decompressed image as a flat byte stream.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Use <see cref="ChdFile.OpenAsStream(string, out ChdImageStream?, CancellationToken)"/> or <see cref="ChdFile.OpenAsStreamAsync(string, CancellationToken)"/> to create
-/// an instance. The stream decompresses hunks on demand via the underlying <see cref="ChdFile"/>;
-/// a single hunk is cached, so sequential reads within the same hunk avoid re-decoding.
-/// </para>
-/// <para>
-/// Disposing the stream optionally disposes the underlying <see cref="ChdFile"/> depending on
-/// how the stream was created. The stream is NOT thread-safe; callers must serialize access.
-/// </para>
+///     <para>
+///         Use <see cref="ChdFile.OpenAsStream(string, out ChdImageStream?, CancellationToken)" /> or
+///         <see cref="ChdFile.OpenAsStreamAsync(string, CancellationToken)" /> to create
+///         an instance. The stream decompresses hunks on demand via the underlying <see cref="ChdFile" />;
+///         a single hunk is cached, so sequential reads within the same hunk avoid re-decoding.
+///     </para>
+///     <para>
+///         Disposing the stream optionally disposes the underlying <see cref="ChdFile" /> depending on
+///         how the stream was created. The stream is NOT thread-safe; callers must serialize access.
+///     </para>
 /// </remarks>
 public sealed class ChdImageStream : Stream
 {
     private readonly ChdFile _chd;
     private readonly bool _ownsChd;
-    private ulong _position;
     private bool _disposed;
+    private ulong _position;
 
     internal ChdImageStream(ChdFile chd, bool ownsChd)
     {
@@ -28,16 +29,16 @@ public sealed class ChdImageStream : Stream
         _ownsChd = ownsChd;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override bool CanRead => !_disposed;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override bool CanSeek => !_disposed;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override bool CanWrite => false;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override long Length
     {
         get
@@ -47,7 +48,7 @@ public sealed class ChdImageStream : Stream
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override long Position
     {
         get
@@ -65,13 +66,13 @@ public sealed class ChdImageStream : Stream
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override void Flush()
     {
         // Read-only stream; nothing to flush.
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override int Read(byte[] buffer, int offset, int count)
     {
         ThrowIfDisposed();
@@ -92,7 +93,7 @@ public sealed class ChdImageStream : Stream
     }
 
 #if NET7_0_OR_GREATER
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override int Read(Span<byte> buffer)
     {
         ThrowIfDisposed();
@@ -110,7 +111,7 @@ public sealed class ChdImageStream : Stream
     }
 #endif
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         ThrowIfDisposed();
@@ -131,7 +132,7 @@ public sealed class ChdImageStream : Stream
     }
 
 #if NET7_0_OR_GREATER
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -151,7 +152,7 @@ public sealed class ChdImageStream : Stream
     }
 #endif
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override long Seek(long offset, SeekOrigin origin)
     {
         ThrowIfDisposed();
@@ -159,16 +160,19 @@ public sealed class ChdImageStream : Stream
         var newPos = origin switch
         {
             SeekOrigin.Begin => offset < 0
-                ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek offset cannot be negative from beginning.")
+                ? throw new ArgumentOutOfRangeException(nameof(offset),
+                    "Seek offset cannot be negative from beginning.")
                 : (ulong)offset,
             SeekOrigin.Current => offset < 0
-                ? -(long)_position < offset ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek before beginning of stream.") : _position - (ulong)(-offset)
+                ? -(long)_position < offset
+                    ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek before beginning of stream.")
+                    : _position - (ulong)-offset
                 : _position + (ulong)offset,
             SeekOrigin.End => offset > 0
                 ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek offset cannot be positive from end.")
-                : (ulong)(-offset) > _chd.TotalBytes
+                : (ulong)-offset > _chd.TotalBytes
                     ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek before beginning of stream.")
-                    : _chd.TotalBytes - (ulong)(-offset),
+                    : _chd.TotalBytes - (ulong)-offset,
             _ => throw new ArgumentException("Invalid SeekOrigin.", nameof(origin))
         };
 
@@ -176,19 +180,19 @@ public sealed class ChdImageStream : Stream
         return (long)_position;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override void SetLength(long value)
     {
         throw new NotSupportedException("ChdImageStream is read-only.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override void Write(byte[] buffer, int offset, int count)
     {
         throw new NotSupportedException("ChdImageStream is read-only.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -202,7 +206,7 @@ public sealed class ChdImageStream : Stream
     }
 
 #if NET7_0_OR_GREATER
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override async ValueTask DisposeAsync()
     {
         if (!_disposed)

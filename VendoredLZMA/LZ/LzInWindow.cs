@@ -3,52 +3,39 @@ namespace VendoredLZMA.LZ;
 /// <summary>Sliding input window buffer for the LZMA encoder, ported from the LZMA SDK (public domain).</summary>
 internal class InWindow
 {
+    internal uint BlockSize;
     internal byte[] BufferBase = null!;
-    private Stream _stream = null!;
-    private uint _posLimit;
-    private bool _streamEndWasReached;
-    private uint _pointerToLastSafePosition;
 
     internal uint BufferOffset;
-
-    internal uint BlockSize;
     internal uint Pos;
-    private uint _keepSizeBefore;
-    private uint _keepSizeAfter;
     internal uint StreamPos;
+    private uint _keepSizeAfter;
+    private uint _keepSizeBefore;
+    private uint _pointerToLastSafePosition;
+    private uint _posLimit;
+    private Stream _stream = null!;
+    private bool _streamEndWasReached;
 
     internal void MoveBlock()
     {
         var offset = BufferOffset + Pos - _keepSizeBefore;
-        if (offset > 0)
-        {
-            offset--;
-        }
+        if (offset > 0) offset--;
 
         var numBytes = BufferOffset + StreamPos - offset;
 
-        for (uint i = 0; i < numBytes; i++)
-        {
-            BufferBase[i] = BufferBase[offset + i];
-        }
+        for (uint i = 0; i < numBytes; i++) BufferBase[i] = BufferBase[offset + i];
 
         BufferOffset -= offset;
     }
 
     internal virtual void ReadBlock()
     {
-        if (_streamEndWasReached)
-        {
-            return;
-        }
+        if (_streamEndWasReached) return;
 
         while (true)
         {
             var size = (int)(0 - BufferOffset + BlockSize - StreamPos);
-            if (size == 0)
-            {
-                return;
-            }
+            if (size == 0) return;
 
             var numReadBytes = _stream.Read(BufferBase, (int)(BufferOffset + StreamPos), size);
             if (numReadBytes == 0)
@@ -56,19 +43,14 @@ internal class InWindow
                 _posLimit = StreamPos;
                 var pointerToPosition = BufferOffset + _posLimit;
                 if (pointerToPosition > _pointerToLastSafePosition)
-                {
                     _posLimit = _pointerToLastSafePosition - BufferOffset;
-                }
 
                 _streamEndWasReached = true;
                 return;
             }
 
             StreamPos += (uint)numReadBytes;
-            if (StreamPos >= Pos + _keepSizeAfter)
-            {
-                _posLimit = StreamPos - _keepSizeAfter;
-            }
+            if (StreamPos >= Pos + _keepSizeAfter) _posLimit = StreamPos - _keepSizeAfter;
         }
     }
 
@@ -117,10 +99,7 @@ internal class InWindow
         if (Pos > _posLimit)
         {
             var pointerToPosition = BufferOffset + Pos;
-            if (pointerToPosition > _pointerToLastSafePosition)
-            {
-                MoveBlock();
-            }
+            if (pointerToPosition > _pointerToLastSafePosition) MoveBlock();
 
             ReadBlock();
         }
@@ -134,12 +113,8 @@ internal class InWindow
     internal uint GetMatchLen(int index, uint distance, uint limit)
     {
         if (_streamEndWasReached)
-        {
             if (Pos + index + limit > StreamPos)
-            {
                 limit = StreamPos - (uint)(Pos + index);
-            }
-        }
 
         distance++;
         var pby = BufferOffset + Pos + (uint)index;

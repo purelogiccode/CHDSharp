@@ -1,16 +1,28 @@
 namespace CHDSharp.Models;
 
-/// <summary>Represents a single entry in the CHD block map, describing compression type, location, length, and caching state for one hunk.</summary>
+/// <summary>
+///     Represents a single entry in the CHD block map, describing compression type, location, length, and caching
+///     state for one hunk.
+/// </summary>
 internal class MapEntry
 {
+    /// <summary>
+    ///     Buffer holding the raw compressed data read from disk; <c>null</c> while unloaded or after the buffer is
+    ///     returned to the pool.
+    /// </summary>
+    internal byte[]? BuffIn;
+
+    /// <summary>
+    ///     Buffer holding the final decompressed hunk data; <c>null</c> while unset or after the buffer is returned to
+    ///     the pool.
+    /// </summary>
+    internal byte[]? BuffOut;
+
+    /// <summary>Cached copy of the decompressed output when this block is kept for reuse; <c>null</c> when no cache is held.</summary>
+    internal byte[]? BuffOutCache;
+
     /// <summary>The compression type applied to this hunk.</summary>
     internal CompressionType Comptype;
-
-    /// <summary>The length of the compressed data on disk.</summary>
-    internal uint Length;
-
-    /// <summary>The file offset of the compressed data, or the source hunk index for self-referencing/parent entries.</summary>
-    internal ulong Offset;
 
     /// <summary>The CRC-32 checksum of the decompressed hunk data (V3 &amp; V4). Null if CRC checking is disabled.</summary>
     internal uint? Crc;
@@ -18,30 +30,33 @@ internal class MapEntry
     /// <summary>The CRC-16 checksum of the decompressed hunk data (V5).</summary>
     internal ushort? Crc16;
 
-    /// <summary>Reference to the source map entry when this hunk is a <see cref="CompressionType.Compressionself"/> reference; <c>null</c> otherwise.</summary>
-    internal MapEntry? SelfMapEntry;
+    /// <summary>Whether the decompressed data buffer should be kept in <see cref="BuffOutCache" /> for reuse.</summary>
+    internal bool KeepBufferCopy;
 
-    /// <summary>Number of times this block is referenced by other hunks; used for caching decompressed data.</summary>
-    internal int UseCount;
+    /// <summary>The length of the compressed data on disk.</summary>
+    internal uint Length;
 
-    /// <summary>Buffer holding the raw compressed data read from disk; <c>null</c> while unloaded or after the buffer is returned to the pool.</summary>
-    internal byte[]? BuffIn;
-
-    /// <summary>Cached copy of the decompressed output when this block is kept for reuse; <c>null</c> when no cache is held.</summary>
-    internal byte[]? BuffOutCache;
-
-    /// <summary>Buffer holding the final decompressed hunk data; <c>null</c> while unset or after the buffer is returned to the pool.</summary>
-    internal byte[]? BuffOut;
+    /// <summary>The file offset of the compressed data, or the source hunk index for self-referencing/parent entries.</summary>
+    internal ulong Offset;
 
     /// <summary>Whether this hunk has been processed during parallel decompression (for ordering during hashing).</summary>
     internal bool Processed;
 
+    /// <summary>
+    ///     The secondary decompression reader delegate for <see cref="CompressionType.Compressiontype2Nd" /> entries
+    ///     (V3/V4 type 6).
+    /// </summary>
+    internal ChdReader? SecondaryReader;
+
+    /// <summary>
+    ///     Reference to the source map entry when this hunk is a <see cref="CompressionType.Compressionself" />
+    ///     reference; <c>null</c> otherwise.
+    /// </summary>
+    internal MapEntry? SelfMapEntry;
+
     /// <summary>A computed weight value used to prioritize which blocks keep cached copies.</summary>
     internal int UsageWeight;
 
-    /// <summary>Whether the decompressed data buffer should be kept in <see cref="BuffOutCache"/> for reuse.</summary>
-    internal bool KeepBufferCopy;
-
-    /// <summary>The secondary decompression reader delegate for <see cref="CompressionType.Compressiontype2Nd"/> entries (V3/V4 type 6).</summary>
-    internal ChdReader? SecondaryReader;
+    /// <summary>Number of times this block is referenced by other hunks; used for caching decompressed data.</summary>
+    internal int UseCount;
 }

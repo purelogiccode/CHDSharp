@@ -4,18 +4,18 @@ using CHDSharp.Encoder.Models;
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Parses a Sega GD-ROM GDI descriptor into a table of contents, matching MAME's
-/// <c>cdrom_file::parse_gdi</c>. Track lines are
-/// <c>&lt;track&gt; &lt;lba&gt; &lt;type&gt; &lt;sector size&gt; "&lt;file&gt;" &lt;offset&gt;</c>;
-/// gaps between track LBAs become zero-filled pad frames at the end of the previous track.
+///     Parses a Sega GD-ROM GDI descriptor into a table of contents, matching MAME's
+///     <c>cdrom_file::parse_gdi</c>. Track lines are
+///     <c>&lt;track&gt; &lt;lba&gt; &lt;type&gt; &lt;sector size&gt; "&lt;file&gt;" &lt;offset&gt;</c>;
+///     gaps between track LBAs become zero-filled pad frames at the end of the previous track.
 /// </summary>
 public class GdiParser
 {
     /// <summary>
-    /// Parses a GDI descriptor into a GD-ROM table of contents.
+    ///     Parses a GDI descriptor into a GD-ROM table of contents.
     /// </summary>
     /// <param name="gdiPath">Path to the .gdi file; referenced data files are resolved relative to it.</param>
-    /// <returns>The parsed table of contents (with <see cref="CdTocFlags.GdRom"/> set).</returns>
+    /// <returns>The parsed table of contents (with <see cref="CdTocFlags.GdRom" /> set).</returns>
     /// <exception cref="FileNotFoundException">The GDI file or a referenced data file does not exist.</exception>
     /// <exception cref="InvalidDataException">The GDI file is malformed or uses unsupported track types.</exception>
     public CdToc Parse(string gdiPath)
@@ -28,7 +28,9 @@ public class GdiParser
 
         // first line: track count
         var headerTokens = CdImageParser.Tokenize(lines.Length > 0 ? lines[0] : string.Empty);
-        if (headerTokens.Count == 0 || !int.TryParse(headerTokens[0], NumberStyles.None, CultureInfo.InvariantCulture, out var numTracks) || numTracks <= 0)
+        if (headerTokens.Count == 0 ||
+            !int.TryParse(headerTokens[0], NumberStyles.None, CultureInfo.InvariantCulture, out var numTracks) ||
+            numTracks <= 0)
             throw new InvalidDataException("GDI header specifies no tracks");
 
         var toc = new CdToc
@@ -52,10 +54,7 @@ public class GdiParser
                 throw new InvalidDataException($"GDI track entry should have 6 parameters, found {tokens.Count}");
 
             var trknum = trackNumber - 1;
-            if (tracks[trknum] != null)
-            {
-                throw new InvalidDataException($"Track {trackNumber} defined multiple times");
-            }
+            if (tracks[trknum] != null) throw new InvalidDataException($"Track {trackNumber} defined multiple times");
 
             var physframeofs = int.Parse(tokens[1], CultureInfo.InvariantCulture);
             var trktype = int.Parse(tokens[2], CultureInfo.InvariantCulture);
@@ -90,7 +89,8 @@ public class GdiParser
                     track.Swap = true;
                     break;
                 default:
-                    throw new InvalidDataException($"Unknown track type {trktype} and track size {trksize} combination encountered");
+                    throw new InvalidDataException(
+                        $"Unknown track type {trktype} and track size {trksize} combination encountered");
             }
 
             if (!File.Exists(fileName))

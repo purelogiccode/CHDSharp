@@ -11,7 +11,8 @@ internal static class Compressor
 {
     //private const int Max = int.MaxValue;
 
-    internal static int Compress(Span<byte> dest, ref uint destLen, ReadOnlySpan<byte> source, uint sourceLen, int level)
+    internal static int Compress(Span<byte> dest, ref uint destLen, ReadOnlySpan<byte> source, uint sourceLen,
+        int level)
     {
         var left = destLen;
         destLen = 0;
@@ -97,13 +98,8 @@ internal static class Compressor
 
         sourceLen -= len + stream.AvailIn;
         if (dest != buf)
-        {
             destLen = stream.total_out;
-        }
-        else if (stream.total_out != 0 && err == ZBufError)
-        {
-            left = 1;
-        }
+        else if (stream.total_out != 0 && err == ZBufError) left = 1;
 
         _ = Inflater.InflateEnd(ref stream);
         return err == ZStreamEnd ? ZOk :

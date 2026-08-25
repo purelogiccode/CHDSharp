@@ -17,7 +17,7 @@ public class IdentMetadataTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -36,7 +36,7 @@ public class IdentMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "ident.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { Metadata = [identEntry] });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = [identEntry] });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -55,7 +55,7 @@ public class IdentMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "no_ident.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+        ChdEncoder.EncodeRaw(ms, chdPath);
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -79,7 +79,7 @@ public class IdentMetadataTests : IDisposable
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, sourcePath, 4096, 512, options: new ChdEncodeOptions { Metadata = [identEntry] });
+            ChdEncoder.EncodeRaw(ms, sourcePath, options: new ChdEncodeOptions { Metadata = [identEntry] });
         }
 
         ChdEncoder.Copy(sourcePath, copyPath);
@@ -102,7 +102,7 @@ public class IdentMetadataTests : IDisposable
         var chdPath = Path.Combine(_dir, "set_del.chd");
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512);
+            ChdEncoder.EncodeRaw(ms, chdPath);
         }
 
         var err = ChdFile.Open(chdPath, out var file);
@@ -148,7 +148,7 @@ public class IdentMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "multi.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { Metadata = entries });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = entries });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -189,7 +189,7 @@ public class IdentMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "all_meta.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, options: new ChdEncodeOptions { Metadata = entries });
+        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = entries });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -225,7 +225,7 @@ public class IdentMetadataTests : IDisposable
         var identEntry = MetadataWriter.BuildIdentMetadata(identData);
 
         var chdPath = Path.Combine(_dir, "blank_ident.chd");
-        ChdEncoder.CreateBlank(chdPath, 8192, 4096, 512, options: new ChdEncodeOptions { Metadata = [identEntry] });
+        ChdEncoder.CreateBlank(chdPath, 8192, options: new ChdEncodeOptions { Metadata = [identEntry] });
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);

@@ -1,9 +1,9 @@
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Corpus-level invariants for <see cref="ChdFile.ReadRawHunk"/> (raw on-disk hunk access):
-/// raw bytes match the decompressed data for uncompressed maps, and parent/zero-fill hunks
-/// have no on-disk data.
+///     Corpus-level invariants for <see cref="ChdFile.ReadRawHunk" /> (raw on-disk hunk access):
+///     raw bytes match the decompressed data for uncompressed maps, and parent/zero-fill hunks
+///     have no on-disk data.
 /// </summary>
 [Collection("TestData")]
 public sealed class ReadRawHunkCorpusTests
@@ -60,10 +60,7 @@ public sealed class ReadRawHunkCorpusTests
             for (uint h = 0; h < file.HunkCount; h++)
             {
                 var raw = file.ReadRawHunk(h);
-                if (raw == null)
-                {
-                    parentReferenced++;
-                }
+                if (raw == null) parentReferenced++;
 
                 Assert.Equal(ChdError.Chderrnone, file.ReadHunk(h, hunk));
             }

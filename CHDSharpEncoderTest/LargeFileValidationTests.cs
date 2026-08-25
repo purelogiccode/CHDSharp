@@ -5,9 +5,9 @@ using CHDSharp.Encoder;
 namespace CHDSharpEncoderTest;
 
 /// <summary>
-/// Large-file (100 MB+) integration tests: encodes, then validates the result with
-/// <c>chdman verify</c>, <c>chdman extractraw</c> (SHA-1 compared against the source),
-/// and a deep CHDSharpLib check.
+///     Large-file (100 MB+) integration tests: encodes, then validates the result with
+///     <c>chdman verify</c>, <c>chdman extractraw</c> (SHA-1 compared against the source),
+///     and a deep CHDSharpLib check.
 /// </summary>
 public class LargeFileValidationTests : IDisposable
 {
@@ -24,7 +24,7 @@ public class LargeFileValidationTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -43,7 +43,7 @@ public class LargeFileValidationTests : IDisposable
         var chdPath = Path.Combine(_dir, "large.chd");
         var extractPath = Path.Combine(_dir, "large_extracted.raw");
 
-        WriteMixedData(srcPath, size, hunkBytes, seed: 2024);
+        WriteMixedData(srcPath, size, hunkBytes, 2024);
         var srcSha1 = Sha1Hex(srcPath);
 
         ChdEncoder.EncodeRaw(srcPath, chdPath, hunkBytes, 4096);
@@ -83,12 +83,12 @@ public class LargeFileValidationTests : IDisposable
 
         WriteCdBin(binPath, dataFrames, audioFrames);
         File.WriteAllText(cuePath, $"""
-            FILE "large.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 {dataFrames / (60 * 75):D2}:{dataFrames / 75 % 60:D2}:{dataFrames % 75:D2}
-            """);
+                                    FILE "large.bin" BINARY
+                                      TRACK 01 MODE1/2352
+                                        INDEX 01 00:00:00
+                                      TRACK 02 AUDIO
+                                        INDEX 01 {dataFrames / (60 * 75):D2}:{dataFrames / 75 % 60:D2}:{dataFrames % 75:D2}
+                                    """);
 
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
@@ -110,15 +110,14 @@ public class LargeFileValidationTests : IDisposable
 
     // ----- helpers -----
 
-    /// <summary>Writes a deterministic 100 MB-class raw file: alternating compressible
-    /// pattern blocks and incompressible seeded-random blocks.</summary>
+    /// <summary>
+    ///     Writes a deterministic 100 MB-class raw file: alternating compressible
+    ///     pattern blocks and incompressible seeded-random blocks.
+    /// </summary>
     private static void WriteMixedData(string path, long size, int blockBytes, int seed)
     {
         var pattern = new byte[blockBytes];
-        for (var i = 0; i < blockBytes; i++)
-        {
-            pattern[i] = (byte)(i & 0xFF);
-        }
+        for (var i = 0; i < blockBytes; i++) pattern[i] = (byte)(i & 0xFF);
 
         var randomBlock = new byte[blockBytes];
         var rng = new Random(seed);
@@ -135,9 +134,11 @@ public class LargeFileValidationTests : IDisposable
         }
     }
 
-    /// <summary>Writes a BIN file: <paramref name="dataFrames"/> patterned data sectors
-    /// followed by <paramref name="audioFrames"/> little-endian audio sectors (matching the
-    /// sector layout used by the other CD tests).</summary>
+    /// <summary>
+    ///     Writes a BIN file: <paramref name="dataFrames" /> patterned data sectors
+    ///     followed by <paramref name="audioFrames" /> little-endian audio sectors (matching the
+    ///     sector layout used by the other CD tests).
+    /// </summary>
     private static void WriteCdBin(string path, int dataFrames, int audioFrames)
     {
         var sector = new byte[CdConstants.MaxSectorData];
@@ -145,10 +146,7 @@ public class LargeFileValidationTests : IDisposable
 
         for (var f = 0; f < dataFrames; f++)
         {
-            for (var j = 0; j < CdConstants.MaxSectorData; j++)
-            {
-                sector[j] = (byte)((f * 31 + j * 7) & 0xFF);
-            }
+            for (var j = 0; j < CdConstants.MaxSectorData; j++) sector[j] = (byte)((f * 31 + j * 7) & 0xFF);
 
             fs.Write(sector);
         }
@@ -166,9 +164,11 @@ public class LargeFileValidationTests : IDisposable
         }
     }
 
-    /// <summary>SHA-1 of the logical image chdman extractraw returns for the BIN written by
-    /// <see cref="WriteCdBin"/>: 2448-byte frames, audio samples byte-swapped to big-endian,
-    /// 96 bytes of zero subcode per frame.</summary>
+    /// <summary>
+    ///     SHA-1 of the logical image chdman extractraw returns for the BIN written by
+    ///     <see cref="WriteCdBin" />: 2448-byte frames, audio samples byte-swapped to big-endian,
+    ///     96 bytes of zero subcode per frame.
+    /// </summary>
     private static string ExpectedCdImageSha1(int dataFrames, int audioFrames)
     {
         using var sha = SHA1.Create();
@@ -180,10 +180,7 @@ public class LargeFileValidationTests : IDisposable
             Array.Clear(frame);
             if (f < dataFrames)
             {
-                for (var j = 0; j < CdConstants.MaxSectorData; j++)
-                {
-                    frame[j] = (byte)((f * 31 + j * 7) & 0xFF);
-                }
+                for (var j = 0; j < CdConstants.MaxSectorData; j++) frame[j] = (byte)((f * 31 + j * 7) & 0xFF);
             }
             else
             {

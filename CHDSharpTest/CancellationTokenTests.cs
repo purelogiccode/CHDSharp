@@ -6,14 +6,14 @@ public class CancellationTokenTests
 {
     private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
+    // Long-lived pre-cancelled source: tokens must outlive any operation that uses them
+    // (disposing the CTS while a token is in flight can throw ObjectDisposedException).
+    private static readonly CancellationTokenSource PreCancelledSource = CreatePreCancelled();
+
     private static string DataPath(string name)
     {
         return Path.Combine(TestDataDir, name);
     }
-
-    // Long-lived pre-cancelled source: tokens must outlive any operation that uses them
-    // (disposing the CTS while a token is in flight can throw ObjectDisposedException).
-    private static readonly CancellationTokenSource PreCancelledSource = CreatePreCancelled();
 
     private static CancellationTokenSource CreatePreCancelled()
     {
@@ -143,7 +143,7 @@ public class CancellationTokenTests
         AssertCancelledMidRun(DataPath("v5_zlib.chd"), cts);
     }
 
-    /// <summary>Runs a deep check whose progress handler cancels <paramref name="cts"/> mid-run.</summary>
+    /// <summary>Runs a deep check whose progress handler cancels <paramref name="cts" /> mid-run.</summary>
     private static void AssertCancelledMidRun(string path, CancellationTokenSource cts)
     {
         var progress = new Progress<ChdProgress>(_ => cts.Cancel());

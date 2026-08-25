@@ -1,10 +1,10 @@
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Regression tests for libchdr #147 / PR #153: CHDs whose source image exceeds ~10 GB
-/// (e.g. PS3 ISOs). The C# port uses 64-bit offsets throughout, but this verifies that
-/// random access at offsets past 4 GiB actually works. A synthetic, uncompressed V5 CHD
-/// is used so the test exercises the large-offset read path without allocating gigabytes.
+///     Regression tests for libchdr #147 / PR #153: CHDs whose source image exceeds ~10 GB
+///     (e.g. PS3 ISOs). The C# port uses 64-bit offsets throughout, but this verifies that
+///     random access at offsets past 4 GiB actually works. A synthetic, uncompressed V5 CHD
+///     is used so the test exercises the large-offset read path without allocating gigabytes.
 /// </summary>
 public class LargeFileTests
 {
@@ -12,10 +12,10 @@ public class LargeFileTests
     private const ulong TotalBytes = 20UL * 1024 * 1024 * 1024; // 20 GiB image
 
     /// <summary>
-    /// Builds an uncompressed V5 CHD whose declared image size is <see cref="TotalBytes"/>
-    /// (20 GiB) but whose on-disk footprint is tiny. The uncompressed V5 map points the single
-    /// "real" hunk at a physical block holding a known pattern; every other hunk is an
-    /// unallocated zero hunk. This gives a genuine >4 GiB logical offset without the data.
+    ///     Builds an uncompressed V5 CHD whose declared image size is <see cref="TotalBytes" />
+    ///     (20 GiB) but whose on-disk footprint is tiny. The uncompressed V5 map points the single
+    ///     "real" hunk at a physical block holding a known pattern; every other hunk is an
+    ///     unallocated zero hunk. This gives a genuine >4 GiB logical offset without the data.
     /// </summary>
     private static MemoryStream BuildLargeV5Chd(out uint targetHunk)
     {
@@ -44,10 +44,7 @@ public class LargeFileTests
 
         // Physical data block at offset Blocksize (= offsetWord 1).
         var pattern = new byte[Blocksize];
-        for (var i = 0; i < pattern.Length; i++)
-        {
-            pattern[i] = (byte)(i & 0xFF);
-        }
+        for (var i = 0; i < pattern.Length; i++) pattern[i] = (byte)(i & 0xFF);
 
         ms.Seek(Blocksize, SeekOrigin.Begin);
         Write(pattern);

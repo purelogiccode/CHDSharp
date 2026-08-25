@@ -26,7 +26,7 @@ public class ChdFileEntry : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Gets the file name (without directory) derived from <see cref="FilePath"/>.</summary>
+    /// <summary>Gets the file name (without directory) derived from <see cref="FilePath" />.</summary>
     public string FileName => Path.GetFileName(FilePath);
 
     /// <summary>Gets a human-readable file size string derived from the file's length on disk.</summary>
@@ -43,7 +43,10 @@ public class ChdFileEntry : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Re-reads the file size from disk and updates the <see cref="FileSize"/> property.</summary>
+    /// <summary>Occurs when a property value changes.</summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>Re-reads the file size from disk and updates the <see cref="FileSize" /> property.</summary>
     public void RefreshFileSize()
     {
         try
@@ -67,10 +70,7 @@ public class ChdFileEntry : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Occurs when a property value changes.</summary>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    /// <summary>Raises the <see cref="PropertyChanged"/> event.</summary>
+    /// <summary>Raises the <see cref="PropertyChanged" /> event.</summary>
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

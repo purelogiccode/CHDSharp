@@ -1,7 +1,11 @@
+using System.Text;
+
 namespace CHDSharpTestGen;
 
-/// <summary>Writes a minimal AVI file (uncompressed YUY2 video + 16-bit PCM audio) accepted by
-/// MAME's aviio reader, for use with chdman -createav / createld (AVHuff codec).</summary>
+/// <summary>
+///     Writes a minimal AVI file (uncompressed YUY2 video + 16-bit PCM audio) accepted by
+///     MAME's aviio reader, for use with chdman -createav / createld (AVHuff codec).
+/// </summary>
 internal static class AviWriter
 {
     public static void Write(string path, int width, int height, int fps, int frames, int sampleRate)
@@ -163,15 +167,13 @@ internal static class AviWriter
             var frame = new byte[width * height * 2];
             var barX = f * 3 % width;
             for (var y = 0; y < height; y++)
+            for (var x = 0; x < width; x++)
             {
-                for (var x = 0; x < width; x++)
-                {
-                    var inBar = x >= barX && x < barX + 6;
-                    var luma = inBar ? (byte)235 : (byte)(16 + (x * 3 + y * 2 + f) % 200);
-                    var chroma = inBar ? (byte)64 : (byte)128;
-                    frame[(y * width + x) * 2] = luma;
-                    frame[(y * width + x) * 2 + 1] = chroma;
-                }
+                var inBar = x >= barX && x < barX + 6;
+                var luma = inBar ? (byte)235 : (byte)(16 + (x * 3 + y * 2 + f) % 200);
+                var chroma = inBar ? (byte)64 : (byte)128;
+                frame[(y * width + x) * 2] = luma;
+                frame[(y * width + x) * 2 + 1] = chroma;
             }
 
             result[f] = frame;
@@ -200,22 +202,26 @@ internal static class AviWriter
         w.Write("LIST"u8);
         var sizePos = w.BaseStream.Position;
         w.Write(0);
-        w.Write(System.Text.Encoding.ASCII.GetBytes(type));
+        w.Write(Encoding.ASCII.GetBytes(type));
         return sizePos;
     }
 
     private static void EndList(BinaryWriter w, long sizePos)
     {
-        PatchSize(w.BaseStream as MemoryStream ?? throw new InvalidOperationException("writer must wrap a MemoryStream"), sizePos);
+        PatchSize(
+            w.BaseStream as MemoryStream ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
+            sizePos);
     }
 
     private static void Chunk(BinaryWriter w, string id, Action<BinaryWriter> body)
     {
-        w.Write(System.Text.Encoding.ASCII.GetBytes(id));
+        w.Write(Encoding.ASCII.GetBytes(id));
         var sizePos = w.BaseStream.Position;
         w.Write(0);
         body(w);
-        PatchSize(w.BaseStream as MemoryStream ?? throw new InvalidOperationException("writer must wrap a MemoryStream"), sizePos);
+        PatchSize(
+            w.BaseStream as MemoryStream ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
+            sizePos);
         if ((w.BaseStream.Position & 1) == 1)
             w.Write((byte)0); // chunks are word-aligned
     }

@@ -14,16 +14,10 @@ internal static class Crc
         {
             var r = i;
             for (var j = 0; j < 8; j++)
-            {
                 if ((r & 1) != 0)
-                {
                     r = (r >> 1) ^ kPoly;
-                }
                 else
-                {
                     r >>= 1;
-                }
-            }
 
             table[i] = r;
         }

@@ -159,7 +159,8 @@ public class SecondCompressedTests
         Assert.True(decompressed);
         return;
 
-        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut2, int buffOutLength, ChdCodecState codec2)
+        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut2, int buffOutLength,
+            ChdCodecState codec2)
         {
             decompressed = true;
             Array.Clear(buffOut2, 0, buffOutLength);
@@ -227,13 +228,11 @@ public class SecondCompressedTests
         Assert.Equal(buffOut[500], buffOut2[500]);
         return;
 
-        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut3, int buffOutLength, ChdCodecState codec2)
+        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut3, int buffOutLength,
+            ChdCodecState codec2)
         {
             callCount++;
-            for (var i = 0; i < buffOutLength; i++)
-            {
-                buffOut3[i] = (byte)(i & 0xFF);
-            }
+            for (var i = 0; i < buffOutLength; i++) buffOut3[i] = (byte)(i & 0xFF);
 
             return ChdError.Chderrnone;
         }
@@ -263,12 +262,10 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrnone, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength, ChdCodecState codec)
+        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
+            ChdCodecState codec)
         {
-            for (var i = 0; i < buffOutLength; i++)
-            {
-                buffOut[i] = 0xAB;
-            }
+            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xAB;
 
             return ChdError.Chderrnone;
         }
@@ -296,12 +293,10 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrdecompressionerror, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength, ChdCodecState codec)
+        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
+            ChdCodecState codec)
         {
-            for (var i = 0; i < buffOutLength; i++)
-            {
-                buffOut[i] = 0xAB;
-            }
+            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xAB;
 
             return ChdError.Chderrnone;
         }
@@ -341,13 +336,11 @@ public class SecondCompressedTests
         Assert.Equal(0xCD, buffOut[0]);
         return;
 
-        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut2, int buffOutLength, ChdCodecState codec2)
+        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut2, int buffOutLength,
+            ChdCodecState codec2)
         {
             decompressed = true;
-            for (var i = 0; i < buffOutLength; i++)
-            {
-                buffOut2[i] = 0xCD;
-            }
+            for (var i = 0; i < buffOutLength; i++) buffOut2[i] = 0xCD;
 
             return ChdError.Chderrnone;
         }
@@ -978,25 +971,46 @@ public class SecondCompressedTests
     [Fact]
     public void ConvMapEntry_all_valid_types_convert_correctly()
     {
-        Assert.Equal(CompressionType.Compressionerror, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeinvalid));
-        Assert.Equal(CompressionType.Compressiontype0, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypecompressed));
-        Assert.Equal(CompressionType.Compressionnone, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeuncompressed));
-        Assert.Equal(CompressionType.Compressionmini, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypemini));
-        Assert.Equal(CompressionType.Compressionself, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeselfhunk));
-        Assert.Equal(CompressionType.Compressionparent, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeparenthunk));
-        Assert.Equal(CompressionType.Compressiontype2Nd, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytype2Ndcompressed));
+        Assert.Equal(CompressionType.Compressionerror,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeinvalid));
+        Assert.Equal(CompressionType.Compressiontype0,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypecompressed));
+        Assert.Equal(CompressionType.Compressionnone,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeuncompressed));
+        Assert.Equal(CompressionType.Compressionmini,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypemini));
+        Assert.Equal(CompressionType.Compressionself,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeselfhunk));
+        Assert.Equal(CompressionType.Compressionparent,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeparenthunk));
+        Assert.Equal(CompressionType.Compressiontype2Nd,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytype2Ndcompressed));
     }
 
     [Fact]
     public void ConvMapEntry_all_valid_types_with_nocrc_still_extract_type()
     {
-        Assert.Equal(CompressionType.Compressionerror, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeinvalid));
-        Assert.Equal(CompressionType.Compressiontype0, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypecompressed));
-        Assert.Equal(CompressionType.Compressionnone, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeuncompressed));
-        Assert.Equal(CompressionType.Compressionmini, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypemini));
-        Assert.Equal(CompressionType.Compressionself, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeselfhunk));
-        Assert.Equal(CompressionType.Compressionparent, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeparenthunk));
-        Assert.Equal(CompressionType.Compressiontype2Nd, ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytype2Ndcompressed));
+        Assert.Equal(CompressionType.Compressionerror,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
+                                                        MapEntryFlag.Mapentrytypeinvalid));
+        Assert.Equal(CompressionType.Compressiontype0,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
+                                                        MapEntryFlag.Mapentrytypecompressed));
+        Assert.Equal(CompressionType.Compressionnone,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
+                                                        MapEntryFlag.Mapentrytypeuncompressed));
+        Assert.Equal(CompressionType.Compressionmini,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
+                                                        MapEntryFlag.Mapentrytypemini));
+        Assert.Equal(CompressionType.Compressionself,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
+                                                        MapEntryFlag.Mapentrytypeselfhunk));
+        Assert.Equal(CompressionType.Compressionparent,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
+                                                        MapEntryFlag.Mapentrytypeparenthunk));
+        Assert.Equal(CompressionType.Compressiontype2Nd,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
+                                                        MapEntryFlag.Mapentrytype2Ndcompressed));
     }
 
     // ── V3 all type6 entries ──
@@ -1082,12 +1096,10 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrnone, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength, ChdCodecState codec)
+        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
+            ChdCodecState codec)
         {
-            for (var i = 0; i < buffOutLength; i++)
-            {
-                buffOut[i] = 0xCD;
-            }
+            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xCD;
 
             return ChdError.Chderrnone;
         }
@@ -1116,12 +1128,10 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrdecompressionerror, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength, ChdCodecState codec)
+        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
+            ChdCodecState codec)
         {
-            for (var i = 0; i < buffOutLength; i++)
-            {
-                buffOut[i] = 0xCD;
-            }
+            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xCD;
 
             return ChdError.Chderrnone;
         }

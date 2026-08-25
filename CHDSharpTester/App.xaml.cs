@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using CHDSharp;
@@ -46,14 +47,15 @@ public partial class App
                     Log.Information("Version check: {Message}", message);
                     await Dispatcher.InvokeAsync(() =>
                     {
-                        MessageBox.Show(message, "Update Available", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(message, "Update Available", MessageBoxButton.OK,
+                            MessageBoxImage.Information);
                     });
                 }
             });
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"App.OnStartup failed: {ex}");
+            Debug.WriteLine($"App.OnStartup failed: {ex}");
         }
     }
 
@@ -68,7 +70,7 @@ public partial class App
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"App.OnExit failed: {ex}");
+            Debug.WriteLine($"App.OnExit failed: {ex}");
         }
 
         base.OnExit(e);

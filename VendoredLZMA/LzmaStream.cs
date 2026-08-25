@@ -3,36 +3,35 @@
 namespace VendoredLZMA;
 
 /// <summary>
-/// Provides a read-only decompression <see cref="Stream"/> backed by LZMA or LZMA2 compressed data.
+///     Provides a read-only decompression <see cref="Stream" /> backed by LZMA or LZMA2 compressed data.
 /// </summary>
 /// <remarks>
-/// Supports forward-only reading. Seeking is limited to <see cref="SeekOrigin.Current"/>.
+///     Supports forward-only reading. Seeking is limited to <see cref="SeekOrigin.Current" />.
 /// </remarks>
 internal class LzmaStream : Stream
 {
-    private readonly Stream _inputStream;
-    private readonly long _inputSize;
-    private readonly long _outputSize;
-
     private readonly int _dictionarySize;
-    private readonly OutWindow _outWindow = new();
-    private readonly RangeCoder.Decoder _rangeDecoder = new();
-    private Decoder? _decoder;
-
-    private long _position;
-    private bool _endReached;
-    private long _availableBytes;
-    private long _rangeDecoderLimit;
-    private long _inputPosition;
+    private readonly long _inputSize;
+    private readonly Stream _inputStream;
 
     // LZMA2
     private readonly bool _isLzma2;
-    private bool _uncompressedChunk;
+    private readonly OutWindow _outWindow = new();
+    private readonly long _outputSize;
+    private readonly RangeCoder.Decoder _rangeDecoder = new();
+    private long _availableBytes;
+    private Decoder? _decoder;
+    private bool _endReached;
+    private long _inputPosition;
     private bool _needDictReset = true;
     private bool _needProps = true;
 
+    private long _position;
+    private long _rangeDecoderLimit;
+    private bool _uncompressedChunk;
+
     /// <summary>
-    /// Initializes a new LZMA decompression stream with unknown input and output sizes.
+    ///     Initializes a new LZMA decompression stream with unknown input and output sizes.
     /// </summary>
     /// <param name="properties">LZMA properties header (5 bytes).</param>
     /// <param name="inputStream">The compressed source stream.</param>
@@ -42,7 +41,7 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Initializes a new LZMA decompression stream with a known input size.
+    ///     Initializes a new LZMA decompression stream with a known input size.
     /// </summary>
     /// <param name="properties">LZMA properties header (5 bytes).</param>
     /// <param name="inputStream">The compressed source stream.</param>
@@ -53,7 +52,7 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Initializes a new LZMA decompression stream with known input and output sizes.
+    ///     Initializes a new LZMA decompression stream with known input and output sizes.
     /// </summary>
     /// <param name="properties">LZMA properties header (5 bytes).</param>
     /// <param name="inputStream">The compressed source stream.</param>
@@ -65,7 +64,7 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Initializes a new LZMA or LZMA2 decompression stream with full configuration.
+    ///     Initializes a new LZMA or LZMA2 decompression stream with full configuration.
     /// </summary>
     /// <param name="properties">Properties header (5 bytes for LZMA, 1 byte for LZMA2).</param>
     /// <param name="inputStream">The compressed source stream.</param>
@@ -116,36 +115,30 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Gets a value indicating whether the stream supports reading. Always <c>true</c>.
+    ///     Gets a value indicating whether the stream supports reading. Always <c>true</c>.
     /// </summary>
     public override bool CanRead => true;
 
     /// <summary>
-    /// Gets a value indicating whether the stream supports seeking. Always <c>false</c>.
+    ///     Gets a value indicating whether the stream supports seeking. Always <c>false</c>.
     /// </summary>
     public override bool CanSeek => false;
 
     /// <summary>
-    /// Gets a value indicating whether the stream supports writing. Always <c>false</c>.
+    ///     Gets a value indicating whether the stream supports writing. Always <c>false</c>.
     /// </summary>
     public override bool CanWrite => false;
 
     /// <summary>
-    /// Does nothing. The stream has no buffers to flush.
-    /// </summary>
-    public override void Flush()
-    {
-    }
-
-    /// <summary>
-    /// Gets the total length of the decompressed stream, or the current position plus remaining available bytes if unknown.
+    ///     Gets the total length of the decompressed stream, or the current position plus remaining available bytes if
+    ///     unknown.
     /// </summary>
     public override long Length => _position + _availableBytes;
 
     /// <summary>
-    /// Gets or sets the current position within the decompressed stream.
+    ///     Gets or sets the current position within the decompressed stream.
     /// </summary>
-    /// <exception cref="NotSupportedException">The setter always throws. Use <see cref="Seek"/> to advance.</exception>
+    /// <exception cref="NotSupportedException">The setter always throws. Use <see cref="Seek" /> to advance.</exception>
     public override long Position
     {
         get => _position;
@@ -153,10 +146,22 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Reads a sequence of decompressed bytes from the stream and advances the position.
+    ///     Gets the current LZMA/LZMA2 properties used for decompressing subsequent chunks.
+    /// </summary>
+    public byte[] Properties { get; }
+
+    /// <summary>
+    ///     Does nothing. The stream has no buffers to flush.
+    /// </summary>
+    public override void Flush()
+    {
+    }
+
+    /// <summary>
+    ///     Reads a sequence of decompressed bytes from the stream and advances the position.
     /// </summary>
     /// <param name="buffer">The buffer to write decompressed data into.</param>
-    /// <param name="offset">The zero-based byte offset in <paramref name="buffer"/> at which to begin writing.</param>
+    /// <param name="offset">The zero-based byte offset in <paramref name="buffer" /> at which to begin writing.</param>
     /// <param name="count">The maximum number of bytes to read.</param>
     /// <returns>The total number of bytes read into the buffer, or 0 if the end of the stream has been reached.</returns>
     /// <exception cref="DataErrorException">Thrown when the compressed data is corrupt or truncated.</exception>
@@ -173,30 +178,21 @@ internal class LzmaStream : Stream
                 if (_isLzma2)
                     DecodeChunkHeader();
                 else
-                {
                     _endReached = true;
-                }
 
                 if (_endReached)
                     break;
             }
 
             var toProcess = count - total;
-            if (toProcess > _availableBytes)
-            {
-                toProcess = (int)_availableBytes;
-            }
+            if (toProcess > _availableBytes) toProcess = (int)_availableBytes;
 
             _outWindow.SetLimit(toProcess);
             if (_uncompressedChunk)
-            {
                 _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
-            }
             else if (_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder)
                      && _outputSize < 0)
-            {
                 _availableBytes = _outWindow.AvailableBytes;
-            }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
             total += read;
@@ -217,10 +213,8 @@ internal class LzmaStream : Stream
         }
 
         if (_endReached)
-        {
             if ((_inputSize >= 0 && _inputPosition != _inputSize) || (_outputSize >= 0 && _position != _outputSize))
                 throw new DataErrorException();
-        }
 
         return total;
     }
@@ -242,10 +236,7 @@ internal class LzmaStream : Stream
                 break;
             default:
             {
-                if (_needDictReset)
-                {
-                    throw new DataErrorException();
-                }
+                if (_needDictReset) throw new DataErrorException();
 
                 break;
             }
@@ -297,13 +288,13 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Advances the current position by <paramref name="offset"/> bytes from <see cref="SeekOrigin.Current"/>.
-    /// Other origins are not supported.
+    ///     Advances the current position by <paramref name="offset" /> bytes from <see cref="SeekOrigin.Current" />.
+    ///     Other origins are not supported.
     /// </summary>
     /// <param name="offset">The number of bytes to skip forward.</param>
-    /// <param name="origin">Must be <see cref="SeekOrigin.Current"/>.</param>
+    /// <param name="origin">Must be <see cref="SeekOrigin.Current" />.</param>
     /// <returns>The new position in the stream.</returns>
-    /// <exception cref="NotSupportedException"><paramref name="origin"/> is not <see cref="SeekOrigin.Current"/>.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="origin" /> is not <see cref="SeekOrigin.Current" />.</exception>
     public override long Seek(long offset, SeekOrigin origin)
     {
         if (origin != SeekOrigin.Current)
@@ -325,7 +316,7 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Not supported. The stream is read-only.
+    ///     Not supported. The stream is read-only.
     /// </summary>
     /// <param name="value">Ignored.</param>
     /// <exception cref="NotSupportedException">Always thrown.</exception>
@@ -335,7 +326,7 @@ internal class LzmaStream : Stream
     }
 
     /// <summary>
-    /// Not supported. The stream is read-only.
+    ///     Not supported. The stream is read-only.
     /// </summary>
     /// <param name="buffer">Ignored.</param>
     /// <param name="offset">Ignored.</param>
@@ -345,9 +336,4 @@ internal class LzmaStream : Stream
     {
         throw new NotSupportedException();
     }
-
-    /// <summary>
-    /// Gets the current LZMA/LZMA2 properties used for decompressing subsequent chunks.
-    /// </summary>
-    public byte[] Properties { get; }
 }

@@ -1,6 +1,6 @@
+using CHDSharp.Encoder;
 using CHDSharp.Utils;
 using MapEntry = CHDSharp.Encoder.Models.MapEntry;
-using CHDSharp.Encoder;
 
 namespace CHDSharpEncoderTest;
 
@@ -48,10 +48,7 @@ public class HunkProcessorTests
     public void PatternHunk_compresses()
     {
         var hunk = new byte[4096];
-        for (var i = 0; i < hunk.Length; i++)
-        {
-            hunk[i] = (byte)(i & 0xFF);
-        }
+        for (var i = 0; i < hunk.Length; i++) hunk[i] = (byte)(i & 0xFF);
 
         var processor = new HunkProcessor(4096);
         var (entry, data) = processor.ProcessHunk(hunk, 124);
@@ -64,10 +61,7 @@ public class HunkProcessorTests
     public void CompressedData_roundtrips()
     {
         var original = new byte[4096];
-        for (var i = 0; i < original.Length; i++)
-        {
-            original[i] = (byte)((i * 7 + 3) & 0xFF);
-        }
+        for (var i = 0; i < original.Length; i++) original[i] = (byte)((i * 7 + 3) & 0xFF);
 
         var processor = new HunkProcessor(4096);
         var (entry, data) = processor.ProcessHunk(original, 124);
@@ -102,10 +96,7 @@ public class HunkProcessorTests
     public void CdFrameSizeHunk_works()
     {
         var hunk = new byte[18816]; // 8 CD frames
-        for (var i = 0; i < hunk.Length; i++)
-        {
-            hunk[i] = (byte)((i * 13 + 7) & 0xFF);
-        }
+        for (var i = 0; i < hunk.Length; i++) hunk[i] = (byte)((i * 13 + 7) & 0xFF);
 
         var processor = new HunkProcessor(18816);
         var (entry, data) = processor.ProcessHunk(hunk, 124);

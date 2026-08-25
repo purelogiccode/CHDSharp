@@ -1,16 +1,43 @@
+using System.Text;
 using CHDSharp.Models.Utils;
 using CHDSharp.Utils;
 
 namespace CHDSharp;
 
-/// <summary>Parses and validates CHD V1-V5 file headers, reading compression configuration, block maps, checksums, and metadata pointers from the stream.</summary>
+/// <summary>
+///     Parses and validates CHD V1-V5 file headers, reading compression configuration, block maps, checksums, and
+///     metadata pointers from the stream.
+/// </summary>
 internal static class ChdHeaders
 {
     private const uint MaxHunkBytes = 128 * 1024 * 1024;
     private const ulong MaxLogicalBytes = 1024UL * 1024 * 1024 * 1024;
 
-    /// <summary>Dispatches to the version-specific header reader (the stream must be positioned
-    /// right after the magic + length + version preamble, as left by <see cref="Chd.CheckHeader"/>).</summary>
+    /// <summary>
+    ///     Default multiple of <see cref="ChdHeader.Blocksize" /> used to bound a single compressed
+    ///     hunk's on-disk length when no explicit cap is set. A valid CHD created at a low compression
+    ///     level can legitimately have a compressed hunk slightly larger than the uncompressed hunk
+    ///     (codec headers/footers), so the default is 2x the hunk size; a malicious hunk map entry that
+    ///     claims more than this is rejected before any allocation.
+    /// </summary>
+    internal const uint DefaultMaxCompressedMultiple = 2;
+
+    /// <summary>
+    ///     Bits 2-31 of the V1-V4 header flags field are undefined; chd-rs rejects any
+    ///     file with them set (<c>header.rs:557</c>, <c>Flags::Undefined = 0xfffffffc</c>).
+    /// </summary>
+    private const uint LegacyUndefinedFlagBits = 0xFFFFFFFC;
+
+    /// <summary>
+    ///     Valid V5 hunk-map compression type values. Anything outside 0..13 is
+    ///     an invalid map entry (chd-rs <c>CompressionTypeV5::from_u8</c> rejects them).
+    /// </summary>
+    private const byte MaxValidV5MapType = 13;
+
+    /// <summary>
+    ///     Dispatches to the version-specific header reader (the stream must be positioned
+    ///     right after the magic + length + version preamble, as left by <see cref="Chd.CheckHeader" />).
+    /// </summary>
     internal static ChdError ReadHeaderByVersion(Stream file, uint version, out ChdHeader chd)
     {
         switch (version)
@@ -27,36 +54,23 @@ internal static class ChdHeaders
     }
 
     /// <summary>
-    /// Default multiple of <see cref="ChdHeader.Blocksize"/> used to bound a single compressed
-    /// hunk's on-disk length when no explicit cap is set. A valid CHD created at a low compression
-    /// level can legitimately have a compressed hunk slightly larger than the uncompressed hunk
-    /// (codec headers/footers), so the default is 2x the hunk size; a malicious hunk map entry that
-    /// claims more than this is rejected before any allocation.
+    ///     Rejects V1-V4 headers whose flags field carries undefined bits
+    ///     (chd-rs <c>header.rs:537-592</c> parity). V5 is exempt (chd-rs does not validate it).
     /// </summary>
-    internal const uint DefaultMaxCompressedMultiple = 2;
-
-    /// <summary>Bits 2-31 of the V1-V4 header flags field are undefined; chd-rs rejects any
-    /// file with them set (<c>header.rs:557</c>, <c>Flags::Undefined = 0xfffffffc</c>).</summary>
-    private const uint LegacyUndefinedFlagBits = 0xFFFFFFFC;
-
-    /// <summary>Valid V5 hunk-map compression type values. Anything outside 0..13 is
-    /// an invalid map entry (chd-rs <c>CompressionTypeV5::from_u8</c> rejects them).</summary>
-    private const byte MaxValidV5MapType = 13;
-
-    /// <summary>Rejects V1-V4 headers whose flags field carries undefined bits
-    /// (chd-rs <c>header.rs:537-592</c> parity). V5 is exempt (chd-rs does not validate it).</summary>
     private static ChdError ValidateLegacyFlags(uint flags)
     {
         return (flags & LegacyUndefinedFlagBits) != 0 ? ChdError.Chderrinvaliddata : ChdError.Chderrnone;
     }
 
-    /// <summary>Checks that every stored (compressed/uncompressed) hunk's byte range
-    /// <c>[offset, offset + length)</c> lies within the file (libchdr <c>chd.c</c> maxoffset
-    /// check, chd-rs <c>map.rs:420-422</c>). Entries without on-disk data (SELF/PARENT/MINI)
-    /// are skipped; their offsets are indexes, not file offsets. Called from
-    /// <see cref="ChdFile.Open(Stream, bool, ChdFile, out ChdFile, System.Threading.CancellationToken)"/>
-    /// where the real file length is known — header-only reads stay lenient, matching
-    /// libchdr/chd-rs (which validate the map only on open).</summary>
+    /// <summary>
+    ///     Checks that every stored (compressed/uncompressed) hunk's byte range
+    ///     <c>[offset, offset + length)</c> lies within the file (libchdr <c>chd.c</c> maxoffset
+    ///     check, chd-rs <c>map.rs:420-422</c>). Entries without on-disk data (SELF/PARENT/MINI)
+    ///     are skipped; their offsets are indexes, not file offsets. Called from
+    ///     <see cref="ChdFile.Open(Stream, bool, ChdFile, out ChdFile, System.Threading.CancellationToken)" />
+    ///     where the real file length is known — header-only reads stay lenient, matching
+    ///     libchdr/chd-rs (which validate the map only on open).
+    /// </summary>
     /// <param name="chd">The parsed header whose map is validated.</param>
     /// <param name="fileLength">The underlying file length in bytes.</param>
     internal static ChdError ValidateMapBounds(ChdHeader chd, ulong fileLength)
@@ -90,17 +104,19 @@ internal static class ChdHeaders
 
     /// <summary>Validates that the hunk size, logical size, and compressed-hunk cap are within safe limits.</summary>
     /// <param name="chd">The parsed header to validate.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> if sizes are acceptable; otherwise <see cref="ChdError.Chderrinvaliddata"/>.</returns>
+    /// <returns>
+    ///     <see cref="ChdError.Chderrnone" /> if sizes are acceptable; otherwise
+    ///     <see cref="ChdError.Chderrinvaliddata" />.
+    /// </returns>
     internal static ChdError ValidateSizeLimits(ChdHeader chd)
     {
-        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes || chd.Totalbytes > MaxLogicalBytes || chd.Unitbytes == 0)
+        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes || chd.Totalbytes > MaxLogicalBytes ||
+            chd.Unitbytes == 0)
             return ChdError.Chderrinvaliddata;
 
         // Default the compressed-hunk cap to 2x the hunk size if not explicitly set.
         if (chd.MaxCompressedBlockCap == 0)
-        {
             chd.MaxCompressedBlockCap = checked(chd.Blocksize * DefaultMaxCompressedMultiple);
-        }
 
         // The cap itself must be representable and at least as large as the hunk size.
         if (chd.MaxCompressedBlockCap < chd.Blocksize)
@@ -112,12 +128,12 @@ internal static class ChdHeaders
     /// <summary>Reads and parses a V1 CHD header from the stream.</summary>
     /// <param name="file">The stream positioned immediately after the CHD magic and version fields.</param>
     /// <param name="chd">When this method returns, contains the parsed header data.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success.</returns>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success.</returns>
     internal static ChdError ReadHeaderV1(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
 
-        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
+        using var br = new BinaryReader(file, Encoding.UTF8, true);
 
         chd.Compression = [ChdCodec.Zlib];
         chd.Flags = br.ReadUInt32Be(); // flags
@@ -138,7 +154,8 @@ internal static class ChdHeaders
         chd.Blocksize = chd.ObsoleteHunksize * hardDiskSectorSize;
         chd.Unitbytes = chd.Blocksize;
 
-        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes || (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes)
+        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes ||
+            (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes)
             return ChdError.Chderrinvaliddata;
 
         // The raw map is stored inline and must physically fit in the file: a corrupted
@@ -180,12 +197,12 @@ internal static class ChdHeaders
     /// <summary>Reads and parses a V2 CHD header from the stream.</summary>
     /// <param name="file">The stream positioned immediately after the CHD magic and version fields.</param>
     /// <param name="chd">When this method returns, contains the parsed header data.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success.</returns>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success.</returns>
     internal static ChdError ReadHeaderV2(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
 
-        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
+        using var br = new BinaryReader(file, Encoding.UTF8, true);
 
         chd.Compression = [ChdCodec.Zlib];
         chd.Flags = br.ReadUInt32Be(); // flags
@@ -206,7 +223,8 @@ internal static class ChdHeaders
         chd.Blocksize = chd.ObsoleteHunksize * seclen;
         chd.Unitbytes = chd.Blocksize;
 
-        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes || (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes)
+        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes ||
+            (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes)
             return ChdError.Chderrinvaliddata;
 
         // The raw map is stored inline and must physically fit in the file: a corrupted
@@ -248,11 +266,11 @@ internal static class ChdHeaders
     /// <summary>Reads and parses a V3 CHD header from the stream.</summary>
     /// <param name="file">The stream positioned immediately after the CHD magic and version fields.</param>
     /// <param name="chd">When this method returns, contains the parsed header data.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success.</returns>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success.</returns>
     internal static ChdError ReadHeaderV3(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
-        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
+        using var br = new BinaryReader(file, Encoding.UTF8, true);
 
         chd.Flags = br.ReadUInt32Be(); // flags
         if (ValidateLegacyFlags(chd.Flags) != ChdError.Chderrnone)
@@ -293,10 +311,7 @@ internal static class ChdHeaders
             };
             var mapflag = (MapEntryFlag)br.ReadByte();
             chd.Map[i].Comptype = ChdCommon.ConvMapEntryFlagtoCompressionType(mapflag);
-            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid)
-            {
-                chd.Map[i].Crc = null;
-            }
+            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid) chd.Map[i].Crc = null;
         }
 
         return ChdError.Chderrnone;
@@ -305,11 +320,11 @@ internal static class ChdHeaders
     /// <summary>Reads and parses a V4 CHD header from the stream.</summary>
     /// <param name="file">The stream positioned immediately after the CHD magic and version fields.</param>
     /// <param name="chd">When this method returns, contains the parsed header data.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success.</returns>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success.</returns>
     internal static ChdError ReadHeaderV4(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
-        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
+        using var br = new BinaryReader(file, Encoding.UTF8, true);
 
         chd.Flags = br.ReadUInt32Be(); // flags
         if (ValidateLegacyFlags(chd.Flags) != ChdError.Chderrnone)
@@ -349,10 +364,7 @@ internal static class ChdHeaders
             };
             var mapflag = (MapEntryFlag)br.ReadByte();
             chd.Map[i].Comptype = ChdCommon.ConvMapEntryFlagtoCompressionType(mapflag);
-            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid)
-            {
-                chd.Map[i].Crc = null;
-            }
+            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid) chd.Map[i].Crc = null;
         }
 
         return ChdError.Chderrnone;
@@ -362,11 +374,11 @@ internal static class ChdHeaders
     /// <summary>Reads and parses a V5 CHD header from the stream, including the compressed or uncompressed block map.</summary>
     /// <param name="file">The stream positioned immediately after the CHD magic and version fields.</param>
     /// <param name="chd">When this method returns, contains the parsed header data.</param>
-    /// <returns><see cref="ChdError.Chderrnone"/> on success; otherwise an error code if the map is corrupt.</returns>
+    /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code if the map is corrupt.</returns>
     internal static ChdError ReadHeaderV5(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
-        using var br = new BinaryReader(file, System.Text.Encoding.UTF8, true);
+        using var br = new BinaryReader(file, Encoding.UTF8, true);
 
         chd.Compression = new ChdCodec[4];
         for (var i = 0; i < 4; i++)
@@ -394,13 +406,17 @@ internal static class ChdHeaders
         var chdCompressed = chd.Compression[0] != ChdCodec.None;
         chd.UncompressedMap = !chdCompressed;
 
-        var err = chdCompressed ? compressed_v5_map(br, mapoffset, chd.Totalblocks, chd.Blocksize, unitbytes, out chd.Map) : uncompressed_v5_map(br, mapoffset, chd.Totalblocks, chd.Blocksize, !Util.IsAllZeroArray(chd.Parentsha1), out chd.Map);
+        var err = chdCompressed
+            ? compressed_v5_map(br, mapoffset, chd.Totalblocks, chd.Blocksize, unitbytes, out chd.Map)
+            : uncompressed_v5_map(br, mapoffset, chd.Totalblocks, chd.Blocksize, !Util.IsAllZeroArray(chd.Parentsha1),
+                out chd.Map);
 
         return err;
     }
 
 
-    private static ChdError uncompressed_v5_map(BinaryReader br, ulong mapoffset, uint totalblocks, uint blocksize, bool hasParent, out MapEntry[] map)
+    private static ChdError uncompressed_v5_map(BinaryReader br, ulong mapoffset, uint totalblocks, uint blocksize,
+        bool hasParent, out MapEntry[] map)
     {
         var streamLen = (ulong)br.BaseStream.Length;
         var mapSize = (ulong)totalblocks * 4;
@@ -448,7 +464,8 @@ internal static class ChdHeaders
         return ChdError.Chderrnone;
     }
 
-    private static ChdError compressed_v5_map(BinaryReader br, ulong mapoffset, uint totalBlocks, uint blocksize, uint unitbytes, out MapEntry[] map)
+    private static ChdError compressed_v5_map(BinaryReader br, ulong mapoffset, uint totalBlocks, uint blocksize,
+        uint unitbytes, out MapEntry[] map)
     {
         var streamLen = (ulong)br.BaseStream.Length;
 
@@ -494,10 +511,7 @@ internal static class ChdHeaders
         var decoder = new HuffmanDecoder(16, 8, bitbuf);
 
         var err = decoder.ImportTreeRle();
-        if (err != HuffmanError.HufferrNone)
-        {
-            return ChdError.Chderrdecompressionerror;
-        }
+        if (err != HuffmanError.HufferrNone) return ChdError.Chderrdecompressionerror;
 
         var repcount = 0;
         var lastcomp = CompressionType.Compressiontype0;

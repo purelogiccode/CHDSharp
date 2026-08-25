@@ -6,14 +6,14 @@ internal class Encoder
     /// <summary>Top value used for range normalisation.</summary>
     internal const uint KTopValue = 1 << 24;
 
-    private Stream? _stream;
-
     internal ulong Low;
     internal uint Range;
-    private uint _cacheSize;
     private byte _cache;
+    private uint _cacheSize;
 
     private long _startPosition;
+
+    private Stream? _stream;
 
     internal void SetStream(Stream stream)
     {
@@ -37,10 +37,7 @@ internal class Encoder
 
     internal void FlushData()
     {
-        for (var i = 0; i < 5; i++)
-        {
-            ShiftLow();
-        }
+        for (var i = 0; i < 5; i++) ShiftLow();
     }
 
     internal void FlushStream()
@@ -68,19 +65,13 @@ internal class Encoder
         {
             _stream!.WriteByte((byte)(_cache + high));
             _cache = (byte)(low >> 24);
-            if (_cacheSize == 0)
-            {
-                return;
-            }
+            if (_cacheSize == 0) return;
 
             high += 0xFF;
             while (true)
             {
                 _stream!.WriteByte((byte)high);
-                if (--_cacheSize == 0)
-                {
-                    return;
-                }
+                if (--_cacheSize == 0) return;
             }
         }
 
@@ -92,10 +83,7 @@ internal class Encoder
         for (var i = numTotalBits - 1; i >= 0; i--)
         {
             Range >>= 1;
-            if (((v >> i) & 1) == 1)
-            {
-                Low += Range;
-            }
+            if (((v >> i) & 1) == 1) Low += Range;
 
             if (Range < KTopValue)
             {

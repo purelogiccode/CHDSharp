@@ -48,7 +48,7 @@ internal struct State
     }
 
     /// <summary>Determines whether the current state represents a character state.</summary>
-    /// <returns><c>true</c> if <see cref="Index"/> is less than 7; otherwise <c>false</c>.</returns>
+    /// <returns><c>true</c> if <see cref="Index" /> is less than 7; otherwise <c>false</c>.</returns>
     public readonly bool IsCharState()
     {
         return Index < 7;

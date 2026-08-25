@@ -1,3 +1,4 @@
+using System.Text;
 using CHDSharp;
 using CHDSharp.Encoder;
 
@@ -12,12 +13,12 @@ public class CreateBlankTests
         try
         {
             const ulong totalBytes = 40960UL; // 10 hunks
-            ChdEncoder.CreateBlank(chdPath, totalBytes, 4096, 512);
+            ChdEncoder.CreateBlank(chdPath, totalBytes);
 
             var chd = File.ReadAllBytes(chdPath);
             Assert.True(chd.Length > 124);
 
-            var magic = System.Text.Encoding.ASCII.GetString(chd, 0, 8);
+            var magic = Encoding.ASCII.GetString(chd, 0, 8);
             Assert.Equal("MComprHD", magic);
 
             var version = ReadU32Be(chd, 12);
@@ -36,7 +37,7 @@ public class CreateBlankTests
         try
         {
             const ulong totalBytes = 1024 * 1024UL; // 1 MB
-            ChdEncoder.CreateBlank(chdPath, totalBytes, 4096, 512);
+            ChdEncoder.CreateBlank(chdPath, totalBytes);
 
             var chd = File.ReadAllBytes(chdPath);
             var logical = ReadU64Be(chd, 32);
@@ -55,7 +56,7 @@ public class CreateBlankTests
         try
         {
             const ulong totalBytes = 1024 * 1024UL; // 1 MB
-            ChdEncoder.CreateBlank(chdPath, totalBytes, 4096, 512);
+            ChdEncoder.CreateBlank(chdPath, totalBytes);
 
             var err = ChdFile.Open(chdPath, out var chd);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -65,17 +66,15 @@ public class CreateBlankTests
             {
                 var found = false;
                 foreach (var entry in chd.Metadata)
-                {
                     if (string.Equals(entry.Tag, "GDDD", StringComparison.Ordinal))
                     {
                         found = true;
-                        var text = System.Text.Encoding.ASCII.GetString(entry.Data).TrimEnd('\0');
+                        var text = Encoding.ASCII.GetString(entry.Data).TrimEnd('\0');
                         Assert.Contains("CYLS:", text, StringComparison.Ordinal);
                         Assert.Contains("HEADS:", text, StringComparison.Ordinal);
                         Assert.Contains("SECS:", text, StringComparison.Ordinal);
                         Assert.Contains("BPS:", text, StringComparison.Ordinal);
                     }
-                }
 
                 Assert.True(found, "Expected GDDD hard disk metadata");
             }
@@ -93,7 +92,7 @@ public class CreateBlankTests
         try
         {
             const ulong totalBytes = 512 * 1024UL; // 512 KB
-            ChdEncoder.CreateBlank(chdPath, totalBytes, 4096, 512);
+            ChdEncoder.CreateBlank(chdPath, totalBytes);
 
             using var fs = File.OpenRead(chdPath);
             var result = Chd.CheckFile(fs, chdPath, true, out _, out _, out _);
@@ -115,7 +114,7 @@ public class CreateBlankTests
             const uint heads = 16;
             const uint sectors = 63;
             const uint sectorSize = 512;
-            ChdEncoder.CreateBlankWithChs(chdPath, cylinders, heads, sectors, sectorSize);
+            ChdEncoder.CreateBlankWithChs(chdPath, cylinders, heads, sectors);
 
             var err = ChdFile.Open(chdPath, out var chd);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -128,17 +127,15 @@ public class CreateBlankTests
 
                 var found = false;
                 foreach (var entry in chd.Metadata)
-                {
                     if (string.Equals(entry.Tag, "GDDD", StringComparison.Ordinal))
                     {
                         found = true;
-                        var text = System.Text.Encoding.ASCII.GetString(entry.Data).TrimEnd('\0');
+                        var text = Encoding.ASCII.GetString(entry.Data).TrimEnd('\0');
                         Assert.Contains($"CYLS:{cylinders}", text, StringComparison.Ordinal);
                         Assert.Contains($"HEADS:{heads}", text, StringComparison.Ordinal);
                         Assert.Contains($"SECS:{sectors}", text, StringComparison.Ordinal);
                         Assert.Contains($"BPS:{sectorSize}", text, StringComparison.Ordinal);
                     }
-                }
 
                 Assert.True(found, "Expected GDDD hard disk metadata");
             }
@@ -156,7 +153,7 @@ public class CreateBlankTests
         try
         {
             const ulong totalBytes = 8192UL; // 2 hunks
-            ChdEncoder.CreateBlank(chdPath, totalBytes, 4096, 512);
+            ChdEncoder.CreateBlank(chdPath, totalBytes);
 
             var err = ChdFile.Open(chdPath, out var chd);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -214,7 +211,7 @@ public class CreateBlankTests
         try
         {
             const ulong totalBytes = 100 * 1024 * 1024UL; // 100 MB
-            ChdEncoder.CreateBlank(chdPath, totalBytes, 4096, 512);
+            ChdEncoder.CreateBlank(chdPath, totalBytes);
 
             var err = ChdFile.Open(chdPath, out var chd);
             Assert.Equal(ChdError.Chderrnone, err);
@@ -255,7 +252,7 @@ public class CreateBlankTests
         var chdPath = Path.GetTempFileName();
         try
         {
-            Assert.Throws<ArgumentException>(() => ChdEncoder.CreateBlank(chdPath, 4096, 0, 512));
+            Assert.Throws<ArgumentException>(() => ChdEncoder.CreateBlank(chdPath, 4096, 0));
         }
         finally
         {

@@ -4,19 +4,19 @@ using System.Text;
 namespace CHDSharp;
 
 /// <summary>
-/// Converts CUE sheets between the three common styles — chdman, Redump, and Redump+CATALOG —
-/// and matches generated CUE text against a database hash (CHDlite <c>convert_cue_style</c> /
-/// <c>match_cue</c> parity, <c>chd_extractor.cpp:497-670</c>). Style differences are limited to
-/// the single-track file name suffix (" (Track 1)" in chdman output) and the CATALOG line.
+///     Converts CUE sheets between the three common styles — chdman, Redump, and Redump+CATALOG —
+///     and matches generated CUE text against a database hash (CHDlite <c>convert_cue_style</c> /
+///     <c>match_cue</c> parity, <c>chd_extractor.cpp:497-670</c>). Style differences are limited to
+///     the single-track file name suffix (" (Track 1)" in chdman output) and the CATALOG line.
 /// </summary>
 public static class CueConverter
 {
     /// <summary>
-    /// Converts a CUE sheet to the requested style. Line endings are normalized to CRLF and
-    /// trailing empty lines are stripped. A leading CATALOG line is removed for the
-    /// non-CATALOG styles; the Redump+CATALOG style prepends <c>CATALOG 0000000000000</c>.
-    /// Single-track discs get/keep the " (Track 1)" suffix in the chdman style and lose it in
-    /// the Redump styles.
+    ///     Converts a CUE sheet to the requested style. Line endings are normalized to CRLF and
+    ///     trailing empty lines are stripped. A leading CATALOG line is removed for the
+    ///     non-CATALOG styles; the Redump+CATALOG style prepends <c>CATALOG 0000000000000</c>.
+    ///     Single-track discs get/keep the " (Track 1)" suffix in the chdman style and lose it in
+    ///     the Redump styles.
     /// </summary>
     /// <param name="cueText">The CUE sheet text.</param>
     /// <param name="style">The target style.</param>
@@ -27,19 +27,12 @@ public static class CueConverter
 
         var lines = NormalizeLines(cueText);
         var start = 0;
-        if (lines.Count > 0 && lines[0].StartsWith("CATALOG", StringComparison.Ordinal))
-        {
-            start = 1;
-        }
+        if (lines.Count > 0 && lines[0].StartsWith("CATALOG", StringComparison.Ordinal)) start = 1;
 
         var fileCount = 0;
         for (var i = start; i < lines.Count; i++)
-        {
             if (lines[i].StartsWith("FILE ", StringComparison.Ordinal))
-            {
                 fileCount++;
-            }
-        }
 
         var singleTrack = fileCount == 1;
         var sb = new StringBuilder(cueText.Length + 32);
@@ -95,14 +88,16 @@ public static class CueConverter
     }
 
     /// <summary>
-    /// Tries each CUE style and returns the first whose normalized output hashes to
-    /// <paramref name="dbHash"/> (case-insensitive hex compare). Used to detect whether an
-    /// existing CUE was generated in chdman, Redump, or Redump+CATALOG form.
+    ///     Tries each CUE style and returns the first whose normalized output hashes to
+    ///     <paramref name="dbHash" /> (case-insensitive hex compare). Used to detect whether an
+    ///     existing CUE was generated in chdman, Redump, or Redump+CATALOG form.
     /// </summary>
     /// <param name="cueText">The CUE sheet text.</param>
     /// <param name="dbHash">The reference hash (hex string, any case).</param>
-    /// <returns>A <see cref="CueMatchResult"/> with the matching style and normalized CUE, or
-    /// <c>Style = null</c> when no style matches.</returns>
+    /// <returns>
+    ///     A <see cref="CueMatchResult" /> with the matching style and normalized CUE, or
+    ///     <c>Style = null</c> when no style matches.
+    /// </returns>
     public static CueMatchResult MatchCue(string cueText, string dbHash)
     {
         ArgumentNullException.ThrowIfNull(dbHash);
@@ -128,10 +123,7 @@ public static class CueConverter
             {
                 case '\r':
                 {
-                    if (i + 1 < text.Length && text[i + 1] == '\n')
-                    {
-                        i++;
-                    }
+                    if (i + 1 < text.Length && text[i + 1] == '\n') i++;
 
                     lines.Add(sb.ToString());
                     sb.Clear();

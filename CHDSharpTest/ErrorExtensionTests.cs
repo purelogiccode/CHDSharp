@@ -43,6 +43,7 @@ public class ErrorExtensionTests
     [Fact]
     public void GetMessage_decompression_mentions_decompression()
     {
-        Assert.Contains("Decompression", ChdError.Chderrdecompressionerror.GetMessage(), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Decompression", ChdError.Chderrdecompressionerror.GetMessage(),
+            StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -1,28 +1,28 @@
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Bit-level output stream. Two modes:
+///     Bit-level output stream. Two modes:
 /// </summary>
 /// <remarks>
-/// Auto-resizing mode (<see cref="BitStreamOut(int)"/>): the buffer grows on demand.
-/// Fixed-buffer mode (<see cref="BitStreamOut(byte[], int, int)"/>): replicates MAME's
-/// <c>bitstream_out</c> (src/lib/util/bitstream.h) exactly — bytes written past the end of
-/// the fixed region are <em>dropped</em> (the underlying zero-filled buffer shows through)
-/// while the write position keeps advancing, and <see cref="Flush"/> returns the final
-/// position including dropped bytes. This is required for byte-parity with chdman's
-/// <c>compress_v5_map</c>, whose worst-case buffer estimate can under-size the map payload
-/// for small hunk counts; chdman emits the clipped (zero-padded) tail and counts it in the
-/// map's compressed-length header field.
+///     Auto-resizing mode (<see cref="BitStreamOut(int)" />): the buffer grows on demand.
+///     Fixed-buffer mode (<see cref="BitStreamOut(byte[], int, int)" />): replicates MAME's
+///     <c>bitstream_out</c> (src/lib/util/bitstream.h) exactly — bytes written past the end of
+///     the fixed region are <em>dropped</em> (the underlying zero-filled buffer shows through)
+///     while the write position keeps advancing, and <see cref="Flush" /> returns the final
+///     position including dropped bytes. This is required for byte-parity with chdman's
+///     <c>compress_v5_map</c>, whose worst-case buffer estimate can under-size the map payload
+///     for small hunk counts; chdman emits the clipped (zero-padded) tail and counts it in the
+///     map's compressed-length header field.
 /// </remarks>
 internal class BitStreamOut
 {
-    private byte[] _buffer;
     private readonly int _baseOffset;
     private readonly int? _fixedLimit;
     private uint _bitBuf;
     private int _bitsInBuf;
+    private byte[] _buffer;
 
-    /// <summary>Initializes a new auto-resizing <see cref="BitStreamOut"/> with the specified initial buffer capacity.</summary>
+    /// <summary>Initializes a new auto-resizing <see cref="BitStreamOut" /> with the specified initial buffer capacity.</summary>
     public BitStreamOut(int capacityBytes)
     {
         _buffer = new byte[capacityBytes];
@@ -32,9 +32,9 @@ internal class BitStreamOut
     }
 
     /// <summary>
-    /// Initializes a new fixed-buffer <see cref="BitStreamOut"/> over
-    /// <paramref name="buffer"/>[<paramref name="offset"/> .. <paramref name="offset"/> + <paramref name="length"/>).
-    /// Writes past the region are dropped (counted, not stored), matching MAME's <c>bitstream_out</c>.
+    ///     Initializes a new fixed-buffer <see cref="BitStreamOut" /> over
+    ///     <paramref name="buffer" />[<paramref name="offset" /> .. <paramref name="offset" /> + <paramref name="length" />).
+    ///     Writes past the region are dropped (counted, not stored), matching MAME's <c>bitstream_out</c>.
     /// </summary>
     public BitStreamOut(byte[] buffer, int offset, int length)
     {
@@ -106,9 +106,9 @@ internal class BitStreamOut
     }
 
     /// <summary>
-    /// Copies the written bytes into a new array of exact size. In fixed-buffer mode the
-    /// result spans the full written extent including dropped positions (which read back
-    /// as the underlying buffer's zero fill), mirroring what chdman appends to the file.
+    ///     Copies the written bytes into a new array of exact size. In fixed-buffer mode the
+    ///     result spans the full written extent including dropped positions (which read back
+    ///     as the underlying buffer's zero fill), mirroring what chdman appends to the file.
     /// </summary>
     /// <returns>A byte array containing the written data.</returns>
     public byte[] ToArray()
@@ -122,10 +122,7 @@ internal class BitStreamOut
     {
         if (_fixedLimit.HasValue)
         {
-            if (ByteLength < _fixedLimit.Value)
-            {
-                _buffer[_baseOffset + ByteLength] = b;
-            }
+            if (ByteLength < _fixedLimit.Value) _buffer[_baseOffset + ByteLength] = b;
         }
         else
         {
@@ -142,10 +139,7 @@ internal class BitStreamOut
             return;
 
         var newSize = _buffer.Length * 2;
-        if (newSize < _buffer.Length + 256)
-        {
-            newSize = _buffer.Length + 256;
-        }
+        if (newSize < _buffer.Length + 256) newSize = _buffer.Length + 256;
 
         Array.Resize(ref _buffer, newSize);
     }

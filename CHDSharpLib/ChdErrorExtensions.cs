@@ -1,6 +1,6 @@
 namespace CHDSharp;
 
-/// <summary>Provides extension methods for <see cref="ChdError"/> values.</summary>
+/// <summary>Provides extension methods for <see cref="ChdError" /> values.</summary>
 public static class ChdErrorExtensions
 {
     /// <summary>Returns a human-readable message describing the error code.</summary>

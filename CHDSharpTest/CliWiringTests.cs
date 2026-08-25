@@ -3,8 +3,8 @@ using System.Diagnostics;
 namespace CHDSharp.Tests;
 
 /// <summary>
-/// Tests that verify the wiring between CLI commands/options and the underlying CHDSharpLib APIs.
-/// Each test exercises a specific CLI command and checks that the library produces the expected output.
+///     Tests that verify the wiring between CLI commands/options and the underlying CHDSharpLib APIs.
+///     Each test exercises a specific CLI command and checks that the library produces the expected output.
 /// </summary>
 [Collection("CLI")]
 public sealed class CliWiringTests : IDisposable
@@ -18,18 +18,6 @@ public sealed class CliWiringTests : IDisposable
         Directory.CreateDirectory(_tempDir);
     }
 
-    public void Dispose()
-    {
-        try
-        {
-            Directory.Delete(_tempDir, recursive: true);
-        }
-        catch
-        {
-            // ignored
-        }
-    }
-
     private static string CliPath
     {
         get
@@ -41,12 +29,25 @@ public sealed class CliWiringTests : IDisposable
             if (testBinIdx >= 0)
             {
                 var slnRoot = baseDir[..testBinIdx];
-                var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ?? "Debug";
+                var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ??
+                             "Debug";
                 var tfm = Path.GetFileName(baseDir.TrimEnd(Path.DirectorySeparatorChar));
                 return Path.Combine(slnRoot, "CHDSharpCli", "bin", config, tfm, "CHDSharp.dll");
             }
 
             return Path.Combine(AppContext.BaseDirectory, "CHDSharp.dll");
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            Directory.Delete(_tempDir, true);
+        }
+        catch
+        {
+            // ignored
         }
     }
 
@@ -286,10 +287,10 @@ public sealed class CliWiringTests : IDisposable
         File.WriteAllBytes(binPath, frameData);
 
         File.WriteAllText(cuePath, """
-            FILE "test.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-            """);
+                                   FILE "test.bin" BINARY
+                                     TRACK 01 MODE1/2352
+                                       INDEX 01 00:00:00
+                                   """);
 
         var (exitCode, output) = RunCli("--createcd", cuePath, chdPath);
         Assert.Equal(0, exitCode);

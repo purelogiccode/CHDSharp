@@ -1,14 +1,13 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe
+namespace VendoredZSTD.Unsafe;
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct HUF_ReadDTableX1_Workspace
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct HUF_ReadDTableX1_Workspace
-    {
-        public fixed uint rankVal[13];
-        public fixed uint rankStart[13];
-        public fixed uint statsWksp[219];
-        public fixed byte symbols[256];
-        public fixed byte huffWeight[256];
-    }
+    public fixed uint rankVal[13];
+    public fixed uint rankStart[13];
+    public fixed uint statsWksp[219];
+    public fixed byte symbols[256];
+    public fixed byte huffWeight[256];
 }

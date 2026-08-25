@@ -1,24 +1,25 @@
+using VendoredFlac.Encoder;
+
 namespace CHDSharp.Encoder;
 
 /// <summary>
-/// Port of MAME's <c>avhuff_encoder</c> (src/lib/util/avhuff.cpp): the laserdisc A/V codec
-/// ('avhu'). Each frame is assembled into a raw 'chav' block (12-byte header, optional
-/// metadata, planar big-endian 16-bit audio, big-endian YUY2 video) and compressed as
-/// delta-RLE Huffman video + per-channel mono FLAC audio.
-///
-/// Compressed frame layout (all values big-endian):
-/// +00 metasize(1) +01 channels(1) +02 samples(2) +04 width(2) +06 height(2)
-/// +08 audio tree size (0xFFFF = FLAC) +0A.. per-channel stream sizes,
-/// then metadata, audio streams, and the Huffman-coded video bitstream.
+///     Port of MAME's <c>avhuff_encoder</c> (src/lib/util/avhuff.cpp): the laserdisc A/V codec
+///     ('avhu'). Each frame is assembled into a raw 'chav' block (12-byte header, optional
+///     metadata, planar big-endian 16-bit audio, big-endian YUY2 video) and compressed as
+///     delta-RLE Huffman video + per-channel mono FLAC audio.
+///     Compressed frame layout (all values big-endian):
+///     +00 metasize(1) +01 channels(1) +02 samples(2) +04 width(2) +06 height(2)
+///     +08 audio tree size (0xFFFF = FLAC) +0A.. per-channel stream sizes,
+///     then metadata, audio streams, and the Huffman-coded video bitstream.
 /// </summary>
 internal sealed class AvHuffEncoder
 {
     private const int RleAlphabetSize = 256 + 16;
     private const int MaxBits = 16;
-
-    private readonly DeltaRleEncoder _yContext = new();
     private readonly DeltaRleEncoder _cbContext = new();
     private readonly DeltaRleEncoder _crContext = new();
+
+    private readonly DeltaRleEncoder _yContext = new();
 
     /// <summary>Raw ('chav') data size for one frame: header + metadata + audio + video.</summary>
     internal static uint RawDataSize(uint width, uint height, uint channels, uint numSamples)
@@ -27,10 +28,10 @@ internal sealed class AvHuffEncoder
     }
 
     /// <summary>
-    /// Assembles a raw 'chav' datastream from decoded pieces (MAME's
-    /// <c>avhuff_encoder::assemble_data</c>). The video is supplied pre-serialized in the
-    /// final big-endian YUY2 byte order (Cb,Y,Cr,Y pixel pairs), which is what MAME's
-    /// <c>put_u16be</c> loop produces from its native bitmap.
+    ///     Assembles a raw 'chav' datastream from decoded pieces (MAME's
+    ///     <c>avhuff_encoder::assemble_data</c>). The video is supplied pre-serialized in the
+    ///     final big-endian YUY2 byte order (Cb,Y,Cr,Y pixel pairs), which is what MAME's
+    ///     <c>put_u16be</c> loop produces from its native bitmap.
     /// </summary>
     /// <param name="buffer">Destination buffer; sized exactly to the raw frame.</param>
     /// <param name="video">Video bytes in final YUY2 order (<c>width * height * 2</c> bytes).</param>
@@ -38,7 +39,7 @@ internal sealed class AvHuffEncoder
     /// <param name="height">Video height in lines.</param>
     /// <param name="channels">Number of audio channels.</param>
     /// <param name="numSamples">Samples per channel in this frame.</param>
-    /// <param name="samples">Planar audio: <paramref name="samples"/>[channel][sample].</param>
+    /// <param name="samples">Planar audio: <paramref name="samples" />[channel][sample].</param>
     internal static void AssembleData(Span<byte> buffer, ReadOnlySpan<byte> video, int width, int height,
         int channels, int numSamples, ReadOnlySpan<short[]> samples)
     {
@@ -74,12 +75,13 @@ internal sealed class AvHuffEncoder
     }
 
     /// <summary>
-    /// Encodes a raw 'chav' block into a compressed stream (MAME's
-    /// <c>avhuff_encoder::encode_data</c>). Returns the compressed length.
+    ///     Encodes a raw 'chav' block into a compressed stream (MAME's
+    ///     <c>avhuff_encoder::encode_data</c>). Returns the compressed length.
     /// </summary>
     internal int EncodeData(ReadOnlySpan<byte> source, Span<byte> dest)
     {
-        if (source.Length < 12 || source[0] != (byte)'c' || source[1] != (byte)'h' || source[2] != (byte)'a' || source[3] != (byte)'v')
+        if (source.Length < 12 || source[0] != (byte)'c' || source[1] != (byte)'h' || source[2] != (byte)'a' ||
+            source[3] != (byte)'v')
             throw new InvalidDataException("AVHuff source does not start with a 'chav' header");
 
         uint metaSize = source[4];
@@ -112,15 +114,9 @@ internal sealed class AvHuffEncoder
 
             // advance past the audio data (tree size 0xFFFF means FLAC: no tree bytes stored)
             uint treeSize = ReadU16Be(dest[8..]);
-            if (treeSize != 0xFFFF)
-            {
-                dstOffs += (int)treeSize;
-            }
+            if (treeSize != 0xFFFF) dstOffs += (int)treeSize;
 
-            for (var ch = 0; ch < channels; ch++)
-            {
-                dstOffs += ReadU16Be(dest[(10 + 2 * ch)..]);
-            }
+            for (var ch = 0; ch < channels; ch++) dstOffs += ReadU16Be(dest[(10 + 2 * ch)..]);
         }
         else
         {
@@ -139,12 +135,12 @@ internal sealed class AvHuffEncoder
     }
 
     /// <summary>
-    /// Encodes the audio channels as one mono FLAC stream per channel (MAME's
-    /// <c>encode_audio</c> with AVHUFF_USE_FLAC): tree-size marker 0xFFFF at dest[8],
-    /// then each channel's FLAC frames written into <paramref name="dest"/> starting at
-    /// <paramref name="dstOffs"/>, capped at <c>samples * 2</c> bytes like MAME's
-    /// <c>flac_encoder::reset(dest, samples * 2)</c> (bytes beyond the cap are dropped but
-    /// still counted in the recorded stream size).
+    ///     Encodes the audio channels as one mono FLAC stream per channel (MAME's
+    ///     <c>encode_audio</c> with AVHUFF_USE_FLAC): tree-size marker 0xFFFF at dest[8],
+    ///     then each channel's FLAC frames written into <paramref name="dest" /> starting at
+    ///     <paramref name="dstOffs" />, capped at <c>samples * 2</c> bytes like MAME's
+    ///     <c>flac_encoder::reset(dest, samples * 2)</c> (bytes beyond the cap are dropped but
+    ///     still counted in the recorded stream size).
     /// </summary>
     private static void EncodeAudio(ReadOnlySpan<byte> source, int channels, int samples, Span<byte> dest, int dstOffs)
     {
@@ -164,7 +160,7 @@ internal sealed class AvHuffEncoder
                 pcm[i] = (short)((source[off] << 8) | source[off + 1]);
             }
 
-            var encoder = new VendoredFlac.Encoder.LibFlacEncoder(samples, channels: 1, sampleRate: 48000);
+            var encoder = new LibFlacEncoder(samples, 1, 48000);
             var length = encoder.Encode(flacOut, pcm.AsSpan(0, samples));
 
             // record the size of this channel's stream (full logical length, even when the
@@ -176,24 +172,20 @@ internal sealed class AvHuffEncoder
             var cap = samples * 2;
             var store = Math.Min(length, cap);
             if (dstOffs + store <= dest.Length)
-            {
                 flacOut.AsSpan(0, store).CopyTo(dest[dstOffs..]);
-            }
             else if (dstOffs < dest.Length)
-            {
                 flacOut.AsSpan(0, Math.Min(store, dest.Length - dstOffs)).CopyTo(dest[dstOffs..]);
-            }
 
             dstOffs += cursize;
         }
     }
 
     /// <summary>
-    /// Lossless video encoding: delta-RLE histogramming of the Y/Cb/Cr planes, RLE-coded
-    /// tree export, then Huffman coding of the interleaved symbols (MAME's
-    /// <c>encode_video_lossless</c>). The bitstream is capped at <c>width * height * 2</c>
-    /// bytes like MAME's <c>bitstream_out bitbuf(dest, width * height * 2)</c>: writes beyond
-    /// the cap are dropped but still counted in the returned length. Returns that length.
+    ///     Lossless video encoding: delta-RLE histogramming of the Y/Cb/Cr planes, RLE-coded
+    ///     tree export, then Huffman coding of the interleaved symbols (MAME's
+    ///     <c>encode_video_lossless</c>). The bitstream is capped at <c>width * height * 2</c>
+    ///     bytes like MAME's <c>bitstream_out bitbuf(dest, width * height * 2)</c>: writes beyond
+    ///     the cap are dropped but still counted in the returned length. Returns that length.
     /// </summary>
     private int EncodeVideoLossless(ReadOnlySpan<byte> source, int width, int height, Span<byte> dest, int dstOffs)
     {
@@ -264,7 +256,7 @@ internal sealed class AvHuffEncoder
         }
     }
 
-    /// <summary>Largest RLE count ≤ <paramref name="rleCount"/>, as a symbol code (avhuff.cpp:98).</summary>
+    /// <summary>Largest RLE count ≤ <paramref name="rleCount" />, as a symbol code (avhuff.cpp:98).</summary>
     internal static int RleCountToCode(int rleCount)
     {
         switch (rleCount)
@@ -293,33 +285,31 @@ internal sealed class AvHuffEncoder
     }
 
     /// <summary>
-    /// Delta-RLE video-plane encoder (MAME's <c>deltarle_encoder</c>): histograms delta/RLE
-    /// symbols over one YUY2 plane, builds a canonical Huffman tree, and later emits the
-    /// symbols while expanding runs.
+    ///     Delta-RLE video-plane encoder (MAME's <c>deltarle_encoder</c>): histograms delta/RLE
+    ///     symbols over one YUY2 plane, builds a canonical Huffman tree, and later emits the
+    ///     symbols while expanding runs.
     /// </summary>
     internal sealed class DeltaRleEncoder
     {
-        private int _rleCount;
         private readonly HuffmanEncoder _encoder = new(RleAlphabetSize, MaxBits);
         private ushort[] _rleBuffer = new ushort[1024];
+        private int _rleCount;
         private int _rleLength;
 
         /// <summary>
-        /// RLE-compresses and histograms one plane (MAME's <c>rle_and_histo_bitmap</c>).
-        /// The delta chain persists across rows; zero-runs that reach a row end with at
-        /// least 8 repeats are maximized to a single end-of-row code.
+        ///     RLE-compresses and histograms one plane (MAME's <c>rle_and_histo_bitmap</c>).
+        ///     The delta chain persists across rows; zero-runs that reach a row end with at
+        ///     least 8 repeats are maximized to a single end-of-row code.
         /// </summary>
         /// <param name="source">The raw 'chav' video bytes.</param>
-        /// <param name="start">Byte offset of this plane within <paramref name="source"/>.</param>
+        /// <param name="start">Byte offset of this plane within <paramref name="source" />.</param>
         /// <param name="itemsPerRow">Items per row (pixels).</param>
         /// <param name="itemAdvance">Bytes between consecutive items.</param>
         /// <param name="rowCount">Number of rows.</param>
-        internal void RleAndHistoBitmap(ReadOnlySpan<byte> source, int start, int itemsPerRow, int itemAdvance, int rowCount)
+        internal void RleAndHistoBitmap(ReadOnlySpan<byte> source, int start, int itemsPerRow, int itemAdvance,
+            int rowCount)
         {
-            if (_rleBuffer.Length < itemsPerRow * rowCount)
-            {
-                _rleBuffer = new ushort[itemsPerRow * rowCount];
-            }
+            if (_rleBuffer.Length < itemsPerRow * rowCount) _rleBuffer = new ushort[itemsPerRow * rowCount];
 
             _rleLength = itemsPerRow * rowCount;
             var destPos = 0;
@@ -349,10 +339,7 @@ internal sealed class AvHuffEncoder
                         }
 
                         // if we hit the end of a row, maximize the count
-                        if (scan >= end && zeroCount >= 8)
-                        {
-                            zeroCount = 100000;
-                        }
+                        if (scan >= end && zeroCount >= 8) zeroCount = 100000;
 
                         // encode the maximal count we can
                         var rleCode = RleCountToCode(zeroCount);
@@ -378,7 +365,7 @@ internal sealed class AvHuffEncoder
             _encoder.BuildTree();
         }
 
-        /// <summary>Clears a pending run so the next <see cref="EncodeOne"/> reads a fresh symbol.</summary>
+        /// <summary>Clears a pending run so the next <see cref="EncodeOne" /> reads a fresh symbol.</summary>
         internal void FlushRle()
         {
             _rleCount = 0;
@@ -395,10 +382,7 @@ internal sealed class AvHuffEncoder
 
             var data = _rleBuffer[rlePos++];
             _encoder.Encode(bitbuf, data);
-            if (data >= 0x100)
-            {
-                _rleCount = CodeToRleCount(data) - 1;
-            }
+            if (data >= 0x100) _rleCount = CodeToRleCount(data) - 1;
         }
 
         /// <summary>Writes the Huffman tree in RLE form (MAME's <c>export_tree_rle</c>).</summary>

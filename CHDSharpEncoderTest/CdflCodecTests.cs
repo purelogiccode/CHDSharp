@@ -18,7 +18,7 @@ public class CdflCodecTests : IDisposable
     {
         try
         {
-            Directory.Delete(_dir, recursive: true);
+            Directory.Delete(_dir, true);
         }
         catch
         {
@@ -32,20 +32,18 @@ public class CdflCodecTests : IDisposable
         // 8-frame CD hunk: audio samples (sine) + subcode
         var hunk = new byte[8 * CdConstants.FrameSize];
         for (var f = 0; f < 8; f++)
-        {
             // big-endian 16-bit stereo samples
-            for (var s = 0; s < 588; s++)
-            {
-                var sample = (int)(Math.Sin(s * 0.1 + f) * 8000);
-                var offset = f * CdConstants.FrameSize + s * 4;
-                hunk[offset] = (byte)(sample >> 8);
-                hunk[offset + 1] = (byte)sample;
-                hunk[offset + 2] = (byte)(sample >> 8);
-                hunk[offset + 3] = (byte)sample;
-            }
-            // subcode: zero
+        for (var s = 0; s < 588; s++)
+        {
+            var sample = (int)(Math.Sin(s * 0.1 + f) * 8000);
+            var offset = f * CdConstants.FrameSize + s * 4;
+            hunk[offset] = (byte)(sample >> 8);
+            hunk[offset + 1] = (byte)sample;
+            hunk[offset + 2] = (byte)(sample >> 8);
+            hunk[offset + 3] = (byte)sample;
         }
 
+        // subcode: zero
         var codec = new CdflCodec(8 * (uint)CdConstants.FrameSize);
         var compressed = codec.Compress(hunk);
 
@@ -91,10 +89,7 @@ public class CdflCodecTests : IDisposable
         for (var f = 0; f < 12; f++)
         {
             var offset = f * CdConstants.MaxSectorData;
-            for (var i = 0; i < CdConstants.MaxSectorData; i++)
-            {
-                bin[offset + i] = (byte)(i & 0xFF); // MODE1 pattern
-            }
+            for (var i = 0; i < CdConstants.MaxSectorData; i++) bin[offset + i] = (byte)(i & 0xFF); // MODE1 pattern
         }
 
         for (var f = 12; f < 24; f++)
@@ -114,16 +109,16 @@ public class CdflCodecTests : IDisposable
         File.WriteAllBytes(Path.Combine(_dir, "game.bin"), bin);
 
         var chdPath = Path.Combine(_dir, "test.chd");
-        ChdEncoder.EncodeCd(cuePath, chdPath, hunkBytes: CdConstants.FramesPerHunk * CdConstants.FrameSize,
-            unitBytes: CdConstants.FrameSize, codecTags: [CodecTags.Cdfl]);
+        ChdEncoder.EncodeCd(cuePath, chdPath, CdConstants.FramesPerHunk * CdConstants.FrameSize,
+            CdConstants.FrameSize, [CodecTags.Cdfl]);
 
         var chd = File.ReadAllBytes(chdPath);
         Assert.Equal(CodecTags.Cdfl, ReadU32Be(chd, 16)); // compressors[0] = cdfl
 
         // expected image: 12 data frames (pad to 12) + 12 audio frames (pad to 12), swapped
         var expected = new byte[24 * CdConstants.FrameSize];
-        PlaceBinFrames(expected, 0, bin, 12, 0, swap: false);
-        PlaceBinFrames(expected, 12, bin, 12, 12 * CdConstants.MaxSectorData, swap: true);
+        PlaceBinFrames(expected, 0, bin, 12, 0, false);
+        PlaceBinFrames(expected, 12, bin, 12, 12 * CdConstants.MaxSectorData, true);
 
         var openErr = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, openErr);
@@ -134,19 +129,16 @@ public class CdflCodecTests : IDisposable
         }
     }
 
-    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset, bool swap)
+    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
+        bool swap)
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
             Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
             if (swap)
-            {
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
-                {
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);
-                }
-            }
         }
     }
 
