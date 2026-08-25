@@ -35,17 +35,25 @@ internal static partial class Inflater
         // copy state.wsize or less output bytes into the circular window
         if (copy >= state.Wsize)
         {
-            netUnsafe.CopyBlockUnaligned(ref window, ref Unsafe.Subtract(ref end, state.Wsize), state.Wsize);
+            netUnsafe.CopyBlockUnaligned(
+                ref window,
+                ref Unsafe.Subtract(ref end, state.Wsize),
+                state.Wsize
+            );
             state.Wnext = 0;
             state.Whave = state.Wsize;
         }
         else
         {
             var dist = state.Wsize - state.Wnext;
-            if (dist > copy) dist = copy;
+            if (dist > copy)
+                dist = copy;
 
-            netUnsafe.CopyBlockUnaligned(ref Unsafe.Add(ref window, state.Wnext), ref Unsafe.Subtract(ref end, copy),
-                dist);
+            netUnsafe.CopyBlockUnaligned(
+                ref Unsafe.Add(ref window, state.Wnext),
+                ref Unsafe.Subtract(ref end, copy),
+                dist
+            );
             copy -= dist;
             if (copy != 0)
             {
@@ -56,9 +64,11 @@ internal static partial class Inflater
             else
             {
                 state.Wnext += dist;
-                if (state.Wnext == state.Wsize) state.Wnext = 0;
+                if (state.Wnext == state.Wsize)
+                    state.Wnext = 0;
 
-                if (state.Whave < state.Wsize) state.Whave += dist;
+                if (state.Whave < state.Wsize)
+                    state.Whave += dist;
             }
         }
     }

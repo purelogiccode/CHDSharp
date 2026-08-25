@@ -20,12 +20,14 @@ public static unsafe partial class Methods
     /*=== Static platform detection ===*/
     public static bool MEM_32bits
     {
-        [Inline] get => sizeof(nint) == 4;
+        [Inline]
+        get => sizeof(nint) == 4;
     }
 
     public static bool MEM_64bits
     {
-        [Inline] get => sizeof(nint) == 8;
+        [Inline]
+        get => sizeof(nint) == 8;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

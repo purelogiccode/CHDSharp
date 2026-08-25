@@ -2,8 +2,7 @@ namespace CHDSharp.Tests;
 
 public sealed class ExtractTests
 {
-    private static readonly string TestDataDir =
-        Path.Combine(AppContext.BaseDirectory, "TestData");
+    private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
     [Fact]
     public void ExtractToDirectory_CD_creates_bin_and_cue()
@@ -44,8 +43,14 @@ public sealed class ExtractTests
                 Assert.True(result.IsCompleteSuccess);
                 Assert.False(result.HasTrackFailures);
                 Assert.Empty(result.TrackResults);
-                Assert.Contains(result.CreatedFiles, f => f.EndsWith(".bin", StringComparison.Ordinal));
-                Assert.Contains(result.CreatedFiles, f => f.EndsWith(".cue", StringComparison.Ordinal));
+                Assert.Contains(
+                    result.CreatedFiles,
+                    f => f.EndsWith(".bin", StringComparison.Ordinal)
+                );
+                Assert.Contains(
+                    result.CreatedFiles,
+                    f => f.EndsWith(".cue", StringComparison.Ordinal)
+                );
             }
         }
         finally
@@ -70,7 +75,10 @@ public sealed class ExtractTests
                 Assert.True(result.IsCompleteSuccess);
                 Assert.False(result.HasTrackFailures);
                 Assert.Empty(result.TrackResults);
-                Assert.Contains(result.CreatedFiles, f => f.EndsWith(".raw", StringComparison.Ordinal));
+                Assert.Contains(
+                    result.CreatedFiles,
+                    f => f.EndsWith(".raw", StringComparison.Ordinal)
+                );
                 Assert.True(File.Exists(Path.Combine(outputDir, "test.raw")));
             }
         }
@@ -172,12 +180,9 @@ public sealed class ExtractTests
         var trackResults = new List<TrackExtractResult>
         {
             new(1, "track01.bin", ChdError.Chderrnone),
-            new(2, null, ChdError.Chderrdecompressionerror)
+            new(2, null, ChdError.Chderrdecompressionerror),
         };
-        var result = new ExtractResult(
-            ["track01.bin"],
-            trackResults,
-            ChdError.Chderrnone);
+        var result = new ExtractResult(["track01.bin"], trackResults, ChdError.Chderrnone);
         Assert.False(result.IsCompleteSuccess);
         Assert.True(result.HasTrackFailures);
     }
@@ -186,10 +191,7 @@ public sealed class ExtractTests
     public void ExtractResult_reports_overall_error_when_descriptor_write_fails()
     {
         var trackResults = new List<TrackExtractResult>();
-        var result = new ExtractResult(
-            [],
-            trackResults,
-            ChdError.Chderrwriteerror);
+        var result = new ExtractResult([], trackResults, ChdError.Chderrwriteerror);
         Assert.False(result.IsCompleteSuccess);
         Assert.False(result.HasTrackFailures);
         Assert.Equal(ChdError.Chderrwriteerror, result.Error);
@@ -238,24 +240,34 @@ public sealed class ExtractTests
                 chd!.ExtractToDirectoryWithReporting(dir2, "test");
             }
 
-            var files1 = Directory.GetFiles(dir1).Select(f => Path.GetFileName(f))
-                .OrderBy(f => f, StringComparer.Ordinal).ToList();
-            var files2 = Directory.GetFiles(dir2).Select(f => Path.GetFileName(f))
-                .OrderBy(f => f, StringComparer.Ordinal).ToList();
+            var files1 = Directory
+                .GetFiles(dir1)
+                .Select(f => Path.GetFileName(f))
+                .OrderBy(f => f, StringComparer.Ordinal)
+                .ToList();
+            var files2 = Directory
+                .GetFiles(dir2)
+                .Select(f => Path.GetFileName(f))
+                .OrderBy(f => f, StringComparer.Ordinal)
+                .ToList();
             Assert.Equal(files1, files2);
 
             foreach (var f in files1)
             {
                 var bytes1 = File.ReadAllBytes(Path.Combine(dir1, f));
                 var bytes2 = File.ReadAllBytes(Path.Combine(dir2, f));
-                Assert.True(bytes1.AsSpan().SequenceEqual(bytes2.AsSpan()),
-                    $"File {f} differs between ExtractToDirectory and ExtractToDirectoryWithReporting");
+                Assert.True(
+                    bytes1.AsSpan().SequenceEqual(bytes2.AsSpan()),
+                    $"File {f} differs between ExtractToDirectory and ExtractToDirectoryWithReporting"
+                );
             }
         }
         finally
         {
-            if (Directory.Exists(dir1)) Directory.Delete(dir1, true);
-            if (Directory.Exists(dir2)) Directory.Delete(dir2, true);
+            if (Directory.Exists(dir1))
+                Directory.Delete(dir1, true);
+            if (Directory.Exists(dir2))
+                Directory.Delete(dir2, true);
         }
     }
 }

@@ -1,7 +1,6 @@
 #nullable disable
 // Copyright (C) 2022-2024 Magnus Montin
 
-
 using System.Runtime.InteropServices;
 using VendoredZLib.Deflate;
 using VendoredZLib.Inflate;
@@ -30,8 +29,7 @@ public ref struct ZStream
     internal InflateState InflateState;
     internal DeflateState DeflateState;
 
-    internal int
-        DataType2; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
+    internal int DataType2; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
 
     internal ReadOnlySpan<byte> Input2;
     internal Span<byte> Output2;
@@ -211,21 +209,37 @@ public ref struct ZStream
     /// </summary>
     public uint Adler { get; internal set; }
 
-    private static void ValidateAvailableBytes(int value, uint offset, ReadOnlySpan<byte> buffer, string bufferName,
-        string offsetPropertyName)
+    private static void ValidateAvailableBytes(
+        int value,
+        uint offset,
+        ReadOnlySpan<byte> buffer,
+        string bufferName,
+        string offsetPropertyName
+    )
     {
         if (value < 0 || value > buffer.Length - offset)
-            throw new ArgumentOutOfRangeException(nameof(value),
-                $"Value was out of range. Must be non-negative and less than or equal to the size of the {bufferName} buffer minus the value of the {offsetPropertyName} property.");
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                $"Value was out of range. Must be non-negative and less than or equal to the size of the {bufferName} buffer minus the value of the {offsetPropertyName} property."
+            );
     }
 
-    private static void ValidateOffset(int value, int availableBytes, ReadOnlySpan<byte> buffer, string bufferName)
+    private static void ValidateOffset(
+        int value,
+        int availableBytes,
+        ReadOnlySpan<byte> buffer,
+        string bufferName
+    )
     {
         if (value < 0 || value >= buffer.Length)
-            throw new ArgumentOutOfRangeException(nameof(value),
-                $"Value was out of range. Must be non-negative and less than the size of the {bufferName} buffer.");
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                $"Value was out of range. Must be non-negative and less than the size of the {bufferName} buffer."
+            );
         if (buffer.Length - value < availableBytes)
-            throw new ArgumentOutOfRangeException(nameof(value),
-                $"The value must refer to a location within the available bytes of the {bufferName} buffer.");
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                $"The value must refer to a location within the available bytes of the {bufferName} buffer."
+            );
     }
 }

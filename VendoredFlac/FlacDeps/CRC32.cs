@@ -14,7 +14,8 @@ internal static class Crc32
         for (uint i = 0; i < Table.Length; i++)
         {
             Table[i] = Reflect(i, 8) << 24;
-            for (var j = 0; j < 8; j++) Table[i] = (Table[i] << 1) ^ ((Table[i] & (1U << 31)) == 0 ? 0 : UPolynomial);
+            for (var j = 0; j < 8; j++)
+                Table[i] = (Table[i] << 1) ^ ((Table[i] & (1U << 31)) == 0 ? 0 : UPolynomial);
 
             Table[i] = Reflect(Table[i], 32);
         }
@@ -31,7 +32,8 @@ internal static class Crc32
     {
         fixed (uint* t = Table)
         {
-            for (var i = 0; i < count; i++) crc = (crc >> 8) ^ t[(crc ^ bytes[i]) & 0xff];
+            for (var i = 0; i < count; i++)
+                crc = (crc >> 8) ^ t[(crc ^ bytes[i]) & 0xff];
         }
 
         return crc;
@@ -52,7 +54,8 @@ internal static class Crc32
         uint value = 0;
         for (var i = 1; i < ch + 1; i++)
         {
-            if (0 != (val & 1)) value |= 1U << (ch - i);
+            if (0 != (val & 1))
+                value |= 1U << (ch - i);
 
             val >>= 1;
         }

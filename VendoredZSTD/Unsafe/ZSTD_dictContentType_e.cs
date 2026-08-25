@@ -9,5 +9,5 @@ public enum ZSTD_dictContentType_e
     ZSTD_dct_rawContent = 1,
 
     /* refuses to load a dictionary if it does not respect Zstandard's specification, starting with ZSTD_MAGIC_DICTIONARY */
-    ZSTD_dct_fullDict = 2
+    ZSTD_dct_fullDict = 2,
 }

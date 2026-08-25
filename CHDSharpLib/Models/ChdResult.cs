@@ -31,13 +31,20 @@ public sealed record ChdResult
     public bool IsSuccess => Error == ChdError.Chderrnone;
 
     /// <summary>SHA1 hash formatted as a lowercase hex string, or "(none)" if not available.</summary>
-    public string Sha1Hex => Sha1 is not null ? Convert.ToHexString(Sha1).ToLowerInvariant() : "(none)";
+    public string Sha1Hex =>
+        Sha1 is not null ? Convert.ToHexString(Sha1).ToLowerInvariant() : "(none)";
 
     /// <summary>MD5 hash formatted as a lowercase hex string, or "(none)" if not available.</summary>
-    public string Md5Hex => Md5 is not null ? Convert.ToHexString(Md5).ToLowerInvariant() : "(none)";
+    public string Md5Hex =>
+        Md5 is not null ? Convert.ToHexString(Md5).ToLowerInvariant() : "(none)";
 
     /// <summary>Deconstructs the result into error, version, SHA1, and MD5 components for pattern matching.</summary>
-    public void Deconstruct(out ChdError error, out uint? version, out byte[]? sha1, out byte[]? md5)
+    public void Deconstruct(
+        out ChdError error,
+        out uint? version,
+        out byte[]? sha1,
+        out byte[]? md5
+    )
     {
         error = Error;
         version = Version;

@@ -26,7 +26,12 @@ internal interface IInWindowStream
 internal interface IMatchFinder : IInWindowStream
 {
     /// <summary>Creates the match finder's internal buffers.</summary>
-    void Create(uint historySize, uint keepAddBufferBefore, uint matchMaxLen, uint keepAddBufferAfter);
+    void Create(
+        uint historySize,
+        uint keepAddBufferBefore,
+        uint matchMaxLen,
+        uint keepAddBufferAfter
+    );
 
     /// <summary>Fills <paramref name="distances" /> with (length, distance) pairs; returns the number of values written.</summary>
     uint GetMatches(uint[] distances);

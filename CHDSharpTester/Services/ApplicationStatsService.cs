@@ -12,7 +12,8 @@ namespace CHDSharpTester.Services;
 internal static class ApplicationStatsService
 {
     private const string Endpoint = "https://www.purelogiccode.com/ApplicationStats/stats";
-    private const string ApiKey = "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
+    private const string ApiKey =
+        "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
 

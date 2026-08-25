@@ -16,7 +16,6 @@ internal class Crc
     {
         const uint polynomial = 0xEDB88320;
         const int crcNumTables = 8;
-
         unchecked
         {
             Crc32Lookup = new uint[256 * crcNumTables];
@@ -24,7 +23,8 @@ internal class Crc
             for (i = 0; i < 256; i++)
             {
                 var r = (uint)i;
-                for (var j = 0; j < 8; j++) r = (r >> 1) ^ (polynomial & ~((r & 1) - 1));
+                for (var j = 0; j < 8; j++)
+                    r = (r >> 1) ^ (polynomial & ~((r & 1) - 1));
 
                 Crc32Lookup[i] = r;
             }
@@ -36,7 +36,6 @@ internal class Crc
             }
         }
     }
-
 
     /// <summary>Initializes a new instance of the <see cref="Crc" /> class and resets the internal state.</summary>
     public Crc()
@@ -54,7 +53,6 @@ internal class Crc
         _crc = 0xffffffffu;
     }
 
-
     /// <summary>Processes a block of data through the CRC-32 algorithm using 8-byte slicing where possible.</summary>
     /// <param name="block">The byte array containing the data to process.</param>
     /// <param name="offset">The zero-based offset in <paramref name="block" /> at which to begin processing.</param>
@@ -64,7 +62,8 @@ internal class Crc
         _totalBytesRead += count;
         var crc = _crc;
 
-        for (; (offset & 7) != 0 && count != 0; count--) crc = (crc >> 8) ^ Crc32Lookup[(byte)crc ^ block[offset++]];
+        for (; (offset & 7) != 0 && count != 0; count--)
+            crc = (crc >> 8) ^ Crc32Lookup[(byte)crc ^ block[offset++]];
 
         if (count >= 8)
         {
@@ -74,24 +73,38 @@ internal class Crc
 
             while (offset != end)
             {
-                crc ^= (uint)(block[offset] + (block[offset + 1] << 8) + (block[offset + 2] << 16) +
-                              (block[offset + 3] << 24));
-                var high = (uint)(block[offset + 4] + (block[offset + 5] << 8) + (block[offset + 6] << 16) +
-                                  (block[offset + 7] << 24));
+                crc ^= (uint)(
+                    block[offset]
+                    + (block[offset + 1] << 8)
+                    + (block[offset + 2] << 16)
+                    + (block[offset + 3] << 24)
+                );
+                var high = (uint)(
+                    block[offset + 4]
+                    + (block[offset + 5] << 8)
+                    + (block[offset + 6] << 16)
+                    + (block[offset + 7] << 24)
+                );
                 offset += 8;
 
-                crc = Crc32Lookup[(byte)crc + 0x700]
-                      ^ Crc32Lookup[(byte)(crc >>= 8) + 0x600]
-                      ^ Crc32Lookup[(byte)(crc >>= 8) + 0x500]
-                      ^ Crc32Lookup[ /*(byte)*/(crc >> 8) + 0x400]
-                      ^ Crc32Lookup[(byte)high + 0x300]
-                      ^ Crc32Lookup[(byte)(high >>= 8) + 0x200]
-                      ^ Crc32Lookup[(byte)(high >>= 8) + 0x100]
-                      ^ Crc32Lookup[ /*(byte)*/(high >> 8) + 0x000];
+                crc =
+                    Crc32Lookup[(byte)crc + 0x700]
+                    ^ Crc32Lookup[(byte)(crc >>= 8) + 0x600]
+                    ^ Crc32Lookup[(byte)(crc >>= 8) + 0x500]
+                    ^ Crc32Lookup[ /*(byte)*/
+                        (crc >> 8) + 0x400
+                    ]
+                    ^ Crc32Lookup[(byte)high + 0x300]
+                    ^ Crc32Lookup[(byte)(high >>= 8) + 0x200]
+                    ^ Crc32Lookup[(byte)(high >>= 8) + 0x100]
+                    ^ Crc32Lookup[ /*(byte)*/
+                        (high >> 8) + 0x000
+                    ];
             }
         }
 
-        while (count-- != 0) crc = (crc >> 8) ^ Crc32Lookup[(byte)crc ^ block[offset++]];
+        while (count-- != 0)
+            crc = (crc >> 8) ^ Crc32Lookup[(byte)crc ^ block[offset++]];
 
         _crc = crc;
     }

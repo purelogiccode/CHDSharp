@@ -31,16 +31,21 @@ public class SecondCompressedTests
     [Fact]
     public void ConvMapEntry_2ndcompressed_returns_type2nd()
     {
-        Assert.Equal(CompressionType.Compressiontype2Nd,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytype2Ndcompressed));
+        Assert.Equal(
+            CompressionType.Compressiontype2Nd,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytype2Ndcompressed)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_2ndcompressed_with_nocrc_still_extracts_type()
     {
-        const MapEntryFlag flag = MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytype2Ndcompressed;
-        Assert.Equal(CompressionType.Compressiontype2Nd,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(flag));
+        const MapEntryFlag flag =
+            MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytype2Ndcompressed;
+        Assert.Equal(
+            CompressionType.Compressiontype2Nd,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(flag)
+        );
     }
 
     // ── InitSecondaryCodec ──
@@ -71,7 +76,15 @@ public class SecondCompressedTests
         {
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.Flac,
-            Map = [new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 100, Offset = 0 }]
+            Map =
+            [
+                new MapEntry
+                {
+                    Comptype = CompressionType.Compressiontype2Nd,
+                    Length = 100,
+                    Offset = 0,
+                },
+            ],
         };
         ChdBlockRead.FindBlockReaders(chd);
 
@@ -86,7 +99,15 @@ public class SecondCompressedTests
         {
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.None,
-            Map = [new MapEntry { Comptype = CompressionType.Compressiontype0, Length = 100, Offset = 0 }]
+            Map =
+            [
+                new MapEntry
+                {
+                    Comptype = CompressionType.Compressiontype0,
+                    Length = 100,
+                    Offset = 0,
+                },
+            ],
         };
         ChdBlockRead.FindBlockReaders(chd);
 
@@ -102,9 +123,19 @@ public class SecondCompressedTests
             SecondaryCodec = ChdCodec.Flac,
             Map =
             [
-                new MapEntry { Comptype = CompressionType.Compressiontype0, Length = 100, Offset = 0 },
-                new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 100, Offset = 100 }
-            ]
+                new MapEntry
+                {
+                    Comptype = CompressionType.Compressiontype0,
+                    Length = 100,
+                    Offset = 0,
+                },
+                new MapEntry
+                {
+                    Comptype = CompressionType.Compressiontype2Nd,
+                    Length = 100,
+                    Offset = 100,
+                },
+            ],
         };
         ChdBlockRead.FindBlockReaders(chd);
 
@@ -123,7 +154,7 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = null
+            SecondaryReader = null,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -146,7 +177,7 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = SecondaryReader
+            SecondaryReader = SecondaryReader,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -159,8 +190,13 @@ public class SecondCompressedTests
         Assert.True(decompressed);
         return;
 
-        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut2, int buffOutLength,
-            ChdCodecState codec2)
+        ChdError SecondaryReader(
+            byte[] buffIn,
+            int buffInLength,
+            byte[] buffOut2,
+            int buffOutLength,
+            ChdCodecState codec2
+        )
         {
             decompressed = true;
             Array.Clear(buffOut2, 0, buffOutLength);
@@ -177,7 +213,7 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = FailingReader
+            SecondaryReader = FailingReader,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -189,7 +225,13 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrdecompressionerror, err);
         return;
 
-        static ChdError FailingReader(byte[] bytes, int i, byte[] bytes1, int i1, ChdCodecState chdCodecState)
+        static ChdError FailingReader(
+            byte[] bytes,
+            int i,
+            byte[] bytes1,
+            int i1,
+            ChdCodecState chdCodecState
+        )
         {
             return ChdError.Chderrdecompressionerror;
         }
@@ -207,7 +249,7 @@ public class SecondCompressedTests
             Offset = 0,
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
-            UseCount = 2
+            UseCount = 2,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -228,11 +270,17 @@ public class SecondCompressedTests
         Assert.Equal(buffOut[500], buffOut2[500]);
         return;
 
-        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut3, int buffOutLength,
-            ChdCodecState codec2)
+        ChdError SecondaryReader(
+            byte[] buffIn,
+            int buffInLength,
+            byte[] buffOut3,
+            int buffOutLength,
+            ChdCodecState codec2
+        )
         {
             callCount++;
-            for (var i = 0; i < buffOutLength; i++) buffOut3[i] = (byte)(i & 0xFF);
+            for (var i = 0; i < buffOutLength; i++)
+                buffOut3[i] = (byte)(i & 0xFF);
 
             return ChdError.Chderrnone;
         }
@@ -241,7 +289,9 @@ public class SecondCompressedTests
     [Fact]
     public void ReadBlock_2ndcompressed_verifies_crc32()
     {
-        var expectedData = new byte[1024].Select(_ => (byte)0xAB).ToArray();
+        var expectedData = new byte[1024]
+            .Select(_ => (byte)0xAB)
+            .ToArray();
         var correctCrc = Crc.CalculateDigest(expectedData, 0, 1024);
         var mapEntry = new MapEntry
         {
@@ -250,7 +300,7 @@ public class SecondCompressedTests
             Offset = 0,
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
-            Crc = correctCrc
+            Crc = correctCrc,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -262,10 +312,16 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrnone, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-            ChdCodecState codec)
+        static ChdError SecondaryReader(
+            byte[] buffIn,
+            int buffInLength,
+            byte[] buffOut,
+            int buffOutLength,
+            ChdCodecState codec
+        )
         {
-            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xAB;
+            for (var i = 0; i < buffOutLength; i++)
+                buffOut[i] = 0xAB;
 
             return ChdError.Chderrnone;
         }
@@ -281,7 +337,7 @@ public class SecondCompressedTests
             Offset = 0,
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
-            Crc = 0x12345678
+            Crc = 0x12345678,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -293,10 +349,16 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrdecompressionerror, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-            ChdCodecState codec)
+        static ChdError SecondaryReader(
+            byte[] buffIn,
+            int buffInLength,
+            byte[] buffOut,
+            int buffOutLength,
+            ChdCodecState codec
+        )
         {
-            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xAB;
+            for (var i = 0; i < buffOutLength; i++)
+                buffOut[i] = 0xAB;
 
             return ChdError.Chderrnone;
         }
@@ -315,14 +377,14 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = SecondaryReader
+            SecondaryReader = SecondaryReader,
         };
 
         var selfEntry = new MapEntry
         {
             Comptype = CompressionType.Compressionself,
             Offset = 0,
-            SelfMapEntry = sourceEntry
+            SelfMapEntry = sourceEntry,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -336,11 +398,17 @@ public class SecondCompressedTests
         Assert.Equal(0xCD, buffOut[0]);
         return;
 
-        ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut2, int buffOutLength,
-            ChdCodecState codec2)
+        ChdError SecondaryReader(
+            byte[] buffIn,
+            int buffInLength,
+            byte[] buffOut2,
+            int buffOutLength,
+            ChdCodecState codec2
+        )
         {
             decompressed = true;
-            for (var i = 0; i < buffOutLength; i++) buffOut2[i] = 0xCD;
+            for (var i = 0; i < buffOutLength; i++)
+                buffOut2[i] = 0xCD;
 
             return ChdError.Chderrnone;
         }
@@ -362,14 +430,10 @@ public class SecondCompressedTests
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 100,
                     Offset = 0,
-                    SecondaryReader = Reader
+                    SecondaryReader = Reader,
                 },
-                new MapEntry
-                {
-                    Comptype = CompressionType.Compressionself,
-                    Offset = 0
-                }
-            ]
+                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 0 },
+            ],
         };
 
         ChdBlockRead.FindBlockReaders(chd);
@@ -378,7 +442,13 @@ public class SecondCompressedTests
         Assert.Null(chd.Map[1].SecondaryReader);
         return;
 
-        static ChdError Reader(byte[] bytes, int i, byte[] bytes1, int i1, ChdCodecState chdCodecState)
+        static ChdError Reader(
+            byte[] bytes,
+            int i,
+            byte[] bytes1,
+            int i1,
+            ChdCodecState chdCodecState
+        )
         {
             return ChdError.Chderrnone;
         }
@@ -397,14 +467,14 @@ public class SecondCompressedTests
             Crc = 12345,
             SecondaryReader = Reader,
             UseCount = 1,
-            KeepBufferCopy = false
+            KeepBufferCopy = false,
         };
 
         var selfEntry = new MapEntry
         {
             Comptype = CompressionType.Compressionself,
             Offset = 0,
-            SelfMapEntry = sourceEntry
+            SelfMapEntry = sourceEntry,
         };
 
         var chd = new ChdHeader
@@ -412,7 +482,7 @@ public class SecondCompressedTests
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.Flac,
             Blocksize = 1024,
-            Map = [sourceEntry, selfEntry]
+            Map = [sourceEntry, selfEntry],
         };
 
         ChdBlockRead.KeepMostRepeatedBlocks(chd, 0);
@@ -425,7 +495,13 @@ public class SecondCompressedTests
         Assert.Null(selfEntry.SelfMapEntry);
         return;
 
-        static ChdError Reader(byte[] bytes, int i, byte[] bytes1, int i1, ChdCodecState chdCodecState)
+        static ChdError Reader(
+            byte[] bytes,
+            int i,
+            byte[] bytes1,
+            int i1,
+            ChdCodecState chdCodecState
+        )
         {
             return ChdError.Chderrnone;
         }
@@ -439,30 +515,136 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry (16 bytes): offset=0, crc=0, length=0x1000, flags=type0
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x00, 0x10, 0x00,
-            0x01
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x00,
+            0x10,
+            0x00,
+            0x01,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -477,30 +659,136 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 1 (ZLIB) (4 bytes)
-            0x00, 0x00, 0x00, 0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry (16 bytes): offset=0, crc=0, length=0x1000, flags=type0
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x00, 0x10, 0x00,
-            0x01
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x00,
+            0x10,
+            0x00,
+            0x01,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -515,32 +803,138 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry (16 bytes): offset=0, crc=0, length=0x0800, flags=type6 (2ND_COMPRESSED)
             // V3 length: (byte0 << 8) | (byte1 << 0) | (byte2 << 16)
             // 0x0800 = byte0=0x08, byte1=0x00, byte2=0x00
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x08, 0x00, 0x00,
-            0x06
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x08,
+            0x00,
+            0x00,
+            0x06,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -556,28 +950,123 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry (16 bytes): offset=0, crc=0, length=0x1000, flags=type6
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x00, 0x10, 0x00,
-            0x06
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x00,
+            0x10,
+            0x00,
+            0x06,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -595,35 +1084,153 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x20,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry 0 (16 bytes): offset=0, crc=0, length=0x1000, flags=type1 (COMPRESSED)
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x00, 0x10, 0x00,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x00,
+            0x10,
+            0x00,
             0x01,
             // map entry 1 (16 bytes): offset=0x1000, crc=0, length=0x0800, flags=type6 (2ND_COMPRESSED)
-            0, 0, 0, 0, 0, 0, 0x10, 0x00,
-            0, 0, 0, 0,
-            0x00, 0x08, 0x00,
-            0x06
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x10,
+            0x00,
+            0,
+            0,
+            0,
+            0,
+            0x00,
+            0x08,
+            0x00,
+            0x06,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -644,7 +1251,7 @@ public class SecondCompressedTests
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.Flac,
             Blocksize = 1024,
-            Map = [new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 100 }]
+            Map = [new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 100 }],
         };
         ChdBlockRead.FindBlockReaders(chd);
         ChdBlockRead.FindRepeatedBlocks(chd);
@@ -703,35 +1310,142 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x20,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry 0 (16 bytes): offset=0, crc=0, length=0x1000, flags=type1 (COMPRESSED)
             // V4 length: (ReadUInt16Be) | (br.ReadByte() << 16)
             // 0x1000 = ReadUInt16Be(0x10,0x00)=0x1000, ReadByte=0x00
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x10, 0x00, 0x00,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x10,
+            0x00,
+            0x00,
             0x01,
             // map entry 1 (16 bytes): offset=0x1000, crc=0, length=0x0800, flags=type6 (2ND_COMPRESSED)
-            0, 0, 0, 0, 0, 0, 0x10, 0x00,
-            0, 0, 0, 0,
-            0x08, 0x00, 0x00,
-            0x06
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x10,
+            0x00,
+            0,
+            0,
+            0,
+            0,
+            0x08,
+            0x00,
+            0x00,
+            0x06,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -756,11 +1470,26 @@ public class SecondCompressedTests
             Blocksize = 1024,
             Map =
             [
-                new MapEntry { Comptype = CompressionType.Compressiontype0, Length = 500, Offset = 0 },
-                new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 600, Offset = 500 },
-                new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 700, Offset = 1100 },
-                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 1 }
-            ]
+                new MapEntry
+                {
+                    Comptype = CompressionType.Compressiontype0,
+                    Length = 500,
+                    Offset = 0,
+                },
+                new MapEntry
+                {
+                    Comptype = CompressionType.Compressiontype2Nd,
+                    Length = 600,
+                    Offset = 500,
+                },
+                new MapEntry
+                {
+                    Comptype = CompressionType.Compressiontype2Nd,
+                    Length = 700,
+                    Offset = 1100,
+                },
+                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 1 },
+            ],
         };
 
         ChdBlockRead.FindRepeatedBlocks(chd);
@@ -786,14 +1515,10 @@ public class SecondCompressedTests
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 500,
                     Offset = 0,
-                    SecondaryReader = Reader
+                    SecondaryReader = Reader,
                 },
-                new MapEntry
-                {
-                    Comptype = CompressionType.Compressionself,
-                    Offset = 0
-                }
-            ]
+                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 0 },
+            ],
         };
 
         ChdBlockRead.FindBlockReaders(chd);
@@ -805,7 +1530,13 @@ public class SecondCompressedTests
         Assert.NotNull(self.SecondaryReader);
         return;
 
-        static ChdError Reader(byte[] bytes, int i, byte[] bytes1, int i1, ChdCodecState chdCodecState)
+        static ChdError Reader(
+            byte[] bytes,
+            int i,
+            byte[] bytes1,
+            int i1,
+            ChdCodecState chdCodecState
+        )
         {
             return ChdError.Chderrnone;
         }
@@ -819,35 +1550,153 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x20,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry 0 (16 bytes): offset=0, crc=0, length=0x1000, flags=type1
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x00, 0x10, 0x00,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x00,
+            0x10,
+            0x00,
             0x01,
             // map entry 1 (16 bytes): offset=0x1000, crc=0, length=0x0800, flags=type6 (2ND_COMPRESSED)
-            0, 0, 0, 0, 0, 0, 0x10, 0x00,
-            0, 0, 0, 0,
-            0x00, 0x08, 0x00,
-            0x06
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x10,
+            0x00,
+            0,
+            0,
+            0,
+            0,
+            0x00,
+            0x08,
+            0x00,
+            0x06,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -885,7 +1734,7 @@ public class SecondCompressedTests
             Crc = 11111,
             SecondaryReader = reader,
             UseCount = 2,
-            KeepBufferCopy = false
+            KeepBufferCopy = false,
         };
 
         var sourceEntry2 = new MapEntry
@@ -896,14 +1745,14 @@ public class SecondCompressedTests
             Crc = 22222,
             SecondaryReader = reader,
             UseCount = 1,
-            KeepBufferCopy = false
+            KeepBufferCopy = false,
         };
 
         var selfEntry = new MapEntry
         {
             Comptype = CompressionType.Compressionself,
             Offset = 0,
-            SelfMapEntry = sourceEntry1
+            SelfMapEntry = sourceEntry1,
         };
 
         var chd = new ChdHeader
@@ -911,7 +1760,7 @@ public class SecondCompressedTests
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.Flac,
             Blocksize = 1024,
-            Map = [sourceEntry1, sourceEntry2, selfEntry]
+            Map = [sourceEntry1, sourceEntry2, selfEntry],
         };
 
         ChdBlockRead.KeepMostRepeatedBlocks(chd, 0);
@@ -932,30 +1781,136 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry (16 bytes): offset=0, crc=0, length=0x0800, flags=type6 | NOCRC (0x16)
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x08, 0x00, 0x00,
-            0x16
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x08,
+            0x00,
+            0x00,
+            0x16,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -971,46 +1926,81 @@ public class SecondCompressedTests
     [Fact]
     public void ConvMapEntry_all_valid_types_convert_correctly()
     {
-        Assert.Equal(CompressionType.Compressionerror,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeinvalid));
-        Assert.Equal(CompressionType.Compressiontype0,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypecompressed));
-        Assert.Equal(CompressionType.Compressionnone,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeuncompressed));
-        Assert.Equal(CompressionType.Compressionmini,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypemini));
-        Assert.Equal(CompressionType.Compressionself,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeselfhunk));
-        Assert.Equal(CompressionType.Compressionparent,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeparenthunk));
-        Assert.Equal(CompressionType.Compressiontype2Nd,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytype2Ndcompressed));
+        Assert.Equal(
+            CompressionType.Compressionerror,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeinvalid)
+        );
+        Assert.Equal(
+            CompressionType.Compressiontype0,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypecompressed)
+        );
+        Assert.Equal(
+            CompressionType.Compressionnone,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeuncompressed)
+        );
+        Assert.Equal(
+            CompressionType.Compressionmini,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypemini)
+        );
+        Assert.Equal(
+            CompressionType.Compressionself,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeselfhunk)
+        );
+        Assert.Equal(
+            CompressionType.Compressionparent,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeparenthunk)
+        );
+        Assert.Equal(
+            CompressionType.Compressiontype2Nd,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytype2Ndcompressed)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_all_valid_types_with_nocrc_still_extract_type()
     {
-        Assert.Equal(CompressionType.Compressionerror,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
-                                                        MapEntryFlag.Mapentrytypeinvalid));
-        Assert.Equal(CompressionType.Compressiontype0,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
-                                                        MapEntryFlag.Mapentrytypecompressed));
-        Assert.Equal(CompressionType.Compressionnone,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
-                                                        MapEntryFlag.Mapentrytypeuncompressed));
-        Assert.Equal(CompressionType.Compressionmini,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
-                                                        MapEntryFlag.Mapentrytypemini));
-        Assert.Equal(CompressionType.Compressionself,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
-                                                        MapEntryFlag.Mapentrytypeselfhunk));
-        Assert.Equal(CompressionType.Compressionparent,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
-                                                        MapEntryFlag.Mapentrytypeparenthunk));
-        Assert.Equal(CompressionType.Compressiontype2Nd,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentryflagnocrc |
-                                                        MapEntryFlag.Mapentrytype2Ndcompressed));
+        Assert.Equal(
+            CompressionType.Compressionerror,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(
+                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeinvalid
+            )
+        );
+        Assert.Equal(
+            CompressionType.Compressiontype0,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(
+                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypecompressed
+            )
+        );
+        Assert.Equal(
+            CompressionType.Compressionnone,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(
+                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeuncompressed
+            )
+        );
+        Assert.Equal(
+            CompressionType.Compressionmini,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(
+                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypemini
+            )
+        );
+        Assert.Equal(
+            CompressionType.Compressionself,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(
+                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeselfhunk
+            )
+        );
+        Assert.Equal(
+            CompressionType.Compressionparent,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(
+                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeparenthunk
+            )
+        );
+        Assert.Equal(
+            CompressionType.Compressiontype2Nd,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(
+                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytype2Ndcompressed
+            )
+        );
     }
 
     // ── V3 all type6 entries ──
@@ -1021,40 +2011,170 @@ public class SecondCompressedTests
         var headerBytes = new byte[]
         {
             // flags (4 bytes)
-            0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // compression type = 2 (ZLIB_PLUS) (4 bytes)
-            0x00, 0x00, 0x00, 0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
             // total blocks (4 bytes)
-            0x00, 0x00, 0x00, 0x03,
+            0x00,
+            0x00,
+            0x00,
+            0x03,
             // total bytes (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x30,
+            0x00,
             // meta offset (8 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent md5 (16 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // blocksize (4 bytes)
-            0x00, 0x00, 0x10, 0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x00,
             // raw sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // parent sha1 (20 bytes)
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             // map entry 0 (16 bytes): flags=type6
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x08, 0x00, 0x00,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x08,
+            0x00,
+            0x00,
             0x06,
             // map entry 1 (16 bytes): flags=type6
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x08, 0x00, 0x00,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x08,
+            0x00,
+            0x00,
             0x06,
             // map entry 2 (16 bytes): flags=type6
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0x08, 0x00, 0x00,
-            0x06
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x08,
+            0x00,
+            0x00,
+            0x06,
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -1074,7 +2194,9 @@ public class SecondCompressedTests
     [Fact]
     public void ReadBlock_2ndcompressed_verifies_crc16()
     {
-        var expectedData = new byte[512].Select(_ => (byte)0xCD).ToArray();
+        var expectedData = new byte[512]
+            .Select(_ => (byte)0xCD)
+            .ToArray();
         var correctCrc16 = Crc16.Calc(expectedData, 512);
         var mapEntry = new MapEntry
         {
@@ -1084,7 +2206,7 @@ public class SecondCompressedTests
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
             Crc = null,
-            Crc16 = correctCrc16
+            Crc16 = correctCrc16,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -1096,10 +2218,16 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrnone, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-            ChdCodecState codec)
+        static ChdError SecondaryReader(
+            byte[] buffIn,
+            int buffInLength,
+            byte[] buffOut,
+            int buffOutLength,
+            ChdCodecState codec
+        )
         {
-            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xCD;
+            for (var i = 0; i < buffOutLength; i++)
+                buffOut[i] = 0xCD;
 
             return ChdError.Chderrnone;
         }
@@ -1116,7 +2244,7 @@ public class SecondCompressedTests
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
             Crc = null,
-            Crc16 = 0x1234
+            Crc16 = 0x1234,
         };
 
         var arrPool = new ArrayPool(1024);
@@ -1128,10 +2256,16 @@ public class SecondCompressedTests
         Assert.Equal(ChdError.Chderrdecompressionerror, err);
         return;
 
-        static ChdError SecondaryReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-            ChdCodecState codec)
+        static ChdError SecondaryReader(
+            byte[] buffIn,
+            int buffInLength,
+            byte[] buffOut,
+            int buffOutLength,
+            ChdCodecState codec
+        )
         {
-            for (var i = 0; i < buffOutLength; i++) buffOut[i] = 0xCD;
+            for (var i = 0; i < buffOutLength; i++)
+                buffOut[i] = 0xCD;
 
             return ChdError.Chderrnone;
         }

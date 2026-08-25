@@ -29,7 +29,8 @@ internal static class TestDataGenerator
         rng.NextBytes(block);
 
         var b = new byte[size];
-        for (var i = 0; i < b.Length; i++) b[i] = block[i % block.Length];
+        for (var i = 0; i < b.Length; i++)
+            b[i] = block[i % block.Length];
 
         return b;
     }
@@ -57,7 +58,8 @@ internal static class TestDataGenerator
     {
         var rng = new Random(seed);
         const string common = "etaoinshrdlucmfwypvbgkjqxz";
-        const string all = "etaoinshrdlucmfwypvbgkjqxz ETAOINSHRDLUCMFWYPVBGKJQXZ0123456789.,!?;:'\"()-";
+        const string all =
+            "etaoinshrdlucmfwypvbgkjqxz ETAOINSHRDLUCMFWYPVBGKJQXZ0123456789.,!?;:'\"()-";
 
         var b = new byte[size];
         for (var i = 0; i < b.Length; i++)
@@ -68,7 +70,7 @@ internal static class TestDataGenerator
                 < 0.45 => (byte)common[rng.Next(common.Length)],
                 < 0.90 => (byte)all[rng.Next(all.Length)],
                 < 0.94 => (byte)' ',
-                _ => (byte)'\n'
+                _ => (byte)'\n',
             };
         }
 
@@ -86,7 +88,8 @@ internal static class TestDataGenerator
         double phase = 0;
         for (var i = 0; i < samples; i++)
         {
-            if (i % 4096 == 0) freq = 180 + rng.NextDouble() * 1200;
+            if (i % 4096 == 0)
+                freq = 180 + rng.NextDouble() * 1200;
 
             phase += 2 * Math.PI * freq / 44100.0;
             var sample = (short)(Math.Sin(phase) * 11000 + (rng.NextDouble() - 0.5) * 400);
@@ -105,28 +108,40 @@ internal static class TestDataGenerator
         var pos = 0;
 
         Fill(size / 4, (buf, o, n) => Array.Clear(buf, o, n));
-        Fill(size / 4, (buf, o, n) =>
-        {
-            var r = new byte[n];
-            rng.NextBytes(r);
-            Array.Copy(r, 0, buf, o, n);
-        });
-        Fill(size / 4, (buf, o, n) =>
-        {
-            var t = Text(n, seed + 7);
-            Array.Copy(t, 0, buf, o, n);
-        });
-        Fill(size / 8, (buf, o, n) =>
-        {
-            var p = Pattern(n, seed + 13);
-            Array.Copy(p, 0, buf, o, n);
-        });
-        Fill(size / 8, (buf, o, n) =>
-        {
-            var r = new byte[n];
-            rng.NextBytes(r);
-            Array.Copy(r, 0, buf, o, n);
-        });
+        Fill(
+            size / 4,
+            (buf, o, n) =>
+            {
+                var r = new byte[n];
+                rng.NextBytes(r);
+                Array.Copy(r, 0, buf, o, n);
+            }
+        );
+        Fill(
+            size / 4,
+            (buf, o, n) =>
+            {
+                var t = Text(n, seed + 7);
+                Array.Copy(t, 0, buf, o, n);
+            }
+        );
+        Fill(
+            size / 8,
+            (buf, o, n) =>
+            {
+                var p = Pattern(n, seed + 13);
+                Array.Copy(p, 0, buf, o, n);
+            }
+        );
+        Fill(
+            size / 8,
+            (buf, o, n) =>
+            {
+                var r = new byte[n];
+                rng.NextBytes(r);
+                Array.Copy(r, 0, buf, o, n);
+            }
+        );
 
         return b;
 
@@ -174,20 +189,28 @@ internal static class TestDataGenerator
         var track2Index = FramesToMsf(track1Frames + 150);
         var track3Index = FramesToMsf(track1Frames + 150 + track2Frames);
 
-        File.WriteAllText(cuePath, $"""
-                                    FILE "cd-mixed.bin" BINARY
-                                      TRACK 01 MODE1/2352
-                                        INDEX 01 00:00:00
-                                      TRACK 02 AUDIO
-                                        PREGAP 00:02:00
-                                        INDEX 01 {track2Index}
-                                      TRACK 03 MODE2/2352
-                                        INDEX 01 {track3Index}
-                                    """);
+        File.WriteAllText(
+            cuePath,
+            $"""
+            FILE "cd-mixed.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                PREGAP 00:02:00
+                INDEX 01 {track2Index}
+              TRACK 03 MODE2/2352
+                INDEX 01 {track3Index}
+            """
+        );
     }
 
     /// <summary>Creates a single audio-track CD (byte-swap exercise: LE BIN → BE CHD).</summary>
-    public static void CreateAudioOnlyCd(string dir, int seed, out string cuePath, out string binPath)
+    public static void CreateAudioOnlyCd(
+        string dir,
+        int seed,
+        out string cuePath,
+        out string binPath
+    )
     {
         cuePath = Path.Combine(dir, "cd-audio.cue");
         binPath = Path.Combine(dir, "cd-audio.bin");
@@ -199,11 +222,14 @@ internal static class TestDataGenerator
             WriteAudioFrame(fs, f, rng, false);
 
         fs.Flush();
-        File.WriteAllText(cuePath, """
-                                   FILE "cd-audio.bin" BINARY
-                                     TRACK 01 AUDIO
-                                       INDEX 01 00:00:00
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "cd-audio.bin" BINARY
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+            """
+        );
     }
 
     /// <summary>Creates a 1 MB ISO-9660 image (single MODE1/2048 track source).</summary>
@@ -246,7 +272,8 @@ internal static class TestDataGenerator
         var data = new byte[length];
         rng.NextBytes(data);
         // a recognizable marker so track contents can be eyeballed in extracts
-        for (var i = 0; i < data.Length; i += 137) data[i] = (byte)(i ^ salt);
+        for (var i = 0; i < data.Length; i += 137)
+            data[i] = (byte)(i ^ salt);
 
         return data;
     }
@@ -287,7 +314,8 @@ internal static class TestDataGenerator
     private static void WriteSyncHeader(byte[] frame, int lba, byte mode)
     {
         frame[0] = 0x00;
-        for (var i = 1; i < 11; i++) frame[i] = 0xFF;
+        for (var i = 1; i < 11; i++)
+            frame[i] = 0xFF;
 
         frame[11] = 0x00;
 

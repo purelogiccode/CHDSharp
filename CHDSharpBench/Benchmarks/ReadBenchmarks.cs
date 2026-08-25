@@ -22,7 +22,8 @@ public class ReadBenchmarks
     // addresses every op (RNG state would otherwise make results order-dependent).
     private ulong _xor;
 
-    [ParamsSource(nameof(CacheSizes))] public int CacheSize { get; set; }
+    [ParamsSource(nameof(CacheSizes))]
+    public int CacheSize { get; set; }
 
     public static IEnumerable<int> CacheSizes()
     {
@@ -39,7 +40,8 @@ public class ReadBenchmarks
         _path = files
             .Select(f => (F: f, Len: new FileInfo(f).Length))
             .OrderByDescending(x => x.Len)
-            .First().F;
+            .First()
+            .F;
 
         var err = ChdFile.Open(_path, out var chd);
         if (err != ChdError.Chderrnone || chd == null)

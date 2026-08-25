@@ -71,7 +71,8 @@ public static class CdImageParser
                     sb.Clear();
                 }
 
-                while (i + 1 < line.Length && char.IsWhiteSpace(line[i + 1])) i++;
+                while (i + 1 < line.Length && char.IsWhiteSpace(line[i + 1]))
+                    i++;
             }
             else
             {

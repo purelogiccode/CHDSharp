@@ -73,9 +73,7 @@ public static unsafe partial class Methods
                 if (FSE_isError(countSize))
                     return countSize;
                 if (countSize > hbSize)
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 return countSize;
             }
         }
@@ -92,7 +90,7 @@ public static unsafe partial class Methods
         remaining = (1 << nbBits) + 1;
         threshold = 1 << nbBits;
         nbBits++;
-        for (;;)
+        for (; ; )
         {
             if (previous0 != 0)
             {
@@ -220,13 +218,7 @@ public static unsafe partial class Methods
         nuint hbSize
     )
     {
-        return FSE_readNCount_body(
-            normalizedCounter,
-            maxSVPtr,
-            tableLogPtr,
-            headerBuffer,
-            hbSize
-        );
+        return FSE_readNCount_body(normalizedCounter, maxSVPtr, tableLogPtr, headerBuffer, hbSize);
     }
 
     /*! FSE_readNCount_bmi2():
@@ -369,9 +361,7 @@ public static unsafe partial class Methods
             for (n = 0; n < oSize; n++)
             {
                 if (huffWeight[n] > 12)
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 rankStats[huffWeight[n]]++;
                 weightTotal += (uint)((1 << huffWeight[n]) >> 1);
             }
@@ -390,9 +380,7 @@ public static unsafe partial class Methods
                 var verif = (uint)(1 << (int)ZSTD_highbit32(rest));
                 var lastWeight = ZSTD_highbit32(rest) + 1;
                 if (verif != rest)
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 huffWeight[oSize] = (byte)lastWeight;
                 rankStats[lastWeight]++;
             }

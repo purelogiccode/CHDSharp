@@ -7,8 +7,12 @@ public class BoundsValidationTests
 {
     private static readonly byte[] Magic = "MComprHD"u8.ToArray();
 
-    private static MemoryStream MakeV3Stream(uint totalblocks, uint blocksize, uint totalbytes,
-        Action<MemoryStream> writeMapEntries)
+    private static MemoryStream MakeV3Stream(
+        uint totalblocks,
+        uint blocksize,
+        uint totalbytes,
+        Action<MemoryStream> writeMapEntries
+    )
     {
         var ms = new MemoryStream();
         ms.Write(Magic, 0, Magic.Length);
@@ -29,8 +33,15 @@ public class BoundsValidationTests
         return ms;
     }
 
-    private static void WriteMapEntryV3(Stream ms, ulong offset, uint crc, byte lenByte0, byte lenByte1, byte lenByte2,
-        byte flags)
+    private static void WriteMapEntryV3(
+        Stream ms,
+        ulong offset,
+        uint crc,
+        byte lenByte0,
+        byte lenByte1,
+        byte lenByte2,
+        byte flags
+    )
     {
         ms.Write(EndianHelpers.Be64(offset));
         ms.Write(EndianHelpers.Be(crc));
@@ -142,7 +153,8 @@ public class BoundsValidationTests
         using var codec = new ChdCodecState();
 
         Assert.Throws<IndexOutOfRangeException>(() =>
-            ChdReaders.Flac(buffIn, 0, buffOut, buffOut.Length, codec));
+            ChdReaders.Flac(buffIn, 0, buffOut, buffOut.Length, codec)
+        );
     }
 
     [Fact]
@@ -161,7 +173,7 @@ public class BoundsValidationTests
             Rawsha1 = new byte[20],
             Sha1 = new byte[20],
             Parentmd5 = new byte[16],
-            Parentsha1 = new byte[20]
+            Parentsha1 = new byte[20],
         };
 
         Assert.Throws<NotSupportedException>(() => ChdBlockRead.FindBlockReaders(chd));
@@ -177,18 +189,27 @@ public class BoundsValidationTests
             stream =>
             {
                 // Entry 0: valid compressed hunk at offset 256
-                WriteMapEntryV3(stream,
+                WriteMapEntryV3(
+                    stream,
                     256,
                     0,
-                    0, 2, 0, // length = 512
-                    (byte)MapEntryFlag.Mapentrytypecompressed);
+                    0,
+                    2,
+                    0, // length = 512
+                    (byte)MapEntryFlag.Mapentrytypecompressed
+                );
                 // Entry 1: self-reference with offset 999 (way beyond map length of 2)
-                WriteMapEntryV3(stream,
+                WriteMapEntryV3(
+                    stream,
                     999,
                     0,
-                    0, 0, 0, // length = 0
-                    (byte)MapEntryFlag.Mapentrytypeselfhunk);
-            });
+                    0,
+                    0,
+                    0, // length = 0
+                    (byte)MapEntryFlag.Mapentrytypeselfhunk
+                );
+            }
+        );
 
         // Append enough padding so stream doesn't trim
         ms.Seek(0, SeekOrigin.End);
@@ -210,18 +231,11 @@ public class BoundsValidationTests
             stream =>
             {
                 // Entry 0: valid compressed hunk
-                WriteMapEntryV3(stream,
-                    256,
-                    0,
-                    0, 2, 0,
-                    (byte)MapEntryFlag.Mapentrytypecompressed);
+                WriteMapEntryV3(stream, 256, 0, 0, 2, 0, (byte)MapEntryFlag.Mapentrytypecompressed);
                 // Entry 1: self-reference to entry 0
-                WriteMapEntryV3(stream,
-                    0,
-                    0,
-                    0, 0, 0,
-                    (byte)MapEntryFlag.Mapentrytypeselfhunk);
-            });
+                WriteMapEntryV3(stream, 0, 0, 0, 0, 0, (byte)MapEntryFlag.Mapentrytypeselfhunk);
+            }
+        );
 
         // Entry 0 spans [256, 768); pad the stream so the open-time map bounds check
         // accepts the stored block (this exercises the SELF-link path, not the bounds path).
@@ -241,21 +255,25 @@ public class BoundsValidationTests
         uint length,
         Func<MemoryStream, byte[]> writeData,
         uint blocksize = 512,
-        byte flags = (byte)MapEntryFlag.Mapentrytypecompressed)
+        byte flags = (byte)MapEntryFlag.Mapentrytypecompressed
+    )
     {
         var ms = MakeV3Stream(
             1,
             blocksize,
             blocksize,
-            stream => WriteMapEntryV3(
-                stream,
-                256,
-                0,
-                // V3 length layout (ChdHeaders.ReadHeaderV3): (byte0<<8) | (byte1<<0) | (byte2<<16).
-                (byte)((length >> 8) & 0xFF),
-                (byte)(length & 0xFF),
-                (byte)((length >> 16) & 0xFF),
-                flags));
+            stream =>
+                WriteMapEntryV3(
+                    stream,
+                    256,
+                    0,
+                    // V3 length layout (ChdHeaders.ReadHeaderV3): (byte0<<8) | (byte1<<0) | (byte2<<16).
+                    (byte)((length >> 8) & 0xFF),
+                    (byte)(length & 0xFF),
+                    (byte)((length >> 16) & 0xFF),
+                    flags
+                )
+        );
 
         // Append the compressed payload at offset 256, and pad the stream to at least
         // offset + claimed length so the open-time map bounds check accepts the file
@@ -265,7 +283,8 @@ public class BoundsValidationTests
         ms.SetLength(256);
         ms.Position = 256;
         ms.Write(data, 0, data.Length);
-        if (ms.Length < 256L + length) ms.SetLength(256L + length);
+        if (ms.Length < 256L + length)
+            ms.SetLength(256L + length);
 
         ms.Position = 0;
         return ms;
@@ -353,7 +372,8 @@ public class BoundsValidationTests
         var stream = MakeV3CompressedHunkStream(
             (uint)compressed.Length,
             _ => compressed,
-            flags: (byte)(MapEntryFlag.Mapentrytypecompressed | MapEntryFlag.Mapentryflagnocrc));
+            flags: (byte)(MapEntryFlag.Mapentrytypecompressed | MapEntryFlag.Mapentryflagnocrc)
+        );
         var err = ChdFile.Open(stream, true, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
         Assert.Equal((uint)(blocksize * 2), chd!.MaxCompressedBlockBytes);

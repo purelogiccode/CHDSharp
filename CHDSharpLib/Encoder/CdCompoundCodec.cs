@@ -30,7 +30,8 @@ public abstract class CdCompoundCodec : IChdCodec
     {
         if (hunkBytes % CdConstants.FrameSize != 0)
             throw new ArgumentException(
-                $"hunkBytes ({hunkBytes}) must be a multiple of the CD frame size ({CdConstants.FrameSize})");
+                $"hunkBytes ({hunkBytes}) must be a multiple of the CD frame size ({CdConstants.FrameSize})"
+            );
 
         _framesPerHunk = (int)(hunkBytes / CdConstants.FrameSize);
         _dataBytes = _framesPerHunk * CdConstants.MaxSectorData;
@@ -50,7 +51,8 @@ public abstract class CdCompoundCodec : IChdCodec
     {
         if (data.Length != _framesPerHunk * CdConstants.FrameSize)
             throw new ArgumentException(
-                $"hunk size mismatch: expected {_framesPerHunk * CdConstants.FrameSize}, got {data.Length}");
+                $"hunk size mismatch: expected {_framesPerHunk * CdConstants.FrameSize}, got {data.Length}"
+            );
 
         var complenBytes = data.Length < 65536 ? 2 : 3;
         var eccBytes = _eccBitmap.Length;
@@ -63,11 +65,25 @@ public abstract class CdCompoundCodec : IChdCodec
         for (var f = 0; f < _framesPerHunk; f++)
         {
             var src = f * CdConstants.FrameSize;
-            Array.Copy(data, src, _dataBuffer, f * CdConstants.MaxSectorData, CdConstants.MaxSectorData);
-            Array.Copy(data, src + CdConstants.MaxSectorData, _subcodeBuffer, f * CdConstants.MaxSubcodeData,
-                CdConstants.MaxSubcodeData);
+            Array.Copy(
+                data,
+                src,
+                _dataBuffer,
+                f * CdConstants.MaxSectorData,
+                CdConstants.MaxSectorData
+            );
+            Array.Copy(
+                data,
+                src + CdConstants.MaxSectorData,
+                _subcodeBuffer,
+                f * CdConstants.MaxSubcodeData,
+                CdConstants.MaxSubcodeData
+            );
 
-            if (data.AsSpan(src, CdEcc.SyncHeader.Length).SequenceEqual(CdEcc.SyncHeader) && CdEcc.EccVerify(data, src))
+            if (
+                data.AsSpan(src, CdEcc.SyncHeader.Length).SequenceEqual(CdEcc.SyncHeader)
+                && CdEcc.EccVerify(data, src)
+            )
             {
                 _eccBitmap[f / 8] |= (byte)(1 << (f % 8));
                 CdEcc.EccClear(_dataBuffer, f * CdConstants.MaxSectorData);
@@ -116,9 +132,7 @@ public sealed class CdzlCodec : CdCompoundCodec
     /// <summary>Creates a CD zlib codec for CD-sized hunks.</summary>
     /// <param name="hunkBytes">Hunk size in bytes; must be a multiple of the CD frame size.</param>
     public CdzlCodec(uint hunkBytes)
-        : base(hunkBytes, new ZlibCodec(), new ZlibCodec())
-    {
-    }
+        : base(hunkBytes, new ZlibCodec(), new ZlibCodec()) { }
 
     /// <inheritdoc />
     public override uint Tag => CodecTags.Cdzl;
@@ -130,9 +144,11 @@ public sealed class CdlzCodec : CdCompoundCodec
     /// <summary>Creates a CD LZMA codec for CD-sized hunks.</summary>
     /// <param name="hunkBytes">Hunk size in bytes; must be a multiple of the CD frame size.</param>
     public CdlzCodec(uint hunkBytes)
-        : base(hunkBytes, new LzmaCodec(hunkBytes / CdConstants.FrameSize * CdConstants.MaxSectorData), new ZlibCodec())
-    {
-    }
+        : base(
+            hunkBytes,
+            new LzmaCodec(hunkBytes / CdConstants.FrameSize * CdConstants.MaxSectorData),
+            new ZlibCodec()
+        ) { }
 
     /// <inheritdoc />
     public override uint Tag => CodecTags.Cdlz;
@@ -144,9 +160,7 @@ public sealed class CdzsCodec : CdCompoundCodec
     /// <summary>Creates a CD Zstandard codec for CD-sized hunks.</summary>
     /// <param name="hunkBytes">Hunk size in bytes; must be a multiple of the CD frame size.</param>
     public CdzsCodec(uint hunkBytes)
-        : base(hunkBytes, new ZstdCodec(), new ZstdCodec())
-    {
-    }
+        : base(hunkBytes, new ZstdCodec(), new ZstdCodec()) { }
 
     /// <inheritdoc />
     public override uint Tag => CodecTags.Cdzs;

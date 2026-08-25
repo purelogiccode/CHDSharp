@@ -10,5 +10,5 @@ internal enum TrackTypeParser
     Cht2,
 
     /// <summary>GD-ROM TOC metadata tag.</summary>
-    GdRom
+    GdRom,
 }

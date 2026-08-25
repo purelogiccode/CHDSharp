@@ -28,7 +28,9 @@ public class DecodeBenchmarks
 
         _files = [.. list];
         if (_files.Length == 0)
-            throw new InvalidOperationException($"No single-codec corpus CHD files found in '{Corpus.Dir}'");
+            throw new InvalidOperationException(
+                $"No single-codec corpus CHD files found in '{Corpus.Dir}'"
+            );
 
         _buffer = new byte[ReadHeader(_files[0]).HunkBytes];
     }
@@ -40,7 +42,8 @@ public class DecodeBenchmarks
         foreach (var file in _files)
         {
             var err = ChdFile.Open(file, out var chd);
-            if (err != ChdError.Chderrnone) continue;
+            if (err != ChdError.Chderrnone)
+                continue;
 
             using (chd)
             {
@@ -67,7 +70,8 @@ public class DecodeBenchmarks
         foreach (var file in _files)
         {
             var err = ChdFile.Open(file, out var chd);
-            if (err != ChdError.Chderrnone || chd == null) continue;
+            if (err != ChdError.Chderrnone || chd == null)
+                continue;
 
             using (chd)
             {

@@ -28,7 +28,10 @@ public class MapClippingChdmanValidationTests : IDisposable
 
     public MapClippingChdmanValidationTests()
     {
-        _testDataDir = Path.Combine(Path.GetTempPath(), "map_clipping_tests_" + Guid.NewGuid().ToString("N"));
+        _testDataDir = Path.Combine(
+            Path.GetTempPath(),
+            "map_clipping_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_testDataDir);
     }
 
@@ -56,7 +59,13 @@ public class MapClippingChdmanValidationTests : IDisposable
         // complen still counts the phantom byte.
         var entries = new[]
         {
-            new MapEntry { Compression = MapEntry.CompressionNone, CompLength = 8192, Offset = 124, Crc16 = 0x0000 }
+            new MapEntry
+            {
+                Compression = MapEntry.CompressionNone,
+                CompLength = 8192,
+                Offset = 124,
+                Crc16 = 0x0000,
+            },
         };
 
         var map = MapCompressor.Compress(entries, 1, 8192, 512);
@@ -75,7 +84,13 @@ public class MapClippingChdmanValidationTests : IDisposable
         // header — unreadable by chdman itself. We must emit the full bitstream instead.
         var entries = new[]
         {
-            new MapEntry { Compression = MapEntry.CompressionNone, CompLength = 8192, Offset = 124, Crc16 = 0x0001 }
+            new MapEntry
+            {
+                Compression = MapEntry.CompressionNone,
+                CompLength = 8192,
+                Offset = 124,
+                Crc16 = 0x0001,
+            },
         };
 
         var map = MapCompressor.Compress(entries, 1, 8192, 512);
@@ -103,7 +118,7 @@ public class MapClippingChdmanValidationTests : IDisposable
             (37632u, false) => 2,
             (37632u, true) => 1,
             (65536u, false) => 1,
-            _ => 2
+            _ => 2,
         };
     }
 
@@ -116,9 +131,13 @@ public class MapClippingChdmanValidationTests : IDisposable
     [InlineData(19584u, 2448u)]
     [InlineData(37632u, 2352u)]
     [InlineData(65536u, 512u)]
-    public void SingleHunk_benignClip_byteIdenticalToChdmanAndReadable(uint hunkBytes, uint unitBytes)
+    public void SingleHunk_benignClip_byteIdenticalToChdmanAndReadable(
+        uint hunkBytes,
+        uint unitBytes
+    )
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         var source = new byte[hunkBytes];
         new Random(SeedFor(hunkBytes, false)).NextBytes(source);
@@ -126,8 +145,20 @@ public class MapClippingChdmanValidationTests : IDisposable
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, hunkBytes, unitBytes, [CodecTags.Zlib]);
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
-            "-hs", hunkBytes.ToString(), "-us", unitBytes.ToString(), "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman(
+            "createraw",
+            "-i",
+            srcPath,
+            "-o",
+            refPath,
+            "-c",
+            "zlib",
+            "-hs",
+            hunkBytes.ToString(),
+            "-us",
+            unitBytes.ToString(),
+            "-f"
+        );
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         Assert.Equal(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
@@ -142,9 +173,13 @@ public class MapClippingChdmanValidationTests : IDisposable
     [InlineData(18816u, 2352u)] // the hunk sizes called out in the sixth-run notes
     [InlineData(19584u, 2448u)]
     [InlineData(65536u, 512u)]
-    public void SingleHunk_corruptClip_oursStaysVerifiableWhileChdmanBreaks(uint hunkBytes, uint unitBytes)
+    public void SingleHunk_corruptClip_oursStaysVerifiableWhileChdmanBreaks(
+        uint hunkBytes,
+        uint unitBytes
+    )
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         var source = new byte[hunkBytes];
         new Random(SeedFor(hunkBytes, true)).NextBytes(source);
@@ -152,21 +187,38 @@ public class MapClippingChdmanValidationTests : IDisposable
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, hunkBytes, unitBytes, [CodecTags.Zlib]);
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
-            "-hs", hunkBytes.ToString(), "-us", unitBytes.ToString(), "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman(
+            "createraw",
+            "-i",
+            srcPath,
+            "-o",
+            refPath,
+            "-c",
+            "zlib",
+            "-hs",
+            hunkBytes.ToString(),
+            "-us",
+            unitBytes.ToString(),
+            "-f"
+        );
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         // our output remains fully valid: chdman verifies it and it round-trips
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", oursPath);
-        Assert.True(verifyExit == 0, $"chdman verify failed on OUR output (exit={verifyExit})\n{vOut}{vErr}");
+        Assert.True(
+            verifyExit == 0,
+            $"chdman verify failed on OUR output (exit={verifyExit})\n{vOut}{vErr}"
+        );
         AssertDecodesTo(oursPath, source);
 
         // chdman 0.289 cannot re-open its own output for these inputs (upstream
         // compress_v5_map clipping bug); pin that so a behavior change is noticed
         var (refInfoExit, _, _) = ChdmanHelper.RunChdman("info", "-i", refPath);
-        Assert.True(refInfoExit != 0,
-            "chdman can now read its own single-hunk output - the upstream clipping bug appears to be fixed; " +
-            "this divergence should be revisited and byte parity restored");
+        Assert.True(
+            refInfoExit != 0,
+            "chdman can now read its own single-hunk output - the upstream clipping bug appears to be fixed; "
+                + "this divergence should be revisited and byte parity restored"
+        );
 
         // and our bytes deliberately differ from chdman's broken ones
         Assert.NotEqual(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
@@ -176,9 +228,13 @@ public class MapClippingChdmanValidationTests : IDisposable
     [InlineData(65536u, 512u)]
     [InlineData(18816u, 2352u)]
     [InlineData(19584u, 2448u)]
-    public void Type0EntryInsideCompressedMap_multiHunk_byteIdenticalToChdman(uint hunkBytes, uint unitBytes)
+    public void Type0EntryInsideCompressedMap_multiHunk_byteIdenticalToChdman(
+        uint hunkBytes,
+        uint unitBytes
+    )
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         // The exact scenario from the sixth-run notes, at a realistic hunk count: mostly
         // incompressible hunks (stored COMPRESSION_NONE) with individual compressible hunks
@@ -197,15 +253,28 @@ public class MapClippingChdmanValidationTests : IDisposable
             }
 
             const string phrase = "the quick brown fox jumps over the lazy dog. ";
-            for (var i = 0; i < span.Length; i++) span[i] = (byte)phrase[i % phrase.Length];
+            for (var i = 0; i < span.Length; i++)
+                span[i] = (byte)phrase[i % phrase.Length];
         }
 
         var tag = $"mixed-{hunkBytes}";
         var (srcPath, oursPath, refPath) = WriteSources(tag, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, hunkBytes, unitBytes, [CodecTags.Zlib]);
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "zlib",
-            "-hs", hunkBytes.ToString(), "-us", unitBytes.ToString(), "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman(
+            "createraw",
+            "-i",
+            srcPath,
+            "-o",
+            refPath,
+            "-c",
+            "zlib",
+            "-hs",
+            hunkBytes.ToString(),
+            "-us",
+            unitBytes.ToString(),
+            "-f"
+        );
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
         Assert.Equal(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
@@ -217,11 +286,18 @@ public class MapClippingChdmanValidationTests : IDisposable
 
     // ----- helpers -----
 
-    private (string SrcPath, string OursPath, string RefPath) WriteSources(string tag, byte[] source)
+    private (string SrcPath, string OursPath, string RefPath) WriteSources(
+        string tag,
+        byte[] source
+    )
     {
         var srcPath = Path.Combine(_testDataDir, tag + ".bin");
         File.WriteAllBytes(srcPath, source);
-        return (srcPath, Path.Combine(_testDataDir, tag + ".ours.chd"), Path.Combine(_testDataDir, tag + ".ref.chd"));
+        return (
+            srcPath,
+            Path.Combine(_testDataDir, tag + ".ours.chd"),
+            Path.Combine(_testDataDir, tag + ".ref.chd")
+        );
     }
 
     private static void AssertDecodesTo(string chdPath, byte[] expected)
@@ -237,17 +313,24 @@ public class MapClippingChdmanValidationTests : IDisposable
             {
                 var readErr = chd.ReadHunk(h, buffer);
                 Assert.Equal(ChdError.Chderrnone, readErr);
-                var valid = (int)Math.Min((ulong)buffer.Length, (ulong)expected.Length - h * (ulong)buffer.Length);
-                Assert.Equal(expected.AsSpan((int)(h * buffer.Length), valid).ToArray(),
-                    buffer.AsSpan(0, valid).ToArray());
+                var valid = (int)
+                    Math.Min(
+                        (ulong)buffer.Length,
+                        (ulong)expected.Length - h * (ulong)buffer.Length
+                    );
+                Assert.Equal(
+                    expected.AsSpan((int)(h * buffer.Length), valid).ToArray(),
+                    buffer.AsSpan(0, valid).ToArray()
+                );
             }
         }
     }
 
-
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) | data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 }

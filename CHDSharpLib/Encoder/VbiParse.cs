@@ -25,27 +25,61 @@ public static class VbiParse
     /// <param name="sourceRowPixels">Row stride in pixels.</param>
     /// <param name="sourceWidth">Visible width in pixels.</param>
     /// <param name="sourceShift">Right-shift selecting the sample byte within each 16-bit pixel.</param>
-    public static VbiMetadata ParseAll(byte[] source, int sourceRowPixels, int sourceWidth, int sourceShift)
+    public static VbiMetadata ParseAll(
+        byte[] source,
+        int sourceRowPixels,
+        int sourceWidth,
+        int sourceShift
+    )
     {
         var vbi = new VbiMetadata();
         var bits0 = new uint[24];
         var bits1 = new uint[24];
 
         // get the white flag
-        vbi.White = ParseWhiteFlag(source, 11 * sourceRowPixels * 2, sourceWidth, sourceShift) ? 1u : 0u;
+        vbi.White = ParseWhiteFlag(source, 11 * sourceRowPixels * 2, sourceWidth, sourceShift)
+            ? 1u
+            : 0u;
 
         // parse line 16
-        if (ParseManchesterCode(source, 16 * sourceRowPixels * 2, sourceWidth, sourceShift, 24, bits0) == 24)
+        if (
+            ParseManchesterCode(
+                source,
+                16 * sourceRowPixels * 2,
+                sourceWidth,
+                sourceShift,
+                24,
+                bits0
+            ) == 24
+        )
             for (var bitNum = 0; bitNum < 24; bitNum++)
                 vbi.Line16 = (vbi.Line16 << 1) | (bits0[bitNum] & 1);
 
         // parse line 17
-        if (ParseManchesterCode(source, 17 * sourceRowPixels * 2, sourceWidth, sourceShift, 24, bits0) == 24)
+        if (
+            ParseManchesterCode(
+                source,
+                17 * sourceRowPixels * 2,
+                sourceWidth,
+                sourceShift,
+                24,
+                bits0
+            ) == 24
+        )
             for (var bitNum = 0; bitNum < 24; bitNum++)
                 vbi.Line17 = (vbi.Line17 << 1) | (bits0[bitNum] & 1);
 
         // parse line 18
-        if (ParseManchesterCode(source, 18 * sourceRowPixels * 2, sourceWidth, sourceShift, 24, bits1) == 24)
+        if (
+            ParseManchesterCode(
+                source,
+                18 * sourceRowPixels * 2,
+                sourceWidth,
+                sourceShift,
+                24,
+                bits1
+            ) == 24
+        )
             for (var bitNum = 0; bitNum < 24; bitNum++)
                 vbi.Line18 = (vbi.Line18 << 1) | (bits1[bitNum] & 1);
 
@@ -61,21 +95,32 @@ public static class VbiParse
         else
         {
             // if both are frame numbers, and one is not valid BCD, pick the other
-            const uint cavMask = 0xf00000, cavCode = 0xf00000;
+            const uint cavMask = 0xf00000,
+                cavCode = 0xf00000;
             if ((vbi.Line17 & cavMask) == cavCode && (vbi.Line18 & cavMask) == cavCode)
             {
-                if ((vbi.Line17 & 0xf000) > 0x9000 || (vbi.Line17 & 0xf00) > 0x900 || (vbi.Line17 & 0xf0) > 0x90 ||
-                    (vbi.Line17 & 0xf) > 0x9)
+                if (
+                    (vbi.Line17 & 0xf000) > 0x9000
+                    || (vbi.Line17 & 0xf00) > 0x900
+                    || (vbi.Line17 & 0xf0) > 0x90
+                    || (vbi.Line17 & 0xf) > 0x9
+                )
                     vbi.Line1718 = vbi.Line18;
-                else if ((vbi.Line18 & 0xf000) > 0x9000 || (vbi.Line18 & 0xf00) > 0x900 || (vbi.Line18 & 0xf0) > 0x90 ||
-                         (vbi.Line18 & 0xf) > 0x9) vbi.Line1718 = vbi.Line17;
+                else if (
+                    (vbi.Line18 & 0xf000) > 0x9000
+                    || (vbi.Line18 & 0xf00) > 0x900
+                    || (vbi.Line18 & 0xf0) > 0x90
+                    || (vbi.Line18 & 0xf) > 0x9
+                )
+                    vbi.Line1718 = vbi.Line17;
             }
 
             // if still nothing, scan through the bits and pick the ones with the most confidence
             if (vbi.Line1718 == 0)
                 for (var bitNum = 0; bitNum < 24; bitNum++)
-                    vbi.Line1718 = (vbi.Line1718 << 1) |
-                                   (bits0[bitNum] > bits1[bitNum] ? bits0[bitNum] & 1 : bits1[bitNum] & 1);
+                    vbi.Line1718 =
+                        (vbi.Line1718 << 1)
+                        | (bits0[bitNum] > bits1[bitNum] ? bits0[bitNum] & 1 : bits1[bitNum] & 1);
         }
 
         return vbi;
@@ -100,8 +145,14 @@ public static class VbiParse
     ///     <c>vbi_parse_manchester_code</c>). Returns the number of bits extracted (0 on failure);
     ///     each result entry holds (confidence &lt;&lt; 1) | bit.
     /// </summary>
-    public static int ParseManchesterCode(byte[] source, int sourceOffsetBytes, int sourceWidth, int sourceShift,
-        int expectedBits, uint[] result)
+    public static int ParseManchesterCode(
+        byte[] source,
+        int sourceOffsetBytes,
+        int sourceWidth,
+        int sourceShift,
+        int expectedBits,
+        uint[] result
+    )
     {
         if (sourceWidth > MaxSourceWidth)
             return 0;
@@ -109,7 +160,8 @@ public static class VbiParse
         var srcAbs = new byte[MaxSourceWidth];
 
         // find highs and lows in the line
-        int min = 0xff, max = 0x00;
+        int min = 0xff,
+            max = 0x00;
         for (var x = 0; x < sourceWidth; x++)
         {
             var rawSrc = Sample(source, sourceOffsetBytes, x, sourceShift);
@@ -133,7 +185,8 @@ public static class VbiParse
             var rawSrc = Sample(source, sourceOffsetBytes, x, sourceShift);
             if (rawSrc >= max)
                 srcAbsVal = 1;
-            else if (rawSrc <= min) srcAbsVal = 0;
+            else if (rawSrc <= min)
+                srcAbsVal = 0;
 
             srcAbs[x] = (byte)srcAbsVal;
         }
@@ -153,7 +206,11 @@ public static class VbiParse
         // now scan to find a clock that has a nearby transition on each beat
         double bestClock = 0;
         var bestErr = 1000;
-        for (var clock = sourceWidth / (double)expectedBits; clock >= 2.0; clock -= 1.0 / expectedBits)
+        for (
+            var clock = sourceWidth / (double)expectedBits;
+            clock >= 2.0;
+            clock -= 1.0 / expectedBits
+        )
         {
             var error = 0;
 
@@ -237,12 +294,18 @@ public static class VbiParse
     ///     <c>vbi_parse_white_flag</c>): true when the histogram peak sits above 90% of the
     ///     noise-trimmed dynamic range.
     /// </summary>
-    public static bool ParseWhiteFlag(byte[] source, int sourceOffsetBytes, int sourceWidth, int sourceShift)
+    public static bool ParseWhiteFlag(
+        byte[] source,
+        int sourceOffsetBytes,
+        int sourceWidth,
+        int sourceShift
+    )
     {
         var histo = new int[256];
 
         // compute a histogram of values
-        for (var x = 0; x < sourceWidth; x++) histo[Sample(source, sourceOffsetBytes, x, sourceShift)]++;
+        for (var x = 0; x < sourceWidth; x++)
+            histo[Sample(source, sourceOffsetBytes, x, sourceShift)]++;
 
         // remove the lowest 1% of the values to account for noise and determine the minimum
         var subtract = sourceWidth / 100;

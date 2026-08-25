@@ -49,7 +49,8 @@ public static unsafe partial class Methods
      */
     private static void POOL_free(void* ctx)
     {
-        if (ctx == null) return;
+        if (ctx == null)
+            return;
 
         var jobThreadPool = GetThreadPool(ctx);
         jobThreadPool.Join();

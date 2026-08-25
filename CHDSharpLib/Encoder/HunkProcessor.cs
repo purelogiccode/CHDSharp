@@ -30,7 +30,8 @@ internal readonly record struct HunkResult(
     uint CompLength,
     ushort Crc16,
     byte[] Sha1,
-    byte[]? Data);
+    byte[]? Data
+);
 
 /// <summary>Processes raw hunk data for CHD v5 encoding, handling compression and map entry generation.</summary>
 internal class HunkProcessor
@@ -44,9 +45,7 @@ internal class HunkProcessor
     /// <summary>Initializes a new <see cref="HunkProcessor" /> for the specified hunk size.</summary>
     /// <param name="hunkBytes">The expected size of each hunk in bytes.</param>
     public HunkProcessor(uint hunkBytes)
-        : this(hunkBytes, [new ZlibCodec()])
-    {
-    }
+        : this(hunkBytes, [new ZlibCodec()]) { }
 
     /// <summary>Initializes a new <see cref="HunkProcessor" /> with the given codecs.</summary>
     /// <param name="hunkBytes">The expected size of each hunk in bytes.</param>
@@ -79,12 +78,17 @@ internal class HunkProcessor
     public HunkProcessor(uint hunkBytes, IReadOnlyList<uint> codecTags, int taskCount)
     {
         if (taskCount < 1)
-            throw new ArgumentOutOfRangeException(nameof(taskCount), taskCount, "TaskCount must be between 1 and 64.");
+            throw new ArgumentOutOfRangeException(
+                nameof(taskCount),
+                taskCount,
+                "TaskCount must be between 1 and 64."
+            );
 
         _hunkBytes = hunkBytes;
         _taskCount = taskCount;
         _workerCodecSets = new IChdCodec[taskCount][];
-        for (var t = 0; t < taskCount; t++) _workerCodecSets[t] = ChdCodecs.CreateAll(codecTags, hunkBytes);
+        for (var t = 0; t < taskCount; t++)
+            _workerCodecSets[t] = ChdCodecs.CreateAll(codecTags, hunkBytes);
 
         _syncCodecs = _workerCodecSets[0];
         _rawPool = new ByteArrayPool((int)hunkBytes);
@@ -98,7 +102,9 @@ internal class HunkProcessor
     public (MapEntry Entry, byte[] Data) ProcessHunk(byte[] rawHunk, long fileOffset)
     {
         if (rawHunk.Length != _hunkBytes)
-            throw new ArgumentException($"Hunk size mismatch: expected {_hunkBytes}, got {rawHunk.Length}");
+            throw new ArgumentException(
+                $"Hunk size mismatch: expected {_hunkBytes}, got {rawHunk.Length}"
+            );
 
         var crc16 = Crc16.Compute(rawHunk);
 
@@ -122,7 +128,7 @@ internal class HunkProcessor
                     Compression = (byte)bestCodec,
                     CompLength = (uint)bestData!.Length,
                     Offset = (ulong)fileOffset,
-                    Crc16 = crc16
+                    Crc16 = crc16,
                 },
                 bestData
             );
@@ -133,7 +139,7 @@ internal class HunkProcessor
                 Compression = MapEntry.CompressionNone,
                 CompLength = _hunkBytes,
                 Offset = (ulong)fileOffset,
-                Crc16 = crc16
+                Crc16 = crc16,
             },
             (byte[])rawHunk.Clone()
         );
@@ -174,8 +180,13 @@ internal class HunkProcessor
     ///     The processor was built with the instance-based
     ///     constructor, which cannot share codecs across worker threads.
     /// </exception>
-    public void CompressAll(uint hunkCount, Func<uint, byte[], int> readHunk, Sha1 rawSha1,
-        Action<HunkResult> onHunkConsumed, CancellationToken cancellationToken = default)
+    public void CompressAll(
+        uint hunkCount,
+        Func<uint, byte[], int> readHunk,
+        Sha1 rawSha1,
+        Action<HunkResult> onHunkConsumed,
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentNullException.ThrowIfNull(readHunk);
         ArgumentNullException.ThrowIfNull(rawSha1);
@@ -185,10 +196,18 @@ internal class HunkProcessor
 
         if (_workerCodecSets == null)
             throw new InvalidOperationException(
-                "Parallel compression requires the codec-tag constructor; codec instances are not thread-safe to share.");
+                "Parallel compression requires the codec-tag constructor; codec instances are not thread-safe to share."
+            );
 
-        using var pipeline = new CompressionPipeline(this, _taskCount, hunkCount, readHunk, rawSha1,
-            onHunkConsumed, cancellationToken);
+        using var pipeline = new CompressionPipeline(
+            this,
+            _taskCount,
+            hunkCount,
+            readHunk,
+            rawSha1,
+            onHunkConsumed,
+            cancellationToken
+        );
         pipeline.Run();
     }
 
@@ -233,9 +252,15 @@ internal class HunkProcessor
         private readonly CancellationTokenSource _ts;
         private Exception? _error;
 
-        public CompressionPipeline(HunkProcessor owner, int taskCount, uint hunkCount,
-            Func<uint, byte[], int> readHunk, Sha1 rawSha1, Action<HunkResult> onHunkConsumed,
-            CancellationToken cancellationToken)
+        public CompressionPipeline(
+            HunkProcessor owner,
+            int taskCount,
+            uint hunkCount,
+            Func<uint, byte[], int> readHunk,
+            Sha1 rawSha1,
+            Action<HunkResult> onHunkConsumed,
+            CancellationToken cancellationToken
+        )
         {
             _owner = owner;
             _taskCount = taskCount;
@@ -247,7 +272,8 @@ internal class HunkProcessor
             _toCompress = new BlockingCollection<int>(taskCount * 8);
             _toWrite = new BlockingCollection<int>(taskCount * 8);
             _items = new HunkItem[hunkCount];
-            for (var i = 0; i < hunkCount; i++) _items[i] = new HunkItem();
+            for (var i = 0; i < hunkCount; i++)
+                _items[i] = new HunkItem();
 
             _ts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _tasks = new List<Task>(taskCount + 1);
@@ -272,16 +298,26 @@ internal class HunkProcessor
 
         public void Run()
         {
-            _tasks.Add(Task.Factory.StartNew(
-                () => ProducerLoop(),
-                CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default));
+            _tasks.Add(
+                Task.Factory.StartNew(
+                    () => ProducerLoop(),
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default
+                )
+            );
 
             for (var t = 0; t < _taskCount; t++)
             {
                 var workerIndex = t;
-                _tasks.Add(Task.Factory.StartNew(
-                    () => WorkerLoop(workerIndex),
-                    CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default));
+                _tasks.Add(
+                    Task.Factory.StartNew(
+                        () => WorkerLoop(workerIndex),
+                        CancellationToken.None,
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default
+                    )
+                );
             }
 
             try
@@ -296,8 +332,16 @@ internal class HunkProcessor
                     while (next < _hunkCount && _items[next].Done)
                     {
                         var item = _items[next];
-                        _onHunkConsumed(new HunkResult(
-                            (uint)next, item.Compression, item.CompLength, item.Crc16, item.Sha1, item.Data));
+                        _onHunkConsumed(
+                            new HunkResult(
+                                (uint)next,
+                                item.Compression,
+                                item.CompLength,
+                                item.Crc16,
+                                item.Sha1,
+                                item.Data
+                            )
+                        );
                         _owner.Reclaim(item);
                         next++;
                     }
@@ -337,9 +381,7 @@ internal class HunkProcessor
                 for (var i = 0; i < _taskCount; i++)
                     _toCompress.Add(-1, _ts.Token);
             }
-            catch (OperationCanceledException)
-            {
-            }
+            catch (OperationCanceledException) { }
             catch (Exception ex)
             {
                 RecordError(ex);
@@ -402,9 +444,7 @@ internal class HunkProcessor
                     _toWrite.Add(h, _ts.Token);
                 }
             }
-            catch (OperationCanceledException)
-            {
-            }
+            catch (OperationCanceledException) { }
             catch (Exception ex)
             {
                 RecordError(ex);
@@ -478,7 +518,9 @@ internal class HunkProcessor
         public void Return(byte[] buffer)
         {
             if (buffer.Length != _arraySize)
-                throw new ArgumentException($"Pooled buffer size mismatch: expected {_arraySize}, got {buffer.Length}");
+                throw new ArgumentException(
+                    $"Pooled buffer size mismatch: expected {_arraySize}, got {buffer.Length}"
+                );
 
             lock (_lock)
             {

@@ -17,7 +17,10 @@ public class LaserDiscEncodeTests : IDisposable
     public LaserDiscEncodeTests()
     {
         // unique per test class instance: the test host runs per-TFM in parallel
-        _testDataDir = Path.Combine(Path.GetTempPath(), "createld_tests_" + Guid.NewGuid().ToString("N"));
+        _testDataDir = Path.Combine(
+            Path.GetTempPath(),
+            "createld_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_testDataDir);
     }
 
@@ -36,17 +39,17 @@ public class LaserDiscEncodeTests : IDisposable
     /// <summary>Small progressive clip: 64x64 @ 25 fps, stereo 48 kHz PCM16.</summary>
     private string WriteSmallAvi()
     {
-        return AviTestWriter.WriteAvi(
-            Path.Combine(_testDataDir, "small.avi"), 64, 64, 10,
-            25, 1, 48000, 2).Path;
+        return AviTestWriter
+            .WriteAvi(Path.Combine(_testDataDir, "small.avi"), 64, 64, 10, 25, 1, 48000, 2)
+            .Path;
     }
 
     /// <summary>Laserdisc-like clip: 320x524 @ 29.97 fps → interlaced, field height 262, VBI captured.</summary>
     private string WriteLdAvi()
     {
-        return AviTestWriter.WriteAvi(
-            Path.Combine(_testDataDir, "ld.avi"), 320, 524, 12,
-            30000, 1001, 48000, 2).Path;
+        return AviTestWriter
+            .WriteAvi(Path.Combine(_testDataDir, "ld.avi"), 320, 524, 12, 30000, 1001, 48000, 2)
+            .Path;
     }
 
     [Fact]
@@ -77,8 +80,14 @@ public class LaserDiscEncodeTests : IDisposable
         {
             var buffer = new byte[chd.HunkBytes];
             Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(hunk, buffer));
-            var expected =
-                BuildExpectedRawFrame(hunk, aviPath, 2, 48000, info.FpsTimes1Million, info.MaxSamplesPerFrame);
+            var expected = BuildExpectedRawFrame(
+                hunk,
+                aviPath,
+                2,
+                48000,
+                info.FpsTimes1Million,
+                info.MaxSamplesPerFrame
+            );
             Assert.Equal(expected, buffer);
         }
     }
@@ -94,11 +103,17 @@ public class LaserDiscEncodeTests : IDisposable
         using var chd = OpenChd(chdPath);
         var avav = chd.Metadata.Single(m => string.Equals(m.Tag, "AVAV", StringComparison.Ordinal));
         Assert.Equal(MetadataWriter.ChdMdflagsChecksum, avav.Flags);
-        Assert.Contains("FPS:25.000000 WIDTH:64 HEIGHT:64 INTERLACED:0 CHANNELS:2 SAMPLERATE:48000", avav.GetText(),
-            StringComparison.Ordinal);
+        Assert.Contains(
+            "FPS:25.000000 WIDTH:64 HEIGHT:64 INTERLACED:0 CHANNELS:2 SAMPLERATE:48000",
+            avav.GetText(),
+            StringComparison.Ordinal
+        );
 
         // field height is 64, not 262/312: no VBI metadata
-        Assert.DoesNotContain(chd.Metadata, m => string.Equals(m.Tag, "AVLD", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            chd.Metadata,
+            m => string.Equals(m.Tag, "AVLD", StringComparison.Ordinal)
+        );
     }
 
     [Fact]
@@ -116,7 +131,11 @@ public class LaserDiscEncodeTests : IDisposable
 
         using var chd = OpenChd(chdPath);
         var avav = chd.Metadata.Single(m => string.Equals(m.Tag, "AVAV", StringComparison.Ordinal));
-        Assert.Contains("FPS:59.940058 WIDTH:320 HEIGHT:262 INTERLACED:1", avav.GetText(), StringComparison.Ordinal);
+        Assert.Contains(
+            "FPS:59.940058 WIDTH:320 HEIGHT:262 INTERLACED:1",
+            avav.GetText(),
+            StringComparison.Ordinal
+        );
 
         // AVLD carries one packed 16-byte VBI record per field
         var avld = chd.Metadata.Single(m => string.Equals(m.Tag, "AVLD", StringComparison.Ordinal));
@@ -133,7 +152,12 @@ public class LaserDiscEncodeTests : IDisposable
         var aviPath = WriteSmallAvi();
         var chdPath = Path.Combine(_testDataDir, "range.chd");
 
-        var info = ChdEncoder.EncodeLaserDisc(aviPath, chdPath, inputStartFrame: 3, inputLengthFrames: 4);
+        var info = ChdEncoder.EncodeLaserDisc(
+            aviPath,
+            chdPath,
+            inputStartFrame: 3,
+            inputLengthFrames: 4
+        );
 
         Assert.Equal(3ul, info.FirstFrame);
         Assert.Equal(4ul, info.Frames);
@@ -144,8 +168,14 @@ public class LaserDiscEncodeTests : IDisposable
         {
             var buffer = new byte[chd.HunkBytes];
             Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(i, buffer));
-            var expected =
-                BuildExpectedRawFrame(i + 3, aviPath, 2, 48000, info.FpsTimes1Million, info.MaxSamplesPerFrame);
+            var expected = BuildExpectedRawFrame(
+                i + 3,
+                aviPath,
+                2,
+                48000,
+                info.FpsTimes1Million,
+                info.MaxSamplesPerFrame
+            );
             Assert.Equal(expected, buffer);
         }
     }
@@ -158,29 +188,33 @@ public class LaserDiscEncodeTests : IDisposable
 
         // uncompressed is rejected (chdman: "Uncompressed is not supported")
         Assert.Throws<ArgumentException>(() =>
-            ChdEncoder.EncodeLaserDisc(aviPath, chdPath, codecTags: [CodecTags.None]));
+            ChdEncoder.EncodeLaserDisc(aviPath, chdPath, codecTags: [CodecTags.None])
+        );
 
         // start beyond the end
         Assert.Throws<InvalidDataException>(() =>
-            ChdEncoder.EncodeLaserDisc(aviPath, chdPath, inputStartFrame: 10));
+            ChdEncoder.EncodeLaserDisc(aviPath, chdPath, inputStartFrame: 10)
+        );
 
         // length beyond the end
         Assert.Throws<InvalidDataException>(() =>
-            ChdEncoder.EncodeLaserDisc(aviPath, chdPath, inputStartFrame: 5, inputLengthFrames: 10));
+            ChdEncoder.EncodeLaserDisc(aviPath, chdPath, inputStartFrame: 5, inputLengthFrames: 10)
+        );
 
         // hunk size that is not a multiple of the frame size
-        Assert.Throws<ArgumentException>(() =>
-            ChdEncoder.EncodeLaserDisc(aviPath, chdPath, 1234));
+        Assert.Throws<ArgumentException>(() => ChdEncoder.EncodeLaserDisc(aviPath, chdPath, 1234));
     }
 
     [Fact]
     public void UyvySource_IsConvertedToYuy2ByteOrder()
     {
         // same content generator, different storage order; decoded video bytes must match
-        var yuy2Path = AviTestWriter.WriteAvi(Path.Combine(_testDataDir, "yuy2.avi"), 32, 32, 4,
-            30, 1, 48000, 2, "YUY2").Path;
-        var uyvyPath = AviTestWriter.WriteAvi(Path.Combine(_testDataDir, "uyvy.avi"), 32, 32, 4,
-            30, 1, 48000, 2, "UYVY").Path;
+        var yuy2Path = AviTestWriter
+            .WriteAvi(Path.Combine(_testDataDir, "yuy2.avi"), 32, 32, 4, 30, 1, 48000, 2, "YUY2")
+            .Path;
+        var uyvyPath = AviTestWriter
+            .WriteAvi(Path.Combine(_testDataDir, "uyvy.avi"), 32, 32, 4, 30, 1, 48000, 2, "UYVY")
+            .Path;
 
         var yuy2Chd = Path.Combine(_testDataDir, "yuy2.chd");
         var uyvyChd = Path.Combine(_testDataDir, "uyvy.chd");
@@ -209,7 +243,11 @@ public class LaserDiscEncodeTests : IDisposable
         var frameBytes = probe.BytesPerFrame;
 
         // two frames per hunk
-        var info = ChdEncoder.EncodeLaserDisc(aviPath, Path.Combine(_testDataDir, "multi.chd"), frameBytes * 2);
+        var info = ChdEncoder.EncodeLaserDisc(
+            aviPath,
+            Path.Combine(_testDataDir, "multi.chd"),
+            frameBytes * 2
+        );
         Assert.Equal(frameBytes * 2, info.HunkBytes);
         Assert.Equal(10ul, info.Frames);
 
@@ -221,9 +259,18 @@ public class LaserDiscEncodeTests : IDisposable
             Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(hunk, buffer));
             for (var slot = 0; slot < 2; slot++)
             {
-                var expected = BuildExpectedRawFrame((uint)(hunk * 2 + slot), aviPath, 2, 48000,
-                    info.FpsTimes1Million, info.MaxSamplesPerFrame);
-                Assert.Equal(expected, buffer.AsSpan(slot * (int)frameBytes, (int)frameBytes).ToArray());
+                var expected = BuildExpectedRawFrame(
+                    (uint)(hunk * 2 + slot),
+                    aviPath,
+                    2,
+                    48000,
+                    info.FpsTimes1Million,
+                    info.MaxSamplesPerFrame
+                );
+                Assert.Equal(
+                    expected,
+                    buffer.AsSpan(slot * (int)frameBytes, (int)frameBytes).ToArray()
+                );
             }
         }
     }
@@ -240,7 +287,14 @@ public class LaserDiscEncodeTests : IDisposable
             var name = Path.GetFileNameWithoutExtension(aviPath);
 
             var refPath = Path.Combine(_testDataDir, name + "_ref.chd");
-            var (exit, stdout, stderr) = ChdmanHelper.RunChdman("createld", "-i", aviPath, "-o", refPath, "-f");
+            var (exit, stdout, stderr) = ChdmanHelper.RunChdman(
+                "createld",
+                "-i",
+                aviPath,
+                "-o",
+                refPath,
+                "-f"
+            );
             Assert.True(exit == 0, $"chdman createld failed (exit={exit})\n{stdout}{stderr}");
 
             var ourPath = Path.Combine(_testDataDir, name + "_ours.chd");
@@ -250,16 +304,21 @@ public class LaserDiscEncodeTests : IDisposable
             var ours = File.ReadAllBytes(ourPath);
             if (!reference.SequenceEqual(ours))
             {
-                var diff = reference.Length != ours.Length
-                    ? -1
-                    : reference.Select((b, i) => (b, i)).First(t => t.b != ours[t.i]).i;
+                var diff =
+                    reference.Length != ours.Length
+                        ? -1
+                        : reference.Select((b, i) => (b, i)).First(t => t.b != ours[t.i]).i;
                 Assert.Fail(
-                    $"{name}: output differs from chdman (lengths {reference.Length} vs {ours.Length}, first diff at {diff})");
+                    $"{name}: output differs from chdman (lengths {reference.Length} vs {ours.Length}, first diff at {diff})"
+                );
             }
 
             // and chdman verifies our file too
             var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", ourPath);
-            Assert.True(verifyExit == 0, $"chdman verify failed on our file (exit={verifyExit})\n{vOut}{vErr}");
+            Assert.True(
+                verifyExit == 0,
+                $"chdman verify failed on our file (exit={verifyExit})\n{vOut}{vErr}"
+            );
         }
     }
 
@@ -275,15 +334,27 @@ public class LaserDiscEncodeTests : IDisposable
     ///     Independently reassembles the expected raw 'chav' frame for one image frame
     ///     (mirrors <see cref="ChdEncoder.EncodeLaserDisc" />'s producer math from the AVI's own timing).
     /// </summary>
-    private static byte[] BuildExpectedRawFrame(ulong frameInImage, string aviPath, uint channels, uint rate,
-        ulong fpsTimes1Million, uint maxSamplesPerFrame)
+    private static byte[] BuildExpectedRawFrame(
+        ulong frameInImage,
+        string aviPath,
+        uint channels,
+        uint rate,
+        ulong fpsTimes1Million,
+        uint maxSamplesPerFrame
+    )
     {
         using var avi = AviReader.Open(aviPath);
         var fullFrame = new byte[avi.Info.Width * avi.Info.Height * 2];
         avi.ReadVideoFrame((uint)frameInImage, fullFrame);
 
-        var firstSample = rate > 0 ? (rate * frameInImage * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million : 0;
-        var endSample = rate > 0 ? (rate * (frameInImage + 1) * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million : 0;
+        var firstSample =
+            rate > 0
+                ? (rate * frameInImage * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million
+                : 0;
+        var endSample =
+            rate > 0
+                ? (rate * (frameInImage + 1) * 1000000 + fpsTimes1Million - 1) / fpsTimes1Million
+                : 0;
         var samples = (int)Math.Min(endSample - firstSample, maxSamplesPerFrame);
 
         var planes = new short[channels][];
@@ -292,7 +363,12 @@ public class LaserDiscEncodeTests : IDisposable
             planes[ch] = new short[samples];
             try
             {
-                avi.ReadSoundSamples(ch, (uint)Math.Min(firstSample, uint.MaxValue), (uint)samples, planes[ch]);
+                avi.ReadSoundSamples(
+                    ch,
+                    (uint)Math.Min(firstSample, uint.MaxValue),
+                    (uint)samples,
+                    planes[ch]
+                );
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -300,9 +376,23 @@ public class LaserDiscEncodeTests : IDisposable
             }
         }
 
-        var result = new byte[AvHuffEncoder.RawDataSize((uint)avi.Info.Width, (uint)avi.Info.Height, channels,
-            maxSamplesPerFrame)];
-        AvHuffEncoder.AssembleData(result, fullFrame, avi.Info.Width, avi.Info.Height, (int)channels, samples, planes);
+        var result = new byte[
+            AvHuffEncoder.RawDataSize(
+                (uint)avi.Info.Width,
+                (uint)avi.Info.Height,
+                channels,
+                maxSamplesPerFrame
+            )
+        ];
+        AvHuffEncoder.AssembleData(
+            result,
+            fullFrame,
+            avi.Info.Width,
+            avi.Info.Height,
+            (int)channels,
+            samples,
+            planes
+        );
         return result;
     }
 
@@ -392,7 +482,9 @@ public class LaserDiscEncodeTests : IDisposable
         ChdEncoder.EncodeRaw(rawPath, chdPath);
 
         var extractedPath = Path.Combine(_testDataDir, "raw_extracted.avi");
-        Assert.Throws<InvalidDataException>(() => ChdEncoder.ExtractLaserDisc(chdPath, extractedPath));
+        Assert.Throws<InvalidDataException>(() =>
+            ChdEncoder.ExtractLaserDisc(chdPath, extractedPath)
+        );
     }
 
     [Fact]
@@ -423,8 +515,17 @@ public class LaserDiscEncodeTests : IDisposable
 /// </summary>
 internal static class AviTestWriter
 {
-    public static (string Path, int Frames, int Width, int Height) WriteAvi(string path, int width, int height,
-        int frames, uint timescale, uint sampletime, uint audioRate, uint audioChannels, string format = "YUY2")
+    public static (string Path, int Frames, int Width, int Height) WriteAvi(
+        string path,
+        int width,
+        int height,
+        int frames,
+        uint timescale,
+        uint sampletime,
+        uint audioRate,
+        uint audioChannels,
+        string format = "YUY2"
+    )
     {
         var formatFourcc = FourCc(format);
         var frameBytes = width * height * 2;
@@ -478,7 +579,10 @@ internal static class AviTestWriter
             for (uint ch = 0; ch < audioChannels; ch++)
             {
                 var sample = (short)(Math.Sin((totalSamples + (ulong)i) * 0.037 + ch) * 9000);
-                BinaryPrimitives.WriteInt16LittleEndian(chunk.AsSpan((int)((i * audioChannels + ch) * 2)), sample);
+                BinaryPrimitives.WriteInt16LittleEndian(
+                    chunk.AsSpan((int)((i * audioChannels + ch) * 2)),
+                    sample
+                );
             }
 
             totalSamples += (ulong)count;
@@ -544,9 +648,13 @@ internal static class AviTestWriter
         var indexEntries = new List<(uint Id, long Offset, uint Size)>();
         for (var f = 0; f < frames; f++)
         {
-            indexEntries.Add((FourCc("00dc"), ms.Position - (moviSizePos + 4), (uint)videoFrames[f].Length));
+            indexEntries.Add(
+                (FourCc("00dc"), ms.Position - (moviSizePos + 4), (uint)videoFrames[f].Length)
+            );
             WriteChunk(ms, "00dc", videoFrames[f]);
-            indexEntries.Add((FourCc("01wb"), ms.Position - (moviSizePos + 4), (uint)audioChunks[f].Length));
+            indexEntries.Add(
+                (FourCc("01wb"), ms.Position - (moviSizePos + 4), (uint)audioChunks[f].Length)
+            );
             WriteChunk(ms, "01wb", audioChunks[f]);
         }
 

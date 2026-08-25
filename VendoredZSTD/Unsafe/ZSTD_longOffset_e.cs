@@ -3,5 +3,5 @@ namespace VendoredZSTD.Unsafe;
 public enum ZSTD_longOffset_e
 {
     ZSTD_lo_isRegularOffset,
-    ZSTD_lo_isLongOffset = 1
+    ZSTD_lo_isLongOffset = 1,
 }

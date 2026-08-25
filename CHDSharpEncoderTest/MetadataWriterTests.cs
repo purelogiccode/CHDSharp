@@ -5,8 +5,15 @@ namespace CHDSharpEncoderTest;
 
 public class MetadataWriterTests
 {
-    private static CdTrack MakeTrack(int number, int trackType, int frames, int pregap = 0,
-        int pgType = 0, int pgDataSize = 0, int postgap = 0)
+    private static CdTrack MakeTrack(
+        int number,
+        int trackType,
+        int frames,
+        int pregap = 0,
+        int pgType = 0,
+        int pgDataSize = 0,
+        int postgap = 0
+    )
     {
         return new CdTrack
         {
@@ -19,7 +26,7 @@ public class MetadataWriterTests
             PgType = pgType,
             PgDataSize = pgDataSize,
             PgSub = CdSubType.None,
-            Postgap = postgap
+            Postgap = postgap,
         };
     }
 
@@ -30,7 +37,8 @@ public class MetadataWriterTests
         var track = MakeTrack(1, CdTrackType.Mode1Raw, 13500);
         Assert.Equal(
             "TRACK:1 TYPE:MODE1_RAW SUBTYPE:NONE FRAMES:13500 PREGAP:0 PGTYPE:MODE1 PGSUB:NONE POSTGAP:0",
-            MetadataWriter.BuildChd2String(track));
+            MetadataWriter.BuildChd2String(track)
+        );
     }
 
     [Fact]
@@ -39,7 +47,8 @@ public class MetadataWriterTests
         var track = MakeTrack(2, CdTrackType.Audio, 13500, 150, CdTrackType.Audio, 2352);
         Assert.Equal(
             "TRACK:2 TYPE:AUDIO SUBTYPE:NONE FRAMES:13500 PREGAP:150 PGTYPE:VAUDIO PGSUB:NONE POSTGAP:0",
-            MetadataWriter.BuildChd2String(track));
+            MetadataWriter.BuildChd2String(track)
+        );
     }
 
     [Fact]
@@ -48,7 +57,8 @@ public class MetadataWriterTests
         var track = MakeTrack(3, CdTrackType.Audio, 100, 0);
         Assert.Equal(
             "TRACK:3 TYPE:AUDIO SUBTYPE:NONE FRAMES:100 PREGAP:0 PGTYPE:MODE1 PGSUB:NONE POSTGAP:0",
-            MetadataWriter.BuildChd2String(track));
+            MetadataWriter.BuildChd2String(track)
+        );
     }
 
     [Theory]
@@ -82,7 +92,7 @@ public class MetadataWriterTests
             Tag = 0x43485432,
             Flags = 0x01,
             Payload = "TRACK:1\0"u8.ToArray(),
-            NextOffset = 0x1234
+            NextOffset = 0x1234,
         };
 
         var data = entry.Serialize();
@@ -193,8 +203,10 @@ public class MetadataWriterTests
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) | data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 
     private static uint ReadU24Be(byte[] data, int offset)

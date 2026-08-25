@@ -28,7 +28,8 @@ public static class Util
     /// <returns>A lowercase hex string, or "(none)" if the array is null.</returns>
     public static string ToHex(byte[]? a)
     {
-        if (a == null) return "(none)";
+        if (a == null)
+            return "(none)";
 
         return Convert.ToHexString(a).ToLowerInvariant();
     }
@@ -37,7 +38,8 @@ public static class Util
     /// <returns><c>true</c> if both arrays are non-null and contain identical bytes; otherwise <c>false</c>.</returns>
     internal static bool ByteArrEquals(byte[] b0, byte[] b1)
     {
-        if (b0.Length != b1.Length) return false;
+        if (b0.Length != b1.Length)
+            return false;
 
         for (var i = 0; i < b0.Length; i++)
             if (b0[i] != b1[i])
@@ -45,7 +47,6 @@ public static class Util
 
         return true;
     }
-
 
     /// <summary>Lexicographically compares two byte arrays for use in sorting.</summary>
     /// <returns>

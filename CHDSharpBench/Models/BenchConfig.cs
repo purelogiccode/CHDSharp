@@ -36,7 +36,7 @@ public static class CodecMap
         ("cdzl", ChdCodec.Cdzlib, CodecTags.Cdzl),
         ("cdlz", ChdCodec.Cdlzma, CodecTags.Cdlz),
         ("cdfl", ChdCodec.Cdflac, CodecTags.Cdfl),
-        ("cdzs", ChdCodec.Cdzstd, CodecTags.Cdzs)
+        ("cdzs", ChdCodec.Cdzstd, CodecTags.Cdzs),
         // "none" has no decode codec; encode-only, exercised by the Encode group.
     ];
 
@@ -54,7 +54,7 @@ public static class CodecMap
             ChdCodec.Cdflac => "cdfl",
             ChdCodec.Cdzstd => "cdzs",
             ChdCodec.Avhuff => "avhu",
-            _ => codec.ToString()
+            _ => codec.ToString(),
         };
     }
 }

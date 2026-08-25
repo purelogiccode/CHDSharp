@@ -13,7 +13,10 @@ public class NewCodecChdmanValidationTests : IDisposable
 
     public NewCodecChdmanValidationTests()
     {
-        _testDataDir = Path.Combine(Path.GetTempPath(), "new_codec_chdman_tests_" + Guid.NewGuid().ToString("N"));
+        _testDataDir = Path.Combine(
+            Path.GetTempPath(),
+            "new_codec_chdman_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_testDataDir);
     }
 
@@ -32,9 +35,13 @@ public class NewCodecChdmanValidationTests : IDisposable
     [Theory]
     [InlineData("huff", "Huffman")]
     [InlineData("flac", "FLAC")]
-    public void RawCodec_PassesChdmanVerify_AndExtractsByteIdentically(string codecName, string chdmanCodecName)
+    public void RawCodec_PassesChdmanVerify_AndExtractsByteIdentically(
+        string codecName,
+        string chdmanCodecName
+    )
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         // 16-bit stereo sample data: FLAC-compressible, and huff handles the raw bytes
         var source = new byte[4096 * 32];
@@ -61,7 +68,14 @@ public class NewCodecChdmanValidationTests : IDisposable
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         var extractPath = Path.Combine(_testDataDir, $"{codecName}_extracted.raw");
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            chdPath,
+            "-o",
+            extractPath,
+            "-f"
+        );
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         Assert.Equal(source, File.ReadAllBytes(extractPath));
@@ -71,18 +85,22 @@ public class NewCodecChdmanValidationTests : IDisposable
     [InlineData("cdzl", "CD Deflate")]
     [InlineData("cdlz", "CD LZMA")]
     [InlineData("cdzs", "CD Zstandard")]
-    public void CdCodec_PassesChdmanVerify_AndExtractsByteIdentically(string codecName, string chdmanCodecName)
+    public void CdCodec_PassesChdmanVerify_AndExtractsByteIdentically(
+        string codecName,
+        string chdmanCodecName
+    )
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         const string cue = """
-                           FILE "game.bin" BINARY
-                             TRACK 01 MODE1/2352
-                               INDEX 01 00:00:00
-                             TRACK 02 AUDIO
-                               INDEX 00 00:00:20
-                               INDEX 01 00:00:22
-                           """;
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:00:20
+                INDEX 01 00:00:22
+            """;
         var cuePath = Path.Combine(_testDataDir, "test.cue");
         File.WriteAllText(cuePath, cue);
 
@@ -90,7 +108,8 @@ public class NewCodecChdmanValidationTests : IDisposable
         for (var f = 0; f < 20; f++)
         {
             var offset = f * CdConstants.MaxSectorData;
-            for (var i = 0; i < CdConstants.MaxSectorData; i++) bin[offset + i] = (byte)(i & 0xFF);
+            for (var i = 0; i < CdConstants.MaxSectorData; i++)
+                bin[offset + i] = (byte)(i & 0xFF);
         }
 
         for (var f = 20; f < 40; f++)
@@ -109,8 +128,13 @@ public class NewCodecChdmanValidationTests : IDisposable
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), bin);
 
         var chdPath = Path.Combine(_testDataDir, $"{codecName}.chd");
-        ChdEncoder.EncodeCd(cuePath, chdPath, CdConstants.FramesPerHunk * CdConstants.FrameSize,
-            CdConstants.FrameSize, [CodecTags.FromName(codecName)]);
+        ChdEncoder.EncodeCd(
+            cuePath,
+            chdPath,
+            CdConstants.FramesPerHunk * CdConstants.FrameSize,
+            CdConstants.FrameSize,
+            [CodecTags.FromName(codecName)]
+        );
 
         var (infoExit, infoOut, infoErr) = ChdmanHelper.RunChdman("info", "-i", chdPath);
         var info = infoOut + infoErr;
@@ -121,7 +145,14 @@ public class NewCodecChdmanValidationTests : IDisposable
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         var extractPath = Path.Combine(_testDataDir, $"{codecName}_extracted.raw");
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            chdPath,
+            "-o",
+            extractPath,
+            "-f"
+        );
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         // expected logical image: 20 data frames + 20 audio frames (byte-swapped) + zero padding
@@ -132,13 +163,25 @@ public class NewCodecChdmanValidationTests : IDisposable
         Assert.Equal(expected, File.ReadAllBytes(extractPath));
     }
 
-    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
-        bool swap)
+    private static void PlaceBinFrames(
+        byte[] image,
+        int chdFrameStart,
+        byte[] bin,
+        int binFrameCount,
+        int binOffset,
+        bool swap
+    )
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
-            Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
+            Array.Copy(
+                bin,
+                binOffset + f * CdConstants.MaxSectorData,
+                image,
+                dest,
+                CdConstants.MaxSectorData
+            );
             if (swap)
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);

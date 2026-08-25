@@ -80,7 +80,13 @@ public class ChdCodecTests : IDisposable
         var chdPath = Path.Combine(_dir, "multi.chd");
 
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, [CodecTags.Zlib, CodecTags.Zstd, CodecTags.Lzma]);
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            4096,
+            512,
+            [CodecTags.Zlib, CodecTags.Zstd, CodecTags.Lzma]
+        );
 
         var chd = File.ReadAllBytes(chdPath);
         Assert.Equal(CodecTags.Zlib, ReadU32Be(chd, 16));
@@ -102,7 +108,8 @@ public class ChdCodecTests : IDisposable
     {
         var codec = new LzmaCodec(4096);
         var data = new byte[4096];
-        for (var i = 0; i < data.Length; i++) data[i] = (byte)(i & 0xFF); // repeating pattern 0..255
+        for (var i = 0; i < data.Length; i++)
+            data[i] = (byte)(i & 0xFF); // repeating pattern 0..255
 
         var compressed = codec.Compress(data);
         Assert.NotNull(compressed);
@@ -127,7 +134,8 @@ public class ChdCodecTests : IDisposable
     {
         // deflate wins on repetitive text; both zlib and zstd compress it
         var data = new byte[4096];
-        for (var i = 0; i < data.Length; i++) data[i] = (byte)(i % 37 == 0 ? 0xFF : 0);
+        for (var i = 0; i < data.Length; i++)
+            data[i] = (byte)(i % 37 == 0 ? 0xFF : 0);
 
         var processor = new HunkProcessor(4096, [new ZlibCodec(), new ZstdCodec()]);
         var (entry, _) = processor.ProcessHunk(data, 124);
@@ -192,8 +200,11 @@ public class ChdCodecTests : IDisposable
     public void CreateAll_TooManyCodecs_Throws()
     {
         Assert.Throws<ArgumentException>(() =>
-            ChdCodecs.CreateAll([CodecTags.Zlib, CodecTags.Zstd, CodecTags.Lzma, CodecTags.Cdfl, CodecTags.Zlib],
-                19584));
+            ChdCodecs.CreateAll(
+                [CodecTags.Zlib, CodecTags.Zstd, CodecTags.Lzma, CodecTags.Cdfl, CodecTags.Zlib],
+                19584
+            )
+        );
     }
 
     [Fact]
@@ -207,13 +218,17 @@ public class ChdCodecTests : IDisposable
     [Fact]
     public void CreateAll_NoneCombinedWithOthers_Throws()
     {
-        Assert.Throws<ArgumentException>(() => ChdCodecs.CreateAll([CodecTags.Zlib, CodecTags.None], 4096));
+        Assert.Throws<ArgumentException>(() =>
+            ChdCodecs.CreateAll([CodecTags.Zlib, CodecTags.None], 4096)
+        );
     }
 
     [Fact]
     public void CreateAll_CdflOnNonCdHunks_Throws()
     {
-        var ex = Assert.Throws<ArgumentException>(() => ChdCodecs.CreateAll([CodecTags.Cdfl], 4096));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChdCodecs.CreateAll([CodecTags.Cdfl], 4096)
+        );
         Assert.Contains("cdfl", ex.Message, StringComparison.Ordinal);
         Assert.Contains("CD-sized", ex.Message, StringComparison.Ordinal);
     }
@@ -239,7 +254,8 @@ public class ChdCodecTests : IDisposable
     {
         using var ms = new MemoryStream(new byte[4096]);
         Assert.Throws<ArgumentException>(() =>
-            ChdEncoder.EncodeRaw(ms, Path.Combine(_dir, "unknown.chd"), 4096, 512, [0x12345678]));
+            ChdEncoder.EncodeRaw(ms, Path.Combine(_dir, "unknown.chd"), 4096, 512, [0x12345678])
+        );
     }
 
     [Fact]
@@ -343,9 +359,11 @@ public class ChdCodecTests : IDisposable
         for (var h = 0; h < hunkCount; h++)
         {
             // mostly zeros (highly compressible) with a per-hunk marker
-            for (var i = 0; i < 4064; i++) source[h * 4096 + i] = 0;
+            for (var i = 0; i < 4064; i++)
+                source[h * 4096 + i] = 0;
 
-            for (var i = 4064; i < 4096; i++) source[h * 4096 + i] = (byte)(h + i);
+            for (var i = 4064; i < 4096; i++)
+                source[h * 4096 + i] = (byte)(h + i);
         }
 
         return source;
@@ -353,8 +371,10 @@ public class ChdCodecTests : IDisposable
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) | data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 
     /// <summary>A codec that never compresses (used to test fallback).</summary>

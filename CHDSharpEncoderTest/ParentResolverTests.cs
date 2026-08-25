@@ -48,7 +48,14 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         // Open the child with a resolver.
@@ -104,7 +111,14 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         var resolverCallCount = 0;
@@ -117,7 +131,8 @@ public class ParentResolverTests : IDisposable
         {
             // Read multiple parent hunks (0..19 are parent-referenced).
             var buffer = new byte[chd.HunkBytes];
-            for (uint i = 0; i < 10; i++) chd.ReadHunk(i, buffer);
+            for (uint i = 0; i < 10; i++)
+                chd.ReadHunk(i, buffer);
 
             Assert.True(resolverCallCount == 1, "Resolver should be called only once (cached)");
         }
@@ -148,7 +163,14 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         var err = ChdFile.Open(childPath, (ParentResolver)Resolver, out var chd);
@@ -198,7 +220,14 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         var err = ChdFile.Open(childPath, (ParentResolver)Resolver, out var chd);
@@ -237,7 +266,14 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         var err = ChdFile.Open(childPath, (ParentResolver?)null, out var chd);
@@ -266,7 +302,14 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         var result = Chd.CheckFileWithParent(childPath, (ParentResolver)Resolver);
@@ -301,7 +344,14 @@ public class ParentResolverTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         byte[]? capturedSha1 = null;

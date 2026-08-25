@@ -36,9 +36,7 @@ internal class LzmaStream : Stream
     /// <param name="properties">LZMA properties header (5 bytes).</param>
     /// <param name="inputStream">The compressed source stream.</param>
     public LzmaStream(byte[] properties, Stream inputStream)
-        : this(properties, inputStream, -1, -1, null, properties.Length < 5)
-    {
-    }
+        : this(properties, inputStream, -1, -1, null, properties.Length < 5) { }
 
     /// <summary>
     ///     Initializes a new LZMA decompression stream with a known input size.
@@ -47,9 +45,7 @@ internal class LzmaStream : Stream
     /// <param name="inputStream">The compressed source stream.</param>
     /// <param name="inputSize">Exact size in bytes of the compressed data, or -1 if unknown.</param>
     public LzmaStream(byte[] properties, Stream inputStream, long inputSize)
-        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5)
-    {
-    }
+        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5) { }
 
     /// <summary>
     ///     Initializes a new LZMA decompression stream with known input and output sizes.
@@ -59,9 +55,7 @@ internal class LzmaStream : Stream
     /// <param name="inputSize">Exact size in bytes of the compressed data, or -1 if unknown.</param>
     /// <param name="outputSize">Exact size in bytes of the decompressed data, or -1 if unknown.</param>
     public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize)
-        : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5)
-    {
-    }
+        : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5) { }
 
     /// <summary>
     ///     Initializes a new LZMA or LZMA2 decompression stream with full configuration.
@@ -73,8 +67,15 @@ internal class LzmaStream : Stream
     /// <param name="presetDictionary">Optional preset dictionary stream for training the decoder, or <c>null</c>.</param>
     /// <param name="isLzma2"><c>true</c> to use LZMA2 format; <c>false</c> for LZMA.</param>
     /// <param name="outWindowBuff">Optional pre-allocated buffer for the output window, or <c>null</c>.</param>
-    public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize,
-        Stream? presetDictionary, bool isLzma2, byte[]? outWindowBuff = null)
+    public LzmaStream(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        Stream? presetDictionary,
+        bool isLzma2,
+        byte[]? outWindowBuff = null
+    )
     {
         _inputStream = inputStream;
         _inputSize = inputSize;
@@ -153,9 +154,7 @@ internal class LzmaStream : Stream
     /// <summary>
     ///     Does nothing. The stream has no buffers to flush.
     /// </summary>
-    public override void Flush()
-    {
-    }
+    public override void Flush() { }
 
     /// <summary>
     ///     Reads a sequence of decompressed bytes from the stream and advances the position.
@@ -185,13 +184,13 @@ internal class LzmaStream : Stream
             }
 
             var toProcess = count - total;
-            if (toProcess > _availableBytes) toProcess = (int)_availableBytes;
+            if (toProcess > _availableBytes)
+                toProcess = (int)_availableBytes;
 
             _outWindow.SetLimit(toProcess);
             if (_uncompressedChunk)
                 _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
-            else if (_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder)
-                     && _outputSize < 0)
+            else if (_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
                 _availableBytes = _outWindow.AvailableBytes;
 
             var read = _outWindow.Read(buffer, offset, toProcess);
@@ -203,7 +202,10 @@ internal class LzmaStream : Stream
             if (_availableBytes == 0 && !_uncompressedChunk)
             {
                 _rangeDecoder.ReleaseStream();
-                if (!_rangeDecoder.IsFinished || (_rangeDecoderLimit >= 0 && _rangeDecoder.Total != _rangeDecoderLimit))
+                if (
+                    !_rangeDecoder.IsFinished
+                    || (_rangeDecoderLimit >= 0 && _rangeDecoder.Total != _rangeDecoderLimit)
+                )
                     throw new DataErrorException();
 
                 _inputPosition += _rangeDecoder.Total;
@@ -213,7 +215,10 @@ internal class LzmaStream : Stream
         }
 
         if (_endReached)
-            if ((_inputSize >= 0 && _inputPosition != _inputSize) || (_outputSize >= 0 && _position != _outputSize))
+            if (
+                (_inputSize >= 0 && _inputPosition != _inputSize)
+                || (_outputSize >= 0 && _position != _outputSize)
+            )
                 throw new DataErrorException();
 
         return total;
@@ -236,7 +241,8 @@ internal class LzmaStream : Stream
                 break;
             default:
             {
-                if (_needDictReset) throw new DataErrorException();
+                if (_needDictReset)
+                    throw new DataErrorException();
 
                 break;
             }

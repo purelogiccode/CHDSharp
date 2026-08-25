@@ -41,9 +41,7 @@ public static unsafe partial class Methods
     {
         if (ZSTD_compressedLiterals(optPtr) != 0)
             optPtr->litSumBasePrice =
-                optLevel != 0
-                    ? ZSTD_fracWeight(optPtr->litSum)
-                    : ZSTD_bitWeight(optPtr->litSum);
+                optLevel != 0 ? ZSTD_fracWeight(optPtr->litSum) : ZSTD_bitWeight(optPtr->litSum);
         optPtr->litLengthSumBasePrice =
             optLevel != 0
                 ? ZSTD_fracWeight(optPtr->litLengthSum)
@@ -62,7 +60,8 @@ public static unsafe partial class Methods
     {
         nuint n;
         uint total = 0;
-        for (n = 0; n < nbElts; n++) total += table[n];
+        for (n = 0; n < nbElts; n++)
+            total += table[n];
 
         return total;
     }
@@ -149,56 +148,56 @@ public static unsafe partial class Methods
             1,
             1,
             1,
-            1
+            1,
         };
 
     private static uint* baseLLfreqs =>
         (uint*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_baseLLfreqs)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_baseLLfreqs)
+            );
 #else
-        private static readonly uint* baseLLfreqs = GetArrayPointer(
-            new uint[36]
-            {
-                4,
-                2,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-            }
-        );
+    private static readonly uint* baseLLfreqs = GetArrayPointer(
+        new uint[36]
+        {
+            4,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+        }
+    );
 #endif
 #if NET8_0_OR_GREATER
     private static ReadOnlySpan<uint> Span_baseOFCfreqs =>
@@ -235,52 +234,52 @@ public static unsafe partial class Methods
             1,
             1,
             1,
-            1
+            1,
         };
 
     private static uint* baseOFCfreqs =>
         (uint*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_baseOFCfreqs)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_baseOFCfreqs)
+            );
 #else
-        private static readonly uint* baseOFCfreqs = GetArrayPointer(
-            new uint[32]
-            {
-                6,
-                2,
-                1,
-                1,
-                2,
-                3,
-                4,
-                4,
-                4,
-                3,
-                2,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-            }
-        );
+    private static readonly uint* baseOFCfreqs = GetArrayPointer(
+        new uint[32]
+        {
+            6,
+            2,
+            1,
+            1,
+            2,
+            3,
+            4,
+            4,
+            4,
+            3,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+        }
+    );
 #endif
     /* ZSTD_rescaleFreqs() :
      * if first block (detected by optPtr->litLengthSum == 0) : init statistics
@@ -300,7 +299,8 @@ public static unsafe partial class Methods
         optPtr->priceType = ZSTD_OptPrice_e.zop_dynamic;
         if (optPtr->litLengthSum == 0)
         {
-            if (srcSize <= 8) optPtr->priceType = ZSTD_OptPrice_e.zop_predef;
+            if (srcSize <= 8)
+                optPtr->priceType = ZSTD_OptPrice_e.zop_predef;
 
             assert(optPtr->symbolCosts != null);
             if (optPtr->symbolCosts->huf.repeatMode == HUF_repeat.HUF_repeat_valid)
@@ -474,12 +474,12 @@ public static unsafe partial class Methods
         {
             var llCode = ZSTD_LLcode(litLength);
             return (uint)(LL_bits[llCode] * (1 << 8))
-                   + optPtr->litLengthSumBasePrice
-                   - (
-                       optLevel != 0
-                           ? ZSTD_fracWeight(optPtr->litLengthFreq[llCode])
-                           : ZSTD_bitWeight(optPtr->litLengthFreq[llCode])
-                   );
+                + optPtr->litLengthSumBasePrice
+                - (
+                    optLevel != 0
+                        ? ZSTD_fracWeight(optPtr->litLengthFreq[llCode])
+                        : ZSTD_bitWeight(optPtr->litLengthFreq[llCode])
+                );
         }
     }
 
@@ -503,7 +503,7 @@ public static unsafe partial class Methods
         assert(matchLength >= 3);
         if (optPtr->priceType == ZSTD_OptPrice_e.zop_predef)
             return (optLevel != 0 ? ZSTD_fracWeight(mlBase) : ZSTD_bitWeight(mlBase))
-                   + (16 + offCode) * (1 << 8);
+                + (16 + offCode) * (1 << 8);
         price =
             offCode * (1 << 8)
             + (
@@ -697,9 +697,7 @@ public static unsafe partial class Methods
             var nextPtr = bt + 2 * (matchIndex & btMask);
             /* guaranteed minimum nb of common bytes */
             var matchLength =
-                commonLengthSmaller < commonLengthLarger
-                    ? commonLengthSmaller
-                    : commonLengthLarger;
+                commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
             assert(matchIndex < curr);
             if (extDict == 0 || matchIndex + matchLength >= dictLimit)
             {
@@ -728,7 +726,8 @@ public static unsafe partial class Methods
                     matchEndIdx = matchIndex + (uint)matchLength;
             }
 
-            if (ip + matchLength == iend) break;
+            if (ip + matchLength == iend)
+                break;
 
             if (match[matchLength] < ip[matchLength])
             {
@@ -802,13 +801,7 @@ public static unsafe partial class Methods
     /* used in ZSTD_loadDictionaryContent() */
     private static void ZSTD_updateTree(ZSTD_matchState_t* ms, byte* ip, byte* iend)
     {
-        ZSTD_updateTree_internal(
-            ms,
-            ip,
-            iend,
-            ms->cParams.minMatch,
-            ZSTD_dictMode_e.ZSTD_noDict
-        );
+        ZSTD_updateTree_internal(ms, ip, iend, ms->cParams.minMatch, ZSTD_dictMode_e.ZSTD_noDict);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -855,14 +848,10 @@ public static unsafe partial class Methods
         uint dummy32;
         uint mnum = 0;
         var nbCompares = 1U << (int)cParams->searchLog;
-        var dms =
-            dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? ms->dictMatchState : null;
-        var dmsCParams =
-            dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? &dms->cParams : null;
-        var dmsBase =
-            dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? dms->window.@base : null;
-        var dmsEnd =
-            dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? dms->window.nextSrc : null;
+        var dms = dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? ms->dictMatchState : null;
+        var dmsCParams = dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? &dms->cParams : null;
+        var dmsBase = dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? dms->window.@base : null;
+        var dmsEnd = dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? dms->window.nextSrc : null;
         var dmsHighLimit =
             dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? (uint)(dmsEnd - dmsBase) : 0;
         var dmsLowLimit =
@@ -896,7 +885,7 @@ public static unsafe partial class Methods
                     if (
                         repIndex >= windowLow
                         && ZSTD_readMINMATCH(ip, minMatch)
-                        == ZSTD_readMINMATCH(ip - repOffset, minMatch)
+                            == ZSTD_readMINMATCH(ip - repOffset, minMatch)
                     )
                         repLen =
                             (uint)ZSTD_count(ip + minMatch, ip + minMatch - repOffset, iLimit)
@@ -913,8 +902,7 @@ public static unsafe partial class Methods
                         dictMode == ZSTD_dictMode_e.ZSTD_extDict
                         && repOffset - 1 < curr - windowLow
                         && dictLimit - 1 - repIndex >= 3
-                        && ZSTD_readMINMATCH(ip, minMatch)
-                        == ZSTD_readMINMATCH(repMatch, minMatch)
+                        && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch)
                     )
                         repLen =
                             (uint)ZSTD_count_2segments(
@@ -929,8 +917,7 @@ public static unsafe partial class Methods
                         dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState
                         && repOffset - 1 < curr - (dmsLowLimit + dmsIndexDelta)
                         && dictLimit - 1 - repIndex >= 3
-                        && ZSTD_readMINMATCH(ip, minMatch)
-                        == ZSTD_readMINMATCH(repMatch, minMatch)
+                        && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch)
                     )
                         repLen =
                             (uint)ZSTD_count_2segments(
@@ -950,7 +937,8 @@ public static unsafe partial class Methods
                     matches[mnum].off = repCode - ll0 + 1;
                     matches[mnum].len = repLen;
                     mnum++;
-                    if (repLen > sufficient_len || ip + repLen == iLimit) return mnum;
+                    if (repLen > sufficient_len || ip + repLen == iLimit)
+                        return mnum;
                 }
             }
         }
@@ -1001,9 +989,7 @@ public static unsafe partial class Methods
             byte* match;
             /* guaranteed minimum nb of common bytes */
             var matchLength =
-                commonLengthSmaller < commonLengthLarger
-                    ? commonLengthSmaller
-                    : commonLengthLarger;
+                commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
             assert(curr > matchIndex);
             if (
                 dictMode == ZSTD_dictMode_e.ZSTD_noDict
@@ -1116,10 +1102,12 @@ public static unsafe partial class Methods
                     matches[mnum].off = curr - matchIndex + 3;
                     matches[mnum].len = (uint)matchLength;
                     mnum++;
-                    if (matchLength > 1 << 12 || ip + matchLength == iLimit) break;
+                    if (matchLength > 1 << 12 || ip + matchLength == iLimit)
+                        break;
                 }
 
-                if (dictMatchIndex <= dmsBtLow) break;
+                if (dictMatchIndex <= dmsBtLow)
+                    break;
 
                 if (match[matchLength] < ip[matchLength])
                 {
@@ -1520,7 +1508,7 @@ public static unsafe partial class Methods
                 uint*,
                 uint,
                 uint,
-                uint>)(&ZSTD_btGetAllMatches_noDict_6)
+                uint>)(&ZSTD_btGetAllMatches_noDict_6),
         },
         new void*[4]
         {
@@ -1563,7 +1551,7 @@ public static unsafe partial class Methods
                 uint*,
                 uint,
                 uint,
-                uint>)(&ZSTD_btGetAllMatches_extDict_6)
+                uint>)(&ZSTD_btGetAllMatches_extDict_6),
         },
         new void*[4]
         {
@@ -1606,14 +1594,11 @@ public static unsafe partial class Methods
                 uint*,
                 uint,
                 uint,
-                uint>)(&ZSTD_btGetAllMatches_dictMatchState_6)
-        }
+                uint>)(&ZSTD_btGetAllMatches_dictMatchState_6),
+        },
     };
 
-    private static void* ZSTD_selectBtGetAllMatches(
-        ZSTD_matchState_t* ms,
-        ZSTD_dictMode_e dictMode
-    )
+    private static void* ZSTD_selectBtGetAllMatches(ZSTD_matchState_t* ms, ZSTD_dictMode_e dictMode)
     {
         var mls =
             ms->cParams.minMatch <= 3 ? 3
@@ -1628,10 +1613,7 @@ public static unsafe partial class Methods
      * Moves forward in @rawSeqStore by @nbBytes,
      * which will update the fields 'pos' and 'posInSequence'.
      */
-    private static void ZSTD_optLdm_skipRawSeqStoreBytes(
-        rawSeqStore_t* rawSeqStore,
-        nuint nbBytes
-    )
+    private static void ZSTD_optLdm_skipRawSeqStoreBytes(rawSeqStore_t* rawSeqStore, nuint nbBytes)
     {
         var currPos = (uint)(rawSeqStore->posInSequence + nbBytes);
         while (currPos != 0 && rawSeqStore->pos < rawSeqStore->size)
@@ -1649,7 +1631,8 @@ public static unsafe partial class Methods
             }
         }
 
-        if (currPos == 0 || rawSeqStore->pos == rawSeqStore->size) rawSeqStore->posInSequence = 0;
+        if (currPos == 0 || rawSeqStore->pos == rawSeqStore->size)
+            rawSeqStore->posInSequence = 0;
     }
 
     /* ZSTD_opt_getNextMatchAndUpdateSeqStore():
@@ -1682,8 +1665,7 @@ public static unsafe partial class Methods
                 : 0;
         matchBytesRemaining =
             literalsBytesRemaining == 0
-                ? currSeq.matchLength
-                  - ((uint)optLdm->seqStore.posInSequence - currSeq.litLength)
+                ? currSeq.matchLength - ((uint)optLdm->seqStore.posInSequence - currSeq.litLength)
                 : currSeq.matchLength;
         if (literalsBytesRemaining >= blockBytesRemaining)
         {
@@ -1699,10 +1681,7 @@ public static unsafe partial class Methods
         if (optLdm->endPosInBlock > currBlockEndPos)
         {
             optLdm->endPosInBlock = currBlockEndPos;
-            ZSTD_optLdm_skipRawSeqStoreBytes(
-                &optLdm->seqStore,
-                currBlockEndPos - currPosInBlock
-            );
+            ZSTD_optLdm_skipRawSeqStoreBytes(&optLdm->seqStore, currBlockEndPos - currPosInBlock);
         }
         else
         {
@@ -1759,7 +1738,8 @@ public static unsafe partial class Methods
         uint remainingBytes
     )
     {
-        if (optLdm->seqStore.size == 0 || optLdm->seqStore.pos >= optLdm->seqStore.size) return;
+        if (optLdm->seqStore.size == 0 || optLdm->seqStore.pos >= optLdm->seqStore.size)
+            return;
 
         if (currPosInBlock >= optLdm->endPosInBlock)
         {
@@ -1884,7 +1864,8 @@ public static unsafe partial class Methods
                         (uint)opt[0].price + ZSTD_litLengthPrice(0, optStatePtr, optLevel);
                     uint pos;
                     uint matchNb;
-                    for (pos = 1; pos < minMatch; pos++) opt[pos].price = 1 << 30;
+                    for (pos = 1; pos < minMatch; pos++)
+                        opt[pos].price = 1 << 30;
 
                     for (matchNb = 0; matchNb < nbMatches; matchNb++)
                     {
@@ -1951,15 +1932,15 @@ public static unsafe partial class Methods
                     continue;
                 if (cur == last_pos)
                     break;
-                if (optLevel == 0 && opt[cur + 1].price <= opt[cur].price + (1 << 8) / 2) continue;
+                if (optLevel == 0 && opt[cur + 1].price <= opt[cur].price + (1 << 8) / 2)
+                    continue;
 
                 assert(opt[cur].price >= 0);
                 {
                     var ll0 = opt[cur].mlen != 0 ? 1U : 0U;
                     var litlen = opt[cur].mlen == 0 ? opt[cur].litlen : 0;
                     var previousPrice = (uint)opt[cur].price;
-                    var basePrice =
-                        previousPrice + ZSTD_litLengthPrice(0, optStatePtr, optLevel);
+                    var basePrice = previousPrice + ZSTD_litLengthPrice(0, optStatePtr, optLevel);
                     var nbMatches = (
                         (delegate* managed<
                             ZSTD_match_t*,
@@ -1980,7 +1961,8 @@ public static unsafe partial class Methods
                         (uint)(inr - istart),
                         (uint)(iend - inr)
                     );
-                    if (nbMatches == 0) continue;
+                    if (nbMatches == 0)
+                        continue;
 
                     {
                         var maxML = matches[nbMatches - 1].len;
@@ -2034,9 +2016,7 @@ public static unsafe partial class Methods
 
             lastSequence = opt[last_pos];
             cur =
-                last_pos > ZSTD_totalLen(lastSequence)
-                    ? last_pos - ZSTD_totalLen(lastSequence)
-                    : 0;
+                last_pos > ZSTD_totalLen(lastSequence) ? last_pos - ZSTD_totalLen(lastSequence) : 0;
             assert(cur < 1 << 12);
             _shortestPath:
             assert(opt[0].mlen == 0);
@@ -2160,14 +2140,7 @@ public static unsafe partial class Methods
         assert(seqStore->sequences == seqStore->sequencesStart);
         assert(ms->window.dictLimit == ms->window.lowLimit);
         assert(ms->window.dictLimit - ms->nextToUpdate <= 1);
-        ZSTD_compressBlock_opt2(
-            ms,
-            seqStore,
-            tmpRep,
-            src,
-            srcSize,
-            ZSTD_dictMode_e.ZSTD_noDict
-        );
+        ZSTD_compressBlock_opt2(ms, seqStore, tmpRep, src, srcSize, ZSTD_dictMode_e.ZSTD_noDict);
         ZSTD_resetSeqStore(seqStore);
         ms->window.@base -= srcSize;
         ms->window.dictLimit += (uint)srcSize;

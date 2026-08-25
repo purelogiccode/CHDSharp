@@ -47,8 +47,7 @@ public static unsafe partial class Methods
         var oend = ostart + dstSize;
         var op = ostart + lhSize;
         var singleStream = lhSize == 3 ? 1U : 0U;
-        var hType =
-            writeEntropy != 0 ? hufMetadata->hType : symbolEncodingType_e.set_repeat;
+        var hType = writeEntropy != 0 ? hufMetadata->hType : symbolEncodingType_e.set_repeat;
         nuint cLitSize = 0;
         *entropyWritten = 0;
         if (litSize == 0 || hufMetadata->hType == symbolEncodingType_e.set_basic)
@@ -60,7 +59,7 @@ public static unsafe partial class Methods
         assert(litSize > 0);
         assert(
             hufMetadata->hType == symbolEncodingType_e.set_compressed
-            || hufMetadata->hType == symbolEncodingType_e.set_repeat
+                || hufMetadata->hType == symbolEncodingType_e.set_repeat
         );
         if (writeEntropy != 0 && hufMetadata->hType == symbolEncodingType_e.set_compressed)
         {
@@ -91,7 +90,8 @@ public static unsafe partial class Methods
                     );
             op += cSize;
             cLitSize += cSize;
-            if (cSize == 0 || ERR_isError(cSize)) return 0;
+            if (cSize == 0 || ERR_isError(cSize))
+                return 0;
 
             if (writeEntropy == 0 && cLitSize >= litSize)
                 return ZSTD_noCompressLiterals(dst, dstSize, literals, litSize);
@@ -99,9 +99,7 @@ public static unsafe partial class Methods
             if (
                 lhSize
                 < (nuint)(
-                    3
-                    + (cLitSize >= 1 * (1 << 10) ? 1 : 0)
-                    + (cLitSize >= 16 * (1 << 10) ? 1 : 0)
+                    3 + (cLitSize >= 1 * (1 << 10) ? 1 : 0) + (cLitSize >= 16 * (1 << 10) ? 1 : 0)
                 )
             )
             {
@@ -124,16 +122,14 @@ public static unsafe partial class Methods
 
             case 4:
             {
-                var lhc =
-                    (uint)(hType + (2 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 18);
+                var lhc = (uint)(hType + (2 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 18);
                 MEM_writeLE32(ostart, lhc);
                 break;
             }
 
             case 5:
             {
-                var lhc =
-                    (uint)(hType + (3 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 22);
+                var lhc = (uint)(hType + (3 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 22);
                 MEM_writeLE32(ostart, lhc);
                 ostart[4] = (byte)(cLitSize >> 10);
                 break;
@@ -171,7 +167,8 @@ public static unsafe partial class Methods
 
         assert(litLengthSum <= litSize);
 #if DEBUG
-        if (lastSequence == 0) assert(litLengthSum == litSize);
+        if (lastSequence == 0)
+            assert(litLengthSum == litSize);
 #endif
 
         return matchLengthSum + litSize;
@@ -211,7 +208,8 @@ public static unsafe partial class Methods
         var op = ostart;
         byte* seqHead;
         *entropyWritten = 0;
-        if (oend - op < 3 + 1) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        if (oend - op < 3 + 1)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
         if (nbSeq < 0x7F)
         {
@@ -230,7 +228,8 @@ public static unsafe partial class Methods
             op += 3;
         }
 
-        if (nbSeq == 0) return (nuint)(op - ostart);
+        if (nbSeq == 0)
+            return (nuint)(op - ostart);
 
         seqHead = op++;
         if (writeEntropy != 0)
@@ -265,7 +264,8 @@ public static unsafe partial class Methods
             );
             {
                 var err_code = bitstreamSize;
-                if (ERR_isError(err_code)) return err_code;
+                if (ERR_isError(err_code))
+                    return err_code;
             }
 
             op += bitstreamSize;
@@ -280,7 +280,8 @@ public static unsafe partial class Methods
             }
         }
 
-        if (op - seqHead < 4) return 0;
+        if (op - seqHead < 4)
+            return 0;
 
         *entropyWritten = 1;
         return (nuint)(op - ostart);
@@ -330,7 +331,8 @@ public static unsafe partial class Methods
             );
             {
                 var err_code = cLitSize;
-                if (ERR_isError(err_code)) return err_code;
+                if (ERR_isError(err_code))
+                    return err_code;
             }
 
             if (cLitSize == 0)
@@ -356,7 +358,8 @@ public static unsafe partial class Methods
             );
             {
                 var err_code = cSeqSize;
-                if (ERR_isError(err_code)) return err_code;
+                if (ERR_isError(err_code))
+                    return err_code;
             }
 
             if (cSeqSize == 0)
@@ -715,7 +718,8 @@ public static unsafe partial class Methods
                 );
                 {
                     var err_code = cSize;
-                    if (ERR_isError(err_code)) return err_code;
+                    if (ERR_isError(err_code))
+                        return err_code;
                 }
 
                 if (cSize > 0 && cSize < decompressedSize)
@@ -730,9 +734,11 @@ public static unsafe partial class Methods
                     ofCodePtr += seqCount;
                     litSize = 0;
                     seqCount = 0;
-                    if (litEntropyWritten != 0) writeLitEntropy = 0;
+                    if (litEntropyWritten != 0)
+                        writeLitEntropy = 0;
 
-                    if (seqEntropyWritten != 0) writeSeqEntropy = 0;
+                    if (seqEntropyWritten != 0)
+                        writeSeqEntropy = 0;
                 }
             }
         } while (lastSequence == 0);
@@ -761,7 +767,8 @@ public static unsafe partial class Methods
             );
             {
                 var err_code = cSize;
-                if (ERR_isError(err_code)) return err_code;
+                if (ERR_isError(err_code))
+                    return err_code;
             }
 
             assert(cSize != 0);
@@ -808,7 +815,8 @@ public static unsafe partial class Methods
                 zc->entropyWorkspace,
                 (8 << 10) + 512 + sizeof(uint) * ((35 > 52 ? 35 : 52) + 2)
             );
-            if (ERR_isError(err_code)) return err_code;
+            if (ERR_isError(err_code))
+                return err_code;
         }
 
         return ZSTD_compressSubBlock_multi(

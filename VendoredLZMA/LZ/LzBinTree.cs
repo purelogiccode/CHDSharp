@@ -40,7 +40,8 @@ internal class BinTree : InWindow, IMatchFinder
     public new void Init()
     {
         base.Init();
-        for (uint i = 0; i < _hashSizeSum; i++) _hash[i] = KEmptyHashValue;
+        for (uint i = 0; i < _hashSizeSum; i++)
+            _hash[i] = KEmptyHashValue;
 
         _cyclicBufferPos = 0;
         ReduceOffsets(-1);
@@ -61,22 +62,32 @@ internal class BinTree : InWindow, IMatchFinder
         return base.GetNumAvailableBytes();
     }
 
-    public void Create(uint historySize, uint keepAddBufferBefore,
-        uint matchMaxLen, uint keepAddBufferAfter)
+    public void Create(
+        uint historySize,
+        uint keepAddBufferBefore,
+        uint matchMaxLen,
+        uint keepAddBufferAfter
+    )
     {
-        if (historySize > KMaxValForNormalize - 256) throw new Exception();
+        if (historySize > KMaxValForNormalize - 256)
+            throw new Exception();
 
         _cutValue = 16 + (matchMaxLen >> 1);
 
-        var windowReservSize = (historySize + keepAddBufferBefore +
-                                matchMaxLen + keepAddBufferAfter) / 2 + 256;
+        var windowReservSize =
+            (historySize + keepAddBufferBefore + matchMaxLen + keepAddBufferAfter) / 2 + 256;
 
-        base.Create(historySize + keepAddBufferBefore, matchMaxLen + keepAddBufferAfter, windowReservSize);
+        base.Create(
+            historySize + keepAddBufferBefore,
+            matchMaxLen + keepAddBufferAfter,
+            windowReservSize
+        );
 
         _matchMaxLen = matchMaxLen;
 
         var cyclicBufferSize = historySize + 1;
-        if (_cyclicBufferSize != cyclicBufferSize) _son = new uint[(_cyclicBufferSize = cyclicBufferSize) * 2];
+        if (_cyclicBufferSize != cyclicBufferSize)
+            _son = new uint[(_cyclicBufferSize = cyclicBufferSize) * 2];
 
         var hs = KBt2HashSize;
 
@@ -89,14 +100,16 @@ internal class BinTree : InWindow, IMatchFinder
             hs |= hs >> 8;
             hs >>= 1;
             hs |= 0xFFFF;
-            if (hs > 1 << 24) hs >>= 1;
+            if (hs > 1 << 24)
+                hs >>= 1;
 
             _hashMask = hs;
             hs++;
             hs += _fixHashSize;
         }
 
-        if (hs != _hashSizeSum) _hash = new uint[_hashSizeSum = hs];
+        if (hs != _hashSizeSum)
+            _hash = new uint[_hashSizeSum = hs];
     }
 
     public uint GetMatches(uint[] distances)
@@ -120,7 +133,9 @@ internal class BinTree : InWindow, IMatchFinder
         var matchMinPos = Pos > _cyclicBufferSize ? Pos - _cyclicBufferSize : 0;
         var cur = BufferOffset + Pos;
         var maxLen = _hashArray ? 3u : KStartMaxLen;
-        uint hashValue, hash2Value = 0, hash3Value = 0;
+        uint hashValue,
+            hash2Value = 0,
+            hash3Value = 0;
 
         if (_hashArray)
         {
@@ -151,9 +166,7 @@ internal class BinTree : InWindow, IMatchFinder
                 distances[offset++] = 2;
                 distances[offset++] = d2 - 1;
                 var update = true;
-                if (BufferBase[cur - (int)d2 + 2] == BufferBase[cur + 2])
-                {
-                }
+                if (BufferBase[cur - (int)d2 + 2] == BufferBase[cur + 2]) { }
                 else if (d3 < mmm && BufferBase[cur - (int)d3] == BufferBase[cur])
                 {
                     d2 = d3;
@@ -171,7 +184,8 @@ internal class BinTree : InWindow, IMatchFinder
                     var limIdx = cur + (int)lenLimit;
                     while (cIdx != limIdx)
                     {
-                        if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx]) break;
+                        if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx])
+                            break;
 
                         cIdx++;
                     }
@@ -195,7 +209,8 @@ internal class BinTree : InWindow, IMatchFinder
                 var limIdx = cur + (int)lenLimit;
                 while (cIdx != limIdx)
                 {
-                    if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx]) break;
+                    if (BufferBase[cIdx - (int)d2] != BufferBase[cIdx])
+                        break;
 
                     cIdx++;
                 }
@@ -222,8 +237,10 @@ internal class BinTree : InWindow, IMatchFinder
 
         if (_numHashDirectBytes != 0)
             if (curMatch > matchMinPos)
-                if (BufferBase[BufferOffset + curMatch + _numHashDirectBytes] !=
-                    BufferBase[cur + _numHashDirectBytes])
+                if (
+                    BufferBase[BufferOffset + curMatch + _numHashDirectBytes]
+                    != BufferBase[cur + _numHashDirectBytes]
+                )
                 {
                     distances[offset++] = maxLen = _numHashDirectBytes;
                     distances[offset++] = Pos - curMatch - 1;
@@ -240,9 +257,12 @@ internal class BinTree : InWindow, IMatchFinder
             }
 
             var delta = Pos - curMatch;
-            var cyclicPos = (delta <= _cyclicBufferPos
-                ? _cyclicBufferPos - delta
-                : _cyclicBufferPos - delta + _cyclicBufferSize) << 1;
+            var cyclicPos =
+                (
+                    delta <= _cyclicBufferPos
+                        ? _cyclicBufferPos - delta
+                        : _cyclicBufferPos - delta + _cyclicBufferSize
+                ) << 1;
 
             var pby1 = BufferOffset + curMatch;
             var len = Math.Min(len0, len1);
@@ -343,9 +363,12 @@ internal class BinTree : InWindow, IMatchFinder
                 }
 
                 var delta = Pos - curMatch;
-                var cyclicPos = (delta <= _cyclicBufferPos
-                    ? _cyclicBufferPos - delta
-                    : _cyclicBufferPos - delta + _cyclicBufferSize) << 1;
+                var cyclicPos =
+                    (
+                        delta <= _cyclicBufferPos
+                            ? _cyclicBufferPos - delta
+                            : _cyclicBufferPos - delta + _cyclicBufferSize
+                    ) << 1;
 
                 var pby1 = BufferOffset + curMatch;
                 var len = Math.Min(len0, len1);
@@ -402,10 +425,12 @@ internal class BinTree : InWindow, IMatchFinder
 
     internal new void MovePos()
     {
-        if (++_cyclicBufferPos >= _cyclicBufferSize) _cyclicBufferPos = 0;
+        if (++_cyclicBufferPos >= _cyclicBufferSize)
+            _cyclicBufferPos = 0;
 
         base.MovePos();
-        if (Pos == KMaxValForNormalize) Normalize();
+        if (Pos == KMaxValForNormalize)
+            Normalize();
     }
 
     private static void NormalizeLinks(uint[] items, uint numItems, uint subValue)

@@ -91,13 +91,20 @@ public static class CdRomAddress
     private static (byte m, byte s, byte f) LbaToMsfCore(int lba)
     {
         if (lba < 0)
-            throw new ArgumentOutOfRangeException(nameof(lba), lba, "The MSF position cannot be negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(lba),
+                lba,
+                "The MSF position cannot be negative."
+            );
 
         var total = (long)lba;
         var minutes = (int)(total / (SecondsPerMinute * FramesPerSecond));
         if (minutes > 99)
-            throw new ArgumentOutOfRangeException(nameof(lba), lba,
-                "The MSF minute field cannot exceed 99 (BCD limit).");
+            throw new ArgumentOutOfRangeException(
+                nameof(lba),
+                lba,
+                "The MSF minute field cannot exceed 99 (BCD limit)."
+            );
 
         total -= (long)minutes * SecondsPerMinute * FramesPerSecond;
         var seconds = (int)(total / FramesPerSecond);
@@ -110,8 +117,11 @@ public static class CdRomAddress
         var hi = value >> 4;
         var lo = value & 0x0F;
         if (hi > 9 || lo > 9)
-            throw new ArgumentOutOfRangeException(nameof(value), value,
-                "MSF bytes must be valid BCD (each nibble 0-9).");
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                value,
+                "MSF bytes must be valid BCD (each nibble 0-9)."
+            );
 
         return hi * 10 + lo;
     }

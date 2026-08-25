@@ -44,7 +44,8 @@ internal static class ChdLogger
 
         private volatile CachedLogger? _cached;
 
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull
         {
             return Resolve().BeginScope(state);
         }
@@ -54,8 +55,13 @@ internal static class ChdLogger
             return Resolve().IsEnabled(logLevel);
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
-            Func<TState, Exception?, string> formatter)
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter
+        )
         {
             Resolve().Log(logLevel, eventId, state, exception, formatter);
         }

@@ -19,9 +19,18 @@ public static class RawDeflate
         var zlib = new ZLib();
         var output = new byte[zlib.CompressBound((uint)data.Length)];
         var zs = new ZStream { Input = data, Output = output };
-        var initStatus = zlib.DeflateInit(ref zs, ZBestCompression, ZDeflated, -15, 8, ZDefaultStrategy);
+        var initStatus = zlib.DeflateInit(
+            ref zs,
+            ZBestCompression,
+            ZDeflated,
+            -15,
+            8,
+            ZDefaultStrategy
+        );
         if (initStatus != ZOk)
-            throw new InvalidOperationException($"zlib DeflateInit failed with status {initStatus}");
+            throw new InvalidOperationException(
+                $"zlib DeflateInit failed with status {initStatus}"
+            );
 
         int status;
         do

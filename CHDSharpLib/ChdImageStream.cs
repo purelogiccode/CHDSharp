@@ -60,7 +60,10 @@ public sealed class ChdImageStream : Stream
         {
             ThrowIfDisposed();
             if (value < 0)
-                throw new ArgumentOutOfRangeException(nameof(value), "Position cannot be negative.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    "Position cannot be negative."
+                );
 
             _position = (ulong)value;
         }
@@ -112,7 +115,12 @@ public sealed class ChdImageStream : Stream
 #endif
 
     /// <inheritdoc />
-    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    public override async Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
     {
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(buffer);
@@ -123,7 +131,8 @@ public sealed class ChdImageStream : Stream
             return 0;
 
         var available = (int)Math.Min((ulong)count, _chd.TotalBytes - _position);
-        var err = await _chd.ReadAsync(_position, buffer, offset, available, cancellationToken).ConfigureAwait(false);
+        var err = await _chd.ReadAsync(_position, buffer, offset, available, cancellationToken)
+            .ConfigureAwait(false);
         if (err != ChdError.Chderrnone)
             throw new IOException($"CHD read failed at offset {_position}: {err}");
 
@@ -133,7 +142,10 @@ public sealed class ChdImageStream : Stream
 
 #if NET7_0_OR_GREATER
     /// <inheritdoc />
-    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
@@ -142,7 +154,8 @@ public sealed class ChdImageStream : Stream
 
         var available = (int)Math.Min((ulong)buffer.Length, _chd.TotalBytes - _position);
         var temp = new byte[available];
-        var err = await _chd.ReadAsync(_position, temp, 0, available, cancellationToken).ConfigureAwait(false);
+        var err = await _chd.ReadAsync(_position, temp, 0, available, cancellationToken)
+            .ConfigureAwait(false);
         if (err != ChdError.Chderrnone)
             throw new IOException($"CHD read failed at offset {_position}: {err}");
 
@@ -160,20 +173,31 @@ public sealed class ChdImageStream : Stream
         var newPos = origin switch
         {
             SeekOrigin.Begin => offset < 0
-                ? throw new ArgumentOutOfRangeException(nameof(offset),
-                    "Seek offset cannot be negative from beginning.")
+                ? throw new ArgumentOutOfRangeException(
+                    nameof(offset),
+                    "Seek offset cannot be negative from beginning."
+                )
                 : (ulong)offset,
             SeekOrigin.Current => offset < 0
                 ? -(long)_position < offset
-                    ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek before beginning of stream.")
+                    ? throw new ArgumentOutOfRangeException(
+                        nameof(offset),
+                        "Seek before beginning of stream."
+                    )
                     : _position - (ulong)-offset
                 : _position + (ulong)offset,
             SeekOrigin.End => offset > 0
-                ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek offset cannot be positive from end.")
-                : (ulong)-offset > _chd.TotalBytes
-                    ? throw new ArgumentOutOfRangeException(nameof(offset), "Seek before beginning of stream.")
-                    : _chd.TotalBytes - (ulong)-offset,
-            _ => throw new ArgumentException("Invalid SeekOrigin.", nameof(origin))
+                ? throw new ArgumentOutOfRangeException(
+                    nameof(offset),
+                    "Seek offset cannot be positive from end."
+                )
+            : (ulong)-offset > _chd.TotalBytes
+                ? throw new ArgumentOutOfRangeException(
+                    nameof(offset),
+                    "Seek before beginning of stream."
+                )
+            : _chd.TotalBytes - (ulong)-offset,
+            _ => throw new ArgumentException("Invalid SeekOrigin.", nameof(origin)),
         };
 
         _position = newPos;

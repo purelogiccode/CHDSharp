@@ -19,15 +19,13 @@ internal sealed class DeflateState
 
     private static readonly StaticTree SBlDesc = new(null, 0, BlCodes, MaxBlBits);
 
-    internal readonly ushort[]
-        BlCount = new ushort[MaxBits + 1]; // number of codes at each bit length for an optimal tree
+    internal readonly ushort[] BlCount = new ushort[MaxBits + 1]; // number of codes at each bit length for an optimal tree
 
     internal readonly TreeDescriptor BlDesc; // desc. for bit length tree
     internal readonly TreeNode[] BlTree = new TreeNode[2 * BlCodes + 1]; // Huffman tree for bit lengths
     internal readonly TreeDescriptor DDesc; // desc. for distance tree
 
-    internal readonly byte[]
-        Depth = new byte[2 * LCodes + 1]; // Depth of each subtree used as tie breaker for trees of equal frequency
+    internal readonly byte[] Depth = new byte[2 * LCodes + 1]; // Depth of each subtree used as tie breaker for trees of equal frequency
 
     internal readonly TreeNode[] DynDtree = new TreeNode[2 * DCodes + 1]; // distance tree
 
@@ -40,14 +38,14 @@ internal sealed class DeflateState
     internal ushort BiBuf; //Output buffer. bits are inserted starting at the bottom (least significant bits).
 
     internal int BiValid; //Number of valid bits in bi_buf. All bits above the last valid bit are always zero.
+
     /* Number of bits by which ins_h must be shifted at each input
      * step. It must be such that after MIN_MATCH steps, the oldest
      * byte no longer takes part in the hash key, that is:
      *   hash_shift * MIN_MATCH >= hash_bits
      */
 
-    internal int
-        BlockStart; // Window position at the beginning of the current output block. Gets negative when the window is moved backwards.
+    internal int BlockStart; // Window position at the beginning of the current output block. Gets negative when the window is moved backwards.
 
     internal uint GoodMatch; // Use a faster search when the previous match is longer than this
     internal uint HashBits; // log2(hash_size)
@@ -56,6 +54,7 @@ internal sealed class DeflateState
     internal int HashShift;
 
     internal uint HashSize; // number of elements in hash table
+
     /* Link to older string with same hash index. To limit the size of this
      * array to 64K, this link is maintained only for the last 32K strings.
      * An index in this array is thus a window index modulo 32K.
@@ -71,6 +70,7 @@ internal sealed class DeflateState
     internal uint Insert; // bytes at end of window left to insert
 
     internal int LastFlush; // value of flush param for previous deflate call
+
     /* Attempt to find a better match only when the current match is strictly
      * smaller than this value. This mechanism is used only for compression
      * levels >= 4.
@@ -86,11 +86,13 @@ internal sealed class DeflateState
     internal uint MatchStart; // start of matching string
 
     internal uint Matches; // number of string matches in current block
+
     /* Length of the best match at previous step. Matches not greater than this
      * are discarded. This is used in the lazy match evaluation.
      */
 
     internal uint MaxChainLength;
+
     /* To speed up deflation, hash chains are never searched beyond this
      * length.  A higher limit improves compression ratio but degrades the
      * speed.
@@ -124,6 +126,7 @@ internal sealed class DeflateState
     internal uint Strstart; // start of string to insert
 
     internal uint SymEnd; // symbol table full when sym_next reaches this
+
     /* Size of match buffer for literals/lengths.  There are 4 reasons for
      * limiting lit_bufsize to 64K:
      *   - frequencies can be kept in 16 bit counters
@@ -150,6 +153,7 @@ internal sealed class DeflateState
     internal uint WSize; // LZ77 window size (32K by default)
 
     internal byte[] Window;
+
     /* Sliding window. Input bytes are read into the second half of the window,
      * and move to the first half later to keep a dictionary of at least wSize
      * bytes. With this organization, matches are limited to a distance of
@@ -159,8 +163,7 @@ internal sealed class DeflateState
      * To do: use the user input buffer as sliding window.
      */
 
-    internal uint
-        WindowSize; // Actual size of window: 2*wSize, except when the user input buffer is directly used as sliding window.
+    internal uint WindowSize; // Actual size of window: 2*wSize, except when the user input buffer is directly used as sliding window.
 
     internal int Wrap; // bit 0 true for zlib, bit 1 true for gzip
 

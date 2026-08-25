@@ -14,4 +14,5 @@ internal sealed record ChdmanInfo(
     string? DataSha1,
     string? Md5,
     string? ParentSha1,
-    string? ParentMd5);
+    string? ParentMd5
+);

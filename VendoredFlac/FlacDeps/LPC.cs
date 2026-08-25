@@ -38,13 +38,20 @@ internal static class Lpc
     /// <param name="min">Minimum lag to compute.</param>
     /// <param name="lag">Maximum lag to compute.</param>
     /// <param name="autoc">Destination buffer for autocorrelation values (accumulated).</param>
-    internal static unsafe void
-        ComputeAutocorr( /*const*/ int* data, float* window, int len, int min, int lag, double* autoc)
+    internal static unsafe void ComputeAutocorr( /*const*/
+        int* data,
+        float* window,
+        int len,
+        int min,
+        int lag,
+        double* autoc
+    )
     {
         var data1 = stackalloc double[len];
         int i;
 
-        for (i = 0; i < len; i++) data1[i] = data[i] * window[i];
+        for (i = 0; i < len; i++)
+            data1[i] = data[i] * window[i];
 
         for (i = min; i <= lag; ++i)
         {
@@ -59,7 +66,8 @@ internal static class Lpc
                 temp2 += pdata[i] * *pdata++;
             }
 
-            if (pdata <= finish) temp += pdata[i] * *pdata;
+            if (pdata <= finish)
+                temp += pdata[i] * *pdata;
 
             autoc[i] += temp + temp2;
         }
@@ -73,8 +81,13 @@ internal static class Lpc
     /// <param name="min">Minimum lag to compute.</param>
     /// <param name="lag">Maximum lag to compute.</param>
     /// <param name="autoc">Destination buffer for autocorrelation values (accumulated).</param>
-    internal static unsafe void
-        ComputeAutocorrWindowless( /*const*/ int* data, int len, int min, int lag, double* autoc)
+    internal static unsafe void ComputeAutocorrWindowless( /*const*/
+        int* data,
+        int len,
+        int min,
+        int lag,
+        double* autoc
+    )
     {
         for (var i = min; i <= lag; ++i)
         {
@@ -88,7 +101,8 @@ internal static class Lpc
                 temp2 += (long)pdata[i] * *pdata++;
             }
 
-            if (pdata <= finish) temp += (long)pdata[i] * *pdata;
+            if (pdata <= finish)
+                temp += (long)pdata[i] * *pdata;
 
             autoc[i] += temp + temp2;
         }
@@ -103,8 +117,13 @@ internal static class Lpc
     /// <param name="min">Minimum lag to compute.</param>
     /// <param name="lag">Maximum lag to compute.</param>
     /// <param name="autoc">Destination buffer for autocorrelation values (accumulated).</param>
-    internal static unsafe void
-        ComputeAutocorrWindowlessLarge( /*const*/ int* data, int len, int min, int lag, double* autoc)
+    internal static unsafe void ComputeAutocorrWindowlessLarge( /*const*/
+        int* data,
+        int len,
+        int min,
+        int lag,
+        double* autoc
+    )
     {
         for (var i = min; i <= lag; ++i)
         {
@@ -118,7 +137,8 @@ internal static class Lpc
                 temp2 += (long)pdata[i] * *pdata++;
             }
 
-            if (pdata <= finish) temp += (long)pdata[i] * *pdata;
+            if (pdata <= finish)
+                temp += (long)pdata[i] * *pdata;
 
             autoc[i] += temp + temp2;
         }
@@ -135,19 +155,28 @@ internal static class Lpc
     /// <param name="min">Minimum lag to compute.</param>
     /// <param name="lag">Maximum lag to compute.</param>
     /// <param name="autoc">Destination buffer for autocorrelation values (accumulated).</param>
-    internal static unsafe void
-        ComputeAutocorrGlue( /*const*/ int* data, float* window, int offs, int offs1, int min, int lag, double* autoc)
+    internal static unsafe void ComputeAutocorrGlue( /*const*/
+        int* data,
+        float* window,
+        int offs,
+        int offs1,
+        int min,
+        int lag,
+        double* autoc
+    )
     {
         var data1 = stackalloc double[lag + lag];
         for (var i = -lag; i < lag; i++)
-            data1[i + lag] = offs + i >= 0 && offs + i < offs1 ? data[offs + i] * window[offs + i] : 0;
+            data1[i + lag] =
+                offs + i >= 0 && offs + i < offs1 ? data[offs + i] * window[offs + i] : 0;
 
         for (var i = min; i <= lag; ++i)
         {
             double temp = 0;
             var pdata = data1 + lag - i;
             var finish = data1 + lag;
-            while (pdata < finish) temp += pdata[i] * *pdata++;
+            while (pdata < finish)
+                temp += pdata[i] * *pdata++;
 
             autoc[i] += temp;
         }
@@ -160,15 +189,20 @@ internal static class Lpc
     /// <param name="min">Minimum lag to compute.</param>
     /// <param name="lag">Maximum lag to compute.</param>
     /// <param name="autoc">Destination buffer for autocorrelation values (accumulated).</param>
-    internal static unsafe void
-        ComputeAutocorrGlue( /*const*/ int* data, int min, int lag, double* autoc)
+    internal static unsafe void ComputeAutocorrGlue( /*const*/
+        int* data,
+        int min,
+        int lag,
+        double* autoc
+    )
     {
         for (var i = min; i <= lag; ++i)
         {
             long temp = 0;
             var pdata = data - i;
             var finish = data;
-            while (pdata < finish) temp += (long)pdata[i] * *pdata++;
+            while (pdata < finish)
+                temp += (long)pdata[i] * *pdata++;
 
             autoc[i] += temp;
         }
@@ -187,15 +221,19 @@ internal static class Lpc
     ///     coefficient].
     /// </param>
     /// <exception cref="Exception">Thrown if <paramref name="maxOrder" /> exceeds <see cref="Maxlpcorder" />.</exception>
-    internal static unsafe void
-        ComputeLpcCoefs(uint maxOrder, double* reff, float* lpc /*[][MAX_LPC_ORDER]*/)
+    internal static unsafe void ComputeLpcCoefs(
+        uint maxOrder,
+        double* reff,
+        float* lpc /*[][MAX_LPC_ORDER]*/
+    )
     {
         var lpcTmp = stackalloc double[Maxlpcorder];
 
         if (maxOrder > Maxlpcorder)
             throw new InvalidOperationException("weird");
 
-        for (var i = 0; i < maxOrder; i++) lpcTmp[i] = 0;
+        for (var i = 0; i < maxOrder; i++)
+            lpcTmp[i] = 0;
 
         for (var i = 0; i < maxOrder; i++)
         {
@@ -209,9 +247,11 @@ internal static class Lpc
                 lpcTmp[i - 1 - j] += r * tmp;
             }
 
-            if (0 != (i & 1)) lpcTmp[i2] += lpcTmp[i2] * r;
+            if (0 != (i & 1))
+                lpcTmp[i2] += lpcTmp[i2] * r;
 
-            for (var j = 0; j <= i; j++) lpc[i * Maxlpcorder + j] = (float)-lpcTmp[j];
+            for (var j = 0; j <= i; j++)
+                lpc[i * Maxlpcorder + j] = (float)-lpcTmp[j];
         }
     }
 
@@ -223,15 +263,20 @@ internal static class Lpc
     /// <param name="maxOrder">Maximum LPC order to compute.</param>
     /// <param name="reff">Destination buffer for reflection coefficients.</param>
     /// <param name="err">Destination buffer for prediction errors.</param>
-    internal static unsafe void
-        ComputeSchurReflection( /*const*/ double* autoc, uint maxOrder,
-            double* reff /*[][MAX_LPC_ORDER]*/, double* err)
+    internal static unsafe void ComputeSchurReflection( /*const*/
+        double* autoc,
+        uint maxOrder,
+        double* reff /*[][MAX_LPC_ORDER]*/
+        ,
+        double* err
+    )
     {
         var gen0 = stackalloc double[Maxlpcorder];
         var gen1 = stackalloc double[Maxlpcorder];
 
         // Schur recursion
-        for (uint i = 0; i < maxOrder; i++) gen0[i] = gen1[i] = autoc[i + 1];
+        for (uint i = 0; i < maxOrder; i++)
+            gen0[i] = gen1[i] = autoc[i + 1];
 
         var error = autoc[0];
         reff[0] = -gen1[0] / error;
@@ -260,11 +305,17 @@ internal static class Lpc
     /// <param name="order">LPC order used for prediction.</param>
     /// <param name="coefs">Pointer to quantized LPC coefficients.</param>
     /// <param name="shift">Right-shift amount applied to the prediction value.</param>
-    internal static unsafe void
-        DecodeResidual(int* res, int* smp, int n, int order,
-            int* coefs, int shift)
+    internal static unsafe void DecodeResidual(
+        int* res,
+        int* smp,
+        int n,
+        int order,
+        int* coefs,
+        int shift
+    )
     {
-        for (var i = 0; i < order; i++) smp[i] = res[i];
+        for (var i = 0; i < order; i++)
+            smp[i] = res[i];
 
         var s = smp;
         var r = res + order;
@@ -292,9 +343,7 @@ internal static class Lpc
                 for (var i = n - order; i > 0; i--)
                 {
                     var co = coefs + order - 1;
-                    var pred =
-                        *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                    var pred = *co * *s++ + c1 * *s++ + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 2;
                 }
@@ -304,9 +353,7 @@ internal static class Lpc
                 for (var i = n - order; i > 0; i--)
                 {
                     var co = coefs + order - 1;
-                    var pred =
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                    var pred = *co-- * *s++ + *co * *s++ + c1 * *s++ + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 3;
                 }
@@ -316,10 +363,7 @@ internal static class Lpc
                 for (var i = n - order; i > 0; i--)
                 {
                     var co = coefs + order - 1;
-                    var pred =
-                        *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                    var pred = *co-- * *s++ + *co-- * *s++ + *co * *s++ + c1 * *s++ + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 4;
                 }
@@ -330,9 +374,12 @@ internal static class Lpc
                 {
                     var co = coefs + order - 1;
                     var pred =
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                        *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co * *s++
+                        + c1 * *s++
+                        + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 5;
                 }
@@ -343,10 +390,13 @@ internal static class Lpc
                 {
                     var co = coefs + order - 1;
                     var pred =
-                        *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                        *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co * *s++
+                        + c1 * *s++
+                        + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 6;
                 }
@@ -357,10 +407,14 @@ internal static class Lpc
                 {
                     var co = coefs + order - 1;
                     var pred =
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                        *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co * *s++
+                        + c1 * *s++
+                        + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 7;
                 }
@@ -371,11 +425,15 @@ internal static class Lpc
                 {
                     var co = coefs + order - 1;
                     var pred =
-                        *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                        *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co * *s++
+                        + c1 * *s++
+                        + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 8;
                 }
@@ -386,11 +444,16 @@ internal static class Lpc
                 {
                     var co = coefs + order - 1;
                     var pred =
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                        *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co * *s++
+                        + c1 * *s++
+                        + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 9;
                 }
@@ -401,12 +464,17 @@ internal static class Lpc
                 {
                     var co = coefs + order - 1;
                     var pred =
-                        *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                        *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co * *s++
+                        + c1 * *s++
+                        + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 10;
                 }
@@ -417,12 +485,18 @@ internal static class Lpc
                 {
                     var co = coefs + order - 1;
                     var pred =
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co-- * *s++ +
-                        *co-- * *s++ + *co * *s++ +
-                        c1 * *s++ + c0 * *s++;
+                        *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co-- * *s++
+                        + *co * *s++
+                        + c1 * *s++
+                        + c0 * *s++;
                     *s = *r++ + (pred >> shift);
                     s -= 11;
                 }
@@ -435,7 +509,8 @@ internal static class Lpc
                     var pred = 0;
                     var co = coefs + order - 1;
                     var c7 = coefs + 7;
-                    while (co > c7) pred += *co-- * *s++;
+                    while (co > c7)
+                        pred += *co-- * *s++;
 
                     pred += coefs[7] * *s++;
                     pred += coefs[6] * *s++;
@@ -462,11 +537,17 @@ internal static class Lpc
     /// <param name="order">LPC order used for prediction.</param>
     /// <param name="coefs">Pointer to quantized LPC coefficients.</param>
     /// <param name="shift">Right-shift amount applied to the prediction value.</param>
-    internal static unsafe void
-        DecodeResidualLong(int* res, int* smp, int n, int order,
-            int* coefs, int shift)
+    internal static unsafe void DecodeResidualLong(
+        int* res,
+        int* smp,
+        int n,
+        int order,
+        int* coefs,
+        int shift
+    )
     {
-        for (var i = 0; i < order; i++) smp[i] = res[i];
+        for (var i = 0; i < order; i++)
+            smp[i] = res[i];
 
         var s = smp;
         var r = res + order;
@@ -579,7 +660,8 @@ internal static class Lpc
                     long pred = 0;
                     var co = coefs + order - 1;
                     var c7 = coefs + 7;
-                    while (co > c7) pred += *co-- * (long)*s++;
+                    while (co > c7)
+                        pred += *co-- * (long)*s++;
 
                     pred += coefs[7] * (long)*s++;
                     pred += coefs[6] * (long)*s++;

@@ -11,5 +11,5 @@ public enum ZSTD_strategy
     ZSTD_btlazy2 = 6,
     ZSTD_btopt = 7,
     ZSTD_btultra = 8,
-    ZSTD_btultra2 = 9
+    ZSTD_btultra2 = 9,
 }

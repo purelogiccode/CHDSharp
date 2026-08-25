@@ -45,7 +45,8 @@ internal class Decoder
 
         Code = 0;
         Range = 0xFFFFFFFF;
-        for (var i = 0; i < 5; i++) Code = (Code << 8) | ReadByteChecked();
+        for (var i = 0; i < 5; i++)
+            Code = (Code << 8) | ReadByteChecked();
 
         Total = 5;
     }

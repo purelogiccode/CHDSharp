@@ -38,7 +38,8 @@ internal static class FlacBitMath
     public static uint ILog2(uint v)
     {
         uint l = 0;
-        while ((v >>= 1) != 0) l++;
+        while ((v >>= 1) != 0)
+            l++;
 
         return l;
     }
@@ -47,7 +48,8 @@ internal static class FlacBitMath
     public static uint ILog2Wide(ulong v)
     {
         uint l = 0;
-        while ((v >>= 1) != 0) l++;
+        while ((v >>= 1) != 0)
+            l++;
 
         return l;
     }
@@ -89,7 +91,8 @@ internal static class FlacBitMath
     public static uint MaxRicePartitionOrderLimited(uint limit, uint blocksize, uint predictorOrder)
     {
         var maxOrder = limit;
-        while (maxOrder > 0 && blocksize >> (int)maxOrder <= predictorOrder) maxOrder--;
+        while (maxOrder > 0 && blocksize >> (int)maxOrder <= predictorOrder)
+            maxOrder--;
 
         return maxOrder;
     }

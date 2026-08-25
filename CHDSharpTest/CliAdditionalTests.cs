@@ -14,12 +14,15 @@ public class CliAdditionalTests
             var baseDir = AppContext.BaseDirectory;
             var testBinIdx = baseDir.IndexOf(
                 Path.Combine("CHDSharpTest", "bin"),
-                StringComparison.OrdinalIgnoreCase);
+                StringComparison.OrdinalIgnoreCase
+            );
             if (testBinIdx >= 0)
             {
                 var slnRoot = baseDir[..testBinIdx];
-                var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ??
-                             "Debug";
+                var config =
+                    Path.GetFileName(
+                        Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))
+                    ) ?? "Debug";
                 var tfm = Path.GetFileName(baseDir.TrimEnd(Path.DirectorySeparatorChar));
                 return Path.Combine(slnRoot, "CHDSharpCli", "bin", config, tfm, "CHDSharp.dll");
             }
@@ -30,8 +33,7 @@ public class CliAdditionalTests
 
     private static (int exitCode, string output) RunCli(params string[] args)
     {
-        var escapedArgs = string.Join(" ",
-            args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a));
+        var escapedArgs = string.Join(" ", args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a));
         var argString = $"\"{CliPath}\" {escapedArgs}";
 
         var psi = new ProcessStartInfo("dotnet", argString)
@@ -39,7 +41,7 @@ public class CliAdditionalTests
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
         using var proc = Process.Start(psi);
@@ -94,7 +96,8 @@ public class CliAdditionalTests
     public void Toc_output_contains_track_info()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
+        if (!File.Exists(path))
+            Assert.Skip("Test data missing: " + path);
 
         var (exitCode, output) = RunCli("--toc", path);
         Assert.Equal(0, exitCode);
@@ -105,7 +108,8 @@ public class CliAdditionalTests
     public void Cue_output_contains_index()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
+        if (!File.Exists(path))
+            Assert.Skip("Test data missing: " + path);
 
         var (exitCode, output) = RunCli("--cue", path);
         Assert.Equal(0, exitCode);
@@ -116,7 +120,8 @@ public class CliAdditionalTests
     public void Classify_for_cd_returns_cd()
     {
         var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
-        if (!File.Exists(path)) Assert.Skip("Test data missing: " + path);
+        if (!File.Exists(path))
+            Assert.Skip("Test data missing: " + path);
 
         var (exitCode, output) = RunCli("--classify", path);
         Assert.Equal(0, exitCode);

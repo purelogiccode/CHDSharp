@@ -15,13 +15,23 @@ public class ProgressReportingTests
     {
         for (var i = 1; i < reports.Count; i++)
         {
-            Assert.True(reports[i].CurrentHunk >= reports[i - 1].CurrentHunk, "CurrentHunk must be monotonic");
-            Assert.True(reports[i].BytesProcessed >= reports[i - 1].BytesProcessed, "BytesProcessed must be monotonic");
+            Assert.True(
+                reports[i].CurrentHunk >= reports[i - 1].CurrentHunk,
+                "CurrentHunk must be monotonic"
+            );
+            Assert.True(
+                reports[i].BytesProcessed >= reports[i - 1].BytesProcessed,
+                "BytesProcessed must be monotonic"
+            );
             Assert.True(reports[i].Elapsed >= reports[i - 1].Elapsed, "Elapsed must be monotonic");
         }
     }
 
-    private static void AssertCompleted(IReadOnlyList<ChdProgress> reports, long totalHunks, long totalBytes)
+    private static void AssertCompleted(
+        IReadOnlyList<ChdProgress> reports,
+        long totalHunks,
+        long totalBytes
+    )
     {
         Assert.NotEmpty(reports);
         var last = reports[^1];
@@ -91,7 +101,11 @@ public class ProgressReportingTests
     public void CheckFileWithParent_reports_progress()
     {
         var progress = new CollectingProgress();
-        var result = Chd.CheckFileWithParent(DataPath("v5_child.chd"), DataPath("v5_parent.chd"), progress);
+        var result = Chd.CheckFileWithParent(
+            DataPath("v5_child.chd"),
+            DataPath("v5_parent.chd"),
+            progress
+        );
         Assert.Equal(ChdError.Chderrnone, result.Error);
 
         var reports = progress.Reports;
@@ -143,7 +157,8 @@ public class ProgressReportingTests
         {
             var progress = new CollectingProgress();
             var count = 0;
-            foreach (var _ in chd!.EnumerateHunks(progress)) count++;
+            foreach (var _ in chd!.EnumerateHunks(progress))
+                count++;
 
             var reports = progress.Reports;
             Assert.Equal((long)chd.HunkCount, count);

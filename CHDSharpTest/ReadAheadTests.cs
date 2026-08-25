@@ -20,7 +20,8 @@ public class ReadAheadTests
         Write("MComprHD"u8.ToArray());
         Write(EndianHelpers.Be(124));
         Write(EndianHelpers.Be(5));
-        for (var i = 0; i < 4; i++) Write(EndianHelpers.Be(0));
+        for (var i = 0; i < 4; i++)
+            Write(EndianHelpers.Be(0));
         Write(EndianHelpers.Be64(TotalBytes));
         Write(EndianHelpers.Be64(mapoffset));
         Write(EndianHelpers.Be64(0));
@@ -32,7 +33,8 @@ public class ReadAheadTests
         {
             ms.Seek((long)(dataStart + h * Blocksize), SeekOrigin.Begin);
             var data = new byte[Blocksize];
-            for (var i = 0; i < data.Length; i++) data[i] = (byte)((h * Blocksize + (ulong)i) & 0xFF);
+            for (var i = 0; i < data.Length; i++)
+                data[i] = (byte)((h * Blocksize + (ulong)i) & 0xFF);
 
             Write(data);
         }

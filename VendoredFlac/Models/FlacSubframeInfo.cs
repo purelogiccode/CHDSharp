@@ -58,7 +58,8 @@ internal unsafe class FlacSubframeInfo
         Sf = new LpcSubframeInfo();
         BestFixed = new ulong[5];
         LpcCtx = new LpcContext[Lpc.Maxlpcwindows];
-        for (var i = 0; i < Lpc.Maxlpcwindows; i++) LpcCtx[i] = new LpcContext();
+        for (var i = 0; i < Lpc.Maxlpcwindows; i++)
+            LpcCtx[i] = new LpcContext();
     }
 
     /// <summary>
@@ -76,7 +77,8 @@ internal unsafe class FlacSubframeInfo
         Samples = s;
         Obits = bps - w;
         Wbits = w;
-        for (var o = 0; o <= 4; o++) BestFixed[o] = 0;
+        for (var o = 0; o <= 4; o++)
+            BestFixed[o] = 0;
 
         Best.Residual = r;
         Best.Type = SubframeType.Verbatim;

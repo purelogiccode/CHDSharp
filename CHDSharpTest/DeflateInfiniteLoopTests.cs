@@ -13,7 +13,10 @@ public class DeflateInfiniteLoopTests
     /// <summary>
     ///     Creates a V3 CHD with a single compressed hunk whose payload is the given bytes.
     /// </summary>
-    private static MemoryStream MakeV3WithCompressedHunk(byte[] compressedPayload, uint blocksize = 512)
+    private static MemoryStream MakeV3WithCompressedHunk(
+        byte[] compressedPayload,
+        uint blocksize = 512
+    )
     {
         var length = (uint)compressedPayload.Length;
         var ms = new MemoryStream();
@@ -73,7 +76,9 @@ public class DeflateInfiniteLoopTests
     ///     Returns true if the operation completed (success or error), false if it hung.
     /// </summary>
     private static (ChdError openErr, bool completed) TryReadHunkWithTimeout(
-        MemoryStream chdStream, int timeoutMs = 5000)
+        MemoryStream chdStream,
+        int timeoutMs = 5000
+    )
     {
         var cts = new CancellationTokenSource(timeoutMs);
         var openErr = ChdError.Chderrinvaliddata;
@@ -140,7 +145,10 @@ public class DeflateInfiniteLoopTests
             var chd = MakeV3WithCompressedHunk(zlib);
 
             var (_, completed) = TryReadHunkWithTimeout(chd);
-            Assert.True(completed, $"ReadHunk must not hang on random deflate data (iteration {i})");
+            Assert.True(
+                completed,
+                $"ReadHunk must not hang on random deflate data (iteration {i})"
+            );
         }
     }
 
@@ -190,7 +198,7 @@ public class DeflateInfiniteLoopTests
             0x05, // BFINAL=1, BTYPE=10 (dynamic)
             0x00, // HLIT=0 (actually +257 = 257), HDIST high bits
             0x00, // HDIST low bits (actually +1 = 1), HCLEN high bits
-            0x00 // HCLEN low bits (actually +4 = 4)
+            0x00, // HCLEN low bits (actually +4 = 4)
         };
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
@@ -210,13 +218,26 @@ public class DeflateInfiniteLoopTests
             0x01, // HLIT=258, HDIST=2 (low bits)
             0x00, // HCLEN=4 (low bits)
             // Code length code lengths (in special order): all zeros except one
-            0x00, 0x00, 0x00, 0x01, // first 4 entries: 0,0,0,1 (symbol 3 = code length 1)
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x01, // first 4 entries: 0,0,0,1 (symbol 3 = code length 1)
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // One symbol with code length 1 → end-of-block code
-            0x00 // literal 0 (code length for symbol 0)
+            0x00, // literal 0 (code length for symbol 0)
         };
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
@@ -261,15 +282,30 @@ public class DeflateInfiniteLoopTests
         var deflate = new byte[]
         {
             0x05, // BFINAL=1, BTYPE=10 (dynamic)
-            0x00, 0x00, 0x00, // HLIT=257, HDIST=1, HCLEN=4
+            0x00,
+            0x00,
+            0x00, // HLIT=257, HDIST=1, HCLEN=4
             // Code length code lengths: only symbol 0 (literal code length 0) has length 1
-            0x01, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
             // End-of-block code (symbol 256)
-            0x00
+            0x00,
         };
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);

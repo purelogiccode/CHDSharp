@@ -15,4 +15,5 @@ public sealed record LaserDiscEncodingInfo(
     uint BytesPerFrame,
     uint HunkBytes,
     ulong FirstFrame,
-    ulong Frames);
+    ulong Frames
+);

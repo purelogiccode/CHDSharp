@@ -6,9 +6,8 @@ namespace VendoredLZMA;
 internal class DataErrorException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="DataErrorException" /> class with a default message.</summary>
-    internal DataErrorException() : base("Data Error")
-    {
-    }
+    internal DataErrorException()
+        : base("Data Error") { }
 }
 
 /// <summary>
@@ -17,9 +16,8 @@ internal class DataErrorException : Exception
 internal class InvalidParamException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="InvalidParamException" /> class.</summary>
-    internal InvalidParamException() : base("Invalid Parameter")
-    {
-    }
+    internal InvalidParamException()
+        : base("Invalid Parameter") { }
 }
 
 /// <summary>Progress callback interface, ported from the LZMA SDK (public domain).</summary>
@@ -35,7 +33,13 @@ internal interface ICodeProgress
 internal interface ICoder
 {
     /// <summary>Codes streams.</summary>
-    void Code(Stream inStream, Stream outStream, long inSize, long outSize, ICodeProgress? progress);
+    void Code(
+        Stream inStream,
+        Stream outStream,
+        long inSize,
+        long outSize,
+        ICodeProgress? progress
+    );
 }
 
 /// <summary>Provides the fields that represent property identifiers for compressing.</summary>
@@ -84,7 +88,7 @@ internal enum CoderPropId
     NumThreads,
 
     /// <summary>Specifies mode with end marker.</summary>
-    EndMarker
+    EndMarker,
 }
 
 /// <summary>Coder property configuration interface, ported from the LZMA SDK (public domain).</summary>

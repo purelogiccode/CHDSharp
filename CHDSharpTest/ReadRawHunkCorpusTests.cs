@@ -8,8 +8,7 @@ namespace CHDSharp.Tests;
 [Collection("TestData")]
 public sealed class ReadRawHunkCorpusTests
 {
-    private static readonly string TestDataDir =
-        Path.Combine(AppContext.BaseDirectory, "TestData");
+    private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
     [Fact]
     public void UncompressedMap_RawEqualsDecompressed()
@@ -32,14 +31,20 @@ public sealed class ReadRawHunkCorpusTests
                 if (raw == null)
                 {
                     zeroFillHunks++;
-                    Assert.True(hunk.All(b => b == 0), $"hunk {h} has no on-disk data but is not zero-filled");
+                    Assert.True(
+                        hunk.All(b => b == 0),
+                        $"hunk {h} has no on-disk data but is not zero-filled"
+                    );
                     continue;
                 }
 
                 Assert.Equal(hunk, raw);
             }
 
-            Assert.True(zeroFillHunks > 0, "expected at least one zero-fill hunk in the uncompressed map");
+            Assert.True(
+                zeroFillHunks > 0,
+                "expected at least one zero-fill hunk in the uncompressed map"
+            );
         }
     }
 
@@ -60,7 +65,8 @@ public sealed class ReadRawHunkCorpusTests
             for (uint h = 0; h < file.HunkCount; h++)
             {
                 var raw = file.ReadRawHunk(h);
-                if (raw == null) parentReferenced++;
+                if (raw == null)
+                    parentReferenced++;
 
                 Assert.Equal(ChdError.Chderrnone, file.ReadHunk(h, hunk));
             }

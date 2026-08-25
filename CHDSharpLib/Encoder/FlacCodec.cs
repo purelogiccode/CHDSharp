@@ -21,11 +21,14 @@ public sealed class FlacCodec : IChdCodec
     public FlacCodec(uint hunkBytes)
     {
         if (hunkBytes % 4 != 0)
-            throw new ArgumentException($"hunkBytes ({hunkBytes}) must be a multiple of 4 for 2ch/16-bit samples");
+            throw new ArgumentException(
+                $"hunkBytes ({hunkBytes}) must be a multiple of 4 for 2ch/16-bit samples"
+            );
 
         // MAME's chd_flac_compressor::blocksize: samples per hunk, halved until ≤ 2048
         _blockSize = (int)(hunkBytes / 4);
-        while (_blockSize > 2048) _blockSize /= 2;
+        while (_blockSize > 2048)
+            _blockSize /= 2;
 
         _swappedBuffer = new byte[hunkBytes];
     }

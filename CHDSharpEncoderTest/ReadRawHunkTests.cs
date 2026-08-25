@@ -61,7 +61,8 @@ public class ReadRawHunkTests : IDisposable
         // compressible data compresses with zlib: the raw bytes are the raw-DEFLATE stream
         // stored on disk; inflating them must reproduce the original hunk
         var source = new byte[4096];
-        for (var i = 0; i < source.Length; i++) source[i] = (byte)(i % 37 == 0 ? 0xFF : 0);
+        for (var i = 0; i < source.Length; i++)
+            source[i] = (byte)(i % 37 == 0 ? 0xFF : 0);
 
         var chdPath = Encode(source, [CodecTags.Zlib]);
 
@@ -87,7 +88,8 @@ public class ReadRawHunkTests : IDisposable
         for (var h = 0; h < 4; h++)
         {
             var pattern = h % 2; // hunk 0 == hunk 2, hunk 1 == hunk 3
-            for (var i = 0; i < 4096; i++) source[h * 4096 + i] = (byte)(pattern * 31 + i % 17);
+            for (var i = 0; i < 4096; i++)
+                source[h * 4096 + i] = (byte)(pattern * 31 + i % 17);
         }
 
         var chdPath = Encode(source, [CodecTags.Zlib]);

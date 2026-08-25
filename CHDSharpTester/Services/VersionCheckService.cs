@@ -12,7 +12,8 @@ namespace CHDSharpTester.Services;
 /// </summary>
 internal static class VersionCheckService
 {
-    private const string RepoApiUrl = "https://api.github.com/repos/purelogiccode/CHDSharp/releases/latest";
+    private const string RepoApiUrl =
+        "https://api.github.com/repos/purelogiccode/CHDSharp/releases/latest";
     private const string RepoReleasesUrl = "https://github.com/purelogiccode/CHDSharp/releases";
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
@@ -48,13 +49,14 @@ internal static class VersionCheckService
                 return null;
 
             var assetName = GetExpectedAssetName();
-            var downloadUrl = release.Assets?
-                .FirstOrDefault(a => string.Equals(a.Name, assetName, StringComparison.OrdinalIgnoreCase))
+            var downloadUrl = release
+                .Assets?.FirstOrDefault(a =>
+                    string.Equals(a.Name, assetName, StringComparison.OrdinalIgnoreCase)
+                )
                 ?.BrowserDownloadUrl;
 
             var url = downloadUrl ?? RepoReleasesUrl;
-            return
-                $"A new version of CHDSharpTester is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}\nDownload: {url}";
+            return $"A new version of CHDSharpTester is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}\nDownload: {url}";
         }
         catch
         {
@@ -76,7 +78,7 @@ internal static class VersionCheckService
             Architecture.Arm64 => "win-arm64",
             Architecture.X64 => "win-x64",
             Architecture.X86 => "win-x86",
-            _ => "win-x64"
+            _ => "win-x64",
         };
 
         return $"CHDSharpTester_{arch}_v{Assembly.GetEntryAssembly()?.GetName().Version}.zip";
@@ -85,14 +87,17 @@ internal static class VersionCheckService
 
 internal sealed class GitHubRelease
 {
-    [JsonPropertyName("tag_name")] public string? TagName { get; set; }
+    [JsonPropertyName("tag_name")]
+    public string? TagName { get; set; }
 
-    [JsonPropertyName("assets")] public List<GitHubAsset>? Assets { get; set; }
+    [JsonPropertyName("assets")]
+    public List<GitHubAsset>? Assets { get; set; }
 }
 
 internal sealed class GitHubAsset
 {
-    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
 
     [JsonPropertyName("browser_download_url")]
     public string? BrowserDownloadUrl { get; set; }

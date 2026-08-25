@@ -166,7 +166,10 @@ public class ReadHeaderTests
         Assert.Equal(ChdError.Chderrnone, err);
         Assert.NotNull(info);
 
-        Assert.Equal(new[] { ChdCodec.Lzma, ChdCodec.Zlib, ChdCodec.Huffman, ChdCodec.Flac }, info.Compression);
+        Assert.Equal(
+            new[] { ChdCodec.Lzma, ChdCodec.Zlib, ChdCodec.Huffman, ChdCodec.Flac },
+            info.Compression
+        );
     }
 
     [Fact]

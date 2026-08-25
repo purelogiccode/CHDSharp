@@ -15,7 +15,8 @@ namespace CHDSharpTester.Services;
 internal sealed class BugReportSink : ILogEventSink
 {
     private const string Endpoint = "https://www.purelogiccode.com/bugreport/api/send-bug-report";
-    private const string ApiKey = "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
+    private const string ApiKey =
+        "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
     private static readonly HttpClient Client = new();
 
     private readonly EnvironmentSnapshot _env;
@@ -37,9 +38,12 @@ internal sealed class BugReportSink : ILogEventSink
     /// <inheritdoc />
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null) return;
-        if (logEvent.Level < LogEventLevel.Warning) return;
-        if (logEvent.Exception is OperationCanceledException or TaskCanceledException) return;
+        if (logEvent == null)
+            return;
+        if (logEvent.Level < LogEventLevel.Warning)
+            return;
+        if (logEvent.Exception is OperationCanceledException or TaskCanceledException)
+            return;
 
         var message = BuildMessage(logEvent);
 
@@ -87,7 +91,11 @@ internal sealed class BugReportSink : ILogEventSink
         return sb.ToString();
     }
 
-    [SuppressMessage("ReSharper", "CA1031", Justification = "Bug-report delivery is best-effort and must never throw.")]
+    [SuppressMessage(
+        "ReSharper",
+        "CA1031",
+        Justification = "Bug-report delivery is best-effort and must never throw."
+    )]
     private async Task SendAsync(string message, LogEvent logEvent)
     {
         try
@@ -99,7 +107,7 @@ internal sealed class BugReportSink : ILogEventSink
                 version = _env.ApplicationVersion,
                 userInfo = (string?)null,
                 environment = _environmentLabel,
-                stackTrace = logEvent.Exception?.StackTrace
+                stackTrace = logEvent.Exception?.StackTrace,
             };
 
             var json = JsonSerializer.Serialize(payload);

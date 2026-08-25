@@ -37,7 +37,8 @@ public static unsafe partial class Methods
                 for (p = 1; p < fastHashFillStep; ++p)
                 {
                     var hashAndTag = ZSTD_hashPtr(ip + p, hBits, mls);
-                    if (hashTable[hashAndTag >> 8] == 0) ZSTD_writeTaggedIndex(hashTable, hashAndTag, curr + p);
+                    if (hashTable[hashAndTag >> 8] == 0)
+                        ZSTD_writeTaggedIndex(hashTable, hashAndTag, curr + p);
                 }
             }
         }
@@ -70,7 +71,8 @@ public static unsafe partial class Methods
                 for (p = 1; p < fastHashFillStep; ++p)
                 {
                     var hash = ZSTD_hashPtr(ip + p, hBits, mls);
-                    if (hashTable[hash] == 0) hashTable[hash] = curr + p;
+                    if (hashTable[hash] == 0)
+                        hashTable[hash] = curr + p;
                 }
             }
         }
@@ -214,7 +216,8 @@ public static unsafe partial class Methods
         ip1 = ip0 + 1;
         ip2 = ip0 + step;
         ip3 = ip2 + 1;
-        if (ip3 >= ilimit) goto _cleanup;
+        if (ip3 >= ilimit)
+            goto _cleanup;
 
         hash0 = ZSTD_hashPtr(ip0, hlog, mls);
         hash1 = ZSTD_hashPtr(ip1, hlog, mls);
@@ -266,7 +269,8 @@ public static unsafe partial class Methods
 
             if (MEM_read32(ip0) == mval)
             {
-                if (step <= 4) hashTable[hash1] = (uint)(ip1 - @base);
+                if (step <= 4)
+                    hashTable[hash1] = (uint)(ip1 - @base);
 
                 goto _offset;
             }
@@ -526,7 +530,8 @@ public static unsafe partial class Methods
                 for (_pos = 0; _pos < _size; _pos += 64)
                 {
 #if NETCOREAPP3_0_OR_GREATER
-                    if (Sse.IsSupported) Sse.Prefetch1(_ptr + _pos);
+                    if (Sse.IsSupported)
+                        Sse.Prefetch1(_ptr + _pos);
 #endif
                 }
             }
@@ -585,10 +590,7 @@ public static unsafe partial class Methods
                     /* Found a possible dict match */
                     var dictMatchIndex = dictMatchIndexAndTag >> 8;
                     var dictMatch = dictBase + dictMatchIndex;
-                    if (
-                        dictMatchIndex > dictStartIndex
-                        && MEM_read32(dictMatch) == MEM_read32(ip0)
-                    )
+                    if (dictMatchIndex > dictStartIndex && MEM_read32(dictMatch) == MEM_read32(ip0))
                         if (matchIndex <= prefixStartIndex)
                         {
                             var offset = curr - dictMatchIndex - dictIndexDelta;
@@ -601,9 +603,7 @@ public static unsafe partial class Methods
                                     prefixStart
                                 ) + 4;
                             while (
-                                ip0 > anchor
-                                && dictMatch > dictStart
-                                && ip0[-1] == dictMatch[-1]
+                                ip0 > anchor && dictMatch > dictStart && ip0[-1] == dictMatch[-1]
                             )
                             {
                                 ip0--;
@@ -692,13 +692,8 @@ public static unsafe partial class Methods
                     {
                         var repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                         var repLength2 =
-                            ZSTD_count_2segments(
-                                ip0 + 4,
-                                repMatch2 + 4,
-                                iend,
-                                repEnd2,
-                                prefixStart
-                            ) + 4;
+                            ZSTD_count_2segments(ip0 + 4, repMatch2 + 4, iend, repEnd2, prefixStart)
+                            + 4;
                         /* swap offset_2 <=> offset_1 */
                         var tmpOffset = offset_2;
                         offset_2 = offset_1;
@@ -816,37 +811,13 @@ public static unsafe partial class Methods
         {
             default:
             case 4:
-                return ZSTD_compressBlock_fast_dictMatchState_4_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_4_0(ms, seqStore, rep, src, srcSize);
             case 5:
-                return ZSTD_compressBlock_fast_dictMatchState_5_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_5_0(ms, seqStore, rep, src, srcSize);
             case 6:
-                return ZSTD_compressBlock_fast_dictMatchState_6_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_6_0(ms, seqStore, rep, src, srcSize);
             case 7:
-                return ZSTD_compressBlock_fast_dictMatchState_7_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_7_0(ms, seqStore, rep, src, srcSize);
         }
     }
 
@@ -928,7 +899,8 @@ public static unsafe partial class Methods
         ip1 = ip0 + 1;
         ip2 = ip0 + step;
         ip3 = ip2 + 1;
-        if (ip3 >= ilimit) goto _cleanup;
+        if (ip3 >= ilimit)
+            goto _cleanup;
 
         hash0 = ZSTD_hashPtr(ip0, hlog, mls);
         hash1 = ZSTD_hashPtr(ip1, hlog, mls);
@@ -966,9 +938,9 @@ public static unsafe partial class Methods
             }
 
             {
-                var mval =
-                    idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
-                if (MEM_read32(ip0) == mval) goto _offset;
+                var mval = idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
+                if (MEM_read32(ip0) == mval)
+                    goto _offset;
             }
 
             idx = hashTable[hash1];
@@ -981,9 +953,9 @@ public static unsafe partial class Methods
             current0 = (uint)(ip0 - @base);
             hashTable[hash0] = current0;
             {
-                var mval =
-                    idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
-                if (MEM_read32(ip0) == mval) goto _offset;
+                var mval = idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
+                if (MEM_read32(ip0) == mval)
+                    goto _offset;
             }
 
             idx = hashTable[hash1];
@@ -1045,7 +1017,8 @@ public static unsafe partial class Methods
         ZSTD_storeSeq(seqStore, (nuint)(ip0 - anchor), anchor, iend, offcode, mLength);
         ip0 += mLength;
         anchor = ip0;
-        if (ip1 < ip0) hashTable[hash1] = (uint)(ip1 - @base);
+        if (ip1 < ip0)
+            hashTable[hash1] = (uint)(ip1 - @base);
 
         if (ip0 <= ilimit)
         {

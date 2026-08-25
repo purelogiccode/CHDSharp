@@ -37,7 +37,7 @@ public enum ChdCodec
     Avhuff = 0x61766875, // avhu
 
     /// <summary>Error / unknown codec.</summary>
-    Error = 0x0eeeeeee
+    Error = 0x0eeeeeee,
 }
 
 /// <summary>Flags describing the type and properties of a hunk map entry.</summary>
@@ -71,7 +71,7 @@ public enum MapEntryFlag
     Mapentrytypeparenthunk = 0x0005, /* same as a hunk in the parent file */
 
     /// <summary>Secondary compressed hunk (V3/V4): compressed with the secondary algorithm, typically FLAC for CDDA audio.</summary>
-    Mapentrytype2Ndcompressed = 0x0006 /* compressed with secondary algorithm (usually FLAC CDDA) */
+    Mapentrytype2Ndcompressed = 0x0006, /* compressed with secondary algorithm (usually FLAC CDDA) */
 }
 
 /// <summary>CD-ROM track types. Matches MAME cdrom.h CD_TRACK_* values.</summary>
@@ -99,7 +99,7 @@ public enum ChdTrackType
     Mode2Raw = 6,
 
     /// <summary>Audio track, 2352 bytes per sector.</summary>
-    Audio = 7
+    Audio = 7,
 }
 
 /// <summary>CD-ROM subcode types. Matches MAME cdrom.h CD_SUB_* values.</summary>
@@ -112,7 +112,7 @@ public enum ChdSubType
     Normal = 1,
 
     /// <summary>Raw uninterleaved subcode (raw, 96 bytes per sector).</summary>
-    Raw = 2
+    Raw = 2,
 }
 
 /// <summary>Represents the compression type for a hunk in the V5 CHD format.</summary>
@@ -193,7 +193,7 @@ public enum CompressionType
     ///     Secondary compressed hunk in V3/V4 CHDs (type 6 map entry). Decompressed using the secondary codec (typically
     ///     FLAC for CDDA audio).
     /// </summary>
-    Compressiontype2Nd = 103
+    Compressiontype2Nd = 103,
 }
 
 /// <summary>Error codes returned by CHD operations.</summary>
@@ -284,5 +284,5 @@ public enum ChdError
     Chderrunsupportedformat,
 
     /// <summary>Unable to open the specified file.</summary>
-    Chderrcannotopenfile
+    Chderrcannotopenfile,
 }

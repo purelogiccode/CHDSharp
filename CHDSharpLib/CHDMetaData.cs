@@ -17,13 +17,21 @@ internal static class ChdMetaData
     private static readonly ILogger Log = ChdLogger.GetLogger(nameof(ChdMetaData));
 
     private static readonly Action<ILogger, string, uint, Exception?> LogMetaTag =
-        LoggerMessage.Define<string, uint>(LogLevel.Debug, new EventId(1), "{Tag}  Length: {Length}");
+        LoggerMessage.Define<string, uint>(
+            LogLevel.Debug,
+            new EventId(1),
+            "{Tag}  Length: {Length}"
+        );
 
     private static readonly Action<ILogger, string, Exception?> LogMetaDataText =
         LoggerMessage.Define<string>(LogLevel.Debug, new EventId(2), "Data: {Data}");
 
     private static readonly Action<ILogger, int, Exception?> LogMetaDataBinary =
-        LoggerMessage.Define<int>(LogLevel.Debug, new EventId(3), "Data: Binary Data Length {Length}");
+        LoggerMessage.Define<int>(
+            LogLevel.Debug,
+            new EventId(3),
+            "Data: Binary Data Length {Length}"
+        );
 
     /// <summary>Reads all metadata entries and validates the combined SHA-1 hash stored in the header (V4/V5).</summary>
     /// <param name="file">The stream containing the CHD file.</param>
@@ -34,7 +42,11 @@ internal static class ChdMetaData
     /// </returns>
     internal static ChdError ReadMetaData(Stream file, ChdHeader chd)
     {
-        if (chd.Rawsha1 is not { Length: 20 } || chd.Sha1 is not { Length: 20 } || Util.IsAllZeroArray(chd.Sha1))
+        if (
+            chd.Rawsha1 is not { Length: 20 }
+            || chd.Sha1 is not { Length: 20 }
+            || Util.IsAllZeroArray(chd.Sha1)
+        )
             return ChdError.Chderrnone;
 
         var metaHashes = new List<byte[]>();
@@ -72,15 +84,19 @@ internal static class ChdMetaData
     ///     list on error.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise a read/parse error code.</returns>
-    internal static ChdError ReadMetaDataEntries(Stream file, ChdHeader chd,
-        out List<ChdMetadataEntry> entries)
+    internal static ChdError ReadMetaDataEntries(
+        Stream file,
+        ChdHeader chd,
+        out List<ChdMetadataEntry> entries
+    )
     {
         entries = [];
         var metaErr = ReadMetaDataInternal(file, chd, false, out var internalEntries);
         if (metaErr != ChdError.Chderrnone)
             return metaErr;
 
-        foreach (var e in internalEntries) entries.Add(new ChdMetadataEntry(e.Tag, e.Data) { Flags = e.Flags });
+        foreach (var e in internalEntries)
+            entries.Add(new ChdMetadataEntry(e.Tag, e.Data) { Flags = e.Flags });
 
         return ChdError.Chderrnone;
     }
@@ -118,8 +134,12 @@ internal static class ChdMetaData
         return sha1Total.Hash;
     }
 
-    private static ChdError ReadMetaDataInternal(Stream file, ChdHeader chd,
-        bool collectHashes, out List<InternalEntry> entries)
+    private static ChdError ReadMetaDataInternal(
+        Stream file,
+        ChdHeader chd,
+        bool collectHashes,
+        out List<InternalEntry> entries
+    )
     {
         entries = [];
         using var br = new BinaryReader(file, Encoding.UTF8, true);
@@ -154,9 +174,18 @@ internal static class ChdMetaData
                 LogMetaDataBinary(Log, metaData.Length, null);
 
             byte[]? hash = null;
-            if (collectHashes && (metaFlags & ChdMdflagsChecksum) != 0) hash = metadata_hash(metaTag, metaData);
+            if (collectHashes && (metaFlags & ChdMdflagsChecksum) != 0)
+                hash = metadata_hash(metaTag, metaData);
 
-            entries.Add(new InternalEntry { Tag = tag, Data = metaData, Hash = hash, Flags = (byte)metaFlags });
+            entries.Add(
+                new InternalEntry
+                {
+                    Tag = tag,
+                    Data = metaData,
+                    Hash = hash,
+                    Flags = (byte)metaFlags,
+                }
+            );
 
             currentOffset = metaNext;
         }
@@ -173,7 +202,8 @@ internal static class ChdMetaData
         metaHash[3] = (byte)((metaTag >> 0) & 0xff);
         var metaDataHash = SHA1.HashData(metaData);
 
-        for (var i = 0; i < 20; i++) metaHash[4 + i] = metaDataHash[i];
+        for (var i = 0; i < 20; i++)
+            metaHash[4 + i] = metaDataHash[i];
 
         return metaHash;
     }

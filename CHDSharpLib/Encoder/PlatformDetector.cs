@@ -10,8 +10,8 @@ namespace CHDSharp.Encoder;
 /// </summary>
 public static class PlatformDetector
 {
-    private static ReadOnlySpan<byte> CdSync => new byte[]
-        { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
+    private static ReadOnlySpan<byte> CdSync =>
+        new byte[] { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
 
     /// <summary>
     ///     Detects the platform of a disc image file. For CUE/GDI/NRG descriptors the track layout
@@ -37,7 +37,12 @@ public static class PlatformDetector
             case ".img":
                 return DetectRawFile(inputPath);
             default:
-                return new DiscPlatformInfo(DiscPlatform.Unknown, null, null, "unsupported input extension");
+                return new DiscPlatformInfo(
+                    DiscPlatform.Unknown,
+                    null,
+                    null,
+                    "unsupported input extension"
+                );
         }
     }
 
@@ -78,7 +83,12 @@ public static class PlatformDetector
         {
             var toc = CdImageParser.Parse(descriptorPath);
             if (toc.Tracks.Count == 0)
-                return new DiscPlatformInfo(DiscPlatform.Unknown, null, null, "no tracks in descriptor");
+                return new DiscPlatformInfo(
+                    DiscPlatform.Unknown,
+                    null,
+                    null,
+                    "no tracks in descriptor"
+                );
 
             var firstDataTrack = toc.Tracks.FirstOrDefault(t => t.TrackType != CdTrackType.Audio);
             if (firstDataTrack.FileName is null)
@@ -108,9 +118,15 @@ public static class PlatformDetector
                 return ExtractCooked(raw, (uint)frameSize);
             }
         }
-        catch (Exception ex) when (ex is InvalidDataException or IOException or FileNotFoundException)
+        catch (Exception ex)
+            when (ex is InvalidDataException or IOException or FileNotFoundException)
         {
-            return new DiscPlatformInfo(DiscPlatform.Unknown, null, null, $"descriptor parse failed: {ex.Message}");
+            return new DiscPlatformInfo(
+                DiscPlatform.Unknown,
+                null,
+                null,
+                $"descriptor parse failed: {ex.Message}"
+            );
         }
     }
 
@@ -141,12 +157,21 @@ public static class PlatformDetector
         }
         catch (IOException ex)
         {
-            return new DiscPlatformInfo(DiscPlatform.Unknown, null, null, $"cannot read input: {ex.Message}");
+            return new DiscPlatformInfo(
+                DiscPlatform.Unknown,
+                null,
+                null,
+                $"cannot read input: {ex.Message}"
+            );
         }
     }
 
     /// <summary>Runs the shared CHDSharpLib detection core over a sector reader.</summary>
-    private static DiscPlatformInfo DetectCore(DiscDetector.SectorReader readSector, string format, string source)
+    private static DiscPlatformInfo DetectCore(
+        DiscDetector.SectorReader readSector,
+        string format,
+        string source
+    )
     {
         // GD-ROM images are always Dreamcast.
         if (string.Equals(format, "gd", StringComparison.Ordinal))
@@ -163,11 +188,15 @@ public static class PlatformDetector
         // CD sync pattern: 00 FF FF FF FF FF FF FF FF FF FF 00
         Span<byte> header = stackalloc byte[16];
         fs.Position = 0;
-        if (fs.Read(header) == header.Length && header[..12].SequenceEqual(CdSync)) return 2352;
+        if (fs.Read(header) == header.Length && header[..12].SequenceEqual(CdSync))
+            return 2352;
 
-        if (length % 2048 == 0) return 2048;
-        if (length % 2336 == 0) return 2336;
-        if (length % 2352 == 0) return 2352;
+        if (length % 2048 == 0)
+            return 2048;
+        if (length % 2336 == 0)
+            return 2336;
+        if (length % 2352 == 0)
+            return 2352;
 
         return 2048; // fallback
     }
@@ -179,7 +208,7 @@ public static class PlatformDetector
             2048 => raw,
             2352 => raw.AsSpan(raw[15] == 0x01 ? 16 : 24, 2048).ToArray(),
             2336 => raw.AsSpan(8, 2048).ToArray(),
-            _ => raw.Length >= 2048 ? raw.AsSpan(0, 2048).ToArray() : null
+            _ => raw.Length >= 2048 ? raw.AsSpan(0, 2048).ToArray() : null,
         };
     }
 }

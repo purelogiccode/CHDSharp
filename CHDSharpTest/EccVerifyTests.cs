@@ -116,7 +116,8 @@ public sealed class EccVerifyTests
         var sector = new byte[CdSectorSize];
         sector[0x00f] = 1;
 
-        for (var i = 0x010; i < 0x80c; i++) sector[i] = (byte)(i & 0xff);
+        for (var i = 0x010; i < 0x80c; i++)
+            sector[i] = (byte)(i & 0xff);
 
         CdRom.EccGenerate(sector, 0);
         Assert.True(CdRom.EccVerify(sector, 0));
@@ -139,8 +140,10 @@ public sealed class EccVerifyTests
 
         CdRom.EccVerify(sector, 0);
 
-        Assert.True(sector.AsSpan().SequenceEqual(copy.AsSpan()),
-            "EccVerify must not modify the sector data");
+        Assert.True(
+            sector.AsSpan().SequenceEqual(copy.AsSpan()),
+            "EccVerify must not modify the sector data"
+        );
     }
 
     [Fact]
@@ -153,8 +156,10 @@ public sealed class EccVerifyTests
         {
             Assert.True(chd!.IsCd);
             var unitBytes = chd.UnitBytes;
-            Assert.True(unitBytes == 2448,
-                $"Expected 2448 bytes per frame (2352 sector + 96 subcode), got {unitBytes}");
+            Assert.True(
+                unitBytes == 2448,
+                $"Expected 2448 bytes per frame (2352 sector + 96 subcode), got {unitBytes}"
+            );
 
             var frameBuf = new byte[CdSectorSize];
             err = chd.Read(0, frameBuf, 0, CdSectorSize);

@@ -5,8 +5,7 @@ namespace CHDSharp.Tests;
 [Collection("TestData")]
 public sealed class TrackInfoTests
 {
-    private static readonly string TestDataDir =
-        Path.Combine(AppContext.BaseDirectory, "TestData");
+    private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
     [Fact]
     public void V5_cd_default_is_cd()
@@ -231,14 +230,19 @@ public sealed class TrackInfoTests
         Assert.Equal(ChdError.Chderrnone, err);
         using (chd)
         {
-            Assert.Throws<InvalidOperationException>(() => chd!.GenerateGdiDescriptor(["track01.bin", "track02.bin"]));
+            Assert.Throws<InvalidOperationException>(() =>
+                chd!.GenerateGdiDescriptor(["track01.bin", "track02.bin"])
+            );
         }
     }
 
     [Fact]
     public void Classify_returns_cd_for_cd_chds()
     {
-        var err = Chd.Classify(Path.Combine(TestDataDir, "v5_cd_default.chd"), out var classification);
+        var err = Chd.Classify(
+            Path.Combine(TestDataDir, "v5_cd_default.chd"),
+            out var classification
+        );
         Assert.Equal(ChdError.Chderrnone, err);
         Assert.Equal("cd", classification);
 
@@ -266,7 +270,10 @@ public sealed class TrackInfoTests
     [Fact]
     public void Classify_returns_file_not_found_for_missing()
     {
-        var err = Chd.Classify(Path.Combine(TestDataDir, "nonexistent.chd"), out var classification);
+        var err = Chd.Classify(
+            Path.Combine(TestDataDir, "nonexistent.chd"),
+            out var classification
+        );
         Assert.Equal(ChdError.Chderrfilenotfound, err);
         Assert.Null(classification);
     }
@@ -274,7 +281,13 @@ public sealed class TrackInfoTests
     [Fact]
     public void All_v5_cd_variants_are_classified_as_cd()
     {
-        var cdFiles = new[] { "v5_cd_cdzl.chd", "v5_cd_cdlz.chd", "v5_cd_cdfl.chd", "v5_cd_cdzs.chd" };
+        var cdFiles = new[]
+        {
+            "v5_cd_cdzl.chd",
+            "v5_cd_cdlz.chd",
+            "v5_cd_cdfl.chd",
+            "v5_cd_cdzs.chd",
+        };
         foreach (var file in cdFiles)
         {
             var err = Chd.Classify(Path.Combine(TestDataDir, file), out var classification);

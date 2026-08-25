@@ -40,7 +40,7 @@ public enum DiscPlatform
     PcEngine = 10,
 
     /// <summary>DVD-Video (VIDEO_TS/VIDEO_TS.IFO) or a generic DVD.</summary>
-    Dvd = 11
+    Dvd = 11,
 }
 
 /// <summary>
@@ -57,35 +57,43 @@ public enum DiscPlatform
 ///     Human-readable description of how the platform was detected
 ///     (sector 0 magic, ISO-9660 path, IPL header, ...).
 /// </param>
-public sealed record DiscPlatformInfo(DiscPlatform Platform, string? Title, string? ManufacturerId, string Source)
+public sealed record DiscPlatformInfo(
+    DiscPlatform Platform,
+    string? Title,
+    string? ManufacturerId,
+    string Source
+)
 {
     /// <summary>
     ///     The platform as a lowercase string ("cd", "dvd", "ps1", "dreamcast", ...),
     ///     or "unknown".
     /// </summary>
-    public string Name => Platform switch
-    {
-        DiscPlatform.GenericCd => "cd",
-        DiscPlatform.ThreeDo => "3do",
-        DiscPlatform.MegaCd => "megacd",
-        DiscPlatform.Saturn => "saturn",
-        DiscPlatform.Dreamcast => "dreamcast",
-        DiscPlatform.Ps1 => "ps1",
-        DiscPlatform.Ps2 => "ps2",
-        DiscPlatform.Psp => "psp",
-        DiscPlatform.NeoGeoCd => "neogeocd",
-        DiscPlatform.PcEngine => "pcengine",
-        DiscPlatform.Dvd => "dvd",
-        _ => "unknown"
-    };
+    public string Name =>
+        Platform switch
+        {
+            DiscPlatform.GenericCd => "cd",
+            DiscPlatform.ThreeDo => "3do",
+            DiscPlatform.MegaCd => "megacd",
+            DiscPlatform.Saturn => "saturn",
+            DiscPlatform.Dreamcast => "dreamcast",
+            DiscPlatform.Ps1 => "ps1",
+            DiscPlatform.Ps2 => "ps2",
+            DiscPlatform.Psp => "psp",
+            DiscPlatform.NeoGeoCd => "neogeocd",
+            DiscPlatform.PcEngine => "pcengine",
+            DiscPlatform.Dvd => "dvd",
+            _ => "unknown",
+        };
 
     /// <inheritdoc />
     public override string ToString()
     {
         var result = Name;
-        if (Title is { Length: > 0 }) result += $" \"{Title}\"";
+        if (Title is { Length: > 0 })
+            result += $" \"{Title}\"";
 
-        if (ManufacturerId is { Length: > 0 }) result += $" [{ManufacturerId}]";
+        if (ManufacturerId is { Length: > 0 })
+            result += $" [{ManufacturerId}]";
 
         return result;
     }

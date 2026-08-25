@@ -30,8 +30,10 @@ public class Huffman168Tests
     public void TwoSymbols_frequentShorter()
     {
         var huff = new Huffman168();
-        for (var i = 0; i < 10; i++) huff.CountSymbol(0);
-        for (var i = 0; i < 5; i++) huff.CountSymbol(1);
+        for (var i = 0; i < 10; i++)
+            huff.CountSymbol(0);
+        for (var i = 0; i < 5; i++)
+            huff.CountSymbol(1);
         huff.BuildTree();
 
         Assert.True(huff.NumBits[0] <= huff.NumBits[1]);
@@ -84,7 +86,8 @@ public class Huffman168Tests
     public void Encode_noBitsForZeroCodeLength()
     {
         var huff = new Huffman168();
-        for (var i = 0; i < 5; i++) huff.CountSymbol(0);
+        for (var i = 0; i < 5; i++)
+            huff.CountSymbol(0);
         huff.BuildTree();
 
         var bs = new BitStreamOut(16);
@@ -100,10 +103,14 @@ public class Huffman168Tests
     public void Encode_encodeSequence_matchesDecode()
     {
         var huff = new Huffman168();
-        for (var i = 0; i < 20; i++) huff.CountSymbol(0);
-        for (var i = 0; i < 10; i++) huff.CountSymbol(1);
-        for (var i = 0; i < 5; i++) huff.CountSymbol(2);
-        for (var i = 0; i < 5; i++) huff.CountSymbol(3);
+        for (var i = 0; i < 20; i++)
+            huff.CountSymbol(0);
+        for (var i = 0; i < 10; i++)
+            huff.CountSymbol(1);
+        for (var i = 0; i < 5; i++)
+            huff.CountSymbol(2);
+        for (var i = 0; i < 5; i++)
+            huff.CountSymbol(3);
         huff.BuildTree();
 
         var bs = new BitStreamOut(1024);
@@ -120,8 +127,10 @@ public class Huffman168Tests
     public void ExportTreeRle_producesOutput()
     {
         var huff = new Huffman168();
-        for (var i = 0; i < 10; i++) huff.CountSymbol(0);
-        for (var i = 0; i < 5; i++) huff.CountSymbol(1);
+        for (var i = 0; i < 10; i++)
+            huff.CountSymbol(0);
+        for (var i = 0; i < 5; i++)
+            huff.CountSymbol(1);
         huff.BuildTree();
 
         var bs = new BitStreamOut(256);
@@ -180,7 +189,8 @@ public class Huffman168Tests
     public void HeavySkew_frequentBelowOthers()
     {
         var huff = new Huffman168();
-        for (var i = 0; i < 100; i++) huff.CountSymbol(5);
+        for (var i = 0; i < 100; i++)
+            huff.CountSymbol(5);
         huff.CountSymbol(0);
         huff.CountSymbol(1);
         huff.CountSymbol(2);

@@ -264,276 +264,276 @@ public static unsafe partial class Methods
             5,
             4,
             2,
-            1
+            1,
         };
 
     private static uint* kInverseProbabilityLog256 =>
         (uint*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_kInverseProbabilityLog256)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_kInverseProbabilityLog256)
+            );
 #else
-        private static readonly uint* kInverseProbabilityLog256 = GetArrayPointer(
-            new uint[256]
-            {
-                0,
-                2048,
-                1792,
-                1642,
-                1536,
-                1453,
-                1386,
-                1329,
-                1280,
-                1236,
-                1197,
-                1162,
-                1130,
-                1100,
-                1073,
-                1047,
-                1024,
-                1001,
-                980,
-                960,
-                941,
-                923,
-                906,
-                889,
-                874,
-                859,
-                844,
-                830,
-                817,
-                804,
-                791,
-                779,
-                768,
-                756,
-                745,
-                734,
-                724,
-                714,
-                704,
-                694,
-                685,
-                676,
-                667,
-                658,
-                650,
-                642,
-                633,
-                626,
-                618,
-                610,
-                603,
-                595,
-                588,
-                581,
-                574,
-                567,
-                561,
-                554,
-                548,
-                542,
-                535,
-                529,
-                523,
-                517,
-                512,
-                506,
-                500,
-                495,
-                489,
-                484,
-                478,
-                473,
-                468,
-                463,
-                458,
-                453,
-                448,
-                443,
-                438,
-                434,
-                429,
-                424,
-                420,
-                415,
-                411,
-                407,
-                402,
-                398,
-                394,
-                390,
-                386,
-                382,
-                377,
-                373,
-                370,
-                366,
-                362,
-                358,
-                354,
-                350,
-                347,
-                343,
-                339,
-                336,
-                332,
-                329,
-                325,
-                322,
-                318,
-                315,
-                311,
-                308,
-                305,
-                302,
-                298,
-                295,
-                292,
-                289,
-                286,
-                282,
-                279,
-                276,
-                273,
-                270,
-                267,
-                264,
-                261,
-                258,
-                256,
-                253,
-                250,
-                247,
-                244,
-                241,
-                239,
-                236,
-                233,
-                230,
-                228,
-                225,
-                222,
-                220,
-                217,
-                215,
-                212,
-                209,
-                207,
-                204,
-                202,
-                199,
-                197,
-                194,
-                192,
-                190,
-                187,
-                185,
-                182,
-                180,
-                178,
-                175,
-                173,
-                171,
-                168,
-                166,
-                164,
-                162,
-                159,
-                157,
-                155,
-                153,
-                151,
-                149,
-                146,
-                144,
-                142,
-                140,
-                138,
-                136,
-                134,
-                132,
-                130,
-                128,
-                126,
-                123,
-                121,
-                119,
-                117,
-                115,
-                114,
-                112,
-                110,
-                108,
-                106,
-                104,
-                102,
-                100,
-                98,
-                96,
-                94,
-                93,
-                91,
-                89,
-                87,
-                85,
-                83,
-                82,
-                80,
-                78,
-                76,
-                74,
-                73,
-                71,
-                69,
-                67,
-                66,
-                64,
-                62,
-                61,
-                59,
-                57,
-                55,
-                54,
-                52,
-                50,
-                49,
-                47,
-                46,
-                44,
-                42,
-                41,
-                39,
-                37,
-                36,
-                34,
-                33,
-                31,
-                30,
-                28,
-                26,
-                25,
-                23,
-                22,
-                20,
-                19,
-                17,
-                16,
-                14,
-                13,
-                11,
-                10,
-                8,
-                7,
-                5,
-                4,
-                2,
-                1,
-            }
-        );
+    private static readonly uint* kInverseProbabilityLog256 = GetArrayPointer(
+        new uint[256]
+        {
+            0,
+            2048,
+            1792,
+            1642,
+            1536,
+            1453,
+            1386,
+            1329,
+            1280,
+            1236,
+            1197,
+            1162,
+            1130,
+            1100,
+            1073,
+            1047,
+            1024,
+            1001,
+            980,
+            960,
+            941,
+            923,
+            906,
+            889,
+            874,
+            859,
+            844,
+            830,
+            817,
+            804,
+            791,
+            779,
+            768,
+            756,
+            745,
+            734,
+            724,
+            714,
+            704,
+            694,
+            685,
+            676,
+            667,
+            658,
+            650,
+            642,
+            633,
+            626,
+            618,
+            610,
+            603,
+            595,
+            588,
+            581,
+            574,
+            567,
+            561,
+            554,
+            548,
+            542,
+            535,
+            529,
+            523,
+            517,
+            512,
+            506,
+            500,
+            495,
+            489,
+            484,
+            478,
+            473,
+            468,
+            463,
+            458,
+            453,
+            448,
+            443,
+            438,
+            434,
+            429,
+            424,
+            420,
+            415,
+            411,
+            407,
+            402,
+            398,
+            394,
+            390,
+            386,
+            382,
+            377,
+            373,
+            370,
+            366,
+            362,
+            358,
+            354,
+            350,
+            347,
+            343,
+            339,
+            336,
+            332,
+            329,
+            325,
+            322,
+            318,
+            315,
+            311,
+            308,
+            305,
+            302,
+            298,
+            295,
+            292,
+            289,
+            286,
+            282,
+            279,
+            276,
+            273,
+            270,
+            267,
+            264,
+            261,
+            258,
+            256,
+            253,
+            250,
+            247,
+            244,
+            241,
+            239,
+            236,
+            233,
+            230,
+            228,
+            225,
+            222,
+            220,
+            217,
+            215,
+            212,
+            209,
+            207,
+            204,
+            202,
+            199,
+            197,
+            194,
+            192,
+            190,
+            187,
+            185,
+            182,
+            180,
+            178,
+            175,
+            173,
+            171,
+            168,
+            166,
+            164,
+            162,
+            159,
+            157,
+            155,
+            153,
+            151,
+            149,
+            146,
+            144,
+            142,
+            140,
+            138,
+            136,
+            134,
+            132,
+            130,
+            128,
+            126,
+            123,
+            121,
+            119,
+            117,
+            115,
+            114,
+            112,
+            110,
+            108,
+            106,
+            104,
+            102,
+            100,
+            98,
+            96,
+            94,
+            93,
+            91,
+            89,
+            87,
+            85,
+            83,
+            82,
+            80,
+            78,
+            76,
+            74,
+            73,
+            71,
+            69,
+            67,
+            66,
+            64,
+            62,
+            61,
+            59,
+            57,
+            55,
+            54,
+            52,
+            50,
+            49,
+            47,
+            46,
+            44,
+            42,
+            41,
+            39,
+            37,
+            36,
+            34,
+            33,
+            31,
+            30,
+            28,
+            26,
+            25,
+            23,
+            22,
+            20,
+            19,
+            17,
+            16,
+            14,
+            13,
+            11,
+            10,
+            8,
+            7,
+            5,
+            4,
+            2,
+            1,
+        }
+    );
 #endif
 
     private static uint ZSTD_getFSEMaxSymbolValue(uint* ctable)
@@ -571,7 +571,8 @@ public static unsafe partial class Methods
                 max,
                 ZSTD_useLowProbCount(nbSeq)
             );
-            if (ERR_isError(err_code)) return err_code;
+            if (ERR_isError(err_code))
+                return err_code;
         }
 
         return FSE_writeNCount(wksp, sizeof(byte) * 512, norm, max, tableLog);
@@ -609,7 +610,8 @@ public static unsafe partial class Methods
         uint s;
         FSE_CState_t cstate;
         FSE_initCState(&cstate, ctable);
-        if (ZSTD_getFSEMaxSymbolValue(ctable) < max) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        if (ZSTD_getFSEMaxSymbolValue(ctable) < max)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
 
         for (s = 0; s <= max; ++s)
         {
@@ -618,7 +620,8 @@ public static unsafe partial class Methods
             var bitCost = FSE_bitCost(cstate.symbolTT, tableLog, s, kAccuracyLog);
             if (count[s] == 0)
                 continue;
-            if (bitCost >= badCost) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            if (bitCost >= badCost)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
 
             cost += (nuint)count[s] * bitCost;
         }
@@ -631,12 +634,7 @@ public static unsafe partial class Methods
      * table described by norm. The max symbol support by norm is assumed >= max.
      * norm must be valid for every symbol with non-zero probability in count.
      */
-    private static nuint ZSTD_crossEntropyCost(
-        short* norm,
-        uint accuracyLog,
-        uint* count,
-        uint max
-    )
+    private static nuint ZSTD_crossEntropyCost(short* norm, uint accuracyLog, uint* count, uint max)
     {
         var shift = 8 - accuracyLog;
         nuint cost = 0;
@@ -671,7 +669,8 @@ public static unsafe partial class Methods
         if (mostFrequent == nbSeq)
         {
             *repeatMode = FSE_repeat.FSE_repeat_none;
-            if (isDefaultAllowed != default && nbSeq <= 2) return symbolEncodingType_e.set_basic;
+            if (isDefaultAllowed != default && nbSeq <= 2)
+                return symbolEncodingType_e.set_basic;
 
             return symbolEncodingType_e.set_rle;
         }
@@ -717,16 +716,12 @@ public static unsafe partial class Methods
             if (isDefaultAllowed != default)
             {
                 assert(!ERR_isError(basicCost));
-                assert(
-                    !(*repeatMode == FSE_repeat.FSE_repeat_valid && ERR_isError(repeatCost))
-                );
+                assert(!(*repeatMode == FSE_repeat.FSE_repeat_valid && ERR_isError(repeatCost)));
             }
 #endif
 
             assert(!ERR_isError(NCountCost));
-            assert(
-                compressedCost < unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxCode))
-            );
+            assert(compressedCost < unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxCode)));
             if (basicCost <= repeatCost && basicCost <= compressedCost)
             {
                 assert(isDefaultAllowed != default);
@@ -771,12 +766,14 @@ public static unsafe partial class Methods
         switch (type)
         {
             case symbolEncodingType_e.set_rle:
-            {
-                var err_code = FSE_buildCTable_rle(nextCTable, (byte)max);
-                if (ERR_isError(err_code)) return err_code;
-            }
+                {
+                    var err_code = FSE_buildCTable_rle(nextCTable, (byte)max);
+                    if (ERR_isError(err_code))
+                        return err_code;
+                }
 
-                if (dstCapacity == 0) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                if (dstCapacity == 0)
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
                 *op = codeTable[0];
                 return 1;
@@ -784,17 +781,18 @@ public static unsafe partial class Methods
                 memcpy(nextCTable, prevCTable, (uint)prevCTableSize);
                 return 0;
             case symbolEncodingType_e.set_basic:
-            {
-                var err_code = FSE_buildCTable_wksp(
-                    nextCTable,
-                    defaultNorm,
-                    defaultMax,
-                    defaultNormLog,
-                    entropyWorkspace,
-                    entropyWorkspaceSize
-                );
-                if (ERR_isError(err_code)) return err_code;
-            }
+                {
+                    var err_code = FSE_buildCTable_wksp(
+                        nextCTable,
+                        defaultNorm,
+                        defaultMax,
+                        defaultNormLog,
+                        entropyWorkspace,
+                        entropyWorkspaceSize
+                    );
+                    if (ERR_isError(err_code))
+                        return err_code;
+                }
 
                 return 0;
             case symbolEncodingType_e.set_compressed:
@@ -819,7 +817,8 @@ public static unsafe partial class Methods
                         max,
                         ZSTD_useLowProbCount(nbSeq_1)
                     );
-                    if (ERR_isError(err_code)) return err_code;
+                    if (ERR_isError(err_code))
+                        return err_code;
                 }
 
                 assert(oend >= op);
@@ -834,7 +833,8 @@ public static unsafe partial class Methods
                     );
                     {
                         var err_code = NCountSize;
-                        if (ERR_isError(err_code)) return err_code;
+                        if (ERR_isError(err_code))
+                            return err_code;
                     }
 
                     {
@@ -846,7 +846,8 @@ public static unsafe partial class Methods
                             wksp->wksp,
                             sizeof(uint) * 285
                         );
-                        if (ERR_isError(err_code)) return err_code;
+                        if (ERR_isError(err_code))
+                            return err_code;
                     }
 
                     return NCountSize;
@@ -856,9 +857,9 @@ public static unsafe partial class Methods
             default:
                 assert(0 != 0);
 
-            {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-            }
+                {
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                }
         }
     }
 
@@ -886,11 +887,7 @@ public static unsafe partial class Methods
         FSE_initCState2(&stateMatchLength, CTable_MatchLength, mlCodeTable[nbSeq - 1]);
         FSE_initCState2(&stateOffsetBits, CTable_OffsetBits, ofCodeTable[nbSeq - 1]);
         FSE_initCState2(&stateLitLength, CTable_LitLength, llCodeTable[nbSeq - 1]);
-        BIT_addBits(
-            &blockStream,
-            sequences[nbSeq - 1].litLength,
-            LL_bits[llCodeTable[nbSeq - 1]]
-        );
+        BIT_addBits(&blockStream, sequences[nbSeq - 1].litLength, LL_bits[llCodeTable[nbSeq - 1]]);
         if (MEM_32bits)
             BIT_flushBits(&blockStream);
         BIT_addBits(&blockStream, sequences[nbSeq - 1].mlBase, ML_bits[mlCodeTable[nbSeq - 1]]);
@@ -982,7 +979,8 @@ public static unsafe partial class Methods
         FSE_flushCState(&blockStream, &stateLitLength);
         {
             var streamSize = BIT_closeCStream(&blockStream);
-            if (streamSize == 0) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            if (streamSize == 0)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
             return streamSize;
         }

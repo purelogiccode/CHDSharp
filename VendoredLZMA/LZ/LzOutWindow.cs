@@ -74,7 +74,8 @@ internal class OutWindow
         Limit = size;
         _pos = _windowSize - size;
         CopyStream(stream, size);
-        if (_pos == _windowSize) _pos = 0;
+        if (_pos == _windowSize)
+            _pos = 0;
 
         _streamPos = _pos;
     }
@@ -97,7 +98,8 @@ internal class OutWindow
             return;
 
         _stream.Write(_buffer, _streamPos, size);
-        if (_pos >= _windowSize) _pos = 0;
+        if (_pos >= _windowSize)
+            _pos = 0;
 
         _streamPos = _pos;
     }
@@ -107,11 +109,13 @@ internal class OutWindow
     {
         var size = len;
         var pos = _pos - distance - 1;
-        if (pos < 0) pos += _windowSize;
+        if (pos < 0)
+            pos += _windowSize;
 
         for (; size > 0 && _pos < _windowSize && Total < Limit; size--)
         {
-            if (pos >= _windowSize) pos = 0;
+            if (pos >= _windowSize)
+                pos = 0;
 
             _buffer[_pos++] = _buffer[pos++];
             Total++;
@@ -136,7 +140,8 @@ internal class OutWindow
     internal byte GetByte(int distance)
     {
         var pos = _pos - distance - 1;
-        if (pos < 0) pos += _windowSize;
+        if (pos < 0)
+            pos += _windowSize;
 
         return _buffer[pos];
     }
@@ -148,9 +153,11 @@ internal class OutWindow
         while (size > 0 && _pos < _windowSize && Total < Limit)
         {
             var curSize = _windowSize - _pos;
-            if (curSize > Limit - Total) curSize = (int)(Limit - Total);
+            if (curSize > Limit - Total)
+                curSize = (int)(Limit - Total);
 
-            if (curSize > size) curSize = size;
+            if (curSize > size)
+                curSize = size;
 
             var numReadBytes = stream.Read(_buffer, _pos, curSize);
             if (numReadBytes == 0)
@@ -179,7 +186,8 @@ internal class OutWindow
             return 0;
 
         var size = _pos - _streamPos;
-        if (size > count) size = count;
+        if (size > count)
+            size = count;
 
         Buffer.BlockCopy(_buffer, _streamPos, buffer, offset, size);
         _streamPos += size;

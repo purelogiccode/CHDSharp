@@ -69,7 +69,9 @@ public class ChdHeaderV5
 
         var result = w.ToArray();
         if (result.Length != Length)
-            throw new InvalidOperationException($"Serialized header is {result.Length} bytes, expected {Length}");
+            throw new InvalidOperationException(
+                $"Serialized header is {result.Length} bytes, expected {Length}"
+            );
 
         return result;
     }
@@ -88,7 +90,9 @@ public class ChdHeaderV5
     public static ChdHeaderV5 Deserialize(byte[] data)
     {
         if (data.Length < Length)
-            throw new ArgumentException($"Header data is {data.Length} bytes, need at least {Length}");
+            throw new ArgumentException(
+                $"Header data is {data.Length} bytes, need at least {Length}"
+            );
 
         return new ChdHeaderV5
         {
@@ -97,7 +101,7 @@ public class ChdHeaderV5
                 ReadU32Be(data, 16),
                 ReadU32Be(data, 20),
                 ReadU32Be(data, 24),
-                ReadU32Be(data, 28)
+                ReadU32Be(data, 28),
             },
             LogicalBytes = ReadU64Be(data, 32),
             MapOffset = ReadU64Be(data, 40),
@@ -106,7 +110,7 @@ public class ChdHeaderV5
             UnitBytes = ReadU32Be(data, 60),
             RawSha1 = data.AsSpan(64, 20).ToArray(),
             Sha1 = data.AsSpan(84, 20).ToArray(),
-            ParentSha1 = data.AsSpan(104, 20).ToArray()
+            ParentSha1 = data.AsSpan(104, 20).ToArray(),
         };
     }
 
@@ -116,7 +120,12 @@ public class ChdHeaderV5
     /// <param name="hunkBytes">The hunk size in bytes.</param>
     /// <param name="unitBytes">The unit size in bytes.</param>
     /// <returns>A new <see cref="ChdHeaderV5" /> configured for a raw image.</returns>
-    public static ChdHeaderV5 CreateRaw(uint compressors0, ulong logicalBytes, uint hunkBytes, uint unitBytes)
+    public static ChdHeaderV5 CreateRaw(
+        uint compressors0,
+        ulong logicalBytes,
+        uint hunkBytes,
+        uint unitBytes
+    )
     {
         return CreateRaw(new[] { compressors0, 0u, 0u, 0u }, logicalBytes, hunkBytes, unitBytes);
     }
@@ -127,12 +136,18 @@ public class ChdHeaderV5
     /// <param name="hunkBytes">The hunk size in bytes.</param>
     /// <param name="unitBytes">The unit size in bytes.</param>
     /// <returns>A new <see cref="ChdHeaderV5" /> configured for the image.</returns>
-    public static ChdHeaderV5 CreateRaw(uint[] compressors, ulong logicalBytes, uint hunkBytes, uint unitBytes)
+    public static ChdHeaderV5 CreateRaw(
+        uint[] compressors,
+        ulong logicalBytes,
+        uint hunkBytes,
+        uint unitBytes
+    )
     {
         ArgumentNullException.ThrowIfNull(compressors);
 
         var codecArray = new uint[4];
-        for (var i = 0; i < 4; i++) codecArray[i] = i < compressors.Length ? compressors[i] : CodecTags.None;
+        for (var i = 0; i < 4; i++)
+            codecArray[i] = i < compressors.Length ? compressors[i] : CodecTags.None;
 
         return new ChdHeaderV5
         {
@@ -141,21 +156,20 @@ public class ChdHeaderV5
             MapOffset = codecArray[0] != CodecTags.None ? 0uL : Length,
             MetaOffset = 0,
             HunkBytes = hunkBytes,
-            UnitBytes = unitBytes
+            UnitBytes = unitBytes,
         };
     }
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) |
-               ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) |
-               data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 
     private static ulong ReadU64Be(byte[] data, int offset)
     {
-        return ((ulong)ReadU32Be(data, offset) << 32) |
-               ReadU32Be(data, offset + 4);
+        return ((ulong)ReadU32Be(data, offset) << 32) | ReadU32Be(data, offset + 4);
     }
 }

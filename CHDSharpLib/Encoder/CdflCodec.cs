@@ -27,13 +27,15 @@ public sealed class CdflCodec : IChdCodec
     {
         if (hunkBytes % CdConstants.FrameSize != 0)
             throw new ArgumentException(
-                $"hunkBytes ({hunkBytes}) must be a multiple of the CD frame size ({CdConstants.FrameSize})");
+                $"hunkBytes ({hunkBytes}) must be a multiple of the CD frame size ({CdConstants.FrameSize})"
+            );
 
         _framesPerHunk = (int)(hunkBytes / CdConstants.FrameSize);
         _dataBytes = _framesPerHunk * CdConstants.MaxSectorData;
         _subcodeBytes = _framesPerHunk * CdConstants.MaxSubcodeData;
         _blockSize = _dataBytes / 4;
-        while (_blockSize > CdConstants.MaxSectorData) _blockSize /= 2;
+        while (_blockSize > CdConstants.MaxSectorData)
+            _blockSize /= 2;
 
         _leBuffer = new byte[_dataBytes];
         // worst case: verbatim subframes; add room for frame headers
@@ -53,13 +55,25 @@ public sealed class CdflCodec : IChdCodec
         for (var f = 0; f < _framesPerHunk; f++)
         {
             var src = f * CdConstants.FrameSize;
-            Array.Copy(data, src, _leBuffer, f * CdConstants.MaxSectorData, CdConstants.MaxSectorData);
-            Array.Copy(data, src + CdConstants.MaxSectorData, subcode, f * CdConstants.MaxSubcodeData,
-                CdConstants.MaxSubcodeData);
+            Array.Copy(
+                data,
+                src,
+                _leBuffer,
+                f * CdConstants.MaxSectorData,
+                CdConstants.MaxSectorData
+            );
+            Array.Copy(
+                data,
+                src + CdConstants.MaxSectorData,
+                subcode,
+                f * CdConstants.MaxSubcodeData,
+                CdConstants.MaxSubcodeData
+            );
         }
 
         // FLAC stores samples little-endian; CHD audio is big-endian, so swap
-        for (var i = 0; i < _dataBytes; i += 2) (_leBuffer[i], _leBuffer[i + 1]) = (_leBuffer[i + 1], _leBuffer[i]);
+        for (var i = 0; i < _dataBytes; i += 2)
+            (_leBuffer[i], _leBuffer[i + 1]) = (_leBuffer[i + 1], _leBuffer[i]);
 
         var flacLen = new LibFlacEncoder(_blockSize).Encode(_flacBuffer, _leBuffer);
 

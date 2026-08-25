@@ -10,17 +10,15 @@ namespace System.Runtime.CompilerServices
     /// <remarks>Internal copy of the .NET 5 attribute.</remarks>
     [AttributeUsage(
         AttributeTargets.Module
-        | AttributeTargets.Class
-        | AttributeTargets.Struct
-        | AttributeTargets.Interface
-        | AttributeTargets.Constructor
-        | AttributeTargets.Method
-        | AttributeTargets.Property
-        | AttributeTargets.Event,
+            | AttributeTargets.Class
+            | AttributeTargets.Struct
+            | AttributeTargets.Interface
+            | AttributeTargets.Constructor
+            | AttributeTargets.Method
+            | AttributeTargets.Property
+            | AttributeTargets.Event,
         Inherited = false
     )]
-    internal sealed class SkipLocalsInitAttribute : Attribute
-    {
-    }
+    internal sealed class SkipLocalsInitAttribute : Attribute { }
 }
 #endif

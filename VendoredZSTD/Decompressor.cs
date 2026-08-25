@@ -72,9 +72,7 @@ public unsafe class Decompressor : IDisposable
     {
         fixed (byte* srcPtr = src)
         {
-            return Methods
-                .ZSTD_decompressBound(srcPtr, (nuint)src.Length)
-                .EnsureContentSizeOk();
+            return Methods.ZSTD_decompressBound(srcPtr, (nuint)src.Length).EnsureContentSizeOk();
         }
     }
 

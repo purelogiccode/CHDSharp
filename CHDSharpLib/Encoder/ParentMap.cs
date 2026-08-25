@@ -33,7 +33,9 @@ public sealed class ParentMap : IDisposable
     {
         ArgumentException.ThrowIfNullOrEmpty(parentPath);
         if (hunkBytes == 0 || unitBytes == 0 || hunkBytes % unitBytes != 0)
-            throw new ArgumentException($"hunkBytes ({hunkBytes}) must be a multiple of unitBytes ({unitBytes})");
+            throw new ArgumentException(
+                $"hunkBytes ({hunkBytes}) must be a multiple of unitBytes ({unitBytes})"
+            );
 
         var err = ChdFile.Open(parentPath, out var parent);
         if (err != ChdError.Chderrnone || parent == null)
@@ -43,8 +45,9 @@ public sealed class ParentMap : IDisposable
         {
             if (parent.HunkBytes != hunkBytes || parent.UnitBytes != unitBytes)
                 throw new ArgumentException(
-                    $"Parent CHD hunk/unit size mismatch: parent is {parent.HunkBytes}/{parent.UnitBytes} bytes, " +
-                    $"requested {hunkBytes}/{unitBytes} bytes. The parent's hunk and unit sizes must match the child's.");
+                    $"Parent CHD hunk/unit size mismatch: parent is {parent.HunkBytes}/{parent.UnitBytes} bytes, "
+                        + $"requested {hunkBytes}/{unitBytes} bytes. The parent's hunk and unit sizes must match the child's."
+                );
 
             _parent = parent;
             HunkCount = parent.HunkCount;
@@ -124,7 +127,9 @@ public sealed class ParentMap : IDisposable
                     next ??= new byte[HunkBytes];
                     var nextErr = parent.ReadHunk(h + 1, next);
                     if (nextErr != ChdError.Chderrnone)
-                        throw new IOException($"Failed to decompress parent CHD hunk {h + 1} ({nextErr})");
+                        throw new IOException(
+                            $"Failed to decompress parent CHD hunk {h + 1} ({nextErr})"
+                        );
 
                     Array.Copy(next, 0, window, take, HunkBytes - take);
                 }

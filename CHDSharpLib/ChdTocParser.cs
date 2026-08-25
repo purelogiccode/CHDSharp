@@ -34,7 +34,10 @@ internal static partial class ChdTocParser
     /// <param name="metadata">The list of metadata entries from the CHD header.</param>
     /// <param name="isGdRom">When this method returns, <c>true</c> if GD-ROM metadata was found.</param>
     /// <returns>A list of parsed track info, or <c>null</c> if no CD/GD-ROM track metadata is present.</returns>
-    internal static List<ChdTrackInfo>? ParseTracks(IReadOnlyList<ChdMetadataEntry> metadata, out bool isGdRom)
+    internal static List<ChdTrackInfo>? ParseTracks(
+        IReadOnlyList<ChdMetadataEntry> metadata,
+        out bool isGdRom
+    )
     {
         return ParseTracks(metadata, out isGdRom, out _);
     }
@@ -44,21 +47,29 @@ internal static partial class ChdTocParser
     ///     tag is present, the disc is a legacy GD-ROM whose CDDA audio is stored little-endian
     ///     (<c>CD_FLAG_GDROMLE</c>), and <paramref name="isLegacyGdRom" /> is set to <c>true</c>.
     /// </summary>
-    internal static List<ChdTrackInfo>? ParseTracks(IReadOnlyList<ChdMetadataEntry> metadata, out bool isGdRom,
-        out bool isLegacyGdRom)
+    internal static List<ChdTrackInfo>? ParseTracks(
+        IReadOnlyList<ChdMetadataEntry> metadata,
+        out bool isGdRom,
+        out bool isLegacyGdRom
+    )
     {
         isGdRom = false;
         isLegacyGdRom = false;
 
-        var cht2Entries = metadata.Where(m => string.Equals(m.Tag, CdRomTrackMetadata2Tag, StringComparison.Ordinal))
+        var cht2Entries = metadata
+            .Where(m => string.Equals(m.Tag, CdRomTrackMetadata2Tag, StringComparison.Ordinal))
             .ToList();
-        var chgdEntries = metadata.Where(m => string.Equals(m.Tag, GdRomTrackMetadataTag, StringComparison.Ordinal))
+        var chgdEntries = metadata
+            .Where(m => string.Equals(m.Tag, GdRomTrackMetadataTag, StringComparison.Ordinal))
             .ToList();
-        var chtrEntries = metadata.Where(m => string.Equals(m.Tag, CdRomTrackMetadataTag, StringComparison.Ordinal))
+        var chtrEntries = metadata
+            .Where(m => string.Equals(m.Tag, CdRomTrackMetadataTag, StringComparison.Ordinal))
             .ToList();
-        var chcdEntries = metadata.Where(m => string.Equals(m.Tag, CdRomOldMetadataTag, StringComparison.Ordinal))
+        var chcdEntries = metadata
+            .Where(m => string.Equals(m.Tag, CdRomOldMetadataTag, StringComparison.Ordinal))
             .ToList();
-        var chgtEntries = metadata.Where(m => string.Equals(m.Tag, GdRomOldMetadataTag, StringComparison.Ordinal))
+        var chgtEntries = metadata
+            .Where(m => string.Equals(m.Tag, GdRomOldMetadataTag, StringComparison.Ordinal))
             .ToList();
 
         if (chgtEntries.Count > 0)
@@ -91,7 +102,9 @@ internal static partial class ChdTocParser
     }
 
     private static List<ChdTrackInfo> ParseTextTracks(
-        List<ChdMetadataEntry> entries, TrackTypeParser parser)
+        List<ChdMetadataEntry> entries,
+        TrackTypeParser parser
+    )
     {
         var tracks = new List<ChdTrackInfo>();
         ulong currentFrame = 0;
@@ -99,22 +112,31 @@ internal static partial class ChdTocParser
         foreach (var entry in entries)
         {
             var text = entry.GetText();
-            if (text.Length > MaxKeyValueTextLength) continue;
+            if (text.Length > MaxKeyValueTextLength)
+                continue;
 
             // Trim trailing null padding (common in some writers); embedded NULs are malformed.
             text = text.TrimEnd('\0');
-            if (text.Contains('\0')) continue;
+            if (text.Contains('\0'))
+                continue;
 
             var fields = ParseKeyValueFields(text);
-            if (fields.Count == 0) continue;
+            if (fields.Count == 0)
+                continue;
 
-            if (!fields.TryGetValue("TRACK", out var trackNumStr)) continue;
-            if (!int.TryParse(trackNumStr, CultureInfo.InvariantCulture, out var trackNum)) continue;
-            if (trackNum is < 1 or > 99) continue;
+            if (!fields.TryGetValue("TRACK", out var trackNumStr))
+                continue;
+            if (!int.TryParse(trackNumStr, CultureInfo.InvariantCulture, out var trackNum))
+                continue;
+            if (trackNum is < 1 or > 99)
+                continue;
 
-            if (!fields.TryGetValue("TYPE", out var typeStr)) continue;
-            if (!fields.TryGetValue("SUBTYPE", out var subStr)) continue;
-            if (!fields.TryGetValue("FRAMES", out var framesStr)) continue;
+            if (!fields.TryGetValue("TYPE", out var typeStr))
+                continue;
+            if (!fields.TryGetValue("SUBTYPE", out var subStr))
+                continue;
+            if (!fields.TryGetValue("FRAMES", out var framesStr))
+                continue;
 
             // Cap field lengths to match MAME's16-byte stack buffers (%15s fix, libchdr #165).
             if (typeStr.Length > MaxTrackFieldLength || subStr.Length > MaxTrackFieldLength)
@@ -124,10 +146,12 @@ internal static partial class ChdTocParser
             var (subType, subSize) = ParseSubTypeString(subStr);
             var frames = int.Parse(framesStr, CultureInfo.InvariantCulture);
 
-            int pregap = 0, postgap = 0;
+            int pregap = 0,
+                postgap = 0;
             var pgType = ChdTrackType.Mode1;
             var pgSub = ChdSubType.None;
-            int pgDataSize = 0, pgSubSize = 0;
+            int pgDataSize = 0,
+                pgSubSize = 0;
             var padFrames = 0;
 
             if (parser >= TrackTypeParser.Cht2 && fields.TryGetValue("PREGAP", out var pregapStr))
@@ -140,10 +164,12 @@ internal static partial class ChdTocParser
                         continue;
 
                     var pgHasData = pgTypeStr.StartsWith('V');
-                    if (pgHasData) pgTypeStr = pgTypeStr[1..];
+                    if (pgHasData)
+                        pgTypeStr = pgTypeStr[1..];
 
                     (pgType, pgDataSize) = ParseTypeString(pgTypeStr);
-                    if (!pgHasData) pgDataSize = 0;
+                    if (!pgHasData)
+                        pgDataSize = 0;
                 }
 
                 if (fields.TryGetValue("PGSUB", out var pgSubStr))
@@ -180,7 +206,7 @@ internal static partial class ChdTocParser
                 PreGapDataSize = pgDataSize,
                 PreGapSubSize = pgSubSize,
                 PadFrames = padFrames,
-                StartFrame = currentFrame
+                StartFrame = currentFrame,
             };
 
             tracks.Add(track);
@@ -214,14 +240,16 @@ internal static partial class ChdTocParser
     private static List<ChdTrackInfo>? ParseBinaryTracks(List<ChdMetadataEntry> entries)
     {
         var data = entries[0].Data;
-        if (data.Length < 4) return null;
+        if (data.Length < 4)
+            return null;
 
         using var ms = new MemoryStream(data);
         using var br = new BinaryReader(ms);
 
         var trackCount = (int)ReadBeUInt32();
         var swapped = trackCount > 99;
-        if (swapped) trackCount = (int)SwapEndian((uint)trackCount);
+        if (swapped)
+            trackCount = (int)SwapEndian((uint)trackCount);
 
         var tracks = new List<ChdTrackInfo>();
         ulong currentFrame = 0;
@@ -254,7 +282,7 @@ internal static partial class ChdTocParser
                 SubSize = (int)subSizeVal,
                 Frames = (int)framesVal,
                 ExtraFrames = (int)extraFramesVal,
-                StartFrame = currentFrame
+                StartFrame = currentFrame,
             };
 
             tracks.Add(track);
@@ -265,13 +293,17 @@ internal static partial class ChdTocParser
 
         static uint SwapEndian(uint v)
         {
-            return ((v & 0xFF) << 24) | ((v & 0xFF00) << 8) | ((v & 0xFF0000) >> 8) | ((v & 0xFF000000) >> 24);
+            return ((v & 0xFF) << 24)
+                | ((v & 0xFF00) << 8)
+                | ((v & 0xFF0000) >> 8)
+                | ((v & 0xFF000000) >> 24);
         }
 
         uint ReadBeUInt32()
         {
             var bytes = br.ReadBytes(4);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(bytes);
             return BitConverter.ToUInt32(bytes, 0);
         }
     }
@@ -288,7 +320,7 @@ internal static partial class ChdTocParser
             "MODE2_FORM_MIX" => (ChdTrackType.Mode2FormMix, 2336),
             "MODE2_RAW" or "MODE2/2352" or "CDI/2352" => (ChdTrackType.Mode2Raw, 2352),
             "AUDIO" => (ChdTrackType.Audio, 2352),
-            _ => (ChdTrackType.Mode1, 2048)
+            _ => (ChdTrackType.Mode1, 2048),
         };
     }
 
@@ -298,7 +330,7 @@ internal static partial class ChdTocParser
         {
             "RW" => (ChdSubType.Normal, 96),
             "RW_RAW" => (ChdSubType.Raw, 96),
-            _ => (ChdSubType.None, 0)
+            _ => (ChdSubType.None, 0),
         };
     }
 
@@ -315,9 +347,14 @@ internal static partial class ChdTocParser
     /// <returns><c>true</c> if a hard disk metadata entry is present; otherwise <c>false</c>.</returns>
     internal static bool HasHddMetadata(IReadOnlyList<ChdMetadataEntry> metadata)
     {
-        return metadata.Any(m => string.Equals(m.Tag, HardDiskMetadataTag, StringComparison.Ordinal));
+        return metadata.Any(m =>
+            string.Equals(m.Tag, HardDiskMetadataTag, StringComparison.Ordinal)
+        );
     }
 
-    [GeneratedRegex(@"(?<key>\w+) *: *(?<value>[^ ]+)", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture)]
+    [GeneratedRegex(
+        @"(?<key>\w+) *: *(?<value>[^ ]+)",
+        RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture
+    )]
     private static partial Regex MyRegex();
 }

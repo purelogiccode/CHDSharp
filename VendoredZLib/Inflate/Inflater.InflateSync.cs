@@ -40,13 +40,16 @@ internal static partial class Inflater
         }
 
         // search available input
-        var @in = SyncSearch(ref state.Have, ref
+        var @in = SyncSearch(
+            ref state.Have,
+            ref
 #if NET7_0_OR_GREATER
             Unsafe.Add(ref strm.InputPtr, strm.NextInput),
 #else
             MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput)),
 #endif
-            strm.AvailIn);
+            strm.AvailIn
+        );
         strm.AvailIn -= @in;
         strm.NextInput += @in;
         strm.TotalInput += @in;

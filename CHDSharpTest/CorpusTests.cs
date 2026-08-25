@@ -5,22 +5,22 @@ namespace CHDSharp.Tests;
 [Collection("TestData")]
 public sealed class CorpusTests
 {
-    private static readonly string TestDataDir =
-        Path.Combine(AppContext.BaseDirectory, "TestData");
+    private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
-    private static readonly string ManifestPath =
-        Path.Combine(TestDataDir, "manifest.json");
+    private static readonly string ManifestPath = Path.Combine(TestDataDir, "manifest.json");
 
     private static List<Entry> LoadManifest()
     {
         using var doc = JsonDocument.Parse(File.ReadAllBytes(ManifestPath));
-        return doc.RootElement.EnumerateArray()
+        return doc
+            .RootElement.EnumerateArray()
             .Select(e => new Entry(
                 e.GetProperty("file").GetString()!,
                 e.GetProperty("version").GetUInt32(),
                 e.GetProperty("parent").GetString() is { Length: > 0 } p ? p : null,
                 e.GetProperty("expect").GetString() ?? "ok",
-                e.GetProperty("note").GetString() ?? ""))
+                e.GetProperty("note").GetString() ?? ""
+            ))
             .ToList();
     }
 
@@ -36,9 +36,7 @@ public sealed class CorpusTests
     {
         var data = new TheoryData<Entry, string, string>();
         foreach (var e in LoadManifest().Where(e => e.Parent != null))
-            data.Add(e,
-                Path.Combine(TestDataDir, e.File),
-                Path.Combine(TestDataDir, e.Parent!));
+            data.Add(e, Path.Combine(TestDataDir, e.File), Path.Combine(TestDataDir, e.Parent!));
         return data;
     }
 
@@ -110,5 +108,11 @@ public sealed class CorpusTests
         Assert.NotEqual(ChdError.Chderrnone, err);
     }
 
-    public sealed record Entry(string File, uint Version, string? Parent, string Expect, string Note);
+    public sealed record Entry(
+        string File,
+        uint Version,
+        string? Parent,
+        string Expect,
+        string Note
+    );
 }

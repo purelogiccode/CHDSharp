@@ -15,11 +15,11 @@ internal partial class AboutWindow
         AppVersionTextBlock.Text = $"Version: {version?.ToString() ?? "Unknown"}";
 
         DescriptionTextBlock.Text =
-            "A WPF desktop application for batch-testing CHD (Compressed Hunks of Data) files " +
-            "using the CHDSharp library. Cross-checks the C# CHD reader against the official " +
-            "MAME chdman tool, with support for header verification, deep decompression, " +
-            "SHA1 integrity checks, random-access byte-range comparison, zstd/cdzs codec " +
-            "tests, and parent/child delta chain validation.";
+            "A WPF desktop application for batch-testing CHD (Compressed Hunks of Data) files "
+            + "using the CHDSharp library. Cross-checks the C# CHD reader against the official "
+            + "MAME chdman tool, with support for header verification, deep decompression, "
+            + "SHA1 integrity checks, random-access byte-range comparison, zstd/cdzs codec "
+            + "tests, and parent/child delta chain validation.";
 
         GitHubLink.NavigateUri = new Uri("https://github.com/purelogiccode/CHDSharp");
         WebLink.NavigateUri = new Uri("https://www.purelogiccode.com");
@@ -34,16 +34,18 @@ internal partial class AboutWindow
     {
         try
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = e.Uri.AbsoluteUri,
-                UseShellExecute = true
-            });
+            Process.Start(
+                new ProcessStartInfo { FileName = e.Uri.AbsoluteUri, UseShellExecute = true }
+            );
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Could not open link: {ex.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(
+                $"Could not open link: {ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error
+            );
         }
 
         e.Handled = true;

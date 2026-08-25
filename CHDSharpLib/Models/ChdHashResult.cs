@@ -15,7 +15,8 @@ public sealed record ChdHashResult(
     byte[]? Sha1,
     byte[]? Sha256,
     uint? Crc32,
-    ulong? Xxh3)
+    ulong? Xxh3
+)
 {
     /// <summary>Formats a hex string for one of the hashes, or <c>null</c> when unavailable.</summary>
     public string? ToHex(ChdHashType type)
@@ -23,10 +24,12 @@ public sealed record ChdHashResult(
         return type switch
         {
             ChdHashType.Sha1 => Sha1 is null ? null : Convert.ToHexString(Sha1).ToLowerInvariant(),
-            ChdHashType.Sha256 => Sha256 is null ? null : Convert.ToHexString(Sha256).ToLowerInvariant(),
+            ChdHashType.Sha256 => Sha256 is null
+                ? null
+                : Convert.ToHexString(Sha256).ToLowerInvariant(),
             ChdHashType.Crc32 => Crc32?.ToString("X8").ToLowerInvariant(),
             ChdHashType.Xxh3 => Xxh3?.ToString("X16").ToLowerInvariant(),
-            _ => null
+            _ => null,
         };
     }
 }

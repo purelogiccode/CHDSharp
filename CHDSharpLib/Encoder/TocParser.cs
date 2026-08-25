@@ -49,7 +49,9 @@ public class TocParser
                 case "FILE":
                 {
                     if (trackIndex < 0)
-                        throw new InvalidDataException($"FILE command without a preceding TRACK: {rawLine}");
+                        throw new InvalidDataException(
+                            $"FILE command without a preceding TRACK: {rawLine}"
+                        );
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed FILE command: {rawLine}");
 
@@ -57,8 +59,10 @@ public class TocParser
                     track.FileName = CdImageParser.ResolveFileName(tocPath, tokens[1]);
 
                     var tokenIndex = 2;
-                    if (tokenIndex < tokens.Count &&
-                        string.Equals(tokens[tokenIndex], "SWAP", StringComparison.Ordinal))
+                    if (
+                        tokenIndex < tokens.Count
+                        && string.Equals(tokens[tokenIndex], "SWAP", StringComparison.Ordinal)
+                    )
                     {
                         track.Swap = true;
                         tokenIndex++;
@@ -74,11 +78,15 @@ public class TocParser
                         var offsetToken = tokens[tokenIndex++];
                         if (offsetToken.StartsWith('#'))
                             // decimal byte offset
-                            fileOffset = long.Parse(offsetToken.AsSpan(1), CultureInfo.InvariantCulture);
+                            fileOffset = long.Parse(
+                                offsetToken.AsSpan(1),
+                                CultureInfo.InvariantCulture
+                            );
                         else if (char.IsDigit(offsetToken[0]))
                             // MSF offset in bytes
-                            fileOffset = (long)CueParser.ParseMsfToFrames(offsetToken) *
-                                         (track.DataSize + track.SubSize);
+                            fileOffset =
+                                (long)CueParser.ParseMsfToFrames(offsetToken)
+                                * (track.DataSize + track.SubSize);
                     }
 
                     track.FileOffset = fileOffset;
@@ -122,7 +130,7 @@ public class TocParser
                         PgSub = CdSubType.None,
                         PadFrames = 0,
                         Index00 = 0,
-                        Index01 = 0
+                        Index01 = 0,
                     };
 
                     CueParser.ParseTrackType(tokens[1], ref track);
@@ -139,7 +147,9 @@ public class TocParser
                 case "START":
                 {
                     if (trackIndex < 0)
-                        throw new InvalidDataException($"START command without a preceding TRACK: {rawLine}");
+                        throw new InvalidDataException(
+                            $"START command without a preceding TRACK: {rawLine}"
+                        );
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed START command: {rawLine}");
 

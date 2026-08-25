@@ -25,14 +25,18 @@ public class VerifyBenchmarks
         // its parent under a manifest name, resolved via Corpus.ParentFor.
         _files =
         [
-            .. Corpus.ChdFiles()
+            .. Corpus
+                .ChdFiles()
                 .Where(Corpus.IsExpectedOk)
-                .Where(f => !Path.GetFileName(f).Contains("_child", StringComparison.Ordinal) ||
-                            Corpus.ParentFor(f) != null)
+                .Where(f =>
+                    !Path.GetFileName(f).Contains("_child", StringComparison.Ordinal)
+                    || Corpus.ParentFor(f) != null
+                ),
         ];
 
         _parents.Clear();
-        foreach (var file in _files) _parents[file] = Corpus.ParentFor(file);
+        foreach (var file in _files)
+            _parents[file] = Corpus.ParentFor(file);
 
         using var ms = new MemoryStream();
         foreach (var file in _files.Where(f => _parents[f] == null))
@@ -54,7 +58,9 @@ public class VerifyBenchmarks
             {
                 var r = Chd.CheckFileWithParent(file, parent);
                 if (r.Error != ChdError.Chderrnone)
-                    throw new InvalidOperationException($"CheckFileWithParent failed on '{file}': {r.Error}");
+                    throw new InvalidOperationException(
+                        $"CheckFileWithParent failed on '{file}': {r.Error}"
+                    );
 
                 continue;
             }
@@ -81,7 +87,9 @@ public class VerifyBenchmarks
             {
                 var r = Chd.CheckFileWithParent(file, parent);
                 if (r.Error != ChdError.Chderrnone)
-                    throw new InvalidOperationException($"CheckFileWithParent failed on '{file}': {r.Error}");
+                    throw new InvalidOperationException(
+                        $"CheckFileWithParent failed on '{file}': {r.Error}"
+                    );
 
                 continue;
             }
@@ -106,7 +114,9 @@ public class VerifyBenchmarks
             var parent = _parents[file];
             var result = Chd.CheckFileWithParent(file, parent);
             if (result.Error != ChdError.Chderrnone)
-                throw new InvalidOperationException($"CheckFileWithParent failed on '{file}': {result.Error}");
+                throw new InvalidOperationException(
+                    $"CheckFileWithParent failed on '{file}': {result.Error}"
+                );
 
             bytes += (ulong)new FileInfo(file).Length;
         }

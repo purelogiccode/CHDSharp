@@ -40,7 +40,8 @@ public static class Corpus
             var resolved = ResolveDefault();
             if (!Directory.Exists(resolved))
                 throw new InvalidOperationException(
-                    "Corpus directory could not be resolved. Pass --corpus <dir> or run from the repo root.");
+                    "Corpus directory could not be resolved. Pass --corpus <dir> or run from the repo root."
+                );
 
             return resolved;
         }
@@ -77,8 +78,9 @@ public static class Corpus
     {
         return
         [
-            .. Directory.EnumerateFiles(Dir, "*.chd", SearchOption.TopDirectoryOnly)
-                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+            .. Directory
+                .EnumerateFiles(Dir, "*.chd", SearchOption.TopDirectoryOnly)
+                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase),
         ];
     }
 
@@ -92,9 +94,11 @@ public static class Corpus
             try
             {
                 Chd.ReadHeader(file, out var header);
-                if (header?.Compression is { Length: > 0 } comps &&
-                    comps[0] == (ChdCodec)codecTag &&
-                    comps.Skip(1).All(c => c == ChdCodec.None))
+                if (
+                    header?.Compression is { Length: > 0 } comps
+                    && comps[0] == (ChdCodec)codecTag
+                    && comps.Skip(1).All(c => c == ChdCodec.None)
+                )
                     return file;
             }
             catch (Exception)
@@ -121,11 +125,13 @@ public static class Corpus
                 if (!e.TryGetProperty("file", out var f) || f.GetString() is not { } name)
                     continue;
 
-                var parent = e.TryGetProperty("parent", out var p) && p.ValueKind == JsonValueKind.String
-                    ? p.GetString()
-                    : null;
-                var ok = e.TryGetProperty("expect", out var x) &&
-                         string.Equals(x.GetString(), "ok", StringComparison.Ordinal);
+                var parent =
+                    e.TryGetProperty("parent", out var p) && p.ValueKind == JsonValueKind.String
+                        ? p.GetString()
+                        : null;
+                var ok =
+                    e.TryGetProperty("expect", out var x)
+                    && string.Equals(x.GetString(), "ok", StringComparison.Ordinal);
                 result[name] = (parent, ok);
             }
         }

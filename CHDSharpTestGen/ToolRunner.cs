@@ -16,9 +16,10 @@ internal static class ToolRunner
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
-        using var p = Process.Start(psi) ?? throw new InvalidOperationException($"failed to start {exe}");
+        using var p =
+            Process.Start(psi) ?? throw new InvalidOperationException($"failed to start {exe}");
 
         var stdoutTask = p.StandardOutput.ReadToEndAsync();
         var stderrTask = p.StandardError.ReadToEndAsync();
@@ -35,7 +36,8 @@ internal static class ToolRunner
             }
 
             throw new InvalidOperationException(
-                $"{Path.GetFileName(exe)} timed out after {DefaultTimeout.TotalMinutes} minutes");
+                $"{Path.GetFileName(exe)} timed out after {DefaultTimeout.TotalMinutes} minutes"
+            );
         }
 
         var stdout = stdoutTask.GetAwaiter().GetResult();
@@ -43,7 +45,8 @@ internal static class ToolRunner
 
         if (p.ExitCode != 0)
             throw new InvalidOperationException(
-                $"{Path.GetFileName(exe)} {args}\nexit {p.ExitCode}\n{stdout}\n{stderr}");
+                $"{Path.GetFileName(exe)} {args}\nexit {p.ExitCode}\n{stdout}\n{stderr}"
+            );
 
         return stdout + stderr;
     }

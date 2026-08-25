@@ -55,7 +55,9 @@ public static class CueParser
                         case "WAVE":
                             (wavLength, wavOffset) = ParseWavSample(lastFile);
                             if (wavLength == 0)
-                                throw new InvalidDataException($"Couldn't read [{lastFile}] or not a valid .WAV");
+                                throw new InvalidDataException(
+                                    $"Couldn't read [{lastFile}] or not a valid .WAV"
+                                );
 
                             break;
                         default:
@@ -69,9 +71,16 @@ public static class CueParser
                 {
                     if (tokens.Count < 3)
                         throw new InvalidDataException($"Malformed TRACK command: {rawLine}");
-                    if (!int.TryParse(tokens[1], NumberStyles.None, CultureInfo.InvariantCulture,
-                            out var trackNumber) ||
-                        trackNumber < 1 || trackNumber > CdConstants.MaxTracks)
+                    if (
+                        !int.TryParse(
+                            tokens[1],
+                            NumberStyles.None,
+                            CultureInfo.InvariantCulture,
+                            out var trackNumber
+                        )
+                        || trackNumber < 1
+                        || trackNumber > CdConstants.MaxTracks
+                    )
                         throw new InvalidDataException($"Invalid track number [{tokens[1]}]");
 
                     if (currentTrack is { } previous)
@@ -89,7 +98,7 @@ public static class CueParser
                         PgType = 0,
                         PgDataSize = 0,
                         Index00 = -1,
-                        Index01 = -1
+                        Index01 = -1,
                     };
 
                     ParseTrackType(tokens[2], ref track);
@@ -101,7 +110,8 @@ public static class CueParser
                         var frames = wavLength / CdConstants.MaxSectorData;
                         if (frames > int.MaxValue)
                             throw new InvalidDataException(
-                                $"WAV file frame count ({frames}) exceeds the maximum supported value");
+                                $"WAV file frame count ({frames}) exceeds the maximum supported value"
+                            );
 
                         track.Frames = (int)frames;
                         track.FileOffset = wavOffset;
@@ -116,12 +126,21 @@ public static class CueParser
                 case "INDEX":
                 {
                     if (currentTrack == null)
-                        throw new InvalidDataException($"INDEX command without a preceding TRACK: {rawLine}");
+                        throw new InvalidDataException(
+                            $"INDEX command without a preceding TRACK: {rawLine}"
+                        );
                     if (tokens.Count < 3)
                         throw new InvalidDataException($"Malformed INDEX command: {rawLine}");
-                    if (!int.TryParse(tokens[1], NumberStyles.None, CultureInfo.InvariantCulture,
-                            out var indexNumber) ||
-                        indexNumber < 0 || indexNumber > CdConstants.MaxIndex)
+                    if (
+                        !int.TryParse(
+                            tokens[1],
+                            NumberStyles.None,
+                            CultureInfo.InvariantCulture,
+                            out var indexNumber
+                        )
+                        || indexNumber < 0
+                        || indexNumber > CdConstants.MaxIndex
+                    )
                         throw new InvalidDataException($"Encountered invalid index [{tokens[1]}]");
 
                     var track = currentTrack.Value;
@@ -158,7 +177,9 @@ public static class CueParser
                 case "PREGAP":
                 {
                     if (currentTrack == null)
-                        throw new InvalidDataException($"PREGAP command without a preceding TRACK: {rawLine}");
+                        throw new InvalidDataException(
+                            $"PREGAP command without a preceding TRACK: {rawLine}"
+                        );
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed PREGAP command: {rawLine}");
 
@@ -171,7 +192,9 @@ public static class CueParser
                 case "POSTGAP":
                 {
                     if (currentTrack == null)
-                        throw new InvalidDataException($"POSTGAP command without a preceding TRACK: {rawLine}");
+                        throw new InvalidDataException(
+                            $"POSTGAP command without a preceding TRACK: {rawLine}"
+                        );
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed POSTGAP command: {rawLine}");
 
@@ -201,15 +224,37 @@ public static class CueParser
         {
             case 1:
             {
-                if (!int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var frames))
+                if (
+                    !int.TryParse(
+                        parts[0],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out var frames
+                    )
+                )
                     throw new InvalidDataException($"Invalid frame count [{token}]");
 
                 return frames;
             }
-            case 3 when
-                int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var minutes) &&
-                int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var seconds) &&
-                int.TryParse(parts[2], NumberStyles.None, CultureInfo.InvariantCulture, out var frame):
+            case 3
+                when int.TryParse(
+                    parts[0],
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out var minutes
+                )
+                    && int.TryParse(
+                        parts[1],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out var seconds
+                    )
+                    && int.TryParse(
+                        parts[2],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out var frame
+                    ):
                 return minutes * 60 * 75 + seconds * 75 + frame;
             default:
                 throw new InvalidDataException($"Invalid MSF time format [{token}]");
@@ -226,7 +271,8 @@ public static class CueParser
                 throw new InvalidDataException($"Track {track.Number} is missing INDEX 01 marker");
 
             // audio data must be byte-swapped for CHD storage
-            if (track.TrackType == CdTrackType.Audio) track.Swap = true;
+            if (track.TrackType == CdTrackType.Audio)
+                track.Swap = true;
 
             // WAV tracks already have their length and offset resolved
             if (track.FileOffset != 0)
@@ -236,35 +282,45 @@ public static class CueParser
             }
 
             var sameFileAsPrev =
-                i > 0 && string.Equals(track.FileName, tracks[i - 1].FileName, StringComparison.Ordinal);
-            var sameFileAsNext = i + 1 < tracks.Count &&
-                                 string.Equals(track.FileName, tracks[i + 1].FileName, StringComparison.Ordinal);
+                i > 0
+                && string.Equals(track.FileName, tracks[i - 1].FileName, StringComparison.Ordinal);
+            var sameFileAsNext =
+                i + 1 < tracks.Count
+                && string.Equals(track.FileName, tracks[i + 1].FileName, StringComparison.Ordinal);
 
             if (i + 1 >= tracks.Count && sameFileAsPrev)
             {
                 // last track in a shared file: remainder of the file
-                var prevSize = (long)tracks[i - 1].Frames * (tracks[i - 1].DataSize + tracks[i - 1].SubSize);
+                var prevSize =
+                    (long)tracks[i - 1].Frames * (tracks[i - 1].DataSize + tracks[i - 1].SubSize);
                 track.FileOffset = tracks[i - 1].FileOffset + prevSize;
-                track.Frames = (int)((GetFileSize(track.FileName!) - track.FileOffset) /
-                                     (track.DataSize + track.SubSize));
+                track.Frames = (int)(
+                    (GetFileSize(track.FileName!) - track.FileOffset)
+                    / (track.DataSize + track.SubSize)
+                );
             }
             else if (sameFileAsNext)
             {
                 track.Frames = tracks[i + 1].Index00 - track.Index00;
                 if (track.Frames == 0)
                     throw new InvalidDataException(
-                        $"Unable to determine size of track {track.Number}, missing INDEX 01 markers?");
+                        $"Unable to determine size of track {track.Number}, missing INDEX 01 markers?"
+                    );
 
                 if (i > 0)
                 {
-                    var prevSize = (long)tracks[i - 1].Frames * (tracks[i - 1].DataSize + tracks[i - 1].SubSize);
+                    var prevSize =
+                        (long)tracks[i - 1].Frames
+                        * (tracks[i - 1].DataSize + tracks[i - 1].SubSize);
                     track.FileOffset = tracks[i - 1].FileOffset + prevSize;
                 }
             }
             else if (track.Frames == 0)
             {
                 // standalone file: whole file is the track
-                track.Frames = (int)(GetFileSize(track.FileName!) / (track.DataSize + track.SubSize));
+                track.Frames = (int)(
+                    GetFileSize(track.FileName!) / (track.DataSize + track.SubSize)
+                );
                 track.FileOffset = 0;
             }
 
@@ -400,18 +456,26 @@ public static class CueParser
 
         // format must be PCM
         if (ReadU16Le(fs, ref offset) != 1)
-            throw new InvalidDataException($"Unsupported WAV format - only PCM is supported ({fileName})");
+            throw new InvalidDataException(
+                $"Unsupported WAV format - only PCM is supported ({fileName})"
+            );
         // only stereo is supported
         if (ReadU16Le(fs, ref offset) != 2)
-            throw new InvalidDataException($"Unsupported number of channels - only stereo is supported ({fileName})");
+            throw new InvalidDataException(
+                $"Unsupported number of channels - only stereo is supported ({fileName})"
+            );
         // sample rate
         if (ReadU32Le(fs, ref offset) != 44100)
-            throw new InvalidDataException($"Unsupported samplerate - only 44100 is supported ({fileName})");
+            throw new InvalidDataException(
+                $"Unsupported samplerate - only 44100 is supported ({fileName})"
+            );
         // bytes/second and block alignment are ignored
         offset += 6;
         // bits/sample
         if (ReadU16Le(fs, ref offset) != 16)
-            throw new InvalidDataException($"Unsupported bits/sample - only 16 is supported ({fileName})");
+            throw new InvalidDataException(
+                $"Unsupported bits/sample - only 16 is supported ({fileName})"
+            );
         // seek past any extra data
         offset += length - 16;
 
@@ -450,7 +514,10 @@ public static class CueParser
             throw new InvalidDataException("Unexpected end of WAV file");
 
         offset += 4;
-        return buffer[0] | ((uint)buffer[1] << 8) | ((uint)buffer[2] << 16) | ((uint)buffer[3] << 24);
+        return buffer[0]
+            | ((uint)buffer[1] << 8)
+            | ((uint)buffer[2] << 16)
+            | ((uint)buffer[3] << 24);
     }
 
     private static ushort ReadU16Le(Stream stream, ref long offset)

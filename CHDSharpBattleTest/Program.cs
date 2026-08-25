@@ -11,26 +11,28 @@ internal static class Program
 {
     private static void PrintUsage()
     {
-        Console.WriteLine("""
-                          CHDSharpBattleTest — battle-test CHDSharp decode/encode against chdman.exe
+        Console.WriteLine(
+            """
+            CHDSharpBattleTest — battle-test CHDSharp decode/encode against chdman.exe
 
-                          Usage: CHDSharpBattleTest [options]
+            Usage: CHDSharpBattleTest [options]
 
-                            --chdman <path>   chdman executable (default: repo-root chdman.exe or PATH)
-                            --cli <path>      CHDSharpCli executable (default: auto-resolve from repo)
-                            --out <dir>       artifact + report root (default: <repo>/TestResults/battle)
-                            --real <dir>      scan a folder recursively for real *.chd files and battle-test
-                                              each one (chdman vs CLI vs library). Repeatable.
-                            --real-timeout <secs>
-                                              per-command timeout for real-file checks (default 900s; large
-                                              CHDs need more time for verify/extract than synthetic ones)
-                            --quick           reduced corpus (faster smoke battle)
-                            --seed <n>        RNG seed for the corpus (default 1337)
-                            --no-keep         delete artifacts at the end when everything passed
-                            --help            show this help
+              --chdman <path>   chdman executable (default: repo-root chdman.exe or PATH)
+              --cli <path>      CHDSharpCli executable (default: auto-resolve from repo)
+              --out <dir>       artifact + report root (default: <repo>/TestResults/battle)
+              --real <dir>      scan a folder recursively for real *.chd files and battle-test
+                                each one (chdman vs CLI vs library). Repeatable.
+              --real-timeout <secs>
+                                per-command timeout for real-file checks (default 900s; large
+                                CHDs need more time for verify/extract than synthetic ones)
+              --quick           reduced corpus (faster smoke battle)
+              --seed <n>        RNG seed for the corpus (default 1337)
+              --no-keep         delete artifacts at the end when everything passed
+              --help            show this help
 
-                          Exit code: 0 when every check passed, 1 when any failed, 2 on usage errors.
-                          """);
+            Exit code: 0 when every check passed, 1 when any failed, 2 on usage errors.
+            """
+        );
     }
 
     private static int Main(string[] args)
@@ -94,7 +96,9 @@ internal static class Program
         chdmanPath ??= ResolveChdmanPath();
         if (chdmanPath == null || !File.Exists(chdmanPath))
         {
-            Console.Error.WriteLine("chdman.exe not found. Pass --chdman <path> or put chdman.exe in the repo root.");
+            Console.Error.WriteLine(
+                "chdman.exe not found. Pass --chdman <path> or put chdman.exe in the repo root."
+            );
             return 2;
         }
 
@@ -106,7 +110,15 @@ internal static class Program
         }
 
         var sw = Stopwatch.StartNew();
-        var harness = new BattleHarness(chdmanPath, cliPath, outDir, seed, quick, realDirs, realTimeoutMs);
+        var harness = new BattleHarness(
+            chdmanPath,
+            cliPath,
+            outDir,
+            seed,
+            quick,
+            realDirs,
+            realTimeoutMs
+        );
         try
         {
             var failed = harness.Run();
@@ -114,7 +126,8 @@ internal static class Program
             Console.WriteLine();
             harness.PrintSummary();
             Console.WriteLine(
-                $"Battle finished in {sw.Elapsed.TotalSeconds:N1}s. Result: {(failed == 0 ? "ALL PASSED" : $"{failed} FAILED")}");
+                $"Battle finished in {sw.Elapsed.TotalSeconds:N1}s. Result: {(failed == 0 ? "ALL PASSED" : $"{failed} FAILED")}"
+            );
 
             if (failed == 0 && noKeep)
                 harness.Cleanup();
@@ -166,11 +179,25 @@ internal static class Program
         while (dir != null)
         {
             // Check in sibling CHDSharpCli project build output
-            var cliDebug = Path.Combine(dir.FullName, "CHDSharpCli", "bin", "Debug", "net8.0", exeName);
+            var cliDebug = Path.Combine(
+                dir.FullName,
+                "CHDSharpCli",
+                "bin",
+                "Debug",
+                "net8.0",
+                exeName
+            );
             if (File.Exists(cliDebug))
                 return cliDebug;
 
-            var cliRelease = Path.Combine(dir.FullName, "CHDSharpCli", "bin", "Release", "net8.0", exeName);
+            var cliRelease = Path.Combine(
+                dir.FullName,
+                "CHDSharpCli",
+                "bin",
+                "Release",
+                "net8.0",
+                exeName
+            );
             if (File.Exists(cliRelease))
                 return cliRelease;
 

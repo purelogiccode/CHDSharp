@@ -65,7 +65,8 @@ internal class AudioSamples
     /// </summary>
     public static unsafe void MemCpy(uint* res, uint* smp, int n)
     {
-        for (var i = n; i > 0; i--) *res++ = *smp++;
+        for (var i = n; i > 0; i--)
+            *res++ = *smp++;
     }
 
     /// <summary>
@@ -73,7 +74,8 @@ internal class AudioSamples
     /// </summary>
     public static unsafe void MemCpy(int* res, int* smp, int n)
     {
-        for (var i = n; i > 0; i--) *res++ = *smp++;
+        for (var i = n; i > 0; i--)
+            *res++ = *smp++;
     }
 
     /// <summary>
@@ -81,7 +83,8 @@ internal class AudioSamples
     /// </summary>
     public static unsafe void MemCpy(long* res, long* smp, int n)
     {
-        for (var i = n; i > 0; i--) *res++ = *smp++;
+        for (var i = n; i > 0; i--)
+            *res++ = *smp++;
     }
 
     /// <summary>
@@ -89,7 +92,8 @@ internal class AudioSamples
     /// </summary>
     public static unsafe void MemCpy(short* res, short* smp, int n)
     {
-        for (var i = n; i > 0; i--) *res++ = *smp++;
+        for (var i = n; i > 0; i--)
+            *res++ = *smp++;
     }
 
     /// <summary>
@@ -101,7 +105,8 @@ internal class AudioSamples
         if ((((IntPtr)smp).ToInt64() & 7) == (((IntPtr)res).ToInt64() & 7) && n > 32)
         {
             var delta = (int)((8 - (((IntPtr)smp).ToInt64() & 7)) & 7);
-            for (var i = delta; i > 0; i--) *res++ = *smp++;
+            for (var i = delta; i > 0; i--)
+                *res++ = *smp++;
 
             n -= delta;
 
@@ -115,7 +120,8 @@ internal class AudioSamples
         if ((((IntPtr)smp).ToInt64() & 3) == (((IntPtr)res).ToInt64() & 3) && n > 16)
         {
             var delta = (int)((4 - (((IntPtr)smp).ToInt64() & 3)) & 3);
-            for (var i = delta; i > 0; i--) *res++ = *smp++;
+            for (var i = delta; i > 0; i--)
+                *res++ = *smp++;
 
             n -= delta;
 
@@ -126,7 +132,8 @@ internal class AudioSamples
             res += n4;
         }
 
-        for (var i = n; i > 0; i--) *res++ = *smp++;
+        for (var i = n; i > 0; i--)
+            *res++ = *smp++;
     }
 
     /// <summary>
@@ -134,7 +141,8 @@ internal class AudioSamples
     /// </summary>
     public static unsafe void MemSet(int* res, int smp, int n)
     {
-        for (var i = n; i > 0; i--) *res++ = smp;
+        for (var i = n; i > 0; i--)
+            *res++ = smp;
     }
 
     /// <summary>
@@ -142,7 +150,8 @@ internal class AudioSamples
     /// </summary>
     public static unsafe void MemSet(long* res, long smp, int n)
     {
-        for (var i = n; i > 0; i--) *res++ = smp;
+        for (var i = n; i > 0; i--)
+            *res++ = smp;
     }
 
     /// <summary>
@@ -167,7 +176,8 @@ internal class AudioSamples
             res += n4;
         }
 
-        for (var i = n; i > 0; i--) *res++ = smp;
+        for (var i = n; i > 0; i--)
+            *res++ = smp;
     }
 
     /// <summary>

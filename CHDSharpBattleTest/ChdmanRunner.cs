@@ -29,13 +29,14 @@ internal sealed class ChdmanRunner
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
         psi.ArgumentList.Add(command);
         foreach (var a in args)
             psi.ArgumentList.Add(a);
 
-        using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {ExePath}");
+        using var p =
+            Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {ExePath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
         if (!p.WaitForExit(TimeoutMs))
@@ -59,7 +60,11 @@ internal sealed class ChdmanRunner
     internal string VersionBanner()
     {
         var r = Run("help", "createraw");
-        var first = r.Combined.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        var first = r
+            .Combined.Split(
+                '\n',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
             .FirstOrDefault();
         return string.IsNullOrEmpty(first) ? "(unknown chdman version)" : first;
     }
@@ -88,7 +93,10 @@ internal sealed class ChdmanRunner
             fields[m.Groups[1].Value.Trim()] = m.Groups[2].Value.Trim();
         }
 
-        if (!fields.TryGetValue("File Version", out var versionText) || !int.TryParse(versionText, out var version))
+        if (
+            !fields.TryGetValue("File Version", out var versionText)
+            || !int.TryParse(versionText, out var version)
+        )
             return null;
 
         return new ChdmanInfo(
@@ -104,7 +112,8 @@ internal sealed class ChdmanRunner
             NormalizeHash(fields, "Data SHA1"),
             NormalizeHash(fields, "MD5"),
             NormalizeHash(fields, "Parent SHA1"),
-            NormalizeHash(fields, "Parent MD5"));
+            NormalizeHash(fields, "Parent MD5")
+        );
 
         static ulong ParseNum(string text)
         {

@@ -30,14 +30,16 @@ public class EncodeCdTests : IDisposable
     public void EncodeCd_HeaderFields_Correct()
     {
         // track 1: 3 frames (pads to 4), track 2: 10 frames (pads to 12)
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 00 00:00:03
-                     INDEX 01 00:00:05
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:00:03
+                INDEX 01 00:00:05
+            """
+        );
         WriteBin(2352L * 13);
         var chdPath = Path.Combine(_dir, "test.chd");
 
@@ -68,17 +70,17 @@ public class EncodeCdTests : IDisposable
     public void EncodeCd_LogicalImage_MatchesExpected()
     {
         // data track: 5 frames (pads to 8), audio track: 7 frames (pads to 8)
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 00 00:00:05
-                     INDEX 01 00:00:07
-                 """);
-        var bin = BuildBinFrames(5, true)
-            .Concat(BuildBinFrames(7, false))
-            .ToArray();
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:00:05
+                INDEX 01 00:00:07
+            """
+        );
+        var bin = BuildBinFrames(5, true).Concat(BuildBinFrames(7, false)).ToArray();
         File.WriteAllBytes(Path.Combine(_dir, "game.bin"), bin);
         var chdPath = Path.Combine(_dir, "test.chd");
 
@@ -106,17 +108,17 @@ public class EncodeCdTests : IDisposable
         // => 12 logical frames; with 8-frame hunks the last hunk holds 4 valid + 4 zero
         // padding frames. Regression for the battle-test bug: the header raw SHA-1 must be
         // computed over only the 12 valid logical frames, not the padded full hunk.
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 00 00:00:05
-                     INDEX 01 00:00:07
-                 """);
-        var bin = BuildBinFrames(5, true)
-            .Concat(BuildBinFrames(3, false))
-            .ToArray();
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:00:05
+                INDEX 01 00:00:07
+            """
+        );
+        var bin = BuildBinFrames(5, true).Concat(BuildBinFrames(3, false)).ToArray();
         File.WriteAllBytes(Path.Combine(_dir, "game.bin"), bin);
         var chdPath = Path.Combine(_dir, "test.chd");
 
@@ -137,14 +139,16 @@ public class EncodeCdTests : IDisposable
     [Fact]
     public void EncodeCd_MultipleBinFiles_Works()
     {
-        WriteCue("""
-                 FILE "data.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 FILE "audio.bin" BINARY
-                   TRACK 02 AUDIO
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "data.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            FILE "audio.bin" BINARY
+              TRACK 02 AUDIO
+                INDEX 01 00:00:00
+            """
+        );
         var dataBin = BuildBinFrames(4, true);
         var audioBin = BuildBinFrames(6, false);
         File.WriteAllBytes(Path.Combine(_dir, "data.bin"), dataBin);
@@ -171,13 +175,15 @@ public class EncodeCdTests : IDisposable
     [Fact]
     public void EncodeCd_PassesChdSharpDeepVerification()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 01 01:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 01:00:00
+            """
+        );
         WriteBin(2352L * (60 * 75 + 100));
         var chdPath = Path.Combine(_dir, "test.chd");
 
@@ -192,14 +198,16 @@ public class EncodeCdTests : IDisposable
     [Fact]
     public void EncodeCd_Metadata_IsReadable()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 00 01:00:00
-                     INDEX 01 01:02:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 01:00:00
+                INDEX 01 01:02:00
+            """
+        );
         WriteBin(2352L * (60 * 75 + 60 * 75 + 8));
         var chdPath = Path.Combine(_dir, "test.chd");
 
@@ -210,42 +218,57 @@ public class EncodeCdTests : IDisposable
         using (chd)
         {
             Assert.True(chd!.IsCd);
-            var cht2 = chd.Metadata
-                .Where(m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal))
+            var cht2 = chd
+                .Metadata.Where(m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal))
                 .ToList();
             Assert.Equal(2, cht2.Count);
             Assert.Contains("TRACK:1 TYPE:MODE1_RAW", cht2[0].GetText(), StringComparison.Ordinal);
             Assert.Contains("TRACK:2 TYPE:AUDIO", cht2[1].GetText(), StringComparison.Ordinal);
-            Assert.Contains("PREGAP:150 PGTYPE:VAUDIO", cht2[1].GetText(), StringComparison.Ordinal);
+            Assert.Contains(
+                "PREGAP:150 PGTYPE:VAUDIO",
+                cht2[1].GetText(),
+                StringComparison.Ordinal
+            );
         }
     }
 
     [Fact]
     public void EncodeCd_InvalidUnitBytes_Throws()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
         WriteBin(2352L * 4);
 
         Assert.Throws<ArgumentException>(() =>
-            ChdEncoder.EncodeCd(Path.Combine(_dir, "test.cue"), Path.Combine(_dir, "bad.chd"), 4096, 512));
+            ChdEncoder.EncodeCd(
+                Path.Combine(_dir, "test.cue"),
+                Path.Combine(_dir, "bad.chd"),
+                4096,
+                512
+            )
+        );
     }
 
     [Fact]
     public void EncodeCd_InvalidHunkBytes_Throws()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
         WriteBin(2352L * 4);
 
         Assert.Throws<ArgumentException>(() =>
-            ChdEncoder.EncodeCd(Path.Combine(_dir, "test.cue"), Path.Combine(_dir, "bad.chd"), 4096));
+            ChdEncoder.EncodeCd(Path.Combine(_dir, "test.cue"), Path.Combine(_dir, "bad.chd"), 4096)
+        );
     }
 
     [Fact]
@@ -254,14 +277,16 @@ public class EncodeCdTests : IDisposable
         WriteCue("");
 
         Assert.Throws<InvalidDataException>(() =>
-            ChdEncoder.EncodeCd(Path.Combine(_dir, "test.cue"), Path.Combine(_dir, "empty.chd")));
+            ChdEncoder.EncodeCd(Path.Combine(_dir, "test.cue"), Path.Combine(_dir, "empty.chd"))
+        );
     }
 
     [Fact]
     public void EncodeCd_MissingCue_Throws()
     {
         Assert.Throws<FileNotFoundException>(() =>
-            ChdEncoder.EncodeCd(Path.Combine(_dir, "nope.cue"), Path.Combine(_dir, "nope.chd")));
+            ChdEncoder.EncodeCd(Path.Combine(_dir, "nope.cue"), Path.Combine(_dir, "nope.chd"))
+        );
     }
 
     // ----- helpers -----
@@ -291,13 +316,25 @@ public class EncodeCdTests : IDisposable
     }
 
     /// <summary>Copies BIN sectors into a 2448-byte-per-frame logical image, swapping audio data.</summary>
-    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
-        bool swap)
+    private static void PlaceBinFrames(
+        byte[] image,
+        int chdFrameStart,
+        byte[] bin,
+        int binFrameCount,
+        int binOffset,
+        bool swap
+    )
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
-            Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
+            Array.Copy(
+                bin,
+                binOffset + f * CdConstants.MaxSectorData,
+                image,
+                dest,
+                CdConstants.MaxSectorData
+            );
             if (swap)
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);
@@ -317,8 +354,10 @@ public class EncodeCdTests : IDisposable
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) | data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 
     private static ulong ReadU64Be(byte[] data, int offset)

@@ -16,7 +16,8 @@ public static unsafe partial class Methods
     {
         var ostart = (byte*)dst;
         var flSize = (uint)(1 + (srcSize > 31 ? 1 : 0) + (srcSize > 4095 ? 1 : 0));
-        if (srcSize + flSize > dstCapacity) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        if (srcSize + flSize > dstCapacity)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
         switch (flSize)
         {
@@ -105,10 +106,7 @@ public static unsafe partial class Methods
      * for literal compression to even be attempted.
      * Minimum is made tighter as compression strategy increases.
      */
-    private static nuint ZSTD_minLiteralsToCompress(
-        ZSTD_strategy strategy,
-        HUF_repeat huf_repeat
-    )
+    private static nuint ZSTD_minLiteralsToCompress(ZSTD_strategy strategy, HUF_repeat huf_repeat)
     {
         assert((int)strategy >= 0);
         assert((int)strategy <= 9);
@@ -151,7 +149,8 @@ public static unsafe partial class Methods
             return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
         if (srcSize < ZSTD_minLiteralsToCompress(strategy, prevHuf->repeatMode))
             return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
-        if (dstCapacity < lhSize + 1) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        if (dstCapacity < lhSize + 1)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
         {
             var repeat = prevHuf->repeatMode;
@@ -219,7 +218,8 @@ public static unsafe partial class Methods
                 &repeat,
                 flags
             );
-            if (repeat != HUF_repeat.HUF_repeat_none) hType = symbolEncodingType_e.set_repeat;
+            if (repeat != HUF_repeat.HUF_repeat_none)
+                hType = symbolEncodingType_e.set_repeat;
         }
 
         {
@@ -238,7 +238,8 @@ public static unsafe partial class Methods
                 return ZSTD_compressRleLiteralsBlock(dst, dstCapacity, src, srcSize);
             }
 
-        if (hType == symbolEncodingType_e.set_compressed) nextHuf->repeatMode = HUF_repeat.HUF_repeat_check;
+        if (hType == symbolEncodingType_e.set_compressed)
+            nextHuf->repeatMode = HUF_repeat.HUF_repeat_check;
 
         switch (lhSize)
         {
@@ -248,40 +249,36 @@ public static unsafe partial class Methods
                     assert(srcSize >= 6);
 
 #endif
-            {
-                var lhc =
-                    (uint)hType
-                    + ((singleStream == 0 ? 1U : 0U) << 2)
-                    + ((uint)srcSize << 4)
-                    + ((uint)cLitSize << 14);
-                MEM_writeLE24(ostart, lhc);
-                break;
-            }
+                {
+                    var lhc =
+                        (uint)hType
+                        + ((singleStream == 0 ? 1U : 0U) << 2)
+                        + ((uint)srcSize << 4)
+                        + ((uint)cLitSize << 14);
+                    MEM_writeLE24(ostart, lhc);
+                    break;
+                }
 
             case 4:
                 assert(srcSize >= 6);
 
-            {
-                var lhc =
-                    (uint)(hType + (2 << 2))
-                    + ((uint)srcSize << 4)
-                    + ((uint)cLitSize << 18);
-                MEM_writeLE32(ostart, lhc);
-                break;
-            }
+                {
+                    var lhc =
+                        (uint)(hType + (2 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 18);
+                    MEM_writeLE32(ostart, lhc);
+                    break;
+                }
 
             case 5:
                 assert(srcSize >= 6);
 
-            {
-                var lhc =
-                    (uint)(hType + (3 << 2))
-                    + ((uint)srcSize << 4)
-                    + ((uint)cLitSize << 22);
-                MEM_writeLE32(ostart, lhc);
-                ostart[4] = (byte)(cLitSize >> 10);
-                break;
-            }
+                {
+                    var lhc =
+                        (uint)(hType + (3 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 22);
+                    MEM_writeLE32(ostart, lhc);
+                    ostart[4] = (byte)(cLitSize >> 10);
+                    break;
+                }
 
             default:
                 assert(0 != 0);

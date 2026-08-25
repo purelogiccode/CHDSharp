@@ -85,14 +85,20 @@ public class ReadSectorTests
     public void ReadSectorMsf_LeadInAddress_Rejected()
     {
         using var chd = Open(CorpusCd);
-        Assert.Equal(ChdError.Chderrinvalidparameter, chd.ReadSectorMsf(0x00, 0x00, 0x00, new byte[CdSectorBytes]));
+        Assert.Equal(
+            ChdError.Chderrinvalidparameter,
+            chd.ReadSectorMsf(0x00, 0x00, 0x00, new byte[CdSectorBytes])
+        );
     }
 
     [Fact]
     public void ReadSector_BufferTooSmall_Rejected()
     {
         using var chd = Open(CorpusCd);
-        Assert.Equal(ChdError.Chderrinvalidparameter, chd.ReadSector(0, new byte[CdSectorBytes - 1]));
+        Assert.Equal(
+            ChdError.Chderrinvalidparameter,
+            chd.ReadSector(0, new byte[CdSectorBytes - 1])
+        );
         Assert.Equal(ChdError.Chderrinvalidparameter, chd.ReadFrame(0, new byte[CdFrameBytes - 1]));
     }
 
@@ -100,8 +106,14 @@ public class ReadSectorTests
     public void ReadSector_LbaOutOfRange_Rejected()
     {
         using var chd = Open(CorpusCd);
-        Assert.Equal(ChdError.Chderrinvalidparameter, chd.ReadSector(1000, new byte[CdSectorBytes]));
-        Assert.Equal(ChdError.Chderrinvalidparameter, chd.ReadSector(uint.MaxValue, new byte[CdSectorBytes]));
+        Assert.Equal(
+            ChdError.Chderrinvalidparameter,
+            chd.ReadSector(1000, new byte[CdSectorBytes])
+        );
+        Assert.Equal(
+            ChdError.Chderrinvalidparameter,
+            chd.ReadSector(uint.MaxValue, new byte[CdSectorBytes])
+        );
         Assert.Equal(ChdError.Chderrinvalidparameter, chd.ReadFrame(1000, new byte[CdFrameBytes]));
     }
 

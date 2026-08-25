@@ -6,11 +6,7 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static void* HUF_alignUpWorkspace(
-        void* workspace,
-        nuint* workspaceSizePtr,
-        nuint align
-    )
+    private static void* HUF_alignUpWorkspace(void* workspace, nuint* workspaceSizePtr, nuint align)
     {
         var mask = align - 1;
         var rem = (nuint)workspace & mask;
@@ -55,12 +51,7 @@ public static unsafe partial class Methods
             return 0;
         {
             /* never fails */
-            var maxCount = HIST_count_simple(
-                wksp->count,
-                &maxSymbolValue,
-                weightTable,
-                wtSize
-            );
+            var maxCount = HIST_count_simple(wksp->count, &maxSymbolValue, weightTable, wtSize);
             if (maxCount == wtSize)
                 return 1;
             if (maxCount == 1)
@@ -380,11 +371,7 @@ public static unsafe partial class Methods
      *                    respect targetNbBits.
      * @return            The maximum number of bits of the Huffman tree after adjustment.
      */
-    private static uint HUF_setMaxHeight(
-        nodeElt_s* huffNode,
-        uint lastNonNull,
-        uint targetNbBits
-    )
+    private static uint HUF_setMaxHeight(nodeElt_s* huffNode, uint lastNonNull, uint targetNbBits)
     {
         uint largestBits = huffNode[lastNonNull].nbBits;
         if (largestBits <= targetNbBits)
@@ -395,9 +382,7 @@ public static unsafe partial class Methods
             var n = (int)lastNonNull;
             while (huffNode[n].nbBits > targetNbBits)
             {
-                totalCost += (int)(
-                    baseCost - (uint)(1 << (int)(largestBits - huffNode[n].nbBits))
-                );
+                totalCost += (int)(baseCost - (uint)(1 << (int)(largestBits - huffNode[n].nbBits)));
                 huffNode[n].nbBits = (byte)targetNbBits;
                 n--;
             }
@@ -751,12 +736,11 @@ public static unsafe partial class Methods
         nuint wkspSize
     )
     {
-        var wksp_tables =
-            (HUF_buildCTable_wksp_tables*)HUF_alignUpWorkspace(
-                workSpace,
-                &wkspSize,
-                sizeof(uint)
-            );
+        var wksp_tables = (HUF_buildCTable_wksp_tables*)HUF_alignUpWorkspace(
+            workSpace,
+            &wkspSize,
+            sizeof(uint)
+        );
         var huffNode0 = &wksp_tables->huffNodeTbl.e0;
         var huffNode = huffNode0 + 1;
         int nonNullRank;
@@ -776,16 +760,13 @@ public static unsafe partial class Methods
         return maxNbBits;
     }
 
-    private static nuint HUF_estimateCompressedSize(
-        nuint* CTable,
-        uint* count,
-        uint maxSymbolValue
-    )
+    private static nuint HUF_estimateCompressedSize(nuint* CTable, uint* count, uint maxSymbolValue)
     {
         var ct = CTable + 1;
         nuint nbBits = 0;
         int s;
-        for (s = 0; s <= (int)maxSymbolValue; ++s) nbBits += HUF_getNbBits(ct[s]) * count[s];
+        for (s = 0; s <= (int)maxSymbolValue; ++s)
+            nbBits += HUF_getNbBits(ct[s]) * count[s];
 
         return nbBits >> 3;
     }
@@ -795,7 +776,8 @@ public static unsafe partial class Methods
         var ct = CTable + 1;
         var bad = 0;
         int s;
-        for (s = 0; s <= (int)maxSymbolValue; ++s) bad |= count[s] != 0 && HUF_getNbBits(ct[s]) == 0 ? 1 : 0;
+        for (s = 0; s <= (int)maxSymbolValue; ++s)
+            bad |= count[s] != 0 && HUF_getNbBits(ct[s]) == 0 ? 1 : 0;
 
         return bad == 0 ? 1 : 0;
     }
@@ -881,8 +863,7 @@ public static unsafe partial class Methods
         var nbBits = bitC->bitPos.e0 & 0xFF;
         var nbBytes = nbBits >> 3;
         /* The top nbBits bits of bitContainer are the ones we need. */
-        var bitContainer =
-            bitC->bitContainer.e0 >> (int)((nuint)(sizeof(nuint) * 8) - nbBits);
+        var bitContainer = bitC->bitContainer.e0 >> (int)((nuint)(sizeof(nuint) * 8) - nbBits);
         bitC->bitPos.e0 &= 7;
         assert(nbBits > 0);
         assert(nbBits <= (nuint)(sizeof(nuint) * 8));
@@ -949,7 +930,8 @@ public static unsafe partial class Methods
         var rem = n % kUnroll;
         if (rem > 0)
         {
-            for (; rem > 0; --rem) HUF_encodeSymbol(bitC, ip[--n], ct, 0, 0);
+            for (; rem > 0; --rem)
+                HUF_encodeSymbol(bitC, ip[--n], ct, 0, 0);
 
             HUF_flushBits(bitC, kFastFlush);
         }
@@ -958,7 +940,8 @@ public static unsafe partial class Methods
         if (n % (2 * kUnroll) != 0)
         {
             int u;
-            for (u = 1; u < kUnroll; ++u) HUF_encodeSymbol(bitC, ip[n - u], ct, 0, 1);
+            for (u = 1; u < kUnroll; ++u)
+                HUF_encodeSymbol(bitC, ip[n - u], ct, 0, 1);
 
             HUF_encodeSymbol(bitC, ip[n - kUnroll], ct, 0, kLastFast);
             HUF_flushBits(bitC, kFastFlush);
@@ -970,12 +953,14 @@ public static unsafe partial class Methods
         {
             /* Encode kUnroll symbols into the bitstream @ index 0. */
             int u;
-            for (u = 1; u < kUnroll; ++u) HUF_encodeSymbol(bitC, ip[n - u], ct, 0, 1);
+            for (u = 1; u < kUnroll; ++u)
+                HUF_encodeSymbol(bitC, ip[n - u], ct, 0, 1);
 
             HUF_encodeSymbol(bitC, ip[n - kUnroll], ct, 0, kLastFast);
             HUF_flushBits(bitC, kFastFlush);
             HUF_zeroIndex1(bitC);
-            for (u = 1; u < kUnroll; ++u) HUF_encodeSymbol(bitC, ip[n - kUnroll - u], ct, 1, 1);
+            for (u = 1; u < kUnroll; ++u)
+                HUF_encodeSymbol(bitC, ip[n - kUnroll - u], ct, 1, 1);
 
             HUF_encodeSymbol(bitC, ip[n - kUnroll - kUnroll], ct, 1, kLastFast);
             HUF_mergeIndex1(bitC);
@@ -1317,13 +1302,16 @@ public static unsafe partial class Methods
                     CTable,
                     flags
                 );
-        if (ERR_isError(cSize)) return cSize;
+        if (ERR_isError(cSize))
+            return cSize;
 
-        if (cSize == 0) return 0;
+        if (cSize == 0)
+            return 0;
 
         op += cSize;
         assert(op >= ostart);
-        if ((nuint)(op - ostart) >= srcSize - 1) return 0;
+        if ((nuint)(op - ostart) >= srcSize - 1)
+            return 0;
 
         return (nuint)(op - ostart);
     }
@@ -1409,7 +1397,8 @@ public static unsafe partial class Methods
                 if (ERR_isError(hSize))
                     continue;
                 newSize = HUF_estimateCompressedSize(table, count, maxSymbolValue) + hSize;
-                if (newSize > optSize + 1) break;
+                if (newSize > optSize + 1)
+                    break;
 
                 if (newSize < optSize)
                 {
@@ -1481,10 +1470,7 @@ public static unsafe partial class Methods
                 flags
             );
 
-        if (
-            (flags & (int)HUF_flags_e.HUF_flags_suspectUncompressible) != 0
-            && srcSize >= 4096 * 10
-        )
+        if ((flags & (int)HUF_flags_e.HUF_flags_suspectUncompressible) != 0 && srcSize >= 4096 * 10)
         {
             nuint largestTotal = 0;
             {
@@ -1609,11 +1595,7 @@ public static unsafe partial class Methods
                 return hSize;
             if (repeat != null && *repeat != HUF_repeat.HUF_repeat_none)
             {
-                var oldSize = HUF_estimateCompressedSize(
-                    oldHufTable,
-                    table->count,
-                    maxSymbolValue
-                );
+                var oldSize = HUF_estimateCompressedSize(oldHufTable, table->count, maxSymbolValue);
                 var newSize = HUF_estimateCompressedSize(
                     &table->CTable.e0,
                     table->count,
@@ -1632,10 +1614,12 @@ public static unsafe partial class Methods
                     );
             }
 
-            if (hSize + 12U >= srcSize) return 0;
+            if (hSize + 12U >= srcSize)
+                return 0;
 
             op += hSize;
-            if (repeat != null) *repeat = HUF_repeat.HUF_repeat_none;
+            if (repeat != null)
+                *repeat = HUF_repeat.HUF_repeat_none;
 
             if (oldHufTable != null)
                 memcpy(oldHufTable, &table->CTable.e0, sizeof(ulong) * 257);

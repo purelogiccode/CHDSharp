@@ -15,5 +15,5 @@ internal enum SubframeType
     Fixed = 8,
 
     /// <summary>Linear Predictive Coding subframe.</summary>
-    Lpc = 32
+    Lpc = 32,
 }

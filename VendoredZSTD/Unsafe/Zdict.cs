@@ -40,11 +40,13 @@ public static unsafe partial class Methods
             srcSize = blockSizeMax;
         {
             var errorCode = ZSTD_compressBegin_usingCDict_deprecated(esr.zc, esr.dict);
-            if (ERR_isError(errorCode)) return;
+            if (ERR_isError(errorCode))
+                return;
         }
 
         cSize = ZSTD_compressBlock_deprecated(esr.zc, esr.workPlace, 1 << 17, src, srcSize);
-        if (ERR_isError(cSize)) return;
+        if (ERR_isError(cSize))
+            return;
 
         if (cSize != 0)
         {
@@ -162,7 +164,7 @@ public static unsafe partial class Methods
         {
             dict = null,
             zc = null,
-            workPlace = null
+            workPlace = null,
         };
         ZSTD_parameters @params;
         uint u,
@@ -180,9 +182,7 @@ public static unsafe partial class Methods
         var wksp = stackalloc uint[1216];
         if (offcodeMax > 30)
         {
-            eSize = unchecked(
-                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed)
-            );
+            eSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed));
             goto _cleanup;
         }
 
@@ -234,9 +234,7 @@ public static unsafe partial class Methods
         }
 
         if (notificationLevel >= 4)
-            for (u = 0; u <= offcodeMax; u++)
-            {
-            }
+            for (u = 0; u <= offcodeMax; u++) { }
 
         {
             var maxNbBits = HUF_buildCTable_wksp(
@@ -279,14 +277,7 @@ public static unsafe partial class Methods
         total = 0;
         for (u = 0; u <= offcodeMax; u++)
             total += offcodeCount[u];
-        errorCode = FSE_normalizeCount(
-            offcodeNCount,
-            Offlog,
-            offcodeCount,
-            total,
-            offcodeMax,
-            1
-        );
+        errorCode = FSE_normalizeCount(offcodeNCount, Offlog, offcodeCount, total, offcodeMax, 1);
         if (ERR_isError(errorCode))
         {
             eSize = errorCode;
@@ -297,14 +288,7 @@ public static unsafe partial class Methods
         total = 0;
         for (u = 0; u <= 52; u++)
             total += matchLengthCount[u];
-        errorCode = FSE_normalizeCount(
-            matchLengthNCount,
-            mlLog,
-            matchLengthCount,
-            total,
-            52,
-            1
-        );
+        errorCode = FSE_normalizeCount(matchLengthNCount, mlLog, matchLengthCount, total, 52, 1);
         if (ERR_isError(errorCode))
         {
             eSize = errorCode;
@@ -495,7 +479,8 @@ public static unsafe partial class Methods
             hSize += eSize;
         }
 
-        if (hSize + dictContentSize > dictBufferCapacity) dictContentSize = dictBufferCapacity - hSize;
+        if (hSize + dictContentSize > dictBufferCapacity)
+            dictContentSize = dictBufferCapacity - hSize;
 
         if (dictContentSize < minContentSize)
         {

@@ -14,7 +14,10 @@ public sealed class CliWiringTests : IDisposable
 
     public CliWiringTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), "chd_wiring_" + Guid.NewGuid().ToString("N")[..8]);
+        _tempDir = Path.Combine(
+            Path.GetTempPath(),
+            "chd_wiring_" + Guid.NewGuid().ToString("N")[..8]
+        );
         Directory.CreateDirectory(_tempDir);
     }
 
@@ -25,12 +28,15 @@ public sealed class CliWiringTests : IDisposable
             var baseDir = AppContext.BaseDirectory;
             var testBinIdx = baseDir.IndexOf(
                 Path.Combine("CHDSharpTest", "bin"),
-                StringComparison.OrdinalIgnoreCase);
+                StringComparison.OrdinalIgnoreCase
+            );
             if (testBinIdx >= 0)
             {
                 var slnRoot = baseDir[..testBinIdx];
-                var config = Path.GetFileName(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))) ??
-                             "Debug";
+                var config =
+                    Path.GetFileName(
+                        Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar))
+                    ) ?? "Debug";
                 var tfm = Path.GetFileName(baseDir.TrimEnd(Path.DirectorySeparatorChar));
                 return Path.Combine(slnRoot, "CHDSharpCli", "bin", config, tfm, "CHDSharp.dll");
             }
@@ -53,8 +59,7 @@ public sealed class CliWiringTests : IDisposable
 
     private static (int exitCode, string output) RunCli(params string[] args)
     {
-        var escapedArgs = string.Join(" ",
-            args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a));
+        var escapedArgs = string.Join(" ", args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a));
         var argString = $"\"{CliPath}\" {escapedArgs}";
 
         var psi = new ProcessStartInfo("dotnet", argString)
@@ -62,7 +67,7 @@ public sealed class CliWiringTests : IDisposable
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
         using var proc = Process.Start(psi);
@@ -258,10 +263,10 @@ public sealed class CliWiringTests : IDisposable
         File.WriteAllBytes(binPath, frameData);
 
         const string cueContent = """
-                                  FILE "test.bin" BINARY
-                                    TRACK 01 MODE1/2352
-                                      INDEX 01 00:00:00
-                                  """;
+            FILE "test.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """;
         File.WriteAllText(cuePath, cueContent);
 
         // Create CD CHD
@@ -286,11 +291,14 @@ public sealed class CliWiringTests : IDisposable
         new Random(42).NextBytes(frameData);
         File.WriteAllBytes(binPath, frameData);
 
-        File.WriteAllText(cuePath, """
-                                   FILE "test.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "test.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
 
         var (exitCode, output) = RunCli("--createcd", cuePath, chdPath);
         Assert.Equal(0, exitCode);
@@ -308,7 +316,15 @@ public sealed class CliWiringTests : IDisposable
         var outCue = Path.Combine(_tempDir, "out.cue");
         var outBin = Path.Combine(_tempDir, "custom_name.bin");
 
-        var (exitCode, _) = RunCli("extractcd", "--output", outCue, "--input", path, "--outputbin", outBin);
+        var (exitCode, _) = RunCli(
+            "extractcd",
+            "--output",
+            outCue,
+            "--input",
+            path,
+            "--outputbin",
+            outBin
+        );
         Assert.Equal(0, exitCode);
         Assert.True(File.Exists(outBin), "BIN file should exist at specified path");
         Assert.True(File.Exists(outCue), "CUE file should exist");
@@ -365,7 +381,10 @@ public sealed class CliWiringTests : IDisposable
 
         var (exitCode, _) = RunCli("extractraw", "--output", outPath, "--input", path, "--force");
         Assert.Equal(0, exitCode);
-        Assert.True(new FileInfo(outPath).Length > 3, "File should be overwritten with CHD content");
+        Assert.True(
+            new FileInfo(outPath).Length > 3,
+            "File should be overwritten with CHD content"
+        );
     }
 
     [Fact]
@@ -395,8 +414,17 @@ public sealed class CliWiringTests : IDisposable
         Assert.Equal(0, e1);
 
         // Extract partial (bytes 1000..2000)
-        var (e2, _) = RunCli("extractraw", "--output", outPartial, "--input", path,
-            "--inputstartbyte", "1000", "--inputbytes", "1000");
+        var (e2, _) = RunCli(
+            "extractraw",
+            "--output",
+            outPartial,
+            "--input",
+            path,
+            "--inputstartbyte",
+            "1000",
+            "--inputbytes",
+            "1000"
+        );
         Assert.Equal(0, e2);
         Assert.True(File.Exists(outPartial), "Partial file should exist");
 
@@ -450,8 +478,17 @@ public sealed class CliWiringTests : IDisposable
         File.WriteAllBytes(srcPath, data);
 
         // Encode only bytes 1024..3072 (2048 bytes)
-        var (exitCode, output) = RunCli("createraw", "--output", chdPath, "--input", srcPath,
-            "--inputstartbyte", "1024", "--inputbytes", "2048");
+        var (exitCode, output) = RunCli(
+            "createraw",
+            "--output",
+            chdPath,
+            "--input",
+            srcPath,
+            "--inputstartbyte",
+            "1024",
+            "--inputbytes",
+            "2048"
+        );
         Assert.Equal(0, exitCode);
         Assert.Contains("Created", output, StringComparison.Ordinal);
 
@@ -510,7 +547,15 @@ public sealed class CliWiringTests : IDisposable
         var srcPath = GetTestChd("v5_zlib.chd");
         var dstPath = Path.Combine(_tempDir, "copied.chd");
 
-        var (exitCode, output) = RunCli("copy", "--output", dstPath, "--input", srcPath, "--compression", "zstd");
+        var (exitCode, output) = RunCli(
+            "copy",
+            "--output",
+            dstPath,
+            "--input",
+            srcPath,
+            "--compression",
+            "zstd"
+        );
         Assert.Equal(0, exitCode);
         Assert.Contains("Created", output, StringComparison.Ordinal);
 
@@ -532,7 +577,15 @@ public sealed class CliWiringTests : IDisposable
         File.Copy(srcPath, workPath);
 
         // Add metadata
-        var (e1, o1) = RunCli("addmeta", "--input", workPath, "--tag", "TEST", "--valuetext", "hello world");
+        var (e1, o1) = RunCli(
+            "addmeta",
+            "--input",
+            workPath,
+            "--tag",
+            "TEST",
+            "--valuetext",
+            "hello world"
+        );
         Assert.Equal(0, e1);
         Assert.Contains("Added/replaced", o1, StringComparison.Ordinal);
 
@@ -593,8 +646,21 @@ public sealed class CliWiringTests : IDisposable
         var chdPath = Path.Combine(_tempDir, "opts.chd");
 
         // Use chdman-style: --hunksize, --unitsize, --numprocessors, --compression
-        var (exitCode, output) = RunCli("createhd", "--output", chdPath, "--size", "65536",
-            "--hunksize", "4096", "--unitsize", "512", "--compression", "none", "--numprocessors", "1");
+        var (exitCode, output) = RunCli(
+            "createhd",
+            "--output",
+            chdPath,
+            "--size",
+            "65536",
+            "--hunksize",
+            "4096",
+            "--unitsize",
+            "512",
+            "--compression",
+            "none",
+            "--numprocessors",
+            "1"
+        );
         Assert.Equal(0, exitCode);
         Assert.Contains("Created", output, StringComparison.Ordinal);
     }
@@ -605,8 +671,21 @@ public sealed class CliWiringTests : IDisposable
         var chdPath = Path.Combine(_tempDir, "opts2.chd");
 
         // Use short names: -o, -s, -hs, -us, -c, -np
-        var (exitCode, output) = RunCli("createhd", "-o", chdPath, "-s", "65536",
-            "-hs", "4096", "-us", "512", "-c", "none", "-np", "1");
+        var (exitCode, output) = RunCli(
+            "createhd",
+            "-o",
+            chdPath,
+            "-s",
+            "65536",
+            "-hs",
+            "4096",
+            "-us",
+            "512",
+            "-c",
+            "none",
+            "-np",
+            "1"
+        );
         Assert.Equal(0, exitCode);
         Assert.Contains("Created", output, StringComparison.Ordinal);
     }
@@ -674,8 +753,13 @@ public sealed class CliWiringTests : IDisposable
     [Fact]
     public void Extractld_missing_file_reports_error()
     {
-        var (exitCode, output) = RunCli("extractld", "--output", Path.Combine(_tempDir, "out.avi"),
-            "--input", @"Z:\no\such\file.chd");
+        var (exitCode, output) = RunCli(
+            "extractld",
+            "--output",
+            Path.Combine(_tempDir, "out.avi"),
+            "--input",
+            @"Z:\no\such\file.chd"
+        );
         Assert.Equal(0, exitCode);
         Assert.Contains("not found", output, StringComparison.OrdinalIgnoreCase);
     }
@@ -687,8 +771,13 @@ public sealed class CliWiringTests : IDisposable
     [Fact]
     public void Createld_missing_file_reports_error()
     {
-        var (exitCode, output) = RunCli("createld", "--output", Path.Combine(_tempDir, "out.chd"),
-            "--input", @"Z:\no\such\file.avi");
+        var (exitCode, output) = RunCli(
+            "createld",
+            "--output",
+            Path.Combine(_tempDir, "out.chd"),
+            "--input",
+            @"Z:\no\such\file.avi"
+        );
         Assert.Equal(0, exitCode);
         Assert.Contains("not found", output, StringComparison.OrdinalIgnoreCase);
     }

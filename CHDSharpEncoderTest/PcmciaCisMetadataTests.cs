@@ -36,7 +36,7 @@ public class PcmciaCisMetadataTests : IDisposable
         {
             Tag = MetadataWriter.PcmciaCisMetadataTag,
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = cisData
+            Payload = cisData,
         };
 
         var chdPath = Path.Combine(_dir, "cis.chd");
@@ -81,7 +81,7 @@ public class PcmciaCisMetadataTests : IDisposable
         {
             Tag = MetadataWriter.PcmciaCisMetadataTag,
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = cisData
+            Payload = cisData,
         };
 
         var sourcePath = Path.Combine(_dir, "source.chd");
@@ -89,7 +89,11 @@ public class PcmciaCisMetadataTests : IDisposable
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, sourcePath, options: new ChdEncodeOptions { Metadata = [cisEntry] });
+            ChdEncoder.EncodeRaw(
+                ms,
+                sourcePath,
+                options: new ChdEncodeOptions { Metadata = [cisEntry] }
+            );
         }
 
         ChdEncoder.Copy(sourcePath, copyPath);
@@ -147,7 +151,7 @@ public class PcmciaCisMetadataTests : IDisposable
         {
             Tag = MetadataWriter.PcmciaCisMetadataTag,
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = cisData
+            Payload = cisData,
         };
 
         var chdPath = Path.Combine(_dir, "empty_cis.chd");
@@ -178,14 +182,14 @@ public class PcmciaCisMetadataTests : IDisposable
             {
                 Tag = MetadataWriter.PcmciaCisMetadataTag,
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = cisData
+                Payload = cisData,
             },
             new()
             {
                 Tag = 0x54455354, // 'TEST'
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = testData
-            }
+                Payload = testData,
+            },
         };
 
         var chdPath = Path.Combine(_dir, "multi.chd");

@@ -15,7 +15,13 @@ internal readonly struct Config
     internal readonly ushort max_chain;
     internal readonly DeflateType deflate_type;
 
-    internal Config(ushort goodLength, ushort maxLazy, ushort niceLength, ushort maxChain, DeflateType deflateType)
+    internal Config(
+        ushort goodLength,
+        ushort maxLazy,
+        ushort niceLength,
+        ushort maxChain,
+        DeflateType deflateType
+    )
     {
         good_length = goodLength;
         max_lazy = maxLazy;
@@ -28,6 +34,6 @@ internal readonly struct Config
     {
         Stored,
         Fast,
-        Slow
+        Slow,
     }
 }

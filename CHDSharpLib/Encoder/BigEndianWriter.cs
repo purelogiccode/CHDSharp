@@ -132,7 +132,8 @@ internal class BigEndianWriter
             return;
 
         var newSize = _buffer.Length * 2;
-        while (newSize < needed) newSize *= 2;
+        while (newSize < needed)
+            newSize *= 2;
 
         Array.Resize(ref _buffer, newSize);
     }

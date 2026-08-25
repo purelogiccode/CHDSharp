@@ -28,13 +28,15 @@ public class CueParserTests : IDisposable
     [Fact]
     public void ParseSimpleCue_TwoTracks()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 01 03:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 03:00:00
+            """
+        );
         // track 1: 3:00:00 = 13500 frames; track 2: 8 frames at end of file
         WriteBin(2352 * (13500 + 8));
 
@@ -56,14 +58,16 @@ public class CueParserTests : IDisposable
     [Fact]
     public void ParseCue_WithPregap()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 AUDIO
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 00 02:30:00
-                     INDEX 01 02:32:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 02:30:00
+                INDEX 01 02:32:00
+            """
+        );
         WriteBin(2352 * (2 * 60 * 75 + 30 * 75 + 8)); // 2:30:00 + 8 frames
 
         var toc = Parse();
@@ -78,14 +82,16 @@ public class CueParserTests : IDisposable
     [Fact]
     public void ParseCue_WithPregapKeyword()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 AUDIO
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     PREGAP 00:02:00
-                     INDEX 01 02:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                PREGAP 00:02:00
+                INDEX 01 02:00:00
+            """
+        );
         WriteBin(2352 * (2 * 60 * 75 + 8));
 
         var toc = Parse();
@@ -97,14 +103,16 @@ public class CueParserTests : IDisposable
     [Fact]
     public void ParseCue_WithPostgap()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 AUDIO
-                     INDEX 01 00:00:00
-                     POSTGAP 00:00:30
-                   TRACK 02 AUDIO
-                     INDEX 01 01:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+                POSTGAP 00:00:30
+              TRACK 02 AUDIO
+                INDEX 01 01:00:00
+            """
+        );
         WriteBin(2352 * (60 * 75 + 8));
 
         var toc = Parse();
@@ -131,16 +139,18 @@ public class CueParserTests : IDisposable
     [Fact]
     public void MultipleTracks_IndexBasedLengths()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 00 03:00:00
-                     INDEX 01 03:02:00
-                   TRACK 03 AUDIO
-                     INDEX 01 06:02:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 03:00:00
+                INDEX 01 03:02:00
+              TRACK 03 AUDIO
+                INDEX 01 06:02:00
+            """
+        );
         WriteBin(2352 * (13500 + 13650 + 100));
 
         var toc = Parse();
@@ -160,14 +170,16 @@ public class CueParserTests : IDisposable
     [Fact]
     public void SeparateFiles_PerTrack()
     {
-        WriteCue("""
-                 FILE "data.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 FILE "audio.bin" BINARY
-                   TRACK 02 AUDIO
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "data.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            FILE "audio.bin" BINARY
+              TRACK 02 AUDIO
+                INDEX 01 00:00:00
+            """
+        );
         WriteFile("data.bin", new byte[2352 * 300]);
         WriteFile("audio.bin", new byte[2352 * 100]);
 
@@ -184,11 +196,13 @@ public class CueParserTests : IDisposable
     [Fact]
     public void Filename_WithSpaces()
     {
-        WriteCue("""
-                 FILE "my game (disc 1).bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "my game (disc 1).bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
         WriteFile("my game (disc 1).bin", new byte[2352 * 50]);
 
         var toc = Parse();
@@ -214,13 +228,19 @@ public class CueParserTests : IDisposable
     [InlineData("MODE2/2352", CdTrackType.Mode2Raw, 2352)]
     [InlineData("CDI/2352", CdTrackType.Mode2Raw, 2352)]
     [InlineData("AUDIO", CdTrackType.Audio, 2352)]
-    public void TrackTypes_MappedCorrectly(string typeString, int expectedType, int expectedDataSize)
+    public void TrackTypes_MappedCorrectly(
+        string typeString,
+        int expectedType,
+        int expectedDataSize
+    )
     {
-        WriteCue($"""
-                  FILE "game.bin" BINARY
-                    TRACK 01 {typeString}
-                      INDEX 01 00:00:00
-                  """);
+        WriteCue(
+            $"""
+            FILE "game.bin" BINARY
+              TRACK 01 {typeString}
+                INDEX 01 00:00:00
+            """
+        );
         WriteBin(2352 * 8);
 
         var toc = Parse();
@@ -232,13 +252,15 @@ public class CueParserTests : IDisposable
     [Fact]
     public void SubType_Rw_And_RwRaw()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352 RW
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO RW_RAW
-                     INDEX 01 01:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352 RW
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO RW_RAW
+                INDEX 01 01:00:00
+            """
+        );
         WriteBin(2448 * (60 * 75 + 8)); // frames include 96 subcode bytes each
 
         var toc = Parse();
@@ -253,13 +275,15 @@ public class CueParserTests : IDisposable
     [Fact]
     public void RemComments_AreIgnored()
     {
-        WriteCue("""
-                 REM This is a comment
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 REM another comment
-                 """);
+        WriteCue(
+            """
+            REM This is a comment
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            REM another comment
+            """
+        );
         WriteBin(2352 * 8);
 
         var toc = Parse();
@@ -280,11 +304,13 @@ public class CueParserTests : IDisposable
     [Fact]
     public void MissingIndex01_Throws()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 00 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 00 00:00:00
+            """
+        );
         WriteBin(2352 * 8);
 
         Assert.Throws<InvalidDataException>(() => Parse());
@@ -293,11 +319,13 @@ public class CueParserTests : IDisposable
     [Fact]
     public void UnknownTrackType_Throws()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE3/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE3/2352
+                INDEX 01 00:00:00
+            """
+        );
         WriteBin(2352 * 8);
 
         Assert.Throws<InvalidDataException>(() => Parse());
@@ -306,11 +334,13 @@ public class CueParserTests : IDisposable
     [Fact]
     public void UnhandledFileType_Throws()
     {
-        WriteCue("""
-                 FILE "game.bin" MP3
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" MP3
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
 
         Assert.Throws<InvalidDataException>(() => Parse());
     }
@@ -318,11 +348,13 @@ public class CueParserTests : IDisposable
     [Fact]
     public void MissingBinFile_Throws()
     {
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
 
         Assert.Throws<FileNotFoundException>(() => Parse());
     }
@@ -336,11 +368,13 @@ public class CueParserTests : IDisposable
     [Fact]
     public void WavFile_IsParsed()
     {
-        WriteCue("""
-                 FILE "audio.wav" WAVE
-                   TRACK 01 AUDIO
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "audio.wav" WAVE
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+            """
+        );
         WriteWav(8); // 8 frames of audio = 18816 bytes
 
         var toc = Parse();
@@ -354,11 +388,13 @@ public class CueParserTests : IDisposable
     [Fact]
     public void WavFile_Invalid_Throws()
     {
-        WriteCue("""
-                 FILE "audio.wav" WAVE
-                   TRACK 01 AUDIO
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "audio.wav" WAVE
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+            """
+        );
         WriteFile("audio.wav", new byte[100]);
 
         Assert.Throws<InvalidDataException>(() => Parse());
@@ -394,7 +430,11 @@ public class CueParserTests : IDisposable
     private void WriteWav(int frames)
     {
         var dataLength = (uint)(frames * CdConstants.MaxSectorData);
-        using var fs = new FileStream(Path.Combine(_dir, "audio.wav"), FileMode.Create, FileAccess.Write);
+        using var fs = new FileStream(
+            Path.Combine(_dir, "audio.wav"),
+            FileMode.Create,
+            FileAccess.Write
+        );
         using var w = new BinaryWriter(fs);
 
         WriteFourCc("RIFF");

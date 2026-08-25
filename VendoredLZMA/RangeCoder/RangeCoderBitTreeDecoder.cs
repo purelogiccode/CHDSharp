@@ -24,7 +24,8 @@ internal readonly struct BitTreeDecoder
     internal uint Decode(Decoder rangeDecoder)
     {
         uint m = 1;
-        for (var bitIndex = _numBitLevels; bitIndex > 0; bitIndex--) m = (m << 1) + _models[m].Decode(rangeDecoder);
+        for (var bitIndex = _numBitLevels; bitIndex > 0; bitIndex--)
+            m = (m << 1) + _models[m].Decode(rangeDecoder);
 
         return m - ((uint)1 << _numBitLevels);
     }
@@ -46,8 +47,12 @@ internal readonly struct BitTreeDecoder
     }
 
     /// <summary>Decodes a symbol using reverse bit ordering on an external model array.</summary>
-    internal static uint ReverseDecode(BitDecoder[] models, uint startIndex,
-        Decoder rangeDecoder, int numBitLevels)
+    internal static uint ReverseDecode(
+        BitDecoder[] models,
+        uint startIndex,
+        Decoder rangeDecoder,
+        int numBitLevels
+    )
     {
         uint m = 1;
         uint symbol = 0;

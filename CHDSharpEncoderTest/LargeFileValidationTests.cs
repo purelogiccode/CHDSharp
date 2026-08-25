@@ -35,7 +35,8 @@ public class LargeFileValidationTests : IDisposable
     [Fact]
     public void Raw_100Mb_RoundTrip_PassesChdman()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         const int hunkBytes = 65536;
         const long size = 100L * 1024 * 1024; // 100 MB
@@ -50,12 +51,22 @@ public class LargeFileValidationTests : IDisposable
 
         var chdSize = new FileInfo(chdPath).Length;
         // two thirds of the data is a repeating pattern, so the CHD must be well under half the source size
-        Assert.True(chdSize < size / 2, $"expected significant compression, CHD is {chdSize:N0} bytes");
+        Assert.True(
+            chdSize < size / 2,
+            $"expected significant compression, CHD is {chdSize:N0} bytes"
+        );
 
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            chdPath,
+            "-o",
+            extractPath,
+            "-f"
+        );
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         Assert.Equal(srcSha1, Sha1Hex(extractPath));
@@ -70,7 +81,8 @@ public class LargeFileValidationTests : IDisposable
     [Fact]
     public void Cd_100Mb_RoundTrip_PassesChdman()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         // 16 data frames + 44600 audio frames: BIN is (16 + 44600) * 2352 ≈ 100 MB;
         // 44616 % 4 == 0, so no track padding is needed
@@ -82,20 +94,30 @@ public class LargeFileValidationTests : IDisposable
         var extractPath = Path.Combine(_dir, "large_cd.raw");
 
         WriteCdBin(binPath, dataFrames, audioFrames);
-        File.WriteAllText(cuePath, $"""
-                                    FILE "large.bin" BINARY
-                                      TRACK 01 MODE1/2352
-                                        INDEX 01 00:00:00
-                                      TRACK 02 AUDIO
-                                        INDEX 01 {dataFrames / (60 * 75):D2}:{dataFrames / 75 % 60:D2}:{dataFrames % 75:D2}
-                                    """);
+        File.WriteAllText(
+            cuePath,
+            $"""
+            FILE "large.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 {dataFrames / (60 * 75):D2}:{dataFrames / 75 % 60:D2}:{dataFrames % 75:D2}
+            """
+        );
 
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            chdPath,
+            "-o",
+            extractPath,
+            "-f"
+        );
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         // extractraw returns the big-endian logical image (audio byte-swapped, zero subcode)
@@ -117,7 +139,8 @@ public class LargeFileValidationTests : IDisposable
     private static void WriteMixedData(string path, long size, int blockBytes, int seed)
     {
         var pattern = new byte[blockBytes];
-        for (var i = 0; i < blockBytes; i++) pattern[i] = (byte)(i & 0xFF);
+        for (var i = 0; i < blockBytes; i++)
+            pattern[i] = (byte)(i & 0xFF);
 
         var randomBlock = new byte[blockBytes];
         var rng = new Random(seed);
@@ -146,7 +169,8 @@ public class LargeFileValidationTests : IDisposable
 
         for (var f = 0; f < dataFrames; f++)
         {
-            for (var j = 0; j < CdConstants.MaxSectorData; j++) sector[j] = (byte)((f * 31 + j * 7) & 0xFF);
+            for (var j = 0; j < CdConstants.MaxSectorData; j++)
+                sector[j] = (byte)((f * 31 + j * 7) & 0xFF);
 
             fs.Write(sector);
         }
@@ -180,7 +204,8 @@ public class LargeFileValidationTests : IDisposable
             Array.Clear(frame);
             if (f < dataFrames)
             {
-                for (var j = 0; j < CdConstants.MaxSectorData; j++) frame[j] = (byte)((f * 31 + j * 7) & 0xFF);
+                for (var j = 0; j < CdConstants.MaxSectorData; j++)
+                    frame[j] = (byte)((f * 31 + j * 7) & 0xFF);
             }
             else
             {

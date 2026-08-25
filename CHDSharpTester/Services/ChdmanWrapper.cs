@@ -40,18 +40,24 @@ internal class ChdmanWrapper
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
+                StandardErrorEncoding = Encoding.UTF8,
             };
             foreach (var a in args)
                 psi.ArgumentList.Add(a);
 
-            using var p = Process.Start(psi) ??
-                          throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+            using var p =
+                Process.Start(psi)
+                ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
             var tOut = p.StandardOutput.ReadToEndAsync();
             var tErr = p.StandardError.ReadToEndAsync();
             p.WaitForExit();
             Task.WaitAll(tOut, tErr);
-            return new Result { ExitCode = p.ExitCode, StdOut = tOut.Result, StdErr = tErr.Result };
+            return new Result
+            {
+                ExitCode = p.ExitCode,
+                StdOut = tOut.Result,
+                StdErr = tErr.Result,
+            };
         }
         catch (Exception ex)
         {
@@ -78,7 +84,7 @@ internal class ChdmanWrapper
             TotalHunks = (uint)ParseULongField(text, @"Total Hunks:\s*([\d,]+)"),
             Compression = ParseStringField(text, @"Compression:\s*(.+)") ?? "",
             Sha1 = ParseHexField(text, @"(?<!Data )SHA1:\s*([0-9a-fA-F]{40})"),
-            DataSha1 = ParseHexField(text, @"Data SHA1:\s*([0-9a-fA-F]{40})")
+            DataSha1 = ParseHexField(text, @"Data SHA1:\s*([0-9a-fA-F]{40})"),
         };
     }
 
@@ -94,7 +100,7 @@ internal class ChdmanWrapper
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
         psi.ArgumentList.Add("verify");
         psi.ArgumentList.Add("-i");
@@ -105,8 +111,9 @@ internal class ChdmanWrapper
             psi.ArgumentList.Add(parent);
         }
 
-        using var p = Process.Start(psi) ??
-                      throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+        using var p =
+            Process.Start(psi)
+            ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
         p.WaitForExit();
@@ -130,7 +137,7 @@ internal class ChdmanWrapper
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
             };
             psi.ArgumentList.Add("extractraw");
             psi.ArgumentList.Add("-i");
@@ -143,8 +150,9 @@ internal class ChdmanWrapper
             psi.ArgumentList.Add(length.ToString(CultureInfo.InvariantCulture));
             psi.ArgumentList.Add("-f");
 
-            using var p = Process.Start(psi) ??
-                          throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+            using var p =
+                Process.Start(psi)
+                ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
             var tOut = p.StandardOutput.ReadToEndAsync();
             var tErr = p.StandardError.ReadToEndAsync();
             p.WaitForExit();
@@ -169,7 +177,6 @@ internal class ChdmanWrapper
             }
         }
     }
-
 
     /// <summary>
     ///     Copies (recompresses) a CHD file using chdman copy. Optionally writes the parent to a separate file for delta
@@ -199,7 +206,12 @@ internal class ChdmanWrapper
     /// <param name="compression">The compression codec(s) to apply.</param>
     /// <param name="parentOut">Optional parent output path for delta CHDs.</param>
     /// <returns>A <see cref="Result" /> containing the exit code and output streams.</returns>
-    public Result CopyVerbose(string input, string output, string compression, string? parentOut = null)
+    public Result CopyVerbose(
+        string input,
+        string output,
+        string compression,
+        string? parentOut = null
+    )
     {
         var args = new List<string> { "copy", "-i", input, "-o", output, "-c", compression, "-f" };
         if (parentOut != null)
@@ -220,7 +232,9 @@ internal class ChdmanWrapper
     private static ulong ParseULongField(string text, string pattern)
     {
         var m = Regex.Match(text, pattern);
-        return m.Success ? ulong.Parse(m.Groups[1].Value.Replace(",", ""), CultureInfo.InvariantCulture) : 0;
+        return m.Success
+            ? ulong.Parse(m.Groups[1].Value.Replace(",", ""), CultureInfo.InvariantCulture)
+            : 0;
     }
 
     private static string? ParseStringField(string text, string pattern)

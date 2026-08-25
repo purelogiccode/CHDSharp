@@ -63,7 +63,10 @@ public static class MetadataWriter
     {
         ArgumentNullException.ThrowIfNull(tag);
         if (tag.Length != 4)
-            throw new ArgumentException($"Metadata tag must be 4 characters, got '{tag}'", nameof(tag));
+            throw new ArgumentException(
+                $"Metadata tag must be 4 characters, got '{tag}'",
+                nameof(tag)
+            );
 
         return ((uint)tag[0] << 24) | ((uint)tag[1] << 16) | ((uint)tag[2] << 8) | tag[3];
     }
@@ -99,9 +102,11 @@ public static class MetadataWriter
         // Replicates chdman's guess_chs (chdman.cpp): given the file size and sector size,
         // find a C/H/S tuple that exactly divides the total sector count, preferring the
         // largest number of sectors per track (63 down to 2) and largest heads (16 down to 2).
-        uint cylinders = 0, heads = 0, sectorsPerTrack = 0;
+        uint cylinders = 0,
+            heads = 0,
+            sectorsPerTrack = 0;
         if (bytesPerSector > 0)
-            for (var totalSectors = totalBytes / bytesPerSector;; totalSectors++)
+            for (var totalSectors = totalBytes / bytesPerSector; ; totalSectors++)
             {
                 var found = false;
                 for (uint curSectors = 63; curSectors > 1 && !found; curSectors--)
@@ -143,14 +148,19 @@ public static class MetadataWriter
     /// <param name="heads">Number of heads.</param>
     /// <param name="sectors">Sectors per track.</param>
     /// <param name="bytesPerSector">Bytes per sector (BPS).</param>
-    public static MetadataEntry BuildHardDiskMetadata(uint cylinders, uint heads, uint sectors, uint bytesPerSector)
+    public static MetadataEntry BuildHardDiskMetadata(
+        uint cylinders,
+        uint heads,
+        uint sectors,
+        uint bytesPerSector
+    )
     {
         var text = $"CYLS:{cylinders},HEADS:{heads},SECS:{sectors},BPS:{bytesPerSector}";
         return new MetadataEntry
         {
             Tag = HardDiskMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = Encoding.ASCII.GetBytes(text + '\0')
+            Payload = Encoding.ASCII.GetBytes(text + '\0'),
         };
     }
 
@@ -166,14 +176,16 @@ public static class MetadataWriter
     {
         ArgumentNullException.ThrowIfNull(identData);
         if (identData.Length != 512)
-            throw new ArgumentException($"ATA IDENTIFY DEVICE data must be exactly 512 bytes, got {identData.Length}",
-                nameof(identData));
+            throw new ArgumentException(
+                $"ATA IDENTIFY DEVICE data must be exactly 512 bytes, got {identData.Length}",
+                nameof(identData)
+            );
 
         return new MetadataEntry
         {
             Tag = IdentMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = identData
+            Payload = identData,
         };
     }
 
@@ -187,7 +199,7 @@ public static class MetadataWriter
         {
             Tag = DvdMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = [0x00]
+            Payload = [0x00],
         };
     }
 
@@ -203,17 +215,24 @@ public static class MetadataWriter
     /// <param name="interlaced">Whether the source is interlaced.</param>
     /// <param name="channels">Audio channel count.</param>
     /// <param name="sampleRate">Audio sample rate in Hz.</param>
-    public static MetadataEntry BuildAvMetadata(ulong fpsTimes1Million, uint width, uint height,
-        bool interlaced, uint channels, uint sampleRate)
+    public static MetadataEntry BuildAvMetadata(
+        ulong fpsTimes1Million,
+        uint width,
+        uint height,
+        bool interlaced,
+        uint channels,
+        uint sampleRate
+    )
     {
-        var text = $"FPS:{fpsTimes1Million / 1000000}.{fpsTimes1Million % 1000000:D6} " +
-                   $"WIDTH:{width} HEIGHT:{height} INTERLACED:{(interlaced ? 1 : 0)} " +
-                   $"CHANNELS:{channels} SAMPLERATE:{sampleRate}";
+        var text =
+            $"FPS:{fpsTimes1Million / 1000000}.{fpsTimes1Million % 1000000:D6} "
+            + $"WIDTH:{width} HEIGHT:{height} INTERLACED:{(interlaced ? 1 : 0)} "
+            + $"CHANNELS:{channels} SAMPLERATE:{sampleRate}";
         return new MetadataEntry
         {
             Tag = AvMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = Encoding.ASCII.GetBytes(text + '\0')
+            Payload = Encoding.ASCII.GetBytes(text + '\0'),
         };
     }
 
@@ -227,13 +246,16 @@ public static class MetadataWriter
     {
         ArgumentNullException.ThrowIfNull(packedFrames);
         if (packedFrames.Length == 0)
-            throw new ArgumentException("AVLD metadata requires at least one frame record", nameof(packedFrames));
+            throw new ArgumentException(
+                "AVLD metadata requires at least one frame record",
+                nameof(packedFrames)
+            );
 
         return new MetadataEntry
         {
             Tag = AvLdMetadataTag,
             Flags = 0,
-            Payload = packedFrames
+            Payload = packedFrames,
         };
     }
 
@@ -307,12 +329,14 @@ public static class MetadataWriter
         foreach (var track in toc.Tracks)
         {
             var text = gdRom ? BuildGdRomString(track) : BuildChd2String(track);
-            entries.Add(new MetadataEntry
-            {
-                Tag = tag,
-                Flags = ChdMdflagsChecksum,
-                Payload = Encoding.ASCII.GetBytes(text + '\0')
-            });
+            entries.Add(
+                new MetadataEntry
+                {
+                    Tag = tag,
+                    Flags = ChdMdflagsChecksum,
+                    Payload = Encoding.ASCII.GetBytes(text + '\0'),
+                }
+            );
         }
 
         return entries;
@@ -325,10 +349,9 @@ public static class MetadataWriter
     /// </summary>
     public static string BuildGdRomString(CdTrack track)
     {
-        return
-            $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} " +
-            $"FRAMES:{track.Frames} PAD:{track.PadFrames} PREGAP:{track.Pregap} PGTYPE:{GetTypeString(track.PgType)} " +
-            $"PGSUB:{GetSubtypeString(track.PgSub)} POSTGAP:{track.Postgap}";
+        return $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} "
+            + $"FRAMES:{track.Frames} PAD:{track.PadFrames} PREGAP:{track.Pregap} PGTYPE:{GetTypeString(track.PgType)} "
+            + $"PGSUB:{GetSubtypeString(track.PgSub)} POSTGAP:{track.Postgap}";
     }
 
     /// <summary>
@@ -388,14 +411,12 @@ public static class MetadataWriter
     /// </summary>
     public static string BuildChd2String(CdTrack track)
     {
-        var pgType = track.PgDataSize > 0
-            ? "V" + GetTypeString(track.PgType)
-            : GetTypeString(track.PgType);
+        var pgType =
+            track.PgDataSize > 0 ? "V" + GetTypeString(track.PgType) : GetTypeString(track.PgType);
 
-        return
-            $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} " +
-            $"FRAMES:{track.Frames} PREGAP:{track.Pregap} PGTYPE:{pgType} PGSUB:{GetSubtypeString(track.PgSub)} " +
-            $"POSTGAP:{track.Postgap}";
+        return $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} "
+            + $"FRAMES:{track.Frames} PREGAP:{track.Pregap} PGTYPE:{pgType} PGSUB:{GetSubtypeString(track.PgSub)} "
+            + $"POSTGAP:{track.Postgap}";
     }
 
     /// <summary>Returns the metadata string for a track type (MAME's <c>get_type_string</c>).</summary>
@@ -411,7 +432,7 @@ public static class MetadataWriter
             CdTrackType.Mode2FormMix => "MODE2_FORM_MIX",
             CdTrackType.Mode2Raw => "MODE2_RAW",
             CdTrackType.Audio => "AUDIO",
-            _ => "UNKNOWN"
+            _ => "UNKNOWN",
         };
     }
 
@@ -422,7 +443,7 @@ public static class MetadataWriter
         {
             CdSubType.Normal => "RW",
             CdSubType.Raw => "RW_RAW",
-            _ => "NONE"
+            _ => "NONE",
         };
     }
 }

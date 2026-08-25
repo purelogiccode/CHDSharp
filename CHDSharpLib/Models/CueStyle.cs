@@ -10,5 +10,5 @@ public enum CueStyle
     Redump = 1,
 
     /// <summary>Redump style with a CATALOG line prepended.</summary>
-    RedumpCatalog = 2
+    RedumpCatalog = 2,
 }

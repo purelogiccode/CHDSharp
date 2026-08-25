@@ -69,7 +69,14 @@ public interface IZLib
     ///     This method does not perform any compression. Actual compression will be done by
     ///     <see cref="Deflate(ref ZStream, int)" />.
     /// </remarks>
-    int DeflateInit(ref ZStream strm, int level, int method, int windowBits, int memLevel, int strategy);
+    int DeflateInit(
+        ref ZStream strm,
+        int level,
+        int method,
+        int windowBits,
+        int memLevel,
+        int strategy
+    );
 
     /// <summary>
     ///     Compresses as much data as possible, and stops when the input buffer becomes empty or the output buffer becomes

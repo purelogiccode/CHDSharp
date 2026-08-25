@@ -25,7 +25,7 @@ public static unsafe class UnsafeHelper
 #if DEBUG
         return PoisonMemory((void*)Marshal.AllocHGlobal((int)size), size);
 #else
-            return (void*)Marshal.AllocHGlobal((int)size);
+        return (void*)Marshal.AllocHGlobal((int)size);
 #endif
     }
 
@@ -35,7 +35,7 @@ public static unsafe class UnsafeHelper
 #if DEBUG
         return PoisonMemory((void*)Marshal.AllocHGlobal((nint)size), size);
 #else
-            return (void*)Marshal.AllocHGlobal((nint)size);
+        return (void*)Marshal.AllocHGlobal((nint)size);
 #endif
     }
 
@@ -88,11 +88,7 @@ public static unsafe class UnsafeHelper
         var destination = (T*)malloc(size);
         fixed (void* source = &array[0])
         {
-            System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(
-                destination,
-                source,
-                size
-            );
+            System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(destination, source, size);
         }
 
         return destination;

@@ -106,7 +106,6 @@ internal static class AudioTitleExtensions
         return chapters[^1];
     }
 
-
     /// <summary>
     ///     Gets a human-readable string representation of the sample rate (e.g., "44.1KHz").
     /// </summary>
@@ -115,8 +114,10 @@ internal static class AudioTitleExtensions
     public static string GetRateString(this IAudioTitle title)
     {
         var sr = title.Pcm.SampleRate;
-        if (sr % 1000 == 0) return $"{sr / 1000}KHz";
-        if (sr % 100 == 0) return $"{sr / 100}.{sr / 100 % 10}KHz";
+        if (sr % 1000 == 0)
+            return $"{sr / 1000}KHz";
+        if (sr % 100 == 0)
+            return $"{sr / 100}.{sr / 100 % 10}KHz";
 
         return $"{sr}Hz";
     }
@@ -130,9 +131,12 @@ internal static class AudioTitleExtensions
     {
         switch (title.Pcm.ChannelCount)
         {
-            case 1: return "mono";
-            case 2: return "stereo";
-            default: return "multi-channel";
+            case 1:
+                return "mono";
+            case 2:
+                return "stereo";
+            default:
+                return "multi-channel";
         }
     }
 }

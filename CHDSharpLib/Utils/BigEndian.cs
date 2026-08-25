@@ -13,37 +13,52 @@ internal static class BigEndian
         /// <returns>The unsigned 16-bit value read in big-endian order.</returns>
         public ushort ReadUInt16Be()
         {
-            return BitConverter.ToUInt16(binRdr.ReadBytesRequired(sizeof(ushort)).ReverseInPlace(), 0);
+            return BitConverter.ToUInt16(
+                binRdr.ReadBytesRequired(sizeof(ushort)).ReverseInPlace(),
+                0
+            );
         }
 
         /// <summary>Reads a big-endian <see cref="Int16" /> from the stream.</summary>
         /// <returns>The signed 16-bit value read in big-endian order.</returns>
         public short ReadInt16Be()
         {
-            return BitConverter.ToInt16(binRdr.ReadBytesRequired(sizeof(short)).ReverseInPlace(), 0);
+            return BitConverter.ToInt16(
+                binRdr.ReadBytesRequired(sizeof(short)).ReverseInPlace(),
+                0
+            );
         }
 
         /// <summary>Reads a big-endian <see cref="UInt32" /> from the stream.</summary>
         /// <returns>The unsigned 32-bit value read in big-endian order.</returns>
         public uint ReadUInt32Be()
         {
-            return BitConverter.ToUInt32(binRdr.ReadBytesRequired(sizeof(uint)).ReverseInPlace(), 0);
+            return BitConverter.ToUInt32(
+                binRdr.ReadBytesRequired(sizeof(uint)).ReverseInPlace(),
+                0
+            );
         }
 
         /// <summary>Reads a big-endian 48-bit unsigned integer from the stream into a <see cref="UInt64" />.</summary>
         /// <returns>The 48-bit value read in big-endian order, stored in a <see cref="UInt64" />.</returns>
         public ulong ReadUInt48Be()
         {
-            return ((ulong)binRdr.ReadByte() << 40) | ((ulong)binRdr.ReadByte() << 32) |
-                   ((ulong)binRdr.ReadByte() << 24) | ((ulong)binRdr.ReadByte() << 16) |
-                   ((ulong)binRdr.ReadByte() << 8) | binRdr.ReadByte();
+            return ((ulong)binRdr.ReadByte() << 40)
+                | ((ulong)binRdr.ReadByte() << 32)
+                | ((ulong)binRdr.ReadByte() << 24)
+                | ((ulong)binRdr.ReadByte() << 16)
+                | ((ulong)binRdr.ReadByte() << 8)
+                | binRdr.ReadByte();
         }
 
         /// <summary>Reads a big-endian <see cref="UInt64" /> from the stream.</summary>
         /// <returns>The unsigned 64-bit value read in big-endian order.</returns>
         public ulong ReadUInt64Be()
         {
-            return BitConverter.ToUInt64(binRdr.ReadBytesRequired(sizeof(ulong)).ReverseInPlace(), 0);
+            return BitConverter.ToUInt64(
+                binRdr.ReadBytesRequired(sizeof(ulong)).ReverseInPlace(),
+                0
+            );
         }
 
         /// <summary>Reads a big-endian <see cref="Int32" /> from the stream.</summary>
@@ -63,12 +78,12 @@ internal static class BigEndian
 
             if (result.Length != byteCount)
                 throw new EndOfStreamException(
-                    $"{byteCount} bytes required from stream, but only {result.Length} returned.");
+                    $"{byteCount} bytes required from stream, but only {result.Length} returned."
+                );
 
             return result;
         }
     }
-
 
     /// <param name="arr">The byte array to read from.</param>
     extension(byte[] arr)
@@ -97,8 +112,10 @@ internal static class BigEndian
         /// <returns>The unsigned 32-bit value read in big-endian order.</returns>
         public uint ReadUInt32Be(int offset)
         {
-            return ((uint)arr[offset + 0] << 24) | ((uint)arr[offset + 1] << 16) | ((uint)arr[offset + 2] << 8) |
-                   arr[offset + 3];
+            return ((uint)arr[offset + 0] << 24)
+                | ((uint)arr[offset + 1] << 16)
+                | ((uint)arr[offset + 2] << 8)
+                | arr[offset + 3];
         }
 
         /// <summary>
@@ -109,9 +126,12 @@ internal static class BigEndian
         /// <returns>The 48-bit value read in big-endian order, stored in a <see cref="ulong" />.</returns>
         public ulong ReadUInt48Be(int offset)
         {
-            return ((ulong)arr[offset + 0] << 40) | ((ulong)arr[offset + 1] << 32) |
-                   ((ulong)arr[offset + 2] << 24) | ((ulong)arr[offset + 3] << 16) | ((ulong)arr[offset + 4] << 8) |
-                   arr[offset + 5];
+            return ((ulong)arr[offset + 0] << 40)
+                | ((ulong)arr[offset + 1] << 32)
+                | ((ulong)arr[offset + 2] << 24)
+                | ((ulong)arr[offset + 3] << 16)
+                | ((ulong)arr[offset + 4] << 8)
+                | arr[offset + 5];
         }
 
         /// <summary>Writes a 16-bit unsigned integer in big-endian order to a byte array at the specified offset.</summary>

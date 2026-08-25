@@ -36,12 +36,20 @@ internal class HuffmanDecoder
     /// <param name="maxbits">Maximum bits per code (must not exceed 24).</param>
     /// <param name="bitbuf">The bit stream to read encoded data from.</param>
     /// <param name="buffLookup">Optional pre-allocated lookup table buffer.</param>
-    public HuffmanDecoder(uint numcodes, byte maxbits, BitStream bitbuf, ushort[]? buffLookup = null)
+    public HuffmanDecoder(
+        uint numcodes,
+        byte maxbits,
+        BitStream bitbuf,
+        ushort[]? buffLookup = null
+    )
     {
         /* limit to 24 bits */
         if (maxbits > 24)
-            throw new ArgumentOutOfRangeException(nameof(maxbits), maxbits,
-                "Huffman decoder supports at most 24 bits.");
+            throw new ArgumentOutOfRangeException(
+                nameof(maxbits),
+                maxbits,
+                "Huffman decoder supports at most 24 bits."
+            );
 
         _numcodes = numcodes;
         _maxbits = maxbits;
@@ -50,7 +58,8 @@ internal class HuffmanDecoder
 
         _huffnode = new NodeT[numcodes];
 
-        for (var i = 0; i < numcodes; i++) _huffnode[i] = new NodeT();
+        for (var i = 0; i < numcodes; i++)
+            _huffnode[i] = new NodeT();
 
         _bitbuf = bitbuf;
     }
@@ -103,11 +112,11 @@ internal class HuffmanDecoder
             /* bits per entry depends on the maxbits */
             >= 16 => 5,
             >= 8 => 4,
-            _ => 3
+            _ => 3,
         };
 
         /* loop until we read all the nodes */
-        for (curnode = 0; curnode < _numcodes;)
+        for (curnode = 0; curnode < _numcodes; )
         {
             /* a non-one value is just raw */
             var nodebits = (int)_bitbuf.Read(numbits);
@@ -131,7 +140,8 @@ internal class HuffmanDecoder
                     if (repcount + curnode > _numcodes)
                         return HuffmanError.HufferrInvalidData;
 
-                    while (repcount-- != 0) _huffnode[curnode++].Numbits = (byte)nodebits;
+                    while (repcount-- != 0)
+                        _huffnode[curnode++].Numbits = (byte)nodebits;
                 }
             }
         }
@@ -149,7 +159,9 @@ internal class HuffmanDecoder
         BuildLookupTable();
 
         /* determine final input length and report errors */
-        return _bitbuf.Overflow() ? HuffmanError.HufferrInputBufferTooSmall : HuffmanError.HufferrNone;
+        return _bitbuf.Overflow()
+            ? HuffmanError.HufferrInputBufferTooSmall
+            : HuffmanError.HufferrNone;
     }
 
     /// <summary>
@@ -174,7 +186,6 @@ internal class HuffmanDecoder
         var start = (int)_bitbuf.Read(3) + 1;
         for (index = 1; index < 24; index++)
             if (index < start || count == 7)
-
             {
                 smallhuff._huffnode[index].Numbits = 0;
             }
@@ -200,7 +211,7 @@ internal class HuffmanDecoder
         }
 
         /* now process the rest of the data */
-        for (curcode = 0; curcode < _numcodes;)
+        for (curcode = 0; curcode < _numcodes; )
         {
             var value = (int)smallhuff.DecodeOne();
             if (value != 0)
@@ -210,9 +221,11 @@ internal class HuffmanDecoder
             else
             {
                 count = (int)_bitbuf.Read(3) + 2;
-                if (count == 7 + 2) count += (int)_bitbuf.Read(rlefullbits);
+                if (count == 7 + 2)
+                    count += (int)_bitbuf.Read(rlefullbits);
 
-                for (; count != 0 && curcode < _numcodes; count--) _huffnode[curcode++].Numbits = (byte)last;
+                for (; count != 0 && curcode < _numcodes; count--)
+                    _huffnode[curcode++].Numbits = (byte)last;
             }
         }
 
@@ -229,7 +242,9 @@ internal class HuffmanDecoder
         BuildLookupTable();
 
         /* determine final input length and report errors */
-        return _bitbuf.Overflow() ? HuffmanError.HufferrInputBufferTooSmall : HuffmanError.HufferrNone;
+        return _bitbuf.Overflow()
+            ? HuffmanError.HufferrInputBufferTooSmall
+            : HuffmanError.HufferrNone;
     }
 
     private HuffmanError AssignCanonicalCodes()
@@ -245,7 +260,8 @@ internal class HuffmanDecoder
             if (node.Numbits > _maxbits)
                 return HuffmanError.HufferrInternalInconsistency;
 
-            if (node.Numbits <= 32) bithisto[node.Numbits]++;
+            if (node.Numbits <= 32)
+                bithisto[node.Numbits]++;
         }
 
         /* for each code length, determine the starting code number */
@@ -259,12 +275,12 @@ internal class HuffmanDecoder
             curstart = nextstart;
         }
 
-
         /* now assign canonical codes */
         for (curcode = 0; curcode < _numcodes; curcode++)
         {
             var node = _huffnode[curcode];
-            if (node.Numbits > 0) node.Bits = bithisto[node.Numbits]++;
+            if (node.Numbits > 0)
+                node.Bits = bithisto[node.Numbits]++;
         }
 
         return HuffmanError.HufferrNone;
@@ -286,7 +302,8 @@ internal class HuffmanDecoder
                 var shift = _maxbits - node.Numbits;
                 var dest = node.Bits << shift;
                 var destend = ((node.Bits + 1) << shift) - 1;
-                while (dest <= destend) _lookup[dest++] = (ushort)value;
+                while (dest <= destend)
+                    _lookup[dest++] = (ushort)value;
             }
         }
     }

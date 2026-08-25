@@ -38,14 +38,16 @@ public class CdCodecTests : IDisposable
     public void EncodeCd_RoundTrips_ThroughChdSharpLib(uint tag)
     {
         var codecName = CodecTags.ToString(tag);
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                   TRACK 02 AUDIO
-                     INDEX 00 00:00:20
-                     INDEX 01 00:00:22
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:00:20
+                INDEX 01 00:00:22
+            """
+        );
         var bin = BuildBin(40);
         File.WriteAllBytes(Path.Combine(_dir, "game.bin"), bin);
 
@@ -78,18 +80,24 @@ public class CdCodecTests : IDisposable
     {
         // hunk size >= 65536 -> the base compressed length uses 3 bytes (MAME parity)
         var codecName = CodecTags.ToString(tag);
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
         var bin = BuildBin(72);
         File.WriteAllBytes(Path.Combine(_dir, "game.bin"), bin);
 
         var chdPath = Path.Combine(_dir, $"{codecName}_large.chd");
         // 72 frames = 176256 bytes -> 4 hunks of 32 frames (78336 bytes each, > 65536)
-        ChdEncoder.EncodeCd(Path.Combine(_dir, "test.cue"), chdPath,
-            32 * (uint)CdConstants.FrameSize, codecTags: [tag]);
+        ChdEncoder.EncodeCd(
+            Path.Combine(_dir, "test.cue"),
+            chdPath,
+            32 * (uint)CdConstants.FrameSize,
+            codecTags: [tag]
+        );
 
         var openErr = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, openErr);
@@ -100,12 +108,23 @@ public class CdCodecTests : IDisposable
             for (var f = 0; f < 72; f++)
             {
                 // per frame: [2352 data][96 subcode zeros]
-                Assert.True(actual.AsSpan(f * CdConstants.FrameSize, CdConstants.MaxSectorData)
-                        .SequenceEqual(bin.AsSpan(f * CdConstants.MaxSectorData, CdConstants.MaxSectorData)),
-                    $"frame {f} content mismatch");
-                Assert.True(actual
-                        .AsSpan(f * CdConstants.FrameSize + CdConstants.MaxSectorData, CdConstants.MaxSubcodeData)
-                        .SequenceEqual(new byte[CdConstants.MaxSubcodeData]), $"frame {f} subcode not zero");
+                Assert.True(
+                    actual
+                        .AsSpan(f * CdConstants.FrameSize, CdConstants.MaxSectorData)
+                        .SequenceEqual(
+                            bin.AsSpan(f * CdConstants.MaxSectorData, CdConstants.MaxSectorData)
+                        ),
+                    $"frame {f} content mismatch"
+                );
+                Assert.True(
+                    actual
+                        .AsSpan(
+                            f * CdConstants.FrameSize + CdConstants.MaxSectorData,
+                            CdConstants.MaxSubcodeData
+                        )
+                        .SequenceEqual(new byte[CdConstants.MaxSubcodeData]),
+                    $"frame {f} subcode not zero"
+                );
             }
         }
     }
@@ -116,7 +135,8 @@ public class CdCodecTests : IDisposable
         // CD compound codecs are only valid on CD-sized hunks
         using var ms = new MemoryStream(new byte[4096]);
         Assert.Throws<ArgumentException>(() =>
-            ChdEncoder.EncodeRaw(ms, Path.Combine(_dir, "bad.chd"), 4096, 512, [CodecTags.Cdzl]));
+            ChdEncoder.EncodeRaw(ms, Path.Combine(_dir, "bad.chd"), 4096, 512, [CodecTags.Cdzl])
+        );
     }
 
     [Theory]
@@ -130,17 +150,20 @@ public class CdCodecTests : IDisposable
         // sync + ECC and sets the bitmap bit, and the decoder must regenerate them
         // byte-identically. This exercises the full ECC-clear/regenerate path.
         var codecName = CodecTags.ToString(tag);
-        WriteCue("""
-                 FILE "game.bin" BINARY
-                   TRACK 01 MODE1/2352
-                     INDEX 01 00:00:00
-                 """);
+        WriteCue(
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
         var bin = new byte[16 * CdConstants.MaxSectorData];
         for (var f = 0; f < 16; f++)
         {
             var offset = f * CdConstants.MaxSectorData;
             // sync header (12 bytes) + zero address + mode byte 1, rest zero
-            for (var i = 0; i < 12; i++) bin[offset + i] = i is 0 or 11 ? (byte)0x00 : (byte)0xFF;
+            for (var i = 0; i < 12; i++)
+                bin[offset + i] = i is 0 or 11 ? (byte)0x00 : (byte)0xFF;
 
             bin[offset + 0x0F] = 0x01;
             // ECC P/Q areas stay zero = valid ECC for this sector
@@ -157,8 +180,13 @@ public class CdCodecTests : IDisposable
         {
             var expected = new byte[16 * CdConstants.FrameSize];
             for (var f = 0; f < 16; f++)
-                Array.Copy(bin, f * CdConstants.MaxSectorData, expected, f * CdConstants.FrameSize,
-                    CdConstants.MaxSectorData);
+                Array.Copy(
+                    bin,
+                    f * CdConstants.MaxSectorData,
+                    expected,
+                    f * CdConstants.FrameSize,
+                    CdConstants.MaxSectorData
+                );
 
             Assert.Equal(ChdError.Chderrnone, file!.ReadAllBytes(out var actual));
             Assert.Equal(expected, actual);
@@ -192,13 +220,25 @@ public class CdCodecTests : IDisposable
         return result;
     }
 
-    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
-        bool swap)
+    private static void PlaceBinFrames(
+        byte[] image,
+        int chdFrameStart,
+        byte[] bin,
+        int binFrameCount,
+        int binOffset,
+        bool swap
+    )
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
-            Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
+            Array.Copy(
+                bin,
+                binOffset + f * CdConstants.MaxSectorData,
+                image,
+                dest,
+                CdConstants.MaxSectorData
+            );
             if (swap)
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);
@@ -212,7 +252,9 @@ public class CdCodecTests : IDisposable
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) | data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 }

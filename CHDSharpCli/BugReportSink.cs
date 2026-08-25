@@ -36,9 +36,12 @@ internal sealed class BugReportSink : ILogEventSink
     /// <inheritdoc />
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null) return;
-        if (logEvent.Level < LogEventLevel.Error) return;
-        if (logEvent.Exception is OperationCanceledException or TaskCanceledException) return;
+        if (logEvent == null)
+            return;
+        if (logEvent.Level < LogEventLevel.Error)
+            return;
+        if (logEvent.Exception is OperationCanceledException or TaskCanceledException)
+            return;
 
         var message = BuildMessage(logEvent);
 
@@ -94,7 +97,11 @@ internal sealed class BugReportSink : ILogEventSink
         return sb.ToString();
     }
 
-    [SuppressMessage("ReSharper", "CA1031", Justification = "Bug-report delivery is best-effort and must never throw.")]
+    [SuppressMessage(
+        "ReSharper",
+        "CA1031",
+        Justification = "Bug-report delivery is best-effort and must never throw."
+    )]
     private async Task SendAsync(string message, LogEvent logEvent)
     {
         try
@@ -106,7 +113,7 @@ internal sealed class BugReportSink : ILogEventSink
                 version = _env.ApplicationVersion,
                 userInfo = (string?)null,
                 environment = _environmentLabel,
-                stackTrace = logEvent.Exception?.StackTrace
+                stackTrace = logEvent.Exception?.StackTrace,
             };
 
             var json = JsonSerializer.Serialize(payload);

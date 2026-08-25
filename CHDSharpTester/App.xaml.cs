@@ -22,14 +22,20 @@ public partial class App
         {
             var logPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "CHDSharpTester", "logs", "chdsharp-tester-.log");
+                "CHDSharpTester",
+                "logs",
+                "chdsharp-tester-.log"
+            );
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
-                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day,
+                .WriteTo.File(
+                    logPath,
+                    rollingInterval: RollingInterval.Day,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
-                    formatProvider: CultureInfo.InvariantCulture)
+                    formatProvider: CultureInfo.InvariantCulture
+                )
                 .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharpTester")))
                 .CreateLogger();
 
@@ -47,8 +53,12 @@ public partial class App
                     Log.Information("Version check: {Message}", message);
                     await Dispatcher.InvokeAsync(() =>
                     {
-                        MessageBox.Show(message, "Update Available", MessageBoxButton.OK,
-                            MessageBoxImage.Information);
+                        MessageBox.Show(
+                            message,
+                            "Update Available",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information
+                        );
                     });
                 }
             });

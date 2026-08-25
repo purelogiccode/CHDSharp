@@ -32,7 +32,8 @@ internal partial class MainWindow
                     "A test run is currently in progress. Are you sure you want to exit?",
                     "Tests Running",
                     MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+                    MessageBoxImage.Warning
+                );
 
                 if (result != MessageBoxResult.Yes)
                 {

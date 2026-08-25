@@ -35,16 +35,31 @@ public static class MapCompressor
     /// <param name="hunkBytes">The size of each hunk in bytes.</param>
     /// <param name="unitBytes">The unit size in bytes.</param>
     /// <returns>A byte array containing the compressed map data.</returns>
-    public static byte[] Compress(MapEntry[] entries, uint hunkCount, uint hunkBytes, uint unitBytes)
+    public static byte[] Compress(
+        MapEntry[] entries,
+        uint hunkCount,
+        uint hunkBytes,
+        uint unitBytes
+    )
     {
-        var rleList = RleEncode(entries, hunkCount, hunkBytes, unitBytes, out var maxSelf, out var maxParent);
+        var rleList = RleEncode(
+            entries,
+            hunkCount,
+            hunkBytes,
+            unitBytes,
+            out var maxSelf,
+            out var maxParent
+        );
 
         uint maxCompLen = 0;
         for (uint i = 0; i < hunkCount; i++)
             // MAME tracks the maximum length over every entry that is not a SELF or PARENT
             // reference (compress_v5_map's else branch): COMPRESSION_NONE entries carry the
             // hunk size, compressed entries their stored length, promoted pseudo-types zero.
-            if (entries[i].Compression is not (MapEntry.CompressionSelf or MapEntry.CompressionParent))
+            if (
+                entries[i].Compression
+                is not (MapEntry.CompressionSelf or MapEntry.CompressionParent)
+            )
                 maxCompLen = Math.Max(maxCompLen, entries[i].CompLength);
 
         var lengthBits = BitsForValue(maxCompLen);
@@ -56,7 +71,9 @@ public static class MapCompressor
             huff.CountSymbol(sym);
         huff.BuildTree();
 
-        var nbitsNeeded = 8 * 16 + (12 + Math.Max(Math.Max(lengthBits + 16, selfBits), parentBits)) * (int)hunkCount;
+        var nbitsNeeded =
+            8 * 16
+            + (12 + Math.Max(Math.Max(lengthBits + 16, selfBits), parentBits)) * (int)hunkCount;
 
         // chdman's compress_v5_map allocates exactly nbits_needed/8 + 1 bytes INCLUDING the
         // 16-byte map header and bitstreams over the tail. That estimate under-sizes the
@@ -159,12 +176,14 @@ public static class MapCompressor
                     case MapEntry.CompressionType3:
                         stream.Write(entry.CompLength, lengthBits);
                         stream.Write(entry.Crc16, 16);
-                        if (first == 0) first = entry.Offset;
+                        if (first == 0)
+                            first = entry.Offset;
 
                         break;
                     case MapEntry.CompressionNone:
                         stream.Write(entry.Crc16, 16);
-                        if (first == 0) first = entry.Offset;
+                        if (first == 0)
+                            first = entry.Offset;
 
                         break;
                     case MapEntry.CompressionSelf:
@@ -199,8 +218,14 @@ public static class MapCompressor
     ///     full run length, so an all-<c>COMPRESSION_TYPE_0</c> image encodes as
     ///     <c>[RLE_LARGE, hi, lo]</c> with no leading type symbol.
     /// </summary>
-    private static List<byte> RleEncode(MapEntry[] entries, uint hunkCount, uint hunkBytes, uint unitBytes,
-        out uint maxSelf, out ulong maxParent)
+    private static List<byte> RleEncode(
+        MapEntry[] entries,
+        uint hunkCount,
+        uint hunkBytes,
+        uint unitBytes,
+        out uint maxSelf,
+        out ulong maxParent
+    )
     {
         var rleList = new List<byte>((int)hunkCount + 4);
         byte lastcomp = 0;
@@ -251,7 +276,8 @@ public static class MapCompressor
             }
 
             // track repeats
-            if (curcomp == lastcomp) count++;
+            if (curcomp == lastcomp)
+                count++;
 
             // if no repeat, or we're at the end, flush it
             if (curcomp != lastcomp || hunknum == hunkCount - 1)

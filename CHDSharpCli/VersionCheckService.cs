@@ -11,7 +11,8 @@ namespace CHDSharp;
 /// </summary>
 internal static class VersionCheckService
 {
-    private const string RepoApiUrl = "https://api.github.com/repos/purelogiccode/CHDSharp/releases/latest";
+    private const string RepoApiUrl =
+        "https://api.github.com/repos/purelogiccode/CHDSharp/releases/latest";
     private const string RepoReleasesUrl = "https://github.com/purelogiccode/CHDSharp/releases";
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
@@ -52,13 +53,19 @@ internal static class VersionCheckService
                 return;
 
             var assetName = GetExpectedAssetName();
-            var downloadUrl = release.Assets?
-                .FirstOrDefault(a => string.Equals(a.Name, assetName, StringComparison.OrdinalIgnoreCase))
+            var downloadUrl = release
+                .Assets?.FirstOrDefault(a =>
+                    string.Equals(a.Name, assetName, StringComparison.OrdinalIgnoreCase)
+                )
                 ?.BrowserDownloadUrl;
 
             Log.Logger.Information("");
-            Log.Logger.Information("  *** A new version of CHDSharp is available: v{Major}.{Minor}.{Build} ***",
-                latestVersion.Major, latestVersion.Minor, latestVersion.Build);
+            Log.Logger.Information(
+                "  *** A new version of CHDSharp is available: v{Major}.{Minor}.{Build} ***",
+                latestVersion.Major,
+                latestVersion.Minor,
+                latestVersion.Build
+            );
             if (downloadUrl != null)
                 Log.Logger.Information("  *** Download: {Url} ***", downloadUrl);
             else
@@ -84,7 +91,7 @@ internal static class VersionCheckService
             Architecture.Arm64 => "win-arm64",
             Architecture.X64 => "win-x64",
             Architecture.X86 => "win-x86",
-            _ => "win-x64"
+            _ => "win-x64",
         };
 
         return $"CHDSharp_{arch}_v{Assembly.GetEntryAssembly()?.GetName().Version}.zip";

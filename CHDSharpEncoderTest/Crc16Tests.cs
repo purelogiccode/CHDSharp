@@ -60,7 +60,8 @@ public class Crc16Tests
     public void ConsistentWithMameCdFrame()
     {
         var cdFrame = new byte[2352];
-        for (var i = 0; i < cdFrame.Length; i++) cdFrame[i] = (byte)(i & 0xFF);
+        for (var i = 0; i < cdFrame.Length; i++)
+            cdFrame[i] = (byte)(i & 0xFF);
 
         var crc = Crc16.Compute(cdFrame);
         Assert.NotEqual(0xFFFF, crc);

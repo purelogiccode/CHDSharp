@@ -102,7 +102,6 @@ internal class BitStream
         _bits -= numbits;
     }
 
-
     /*-----------------------------------------------------
      *  bitstream_read - fetch the requested number of bits
      *-----------------------------------------------------
@@ -132,7 +131,8 @@ internal class BitStream
             _bits -= 8;
         }
 
-        if (_dbitoffs > _bits) _doffset++;
+        if (_dbitoffs > _bits)
+            _doffset++;
 
         _bits = 0;
         _buffer = 0;

@@ -7,8 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
   </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
+  <ItemGroup></ItemGroup>
   <ItemGroup>
     <Using Include="CHDSharpTestGen.Models" />
     <Using Include="CHDSharp.Models" />

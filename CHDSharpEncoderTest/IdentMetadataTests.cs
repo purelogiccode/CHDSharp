@@ -36,7 +36,11 @@ public class IdentMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "ident.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { Metadata = [identEntry] });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            options: new ChdEncodeOptions { Metadata = [identEntry] }
+        );
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -79,7 +83,11 @@ public class IdentMetadataTests : IDisposable
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, sourcePath, options: new ChdEncodeOptions { Metadata = [identEntry] });
+            ChdEncoder.EncodeRaw(
+                ms,
+                sourcePath,
+                options: new ChdEncodeOptions { Metadata = [identEntry] }
+            );
         }
 
         ChdEncoder.Copy(sourcePath, copyPath);
@@ -142,8 +150,8 @@ public class IdentMetadataTests : IDisposable
             {
                 Tag = 0x54455354, // 'TEST'
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = testData
-            }
+                Payload = testData,
+            },
         };
 
         var chdPath = Path.Combine(_dir, "multi.chd");
@@ -177,14 +185,14 @@ public class IdentMetadataTests : IDisposable
             {
                 Tag = MetadataWriter.KeyMetadataTag,
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = keyData
+                Payload = keyData,
             },
             new()
             {
                 Tag = MetadataWriter.PcmciaCisMetadataTag,
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = cisData
-            }
+                Payload = cisData,
+            },
         };
 
         var chdPath = Path.Combine(_dir, "all_meta.chd");
@@ -225,7 +233,11 @@ public class IdentMetadataTests : IDisposable
         var identEntry = MetadataWriter.BuildIdentMetadata(identData);
 
         var chdPath = Path.Combine(_dir, "blank_ident.chd");
-        ChdEncoder.CreateBlank(chdPath, 8192, options: new ChdEncodeOptions { Metadata = [identEntry] });
+        ChdEncoder.CreateBlank(
+            chdPath,
+            8192,
+            options: new ChdEncodeOptions { Metadata = [identEntry] }
+        );
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);

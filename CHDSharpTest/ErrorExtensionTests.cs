@@ -15,8 +15,10 @@ public class ErrorExtensionTests
         foreach (var error in allErrors)
         {
             var msg = error.GetMessage();
-            Assert.False(string.IsNullOrWhiteSpace(msg),
-                $"GetMessage for {error} returned empty or null");
+            Assert.False(
+                string.IsNullOrWhiteSpace(msg),
+                $"GetMessage for {error} returned empty or null"
+            );
         }
     }
 
@@ -37,13 +39,20 @@ public class ErrorExtensionTests
     [Fact]
     public void GetMessage_requiresparent_mentions_parent()
     {
-        Assert.Contains("parent", ChdError.Chderrrequiresparent.GetMessage(), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "parent",
+            ChdError.Chderrrequiresparent.GetMessage(),
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
     [Fact]
     public void GetMessage_decompression_mentions_decompression()
     {
-        Assert.Contains("Decompression", ChdError.Chderrdecompressionerror.GetMessage(),
-            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "Decompression",
+            ChdError.Chderrdecompressionerror.GetMessage(),
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 }

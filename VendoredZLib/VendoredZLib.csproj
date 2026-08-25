@@ -8,6 +8,5 @@
   <ItemGroup>
     <InternalsVisibleTo Include="CHDSharpLib" />
   </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
+  <ItemGroup></ItemGroup>
 </Project>

@@ -10,7 +10,10 @@ public class HunkProgressTests : IDisposable
 
     public HunkProgressTests()
     {
-        _dir = Path.Combine(Path.GetTempPath(), "hunk_progress_tests_" + Guid.NewGuid().ToString("N"));
+        _dir = Path.Combine(
+            Path.GetTempPath(),
+            "hunk_progress_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_dir);
     }
 
@@ -35,7 +38,11 @@ public class HunkProgressTests : IDisposable
         var reports = new List<HunkProgress>();
         var chdPath = Path.Combine(_dir, "ordered.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { HunkCompleted = reports.Add });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            options: new ChdEncodeOptions { HunkCompleted = reports.Add }
+        );
 
         Assert.Equal(3, reports.Count);
         Assert.Equal(new uint[] { 0, 1, 2 }, reports.Select(r => r.HunkIndex).ToArray());
@@ -54,13 +61,29 @@ public class HunkProgressTests : IDisposable
         var reports = new List<HunkProgress>();
         var chdPath = Path.Combine(_dir, "ratio.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { HunkCompleted = reports.Add });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            options: new ChdEncodeOptions { HunkCompleted = reports.Add }
+        );
 
         Assert.All(reports, r => Assert.True(r.Ratio <= 1.0));
-        Assert.Contains(reports, r =>
-            r is { CodecName: "zlib", CompressionType: MapEntry.CompressionType0, Ratio: < 1.0 });
-        Assert.Contains(reports, r =>
-            r is { CodecName: "self", CompressionType: MapEntry.CompressionSelf, StoredBytes: 0, Ratio: 0.0 });
+        Assert.Contains(
+            reports,
+            r =>
+                r is { CodecName: "zlib", CompressionType: MapEntry.CompressionType0, Ratio: < 1.0 }
+        );
+        Assert.Contains(
+            reports,
+            r =>
+                r
+                    is {
+                        CodecName: "self",
+                        CompressionType: MapEntry.CompressionSelf,
+                        StoredBytes: 0,
+                        Ratio: 0.0
+                    }
+        );
     }
 
     [Fact]
@@ -72,7 +95,11 @@ public class HunkProgressTests : IDisposable
         var reports = new List<HunkProgress>();
         var chdPath = Path.Combine(_dir, "none.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions { HunkCompleted = reports.Add });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            options: new ChdEncodeOptions { HunkCompleted = reports.Add }
+        );
 
         foreach (var r in reports)
         {
@@ -104,7 +131,11 @@ public class HunkProgressTests : IDisposable
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, with, options: new ChdEncodeOptions { HunkCompleted = _ => { } });
+            ChdEncoder.EncodeRaw(
+                ms,
+                with,
+                options: new ChdEncodeOptions { HunkCompleted = _ => { } }
+            );
         }
 
         Assert.Equal(File.ReadAllBytes(without), File.ReadAllBytes(with));
@@ -115,21 +146,28 @@ public class HunkProgressTests : IDisposable
     {
         // 16 data frames + 16 audio frames = 32 frames = 4 hunks of 8 frames
         var cuePath = Path.Combine(_dir, "test.cue");
-        File.WriteAllText(cuePath, """
-                                   FILE "game.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                     TRACK 02 AUDIO
-                                       INDEX 01 00:00:16
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 00:00:16
+            """
+        );
         var bin = new byte[32 * CdConstants.MaxSectorData];
-        for (var i = 0; i < bin.Length; i++) bin[i] = (byte)(i & 0xFF);
+        for (var i = 0; i < bin.Length; i++)
+            bin[i] = (byte)(i & 0xFF);
 
         File.WriteAllBytes(Path.Combine(_dir, "game.bin"), bin);
 
         var reports = new List<HunkProgress>();
-        ChdEncoder.EncodeCd(cuePath, Path.Combine(_dir, "cd.chd"),
-            options: new ChdEncodeOptions { HunkCompleted = reports.Add });
+        ChdEncoder.EncodeCd(
+            cuePath,
+            Path.Combine(_dir, "cd.chd"),
+            options: new ChdEncodeOptions { HunkCompleted = reports.Add }
+        );
 
         const int framesPerHunk = CdConstants.FramesPerHunk;
         Assert.Equal(4u, (uint)reports.Count);

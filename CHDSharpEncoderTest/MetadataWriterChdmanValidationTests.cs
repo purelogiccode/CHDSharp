@@ -16,7 +16,10 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     public MetadataWriterChdmanValidationTests()
     {
         // unique per test class instance: the test host runs per-TFM in parallel
-        _testDataDir = Path.Combine(Path.GetTempPath(), "metadata_writer_chdman_tests_" + Guid.NewGuid().ToString("N"));
+        _testDataDir = Path.Combine(
+            Path.GetTempPath(),
+            "metadata_writer_chdman_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_testDataDir);
     }
 
@@ -35,25 +38,26 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     [Fact]
     public void MetadataChain_MatchesChdman_ByteForByte()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         // Saturn-style: MODE1/2352 data track + AUDIO tracks with pregaps, single BIN
         const string cue = """
-                           FILE "game.bin" BINARY
-                             TRACK 01 MODE1/2352
-                               INDEX 01 00:00:00
-                             TRACK 02 AUDIO
-                               INDEX 00 03:00:00
-                               INDEX 01 03:02:00
-                             TRACK 03 AUDIO
-                               INDEX 00 06:00:00
-                               INDEX 01 06:02:00
-                             TRACK 04 AUDIO
-                               INDEX 00 09:00:00
-                               INDEX 01 09:02:00
-                             TRACK 05 AUDIO
-                               INDEX 01 12:02:00
-                           """;
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 03:00:00
+                INDEX 01 03:02:00
+              TRACK 03 AUDIO
+                INDEX 00 06:00:00
+                INDEX 01 06:02:00
+              TRACK 04 AUDIO
+                INDEX 00 09:00:00
+                INDEX 01 09:02:00
+              TRACK 05 AUDIO
+                INDEX 01 12:02:00
+            """;
         var cuePath = Path.Combine(_testDataDir, "saturn.cue");
         var binPath = Path.Combine(_testDataDir, "game.bin");
         var chdPath = Path.Combine(_testDataDir, "saturn.chd");
@@ -63,9 +67,20 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             fs.SetLength(2352L * 54550);
         }
 
-        var (exitCode, stdout, stderr) =
-            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
-        Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman(
+            "createcd",
+            "-i",
+            cuePath,
+            "-o",
+            chdPath,
+            "-c",
+            "zlib",
+            "-f"
+        );
+        Assert.True(
+            exitCode == 0,
+            $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}"
+        );
 
         // our metadata chain, from the same CUE through CueParser + MetadataWriter
         var toc = CueParser.Parse(cuePath);
@@ -97,18 +112,19 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     [Fact]
     public void Metadata_ReadBack_MatchesChdsharpReader()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         const string cue = """
-                           FILE "game.bin" BINARY
-                             TRACK 01 MODE1/2352
-                               INDEX 01 00:00:00
-                             TRACK 02 AUDIO
-                               INDEX 00 01:00:00
-                               INDEX 01 01:02:00
-                             TRACK 03 AUDIO
-                               INDEX 01 02:00:00
-                           """;
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 01:00:00
+                INDEX 01 01:02:00
+              TRACK 03 AUDIO
+                INDEX 01 02:00:00
+            """;
         var cuePath = Path.Combine(_testDataDir, "saturn.cue");
         var binPath = Path.Combine(_testDataDir, "game.bin");
         var chdPath = Path.Combine(_testDataDir, "saturn.chd");
@@ -118,9 +134,20 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             fs.SetLength(2352L * (4500 + 4650 + 8));
         }
 
-        var (exitCode, stdout, stderr) =
-            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdPath, "-c", "zlib", "-f");
-        Assert.True(exitCode == 0, $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman(
+            "createcd",
+            "-i",
+            cuePath,
+            "-o",
+            chdPath,
+            "-c",
+            "zlib",
+            "-f"
+        );
+        Assert.True(
+            exitCode == 0,
+            $"chdman createcd failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}"
+        );
 
         // build the expected entries from our parser + writer
         var toc = CueParser.Parse(cuePath);
@@ -137,12 +164,15 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             var length = ReadU24Be(header, 5);
             var payload = new byte[length];
             ms.ReadExactly(payload, 0, payload.Length);
-            expectedEntries.Add(new ChdMetadataEntry(
-                $"{(char)((tag >> 24) & 0xFF)}{(char)((tag >> 16) & 0xFF)}{(char)((tag >> 8) & 0xFF)}{(char)(tag & 0xFF)}",
-                payload)
-            {
-                Flags = header[4]
-            });
+            expectedEntries.Add(
+                new ChdMetadataEntry(
+                    $"{(char)((tag >> 24) & 0xFF)}{(char)((tag >> 16) & 0xFF)}{(char)((tag >> 8) & 0xFF)}{(char)(tag & 0xFF)}",
+                    payload
+                )
+                {
+                    Flags = header[4],
+                }
+            );
         }
 
         // the same entries as parsed by the CHDSharpLib reader from chdman's file
@@ -150,8 +180,8 @@ public class MetadataWriterChdmanValidationTests : IDisposable
         Assert.Equal(ChdError.Chderrnone, openErr);
         using (chd)
         {
-            var actualEntries = chd!.Metadata
-                .Where(m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal))
+            var actualEntries = chd!
+                .Metadata.Where(m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal))
                 .ToList();
 
             Assert.Equal(expectedEntries.Count, actualEntries.Count);
@@ -182,14 +212,16 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             var payload = new byte[length];
             Array.Copy(fileBytes, (int)offset + 16, payload, 0, (int)length);
 
-            entries.Add(new MetaEntry
-            {
-                Tag = tag,
-                Flags = flags,
-                Length = length,
-                Next = next,
-                Payload = payload
-            });
+            entries.Add(
+                new MetaEntry
+                {
+                    Tag = tag,
+                    Flags = flags,
+                    Length = length,
+                    Next = next,
+                    Payload = payload,
+                }
+            );
 
             // a non-zero next must point exactly past this entry (chained, not scattered)
             if (next != 0)
@@ -202,8 +234,10 @@ public class MetadataWriterChdmanValidationTests : IDisposable
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) | data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 
     private static uint ReadU24Be(byte[] data, int offset)

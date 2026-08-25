@@ -42,52 +42,67 @@ public class ChdCommonTests
     [Fact]
     public void ConvMapEntry_invalid_returns_error()
     {
-        Assert.Equal(CompressionType.Compressionerror,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeinvalid));
+        Assert.Equal(
+            CompressionType.Compressionerror,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeinvalid)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_compressed_returns_type0()
     {
-        Assert.Equal(CompressionType.Compressiontype0,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypecompressed));
+        Assert.Equal(
+            CompressionType.Compressiontype0,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypecompressed)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_uncompressed_returns_none()
     {
-        Assert.Equal(CompressionType.Compressionnone,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeuncompressed));
+        Assert.Equal(
+            CompressionType.Compressionnone,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeuncompressed)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_mini_returns_mini()
     {
-        Assert.Equal(CompressionType.Compressionmini,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypemini));
+        Assert.Equal(
+            CompressionType.Compressionmini,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypemini)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_selfhunk_returns_self()
     {
-        Assert.Equal(CompressionType.Compressionself,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeselfhunk));
+        Assert.Equal(
+            CompressionType.Compressionself,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeselfhunk)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_parenthunk_returns_parent()
     {
-        Assert.Equal(CompressionType.Compressionparent,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeparenthunk));
+        Assert.Equal(
+            CompressionType.Compressionparent,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(MapEntryFlag.Mapentrytypeparenthunk)
+        );
     }
 
     [Fact]
     public void ConvMapEntry_flag_with_nocrc_still_extracts_type()
     {
         // Mapentryflagnocrc | Mapentrytypecompressed = 0x0011
-        const MapEntryFlag flag = MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypecompressed;
-        Assert.Equal(CompressionType.Compressiontype0,
-            ChdCommon.ConvMapEntryFlagtoCompressionType(flag));
+        const MapEntryFlag flag =
+            MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypecompressed;
+        Assert.Equal(
+            CompressionType.Compressiontype0,
+            ChdCommon.ConvMapEntryFlagtoCompressionType(flag)
+        );
     }
 
     // ── IsValidCodec ──

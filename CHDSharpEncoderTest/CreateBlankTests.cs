@@ -26,7 +26,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -45,7 +46,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -81,7 +83,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -100,7 +103,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -142,7 +146,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -176,7 +181,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -200,7 +206,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -228,7 +235,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -242,7 +250,8 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -256,14 +265,19 @@ public class CreateBlankTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return (uint)((data[offset] << 24) | (data[offset + 1] << 16) |
-                      (data[offset + 2] << 8) | data[offset + 3]);
+        return (uint)(
+            (data[offset] << 24)
+            | (data[offset + 1] << 16)
+            | (data[offset + 2] << 8)
+            | data[offset + 3]
+        );
     }
 
     private static ulong ReadU64Be(byte[] data, int offset)

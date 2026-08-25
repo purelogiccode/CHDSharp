@@ -15,7 +15,10 @@ public class EncodeCdChdmanValidationTests : IDisposable
     public EncodeCdChdmanValidationTests()
     {
         // unique per test class instance: the test host runs per-TFM in parallel
-        _testDataDir = Path.Combine(Path.GetTempPath(), "encode_cd_chdman_tests_" + Guid.NewGuid().ToString("N"));
+        _testDataDir = Path.Combine(
+            Path.GetTempPath(),
+            "encode_cd_chdman_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_testDataDir);
     }
 
@@ -34,19 +37,20 @@ public class EncodeCdChdmanValidationTests : IDisposable
     [Fact]
     public void EncodeCd_ExtractRaw_MatchesChdman()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         // data track + 2 audio tracks with pregaps, single BIN (10 + 12 + 8 = 30 sectors)
         const string cue = """
-                           FILE "game.bin" BINARY
-                             TRACK 01 MODE1/2352
-                               INDEX 01 00:00:00
-                             TRACK 02 AUDIO
-                               INDEX 00 00:00:10
-                               INDEX 01 00:00:12
-                             TRACK 03 AUDIO
-                               INDEX 01 00:00:22
-                           """;
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:00:10
+                INDEX 01 00:00:12
+              TRACK 03 AUDIO
+                INDEX 01 00:00:22
+            """;
         var bin = BuildBin(30);
         var cuePath = WriteCue("game.cue", cue);
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), bin);
@@ -55,16 +59,40 @@ public class EncodeCdChdmanValidationTests : IDisposable
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         ChdEncoder.EncodeCd(cuePath, ourChd);
 
-        var (createExit, cstdout, cstderr) =
-            ChdmanHelper.RunChdman("createcd", "-i", cuePath, "-o", chdmanChd, "-c", "zlib", "-f");
-        Assert.True(createExit == 0,
-            $"chdman createcd failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}");
+        var (createExit, cstdout, cstderr) = ChdmanHelper.RunChdman(
+            "createcd",
+            "-i",
+            cuePath,
+            "-o",
+            chdmanChd,
+            "-c",
+            "zlib",
+            "-f"
+        );
+        Assert.True(
+            createExit == 0,
+            $"chdman createcd failed (exit={createExit})\nstdout: {cstdout}\nstderr: {cstderr}"
+        );
 
         var ourExtract = Path.Combine(_testDataDir, "our.raw");
         var chdmanExtract = Path.Combine(_testDataDir, "chdman.raw");
-        var (e1, o1, e1R) = ChdmanHelper.RunChdman("extractraw", "-i", ourChd, "-o", ourExtract, "-f");
+        var (e1, o1, e1R) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            ourChd,
+            "-o",
+            ourExtract,
+            "-f"
+        );
         Assert.True(e1 == 0, $"extractraw our failed (exit={e1})\nstdout: {o1}\nstderr: {e1R}");
-        var (e2, o2, e2R) = ChdmanHelper.RunChdman("extractraw", "-i", chdmanChd, "-o", chdmanExtract, "-f");
+        var (e2, o2, e2R) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            chdmanChd,
+            "-o",
+            chdmanExtract,
+            "-f"
+        );
         Assert.True(e2 == 0, $"extractraw chdman failed (exit={e2})\nstdout: {o2}\nstderr: {e2R}");
 
         // byte-identical logical images (audio swapped, tracks padded to 4-frame boundaries)
@@ -74,18 +102,19 @@ public class EncodeCdChdmanValidationTests : IDisposable
     [Fact]
     public void EncodeCd_PassesChdmanVerify()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         const string cue = """
-                           FILE "game.bin" BINARY
-                             TRACK 01 MODE1/2352
-                               INDEX 01 00:00:00
-                             TRACK 02 AUDIO
-                               INDEX 00 00:00:08
-                               INDEX 01 00:00:10
-                             TRACK 03 AUDIO
-                               INDEX 01 00:00:20
-                           """;
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:00:08
+                INDEX 01 00:00:10
+              TRACK 03 AUDIO
+                INDEX 01 00:00:20
+            """;
         var cuePath = WriteCue("verify.cue", cue);
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), BuildBin(30));
         var chdPath = Path.Combine(_testDataDir, "verify.chd");
@@ -93,21 +122,25 @@ public class EncodeCdChdmanValidationTests : IDisposable
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
         var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
-        Assert.True(exitCode == 0, $"chdman verify failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}");
+        Assert.True(
+            exitCode == 0,
+            $"chdman verify failed (exit={exitCode})\nstdout: {stdout}\nstderr: {stderr}"
+        );
     }
 
     [Fact]
     public void EncodeCd_ChdmanInfo_ShowsMetadata()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         const string cue = """
-                           FILE "game.bin" BINARY
-                             TRACK 01 MODE1/2352
-                               INDEX 01 00:00:00
-                             TRACK 02 AUDIO
-                               INDEX 01 01:00:00
-                           """;
+            FILE "game.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 01:00:00
+            """;
         var cuePath = WriteCue("info.cue", cue);
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), BuildBin(60 * 75 + 100));
         var chdPath = Path.Combine(_testDataDir, "info.chd");
@@ -127,7 +160,8 @@ public class EncodeCdChdmanValidationTests : IDisposable
     [Fact]
     public void SaturnStyle_ChdmanRoundTrip()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         // 1 data track (75 frames) + 7 audio tracks (75,75,75,75,75,75,50) with 2-frame pregaps
         const int dataFrames = 75;
@@ -160,7 +194,14 @@ public class EncodeCdChdmanValidationTests : IDisposable
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
         var extractPath = Path.Combine(_testDataDir, "saturn.raw");
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            chdPath,
+            "-o",
+            extractPath,
+            "-f"
+        );
         Assert.True(extractExit == 0, $"extractraw failed (exit={extractExit})\n{eOut}{eErr}");
 
         // 75→76 and 50→52 padded frames per track = 584 total
@@ -186,8 +227,9 @@ public class EncodeCdChdmanValidationTests : IDisposable
                 {
                     var frame = i / CdConstants.FrameSize;
                     throw new XunitException(
-                        $"first difference at byte {i} (frame {frame}, offset {i % CdConstants.FrameSize}): " +
-                        $"expected {expected[i]:X2}, actual {actual[i]:X2}");
+                        $"first difference at byte {i} (frame {frame}, offset {i % CdConstants.FrameSize}): "
+                            + $"expected {expected[i]:X2}, actual {actual[i]:X2}"
+                    );
                 }
 
         Assert.Equal(expected, actual);
@@ -237,13 +279,25 @@ public class EncodeCdChdmanValidationTests : IDisposable
         return bin;
     }
 
-    private static void PlaceBinFrames(byte[] image, int chdFrameStart, byte[] bin, int binFrameCount, int binOffset,
-        bool swap)
+    private static void PlaceBinFrames(
+        byte[] image,
+        int chdFrameStart,
+        byte[] bin,
+        int binFrameCount,
+        int binOffset,
+        bool swap
+    )
     {
         for (var f = 0; f < binFrameCount; f++)
         {
             var dest = (chdFrameStart + f) * CdConstants.FrameSize;
-            Array.Copy(bin, binOffset + f * CdConstants.MaxSectorData, image, dest, CdConstants.MaxSectorData);
+            Array.Copy(
+                bin,
+                binOffset + f * CdConstants.MaxSectorData,
+                image,
+                dest,
+                CdConstants.MaxSectorData
+            );
             if (swap)
                 for (var i = 0; i < CdConstants.MaxSectorData; i += 2)
                     (image[dest + i], image[dest + i + 1]) = (image[dest + i + 1], image[dest + i]);

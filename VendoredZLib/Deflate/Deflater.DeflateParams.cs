@@ -15,21 +15,21 @@ internal static partial class Deflater
 
         var s = strm.DeflateState;
 
-        if (level == ZDefaultCompression) level = 6;
+        if (level == ZDefaultCompression)
+            level = 6;
 
         if (level < 0 || level > 9 || strategy < 0 || strategy > ZFixed)
             return ZStreamError;
 
         ref var configurationTable = ref
 #if NET7_0_OR_GREATER
-            strm.DeflateRefs.ConfigurationTable;
+        strm.DeflateRefs.ConfigurationTable;
 #else
-            MemoryMarshal.GetReference<Config>(s_configuration_table);
+        MemoryMarshal.GetReference<Config>(s_configuration_table);
 #endif
         var deflateType = Unsafe.Add(ref configurationTable, (uint)s.Level).deflate_type;
         ref var config = ref Unsafe.Add(ref configurationTable, (uint)level);
-        if ((strategy != s.Strategy || deflateType != config.deflate_type)
-            && s.LastFlush != -2)
+        if ((strategy != s.Strategy || deflateType != config.deflate_type) && s.LastFlush != -2)
         {
             // Flush the last buffer:
             var err = Deflate(ref strm, ZBlock);
@@ -47,11 +47,12 @@ internal static partial class Deflater
                 {
 #if NET7_0_OR_GREATER
                     ref var refs = ref strm.DeflateRefs;
-                    if (netUnsafe.IsNullRef(ref refs.Prev)) refs.Prev = ref MemoryMarshal.GetReference(s.Prev);
+                    if (netUnsafe.IsNullRef(ref refs.Prev))
+                        refs.Prev = ref MemoryMarshal.GetReference(s.Prev);
 #endif
                     ref var prev = ref
 #if NET7_0_OR_GREATER
-                        refs.Prev;
+                    refs.Prev;
 #else
                     MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
@@ -60,7 +61,7 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
                         refs.Head
 #else
-                    MemoryMarshal.GetReference<ushort>(s.head)
+                        MemoryMarshal.GetReference<ushort>(s.head)
 #endif
                     );
                 }

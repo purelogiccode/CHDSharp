@@ -37,7 +37,7 @@ public class KeyMetadataTests : IDisposable
         {
             Tag = MetadataWriter.KeyMetadataTag,
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = keyData
+            Payload = keyData,
         };
 
         var chdPath = Path.Combine(_dir, "key.chd");
@@ -83,7 +83,7 @@ public class KeyMetadataTests : IDisposable
         {
             Tag = MetadataWriter.KeyMetadataTag,
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = keyData
+            Payload = keyData,
         };
 
         var sourcePath = Path.Combine(_dir, "source.chd");
@@ -91,7 +91,11 @@ public class KeyMetadataTests : IDisposable
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, sourcePath, options: new ChdEncodeOptions { Metadata = [keyEntry] });
+            ChdEncoder.EncodeRaw(
+                ms,
+                sourcePath,
+                options: new ChdEncodeOptions { Metadata = [keyEntry] }
+            );
         }
 
         ChdEncoder.Copy(sourcePath, copyPath);
@@ -155,14 +159,14 @@ public class KeyMetadataTests : IDisposable
             {
                 Tag = MetadataWriter.KeyMetadataTag,
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = keyData
+                Payload = keyData,
             },
             new()
             {
                 Tag = 0x54455354, // 'TEST'
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = testData
-            }
+                Payload = testData,
+            },
         };
 
         var chdPath = Path.Combine(_dir, "multi.chd");
@@ -194,14 +198,14 @@ public class KeyMetadataTests : IDisposable
             {
                 Tag = MetadataWriter.KeyMetadataTag,
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = keyData
+                Payload = keyData,
             },
             new()
             {
                 Tag = MetadataWriter.PcmciaCisMetadataTag,
                 Flags = MetadataWriter.ChdMdflagsChecksum,
-                Payload = cisData
-            }
+                Payload = cisData,
+            },
         };
 
         var chdPath = Path.Combine(_dir, "key_cis.chd");

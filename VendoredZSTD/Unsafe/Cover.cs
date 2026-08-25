@@ -13,7 +13,8 @@ public static unsafe partial class Methods
     {
         nuint sum = 0;
         uint i;
-        for (i = 0; i < nbSamples; ++i) sum += samplesSizes[i];
+        for (i = 0; i < nbSamples; ++i)
+            sum += samplesSizes[i];
 
         return sum;
     }
@@ -21,16 +22,10 @@ public static unsafe partial class Methods
     /**
      * Warns the user when their corpus is too small.
      */
-    private static void COVER_warnOnSmallCorpus(
-        nuint maxDictSize,
-        nuint nbDmers,
-        int displayLevel
-    )
+    private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers, int displayLevel)
     {
         var ratio = nbDmers / (double)maxDictSize;
-        if (ratio >= 10)
-        {
-        }
+        if (ratio >= 10) { }
     }
 
     /**
@@ -95,8 +90,7 @@ public static unsafe partial class Methods
             nuint maxSampleSize = 0;
             i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
             for (; i < nbSamples; ++i)
-                maxSampleSize =
-                    samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
+                maxSampleSize = samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
 
             dstCapacity = ZSTD_compressBound(maxSampleSize);
             dst = malloc(dstCapacity);
@@ -104,7 +98,8 @@ public static unsafe partial class Methods
 
         cctx = ZSTD_createCCtx();
         cdict = ZSTD_createCDict(dict, dictBufferCapacity, parameters.zParams.compressionLevel);
-        if (dst == null || cctx == null || cdict == null) goto _compressCleanup;
+        if (dst == null || cctx == null || cdict == null)
+            goto _compressCleanup;
 
         totalCompressedSize = dictBufferCapacity;
         i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
@@ -130,7 +125,8 @@ public static unsafe partial class Methods
         _compressCleanup:
         ZSTD_freeCCtx(cctx);
         ZSTD_freeCDict(cdict);
-        if (dst != null) free(dst);
+        if (dst != null)
+            free(dst);
 
         return totalCompressedSize;
     }
@@ -155,10 +151,12 @@ public static unsafe partial class Methods
      */
     private static void COVER_best_wait(COVER_best_s* best)
     {
-        if (best == null) return;
+        if (best == null)
+            return;
 
         SynchronizationWrapper.Enter(&best->mutex);
-        while (best->liveJobs != 0) SynchronizationWrapper.Wait(&best->mutex);
+        while (best->liveJobs != 0)
+            SynchronizationWrapper.Wait(&best->mutex);
 
         SynchronizationWrapper.Exit(&best->mutex);
     }
@@ -168,10 +166,12 @@ public static unsafe partial class Methods
      */
     private static void COVER_best_destroy(COVER_best_s* best)
     {
-        if (best == null) return;
+        if (best == null)
+            return;
 
         COVER_best_wait(best);
-        if (best->dict != null) free(best->dict);
+        if (best->dict != null)
+            free(best->dict);
 
         SynchronizationWrapper.Free(&best->mutex);
     }
@@ -182,7 +182,8 @@ public static unsafe partial class Methods
      */
     private static void COVER_best_start(COVER_best_s* best)
     {
-        if (best == null) return;
+        if (best == null)
+            return;
 
         SynchronizationWrapper.Enter(&best->mutex);
         ++best->liveJobs;
@@ -203,7 +204,8 @@ public static unsafe partial class Methods
         void* dict = selection.dictContent;
         var compressedSize = selection.totalCompressedSize;
         var dictSize = selection.dictSize;
-        if (best == null) return;
+        if (best == null)
+            return;
 
         {
             nuint liveJobs;
@@ -214,7 +216,8 @@ public static unsafe partial class Methods
             {
                 if (best->dict == null || best->dictSize < dictSize)
                 {
-                    if (best->dict != null) free(best->dict);
+                    if (best->dict != null)
+                        free(best->dict);
 
                     best->dict = malloc(dictSize);
                     if (best->dict == null)
@@ -238,7 +241,8 @@ public static unsafe partial class Methods
                 }
             }
 
-            if (liveJobs == 0) SynchronizationWrapper.PulseAll(&best->mutex);
+            if (liveJobs == 0)
+                SynchronizationWrapper.PulseAll(&best->mutex);
 
             SynchronizationWrapper.Exit(&best->mutex);
         }
@@ -399,11 +403,7 @@ public static unsafe partial class Methods
             if (totalCompressedSize <= largestCompressed * regressionTolerance)
             {
                 free(largestDictbuffer);
-                return setDictSelection(
-                    candidateDictBuffer,
-                    dictContentSize,
-                    totalCompressedSize
-                );
+                return setDictSelection(candidateDictBuffer, dictContentSize, totalCompressedSize);
             }
 
             dictContentSize *= 2;

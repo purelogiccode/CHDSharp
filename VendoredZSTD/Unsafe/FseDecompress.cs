@@ -66,7 +66,8 @@ public static unsafe partial class Methods
                     int i;
                     int n = normalizedCounter[s];
                     MEM_write64(spread + pos, sv);
-                    for (i = 8; i < n; i += 8) MEM_write64(spread + pos + i, sv);
+                    for (i = 8; i < n; i += 8)
+                        MEM_write64(spread + pos + i, sv);
 
                     pos += (nuint)n;
                 }
@@ -179,21 +180,16 @@ public static unsafe partial class Methods
         FSE_initDState(&state2, &bitD, dt);
         for (
             ;
-            BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_unfinished
-            && op < olimit;
+            BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_unfinished && op < olimit;
             op += 4
         )
         {
             op[0] =
-                fast != 0
-                    ? FSE_decodeSymbolFast(&state1, &bitD)
-                    : FSE_decodeSymbol(&state1, &bitD);
+                fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
             if ((14 - 2) * 2 + 7 > sizeof(nuint) * 8)
                 BIT_reloadDStream(&bitD);
             op[1] =
-                fast != 0
-                    ? FSE_decodeSymbolFast(&state2, &bitD)
-                    : FSE_decodeSymbol(&state2, &bitD);
+                fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
             if ((14 - 2) * 4 + 7 > sizeof(nuint) * 8)
                 if (BIT_reloadDStream(&bitD) > BIT_DStream_status.BIT_DStream_unfinished)
                 {
@@ -202,15 +198,11 @@ public static unsafe partial class Methods
                 }
 
             op[2] =
-                fast != 0
-                    ? FSE_decodeSymbolFast(&state1, &bitD)
-                    : FSE_decodeSymbol(&state1, &bitD);
+                fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
             if ((14 - 2) * 2 + 7 > sizeof(nuint) * 8)
                 BIT_reloadDStream(&bitD);
             op[3] =
-                fast != 0
-                    ? FSE_decodeSymbolFast(&state2, &bitD)
-                    : FSE_decodeSymbol(&state2, &bitD);
+                fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
         }
 
         while (true)
@@ -218,9 +210,7 @@ public static unsafe partial class Methods
             if (op > omax - 2)
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
             *op++ =
-                fast != 0
-                    ? FSE_decodeSymbolFast(&state1, &bitD)
-                    : FSE_decodeSymbol(&state1, &bitD);
+                fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
             if (BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_overflow)
             {
                 *op++ =
@@ -233,9 +223,7 @@ public static unsafe partial class Methods
             if (op > omax - 2)
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
             *op++ =
-                fast != 0
-                    ? FSE_decodeSymbolFast(&state2, &bitD)
-                    : FSE_decodeSymbol(&state2, &bitD);
+                fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
             if (BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_overflow)
             {
                 *op++ =
@@ -304,15 +292,13 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
         assert(
             (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
-            <= wkspSize
+                <= wkspSize
         );
         workSpace =
             (byte*)workSpace
             + sizeof(FSE_DecompressWksp)
             + (1 + (1 << (int)tableLog)) * sizeof(uint);
-        wkspSize -= (nuint)(
-            sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint)
-        );
+        wkspSize -= (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint));
         {
             var _var_err__ = FSE_buildDTable_internal(
                 wksp->dtable,

@@ -39,7 +39,7 @@ public static class ChdErrorExtensions
             ChdError.Chderrnoasyncoperation => "No async operation in progress",
             ChdError.Chderrunsupportedformat => "Unsupported format",
             ChdError.Chderrcannotopenfile => "Cannot open file",
-            _ => $"Unknown error ({error})"
+            _ => $"Unknown error ({error})",
         };
     }
 }

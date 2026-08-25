@@ -120,13 +120,7 @@ public unsafe class Compressor : IDisposable
         {
             var returnValue = (int)
                 Methods
-                    .ZSTD_compress2(
-                        cctx,
-                        destPtr,
-                        (nuint)dest.Length,
-                        srcPtr,
-                        (nuint)src.Length
-                    )
+                    .ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
                     .EnsureZstdSuccess();
             GC.KeepAlive(this);
             return returnValue;

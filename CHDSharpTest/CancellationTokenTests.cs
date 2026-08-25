@@ -37,7 +37,9 @@ public class CancellationTokenTests
         using (chd)
         {
             var buffer = new byte[chd!.HunkBytes];
-            Assert.Throws<OperationCanceledException>(() => chd.ReadHunk(0, buffer, CancelledToken()));
+            Assert.Throws<OperationCanceledException>(() =>
+                chd.ReadHunk(0, buffer, CancelledToken())
+            );
         }
     }
 
@@ -49,7 +51,9 @@ public class CancellationTokenTests
         using (chd)
         {
             var buffer = new byte[1024];
-            Assert.Throws<OperationCanceledException>(() => chd!.Read(0, buffer, 0, buffer.Length, CancelledToken()));
+            Assert.Throws<OperationCanceledException>(() =>
+                chd!.Read(0, buffer, 0, buffer.Length, CancelledToken())
+            );
         }
     }
 
@@ -60,7 +64,9 @@ public class CancellationTokenTests
         Assert.Equal(ChdError.Chderrnone, err);
         using (chd)
         {
-            Assert.Throws<OperationCanceledException>(() => chd!.ReadAllBytes(out _, null, CancelledToken()));
+            Assert.Throws<OperationCanceledException>(() =>
+                chd!.ReadAllBytes(out _, null, CancelledToken())
+            );
         }
     }
 
@@ -82,14 +88,21 @@ public class CancellationTokenTests
     public void Open_precancelled_token_throws()
     {
         Assert.Throws<OperationCanceledException>(() =>
-            ChdFile.Open(DataPath("v5_zlib.chd"), out _, CancelledToken()));
+            ChdFile.Open(DataPath("v5_zlib.chd"), out _, CancelledToken())
+        );
     }
 
     [Fact]
     public void Open_with_parent_precancelled_token_throws()
     {
         Assert.Throws<OperationCanceledException>(() =>
-            ChdFile.Open(DataPath("v5_child.chd"), DataPath("v5_parent.chd"), out _, CancelledToken()));
+            ChdFile.Open(
+                DataPath("v5_child.chd"),
+                DataPath("v5_parent.chd"),
+                out _,
+                CancelledToken()
+            )
+        );
     }
 
     [Fact]
@@ -104,7 +117,8 @@ public class CancellationTokenTests
     public async Task OpenAsync_precancelled_token_is_cancelled()
     {
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            ChdFile.OpenAsync(DataPath("v5_zlib.chd"), CancelledToken()));
+            ChdFile.OpenAsync(DataPath("v5_zlib.chd"), CancelledToken())
+        );
     }
 
     [Fact]
@@ -122,7 +136,8 @@ public class CancellationTokenTests
     {
         using var fs = File.OpenRead(DataPath("v5_zlib.chd"));
         Assert.Throws<OperationCanceledException>(() =>
-            Chd.CheckFile(fs, "v5_zlib.chd", true, null, CancelledToken()));
+            Chd.CheckFile(fs, "v5_zlib.chd", true, null, CancelledToken())
+        );
     }
 
     [Fact]
@@ -130,7 +145,8 @@ public class CancellationTokenTests
     {
         using var fs = File.OpenRead(DataPath("v5_zlib.chd"));
         Assert.Throws<OperationCanceledException>(() =>
-            Chd.CheckFile(fs, "v5_zlib.chd", false, null, CancelledToken()));
+            Chd.CheckFile(fs, "v5_zlib.chd", false, null, CancelledToken())
+        );
     }
 
     [Fact]
@@ -150,7 +166,8 @@ public class CancellationTokenTests
 
         using var fs = File.OpenRead(path);
         Assert.Throws<OperationCanceledException>(() =>
-            Chd.CheckFile(fs, "v5_zlib.chd", true, progress, cts.Token));
+            Chd.CheckFile(fs, "v5_zlib.chd", true, progress, cts.Token)
+        );
     }
 
     [Fact]
@@ -167,7 +184,13 @@ public class CancellationTokenTests
     public void CheckFileWithParent_precancelled_token_throws()
     {
         Assert.Throws<OperationCanceledException>(() =>
-            Chd.CheckFileWithParent(DataPath("v5_child.chd"), DataPath("v5_parent.chd"), null, CancelledToken()));
+            Chd.CheckFileWithParent(
+                DataPath("v5_child.chd"),
+                DataPath("v5_parent.chd"),
+                null,
+                CancelledToken()
+            )
+        );
     }
 
     [Fact]
@@ -191,7 +214,8 @@ public class CancellationTokenTests
             {
                 // Cancellation must propagate as OCE, not be swallowed into an error result.
                 Assert.Throws<OperationCanceledException>(() =>
-                    chd!.ExtractToDirectory(outputDir, "test", null, CancelledToken()));
+                    chd!.ExtractToDirectory(outputDir, "test", null, CancelledToken())
+                );
             }
         }
         finally
@@ -233,7 +257,8 @@ public class CancellationTokenTests
         {
             var buffer = new byte[chd!.HunkBytes];
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                chd.ReadHunkAsync(0, buffer, CancelledToken()));
+                chd.ReadHunkAsync(0, buffer, CancelledToken())
+            );
         }
     }
 
@@ -246,7 +271,8 @@ public class CancellationTokenTests
         {
             var buffer = new byte[1024];
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                chd!.ReadAsync(0, buffer, 0, buffer.Length, CancelledToken()));
+                chd!.ReadAsync(0, buffer, 0, buffer.Length, CancelledToken())
+            );
         }
     }
 }

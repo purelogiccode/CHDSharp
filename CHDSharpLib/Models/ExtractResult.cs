@@ -7,7 +7,11 @@ namespace CHDSharp.Models;
 public sealed record ExtractResult
 {
     /// <summary>Creates a new <see cref="ExtractResult" /> with the given lists and error code.</summary>
-    public ExtractResult(List<string> createdFiles, List<TrackExtractResult> trackResults, ChdError error)
+    public ExtractResult(
+        List<string> createdFiles,
+        List<TrackExtractResult> trackResults,
+        ChdError error
+    )
     {
         CreatedFiles = createdFiles;
         TrackResults = trackResults;
@@ -31,7 +35,8 @@ public sealed record ExtractResult
     public ChdError Error { get; init; }
 
     /// <summary><c>true</c> if every track and descriptor was extracted without error.</summary>
-    public bool IsCompleteSuccess => Error == ChdError.Chderrnone && TrackResults.All(t => t.IsSuccess);
+    public bool IsCompleteSuccess =>
+        Error == ChdError.Chderrnone && TrackResults.All(t => t.IsSuccess);
 
     /// <summary><c>true</c> if at least one track failed to extract.</summary>
     public bool HasTrackFailures => TrackResults.Any(t => !t.IsSuccess);

@@ -28,15 +28,19 @@ public class GdiParser
 
         // first line: track count
         var headerTokens = CdImageParser.Tokenize(lines.Length > 0 ? lines[0] : string.Empty);
-        if (headerTokens.Count == 0 ||
-            !int.TryParse(headerTokens[0], NumberStyles.None, CultureInfo.InvariantCulture, out var numTracks) ||
-            numTracks <= 0)
+        if (
+            headerTokens.Count == 0
+            || !int.TryParse(
+                headerTokens[0],
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out var numTracks
+            )
+            || numTracks <= 0
+        )
             throw new InvalidDataException("GDI header specifies no tracks");
 
-        var toc = new CdToc
-        {
-            Flags = CdTocFlags.GdRom
-        };
+        var toc = new CdToc { Flags = CdTocFlags.GdRom };
         var tracks = new CdTrack?[numTracks];
         var trackCount = 0;
 
@@ -46,15 +50,28 @@ public class GdiParser
             if (tokens.Count == 0)
                 continue;
 
-            if (!int.TryParse(tokens[0], NumberStyles.None, CultureInfo.InvariantCulture, out var trackNumber) ||
-                trackNumber < 1 || trackNumber > numTracks)
-                throw new InvalidDataException($"Track {tokens[0]} is out of expected range of 1 to {numTracks}");
+            if (
+                !int.TryParse(
+                    tokens[0],
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out var trackNumber
+                )
+                || trackNumber < 1
+                || trackNumber > numTracks
+            )
+                throw new InvalidDataException(
+                    $"Track {tokens[0]} is out of expected range of 1 to {numTracks}"
+                );
 
             if (tokens.Count != 6)
-                throw new InvalidDataException($"GDI track entry should have 6 parameters, found {tokens.Count}");
+                throw new InvalidDataException(
+                    $"GDI track entry should have 6 parameters, found {tokens.Count}"
+                );
 
             var trknum = trackNumber - 1;
-            if (tracks[trknum] != null) throw new InvalidDataException($"Track {trackNumber} defined multiple times");
+            if (tracks[trknum] != null)
+                throw new InvalidDataException($"Track {trackNumber} defined multiple times");
 
             var physframeofs = int.Parse(tokens[1], CultureInfo.InvariantCulture);
             var trktype = int.Parse(tokens[2], CultureInfo.InvariantCulture);
@@ -70,7 +87,7 @@ public class GdiParser
                 FileOffset = 0,
                 SubType = CdSubType.None,
                 SubSize = 0,
-                PgSub = CdSubType.None
+                PgSub = CdSubType.None,
             };
 
             switch (trktype)
@@ -90,7 +107,8 @@ public class GdiParser
                     break;
                 default:
                     throw new InvalidDataException(
-                        $"Unknown track type {trktype} and track size {trksize} combination encountered");
+                        $"Unknown track type {trktype} and track size {trksize} combination encountered"
+                    );
             }
 
             if (!File.Exists(fileName))
@@ -99,7 +117,9 @@ public class GdiParser
             var fileLength = new FileInfo(fileName).Length;
             var frames = fileLength / trksize;
             if (frames > int.MaxValue)
-                throw new InvalidDataException($"Track frame count ({frames}) exceeds the maximum supported value");
+                throw new InvalidDataException(
+                    $"Track frame count ({frames}) exceeds the maximum supported value"
+                );
 
             track.Frames = (int)frames;
             track.PadFrames = 0;

@@ -32,9 +32,15 @@ internal sealed class AviWriter : IDisposable
     private uint _videoFrameCount;
     private long _videoStrhLengthPos;
 
-    private AviWriter(Stream stream, uint width, uint height,
-        uint videoTimescale, uint videoSampletime,
-        uint audioChannels, uint audioSampleRate)
+    private AviWriter(
+        Stream stream,
+        uint width,
+        uint height,
+        uint videoTimescale,
+        uint videoSampletime,
+        uint audioChannels,
+        uint audioSampleRate
+    )
     {
         _stream = stream;
         _width = width;
@@ -51,25 +57,58 @@ internal sealed class AviWriter : IDisposable
         _stream.Dispose();
     }
 
-    internal static AviWriter Create(string path, uint width, uint height,
-        uint videoTimescale, uint videoSampletime,
-        uint audioChannels, uint audioSampleRate)
+    internal static AviWriter Create(
+        string path,
+        uint width,
+        uint height,
+        uint videoTimescale,
+        uint videoSampletime,
+        uint audioChannels,
+        uint audioSampleRate
+    )
     {
-        var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024);
-        var writer = new AviWriter(fs, width, height, videoTimescale, videoSampletime, audioChannels, audioSampleRate);
+        var fs = new FileStream(
+            path,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            1024 * 1024
+        );
+        var writer = new AviWriter(
+            fs,
+            width,
+            height,
+            videoTimescale,
+            videoSampletime,
+            audioChannels,
+            audioSampleRate
+        );
         writer.WriteHeaders();
         return writer;
     }
 
-    internal static AviWriter Create(Stream stream, uint width, uint height,
-        uint videoTimescale, uint videoSampletime,
-        uint audioChannels, uint audioSampleRate)
+    internal static AviWriter Create(
+        Stream stream,
+        uint width,
+        uint height,
+        uint videoTimescale,
+        uint videoSampletime,
+        uint audioChannels,
+        uint audioSampleRate
+    )
     {
         if (!stream.CanSeek)
             throw new ArgumentException("Stream must be seekable", nameof(stream));
 
-        var writer = new AviWriter(stream, width, height, videoTimescale, videoSampletime, audioChannels,
-            audioSampleRate);
+        var writer = new AviWriter(
+            stream,
+            width,
+            height,
+            videoTimescale,
+            videoSampletime,
+            audioChannels,
+            audioSampleRate
+        );
         writer.WriteHeaders();
         return writer;
     }
@@ -81,7 +120,8 @@ internal sealed class AviWriter : IDisposable
         WriteU32(Fcc00Dc);
         WriteU32((uint)yuy2Data.Length);
         _stream.Write(yuy2Data);
-        if (yuy2Data.Length % 2 != 0) _stream.WriteByte(0);
+        if (yuy2Data.Length % 2 != 0)
+            _stream.WriteByte(0);
         _index.Add((Fcc00Dc, offset, (uint)yuy2Data.Length));
         _videoFrameCount++;
     }
@@ -93,7 +133,8 @@ internal sealed class AviWriter : IDisposable
         WriteU32(Fcc01Wb);
         WriteU32((uint)pcmData.Length);
         _stream.Write(pcmData);
-        if (pcmData.Length % 2 != 0) _stream.WriteByte(0);
+        if (pcmData.Length % 2 != 0)
+            _stream.WriteByte(0);
         _index.Add((Fcc01Wb, offset, (uint)pcmData.Length));
         _audioSampleCount += sampleCount;
     }
@@ -116,7 +157,8 @@ internal sealed class AviWriter : IDisposable
         var avihStart = _stream.Position;
         WriteFourCc("avih");
         WriteU32(56);
-        var usecPerFrame = _videoTimescale > 0 ? (uint)((ulong)_videoSampletime * 1000000 / _videoTimescale) : 0;
+        var usecPerFrame =
+            _videoTimescale > 0 ? (uint)((ulong)_videoSampletime * 1000000 / _videoTimescale) : 0;
         WriteAvih(usecPerFrame);
         // avih has a fixed size of 56 bytes, frame count at offset 16
         _avihFrameCountPos = avihStart + 4 + 4 + 16; // fourcc + size + 16
@@ -175,7 +217,8 @@ internal sealed class AviWriter : IDisposable
 
     private void FinalizeFile()
     {
-        if (_finalized) return;
+        if (_finalized)
+            return;
 
         _finalized = true;
 
@@ -259,7 +302,10 @@ internal sealed class AviWriter : IDisposable
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(0), 1);
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(2), (ushort)_audioChannels);
         BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(4), _audioSampleRate);
-        BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(8), _audioSampleRate * _audioChannels * 2);
+        BinaryPrimitives.WriteUInt32LittleEndian(
+            buf.AsSpan(8),
+            _audioSampleRate * _audioChannels * 2
+        );
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(12), (ushort)(_audioChannels * 2));
         BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(14), 16);
         _stream.Write(buf);

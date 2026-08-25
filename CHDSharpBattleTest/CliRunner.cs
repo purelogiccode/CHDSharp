@@ -26,13 +26,14 @@ internal sealed class CliRunner
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
         psi.ArgumentList.Add(command);
         foreach (var a in args)
             psi.ArgumentList.Add(a);
 
-        using var p = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {ExePath}");
+        using var p =
+            Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {ExePath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
         if (!p.WaitForExit(TimeoutMs))

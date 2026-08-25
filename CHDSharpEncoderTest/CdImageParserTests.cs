@@ -9,7 +9,10 @@ public class CdImageParserTests : IDisposable
 
     public CdImageParserTests()
     {
-        _dir = Path.Combine(Path.GetTempPath(), "cd_image_parser_tests_" + Guid.NewGuid().ToString("N"));
+        _dir = Path.Combine(
+            Path.GetTempPath(),
+            "cd_image_parser_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_dir);
     }
 
@@ -78,11 +81,14 @@ public class CdImageParserTests : IDisposable
         // track 1: 100 frames at LBA 0; track 2 (audio): 50 frames at LBA 200 → 100 pad frames
         WriteFile("track01.bin", new byte[2352 * 100]);
         WriteFile("track02.raw", new byte[2352 * 50]);
-        var path = WriteFile("game.gdi", """
-                                         2
-                                         1 0 4 2352 "track01.bin" 0
-                                         2 200 0 2352 "track02.raw" 0
-                                         """);
+        var path = WriteFile(
+            "game.gdi",
+            """
+            2
+            1 0 4 2352 "track01.bin" 0
+            2 200 0 2352 "track02.raw" 0
+            """
+        );
 
         var toc = new GdiParser().Parse(path);
 
@@ -101,10 +107,13 @@ public class CdImageParserTests : IDisposable
     public void Gdi_2048Sectors_IsMode1()
     {
         WriteFile("track01.bin", new byte[2048 * 60]);
-        var path = WriteFile("game.gdi", """
-                                         1
-                                         1 0 4 2048 "track01.bin" 0
-                                         """);
+        var path = WriteFile(
+            "game.gdi",
+            """
+            1
+            1 0 4 2048 "track01.bin" 0
+            """
+        );
 
         var toc = new GdiParser().Parse(path);
 
@@ -119,12 +128,15 @@ public class CdImageParserTests : IDisposable
         WriteFile("track01.bin", new byte[2352 * 300]);
         WriteFile("track02.raw", new byte[2352 * 100]);
         WriteFile("track03.raw", new byte[2352 * 100]);
-        var path = WriteFile("game.gdi", """
-                                         3
-                                         1 0 4 2352 "track01.bin" 0
-                                         2 300 0 2352 "track02.raw" 0
-                                         3 400 0 2352 "track03.raw" 0
-                                         """);
+        var path = WriteFile(
+            "game.gdi",
+            """
+            3
+            1 0 4 2352 "track01.bin" 0
+            2 300 0 2352 "track02.raw" 0
+            3 400 0 2352 "track03.raw" 0
+            """
+        );
 
         var toc = new GdiParser().Parse(path);
 
@@ -139,10 +151,13 @@ public class CdImageParserTests : IDisposable
     public void Gdi_MissingTracks_Throws()
     {
         WriteFile("track01.bin", new byte[2352 * 10]);
-        var path = WriteFile("game.gdi", """
-                                         2
-                                         1 0 4 2352 "track01.bin" 0
-                                         """);
+        var path = WriteFile(
+            "game.gdi",
+            """
+            2
+            1 0 4 2352 "track01.bin" 0
+            """
+        );
 
         Assert.Throws<InvalidDataException>(() => new GdiParser().Parse(path));
     }
@@ -150,10 +165,13 @@ public class CdImageParserTests : IDisposable
     [Fact]
     public void Gdi_WrongParamCount_Throws()
     {
-        var path = WriteFile("game.gdi", """
-                                         1
-                                         1 0 4 2352 "track01.bin"
-                                         """);
+        var path = WriteFile(
+            "game.gdi",
+            """
+            1
+            1 0 4 2352 "track01.bin"
+            """
+        );
 
         Assert.Throws<InvalidDataException>(() => new GdiParser().Parse(path));
     }
@@ -161,10 +179,13 @@ public class CdImageParserTests : IDisposable
     [Fact]
     public void Gdi_UnknownTrackType_Throws()
     {
-        var path = WriteFile("game.gdi", """
-                                         1
-                                         1 0 3 2352 "track01.bin" 0
-                                         """);
+        var path = WriteFile(
+            "game.gdi",
+            """
+            1
+            1 0 3 2352 "track01.bin" 0
+            """
+        );
 
         Assert.Throws<InvalidDataException>(() => new GdiParser().Parse(path));
     }
@@ -172,10 +193,13 @@ public class CdImageParserTests : IDisposable
     [Fact]
     public void Gdi_MissingDataFile_Throws()
     {
-        var path = WriteFile("game.gdi", """
-                                         1
-                                         1 0 4 2352 "nope.bin" 0
-                                         """);
+        var path = WriteFile(
+            "game.gdi",
+            """
+            1
+            1 0 4 2352 "nope.bin" 0
+            """
+        );
 
         Assert.Throws<FileNotFoundException>(() => new GdiParser().Parse(path));
     }
@@ -186,10 +210,13 @@ public class CdImageParserTests : IDisposable
     public void Toc_DataTrack_WithMsfLength()
     {
         WriteFile("data.bin", new byte[2048 * 120]);
-        var path = WriteFile("disc.toc", """
-                                         TRACK MODE1
-                                         DATAFILE "data.bin" 0 01:36:00
-                                         """);
+        var path = WriteFile(
+            "disc.toc",
+            """
+            TRACK MODE1
+            DATAFILE "data.bin" 0 01:36:00
+            """
+        );
 
         var toc = new TocParser().Parse(path);
 
@@ -205,11 +232,14 @@ public class CdImageParserTests : IDisposable
     public void Toc_AudioTrack_WithStartPregap()
     {
         WriteFile("audio.wav", new byte[2352 * 50]);
-        var path = WriteFile("disc.toc", """
-                                         TRACK AUDIO
-                                         AUDIOFILE "audio.wav" 0 00:00:50
-                                         START 00:02:00
-                                         """);
+        var path = WriteFile(
+            "disc.toc",
+            """
+            TRACK AUDIO
+            AUDIOFILE "audio.wav" 0 00:00:50
+            START 00:02:00
+            """
+        );
 
         var toc = new TocParser().Parse(path);
 
@@ -224,10 +254,13 @@ public class CdImageParserTests : IDisposable
     public void Toc_SwapFlag_AndDecimalOffset()
     {
         WriteFile("data.bin", new byte[2352 * 60]);
-        var path = WriteFile("disc.toc", """
-                                         TRACK AUDIO
-                                         FILE "data.bin" SWAP #2352 00:00:59
-                                         """);
+        var path = WriteFile(
+            "disc.toc",
+            """
+            TRACK AUDIO
+            FILE "data.bin" SWAP #2352 00:00:59
+            """
+        );
 
         var toc = new TocParser().Parse(path);
 
@@ -240,10 +273,13 @@ public class CdImageParserTests : IDisposable
     public void Toc_OffsetAndLength_AreDistinguished()
     {
         WriteFile("data.bin", new byte[2352 * 100]);
-        var path = WriteFile("disc.toc", """
-                                         TRACK AUDIO
-                                         AUDIOFILE "data.bin" 00:00:10 00:00:50
-                                         """);
+        var path = WriteFile(
+            "disc.toc",
+            """
+            TRACK AUDIO
+            AUDIOFILE "data.bin" 00:00:10 00:00:50
+            """
+        );
 
         var toc = new TocParser().Parse(path);
 
@@ -255,10 +291,13 @@ public class CdImageParserTests : IDisposable
     [Fact]
     public void Toc_UnknownTrackType_Throws()
     {
-        var path = WriteFile("disc.toc", """
-                                         TRACK MYSTERY
-                                         DATAFILE "data.bin" 0 00:01:00
-                                         """);
+        var path = WriteFile(
+            "disc.toc",
+            """
+            TRACK MYSTERY
+            DATAFILE "data.bin" 0 00:01:00
+            """
+        );
 
         Assert.Throws<InvalidDataException>(() => new TocParser().Parse(path));
     }
@@ -268,7 +307,10 @@ public class CdImageParserTests : IDisposable
     [Fact]
     public void Dispatcher_Cue_RoutesToCueParser()
     {
-        var cue = WriteFile("disc.cue", "FILE \"game.bin\" BINARY\n  TRACK 01 MODE1/2352\n    INDEX 01 00:00:00\n");
+        var cue = WriteFile(
+            "disc.cue",
+            "FILE \"game.bin\" BINARY\n  TRACK 01 MODE1/2352\n    INDEX 01 00:00:00\n"
+        );
         WriteFile("game.bin", new byte[2352 * 20]);
 
         var toc = CdImageParser.Parse(cue);

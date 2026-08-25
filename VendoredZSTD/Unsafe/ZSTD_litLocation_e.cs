@@ -9,5 +9,5 @@ public enum ZSTD_litLocation_e
     ZSTD_in_dst = 1,
 
     /* Split between litExtraBuffer and dst */
-    ZSTD_split = 2
+    ZSTD_split = 2,
 }

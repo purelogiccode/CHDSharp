@@ -27,9 +27,14 @@ public static partial class Chd
     ///     is thrown if cancellation is requested.
     /// </param>
     /// <returns>A <see cref="ChdHashComputeResult" /> with the error code and hash results.</returns>
-    public static ChdHashComputeResult ComputeHashesWithReporting(string filename, ChdHashType types,
-        string? parentFilename = null, bool perTrack = false, IProgress<ChdProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public static ChdHashComputeResult ComputeHashesWithReporting(
+        string filename,
+        ChdHashType types,
+        string? parentFilename = null,
+        bool perTrack = false,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentException.ThrowIfNullOrEmpty(filename);
         if (types == ChdHashType.None)
@@ -61,8 +66,15 @@ public static partial class Chd
             foreach (var (track, offset, length) in regions)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var hashResult = HashRegionWithReporting(chd, offset, (ulong)length, types, track, progress,
-                    cancellationToken);
+                var hashResult = HashRegionWithReporting(
+                    chd,
+                    offset,
+                    (ulong)length,
+                    types,
+                    track,
+                    progress,
+                    cancellationToken
+                );
                 if (hashResult.Error != ChdError.Chderrnone)
                     return new ChdHashComputeResult(hashResult.Error, []);
 
@@ -99,28 +111,49 @@ public static partial class Chd
     ///     Empty when <paramref name="types" /> is <see cref="ChdHashType.None" />.
     /// </returns>
     /// <exception cref="InvalidDataException">The CHD cannot be opened or a hunk fails to decompress.</exception>
-    public static IReadOnlyList<ChdHashResult> ComputeHashes(string filename, ChdHashType types,
-        string? parentFilename = null, bool perTrack = false, IProgress<ChdProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public static IReadOnlyList<ChdHashResult> ComputeHashes(
+        string filename,
+        ChdHashType types,
+        string? parentFilename = null,
+        bool perTrack = false,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        var result = ComputeHashesWithReporting(filename, types, parentFilename, perTrack, progress, cancellationToken);
+        var result = ComputeHashesWithReporting(
+            filename,
+            types,
+            parentFilename,
+            perTrack,
+            progress,
+            cancellationToken
+        );
         if (result.Error != ChdError.Chderrnone)
             throw new InvalidDataException(
-                $"Cannot open CHD '{filename}' ({result.Error.GetMessage()} ({result.Error}))");
+                $"Cannot open CHD '{filename}' ({result.Error.GetMessage()} ({result.Error}))"
+            );
 
         return result.Results;
     }
 
-    private static (ChdError Error, ChdHashResult? Result) HashRegionWithReporting(ChdFile chd, ulong offset,
-        ulong length, ChdHashType types,
-        int? trackNumber, IProgress<ChdProgress>? progress, CancellationToken cancellationToken)
+    private static (ChdError Error, ChdHashResult? Result) HashRegionWithReporting(
+        ChdFile chd,
+        ulong offset,
+        ulong length,
+        ChdHashType types,
+        int? trackNumber,
+        IProgress<ChdProgress>? progress,
+        CancellationToken cancellationToken
+    )
     {
-        using var sha1 = (types & ChdHashType.Sha1) != ChdHashType.None
-            ? IncrementalHash.CreateHash(HashAlgorithmName.SHA1)
-            : null;
-        using var sha256 = (types & ChdHashType.Sha256) != ChdHashType.None
-            ? IncrementalHash.CreateHash(HashAlgorithmName.SHA256)
-            : null;
+        using var sha1 =
+            (types & ChdHashType.Sha1) != ChdHashType.None
+                ? IncrementalHash.CreateHash(HashAlgorithmName.SHA1)
+                : null;
+        using var sha256 =
+            (types & ChdHashType.Sha256) != ChdHashType.None
+                ? IncrementalHash.CreateHash(HashAlgorithmName.SHA256)
+                : null;
         var crc32 = (types & ChdHashType.Crc32) != ChdHashType.None ? new Crc32() : null;
         var xxh3 = (types & ChdHashType.Xxh3) != ChdHashType.None ? new XxHash3() : null;
 
@@ -143,21 +176,28 @@ public static partial class Chd
             offset += (ulong)chunk;
             remaining -= (ulong)chunk;
 
-            progress?.Report(new ChdProgress(
-                (uint)((length - remaining) / chd.HunkBytes),
-                (uint)((length + chd.HunkBytes - 1) / chd.HunkBytes),
-                (long)(length - remaining),
-                (long)length,
-                sw!.Elapsed));
+            progress?.Report(
+                new ChdProgress(
+                    (uint)((length - remaining) / chd.HunkBytes),
+                    (uint)((length + chd.HunkBytes - 1) / chd.HunkBytes),
+                    (long)(length - remaining),
+                    (long)length,
+                    sw!.Elapsed
+                )
+            );
         }
 
-        return (ChdError.Chderrnone, new ChdHashResult(
-            trackNumber,
-            offset - length,
-            (long)length,
-            types.HasFlag(ChdHashType.Sha1) ? sha1!.GetHashAndReset() : null,
-            types.HasFlag(ChdHashType.Sha256) ? sha256!.GetHashAndReset() : null,
-            types.HasFlag(ChdHashType.Crc32) ? crc32!.GetCurrentHashAsUInt32() : null,
-            types.HasFlag(ChdHashType.Xxh3) ? xxh3!.GetCurrentHashAsUInt64() : null));
+        return (
+            ChdError.Chderrnone,
+            new ChdHashResult(
+                trackNumber,
+                offset - length,
+                (long)length,
+                types.HasFlag(ChdHashType.Sha1) ? sha1!.GetHashAndReset() : null,
+                types.HasFlag(ChdHashType.Sha256) ? sha256!.GetHashAndReset() : null,
+                types.HasFlag(ChdHashType.Crc32) ? crc32!.GetCurrentHashAsUInt32() : null,
+                types.HasFlag(ChdHashType.Xxh3) ? xxh3!.GetCurrentHashAsUInt64() : null
+            )
+        );
     }
 }

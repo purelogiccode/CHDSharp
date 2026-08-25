@@ -40,7 +40,10 @@ internal class BitStreamOut
     {
         ArgumentNullException.ThrowIfNull(buffer);
         if (offset < 0 || length < 0 || offset + length > buffer.Length)
-            throw new ArgumentOutOfRangeException(nameof(offset), "offset/length fall outside the supplied buffer");
+            throw new ArgumentOutOfRangeException(
+                nameof(offset),
+                "offset/length fall outside the supplied buffer"
+            );
 
         _buffer = buffer;
         _baseOffset = offset;
@@ -122,7 +125,8 @@ internal class BitStreamOut
     {
         if (_fixedLimit.HasValue)
         {
-            if (ByteLength < _fixedLimit.Value) _buffer[_baseOffset + ByteLength] = b;
+            if (ByteLength < _fixedLimit.Value)
+                _buffer[_baseOffset + ByteLength] = b;
         }
         else
         {
@@ -139,7 +143,8 @@ internal class BitStreamOut
             return;
 
         var newSize = _buffer.Length * 2;
-        if (newSize < _buffer.Length + 256) newSize = _buffer.Length + 256;
+        if (newSize < _buffer.Length + 256)
+            newSize = _buffer.Length + 256;
 
         Array.Resize(ref _buffer, newSize);
     }

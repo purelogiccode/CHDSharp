@@ -40,7 +40,8 @@ internal class Crc8
     internal byte ComputeChecksum(byte[] bytes, int pos, int count)
     {
         ushort crc = 0;
-        for (var i = pos; i < pos + count; i++) crc = Table[crc ^ bytes[i]];
+        for (var i = pos; i < pos + count; i++)
+            crc = Table[crc ^ bytes[i]];
 
         return (byte)crc;
     }
@@ -55,7 +56,8 @@ internal class Crc8
     internal unsafe byte ComputeChecksum(byte* bytes, int pos, int count)
     {
         ushort crc = 0;
-        for (var i = pos; i < pos + count; i++) crc = Table[crc ^ bytes[i]];
+        for (var i = pos; i < pos + count; i++)
+            crc = Table[crc ^ bytes[i]];
 
         return (byte)crc;
     }

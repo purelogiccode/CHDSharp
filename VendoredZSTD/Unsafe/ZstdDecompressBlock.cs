@@ -20,7 +20,8 @@ public static unsafe partial class Methods
      *  Provides the size of compressed block from block header `src` */
     private static nuint ZSTD_getcBlockSize(void* src, nuint srcSize, blockProperties_t* bpPtr)
     {
-        if (srcSize < ZSTD_blockHeaderSize) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (srcSize < ZSTD_blockHeaderSize)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
         {
             var cBlockHeader = MEM_readLE24(src);
@@ -120,7 +121,8 @@ public static unsafe partial class Methods
         streaming_operation streaming
     )
     {
-        if (srcSize < 1 + 1) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        if (srcSize < 1 + 1)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
         {
             var istart = (byte*)src;
@@ -140,202 +142,195 @@ public static unsafe partial class Methods
                             (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
                         );
 
-                {
-                    nuint lhSize,
-                        litSize,
-                        litCSize;
-                    uint singleStream = 0;
-                    var lhlCode = (uint)((istart[0] >> 2) & 3);
-                    var lhc = MEM_readLE32(istart);
-                    nuint hufSuccess;
-                    var expectedWriteSize = 1 << 17 < dstCapacity ? 1 << 17 : dstCapacity;
-                    var flags =
-                        0
-                        | (
-                            ZSTD_DCtx_get_bmi2(dctx) != 0
-                                ? (int)HUF_flags_e.HUF_flags_bmi2
-                                : 0
-                        )
-                        | (
-                            dctx->disableHufAsm != 0
-                                ? (int)HUF_flags_e.HUF_flags_disableAsm
-                                : 0
-                        );
-                    switch (lhlCode)
                     {
-                        case 0:
-                        case 1:
-                        default:
-                            singleStream = lhlCode == 0 ? 1U : 0U;
-                            lhSize = 3;
-                            litSize = (lhc >> 4) & 0x3FF;
-                            litCSize = (lhc >> 14) & 0x3FF;
-                            break;
-                        case 2:
-                            lhSize = 4;
-                            litSize = (lhc >> 4) & 0x3FFF;
-                            litCSize = lhc >> 18;
-                            break;
-                        case 3:
-                            lhSize = 5;
-                            litSize = (lhc >> 4) & 0x3FFFF;
-                            litCSize = (lhc >> 22) + ((nuint)istart[4] << 10);
-                            break;
-                    }
+                        nuint lhSize,
+                            litSize,
+                            litCSize;
+                        uint singleStream = 0;
+                        var lhlCode = (uint)((istart[0] >> 2) & 3);
+                        var lhc = MEM_readLE32(istart);
+                        nuint hufSuccess;
+                        var expectedWriteSize = 1 << 17 < dstCapacity ? 1 << 17 : dstCapacity;
+                        var flags =
+                            0
+                            | (ZSTD_DCtx_get_bmi2(dctx) != 0 ? (int)HUF_flags_e.HUF_flags_bmi2 : 0)
+                            | (
+                                dctx->disableHufAsm != 0 ? (int)HUF_flags_e.HUF_flags_disableAsm : 0
+                            );
+                        switch (lhlCode)
+                        {
+                            case 0:
+                            case 1:
+                            default:
+                                singleStream = lhlCode == 0 ? 1U : 0U;
+                                lhSize = 3;
+                                litSize = (lhc >> 4) & 0x3FF;
+                                litCSize = (lhc >> 14) & 0x3FF;
+                                break;
+                            case 2:
+                                lhSize = 4;
+                                litSize = (lhc >> 4) & 0x3FFF;
+                                litCSize = lhc >> 18;
+                                break;
+                            case 3:
+                                lhSize = 5;
+                                litSize = (lhc >> 4) & 0x3FFFF;
+                                litCSize = (lhc >> 22) + ((nuint)istart[4] << 10);
+                                break;
+                        }
 
-                    if (litSize > 0 && dst == null)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
-
-                    if (litSize > 1 << 17)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                        );
-
-                    if (singleStream == 0)
-                        if (litSize < 6)
+                        if (litSize > 0 && dst == null)
                             return unchecked(
-                                (nuint)(
-                                    -(int)ZSTD_ErrorCode.ZSTD_error_literals_headerWrong
-                                )
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
                             );
 
-                    if (litCSize + lhSize > srcSize)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                        );
+                        if (litSize > 1 << 17)
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                            );
 
-                    if (expectedWriteSize < litSize)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        if (singleStream == 0)
+                            if (litSize < 6)
+                                return unchecked(
+                                    (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_literals_headerWrong)
+                                );
 
-                    ZSTD_allocateLiteralsBuffer(
-                        dctx,
-                        dst,
-                        dstCapacity,
-                        litSize,
-                        streaming,
-                        expectedWriteSize,
-                        0
-                    );
-                    if (dctx->ddictIsCold != 0 && litSize > 768)
-                    {
-                        var _ptr = (sbyte*)dctx->HUFptr;
-                        const nuint _size = sizeof(uint) * 4097;
-                        nuint _pos;
-                        for (_pos = 0; _pos < _size; _pos += 64)
+                        if (litCSize + lhSize > srcSize)
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                            );
+
+                        if (expectedWriteSize < litSize)
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
+                            );
+
+                        ZSTD_allocateLiteralsBuffer(
+                            dctx,
+                            dst,
+                            dstCapacity,
+                            litSize,
+                            streaming,
+                            expectedWriteSize,
+                            0
+                        );
+                        if (dctx->ddictIsCold != 0 && litSize > 768)
                         {
+                            var _ptr = (sbyte*)dctx->HUFptr;
+                            const nuint _size = sizeof(uint) * 4097;
+                            nuint _pos;
+                            for (_pos = 0; _pos < _size; _pos += 64)
+                            {
 #if NETCOREAPP3_0_OR_GREATER
-                            if (Sse.IsSupported) Sse.Prefetch1(_ptr + _pos);
+                                if (Sse.IsSupported)
+                                    Sse.Prefetch1(_ptr + _pos);
 #endif
+                            }
                         }
-                    }
 
-                    if (litEncType == symbolEncodingType_e.set_repeat)
-                    {
-                        if (singleStream != 0)
+                        if (litEncType == symbolEncodingType_e.set_repeat)
                         {
-                            hufSuccess = HUF_decompress1X_usingDTable(
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->HUFptr,
-                                flags
-                            );
+                            if (singleStream != 0)
+                            {
+                                hufSuccess = HUF_decompress1X_usingDTable(
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->HUFptr,
+                                    flags
+                                );
+                            }
+                            else
+                            {
+                                assert(litSize >= 6);
+                                hufSuccess = HUF_decompress4X_usingDTable(
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->HUFptr,
+                                    flags
+                                );
+                            }
                         }
                         else
                         {
-                            assert(litSize >= 6);
-                            hufSuccess = HUF_decompress4X_usingDTable(
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->HUFptr,
-                                flags
-                            );
+                            if (singleStream != 0)
+                                hufSuccess = HUF_decompress1X1_DCtx_wksp(
+                                    dctx->entropy.hufTable,
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->workspace,
+                                    sizeof(uint) * 640,
+                                    flags
+                                );
+                            else
+                                hufSuccess = HUF_decompress4X_hufOnly_wksp(
+                                    dctx->entropy.hufTable,
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->workspace,
+                                    sizeof(uint) * 640,
+                                    flags
+                                );
                         }
-                    }
-                    else
-                    {
-                        if (singleStream != 0)
-                            hufSuccess = HUF_decompress1X1_DCtx_wksp(
-                                dctx->entropy.hufTable,
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->workspace,
-                                sizeof(uint) * 640,
-                                flags
+
+                        if (dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_split)
+                        {
+                            memcpy(
+                                dctx->litExtraBuffer,
+                                dctx->litBufferEnd
+                                    - (
+                                        1 << 16 <= 64 ? 64
+                                        : 1 << 16 <= 128 << 10 ? 1 << 16
+                                        : 128 << 10
+                                    ),
+                                1 << 16 <= 64 ? 64
+                                    : 1 << 16 <= 128 << 10 ? 1 << 16
+                                    : 128 << 10
                             );
-                        else
-                            hufSuccess = HUF_decompress4X_hufOnly_wksp(
-                                dctx->entropy.hufTable,
+                            memmove(
+                                dctx->litBuffer
+                                    + (
+                                        1 << 16 <= 64 ? 64
+                                        : 1 << 16 <= 128 << 10 ? 1 << 16
+                                        : 128 << 10
+                                    )
+                                    - 32,
                                 dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->workspace,
-                                sizeof(uint) * 640,
-                                flags
+                                litSize
+                                    - (
+                                        1 << 16 <= 64 ? 64
+                                        : 1 << 16 <= 128 << 10 ? 1 << 16
+                                        : 128 << 10
+                                    )
                             );
+                            dctx->litBuffer +=
+                                (
+                                    1 << 16 <= 64 ? 64
+                                    : 1 << 16 <= 128 << 10 ? 1 << 16
+                                    : 128 << 10
+                                ) - 32;
+                            dctx->litBufferEnd -= 32;
+                        }
+
+                        if (ERR_isError(hufSuccess))
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                            );
+
+                        dctx->litPtr = dctx->litBuffer;
+                        dctx->litSize = litSize;
+                        dctx->litEntropy = 1;
+                        if (litEncType == symbolEncodingType_e.set_compressed)
+                            dctx->HUFptr = dctx->entropy.hufTable;
+                        return litCSize + lhSize;
                     }
-
-                    if (dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_split)
-                    {
-                        memcpy(
-                            dctx->litExtraBuffer,
-                            dctx->litBufferEnd
-                            - (
-                                1 << 16 <= 64 ? 64
-                                : 1 << 16 <= 128 << 10 ? 1 << 16
-                                : 128 << 10
-                            ),
-                            1 << 16 <= 64 ? 64
-                            : 1 << 16 <= 128 << 10 ? 1 << 16
-                            : 128 << 10
-                        );
-                        memmove(
-                            dctx->litBuffer
-                            + (
-                                1 << 16 <= 64 ? 64
-                                : 1 << 16 <= 128 << 10 ? 1 << 16
-                                : 128 << 10
-                            )
-                            - 32,
-                            dctx->litBuffer,
-                            litSize
-                            - (
-                                1 << 16 <= 64 ? 64
-                                : 1 << 16 <= 128 << 10 ? 1 << 16
-                                : 128 << 10
-                            )
-                        );
-                        dctx->litBuffer +=
-                        (
-                            1 << 16 <= 64 ? 64
-                            : 1 << 16 <= 128 << 10 ? 1 << 16
-                            : 128 << 10
-                        ) - 32;
-                        dctx->litBufferEnd -= 32;
-                    }
-
-                    if (ERR_isError(hufSuccess))
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                        );
-
-                    dctx->litPtr = dctx->litBuffer;
-                    dctx->litSize = litSize;
-                    dctx->litEntropy = 1;
-                    if (litEncType == symbolEncodingType_e.set_compressed)
-                        dctx->HUFptr = dctx->entropy.hufTable;
-                    return litCSize + lhSize;
-                }
 
                 case symbolEncodingType_e.set_basic:
                 {
@@ -367,14 +362,10 @@ public static unsafe partial class Methods
                     }
 
                     if (litSize > 0 && dst == null)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
                     if (expectedWriteSize < litSize)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
                     ZSTD_allocateLiteralsBuffer(
                         dctx,
@@ -409,16 +400,16 @@ public static unsafe partial class Methods
                             memcpy(
                                 dctx->litExtraBuffer,
                                 istart
-                                + lhSize
-                                + litSize
-                                - (
-                                    1 << 16 <= 64 ? 64
+                                    + lhSize
+                                    + litSize
+                                    - (
+                                        1 << 16 <= 64 ? 64
+                                        : 1 << 16 <= 128 << 10 ? 1 << 16
+                                        : 128 << 10
+                                    ),
+                                1 << 16 <= 64 ? 64
                                     : 1 << 16 <= 128 << 10 ? 1 << 16
                                     : 128 << 10
-                                ),
-                                1 << 16 <= 64 ? 64
-                                : 1 << 16 <= 128 << 10 ? 1 << 16
-                                : 128 << 10
                             );
                         }
                         else
@@ -473,9 +464,7 @@ public static unsafe partial class Methods
                     }
 
                     if (litSize > 0 && dst == null)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
                     if (litSize > 1 << 17)
                         return unchecked(
@@ -483,9 +472,7 @@ public static unsafe partial class Methods
                         );
 
                     if (expectedWriteSize < litSize)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
                     ZSTD_allocateLiteralsBuffer(
                         dctx,
@@ -514,8 +501,8 @@ public static unsafe partial class Methods
                             dctx->litExtraBuffer,
                             istart[lhSize],
                             1 << 16 <= 64 ? 64
-                            : 1 << 16 <= 128 << 10 ? 1 << 16
-                            : 128 << 10
+                                : 1 << 16 <= 128 << 10 ? 1 << 16
+                                : 128 << 10
                         );
                     }
                     else
@@ -530,9 +517,7 @@ public static unsafe partial class Methods
 
                 default:
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
             }
         }
@@ -605,7 +590,7 @@ public static unsafe partial class Methods
             new(0, 16, 6, 65536),
             new(0, 15, 6, 32768),
             new(0, 14, 6, 16384),
-            new(0, 13, 6, 8192)
+            new(0, 13, 6, 8192),
         }
     );
 
@@ -617,94 +602,34 @@ public static unsafe partial class Methods
             new(0, 6, 4, 61),
             new(0, 9, 5, 509),
             new(0, 15, 5, 32765),
-            new(
-                0,
-                21,
-                5,
-                2097149
-            ),
+            new(0, 21, 5, 2097149),
             new(0, 3, 5, 5),
             new(0, 7, 4, 125),
             new(0, 12, 5, 4093),
-            new(
-                0,
-                18,
-                5,
-                262141
-            ),
-            new(
-                0,
-                23,
-                5,
-                8388605
-            ),
+            new(0, 18, 5, 262141),
+            new(0, 23, 5, 8388605),
             new(0, 5, 5, 29),
             new(0, 8, 4, 253),
             new(0, 14, 5, 16381),
-            new(
-                0,
-                20,
-                5,
-                1048573
-            ),
+            new(0, 20, 5, 1048573),
             new(0, 2, 5, 1),
             new(16, 7, 4, 125),
             new(0, 11, 5, 2045),
-            new(
-                0,
-                17,
-                5,
-                131069
-            ),
-            new(
-                0,
-                22,
-                5,
-                4194301
-            ),
+            new(0, 17, 5, 131069),
+            new(0, 22, 5, 4194301),
             new(0, 4, 5, 13),
             new(16, 8, 4, 253),
             new(0, 13, 5, 8189),
-            new(
-                0,
-                19,
-                5,
-                524285
-            ),
+            new(0, 19, 5, 524285),
             new(0, 1, 5, 1),
             new(16, 6, 4, 61),
             new(0, 10, 5, 1021),
             new(0, 16, 5, 65533),
-            new(
-                0,
-                28,
-                5,
-                268435453
-            ),
-            new(
-                0,
-                27,
-                5,
-                134217725
-            ),
-            new(
-                0,
-                26,
-                5,
-                67108861
-            ),
-            new(
-                0,
-                25,
-                5,
-                33554429
-            ),
-            new(
-                0,
-                24,
-                5,
-                16777213
-            )
+            new(0, 28, 5, 268435453),
+            new(0, 27, 5, 134217725),
+            new(0, 26, 5, 67108861),
+            new(0, 25, 5, 33554429),
+            new(0, 24, 5, 16777213),
         }
     );
 
@@ -775,15 +700,11 @@ public static unsafe partial class Methods
             new(0, 13, 6, 8195),
             new(0, 12, 6, 4099),
             new(0, 11, 6, 2051),
-            new(0, 10, 6, 1027)
+            new(0, 10, 6, 1027),
         }
     );
 
-    private static void ZSTD_buildSeqTable_rle(
-        ZSTD_seqSymbol* dt,
-        uint baseValue,
-        byte nbAddBits
-    )
+    private static void ZSTD_buildSeqTable_rle(ZSTD_seqSymbol* dt, uint baseValue, byte nbAddBits)
     {
         void* ptr = dt;
         var DTableH = (ZSTD_seqSymbol_header*)ptr;
@@ -862,7 +783,8 @@ public static unsafe partial class Methods
                     int i;
                     int n = normalizedCounter[s];
                     MEM_write64(spread + pos, sv);
-                    for (i = 8; i < n; i += 8) MEM_write64(spread + pos + i, sv);
+                    for (i = 8; i < n; i += 8)
+                        MEM_write64(spread + pos + i, sv);
 
                     assert(n >= 0);
                     pos += (nuint)n;
@@ -1010,19 +932,18 @@ public static unsafe partial class Methods
         switch (type)
         {
             case symbolEncodingType_e.set_rle:
-                if (srcSize == 0) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                if (srcSize == 0)
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
                 if (*(byte*)src > max)
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
-            {
-                uint symbol = *(byte*)src;
-                var baseline = baseValue[symbol];
-                var nbBits = nbAdditionalBits[symbol];
-                ZSTD_buildSeqTable_rle(DTableSpace, baseline, nbBits);
-            }
+                {
+                    uint symbol = *(byte*)src;
+                    var baseline = baseValue[symbol];
+                    var nbBits = nbAdditionalBits[symbol];
+                    ZSTD_buildSeqTable_rle(DTableSpace, baseline, nbBits);
+                }
 
                 *DTablePtr = DTableSpace;
                 return 1;
@@ -1031,9 +952,7 @@ public static unsafe partial class Methods
                 return 0;
             case symbolEncodingType_e.set_repeat:
                 if (flagRepeatTable == 0)
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
                 if (ddictIsCold != 0 && nbSeq > 24)
                 {
@@ -1046,7 +965,8 @@ public static unsafe partial class Methods
                         for (_pos = 0; _pos < _size; _pos += 64)
                         {
 #if NETCOREAPP3_0_OR_GREATER
-                            if (Sse.IsSupported) Sse.Prefetch1(_ptr + _pos);
+                            if (Sse.IsSupported)
+                                Sse.Prefetch1(_ptr + _pos);
 #endif
                         }
                     }
@@ -1059,14 +979,10 @@ public static unsafe partial class Methods
                 var norm = stackalloc short[53];
                 var headerSize = FSE_readNCount(norm, &max, &tableLog, src, srcSize);
                 if (ERR_isError(headerSize))
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
                 if (tableLog > maxLog)
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
                 ZSTD_buildFSETable(
                     DTableSpace,
@@ -1086,9 +1002,9 @@ public static unsafe partial class Methods
             default:
                 assert(0 != 0);
 
-            {
-                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-            }
+                {
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                }
         }
     }
 
@@ -1106,13 +1022,15 @@ public static unsafe partial class Methods
         var iend = istart + srcSize;
         var ip = istart;
         int nbSeq;
-        if (srcSize < 1) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (srcSize < 1)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
         nbSeq = *ip++;
         if (nbSeq == 0)
         {
             *nbSeqPtr = 0;
-            if (srcSize != 1) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            if (srcSize != 1)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
             return 1;
         }
@@ -1121,21 +1039,24 @@ public static unsafe partial class Methods
         {
             if (nbSeq == 0xFF)
             {
-                if (ip + 2 > iend) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                if (ip + 2 > iend)
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
                 nbSeq = MEM_readLE16(ip) + 0x7F00;
                 ip += 2;
             }
             else
             {
-                if (ip >= iend) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+                if (ip >= iend)
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
                 nbSeq = ((nbSeq - 0x80) << 8) + *ip++;
             }
         }
 
         *nbSeqPtr = nbSeq;
-        if (ip + 1 > iend) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (ip + 1 > iend)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
         {
             var LLtype = (symbolEncodingType_e)(*ip >> 6);
@@ -1162,9 +1083,7 @@ public static unsafe partial class Methods
                     ZSTD_DCtx_get_bmi2(dctx)
                 );
                 if (ERR_isError(llhSize))
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
                 ip += llhSize;
             }
@@ -1189,9 +1108,7 @@ public static unsafe partial class Methods
                     ZSTD_DCtx_get_bmi2(dctx)
                 );
                 if (ERR_isError(ofhSize))
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
                 ip += ofhSize;
             }
@@ -1216,9 +1133,7 @@ public static unsafe partial class Methods
                     ZSTD_DCtx_get_bmi2(dctx)
                 );
                 if (ERR_isError(mlhSize))
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
                 ip += mlhSize;
             }
@@ -1231,25 +1146,25 @@ public static unsafe partial class Methods
     private static ReadOnlySpan<uint> Span_dec32table => new uint[8] { 0, 1, 2, 1, 4, 4, 4, 4 };
     private static uint* dec32table =>
         (uint*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_dec32table)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_dec32table)
+            );
 #else
-        private static readonly uint* dec32table = GetArrayPointer(
-            new uint[8] { 0, 1, 2, 1, 4, 4, 4, 4 }
-        );
+    private static readonly uint* dec32table = GetArrayPointer(
+        new uint[8] { 0, 1, 2, 1, 4, 4, 4, 4 }
+    );
 #endif
 #if NET8_0_OR_GREATER
     private static ReadOnlySpan<int> Span_dec64table => new int[8] { 8, 8, 8, 7, 8, 9, 10, 11 };
     private static int* dec64table =>
         (int*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_dec64table)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_dec64table)
+            );
 #else
-        private static readonly int* dec64table = GetArrayPointer(
-            new int[8] { 8, 8, 8, 7, 8, 9, 10, 11 }
-        );
+    private static readonly int* dec64table = GetArrayPointer(
+        new int[8] { 8, 8, 8, 7, 8, 9, 10, 11 }
+    );
 #endif
     /*! ZSTD_overlapCopy8() :
      *  Copies 8 bytes from ip to op and updates op and ip where ip <= op.
@@ -1305,9 +1220,8 @@ public static unsafe partial class Methods
         var diff = (nint)(op - ip);
         var oend = op + length;
         assert(
-            (ovtype == ZSTD_overlap_e.ZSTD_no_overlap
-             && (diff <= -8 || diff >= 8 || op >= oend_w))
-            || (ovtype == ZSTD_overlap_e.ZSTD_overlap_src_before_dst && diff >= 0)
+            (ovtype == ZSTD_overlap_e.ZSTD_no_overlap && (diff <= -8 || diff >= 8 || op >= oend_w))
+                || (ovtype == ZSTD_overlap_e.ZSTD_overlap_src_before_dst && diff >= 0)
         );
         if (length < 8)
         {
@@ -1541,7 +1455,7 @@ public static unsafe partial class Methods
                 {
                     litLength = sequence_litLength,
                     matchLength = sequence_matchLength,
-                    offset = sequence_offset
+                    offset = sequence_offset,
                 },
                 litPtr,
                 litLimit,
@@ -1594,12 +1508,7 @@ public static unsafe partial class Methods
         assert(sequence_matchLength >= 1);
         if (sequence_offset >= 16)
         {
-            ZSTD_wildcopy(
-                op,
-                match,
-                (nint)sequence_matchLength,
-                ZSTD_overlap_e.ZSTD_no_overlap
-            );
+            ZSTD_wildcopy(op, match, (nint)sequence_matchLength, ZSTD_overlap_e.ZSTD_no_overlap);
             return sequenceLength;
         }
 
@@ -1701,12 +1610,7 @@ public static unsafe partial class Methods
         assert(sequence.matchLength >= 1);
         if (sequence.offset >= 16)
         {
-            ZSTD_wildcopy(
-                op,
-                match,
-                (nint)sequence.matchLength,
-                ZSTD_overlap_e.ZSTD_no_overlap
-            );
+            ZSTD_wildcopy(op, match, (nint)sequence.matchLength, ZSTD_overlap_e.ZSTD_no_overlap);
             return sequenceLength;
         }
 
@@ -1753,10 +1657,7 @@ public static unsafe partial class Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
-    private static seq_t ZSTD_decodeSequence(
-        seqState_t* seqState,
-        ZSTD_longOffset_e longOffsets
-    )
+    private static seq_t ZSTD_decodeSequence(seqState_t* seqState, ZSTD_longOffset_e longOffsets)
     {
         seq_t seq;
         var llDInfo = seqState->stateLL.table + seqState->stateLL.state;
@@ -1848,18 +1749,8 @@ public static unsafe partial class Methods
                 seq.litLength += BIT_readBitsFast(&seqState->DStream, llBits);
             if (MEM_32bits)
                 BIT_reloadDStream(&seqState->DStream);
-            ZSTD_updateFseStateWithDInfo(
-                &seqState->stateLL,
-                &seqState->DStream,
-                llNext,
-                llnbBits
-            );
-            ZSTD_updateFseStateWithDInfo(
-                &seqState->stateML,
-                &seqState->DStream,
-                mlNext,
-                mlnbBits
-            );
+            ZSTD_updateFseStateWithDInfo(&seqState->stateLL, &seqState->DStream, llNext, llnbBits);
+            ZSTD_updateFseStateWithDInfo(&seqState->stateML, &seqState->DStream, mlNext, mlnbBits);
             if (MEM_32bits)
                 BIT_reloadDStream(&seqState->DStream);
             ZSTD_updateFseStateWithDInfo(
@@ -1914,7 +1805,7 @@ public static unsafe partial class Methods
             assert(dst != null);
             {
                 var sequence = ZSTD_decodeSequence(&seqState, isLongOffset);
-                for (; litPtr + sequence.litLength <= dctx->litBufferEnd;)
+                for (; litPtr + sequence.litLength <= dctx->litBufferEnd; )
                 {
                     var oneSeqSize = ZSTD_execSequenceSplitLitBuffer(
                         op,
@@ -1981,7 +1872,7 @@ public static unsafe partial class Methods
             }
 
             if (nbSeq > 0)
-                for (;;)
+                for (; ; )
                 {
                     var sequence = ZSTD_decodeSequence(&seqState, isLongOffset);
                     var oneSeqSize = ZSTD_execSequence(
@@ -2002,7 +1893,8 @@ public static unsafe partial class Methods
                     BIT_reloadDStream(&seqState.DStream);
                 }
 
-            if (nbSeq != 0) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            if (nbSeq != 0)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
             if (BIT_reloadDStream(&seqState.DStream) < BIT_DStream_status.BIT_DStream_completed)
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
@@ -2088,10 +1980,8 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
-                    System.Runtime.CompilerServices.Unsafe.Add(
-                        ref seqState.prevOffset.e0,
-                        (int)i
-                    ) = dctx->entropy.rep[i];
+                    System.Runtime.CompilerServices.Unsafe.Add(ref seqState.prevOffset.e0, (int)i) =
+                        dctx->entropy.rep[i];
             }
 
             if (ERR_isError(BIT_initDStream(ref seqState.DStream, ip, (nuint)(iend - ip))))
@@ -2101,7 +1991,7 @@ public static unsafe partial class Methods
             ZSTD_initFseState(ref seqState.stateOffb, ref seqState.DStream, dctx->OFTptr);
             ZSTD_initFseState(ref seqState.stateML, ref seqState.DStream, dctx->MLTptr);
             assert(dst != null);
-            for (;;)
+            for (; ; )
             {
                 nuint sequence_litLength;
                 nuint sequence_matchLength;
@@ -2139,18 +2029,15 @@ public static unsafe partial class Methods
                                 offset =
                                     ofBase
                                     + (
-                                        BIT_readBitsFast(
-                                            ref seqState.DStream,
-                                            ofBits - extraBits
-                                        ) << (int)extraBits
+                                        BIT_readBitsFast(ref seqState.DStream, ofBits - extraBits)
+                                        << (int)extraBits
                                     );
                                 BIT_reloadDStream(ref seqState.DStream);
                                 offset += BIT_readBitsFast(ref seqState.DStream, extraBits);
                             }
                             else
                             {
-                                offset =
-                                    ofBase + BIT_readBitsFast(ref seqState.DStream, ofBits);
+                                offset = ofBase + BIT_readBitsFast(ref seqState.DStream, ofBits);
                                 if (MEM_32bits)
                                     BIT_reloadDStream(ref seqState.DStream);
                             }
@@ -2168,17 +2055,15 @@ public static unsafe partial class Methods
                                     ref seqState.prevOffset.e0,
                                     (int)ll0
                                 );
-                                seqState.prevOffset.e1 =
-                                    System.Runtime.CompilerServices.Unsafe.Add(
-                                        ref seqState.prevOffset.e0,
-                                        ll0 == 0 ? 1 : 0
-                                    );
+                                seqState.prevOffset.e1 = System.Runtime.CompilerServices.Unsafe.Add(
+                                    ref seqState.prevOffset.e0,
+                                    ll0 == 0 ? 1 : 0
+                                );
                                 seqState.prevOffset.e0 = offset;
                             }
                             else
                             {
-                                offset =
-                                    ofBase + ll0 + BIT_readBitsFast(ref seqState.DStream, 1);
+                                offset = ofBase + ll0 + BIT_readBitsFast(ref seqState.DStream, 1);
                                 {
                                     var temp =
                                         offset == 3
@@ -2256,7 +2141,7 @@ public static unsafe partial class Methods
                             {
                                 litLength = sequence_litLength,
                                 matchLength = sequence_matchLength,
-                                offset = sequence_offset
+                                offset = sequence_offset,
                             },
                             &litPtr,
                             litEnd,
@@ -2339,7 +2224,8 @@ public static unsafe partial class Methods
                         );
                     }
 
-                    returnOneSeqSize: ;
+                    returnOneSeqSize:
+                    ;
                 }
 
                 if (ERR_isError(oneSeqSize))
@@ -2350,12 +2236,10 @@ public static unsafe partial class Methods
                 BIT_reloadDStream(ref seqState.DStream);
             }
 
-            if (nbSeq != 0) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            if (nbSeq != 0)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
-            if (
-                BIT_reloadDStream(ref seqState.DStream)
-                < BIT_DStream_status.BIT_DStream_completed
-            )
+            if (BIT_reloadDStream(ref seqState.DStream) < BIT_DStream_status.BIT_DStream_completed)
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
             {
@@ -2512,7 +2396,7 @@ public static unsafe partial class Methods
             for (
                 seqNb = 0;
                 BIT_reloadDStream(&seqState.DStream) <= BIT_DStream_status.BIT_DStream_completed
-                && seqNb < seqAdvance;
+                    && seqNb < seqAdvance;
                 seqNb++
             )
             {
@@ -2521,12 +2405,13 @@ public static unsafe partial class Methods
                 sequences[seqNb] = sequence;
             }
 
-            if (seqNb < seqAdvance) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            if (seqNb < seqAdvance)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
             for (
                 ;
                 BIT_reloadDStream(&seqState.DStream) <= BIT_DStream_status.BIT_DStream_completed
-                && seqNb < nbSeq;
+                    && seqNb < nbSeq;
                 seqNb++
             )
             {
@@ -2572,12 +2457,7 @@ public static unsafe partial class Methods
                     );
                     if (ERR_isError(oneSeqSize))
                         return oneSeqSize;
-                    prefetchPos = ZSTD_prefetchMatch(
-                        prefetchPos,
-                        sequence,
-                        prefixStart,
-                        dictEnd
-                    );
+                    prefetchPos = ZSTD_prefetchMatch(prefetchPos, sequence, prefixStart, dictEnd);
                     sequences[seqNb & (8 - 1)] = sequence;
                     op += oneSeqSize;
                 }
@@ -2608,18 +2488,14 @@ public static unsafe partial class Methods
                             );
                     if (ERR_isError(oneSeqSize))
                         return oneSeqSize;
-                    prefetchPos = ZSTD_prefetchMatch(
-                        prefetchPos,
-                        sequence,
-                        prefixStart,
-                        dictEnd
-                    );
+                    prefetchPos = ZSTD_prefetchMatch(prefetchPos, sequence, prefixStart, dictEnd);
                     sequences[seqNb & (8 - 1)] = sequence;
                     op += oneSeqSize;
                 }
             }
 
-            if (seqNb < nbSeq) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            if (seqNb < nbSeq)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
 
             seqNb -= seqAdvance;
             for (; seqNb < nbSeq; seqNb++)
@@ -2858,11 +2734,7 @@ public static unsafe partial class Methods
      */
     private static ZSTD_OffsetInfo ZSTD_getOffsetInfo(ZSTD_seqSymbol* offTable, int nbSeq)
     {
-        var info = new ZSTD_OffsetInfo
-        {
-            longOffsetShare = 0,
-            maxNbAdditionalBits = 0
-        };
+        var info = new ZSTD_OffsetInfo { longOffsetShare = 0, maxNbAdditionalBits = 0 };
         if (nbSeq != 0)
         {
             void* ptr = offTable;
@@ -2895,7 +2767,8 @@ public static unsafe partial class Methods
      */
     private static nuint ZSTD_maxShortOffset()
     {
-        if (MEM_64bits) return unchecked((nuint)(-1));
+        if (MEM_64bits)
+            return unchecked((nuint)(-1));
 
         /* The maximum offBase is (1 << (STREAM_ACCUMULATOR_MIN + 1)) - 1.
          * This offBase would require STREAM_ACCUMULATOR_MIN extra bits.
@@ -2924,7 +2797,8 @@ public static unsafe partial class Methods
     )
     {
         var ip = (byte*)src;
-        if (srcSize > 1 << 17) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (srcSize > 1 << 17)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
         {
             var litCSize = ZSTD_decodeLiteralsBlock(
@@ -3152,223 +3026,216 @@ public static unsafe partial class Methods
     }
 
 #if !NET8_0_OR_GREATER
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_decompressSequences_body(
-            ZSTD_DCtx_s* dctx,
-            void* dst,
-            nuint maxDstSize,
-            void* seqStart,
-            nuint seqSize,
-            int nbSeq,
-            ZSTD_longOffset_e isLongOffset,
-            int frame
-        )
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static nuint ZSTD_decompressSequences_body(
+        ZSTD_DCtx_s* dctx,
+        void* dst,
+        nuint maxDstSize,
+        void* seqStart,
+        nuint seqSize,
+        int nbSeq,
+        ZSTD_longOffset_e isLongOffset,
+        int frame
+    )
+    {
+        // HACK, force nbSeq to stack (better register usage)
+        System.Threading.Volatile.Read(ref nbSeq);
+        byte* ip = (byte*)(seqStart);
+        byte* iend = ip + seqSize;
+        byte* ostart = (byte*)(dst);
+        byte* oend =
+            dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_not_in_dst
+                ? ostart + maxDstSize
+                : dctx->litBuffer;
+        byte* op = ostart;
+        byte* litPtr = dctx->litPtr;
+        byte* litEnd = litPtr + dctx->litSize;
+        byte* prefixStart = (byte*)((dctx->prefixStart));
+        byte* vBase = (byte*)((dctx->virtualStart));
+        byte* dictEnd = (byte*)((dctx->dictEnd));
+        if (((nbSeq) != 0))
         {
-            // HACK, force nbSeq to stack (better register usage)
-            System.Threading.Volatile.Read(ref nbSeq);
-            byte* ip = (byte*)(seqStart);
-            byte* iend = ip + seqSize;
-            byte* ostart = (byte*)(dst);
-            byte* oend =
-                dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_not_in_dst
-                    ? ostart + maxDstSize
-                    : dctx->litBuffer;
-            byte* op = ostart;
-            byte* litPtr = dctx->litPtr;
-            byte* litEnd = litPtr + dctx->litSize;
-            byte* prefixStart = (byte*)((dctx->prefixStart));
-            byte* vBase = (byte*)((dctx->virtualStart));
-            byte* dictEnd = (byte*)((dctx->dictEnd));
-            if (((nbSeq) != 0))
+            seqState_t seqState;
+            dctx->fseEntropy = 1;
             {
-                seqState_t seqState;
-                dctx->fseEntropy = 1;
-                {
-                    uint i;
-                    for (i = 0; i < 3; i++)
-                        (&seqState.prevOffset.e0)[i] = dctx->entropy.rep[i];
-                }
+                uint i;
+                for (i = 0; i < 3; i++)
+                    (&seqState.prevOffset.e0)[i] = dctx->entropy.rep[i];
+            }
 
-                if (ERR_isError(BIT_initDStream(&seqState.DStream, ip, (nuint)(iend - ip))))
-                {
-                    return (
-                        unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected)))
-                    );
-                }
+            if (ERR_isError(BIT_initDStream(&seqState.DStream, ip, (nuint)(iend - ip))))
+            {
+                return (unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected))));
+            }
 
-                ZSTD_initFseState(&seqState.stateLL, &seqState.DStream, dctx->LLTptr);
-                ZSTD_initFseState(&seqState.stateOffb, &seqState.DStream, dctx->OFTptr);
-                ZSTD_initFseState(&seqState.stateML, &seqState.DStream, dctx->MLTptr);
-                assert(dst != (null));
-                for (;;)
+            ZSTD_initFseState(&seqState.stateLL, &seqState.DStream, dctx->LLTptr);
+            ZSTD_initFseState(&seqState.stateOffb, &seqState.DStream, dctx->OFTptr);
+            ZSTD_initFseState(&seqState.stateML, &seqState.DStream, dctx->MLTptr);
+            assert(dst != (null));
+            for (; ; )
+            {
+                seq_t sequence = ZSTD_decodeSequence(&seqState, isLongOffset);
+                nuint oneSeqSize;
                 {
-                    seq_t sequence = ZSTD_decodeSequence(&seqState, isLongOffset);
-                    nuint oneSeqSize;
-                    {
-                        var sequence_litLength = sequence.litLength;
-                        var sequence_matchLength = sequence.matchLength;
-                        var sequence_offset = sequence.offset;
-                        byte* oLitEnd = op + sequence_litLength;
-                        oneSeqSize = sequence_litLength + sequence_matchLength;
-                        /* risk : address space overflow (32-bits) */
-                        byte* oMatchEnd = op + oneSeqSize;
-                        /* risk : address space underflow on oend=NULL */
-                        byte* oend_w = oend - 32;
-                        byte* iLitEnd = litPtr + sequence_litLength;
-                        byte* match = oLitEnd - sequence_offset;
-                        assert(op != (null));
-                        assert(oend_w < oend);
-                        if (
-                            (
-                                iLitEnd > litEnd
-                                || oMatchEnd > oend_w
-                                || (MEM_32bits && (nuint)((oend - op)) < oneSeqSize + 32)
-                            )
+                    var sequence_litLength = sequence.litLength;
+                    var sequence_matchLength = sequence.matchLength;
+                    var sequence_offset = sequence.offset;
+                    byte* oLitEnd = op + sequence_litLength;
+                    oneSeqSize = sequence_litLength + sequence_matchLength;
+                    /* risk : address space overflow (32-bits) */
+                    byte* oMatchEnd = op + oneSeqSize;
+                    /* risk : address space underflow on oend=NULL */
+                    byte* oend_w = oend - 32;
+                    byte* iLitEnd = litPtr + sequence_litLength;
+                    byte* match = oLitEnd - sequence_offset;
+                    assert(op != (null));
+                    assert(oend_w < oend);
+                    if (
+                        (
+                            iLitEnd > litEnd
+                            || oMatchEnd > oend_w
+                            || (MEM_32bits && (nuint)((oend - op)) < oneSeqSize + 32)
                         )
-                        {
-                            oneSeqSize = ZSTD_execSequenceEnd(
-                                op,
-                                oend,
-                                new seq_t
-                                {
-                                    litLength = sequence_litLength,
-                                    matchLength = sequence_matchLength,
-                                    offset = sequence_offset,
-                                },
-                                &litPtr,
-                                litEnd,
-                                prefixStart,
-                                vBase,
-                                dictEnd
-                            );
-                            goto returnOneSeqSize;
-                        }
-
-                        assert(op <= oLitEnd);
-                        assert(oLitEnd < oMatchEnd);
-                        assert(oMatchEnd <= oend);
-                        assert(iLitEnd <= litEnd);
-                        assert(oLitEnd <= oend_w);
-                        assert(oMatchEnd <= oend_w);
-                        assert(32 >= 16);
-                        ZSTD_copy16(op, (litPtr));
-                        if ((sequence_litLength > 16))
-                        {
-                            ZSTD_wildcopy(
-                                op + 16,
-                                (litPtr) + 16,
-                                (nint)(sequence_litLength - 16),
-                                ZSTD_overlap_e.ZSTD_no_overlap
-                            );
-                        }
-
-                        byte* opInner = oLitEnd;
-                        litPtr = iLitEnd;
-                        if (sequence_offset > (nuint)((oLitEnd - prefixStart)))
-                        {
-                            if ((sequence_offset > (nuint)((oLitEnd - vBase))))
+                    )
+                    {
+                        oneSeqSize = ZSTD_execSequenceEnd(
+                            op,
+                            oend,
+                            new seq_t
                             {
-                                oneSeqSize = (
-                                    unchecked(
-                                        (nuint)(
-                                            -(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                                        )
-                                    )
-                                );
-                                goto returnOneSeqSize;
-                            }
-
-                            match = dictEnd + (match - prefixStart);
-                            if (match + sequence_matchLength <= dictEnd)
-                            {
-                                memmove((oLitEnd), (match), (ulong)((sequence_matchLength)));
-                                goto returnOneSeqSize;
-                            }
-
-                            {
-                                nuint length1 = (nuint)(dictEnd - match);
-                                memmove((oLitEnd), (match), (ulong)((length1)));
-                                opInner = oLitEnd + length1;
-                                sequence_matchLength -= length1;
-                                match = prefixStart;
-                            }
-                        }
-
-                        assert(opInner <= oMatchEnd);
-                        assert(oMatchEnd <= oend_w);
-                        assert(match >= prefixStart);
-                        assert(sequence_matchLength >= 1);
-                        if ((sequence_offset >= 16))
-                        {
-                            ZSTD_wildcopy(
-                                opInner,
-                                match,
-                                (nint)(sequence_matchLength),
-                                ZSTD_overlap_e.ZSTD_no_overlap
-                            );
-                            goto returnOneSeqSize;
-                        }
-
-                        assert(sequence_offset < 16);
-                        ZSTD_overlapCopy8(ref opInner, ref match, sequence_offset);
-                        if (sequence_matchLength > 8)
-                        {
-                            assert(opInner < oMatchEnd);
-                            ZSTD_wildcopy(
-                                opInner,
-                                match,
-                                (nint)(sequence_matchLength) - 8,
-                                ZSTD_overlap_e.ZSTD_overlap_src_before_dst
-                            );
-                        }
-
-                        returnOneSeqSize: ;
+                                litLength = sequence_litLength,
+                                matchLength = sequence_matchLength,
+                                offset = sequence_offset,
+                            },
+                            &litPtr,
+                            litEnd,
+                            prefixStart,
+                            vBase,
+                            dictEnd
+                        );
+                        goto returnOneSeqSize;
                     }
 
-                    if ((ERR_isError(oneSeqSize)))
-                        return oneSeqSize;
-                    op += oneSeqSize;
-                    if ((((--nbSeq) == 0)))
-                        break;
-                    BIT_reloadDStream(&(seqState.DStream));
+                    assert(op <= oLitEnd);
+                    assert(oLitEnd < oMatchEnd);
+                    assert(oMatchEnd <= oend);
+                    assert(iLitEnd <= litEnd);
+                    assert(oLitEnd <= oend_w);
+                    assert(oMatchEnd <= oend_w);
+                    assert(32 >= 16);
+                    ZSTD_copy16(op, (litPtr));
+                    if ((sequence_litLength > 16))
+                    {
+                        ZSTD_wildcopy(
+                            op + 16,
+                            (litPtr) + 16,
+                            (nint)(sequence_litLength - 16),
+                            ZSTD_overlap_e.ZSTD_no_overlap
+                        );
+                    }
+
+                    byte* opInner = oLitEnd;
+                    litPtr = iLitEnd;
+                    if (sequence_offset > (nuint)((oLitEnd - prefixStart)))
+                    {
+                        if ((sequence_offset > (nuint)((oLitEnd - vBase))))
+                        {
+                            oneSeqSize = (
+                                unchecked(
+                                    (nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected))
+                                )
+                            );
+                            goto returnOneSeqSize;
+                        }
+
+                        match = dictEnd + (match - prefixStart);
+                        if (match + sequence_matchLength <= dictEnd)
+                        {
+                            memmove((oLitEnd), (match), (ulong)((sequence_matchLength)));
+                            goto returnOneSeqSize;
+                        }
+
+                        {
+                            nuint length1 = (nuint)(dictEnd - match);
+                            memmove((oLitEnd), (match), (ulong)((length1)));
+                            opInner = oLitEnd + length1;
+                            sequence_matchLength -= length1;
+                            match = prefixStart;
+                        }
+                    }
+
+                    assert(opInner <= oMatchEnd);
+                    assert(oMatchEnd <= oend_w);
+                    assert(match >= prefixStart);
+                    assert(sequence_matchLength >= 1);
+                    if ((sequence_offset >= 16))
+                    {
+                        ZSTD_wildcopy(
+                            opInner,
+                            match,
+                            (nint)(sequence_matchLength),
+                            ZSTD_overlap_e.ZSTD_no_overlap
+                        );
+                        goto returnOneSeqSize;
+                    }
+
+                    assert(sequence_offset < 16);
+                    ZSTD_overlapCopy8(ref opInner, ref match, sequence_offset);
+                    if (sequence_matchLength > 8)
+                    {
+                        assert(opInner < oMatchEnd);
+                        ZSTD_wildcopy(
+                            opInner,
+                            match,
+                            (nint)(sequence_matchLength) - 8,
+                            ZSTD_overlap_e.ZSTD_overlap_src_before_dst
+                        );
+                    }
+
+                    returnOneSeqSize:
+                    ;
                 }
 
-                if (((nbSeq) != 0))
-                {
-                    return (
-                        unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected)))
-                    );
-                }
+                if ((ERR_isError(oneSeqSize)))
+                    return oneSeqSize;
+                op += oneSeqSize;
+                if ((((--nbSeq) == 0)))
+                    break;
+                BIT_reloadDStream(&(seqState.DStream));
+            }
 
-                if (BIT_reloadDStream(&seqState.DStream) < BIT_DStream_status.BIT_DStream_completed)
-                {
-                    return (
-                        unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected)))
-                    );
-                }
+            if (((nbSeq) != 0))
+            {
+                return (unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected))));
+            }
 
-                {
-                    uint i;
-                    for (i = 0; i < 3; i++)
-                        dctx->entropy.rep[i] = (uint)(((&seqState.prevOffset.e0)[i]));
-                }
+            if (BIT_reloadDStream(&seqState.DStream) < BIT_DStream_status.BIT_DStream_completed)
+            {
+                return (unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_corruption_detected))));
             }
 
             {
-                nuint lastLLSize = (nuint)(litEnd - litPtr);
-                if (lastLLSize > (nuint)((oend - op)))
-                {
-                    return (unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))));
-                }
+                uint i;
+                for (i = 0; i < 3; i++)
+                    dctx->entropy.rep[i] = (uint)(((&seqState.prevOffset.e0)[i]));
+            }
+        }
 
-                if (op != (null))
-                {
-                    memcpy((op), (litPtr), (uint)((lastLLSize)));
-                    op += lastLLSize;
-                }
+        {
+            nuint lastLLSize = (nuint)(litEnd - litPtr);
+            if (lastLLSize > (nuint)((oend - op)))
+            {
+                return (unchecked((nuint)(-(int)(ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))));
             }
 
-            return (nuint)(op - ostart);
+            if (op != (null))
+            {
+                memcpy((op), (litPtr), (uint)((lastLLSize)));
+                op += lastLLSize;
+            }
         }
+
+        return (nuint)(op - ostart);
+    }
 #endif
 }

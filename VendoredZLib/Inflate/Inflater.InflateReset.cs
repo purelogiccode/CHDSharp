@@ -65,7 +65,8 @@ internal static partial class Inflater
         var state = strm.InflateState;
         strm.TotalInput = strm.total_out = state.Total = 0;
         strm.Msg = null;
-        if (state.Wrap != 0) strm.Adler = (uint)(state.Wrap & 1);
+        if (state.Wrap != 0)
+            strm.Adler = (uint)(state.Wrap & 1);
 
         state.Mode = InflateMode.Head;
         state.Last = 0;

@@ -39,8 +39,15 @@ public readonly struct HunkProgress
     /// <param name="compressionType">The map compression type.</param>
     /// <param name="codecName">The codec name.</param>
     /// <param name="ratio">Compression ratio.</param>
-    public HunkProgress(uint hunkIndex, uint hunkCount, int rawBytes, int storedBytes, byte compressionType,
-        string codecName, double ratio)
+    public HunkProgress(
+        uint hunkIndex,
+        uint hunkCount,
+        int rawBytes,
+        int storedBytes,
+        byte compressionType,
+        string codecName,
+        double ratio
+    )
     {
         HunkIndex = hunkIndex;
         HunkCount = hunkCount;

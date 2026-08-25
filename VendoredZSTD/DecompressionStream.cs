@@ -22,9 +22,7 @@ public class DecompressionStream : Stream
         bool checkEndOfStream = true,
         bool leaveOpen = true
     )
-        : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen)
-    {
-    }
+        : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen) { }
 
     public DecompressionStream(
         Stream stream,
@@ -53,11 +51,7 @@ public class DecompressionStream : Stream
         inputBufferSize =
             bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
         inputBuffer = ArrayPool<byte>.Shared.Rent(inputBufferSize);
-        input = new ZSTD_inBuffer_s
-        {
-            pos = (nuint)inputBufferSize,
-            size = (nuint)inputBufferSize
-        };
+        input = new ZSTD_inBuffer_s { pos = (nuint)inputBufferSize, size = (nuint)inputBufferSize };
     }
 
     public void SetParameter(ZSTD_dParameter parameter, int value)
@@ -88,13 +82,15 @@ public class DecompressionStream : Stream
         if (decompressor == null)
             return;
 
-        if (!preserveDecompressor) decompressor.Dispose();
+        if (!preserveDecompressor)
+            decompressor.Dispose();
 
         decompressor = null;
 
         ArrayPool<byte>.Shared.Return(inputBuffer);
 
-        if (!leaveOpen) innerStream.Dispose();
+        if (!leaveOpen)
+            innerStream.Dispose();
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -105,13 +101,14 @@ public class DecompressionStream : Stream
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
     public override int Read(Span<byte> buffer)
 #else
-        public int Read(Span<byte> buffer)
+    public int Read(Span<byte> buffer)
 #endif
     {
         EnsureNotDisposed();
 
         // Guard against infinite loop (output.pos would never become non-zero)
-        if (buffer.Length == 0) return 0;
+        if (buffer.Length == 0)
+            return 0;
 
         var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
         while (true)
@@ -128,7 +125,8 @@ public class DecompressionStream : Stream
                 // If decompression filled the output buffer, there might still be data buffered in the decompressor context
                 contextDrained = output.pos < output.size;
                 // If we have data to return, return it immediately, so we won't stall on Read
-                if (output.pos > 0) return (int)output.pos;
+                if (output.pos > 0)
+                    return (int)output.pos;
             }
 
             // Otherwise, read some more input
@@ -162,16 +160,17 @@ public class DecompressionStream : Stream
         CancellationToken cancellationToken = default
     )
 #else
-        public async ValueTask<int> ReadAsync(
-            Memory<byte> buffer,
-            CancellationToken cancellationToken = default
-        )
+    public async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
 #endif
     {
         EnsureNotDisposed();
 
         // Guard against infinite loop (output.pos would never become non-zero)
-        if (buffer.Length == 0) return 0;
+        if (buffer.Length == 0)
+            return 0;
 
         var output = new ZSTD_outBuffer_s { pos = 0, size = (nuint)buffer.Length };
         while (true)
@@ -188,7 +187,8 @@ public class DecompressionStream : Stream
                 // If decompression filled the output buffer, there might still be data buffered in the decompressor context
                 contextDrained = output.pos < output.size;
                 // If we have data to return, return it immediately, so we won't stall on Read
-                if (output.pos > 0) return (int)output.pos;
+                if (output.pos > 0)
+                    return (int)output.pos;
             }
 
             // Otherwise, read some more input
@@ -262,17 +262,17 @@ public class DecompressionStream : Stream
     }
 
 #if NETSTANDARD2_0 || NETFRAMEWORK
-        public virtual ValueTask DisposeAsync()
+    public virtual ValueTask DisposeAsync()
+    {
+        try
         {
-            try
-            {
-                Dispose();
-                return default;
-            }
-            catch (Exception exc)
-            {
-                return new ValueTask(Task.FromException(exc));
-            }
+            Dispose();
+            return default;
         }
+        catch (Exception exc)
+        {
+            return new ValueTask(Task.FromException(exc));
+        }
+    }
 #endif
 }

@@ -2,8 +2,7 @@ namespace CHDSharp.Tests;
 
 public sealed class TrackInfoEdgeCaseTests
 {
-    private static readonly string TestDataDir =
-        Path.Combine(AppContext.BaseDirectory, "TestData");
+    private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
     [Fact]
     public void Cue_sheet_mode2_track_types()
@@ -71,7 +70,8 @@ public sealed class TrackInfoEdgeCaseTests
         using (chd)
         {
             var cue = chd!.GenerateCueSheet("test.bin");
-            var fileCount = cue.Split('\n').Count(l => l.Trim().StartsWith("FILE", StringComparison.Ordinal));
+            var fileCount = cue.Split('\n')
+                .Count(l => l.Trim().StartsWith("FILE", StringComparison.Ordinal));
             Assert.Equal(1, fileCount);
         }
     }
@@ -86,11 +86,15 @@ public sealed class TrackInfoEdgeCaseTests
             var tracks = chd!.Tracks!;
             for (var i = 1; i < tracks.Count; i++)
             {
-                Assert.True(tracks[i].StartFrame > tracks[i - 1].StartFrame,
-                    $"Track {i + 1} StartFrame ({tracks[i].StartFrame}) should be > Track {i} StartFrame ({tracks[i - 1].StartFrame})");
+                Assert.True(
+                    tracks[i].StartFrame > tracks[i - 1].StartFrame,
+                    $"Track {i + 1} StartFrame ({tracks[i].StartFrame}) should be > Track {i} StartFrame ({tracks[i - 1].StartFrame})"
+                );
                 Assert.Equal(
                     tracks[i].StartFrame,
-                    tracks[i - 1].StartFrame + (ulong)(tracks[i - 1].Frames + tracks[i - 1].ExtraFrames));
+                    tracks[i - 1].StartFrame
+                        + (ulong)(tracks[i - 1].Frames + tracks[i - 1].ExtraFrames)
+                );
             }
         }
     }
@@ -103,7 +107,10 @@ public sealed class TrackInfoEdgeCaseTests
         using (chd)
         {
             var tracks = chd!.Tracks!;
-            var totalFrames = tracks.Aggregate(0UL, (acc, t) => acc + (ulong)(t.Frames + t.ExtraFrames));
+            var totalFrames = tracks.Aggregate(
+                0UL,
+                (acc, t) => acc + (ulong)(t.Frames + t.ExtraFrames)
+            );
             Assert.Equal(chd.TotalBytes / chd.UnitBytes, totalFrames);
         }
     }
@@ -158,8 +165,11 @@ public sealed class TrackInfoEdgeCaseTests
     {
         var cdFiles = new[]
         {
-            "v5_cd_default.chd", "v5_cd_cdzl.chd", "v5_cd_cdlz.chd",
-            "v5_cd_cdfl.chd", "v5_cd_cdzs.chd"
+            "v5_cd_default.chd",
+            "v5_cd_cdzl.chd",
+            "v5_cd_cdlz.chd",
+            "v5_cd_cdfl.chd",
+            "v5_cd_cdzs.chd",
         };
         foreach (var file in cdFiles)
         {
@@ -180,8 +190,14 @@ public sealed class TrackInfoEdgeCaseTests
     {
         var rawFiles = new[]
         {
-            "v5_zlib.chd", "v5_lzma.chd", "v5_huff.chd", "v5_flac.chd",
-            "v5_zstd.chd", "v5_multi.chd", "v5_none.chd", "v5_odd.chd"
+            "v5_zlib.chd",
+            "v5_lzma.chd",
+            "v5_huff.chd",
+            "v5_flac.chd",
+            "v5_zstd.chd",
+            "v5_multi.chd",
+            "v5_none.chd",
+            "v5_odd.chd",
         };
         foreach (var file in rawFiles)
         {
@@ -201,8 +217,11 @@ public sealed class TrackInfoEdgeCaseTests
     {
         var cdFiles = new[]
         {
-            "v5_cd_default.chd", "v5_cd_cdzl.chd", "v5_cd_cdlz.chd",
-            "v5_cd_cdfl.chd", "v5_cd_cdzs.chd"
+            "v5_cd_default.chd",
+            "v5_cd_cdzl.chd",
+            "v5_cd_cdlz.chd",
+            "v5_cd_cdfl.chd",
+            "v5_cd_cdzs.chd",
         };
         List<ChdTrackInfo>? first = null;
         foreach (var file in cdFiles)
@@ -270,7 +289,8 @@ public sealed class TrackInfoEdgeCaseTests
         var err = ChdFile.Open(
             Path.Combine(TestDataDir, "v3_child.chd"),
             Path.Combine(TestDataDir, "v3_zlib.chd"),
-            out var chd);
+            out var chd
+        );
         Assert.Equal(ChdError.Chderrnone, err);
         using (chd)
         {
@@ -285,7 +305,8 @@ public sealed class TrackInfoEdgeCaseTests
         var err = ChdFile.Open(
             Path.Combine(TestDataDir, "v5_child.chd"),
             Path.Combine(TestDataDir, "v5_parent.chd"),
-            out var chd);
+            out var chd
+        );
         Assert.Equal(ChdError.Chderrnone, err);
         using (chd)
         {

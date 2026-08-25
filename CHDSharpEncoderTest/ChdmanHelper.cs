@@ -8,7 +8,8 @@ internal static class ChdmanHelper
 
     internal static (int ExitCode, string StdOut, string StdErr) RunChdman(params string[] args)
     {
-        var chdmanPath = ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
+        var chdmanPath =
+            ChdmanPath ?? throw new InvalidOperationException("chdman.exe not available");
 
         var psi = new ProcessStartInfo
         {
@@ -16,7 +17,7 @@ internal static class ChdmanHelper
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
         foreach (var a in args)
             psi.ArgumentList.Add(a);
@@ -40,7 +41,9 @@ internal static class ChdmanHelper
             return candidate;
 
         // check Tester project dir (for IDE Test Explorer runs)
-        candidate = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName));
+        candidate = Path.GetFullPath(
+            Path.Combine(baseDir, "..", "..", "..", "..", "CHDSharpTester", exeName)
+        );
         if (File.Exists(candidate))
             return candidate;
 

@@ -28,17 +28,20 @@ internal sealed class LibFlacBitWriter
     private void EnsureCapacity(int bitsToAdd)
     {
         var neededBytes = (BitCount + bitsToAdd + 7) / 8;
-        if (neededBytes <= _buffer.Length) return;
+        if (neededBytes <= _buffer.Length)
+            return;
 
         var newSize = _buffer.Length;
-        while (newSize < neededBytes) newSize = Math.Max(newSize * 2, 64);
+        while (newSize < neededBytes)
+            newSize = Math.Max(newSize * 2, 64);
 
         Array.Resize(ref _buffer, newSize);
     }
 
     public void WriteZeroes(int bits)
     {
-        if (bits == 0) return;
+        if (bits == 0)
+            return;
 
         EnsureCapacity(bits);
         BitCount += bits;
@@ -46,7 +49,8 @@ internal sealed class LibFlacBitWriter
 
     public void WriteRawUInt32(uint value, int bits)
     {
-        if (bits == 0) return;
+        if (bits == 0)
+            return;
 
         EnsureCapacity(bits);
         var shift = 32 - bits;
@@ -55,7 +59,8 @@ internal sealed class LibFlacBitWriter
         {
             var bytePos = BitCount >> 3;
             var bitPos = 7 - (BitCount & 7);
-            if (((v >> i) & 1) != 0) _buffer[bytePos] |= (byte)(1 << bitPos);
+            if (((v >> i) & 1) != 0)
+                _buffer[bytePos] |= (byte)(1 << bitPos);
 
             BitCount++;
         }
@@ -162,7 +167,8 @@ internal sealed class LibFlacBitWriter
     public void ZeroPadToByteBoundary()
     {
         var rem = BitCount & 7;
-        if (rem != 0) WriteZeroes(8 - rem);
+        if (rem != 0)
+            WriteZeroes(8 - rem);
     }
 
     /// <summary>Copies the written bytes (padded to a byte boundary) into the destination buffer starting at offset 0.</summary>

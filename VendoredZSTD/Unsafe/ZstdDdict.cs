@@ -75,17 +75,13 @@ public static unsafe partial class Methods
             if (magic != 0xEC30A437)
             {
                 if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_fullDict)
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
                 return 0;
             }
         }
 
         ddict->dictID = MEM_readLE32((sbyte*)ddict->dictContent + 4);
-        if (
-            ERR_isError(ZSTD_loadDEntropy(&ddict->entropy, ddict->dictContent, ddict->dictSize))
-        )
+        if (ERR_isError(ZSTD_loadDEntropy(&ddict->entropy, ddict->dictContent, ddict->dictSize)))
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
 
         ddict->entropyPresent = 1;
@@ -100,11 +96,7 @@ public static unsafe partial class Methods
         ZSTD_dictContentType_e dictContentType
     )
     {
-        if (
-            dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef
-            || dict == null
-            || dictSize == 0
-        )
+        if (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef || dict == null || dictSize == 0)
         {
             ddict->dictBuffer = null;
             ddict->dictContent = dict;
@@ -125,7 +117,8 @@ public static unsafe partial class Methods
         ddict->entropy.hufTable[0] = 12 * 0x1000001;
         {
             var err_code = ZSTD_loadEntropy_intoDDict(ddict, dictContentType);
-            if (ERR_isError(err_code)) return err_code;
+            if (ERR_isError(err_code))
+                return err_code;
         }
 
         return 0;
@@ -139,16 +132,10 @@ public static unsafe partial class Methods
         ZSTD_customMem customMem
     )
     {
-        if (
-            ((customMem.customAlloc == null ? 1 : 0) ^ (customMem.customFree == null ? 1 : 0))
-            != 0
-        )
+        if (((customMem.customAlloc == null ? 1 : 0) ^ (customMem.customFree == null ? 1 : 0)) != 0)
             return null;
         {
-            var ddict = (ZSTD_DDict_s*)ZSTD_customMalloc(
-                (nuint)sizeof(ZSTD_DDict_s),
-                customMem
-            );
+            var ddict = (ZSTD_DDict_s*)ZSTD_customMalloc((nuint)sizeof(ZSTD_DDict_s), customMem);
             if (ddict == null)
                 return null;
             ddict->cMem = customMem;
@@ -181,7 +168,7 @@ public static unsafe partial class Methods
         {
             customAlloc = null,
             customFree = null,
-            opaque = null
+            opaque = null,
         };
         return ZSTD_createDDict_advanced(
             dict,
@@ -202,7 +189,7 @@ public static unsafe partial class Methods
         {
             customAlloc = null,
             customFree = null,
-            opaque = null
+            opaque = null,
         };
         return ZSTD_createDDict_advanced(
             dictBuffer,
@@ -271,13 +258,10 @@ public static unsafe partial class Methods
     /*! ZSTD_estimateDDictSize() :
      *  Estimate amount of memory that will be needed to create a dictionary for decompression.
      *  Note : dictionary created by reference using ZSTD_dlm_byRef are smaller */
-    public static nuint ZSTD_estimateDDictSize(
-        nuint dictSize,
-        ZSTD_dictLoadMethod_e dictLoadMethod
-    )
+    public static nuint ZSTD_estimateDDictSize(nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod)
     {
         return (nuint)sizeof(ZSTD_DDict_s)
-               + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
+            + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
     }
 
     public static nuint ZSTD_sizeof_DDict(ZSTD_DDict_s* ddict)

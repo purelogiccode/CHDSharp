@@ -64,7 +64,7 @@ public sealed class ChdTrackInfo
             ChdTrackType.Mode2FormMix => "MODE2/2336",
             ChdTrackType.Mode2Raw => "MODE2/2352",
             ChdTrackType.Audio => "AUDIO",
-            _ => "UNKNOWN"
+            _ => "UNKNOWN",
         };
     }
 
@@ -75,7 +75,7 @@ public sealed class ChdTrackInfo
         {
             ChdSubType.Normal => "RW",
             ChdSubType.Raw => "RW_RAW",
-            _ => "NONE"
+            _ => "NONE",
         };
     }
 }

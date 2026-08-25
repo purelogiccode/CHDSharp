@@ -20,7 +20,8 @@ internal unsafe class FlacFrame
     ///     Block size codes from the frame header. <c>bs_code0</c> is the primary code;
     ///     <c>bs_code1</c> provides additional info for custom block sizes.
     /// </summary>
-    public int BsCode0, BsCode1;
+    public int BsCode0,
+        BsCode1;
 
     /// <summary>
     ///     Channel assignment mode for this frame.
@@ -59,7 +60,8 @@ internal unsafe class FlacFrame
     public FlacFrame(int subframesCount)
     {
         Subframes = new FlacSubframeInfo[subframesCount];
-        for (var ch = 0; ch < subframesCount; ch++) Subframes[ch] = new FlacSubframeInfo();
+        for (var ch = 0; ch < subframesCount; ch++)
+            Subframes[ch] = new FlacSubframeInfo();
 
         Current = new FlacSubframe(0);
     }

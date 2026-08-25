@@ -14,8 +14,26 @@ internal static class SourceData
 
     private static readonly string[] Words =
     [
-        "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "compressed", "hunks",
-        "of", "data", "synthetic", "test", "corpus", "zlib", "lzma", "huffman", "flac", "zstd"
+        "the",
+        "quick",
+        "brown",
+        "fox",
+        "jumps",
+        "over",
+        "lazy",
+        "dog",
+        "compressed",
+        "hunks",
+        "of",
+        "data",
+        "synthetic",
+        "test",
+        "corpus",
+        "zlib",
+        "lzma",
+        "huffman",
+        "flac",
+        "zstd",
     ];
 
     /// <summary>Builds the primary 512 KiB raw image.</summary>
@@ -81,9 +99,15 @@ internal static class SourceData
             var sec = data.AsSpan(s * 2048, 2048);
             switch (s % 4)
             {
-                case 0: FillText(sec, rng); break;
-                case 1: FillStructured(sec, rng, s); break;
-                case 2: rng.Fill(sec); break;
+                case 0:
+                    FillText(sec, rng);
+                    break;
+                case 1:
+                    FillStructured(sec, rng, s);
+                    break;
+                case 2:
+                    rng.Fill(sec);
+                    break;
                 // case 3: zeros
             }
         }
@@ -97,7 +121,8 @@ internal static class SourceData
         var data = new byte[frames * 2352];
         var rng = new DetRng(0xC0FFEE04);
         var samples = data.Length / 4;
-        double phaseL = 0, phaseR = 0;
+        double phaseL = 0,
+            phaseR = 0;
 
         for (var i = 0; i < samples; i++)
         {
@@ -127,7 +152,8 @@ internal static class SourceData
 
     private static void FillRepeating8(Span<byte> hunk, ReadOnlySpan<byte> pattern)
     {
-        for (var i = 0; i < hunk.Length; i++) hunk[i] = pattern[i % 8];
+        for (var i = 0; i < hunk.Length; i++)
+            hunk[i] = pattern[i % 8];
     }
 
     private static void FillText(Span<byte> hunk, DetRng rng)
@@ -152,7 +178,8 @@ internal static class SourceData
             var runLen = 16 + rng.Next(64);
             var val = (byte)((salt * 31 + i) & 0xFF);
             var ramp = rng.Next(2) == 0;
-            for (var j = 0; j < runLen && i < hunk.Length; j++, i++) hunk[i] = ramp ? (byte)(val + j) : val;
+            for (var j = 0; j < runLen && i < hunk.Length; j++, i++)
+                hunk[i] = ramp ? (byte)(val + j) : val;
         }
     }
 }

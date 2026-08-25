@@ -87,13 +87,17 @@ public sealed class AviReader : IDisposable
     /// <exception cref="NotSupportedException">The video format is not YUY2/VYUY/UYVY.</exception>
     public void ReadVideoFrame(uint frameNum, Span<byte> dest)
     {
-        var stream = GetVideoStream() ?? throw new InvalidDataException("AVI file contains no video stream");
+        var stream =
+            GetVideoStream() ?? throw new InvalidDataException("AVI file contains no video stream");
         if (stream.Format is not (FormatUyvy or FormatVyuy or FormatYuy2))
             throw new NotSupportedException(
-                $"Unsupported AVI video format '{FourCcToString(stream.Format)}'; YUY2, VYUY or UYVY is required");
+                $"Unsupported AVI video format '{FourCcToString(stream.Format)}'; YUY2, VYUY or UYVY is required"
+            );
         if (frameNum >= (uint)stream.Chunks.Count)
-            throw new ArgumentOutOfRangeException(nameof(frameNum),
-                $"AVI frame {frameNum} is out of range (0..{stream.Chunks.Count - 1})");
+            throw new ArgumentOutOfRangeException(
+                nameof(frameNum),
+                $"AVI frame {frameNum} is out of range (0..{stream.Chunks.Count - 1})"
+            );
 
         var chunk = stream.Chunks[(int)frameNum];
         var data = ReadChunkData(chunk.Offset, chunk.Length);
@@ -133,19 +137,26 @@ public sealed class AviReader : IDisposable
     /// <exception cref="NotSupportedException">The audio format is not 8/16-bit PCM.</exception>
     public void ReadSoundSamples(int channel, uint firstSample, uint numSamples, Span<short> output)
     {
-        var stream = GetAudioStream(channel, out var offset)
-                     ?? throw new ArgumentOutOfRangeException(nameof(channel),
-                         $"AVI file has no audio channel {channel}");
+        var stream =
+            GetAudioStream(channel, out var offset)
+            ?? throw new ArgumentOutOfRangeException(
+                nameof(channel),
+                $"AVI file has no audio channel {channel}"
+            );
         if (stream.Format != 0 || (stream.SampleBits != 8 && stream.SampleBits != 16))
             throw new NotSupportedException(
-                $"Unsupported AVI audio format (PCM 8/16-bit required, got {stream.SampleBits}-bit)");
+                $"Unsupported AVI audio format (PCM 8/16-bit required, got {stream.SampleBits}-bit)"
+            );
 
         var totalSamples = (uint)stream.Chunks.Count > 0 ? PerChannelSampleCount(stream) : 0;
         if (firstSample >= totalSamples)
-            throw new ArgumentOutOfRangeException(nameof(firstSample),
-                $"AVI sample {firstSample} is out of range (0..{totalSamples - 1})");
+            throw new ArgumentOutOfRangeException(
+                nameof(firstSample),
+                $"AVI sample {firstSample} is out of range (0..{totalSamples - 1})"
+            );
 
-        if (firstSample + numSamples > totalSamples) numSamples = totalSamples - firstSample;
+        if (firstSample + numSamples > totalSamples)
+            numSamples = totalSamples - firstSample;
 
         var bytesPerSample = (uint)(stream.SampleBits / 8) * stream.Channels;
         var outPos = 0;
@@ -153,7 +164,8 @@ public sealed class AviReader : IDisposable
         while (numSamples > 0)
         {
             // locate the chunk containing the first sample
-            uint chunkBase = 0, chunkEnd = 0;
+            uint chunkBase = 0,
+                chunkEnd = 0;
             int chunkNum;
             for (chunkNum = 0; chunkNum < stream.Chunks.Count; chunkNum++)
             {
@@ -171,13 +183,18 @@ public sealed class AviReader : IDisposable
                 break;
             }
 
-            var data = ReadChunkData(stream.Chunks[chunkNum].Offset, stream.Chunks[chunkNum].Length);
+            var data = ReadChunkData(
+                stream.Chunks[chunkNum].Offset,
+                stream.Chunks[chunkNum].Length
+            );
             var samplesThisChunk = Math.Min(chunkEnd - firstSample, numSamples);
 
             var baseIndex = (int)(stream.Channels * (firstSample - chunkBase) + offset);
             if (stream.SampleBits == 16)
                 for (var i = 0; i < samplesThisChunk; i++, baseIndex += stream.Channels)
-                    output[outPos++] = BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(8 + baseIndex * 2));
+                    output[outPos++] = BinaryPrimitives.ReadInt16LittleEndian(
+                        data.AsSpan(8 + baseIndex * 2)
+                    );
             else
                 for (var i = 0; i < samplesThisChunk; i++, baseIndex += stream.Channels)
                     output[outPos++] = (short)((data[8 + baseIndex] << 8) - 0x8000);
@@ -372,7 +389,8 @@ public sealed class AviReader : IDisposable
             var offset = BinaryPrimitives.ReadUInt32LittleEndian(data[(baseIdx + 8)..]);
             var chunkSize = BinaryPrimitives.ReadUInt32LittleEndian(data[(baseIdx + 12)..]);
 
-            var streamNum = (int)(((chunkId >> 8) & 0xff) - '0') + 10 * (int)((chunkId & 0xff) - '0');
+            var streamNum =
+                (int)(((chunkId >> 8) & 0xff) - '0') + 10 * (int)((chunkId & 0xff) - '0');
             if (streamNum < 0 || streamNum >= _streams.Count)
                 continue;
 
@@ -393,7 +411,8 @@ public sealed class AviReader : IDisposable
             var chunkId = BinaryPrimitives.ReadUInt32LittleEndian(header);
             var chunkSize = BinaryPrimitives.ReadUInt32LittleEndian(header[4..]);
 
-            var streamNum = (int)(((chunkId >> 8) & 0xff) - '0') + 10 * (int)((chunkId & 0xff) - '0');
+            var streamNum =
+                (int)(((chunkId >> 8) & 0xff) - '0') + 10 * (int)((chunkId & 0xff) - '0');
             var kind = (char)((chunkId >> 24) & 0xff); // 'dc'/'db' video, 'wb' audio
             if (streamNum >= 0 && streamNum < _streams.Count && kind is 'd' or 'c' or 'w')
                 _streams[streamNum].Chunks.Add((pos, (int)(chunkSize + 8)));
@@ -410,9 +429,8 @@ public sealed class AviReader : IDisposable
         {
             Info.VideoTimescale = video.Rate;
             Info.VideoSampletime = video.Scale;
-            Info.VideoNumsamples = video.SamplesFromHeader != 0
-                ? video.SamplesFromHeader
-                : (uint)video.Chunks.Count;
+            Info.VideoNumsamples =
+                video.SamplesFromHeader != 0 ? video.SamplesFromHeader : (uint)video.Chunks.Count;
             Info.Width = video.Width;
             Info.Height = video.Height;
             Info.VideoFormat = video.Format;
@@ -429,8 +447,11 @@ public sealed class AviReader : IDisposable
             while (GetAudioStream((int)Info.AudioChannels, out _) is { } next)
             {
                 Info.AudioChannels++;
-                if (next.SampleRate != firstAudio.SampleRate || next.SampleBits != firstAudio.SampleBits ||
-                    next.Channels != firstAudio.Channels)
+                if (
+                    next.SampleRate != firstAudio.SampleRate
+                    || next.SampleBits != firstAudio.SampleBits
+                    || next.Channels != firstAudio.Channels
+                )
                     throw new InvalidDataException("AVI file has incompatible audio streams");
             }
         }
@@ -469,7 +490,9 @@ public sealed class AviReader : IDisposable
     private byte[] ReadChunkData(long offset, int length)
     {
         if (offset < 0 || length < 8 || offset + length > _file.Length)
-            throw new InvalidDataException($"AVI chunk at {offset} (length {length}) is out of bounds");
+            throw new InvalidDataException(
+                $"AVI chunk at {offset} (length {length}) is out of bounds"
+            );
 
         return ReadAt(offset, length);
     }
@@ -498,7 +521,7 @@ public sealed class AviReader : IDisposable
             (byte)(fourcc & 0xFF),
             (byte)((fourcc >> 8) & 0xFF),
             (byte)((fourcc >> 16) & 0xFF),
-            (byte)((fourcc >> 24) & 0xFF)
+            (byte)((fourcc >> 24) & 0xFF),
         ];
         return Encoding.ASCII.GetString(bytes);
     }
@@ -518,7 +541,8 @@ public sealed class AviReader : IDisposable
         public uint Scale = 1;
         public uint Type; // 'vids' / 'auds'
 
-        public int Width, Height; // video
+        public int Width,
+            Height; // video
     }
 
     /// <summary>Movie description (MAME's <c>avi_file::movie_info</c> subset).</summary>

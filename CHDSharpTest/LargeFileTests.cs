@@ -33,7 +33,8 @@ public class LargeFileTests
         Write(EndianHelpers.Be(5));
 
         // Compression slots all None → uncompressed map.
-        for (var i = 0; i < 4; i++) Write(EndianHelpers.Be(0));
+        for (var i = 0; i < 4; i++)
+            Write(EndianHelpers.Be(0));
 
         Write(EndianHelpers.Be64(TotalBytes)); // totalbytes
         Write(EndianHelpers.Be64(mapoffset)); // mapoffset
@@ -44,7 +45,8 @@ public class LargeFileTests
 
         // Physical data block at offset Blocksize (= offsetWord 1).
         var pattern = new byte[Blocksize];
-        for (var i = 0; i < pattern.Length; i++) pattern[i] = (byte)(i & 0xFF);
+        for (var i = 0; i < pattern.Length; i++)
+            pattern[i] = (byte)(i & 0xFF);
 
         ms.Seek(Blocksize, SeekOrigin.Begin);
         Write(pattern);
@@ -88,7 +90,10 @@ public class LargeFileTests
         using (chd)
         {
             var logicalOffset = (ulong)targetHunk * Blocksize;
-            Assert.True(logicalOffset > 4UL * 1024 * 1024 * 1024, "target hunk must lie past 4 GiB");
+            Assert.True(
+                logicalOffset > 4UL * 1024 * 1024 * 1024,
+                "target hunk must lie past 4 GiB"
+            );
 
             var buf = new byte[64];
             var rErr = chd!.Read(logicalOffset, buf, 0, buf.Length);

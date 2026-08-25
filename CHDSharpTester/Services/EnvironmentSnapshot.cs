@@ -16,7 +16,8 @@ internal sealed class EnvironmentSnapshot
     public EnvironmentSnapshot(string applicationName)
     {
         ApplicationName = applicationName;
-        ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
+        ApplicationVersion =
+            Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
         WindowsVersion = GetWindowsVersion();
     }
 
@@ -50,8 +51,11 @@ internal sealed class EnvironmentSnapshot
     /// <summary>The system temporary directory path.</summary>
     public string TempPath => Path.GetTempPath();
 
-    [SuppressMessage("ReSharper", "CA1031",
-        Justification = "Best-effort environment detection; fall back to OS version.")]
+    [SuppressMessage(
+        "ReSharper",
+        "CA1031",
+        Justification = "Best-effort environment detection; fall back to OS version."
+    )]
     private static string GetWindowsVersion()
     {
         try

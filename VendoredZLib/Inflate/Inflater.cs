@@ -10,95 +10,579 @@ internal static partial class Inflater
 {
     internal static readonly Code[] SLenfix = new Code[]
     {
-        new(96, 7, 0), new(0, 8, 80), new(0, 8, 16), new(20, 8, 115), new(18, 7, 31), new(0, 8, 112), new(0, 8, 48),
-        new(0, 9, 192), new(16, 7, 10), new(0, 8, 96), new(0, 8, 32), new(0, 9, 160), new(0, 8, 0), new(0, 8, 128),
-        new(0, 8, 64), new(0, 9, 224), new(16, 7, 6), new(0, 8, 88), new(0, 8, 24), new(0, 9, 144), new(19, 7, 59),
-        new(0, 8, 120), new(0, 8, 56), new(0, 9, 208), new(17, 7, 17), new(0, 8, 104), new(0, 8, 40), new(0, 9, 176),
-        new(0, 8, 8), new(0, 8, 136), new(0, 8, 72), new(0, 9, 240), new(16, 7, 4), new(0, 8, 84), new(0, 8, 20),
-        new(21, 8, 227), new(19, 7, 43), new(0, 8, 116), new(0, 8, 52), new(0, 9, 200), new(17, 7, 13), new(0, 8, 100),
-        new(0, 8, 36), new(0, 9, 168), new(0, 8, 4), new(0, 8, 132), new(0, 8, 68), new(0, 9, 232), new(16, 7, 8),
-        new(0, 8, 92), new(0, 8, 28), new(0, 9, 152), new(20, 7, 83), new(0, 8, 124), new(0, 8, 60), new(0, 9, 216),
-        new(18, 7, 23), new(0, 8, 108), new(0, 8, 44), new(0, 9, 184), new(0, 8, 12), new(0, 8, 140), new(0, 8, 76),
-        new(0, 9, 248), new(16, 7, 3), new(0, 8, 82), new(0, 8, 18), new(21, 8, 163), new(19, 7, 35), new(0, 8, 114),
-        new(0, 8, 50), new(0, 9, 196), new(17, 7, 11), new(0, 8, 98), new(0, 8, 34), new(0, 9, 164), new(0, 8, 2),
-        new(0, 8, 130), new(0, 8, 66), new(0, 9, 228), new(16, 7, 7), new(0, 8, 90), new(0, 8, 26), new(0, 9, 148),
-        new(20, 7, 67), new(0, 8, 122), new(0, 8, 58), new(0, 9, 212), new(18, 7, 19), new(0, 8, 106), new(0, 8, 42),
-        new(0, 9, 180), new(0, 8, 10), new(0, 8, 138), new(0, 8, 74), new(0, 9, 244), new(16, 7, 5), new(0, 8, 86),
-        new(0, 8, 22), new(64, 8, 0), new(19, 7, 51), new(0, 8, 118), new(0, 8, 54), new(0, 9, 204), new(17, 7, 15),
-        new(0, 8, 102), new(0, 8, 38), new(0, 9, 172), new(0, 8, 6), new(0, 8, 134), new(0, 8, 70), new(0, 9, 236),
-        new(16, 7, 9), new(0, 8, 94), new(0, 8, 30), new(0, 9, 156), new(20, 7, 99), new(0, 8, 126), new(0, 8, 62),
-        new(0, 9, 220), new(18, 7, 27), new(0, 8, 110), new(0, 8, 46), new(0, 9, 188), new(0, 8, 14), new(0, 8, 142),
-        new(0, 8, 78), new(0, 9, 252), new(96, 7, 0), new(0, 8, 81), new(0, 8, 17), new(21, 8, 131), new(18, 7, 31),
-        new(0, 8, 113), new(0, 8, 49), new(0, 9, 194), new(16, 7, 10), new(0, 8, 97), new(0, 8, 33), new(0, 9, 162),
-        new(0, 8, 1), new(0, 8, 129), new(0, 8, 65), new(0, 9, 226), new(16, 7, 6), new(0, 8, 89), new(0, 8, 25),
-        new(0, 9, 146), new(19, 7, 59), new(0, 8, 121), new(0, 8, 57), new(0, 9, 210), new(17, 7, 17), new(0, 8, 105),
-        new(0, 8, 41), new(0, 9, 178), new(0, 8, 9), new(0, 8, 137), new(0, 8, 73), new(0, 9, 242), new(16, 7, 4),
-        new(0, 8, 85), new(0, 8, 21), new(16, 8, 258), new(19, 7, 43), new(0, 8, 117), new(0, 8, 53), new(0, 9, 202),
-        new(17, 7, 13), new(0, 8, 101), new(0, 8, 37), new(0, 9, 170), new(0, 8, 5), new(0, 8, 133), new(0, 8, 69),
-        new(0, 9, 234), new(16, 7, 8), new(0, 8, 93), new(0, 8, 29), new(0, 9, 154), new(20, 7, 83), new(0, 8, 125),
-        new(0, 8, 61), new(0, 9, 218), new(18, 7, 23), new(0, 8, 109), new(0, 8, 45), new(0, 9, 186), new(0, 8, 13),
-        new(0, 8, 141), new(0, 8, 77), new(0, 9, 250), new(16, 7, 3), new(0, 8, 83), new(0, 8, 19), new(21, 8, 195),
-        new(19, 7, 35), new(0, 8, 115), new(0, 8, 51), new(0, 9, 198), new(17, 7, 11), new(0, 8, 99), new(0, 8, 35),
-        new(0, 9, 166), new(0, 8, 3), new(0, 8, 131), new(0, 8, 67), new(0, 9, 230), new(16, 7, 7), new(0, 8, 91),
-        new(0, 8, 27), new(0, 9, 150), new(20, 7, 67), new(0, 8, 123), new(0, 8, 59), new(0, 9, 214), new(18, 7, 19),
-        new(0, 8, 107), new(0, 8, 43), new(0, 9, 182), new(0, 8, 11), new(0, 8, 139), new(0, 8, 75), new(0, 9, 246),
-        new(16, 7, 5), new(0, 8, 87), new(0, 8, 23), new(64, 8, 0), new(19, 7, 51), new(0, 8, 119), new(0, 8, 55),
-        new(0, 9, 206), new(17, 7, 15), new(0, 8, 103), new(0, 8, 39), new(0, 9, 174), new(0, 8, 7), new(0, 8, 135),
-        new(0, 8, 71), new(0, 9, 238), new(16, 7, 9), new(0, 8, 95), new(0, 8, 31), new(0, 9, 158), new(20, 7, 99),
-        new(0, 8, 127), new(0, 8, 63), new(0, 9, 222), new(18, 7, 27), new(0, 8, 111), new(0, 8, 47), new(0, 9, 190),
-        new(0, 8, 15), new(0, 8, 143), new(0, 8, 79), new(0, 9, 254), new(96, 7, 0), new(0, 8, 80), new(0, 8, 16),
-        new(20, 8, 115), new(18, 7, 31), new(0, 8, 112), new(0, 8, 48), new(0, 9, 193), new(16, 7, 10), new(0, 8, 96),
-        new(0, 8, 32), new(0, 9, 161), new(0, 8, 0), new(0, 8, 128), new(0, 8, 64), new(0, 9, 225), new(16, 7, 6),
-        new(0, 8, 88), new(0, 8, 24), new(0, 9, 145), new(19, 7, 59), new(0, 8, 120), new(0, 8, 56), new(0, 9, 209),
-        new(17, 7, 17), new(0, 8, 104), new(0, 8, 40), new(0, 9, 177), new(0, 8, 8), new(0, 8, 136), new(0, 8, 72),
-        new(0, 9, 241), new(16, 7, 4), new(0, 8, 84), new(0, 8, 20), new(21, 8, 227), new(19, 7, 43), new(0, 8, 116),
-        new(0, 8, 52), new(0, 9, 201), new(17, 7, 13), new(0, 8, 100), new(0, 8, 36), new(0, 9, 169), new(0, 8, 4),
-        new(0, 8, 132), new(0, 8, 68), new(0, 9, 233), new(16, 7, 8), new(0, 8, 92), new(0, 8, 28), new(0, 9, 153),
-        new(20, 7, 83), new(0, 8, 124), new(0, 8, 60), new(0, 9, 217), new(18, 7, 23), new(0, 8, 108), new(0, 8, 44),
-        new(0, 9, 185), new(0, 8, 12), new(0, 8, 140), new(0, 8, 76), new(0, 9, 249), new(16, 7, 3), new(0, 8, 82),
-        new(0, 8, 18), new(21, 8, 163), new(19, 7, 35), new(0, 8, 114), new(0, 8, 50), new(0, 9, 197), new(17, 7, 11),
-        new(0, 8, 98), new(0, 8, 34), new(0, 9, 165), new(0, 8, 2), new(0, 8, 130), new(0, 8, 66), new(0, 9, 229),
-        new(16, 7, 7), new(0, 8, 90), new(0, 8, 26), new(0, 9, 149), new(20, 7, 67), new(0, 8, 122), new(0, 8, 58),
-        new(0, 9, 213), new(18, 7, 19), new(0, 8, 106), new(0, 8, 42), new(0, 9, 181), new(0, 8, 10), new(0, 8, 138),
-        new(0, 8, 74), new(0, 9, 245), new(16, 7, 5), new(0, 8, 86), new(0, 8, 22), new(64, 8, 0), new(19, 7, 51),
-        new(0, 8, 118), new(0, 8, 54), new(0, 9, 205), new(17, 7, 15), new(0, 8, 102), new(0, 8, 38), new(0, 9, 173),
-        new(0, 8, 6), new(0, 8, 134), new(0, 8, 70), new(0, 9, 237), new(16, 7, 9), new(0, 8, 94), new(0, 8, 30),
-        new(0, 9, 157), new(20, 7, 99), new(0, 8, 126), new(0, 8, 62), new(0, 9, 221), new(18, 7, 27), new(0, 8, 110),
-        new(0, 8, 46), new(0, 9, 189), new(0, 8, 14), new(0, 8, 142), new(0, 8, 78), new(0, 9, 253), new(96, 7, 0),
-        new(0, 8, 81), new(0, 8, 17), new(21, 8, 131), new(18, 7, 31), new(0, 8, 113), new(0, 8, 49), new(0, 9, 195),
-        new(16, 7, 10), new(0, 8, 97), new(0, 8, 33), new(0, 9, 163), new(0, 8, 1), new(0, 8, 129), new(0, 8, 65),
-        new(0, 9, 227), new(16, 7, 6), new(0, 8, 89), new(0, 8, 25), new(0, 9, 147), new(19, 7, 59), new(0, 8, 121),
-        new(0, 8, 57), new(0, 9, 211), new(17, 7, 17), new(0, 8, 105), new(0, 8, 41), new(0, 9, 179), new(0, 8, 9),
-        new(0, 8, 137), new(0, 8, 73), new(0, 9, 243), new(16, 7, 4), new(0, 8, 85), new(0, 8, 21), new(16, 8, 258),
-        new(19, 7, 43), new(0, 8, 117), new(0, 8, 53), new(0, 9, 203), new(17, 7, 13), new(0, 8, 101), new(0, 8, 37),
-        new(0, 9, 171), new(0, 8, 5), new(0, 8, 133), new(0, 8, 69), new(0, 9, 235), new(16, 7, 8), new(0, 8, 93),
-        new(0, 8, 29), new(0, 9, 155), new(20, 7, 83), new(0, 8, 125), new(0, 8, 61), new(0, 9, 219), new(18, 7, 23),
-        new(0, 8, 109), new(0, 8, 45), new(0, 9, 187), new(0, 8, 13), new(0, 8, 141), new(0, 8, 77), new(0, 9, 251),
-        new(16, 7, 3), new(0, 8, 83), new(0, 8, 19), new(21, 8, 195), new(19, 7, 35), new(0, 8, 115), new(0, 8, 51),
-        new(0, 9, 199), new(17, 7, 11), new(0, 8, 99), new(0, 8, 35), new(0, 9, 167), new(0, 8, 3), new(0, 8, 131),
-        new(0, 8, 67), new(0, 9, 231), new(16, 7, 7), new(0, 8, 91), new(0, 8, 27), new(0, 9, 151), new(20, 7, 67),
-        new(0, 8, 123), new(0, 8, 59), new(0, 9, 215), new(18, 7, 19), new(0, 8, 107), new(0, 8, 43), new(0, 9, 183),
-        new(0, 8, 11), new(0, 8, 139), new(0, 8, 75), new(0, 9, 247), new(16, 7, 5), new(0, 8, 87), new(0, 8, 23),
-        new(64, 8, 0), new(19, 7, 51), new(0, 8, 119), new(0, 8, 55), new(0, 9, 207), new(17, 7, 15), new(0, 8, 103),
-        new(0, 8, 39), new(0, 9, 175), new(0, 8, 7), new(0, 8, 135), new(0, 8, 71), new(0, 9, 239), new(16, 7, 9),
-        new(0, 8, 95), new(0, 8, 31), new(0, 9, 159), new(20, 7, 99), new(0, 8, 127), new(0, 8, 63), new(0, 9, 223),
-        new(18, 7, 27), new(0, 8, 111), new(0, 8, 47), new(0, 9, 191), new(0, 8, 15), new(0, 8, 143), new(0, 8, 79),
-        new(0, 9, 255)
+        new(96, 7, 0),
+        new(0, 8, 80),
+        new(0, 8, 16),
+        new(20, 8, 115),
+        new(18, 7, 31),
+        new(0, 8, 112),
+        new(0, 8, 48),
+        new(0, 9, 192),
+        new(16, 7, 10),
+        new(0, 8, 96),
+        new(0, 8, 32),
+        new(0, 9, 160),
+        new(0, 8, 0),
+        new(0, 8, 128),
+        new(0, 8, 64),
+        new(0, 9, 224),
+        new(16, 7, 6),
+        new(0, 8, 88),
+        new(0, 8, 24),
+        new(0, 9, 144),
+        new(19, 7, 59),
+        new(0, 8, 120),
+        new(0, 8, 56),
+        new(0, 9, 208),
+        new(17, 7, 17),
+        new(0, 8, 104),
+        new(0, 8, 40),
+        new(0, 9, 176),
+        new(0, 8, 8),
+        new(0, 8, 136),
+        new(0, 8, 72),
+        new(0, 9, 240),
+        new(16, 7, 4),
+        new(0, 8, 84),
+        new(0, 8, 20),
+        new(21, 8, 227),
+        new(19, 7, 43),
+        new(0, 8, 116),
+        new(0, 8, 52),
+        new(0, 9, 200),
+        new(17, 7, 13),
+        new(0, 8, 100),
+        new(0, 8, 36),
+        new(0, 9, 168),
+        new(0, 8, 4),
+        new(0, 8, 132),
+        new(0, 8, 68),
+        new(0, 9, 232),
+        new(16, 7, 8),
+        new(0, 8, 92),
+        new(0, 8, 28),
+        new(0, 9, 152),
+        new(20, 7, 83),
+        new(0, 8, 124),
+        new(0, 8, 60),
+        new(0, 9, 216),
+        new(18, 7, 23),
+        new(0, 8, 108),
+        new(0, 8, 44),
+        new(0, 9, 184),
+        new(0, 8, 12),
+        new(0, 8, 140),
+        new(0, 8, 76),
+        new(0, 9, 248),
+        new(16, 7, 3),
+        new(0, 8, 82),
+        new(0, 8, 18),
+        new(21, 8, 163),
+        new(19, 7, 35),
+        new(0, 8, 114),
+        new(0, 8, 50),
+        new(0, 9, 196),
+        new(17, 7, 11),
+        new(0, 8, 98),
+        new(0, 8, 34),
+        new(0, 9, 164),
+        new(0, 8, 2),
+        new(0, 8, 130),
+        new(0, 8, 66),
+        new(0, 9, 228),
+        new(16, 7, 7),
+        new(0, 8, 90),
+        new(0, 8, 26),
+        new(0, 9, 148),
+        new(20, 7, 67),
+        new(0, 8, 122),
+        new(0, 8, 58),
+        new(0, 9, 212),
+        new(18, 7, 19),
+        new(0, 8, 106),
+        new(0, 8, 42),
+        new(0, 9, 180),
+        new(0, 8, 10),
+        new(0, 8, 138),
+        new(0, 8, 74),
+        new(0, 9, 244),
+        new(16, 7, 5),
+        new(0, 8, 86),
+        new(0, 8, 22),
+        new(64, 8, 0),
+        new(19, 7, 51),
+        new(0, 8, 118),
+        new(0, 8, 54),
+        new(0, 9, 204),
+        new(17, 7, 15),
+        new(0, 8, 102),
+        new(0, 8, 38),
+        new(0, 9, 172),
+        new(0, 8, 6),
+        new(0, 8, 134),
+        new(0, 8, 70),
+        new(0, 9, 236),
+        new(16, 7, 9),
+        new(0, 8, 94),
+        new(0, 8, 30),
+        new(0, 9, 156),
+        new(20, 7, 99),
+        new(0, 8, 126),
+        new(0, 8, 62),
+        new(0, 9, 220),
+        new(18, 7, 27),
+        new(0, 8, 110),
+        new(0, 8, 46),
+        new(0, 9, 188),
+        new(0, 8, 14),
+        new(0, 8, 142),
+        new(0, 8, 78),
+        new(0, 9, 252),
+        new(96, 7, 0),
+        new(0, 8, 81),
+        new(0, 8, 17),
+        new(21, 8, 131),
+        new(18, 7, 31),
+        new(0, 8, 113),
+        new(0, 8, 49),
+        new(0, 9, 194),
+        new(16, 7, 10),
+        new(0, 8, 97),
+        new(0, 8, 33),
+        new(0, 9, 162),
+        new(0, 8, 1),
+        new(0, 8, 129),
+        new(0, 8, 65),
+        new(0, 9, 226),
+        new(16, 7, 6),
+        new(0, 8, 89),
+        new(0, 8, 25),
+        new(0, 9, 146),
+        new(19, 7, 59),
+        new(0, 8, 121),
+        new(0, 8, 57),
+        new(0, 9, 210),
+        new(17, 7, 17),
+        new(0, 8, 105),
+        new(0, 8, 41),
+        new(0, 9, 178),
+        new(0, 8, 9),
+        new(0, 8, 137),
+        new(0, 8, 73),
+        new(0, 9, 242),
+        new(16, 7, 4),
+        new(0, 8, 85),
+        new(0, 8, 21),
+        new(16, 8, 258),
+        new(19, 7, 43),
+        new(0, 8, 117),
+        new(0, 8, 53),
+        new(0, 9, 202),
+        new(17, 7, 13),
+        new(0, 8, 101),
+        new(0, 8, 37),
+        new(0, 9, 170),
+        new(0, 8, 5),
+        new(0, 8, 133),
+        new(0, 8, 69),
+        new(0, 9, 234),
+        new(16, 7, 8),
+        new(0, 8, 93),
+        new(0, 8, 29),
+        new(0, 9, 154),
+        new(20, 7, 83),
+        new(0, 8, 125),
+        new(0, 8, 61),
+        new(0, 9, 218),
+        new(18, 7, 23),
+        new(0, 8, 109),
+        new(0, 8, 45),
+        new(0, 9, 186),
+        new(0, 8, 13),
+        new(0, 8, 141),
+        new(0, 8, 77),
+        new(0, 9, 250),
+        new(16, 7, 3),
+        new(0, 8, 83),
+        new(0, 8, 19),
+        new(21, 8, 195),
+        new(19, 7, 35),
+        new(0, 8, 115),
+        new(0, 8, 51),
+        new(0, 9, 198),
+        new(17, 7, 11),
+        new(0, 8, 99),
+        new(0, 8, 35),
+        new(0, 9, 166),
+        new(0, 8, 3),
+        new(0, 8, 131),
+        new(0, 8, 67),
+        new(0, 9, 230),
+        new(16, 7, 7),
+        new(0, 8, 91),
+        new(0, 8, 27),
+        new(0, 9, 150),
+        new(20, 7, 67),
+        new(0, 8, 123),
+        new(0, 8, 59),
+        new(0, 9, 214),
+        new(18, 7, 19),
+        new(0, 8, 107),
+        new(0, 8, 43),
+        new(0, 9, 182),
+        new(0, 8, 11),
+        new(0, 8, 139),
+        new(0, 8, 75),
+        new(0, 9, 246),
+        new(16, 7, 5),
+        new(0, 8, 87),
+        new(0, 8, 23),
+        new(64, 8, 0),
+        new(19, 7, 51),
+        new(0, 8, 119),
+        new(0, 8, 55),
+        new(0, 9, 206),
+        new(17, 7, 15),
+        new(0, 8, 103),
+        new(0, 8, 39),
+        new(0, 9, 174),
+        new(0, 8, 7),
+        new(0, 8, 135),
+        new(0, 8, 71),
+        new(0, 9, 238),
+        new(16, 7, 9),
+        new(0, 8, 95),
+        new(0, 8, 31),
+        new(0, 9, 158),
+        new(20, 7, 99),
+        new(0, 8, 127),
+        new(0, 8, 63),
+        new(0, 9, 222),
+        new(18, 7, 27),
+        new(0, 8, 111),
+        new(0, 8, 47),
+        new(0, 9, 190),
+        new(0, 8, 15),
+        new(0, 8, 143),
+        new(0, 8, 79),
+        new(0, 9, 254),
+        new(96, 7, 0),
+        new(0, 8, 80),
+        new(0, 8, 16),
+        new(20, 8, 115),
+        new(18, 7, 31),
+        new(0, 8, 112),
+        new(0, 8, 48),
+        new(0, 9, 193),
+        new(16, 7, 10),
+        new(0, 8, 96),
+        new(0, 8, 32),
+        new(0, 9, 161),
+        new(0, 8, 0),
+        new(0, 8, 128),
+        new(0, 8, 64),
+        new(0, 9, 225),
+        new(16, 7, 6),
+        new(0, 8, 88),
+        new(0, 8, 24),
+        new(0, 9, 145),
+        new(19, 7, 59),
+        new(0, 8, 120),
+        new(0, 8, 56),
+        new(0, 9, 209),
+        new(17, 7, 17),
+        new(0, 8, 104),
+        new(0, 8, 40),
+        new(0, 9, 177),
+        new(0, 8, 8),
+        new(0, 8, 136),
+        new(0, 8, 72),
+        new(0, 9, 241),
+        new(16, 7, 4),
+        new(0, 8, 84),
+        new(0, 8, 20),
+        new(21, 8, 227),
+        new(19, 7, 43),
+        new(0, 8, 116),
+        new(0, 8, 52),
+        new(0, 9, 201),
+        new(17, 7, 13),
+        new(0, 8, 100),
+        new(0, 8, 36),
+        new(0, 9, 169),
+        new(0, 8, 4),
+        new(0, 8, 132),
+        new(0, 8, 68),
+        new(0, 9, 233),
+        new(16, 7, 8),
+        new(0, 8, 92),
+        new(0, 8, 28),
+        new(0, 9, 153),
+        new(20, 7, 83),
+        new(0, 8, 124),
+        new(0, 8, 60),
+        new(0, 9, 217),
+        new(18, 7, 23),
+        new(0, 8, 108),
+        new(0, 8, 44),
+        new(0, 9, 185),
+        new(0, 8, 12),
+        new(0, 8, 140),
+        new(0, 8, 76),
+        new(0, 9, 249),
+        new(16, 7, 3),
+        new(0, 8, 82),
+        new(0, 8, 18),
+        new(21, 8, 163),
+        new(19, 7, 35),
+        new(0, 8, 114),
+        new(0, 8, 50),
+        new(0, 9, 197),
+        new(17, 7, 11),
+        new(0, 8, 98),
+        new(0, 8, 34),
+        new(0, 9, 165),
+        new(0, 8, 2),
+        new(0, 8, 130),
+        new(0, 8, 66),
+        new(0, 9, 229),
+        new(16, 7, 7),
+        new(0, 8, 90),
+        new(0, 8, 26),
+        new(0, 9, 149),
+        new(20, 7, 67),
+        new(0, 8, 122),
+        new(0, 8, 58),
+        new(0, 9, 213),
+        new(18, 7, 19),
+        new(0, 8, 106),
+        new(0, 8, 42),
+        new(0, 9, 181),
+        new(0, 8, 10),
+        new(0, 8, 138),
+        new(0, 8, 74),
+        new(0, 9, 245),
+        new(16, 7, 5),
+        new(0, 8, 86),
+        new(0, 8, 22),
+        new(64, 8, 0),
+        new(19, 7, 51),
+        new(0, 8, 118),
+        new(0, 8, 54),
+        new(0, 9, 205),
+        new(17, 7, 15),
+        new(0, 8, 102),
+        new(0, 8, 38),
+        new(0, 9, 173),
+        new(0, 8, 6),
+        new(0, 8, 134),
+        new(0, 8, 70),
+        new(0, 9, 237),
+        new(16, 7, 9),
+        new(0, 8, 94),
+        new(0, 8, 30),
+        new(0, 9, 157),
+        new(20, 7, 99),
+        new(0, 8, 126),
+        new(0, 8, 62),
+        new(0, 9, 221),
+        new(18, 7, 27),
+        new(0, 8, 110),
+        new(0, 8, 46),
+        new(0, 9, 189),
+        new(0, 8, 14),
+        new(0, 8, 142),
+        new(0, 8, 78),
+        new(0, 9, 253),
+        new(96, 7, 0),
+        new(0, 8, 81),
+        new(0, 8, 17),
+        new(21, 8, 131),
+        new(18, 7, 31),
+        new(0, 8, 113),
+        new(0, 8, 49),
+        new(0, 9, 195),
+        new(16, 7, 10),
+        new(0, 8, 97),
+        new(0, 8, 33),
+        new(0, 9, 163),
+        new(0, 8, 1),
+        new(0, 8, 129),
+        new(0, 8, 65),
+        new(0, 9, 227),
+        new(16, 7, 6),
+        new(0, 8, 89),
+        new(0, 8, 25),
+        new(0, 9, 147),
+        new(19, 7, 59),
+        new(0, 8, 121),
+        new(0, 8, 57),
+        new(0, 9, 211),
+        new(17, 7, 17),
+        new(0, 8, 105),
+        new(0, 8, 41),
+        new(0, 9, 179),
+        new(0, 8, 9),
+        new(0, 8, 137),
+        new(0, 8, 73),
+        new(0, 9, 243),
+        new(16, 7, 4),
+        new(0, 8, 85),
+        new(0, 8, 21),
+        new(16, 8, 258),
+        new(19, 7, 43),
+        new(0, 8, 117),
+        new(0, 8, 53),
+        new(0, 9, 203),
+        new(17, 7, 13),
+        new(0, 8, 101),
+        new(0, 8, 37),
+        new(0, 9, 171),
+        new(0, 8, 5),
+        new(0, 8, 133),
+        new(0, 8, 69),
+        new(0, 9, 235),
+        new(16, 7, 8),
+        new(0, 8, 93),
+        new(0, 8, 29),
+        new(0, 9, 155),
+        new(20, 7, 83),
+        new(0, 8, 125),
+        new(0, 8, 61),
+        new(0, 9, 219),
+        new(18, 7, 23),
+        new(0, 8, 109),
+        new(0, 8, 45),
+        new(0, 9, 187),
+        new(0, 8, 13),
+        new(0, 8, 141),
+        new(0, 8, 77),
+        new(0, 9, 251),
+        new(16, 7, 3),
+        new(0, 8, 83),
+        new(0, 8, 19),
+        new(21, 8, 195),
+        new(19, 7, 35),
+        new(0, 8, 115),
+        new(0, 8, 51),
+        new(0, 9, 199),
+        new(17, 7, 11),
+        new(0, 8, 99),
+        new(0, 8, 35),
+        new(0, 9, 167),
+        new(0, 8, 3),
+        new(0, 8, 131),
+        new(0, 8, 67),
+        new(0, 9, 231),
+        new(16, 7, 7),
+        new(0, 8, 91),
+        new(0, 8, 27),
+        new(0, 9, 151),
+        new(20, 7, 67),
+        new(0, 8, 123),
+        new(0, 8, 59),
+        new(0, 9, 215),
+        new(18, 7, 19),
+        new(0, 8, 107),
+        new(0, 8, 43),
+        new(0, 9, 183),
+        new(0, 8, 11),
+        new(0, 8, 139),
+        new(0, 8, 75),
+        new(0, 9, 247),
+        new(16, 7, 5),
+        new(0, 8, 87),
+        new(0, 8, 23),
+        new(64, 8, 0),
+        new(19, 7, 51),
+        new(0, 8, 119),
+        new(0, 8, 55),
+        new(0, 9, 207),
+        new(17, 7, 15),
+        new(0, 8, 103),
+        new(0, 8, 39),
+        new(0, 9, 175),
+        new(0, 8, 7),
+        new(0, 8, 135),
+        new(0, 8, 71),
+        new(0, 9, 239),
+        new(16, 7, 9),
+        new(0, 8, 95),
+        new(0, 8, 31),
+        new(0, 9, 159),
+        new(20, 7, 99),
+        new(0, 8, 127),
+        new(0, 8, 63),
+        new(0, 9, 223),
+        new(18, 7, 27),
+        new(0, 8, 111),
+        new(0, 8, 47),
+        new(0, 9, 191),
+        new(0, 8, 15),
+        new(0, 8, 143),
+        new(0, 8, 79),
+        new(0, 9, 255),
     };
 
     internal static readonly Code[] SDistfix = new Code[]
     {
-        new(16, 5, 1), new(23, 5, 257), new(19, 5, 17), new(27, 5, 4097), new(17, 5, 5), new(25, 5, 1025),
-        new(21, 5, 65), new(29, 5, 16385), new(16, 5, 3), new(24, 5, 513), new(20, 5, 33), new(28, 5, 8193),
-        new(18, 5, 9), new(26, 5, 2049), new(22, 5, 129), new(64, 5, 0), new(16, 5, 2), new(23, 5, 385),
-        new(19, 5, 25), new(27, 5, 6145), new(17, 5, 7), new(25, 5, 1537), new(21, 5, 97), new(29, 5, 24577),
-        new(16, 5, 4), new(24, 5, 769), new(20, 5, 49), new(28, 5, 12289), new(18, 5, 13), new(26, 5, 3073),
-        new(22, 5, 193), new(64, 5, 0)
+        new(16, 5, 1),
+        new(23, 5, 257),
+        new(19, 5, 17),
+        new(27, 5, 4097),
+        new(17, 5, 5),
+        new(25, 5, 1025),
+        new(21, 5, 65),
+        new(29, 5, 16385),
+        new(16, 5, 3),
+        new(24, 5, 513),
+        new(20, 5, 33),
+        new(28, 5, 8193),
+        new(18, 5, 9),
+        new(26, 5, 2049),
+        new(22, 5, 129),
+        new(64, 5, 0),
+        new(16, 5, 2),
+        new(23, 5, 385),
+        new(19, 5, 25),
+        new(27, 5, 6145),
+        new(17, 5, 7),
+        new(25, 5, 1537),
+        new(21, 5, 97),
+        new(29, 5, 24577),
+        new(16, 5, 4),
+        new(24, 5, 769),
+        new(20, 5, 49),
+        new(28, 5, 12289),
+        new(18, 5, 13),
+        new(26, 5, 3073),
+        new(22, 5, 193),
+        new(64, 5, 0),
     };
 
     // permutation of code lengths
     private static readonly ushort[] SOrder = new ushort[]
-        { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+    {
+        16,
+        17,
+        18,
+        0,
+        8,
+        7,
+        9,
+        6,
+        10,
+        5,
+        11,
+        4,
+        12,
+        3,
+        13,
+        2,
+        14,
+        1,
+        15,
+    };
 
     internal static void Init()
     {
@@ -107,22 +591,26 @@ internal static partial class Inflater
 
     internal static int Inflate(ref ZStream strm, int flush)
     {
-        if (InflateStateCheck(ref strm)
+        if (
+            InflateStateCheck(ref strm)
             || strm.Output2.IsEmpty
-            || (strm.Input2.IsEmpty && strm.AvailIn != 0))
+            || (strm.Input2.IsEmpty && strm.AvailIn != 0)
+        )
             return ZStreamError;
 
         var state = strm.InflateState;
         if (state.Mode == InflateMode.Type) // Skip check
             state.Mode = InflateMode.Typedo;
 
-        ref var next = ref // next input
+        ref var next =
+            ref // next input
 #if NET7_0_OR_GREATER
             Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
             MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
-        ref var put = ref // next output
+        ref var put =
+            ref // next output
 #if NET7_0_OR_GREATER
             Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
 #else
@@ -159,7 +647,7 @@ internal static partial class Inflater
         var nextOut = strm.NextOutput;
         var ret = ZOk;
 
-        for (;;)
+        for (; ; )
             switch (state.Mode)
             {
                 case InflateMode.Head:
@@ -198,7 +686,8 @@ internal static partial class Inflater
                     hold >>= 4;
                     bits -= 4;
                     len = (hold & ((1U << 4) - 1)) + 8;
-                    if (state.Wbits == 0) state.Wbits = len;
+                    if (state.Wbits == 0)
+                        state.Wbits = len;
 
                     if (len > 15 || len > state.Wbits)
                     {
@@ -280,7 +769,9 @@ internal static partial class Inflater
                     switch (hold & ((1U << 2) - 1))
                     {
                         case 0: // stored block
-                            Trace.Tracev($"inflate:     stored block{(state.Last != 0 ? " (last)" : "")}\n");
+                            Trace.Tracev(
+                                $"inflate:     stored block{(state.Last != 0 ? " (last)" : "")}\n"
+                            );
                             state.Mode = InflateMode.Stored;
                             break;
                         case 1: // fixed block
@@ -289,7 +780,9 @@ internal static partial class Inflater
                             state.Diststart = 0;
                             state.Distcode = SDistfix;
                             state.Distbits = 5;
-                            Trace.Tracev($"inflate:     fixed codes block{(state.Last != 0 ? " (last)" : "")}\n");
+                            Trace.Tracev(
+                                $"inflate:     fixed codes block{(state.Last != 0 ? " (last)" : "")}\n"
+                            );
                             state.Mode = InflateMode.Len2; // decode codes
                             if (flush == ZTrees)
                             {
@@ -300,7 +793,9 @@ internal static partial class Inflater
 
                             break;
                         case 2: // dynamic block
-                            Trace.Tracev($"inflate:     dynamic codes block{(state.Last != 0 ? "(last)" : "")}\n");
+                            Trace.Tracev(
+                                $"inflate:     dynamic codes block{(state.Last != 0 ? "(last)" : "")}\n"
+                            );
                             state.Mode = InflateMode.Table;
                             break;
                         case 3:
@@ -350,9 +845,11 @@ internal static partial class Inflater
                     copy = state.Length;
                     if (copy != 0)
                     {
-                        if (copy > have) copy = have;
+                        if (copy > have)
+                            copy = have;
 
-                        if (copy > left) copy = left;
+                        if (copy > left)
+                            copy = left;
 
                         if (copy == 0)
                             goto inf_leave;
@@ -409,21 +906,21 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lens))
+                            Lens))
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lens = ref MemoryMarshal.GetReference(state.Lens);
+                        Lens = ref MemoryMarshal.GetReference(state.Lens);
 
                     if (netUnsafe.IsNullRef(ref
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Order))
+                            Order))
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Order = ref MemoryMarshal.GetReference(SOrder);
+                        Order = ref MemoryMarshal.GetReference(SOrder);
 
                     while (state.Have < state.Ncode)
                     {
@@ -443,9 +940,9 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lens, (uint)Unsafe.Add(ref
+                            Lens, (uint)Unsafe.Add(ref
 #if NET7_0_OR_GREATER
-                                refs.
+                                    refs.
 #endif
                                     Order, state.Have++)) = (ushort)(hold & ((1U << 3) - 1));
                         hold >>= 3;
@@ -457,9 +954,9 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lens, (uint)Unsafe.Add(ref
+                            Lens, (uint)Unsafe.Add(ref
 #if NET7_0_OR_GREATER
-                                refs.
+                                    refs.
 #endif
                                     Order, state.Have++)) = 0;
 
@@ -475,50 +972,62 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Work = ref MemoryMarshal.GetReference(state.Work);
+                        Work = ref MemoryMarshal.GetReference(state.Work);
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lbase = ref MemoryMarshal.GetReference(SLbase);
+                        Lbase = ref MemoryMarshal.GetReference(SLbase);
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lext = ref MemoryMarshal.GetReference(SLext);
+                        Lext = ref MemoryMarshal.GetReference(SLext);
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dbase = ref MemoryMarshal.GetReference(SDbase);
+                        Dbase = ref MemoryMarshal.GetReference(SDbase);
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dext = ref MemoryMarshal.GetReference(SDext);
+                        Dext = ref MemoryMarshal.GetReference(SDext);
                     }
 
-                    ret = InflateTable(CodeType.Codes, ref
+                    ret = InflateTable(
+                        CodeType.Codes,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lens, 19, ref codes, ref state.Lenbits, ref
+                        Lens,
+                        19,
+                        ref codes,
+                        ref state.Lenbits,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Work, ref state.Next, ref
+                        Work,
+                        ref state.Next,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lbase, ref
+                        Lbase,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lext, ref
+                        Lext,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dbase, ref
+                        Dbase,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dext);
+                        Dext
+                    );
                     if (ret != 0)
                     {
                         strm.Msg = "invalid code lengths set";
@@ -535,21 +1044,21 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lencode))
+                            Lencode))
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lencode = ref MemoryMarshal.GetReference(state.Lencode);
+                        Lencode = ref MemoryMarshal.GetReference(state.Lencode);
 
                     while (state.Have < state.Nlen + state.Ndist)
                     {
-                        for (;;)
+                        for (; ; )
                         {
                             here = Unsafe.Add(ref
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Lencode, hold & ((1U << state.Lenbits) - 1));
+                                Lencode, hold & ((1U << state.Lenbits) - 1));
                             if (here.bits <= bits)
                                 break;
 
@@ -578,7 +1087,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Lens, state.Have++) = here.val;
+                                Lens, state.Have++) = here.val;
                         }
                         else
                         {
@@ -609,7 +1118,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                     refs.
 #endif
-                                        Lens, state.Have - 1);
+                                    Lens, state.Have - 1);
                                 copy = 3 + (hold & ((1U << 2) - 1));
                                 hold >>= 2;
                                 bits -= 2;
@@ -669,7 +1178,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                     refs.
 #endif
-                                        Lens, state.Have++) = (ushort)len;
+                                    Lens, state.Have++) = (ushort)len;
                         }
                     }
 
@@ -682,7 +1191,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lens, 256U) == 0)
+                            Lens, 256U) == 0)
                     {
                         strm.Msg = "invalid code -- missing end-of-block";
                         state.Mode = InflateMode.Bad;
@@ -693,31 +1202,43 @@ internal static partial class Inflater
                     state.Next = 0;
                     state.Lencode = state.Codes;
                     state.Lenbits = 9;
-                    ret = InflateTable(CodeType.Lens, ref
+                    ret = InflateTable(
+                        CodeType.Lens,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lens, state.Nlen, ref codes, ref state.Lenbits, ref
+                        Lens,
+                        state.Nlen,
+                        ref codes,
+                        ref state.Lenbits,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Work, ref state.Next, ref
+                        Work,
+                        ref state.Next,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lbase, ref
+                        Lbase,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lext, ref
+                        Lext,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dbase, ref
+                        Dbase,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dext);
+                        Dext
+                    );
                     if (ret != 0)
                     {
                         strm.Msg = "invalid literal/lengths set";
@@ -729,31 +1250,43 @@ internal static partial class Inflater
                     state.Diststart = state.Next;
                     state.Distbits = 6;
                     codes = ref Unsafe.Add(ref codes, state.Next);
-                    ret = InflateTable(CodeType.Dists, ref Unsafe.Add(ref
+                    ret = InflateTable(
+                        CodeType.Dists,
+                        ref Unsafe.Add(ref
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lens, state.Nlen), state.Ndist, ref codes, ref state.Distbits, ref
+                            Lens, state.Nlen),
+                        state.Ndist,
+                        ref codes,
+                        ref state.Distbits,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Work, ref state.Next, ref
+                        Work,
+                        ref state.Next,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lbase, ref
+                        Lbase,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lext, ref
+                        Lext,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dbase, ref
+                        Dbase,
+                        ref
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Dext);
+                        Dext
+                    );
                     if (ret != 0)
                     {
                         strm.Msg = "invalid distances set";
@@ -775,21 +1308,21 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lencode))
+                            Lencode))
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Lencode = ref MemoryMarshal.GetReference(state.Lencode);
+                        Lencode = ref MemoryMarshal.GetReference(state.Lencode);
 
                     if (netUnsafe.IsNullRef(ref
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Distcode))
+                            Distcode))
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Distcode = ref MemoryMarshal.GetReference(state.Distcode);
+                        Distcode = ref MemoryMarshal.GetReference(state.Distcode);
 
                     if (have >= 6 && left >= 258)
                     {
@@ -803,28 +1336,34 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Window))
+                                Window))
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Window = ref MemoryMarshal.GetReference(state.Window);
+                            Window = ref MemoryMarshal.GetReference(state.Window);
 
-                        InflateFast(ref strm, @out, ref
+                        InflateFast(
+                            ref strm,
+                            @out,
+                            ref
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Window, ref
+                            Window,
+                            ref
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lencode, ref Unsafe.Add(ref
+                            Lencode,
+                            ref Unsafe.Add(ref
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Distcode, state.Diststart));
+                                Distcode, state.Diststart)
+                        );
                         put = ref
 #if NET7_0_OR_GREATER
-                            Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
+                        Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
 #else
                         MemoryMarshal.GetReference(strm.Output2.Slice((int)strm.NextOutput));
 #endif
@@ -832,7 +1371,7 @@ internal static partial class Inflater
                         left = strm.AvailOut;
                         next = ref
 #if NET7_0_OR_GREATER
-                            Unsafe.Add(ref strm.InputPtr, strm.NextInput);
+                        Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
                         MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
@@ -841,19 +1380,20 @@ internal static partial class Inflater
                         hold = strm.InflateState.Hold;
                         bits = strm.InflateState.Bits;
 #pragma warning disable CA1508
-                        if (state.Mode == InflateMode.Type) state.Back = -1;
+                        if (state.Mode == InflateMode.Type)
+                            state.Back = -1;
 #pragma warning restore CA1508
                         break;
                     }
 
                     state.Back = 0;
-                    for (;;)
+                    for (; ; )
                     {
                         here = Unsafe.Add(ref
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Lencode, hold & ((1U << state.Lenbits) - 1));
+                            Lencode, hold & ((1U << state.Lenbits) - 1));
                         if (here.bits <= bits)
                             break;
 
@@ -877,13 +1417,16 @@ internal static partial class Inflater
                     if (here.op > 0 && (here.op & 0xf0) == 0)
                     {
                         last = here;
-                        for (;;)
+                        for (; ; )
                         {
-                            here = Unsafe.Add(ref
+                            here = Unsafe.Add(
+                                ref
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Lencode, last.val + ((hold & (1U << (last.bits + last.op - 1))) >> last.bits));
+                                Lencode,
+                                last.val + ((hold & (1U << (last.bits + last.op - 1))) >> last.bits)
+                            );
                             if ((uint)(last.bits + here.bits) <= bits)
                                 break;
 
@@ -915,9 +1458,11 @@ internal static partial class Inflater
                     state.Length = here.val;
                     if (here.op == 0)
                     {
-                        Trace.Tracevv(here.val is >= 0x20 and < 0x7f
-                            ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n"
-                            : $"inflate:         literal 0x{here.val:X2}\n");
+                        Trace.Tracevv(
+                            here.val is >= 0x20 and < 0x7f
+                                ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n"
+                                : $"inflate:         literal 0x{here.val:X2}\n"
+                        );
                         state.Mode = InflateMode.Lit;
                         break;
                     }
@@ -970,19 +1515,22 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Distcode))
+                            Distcode))
 #if NET7_0_OR_GREATER
                         refs.
 #endif
-                            Distcode = ref MemoryMarshal.GetReference(state.Distcode);
+                        Distcode = ref MemoryMarshal.GetReference(state.Distcode);
 
-                    for (;;)
+                    for (; ; )
                     {
-                        here = Unsafe.Add(ref
+                        here = Unsafe.Add(
+                            ref
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Distcode, state.Diststart + (hold & ((1U << state.Distbits) - 1)));
+                            Distcode,
+                            state.Diststart + (hold & ((1U << state.Distbits) - 1))
+                        );
                         if (here.bits <= bits)
                             break;
 
@@ -1006,14 +1554,18 @@ internal static partial class Inflater
                     if ((here.op & 0xf0) == 0)
                     {
                         last = here;
-                        for (;;)
+                        for (; ; )
                         {
-                            here = Unsafe.Add(ref
+                            here = Unsafe.Add(
+                                ref
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Distcode, state.Diststart + last.val +
-                                              ((hold & ((1U << (last.bits + last.op)) - 1)) >> last.bits));
+                                Distcode,
+                                state.Diststart
+                                    + last.val
+                                    + ((hold & ((1U << (last.bits + last.op)) - 1)) >> last.bits)
+                            );
                             if ((uint)(last.bits + here.bits) <= bits)
                                 break;
 
@@ -1096,11 +1648,11 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Window))
+                                Window))
 #if NET7_0_OR_GREATER
                             refs.
 #endif
-                                Window = ref MemoryMarshal.GetReference(state.Window);
+                            Window = ref MemoryMarshal.GetReference(state.Window);
 
                         if (copy > state.Wnext)
                         {
@@ -1109,7 +1661,7 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Window, state.Wsize - copy);
+                                Window, state.Wsize - copy);
                         }
                         else
                         {
@@ -1117,10 +1669,11 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
                                 refs.
 #endif
-                                    Window, state.Wnext - copy);
+                                Window, state.Wnext - copy);
                         }
 
-                        if (copy > state.Length) copy = state.Length;
+                        if (copy > state.Length)
+                            copy = state.Length;
                     }
                     else // copy from output
                     {
@@ -1128,7 +1681,8 @@ internal static partial class Inflater
                         copy = state.Length;
                     }
 
-                    if (copy > left) copy = left;
+                    if (copy > left)
+                        copy = left;
 
                     left -= copy;
                     state.Length -= copy;
@@ -1140,7 +1694,8 @@ internal static partial class Inflater
                         from = ref Unsafe.Add(ref from, 1U);
                     } while (--copy != 0);
 
-                    if (state.Length == 0) state.Mode = InflateMode.Len;
+                    if (state.Length == 0)
+                        state.Mode = InflateMode.Len;
 
                     break;
                 case InflateMode.Lit:
@@ -1172,8 +1727,11 @@ internal static partial class Inflater
                         strm.total_out += @out;
                         state.Total += @out;
                         if ((state.Wrap & 4) != 0 && @out != 0)
-                            strm.Adler = state.Check =
-                                Adler32.Update(state.Check, ref Unsafe.Subtract(ref put, @out), @out);
+                            strm.Adler = state.Check = Adler32.Update(
+                                state.Check,
+                                ref Unsafe.Subtract(ref put, @out),
+                                @out
+                            );
 
                         @out = left;
                         if ((state.Wrap & 4) != 0 && ZSwap32(hold) != state.Check)
@@ -1209,15 +1767,21 @@ internal static partial class Inflater
         strm.AvailIn = have;
         strm.InflateState.Hold = hold;
         strm.InflateState.Bits = bits;
-        if (state.Wsize != 0 || (@out != strm.AvailOut && state.Mode < InflateMode.Bad &&
-                                 (state.Mode < InflateMode.Check || flush != ZFinish)))
+        if (
+            state.Wsize != 0
+            || (
+                @out != strm.AvailOut
+                && state.Mode < InflateMode.Bad
+                && (state.Mode < InflateMode.Check || flush != ZFinish)
+            )
+        )
             try
             {
                 UpdateWindow(ref strm, ref put, @out - strm.AvailOut, ref
 #if NET7_0_OR_GREATER
                     refs.
 #endif
-                        Window);
+                    Window);
             }
             catch (OutOfMemoryException)
             {
@@ -1231,26 +1795,33 @@ internal static partial class Inflater
         strm.total_out += @out;
         state.Total += @out;
         if ((state.Wrap & 4) != 0 && @out != 0)
-            strm.Adler = state.Check = Adler32.Update(state.Check, ref Unsafe.Subtract(ref put, @out), @out);
+            strm.Adler = state.Check = Adler32.Update(
+                state.Check,
+                ref Unsafe.Subtract(ref put, @out),
+                @out
+            );
 
-        strm.DataType2 = (int)state.Bits + (state.Last != 0 ? 64 : 0) +
-                         (state.Mode == InflateMode.Type ? 128 : 0) +
-                         (state.Mode is InflateMode.Len2 or InflateMode.Copy2 ? 256 : 0);
-        if (((@in == 0 && @out == 0) || flush == ZFinish) && ret == ZOk) ret = ZBufError;
+        strm.DataType2 =
+            (int)state.Bits
+            + (state.Last != 0 ? 64 : 0)
+            + (state.Mode == InflateMode.Type ? 128 : 0)
+            + (state.Mode is InflateMode.Len2 or InflateMode.Copy2 ? 256 : 0);
+        if (((@in == 0 && @out == 0) || flush == ZFinish) && ret == ZOk)
+            ret = ZBufError;
 
         return ret;
     }
 
     private static bool InflateStateCheck(ref ZStream strm)
     {
-        return strm.InflateState == null || strm.InflateState.Mode < InflateMode.Head
-                                         || strm.InflateState.Mode > InflateMode.Sync;
+        return strm.InflateState == null
+            || strm.InflateState.Mode < InflateMode.Head
+            || strm.InflateState.Mode > InflateMode.Sync;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSwap32(uint q)
     {
-        return ((q >> 24) & 0xff) + ((q >> 8) & 0xff00)
-                                  + ((q & 0xff00) << 8) + ((q & 0xff) << 24);
+        return ((q >> 24) & 0xff) + ((q >> 8) & 0xff00) + ((q & 0xff00) << 8) + ((q & 0xff) << 24);
     }
 }

@@ -4,23 +4,22 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static readonly FASTCOVER_accel_t* FASTCOVER_defaultAccelParameters =
-        GetArrayPointer(
-            new FASTCOVER_accel_t[11]
-            {
-                new(100, 0),
-                new(100, 0),
-                new(50, 1),
-                new(34, 2),
-                new(25, 3),
-                new(20, 4),
-                new(17, 5),
-                new(14, 6),
-                new(13, 7),
-                new(11, 8),
-                new(10, 9)
-            }
-        );
+    private static readonly FASTCOVER_accel_t* FASTCOVER_defaultAccelParameters = GetArrayPointer(
+        new FASTCOVER_accel_t[11]
+        {
+            new(100, 0),
+            new(100, 0),
+            new(50, 1),
+            new(34, 2),
+            new(25, 3),
+            new(20, 4),
+            new(17, 5),
+            new(14, 6),
+            new(13, 7),
+            new(11, 8),
+            new(10, 9),
+        }
+    );
 
     /*-*************************************
      * Hash Functions
@@ -30,7 +29,8 @@ public static unsafe partial class Methods
      */
     private static nuint FASTCOVER_hashPtrToIndex(void* p, uint f, uint d)
     {
-        if (d == 6) return ZSTD_hash6Ptr(p, f);
+        if (d == 6)
+            return ZSTD_hash6Ptr(p, f);
 
         return ZSTD_hash8Ptr(p, f);
     }
@@ -68,7 +68,7 @@ public static unsafe partial class Methods
         {
             begin = 0,
             end = 0,
-            score = 0
+            score = 0,
         };
         COVER_segment_t activeSegment;
         activeSegment.begin = begin;
@@ -78,25 +78,24 @@ public static unsafe partial class Methods
         {
             /* Get hash value of current dmer */
             var idx = FASTCOVER_hashPtrToIndex(ctx->samples + activeSegment.end, f, d);
-            if (segmentFreqs[idx] == 0) activeSegment.score += freqs[idx];
+            if (segmentFreqs[idx] == 0)
+                activeSegment.score += freqs[idx];
 
             activeSegment.end += 1;
             segmentFreqs[idx] += 1;
             if (activeSegment.end - activeSegment.begin == dmersInK + 1)
             {
                 /* Get hash value of the dmer to be eliminated from active segment */
-                var delIndex = FASTCOVER_hashPtrToIndex(
-                    ctx->samples + activeSegment.begin,
-                    f,
-                    d
-                );
+                var delIndex = FASTCOVER_hashPtrToIndex(ctx->samples + activeSegment.begin, f, d);
                 segmentFreqs[delIndex] -= 1;
-                if (segmentFreqs[delIndex] == 0) activeSegment.score -= freqs[delIndex];
+                if (segmentFreqs[delIndex] == 0)
+                    activeSegment.score -= freqs[delIndex];
 
                 activeSegment.begin += 1;
             }
 
-            if (activeSegment.score > bestSegment.score) bestSegment = activeSegment;
+            if (activeSegment.score > bestSegment.score)
+                bestSegment = activeSegment;
         }
 
         while (activeSegment.begin < end)
@@ -126,19 +125,26 @@ public static unsafe partial class Methods
         uint accel
     )
     {
-        if (parameters.d == 0 || parameters.k == 0) return 0;
+        if (parameters.d == 0 || parameters.k == 0)
+            return 0;
 
-        if (parameters.d != 6 && parameters.d != 8) return 0;
+        if (parameters.d != 6 && parameters.d != 8)
+            return 0;
 
-        if (parameters.k > maxDictSize) return 0;
+        if (parameters.k > maxDictSize)
+            return 0;
 
-        if (parameters.d > parameters.k) return 0;
+        if (parameters.d > parameters.k)
+            return 0;
 
-        if (f > 31 || f == 0) return 0;
+        if (f > 31 || f == 0)
+            return 0;
 
-        if (parameters.splitPoint <= 0 || parameters.splitPoint > 1) return 0;
+        if (parameters.splitPoint <= 0 || parameters.splitPoint > 1)
+            return 0;
 
-        if (accel > 10 || accel == 0) return 0;
+        if (accel > 10 || accel == 0)
+            return 0;
 
         return 1;
     }
@@ -217,9 +223,11 @@ public static unsafe partial class Methods
         )
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
-        if (nbTrainSamples < 5) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (nbTrainSamples < 5)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
-        if (nbTestSamples < 1) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (nbTestSamples < 1)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
         memset(ctx, 0, (uint)sizeof(FASTCOVER_ctx_t));
         ctx->samples = samples;
@@ -242,7 +250,8 @@ public static unsafe partial class Methods
             uint i;
             ctx->offsets[0] = 0;
             assert(nbSamples >= 5);
-            for (i = 1; i <= nbSamples; ++i) ctx->offsets[i] = ctx->offsets[i - 1] + samplesSizes[i - 1];
+            for (i = 1; i <= nbSamples; ++i)
+                ctx->offsets[i] = ctx->offsets[i - 1] + samplesSizes[i - 1];
         }
 
         ctx->freqs = (uint*)calloc((ulong)1 << (int)f, sizeof(uint));
@@ -296,7 +305,8 @@ public static unsafe partial class Methods
             );
             if (segment.score == 0)
             {
-                if (++zeroScoreRun >= maxZeroScoreRun) break;
+                if (++zeroScoreRun >= maxZeroScoreRun)
+                    break;
 
                 continue;
             }
@@ -306,7 +316,8 @@ public static unsafe partial class Methods
                 segment.end - segment.begin + parameters.d - 1 < tail
                     ? segment.end - segment.begin + parameters.d - 1
                     : tail;
-            if (segmentSize < parameters.d) break;
+            if (segmentSize < parameters.d)
+                break;
 
             tail -= segmentSize;
             memcpy(dict + tail, ctx->samples + segment.begin, (uint)segmentSize);
@@ -336,7 +347,8 @@ public static unsafe partial class Methods
             unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC))
         );
         var freqs = (uint*)malloc(((ulong)1 << (int)ctx->f) * sizeof(uint));
-        if (segmentFreqs == null || dict == null || freqs == null) goto _cleanup;
+        if (segmentFreqs == null || dict == null || freqs == null)
+            goto _cleanup;
 
         memcpy(freqs, ctx->freqs, (uint)(((ulong)1 << (int)ctx->f) * sizeof(uint)));
         {
@@ -348,9 +360,7 @@ public static unsafe partial class Methods
                 parameters,
                 segmentFreqs
             );
-            var nbFinalizeSamples = (uint)(
-                ctx->nbTrainSamples * ctx->accelParams.finalize / 100
-            );
+            var nbFinalizeSamples = (uint)(ctx->nbTrainSamples * ctx->accelParams.finalize / 100);
             selection = COVER_selectDict(
                 dict + tail,
                 dictBufferCapacity,
@@ -364,7 +374,8 @@ public static unsafe partial class Methods
                 ctx->offsets,
                 totalCompressedSize
             );
-            if (COVER_dictSelectionIsError(selection) != 0) goto _cleanup;
+            if (COVER_dictSelectionIsError(selection) != 0)
+                goto _cleanup;
         }
 
         _cleanup:
@@ -453,9 +464,11 @@ public static unsafe partial class Methods
         )
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
 
-        if (nbSamples == 0) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (nbSamples == 0)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
-        if (dictBufferCapacity < 256) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        if (dictBufferCapacity < 256)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
         accelParams = FASTCOVER_defaultAccelParameters[parameters.accel];
         {
@@ -469,16 +482,14 @@ public static unsafe partial class Methods
                 parameters.f,
                 accelParams
             );
-            if (ERR_isError(initVal)) return initVal;
+            if (ERR_isError(initVal))
+                return initVal;
         }
 
         COVER_warnOnSmallCorpus(dictBufferCapacity, ctx.nbDmers, g_displayLevel);
         {
             /* Initialize array to keep track of frequency of dmer within activeSegment */
-            var segmentFreqs = (ushort*)calloc(
-                (ulong)1 << (int)parameters.f,
-                sizeof(ushort)
-            );
+            var segmentFreqs = (ushort*)calloc((ulong)1 << (int)parameters.f, sizeof(ushort));
             var tail = FASTCOVER_buildDictionary(
                 &ctx,
                 ctx.freqs,
@@ -487,9 +498,7 @@ public static unsafe partial class Methods
                 coverParams,
                 segmentFreqs
             );
-            var nbFinalizeSamples = (uint)(
-                ctx.nbTrainSamples * ctx.accelParams.finalize / 100
-            );
+            var nbFinalizeSamples = (uint)(ctx.nbTrainSamples * ctx.accelParams.finalize / 100);
             var dictionarySize = ZDICT_finalizeDictionary(
                 dict,
                 dictBufferCapacity,
@@ -500,9 +509,7 @@ public static unsafe partial class Methods
                 nbFinalizeSamples,
                 coverParams.zParams
             );
-            if (!ERR_isError(dictionarySize))
-            {
-            }
+            if (!ERR_isError(dictionarySize)) { }
 
             FASTCOVER_ctx_destroy(&ctx);
             free(segmentFreqs);
@@ -563,19 +570,23 @@ public static unsafe partial class Methods
         if (splitPoint <= 0 || splitPoint > 1)
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
 
-        if (accel == 0 || accel > 10) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
+        if (accel == 0 || accel > 10)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
 
         if (kMinK < kMaxD || kMaxK < kMinK)
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound));
 
-        if (nbSamples == 0) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        if (nbSamples == 0)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
 
-        if (dictBufferCapacity < 256) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        if (dictBufferCapacity < 256)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
         if (nbThreads > 1)
         {
             pool = POOL_create(nbThreads, 1);
-            if (pool == null) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            if (pool == null)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
         }
 
         COVER_best_init(&best);
@@ -623,9 +634,7 @@ public static unsafe partial class Methods
                     COVER_best_destroy(&best);
                     FASTCOVER_ctx_destroy(&ctx);
                     POOL_free(pool);
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
                 }
 
                 data->ctx = &ctx;

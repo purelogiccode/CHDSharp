@@ -281,10 +281,10 @@ namespace System.Numerics
 
             // uint.MaxValue >> 27 is always in range [0 - 31] so we use Unsafe.AddByteOffset to avoid bounds check
             return 31
-                   ^ Log2DeBruijn[
-                       // uint|long -> IntPtr cast on 32-bit platforms does expensive overflow checks not needed here
-                       (int)((value * 0x07C4ACDDu) >> 27)
-                   ];
+                ^ Log2DeBruijn[
+                    // uint|long -> IntPtr cast on 32-bit platforms does expensive overflow checks not needed here
+                    (int)((value * 0x07C4ACDDu) >> 27)
+                ];
         }
 
         /// <summary>

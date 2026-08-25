@@ -14,17 +14,32 @@ internal static partial class Deflater
 
     internal static int DeflateInit(ref ZStream strm, int level)
     {
-        return DeflateInit(ref strm, level, ZDeflated, MaxWindowBits, DefaultMemLevel, ZDefaultStrategy);
+        return DeflateInit(
+            ref strm,
+            level,
+            ZDeflated,
+            MaxWindowBits,
+            DefaultMemLevel,
+            ZDefaultStrategy
+        );
     }
 
-    internal static int DeflateInit(ref ZStream strm, int level, int method, int windowBits, int memLevel, int strategy)
+    internal static int DeflateInit(
+        ref ZStream strm,
+        int level,
+        int method,
+        int windowBits,
+        int memLevel,
+        int strategy
+    )
     {
         const int maxMemLevel = 9;
         const int minMatch = 3;
 
         strm.Msg = null;
 
-        if (level == ZDefaultCompression) level = 6;
+        if (level == ZDefaultCompression)
+            level = 6;
 
         var wrap = 1;
         if (windowBits < 0) // suppress zlib wrapper
@@ -36,15 +51,22 @@ internal static partial class Deflater
             windowBits = -windowBits;
         }
 
-        if (memLevel < 1 || memLevel > maxMemLevel
-                         || method != ZDeflated
-                         || windowBits < 8 || windowBits > 15
-                         || level < 0 || level > 9
-                         || strategy < 0 || strategy > ZFixed
-                         || (windowBits == 8 && wrap != 1))
+        if (
+            memLevel < 1
+            || memLevel > maxMemLevel
+            || method != ZDeflated
+            || windowBits < 8
+            || windowBits > 15
+            || level < 0
+            || level > 9
+            || strategy < 0
+            || strategy > ZFixed
+            || (windowBits == 8 && wrap != 1)
+        )
             return ZStreamError;
 
-        if (windowBits == 8) windowBits = 9;
+        if (windowBits == 8)
+            windowBits = 9;
 
         DeflateState s = null;
         try
@@ -86,7 +108,8 @@ internal static partial class Deflater
         }
         catch (OutOfMemoryException)
         {
-            if (s != null) s.Status = FinishState;
+            if (s != null)
+                s.Status = FinishState;
 
             strm.Msg = SzErrmsg[ZNeedDict - ZMemError];
             _ = DeflateEnd(ref strm);

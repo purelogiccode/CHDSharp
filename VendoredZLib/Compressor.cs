@@ -11,8 +11,13 @@ internal static class Compressor
 {
     //private const int Max = int.MaxValue;
 
-    internal static int Compress(Span<byte> dest, ref uint destLen, ReadOnlySpan<byte> source, uint sourceLen,
-        int level)
+    internal static int Compress(
+        Span<byte> dest,
+        ref uint destLen,
+        ReadOnlySpan<byte> source,
+        uint sourceLen,
+        int level
+    )
     {
         var left = destLen;
         destLen = 0;
@@ -49,7 +54,12 @@ internal static class Compressor
         return err == ZStreamEnd ? ZOk : err;
     }
 
-    internal static int Uncompress(Span<byte> dest, ref uint destLen, ReadOnlySpan<byte> source, ref uint sourceLen)
+    internal static int Uncompress(
+        Span<byte> dest,
+        ref uint destLen,
+        ReadOnlySpan<byte> source,
+        ref uint sourceLen
+    )
     {
         uint left;
         var len = sourceLen;
@@ -66,11 +76,7 @@ internal static class Compressor
             dest = buf;
         }
 
-        ZStream stream = new()
-        {
-            Input = source,
-            AvailIn = 0
-        };
+        ZStream stream = new() { Input = source, AvailIn = 0 };
 
         var err = Inflater.InflateInit(ref stream, DefaultWindowBits);
         if (err != ZOk)
@@ -99,18 +105,18 @@ internal static class Compressor
         sourceLen -= len + stream.AvailIn;
         if (dest != buf)
             destLen = stream.total_out;
-        else if (stream.total_out != 0 && err == ZBufError) left = 1;
+        else if (stream.total_out != 0 && err == ZBufError)
+            left = 1;
 
         _ = Inflater.InflateEnd(ref stream);
-        return err == ZStreamEnd ? ZOk :
-            err == ZNeedDict ? ZDataError :
-            err == ZBufError && left + stream.AvailOut != 0 ? ZDataError :
-            err;
+        return err == ZStreamEnd ? ZOk
+            : err == ZNeedDict ? ZDataError
+            : err == ZBufError && left + stream.AvailOut != 0 ? ZDataError
+            : err;
     }
 
     internal static uint CompressBound(uint sourceLen)
     {
-        return sourceLen + (sourceLen >> 12) + (sourceLen >> 14) +
-               (sourceLen >> 25) + 13;
+        return sourceLen + (sourceLen >> 12) + (sourceLen >> 14) + (sourceLen >> 25) + 13;
     }
 }

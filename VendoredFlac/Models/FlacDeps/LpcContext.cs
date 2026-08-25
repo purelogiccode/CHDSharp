@@ -32,7 +32,8 @@ internal class LpcSubframeInfo
     /// </summary>
     public void Reset()
     {
-        for (var sec = 0; sec < AutocorrSectionOrders.Length; sec++) AutocorrSectionOrders[sec] = 0;
+        for (var sec = 0; sec < AutocorrSectionOrders.Length; sec++)
+            AutocorrSectionOrders[sec] = 0;
     }
 }
 
@@ -64,7 +65,7 @@ internal unsafe struct LpcWindowSection
         OneGlue,
 
         /// <summary>Glue section between windowed regions.</summary>
-        Glue
+        Glue,
     }
 
     /// <summary>
@@ -160,19 +161,38 @@ internal unsafe struct LpcWindowSection
     /// <param name="order">Maximum lag order.</param>
     /// <param name="blocksize">Total block size.</param>
     /// <param name="autoc">Destination buffer for autocorrelation values (accumulated).</param>
-    public readonly void ComputeAutocorr( /*const*/ int* data, float* window, int minOrder, int order, int blocksize,
-        double* autoc)
+    public readonly void ComputeAutocorr( /*const*/
+        int* data,
+        float* window,
+        int minOrder,
+        int order,
+        int blocksize,
+        double* autoc
+    )
     {
         switch (MType)
         {
             case SectionType.OneLarge:
-                Lpc.ComputeAutocorrWindowlessLarge(data + MStart, MEnd - MStart, minOrder, order, autoc);
+                Lpc.ComputeAutocorrWindowlessLarge(
+                    data + MStart,
+                    MEnd - MStart,
+                    minOrder,
+                    order,
+                    autoc
+                );
                 break;
             case SectionType.One:
                 Lpc.ComputeAutocorrWindowless(data + MStart, MEnd - MStart, minOrder, order, autoc);
                 break;
             case SectionType.Data:
-                Lpc.ComputeAutocorr(data + MStart, window + MStart, MEnd - MStart, minOrder, order, autoc);
+                Lpc.ComputeAutocorr(
+                    data + MStart,
+                    window + MStart,
+                    MEnd - MStart,
+                    minOrder,
+                    order,
+                    autoc
+                );
                 break;
             case SectionType.Glue:
                 Lpc.ComputeAutocorrGlue(data, window, MStart, MEnd, minOrder, order, autoc);
@@ -193,8 +213,14 @@ internal unsafe struct LpcWindowSection
     /// <param name="sz">Size of each window segment.</param>
     /// <param name="bps">Bits per sample.</param>
     /// <param name="sections">Destination buffer for detected sections, sized for all windows.</param>
-    public static void Detect(int windowcount, float* windowSegment, int stride, int sz, int bps,
-        LpcWindowSection* sections)
+    public static void Detect(
+        int windowcount,
+        float* windowSegment,
+        int stride,
+        int sz,
+        int bps,
+        LpcWindowSection* sections
+    )
     {
         var sectionId = 0;
         var boundaries = new List<int>();
@@ -210,24 +236,25 @@ internal unsafe struct LpcWindowSection
                 var wa = windowSegment[a * stride + x];
                 if (wa != w)
                     for (var i1 = i; i1 < windowcount; i1++)
-                        if (alias[i1, boundaries.Count] == a
-                            && w == windowSegment[i1 * stride + x])
+                        if (alias[i1, boundaries.Count] == a && w == windowSegment[i1 * stride + x])
                             alias[i1, boundaries.Count] = i;
 
                 if (boundaries.Count >= Lpc.Maxlpcsections * 2)
                     throw new InvalidOperationException("Maximum number of LPC sections exceeded.");
 
                 types[i, boundaries.Count] =
-                    boundaries.Count >= Lpc.Maxlpcsections * 2 - 2 ? SectionType.Data :
-                    w == 0.0 ? SectionType.Zero :
-                    w != 1.0 ? SectionType.Data :
-                    bps * 2 + BitReader.Log2I(sz) >= 61 ? SectionType.OneLarge : SectionType.One;
+                    boundaries.Count >= Lpc.Maxlpcsections * 2 - 2 ? SectionType.Data
+                    : w == 0.0 ? SectionType.Zero
+                    : w != 1.0 ? SectionType.Data
+                    : bps * 2 + BitReader.Log2I(sz) >= 61 ? SectionType.OneLarge
+                    : SectionType.One;
             }
 
             var isBoundary = false;
             for (var i = 0; i < windowcount; i++)
-                isBoundary |= boundaries.Count == 0 ||
-                              types[i, boundaries.Count - 1] != types[i, boundaries.Count];
+                isBoundary |=
+                    boundaries.Count == 0
+                    || types[i, boundaries.Count - 1] != types[i, boundaries.Count];
 
             if (isBoundary)
             {
@@ -262,12 +289,18 @@ internal unsafe struct LpcWindowSection
             {
                 var windowSections = sections + i * Lpc.Maxlpcsections;
                 var sec = secs[i] - 1;
-                if (sec > 0
-                    && j > 0 && (aliasSet[i, j] == aliasSet[i, j - 1] || windowSections[sec].MType == SectionType.Zero)
+                if (
+                    sec > 0
+                    && j > 0
+                    && (
+                        aliasSet[i, j] == aliasSet[i, j - 1]
+                        || windowSections[sec].MType == SectionType.Zero
+                    )
                     && windowSections[sec].MStart == boundaries[j]
                     && windowSections[sec].MEnd == boundaries[j + 1]
                     && windowSections[sec - 1].MEnd == boundaries[j]
-                    && windowSections[sec - 1].MType == windowSections[sec].MType)
+                    && windowSections[sec - 1].MType == windowSections[sec].MType
+                )
                 {
                     windowSections[sec - 1].MEnd = windowSections[sec].MEnd;
                     secs[i]--;
@@ -277,8 +310,7 @@ internal unsafe struct LpcWindowSection
                 if (sectionId >= Lpc.Maxlpcsections)
                     throw new InvalidOperationException("Maximum number of LPC sections exceeded.");
 
-                if (aliasSet[i, j] != 0
-                    && types[i, j] != SectionType.Zero)
+                if (aliasSet[i, j] != 0 && types[i, j] != SectionType.Zero)
                 {
                     for (var i1 = i; i1 < windowcount; i1++)
                         if (alias[i1, j] == i && secs[i1] > 0)
@@ -291,12 +323,18 @@ internal unsafe struct LpcWindowSection
                 {
                     // section_id for glue? nontrivial, must be sure next sections are the same size
                     case > 0
-                        when (windowSections[sec].MType == SectionType.One ||
-                              windowSections[sec].MType == SectionType.OneLarge)
-                             && windowSections[sec].MEnd - windowSections[sec].MStart >= Lpc.Maxlpcorder
-                             && (windowSections[sec - 1].MType == SectionType.One ||
-                                 windowSections[sec - 1].MType == SectionType.OneLarge)
-                             && windowSections[sec - 1].MEnd - windowSections[sec - 1].MStart >= Lpc.Maxlpcorder:
+                        when (
+                            windowSections[sec].MType == SectionType.One
+                            || windowSections[sec].MType == SectionType.OneLarge
+                        )
+                            && windowSections[sec].MEnd - windowSections[sec].MStart
+                                >= Lpc.Maxlpcorder
+                            && (
+                                windowSections[sec - 1].MType == SectionType.One
+                                || windowSections[sec - 1].MType == SectionType.OneLarge
+                            )
+                            && windowSections[sec - 1].MEnd - windowSections[sec - 1].MStart
+                                >= Lpc.Maxlpcorder:
                         windowSections[sec + 1] = windowSections[sec];
                         windowSections[sec].MEnd = windowSections[sec].MStart;
                         windowSections[sec].MType = SectionType.OneGlue;
@@ -305,7 +343,7 @@ internal unsafe struct LpcWindowSection
                         continue;
                     case > 0
                         when windowSections[sec].MType != SectionType.Zero
-                             && windowSections[sec - 1].MType != SectionType.Zero:
+                            && windowSections[sec - 1].MType != SectionType.Zero:
                         windowSections[sec + 1] = windowSections[sec];
                         windowSections[sec].MEnd = windowSections[sec].MStart;
                         windowSections[sec].MType = SectionType.Glue;
@@ -321,8 +359,10 @@ internal unsafe struct LpcWindowSection
             for (var s = 0; s < secs[i]; s++)
             {
                 var windowSections = sections + i * Lpc.Maxlpcsections;
-                if (windowSections[s].MType == SectionType.Glue
-                    || windowSections[s].MType == SectionType.OneGlue)
+                if (
+                    windowSections[s].MType == SectionType.Glue
+                    || windowSections[s].MType == SectionType.OneGlue
+                )
                     windowSections[s].MEnd = windowSections[s + 1].MEnd;
             }
 
@@ -396,7 +436,8 @@ internal unsafe class LpcContext
     public void Reset()
     {
         _autocorrOrder = 0;
-        for (var iPrecision = 0; iPrecision < Lpc.Maxlpcprecisions; iPrecision++) DoneLpcs[iPrecision] = 0;
+        for (var iPrecision = 0; iPrecision < Lpc.Maxlpcprecisions; iPrecision++)
+            DoneLpcs[iPrecision] = 0;
     }
 
     /// <summary>
@@ -410,30 +451,56 @@ internal unsafe class LpcContext
     /// <param name="blocksize">Block size</param>
     /// <param name="window">Window function</param>
     /// <param name="sections">Window sections for autocorrelation computation.</param>
-    public void GetReflection(LpcSubframeInfo subframe, int order, int blocksize, int* samples, float* window,
-        LpcWindowSection* sections)
+    public void GetReflection(
+        LpcSubframeInfo subframe,
+        int order,
+        int blocksize,
+        int* samples,
+        float* window,
+        LpcWindowSection* sections
+    )
     {
         if (_autocorrOrder > order)
             return;
 
-        fixed (double* reff = Reflection, autoc = AutocorrValues, err = PredictionError)
+        fixed (
+            double* reff = Reflection,
+                autoc = AutocorrValues,
+                err = PredictionError
+        )
         {
-            for (var i = _autocorrOrder; i <= order; i++) autoc[i] = 0;
+            for (var i = _autocorrOrder; i <= order; i++)
+                autoc[i] = 0;
 
             for (var section = 0; section < Lpc.Maxlpcsections; section++)
             {
-                if (sections[section].MType == LpcWindowSection.SectionType.Zero) continue;
+                if (sections[section].MType == LpcWindowSection.SectionType.Zero)
+                    continue;
 
                 if (sections[section].MId >= 0)
                 {
                     if (subframe.AutocorrSectionOrders[sections[section].MId] <= order)
                     {
-                        fixed (double* autocsec = &subframe.AutocorrSectionValues[sections[section].MId, 0])
+                        fixed (
+                            double* autocsec = &subframe.AutocorrSectionValues[
+                                sections[section].MId,
+                                0
+                            ]
+                        )
                         {
                             var minOrder = subframe.AutocorrSectionOrders[sections[section].MId];
-                            for (var i = minOrder; i <= order; i++) autocsec[i] = 0;
+                            for (var i = minOrder; i <= order; i++)
+                                autocsec[i] = 0;
 
-                            sections[section].ComputeAutocorr(samples, window, minOrder, order, blocksize, autocsec);
+                            sections[section]
+                                .ComputeAutocorr(
+                                    samples,
+                                    window,
+                                    minOrder,
+                                    order,
+                                    blocksize,
+                                    autocsec
+                                );
                         }
 
                         subframe.AutocorrSectionOrders[sections[section].MId] = order + 1;
@@ -444,7 +511,8 @@ internal unsafe class LpcContext
                 }
                 else
                 {
-                    sections[section].ComputeAutocorr(samples, window, _autocorrOrder, order, blocksize, autoc);
+                    sections[section]
+                        .ComputeAutocorr(samples, window, _autocorrOrder, order, blocksize, autoc);
                 }
             }
 
@@ -463,7 +531,8 @@ internal unsafe class LpcContext
     /// <returns>The Akaike score (lower is better).</returns>
     public double Akaike(int blocksize, int order, double alpha, double beta)
     {
-        return blocksize * Math.Log(PredictionError[order - 1]) + Math.Log(blocksize) * order * (alpha + beta * order);
+        return blocksize * Math.Log(PredictionError[order - 1])
+            + Math.Log(blocksize) * order * (alpha + beta * order);
     }
 
     /// <summary>
@@ -475,14 +544,25 @@ internal unsafe class LpcContext
     /// <param name="maxOrder"></param>
     /// <param name="alpha"></param>
     /// <param name="beta"></param>
-    public void SortOrdersAkaike(int blocksize, int count, int minOrder, int maxOrder, double alpha, double beta)
+    public void SortOrdersAkaike(
+        int blocksize,
+        int count,
+        int minOrder,
+        int maxOrder,
+        double alpha,
+        double beta
+    )
     {
-        for (var i = minOrder; i <= maxOrder; i++) BestOrders[i - minOrder] = i;
+        for (var i = minOrder; i <= maxOrder; i++)
+            BestOrders[i - minOrder] = i;
 
         var lim = maxOrder - minOrder + 1;
         for (var i = 0; i < lim && i < count; i++)
         for (var j = i + 1; j < lim; j++)
-            if (Akaike(blocksize, BestOrders[j], alpha, beta) < Akaike(blocksize, BestOrders[i], alpha, beta))
+            if (
+                Akaike(blocksize, BestOrders[j], alpha, beta)
+                < Akaike(blocksize, BestOrders[i], alpha, beta)
+            )
                 (BestOrders[j], BestOrders[i]) = (BestOrders[i], BestOrders[j]);
     }
 

@@ -27,7 +27,8 @@ public static class CueConverter
 
         var lines = NormalizeLines(cueText);
         var start = 0;
-        if (lines.Count > 0 && lines[0].StartsWith("CATALOG", StringComparison.Ordinal)) start = 1;
+        if (lines.Count > 0 && lines[0].StartsWith("CATALOG", StringComparison.Ordinal))
+            start = 1;
 
         var fileCount = 0;
         for (var i = start; i < lines.Count; i++)
@@ -59,9 +60,10 @@ public static class CueConverter
                         if (!fname.Contains(" (Track ", StringComparison.Ordinal))
                         {
                             var dot = fname.LastIndexOf('.');
-                            fname = dot >= 0
-                                ? fname[..dot] + " (Track 1)" + fname[dot..]
-                                : fname + " (Track 1)";
+                            fname =
+                                dot >= 0
+                                    ? fname[..dot] + " (Track 1)" + fname[dot..]
+                                    : fname + " (Track 1)";
                         }
                     }
                     else
@@ -104,7 +106,9 @@ public static class CueConverter
         foreach (var style in new[] { CueStyle.Chdman, CueStyle.Redump, CueStyle.RedumpCatalog })
         {
             var converted = ConvertCue(cueText, style);
-            var hash = Convert.ToHexString(SHA1.HashData(Encoding.ASCII.GetBytes(converted))).ToLowerInvariant();
+            var hash = Convert
+                .ToHexString(SHA1.HashData(Encoding.ASCII.GetBytes(converted)))
+                .ToLowerInvariant();
             if (string.Equals(hash, dbHash, StringComparison.OrdinalIgnoreCase))
                 return new CueMatchResult(style, converted, hash);
         }
@@ -123,7 +127,8 @@ public static class CueConverter
             {
                 case '\r':
                 {
-                    if (i + 1 < text.Length && text[i + 1] == '\n') i++;
+                    if (i + 1 < text.Length && text[i + 1] == '\n')
+                        i++;
 
                     lines.Add(sb.ToString());
                     sb.Clear();

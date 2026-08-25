@@ -42,11 +42,16 @@ internal static class ChdHeaders
     {
         switch (version)
         {
-            case 1: return ReadHeaderV1(file, out chd);
-            case 2: return ReadHeaderV2(file, out chd);
-            case 3: return ReadHeaderV3(file, out chd);
-            case 4: return ReadHeaderV4(file, out chd);
-            case 5: return ReadHeaderV5(file, out chd);
+            case 1:
+                return ReadHeaderV1(file, out chd);
+            case 2:
+                return ReadHeaderV2(file, out chd);
+            case 3:
+                return ReadHeaderV3(file, out chd);
+            case 4:
+                return ReadHeaderV4(file, out chd);
+            case 5:
+                return ReadHeaderV5(file, out chd);
             default:
                 chd = new ChdHeader();
                 return ChdError.Chderrunsupportedversion;
@@ -59,7 +64,9 @@ internal static class ChdHeaders
     /// </summary>
     private static ChdError ValidateLegacyFlags(uint flags)
     {
-        return (flags & LegacyUndefinedFlagBits) != 0 ? ChdError.Chderrinvaliddata : ChdError.Chderrnone;
+        return (flags & LegacyUndefinedFlagBits) != 0
+            ? ChdError.Chderrinvaliddata
+            : ChdError.Chderrnone;
     }
 
     /// <summary>
@@ -110,8 +117,12 @@ internal static class ChdHeaders
     /// </returns>
     internal static ChdError ValidateSizeLimits(ChdHeader chd)
     {
-        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes || chd.Totalbytes > MaxLogicalBytes ||
-            chd.Unitbytes == 0)
+        if (
+            chd.Blocksize == 0
+            || chd.Blocksize > MaxHunkBytes
+            || chd.Totalbytes > MaxLogicalBytes
+            || chd.Unitbytes == 0
+        )
             return ChdError.Chderrinvaliddata;
 
         // Default the compressed-hunk cap to 2x the hunk size if not explicitly set.
@@ -150,12 +161,19 @@ internal static class ChdHeaders
         chd.Parentmd5 = br.ReadBytes(16);
 
         const int hardDiskSectorSize = 512;
-        chd.Totalbytes = (ulong)chd.ObsoleteCylinders * chd.ObsoleteHeads * chd.ObsoleteSectors * hardDiskSectorSize;
+        chd.Totalbytes =
+            (ulong)chd.ObsoleteCylinders
+            * chd.ObsoleteHeads
+            * chd.ObsoleteSectors
+            * hardDiskSectorSize;
         chd.Blocksize = chd.ObsoleteHunksize * hardDiskSectorSize;
         chd.Unitbytes = chd.Blocksize;
 
-        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes ||
-            (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes)
+        if (
+            chd.Blocksize == 0
+            || chd.Blocksize > MaxHunkBytes
+            || (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes
+        )
             return ChdError.Chderrinvaliddata;
 
         // The raw map is stored inline and must physically fit in the file: a corrupted
@@ -173,7 +191,6 @@ internal static class ChdHeaders
             var tmpu = br.ReadUInt64Be();
             chd.Map[i] = new MapEntry();
 
-
             if (mapBack.TryGetValue(tmpu, out var v))
             {
                 chd.Map[i].Offset = (uint)v;
@@ -186,9 +203,10 @@ internal static class ChdHeaders
 
             chd.Map[i].Offset = tmpu & 0xfffffffffff;
             chd.Map[i].Length = (uint)(tmpu >> 44);
-            chd.Map[i].Comptype = chd.Map[i].Length == chd.Blocksize
-                ? CompressionType.Compressionnone
-                : CompressionType.Compressiontype0;
+            chd.Map[i].Comptype =
+                chd.Map[i].Length == chd.Blocksize
+                    ? CompressionType.Compressionnone
+                    : CompressionType.Compressiontype0;
         }
 
         return ChdError.Chderrnone;
@@ -219,12 +237,16 @@ internal static class ChdHeaders
         chd.Parentmd5 = br.ReadBytes(16);
         var seclen = br.ReadUInt32Be(); // bytes per sector (added in V2)
 
-        chd.Totalbytes = (ulong)chd.ObsoleteCylinders * chd.ObsoleteHeads * chd.ObsoleteSectors * seclen;
+        chd.Totalbytes =
+            (ulong)chd.ObsoleteCylinders * chd.ObsoleteHeads * chd.ObsoleteSectors * seclen;
         chd.Blocksize = chd.ObsoleteHunksize * seclen;
         chd.Unitbytes = chd.Blocksize;
 
-        if (chd.Blocksize == 0 || chd.Blocksize > MaxHunkBytes ||
-            (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes)
+        if (
+            chd.Blocksize == 0
+            || chd.Blocksize > MaxHunkBytes
+            || (ulong)chd.Totalblocks * chd.Blocksize > MaxLogicalBytes
+        )
             return ChdError.Chderrinvaliddata;
 
         // The raw map is stored inline and must physically fit in the file: a corrupted
@@ -242,7 +264,6 @@ internal static class ChdHeaders
             var tmpu = br.ReadUInt64Be();
             chd.Map[i] = new MapEntry();
 
-
             if (mapBack.TryGetValue(tmpu, out var v))
             {
                 chd.Map[i].Offset = (uint)v;
@@ -255,9 +276,10 @@ internal static class ChdHeaders
 
             chd.Map[i].Offset = tmpu & 0xfffffffffff;
             chd.Map[i].Length = (uint)(tmpu >> 44);
-            chd.Map[i].Comptype = chd.Map[i].Length == chd.Blocksize
-                ? CompressionType.Compressionnone
-                : CompressionType.Compressiontype0;
+            chd.Map[i].Comptype =
+                chd.Map[i].Length == chd.Blocksize
+                    ? CompressionType.Compressionnone
+                    : CompressionType.Compressiontype0;
         }
 
         return ChdError.Chderrnone;
@@ -307,11 +329,14 @@ internal static class ChdHeaders
             {
                 Offset = br.ReadUInt64Be(),
                 Crc = br.ReadUInt32Be(),
-                Length = (uint)((br.ReadByte() << 8) | (br.ReadByte() << 0) | (br.ReadByte() << 16))
+                Length = (uint)(
+                    (br.ReadByte() << 8) | (br.ReadByte() << 0) | (br.ReadByte() << 16)
+                ),
             };
             var mapflag = (MapEntryFlag)br.ReadByte();
             chd.Map[i].Comptype = ChdCommon.ConvMapEntryFlagtoCompressionType(mapflag);
-            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid) chd.Map[i].Crc = null;
+            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid)
+                chd.Map[i].Crc = null;
         }
 
         return ChdError.Chderrnone;
@@ -360,16 +385,16 @@ internal static class ChdHeaders
             {
                 Offset = br.ReadUInt64Be(),
                 Crc = br.ReadUInt32Be(),
-                Length = (uint)(br.ReadUInt16Be() | (br.ReadByte() << 16))
+                Length = (uint)(br.ReadUInt16Be() | (br.ReadByte() << 16)),
             };
             var mapflag = (MapEntryFlag)br.ReadByte();
             chd.Map[i].Comptype = ChdCommon.ConvMapEntryFlagtoCompressionType(mapflag);
-            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid) chd.Map[i].Crc = null;
+            if ((mapflag & MapEntryFlag.Mapentryflagnocrc) != MapEntryFlag.Mapentrytypeinvalid)
+                chd.Map[i].Crc = null;
         }
 
         return ChdError.Chderrnone;
     }
-
 
     /// <summary>Reads and parses a V5 CHD header from the stream, including the compressed or uncompressed block map.</summary>
     /// <param name="file">The stream positioned immediately after the CHD magic and version fields.</param>
@@ -407,16 +432,34 @@ internal static class ChdHeaders
         chd.UncompressedMap = !chdCompressed;
 
         var err = chdCompressed
-            ? compressed_v5_map(br, mapoffset, chd.Totalblocks, chd.Blocksize, unitbytes, out chd.Map)
-            : uncompressed_v5_map(br, mapoffset, chd.Totalblocks, chd.Blocksize, !Util.IsAllZeroArray(chd.Parentsha1),
-                out chd.Map);
+            ? compressed_v5_map(
+                br,
+                mapoffset,
+                chd.Totalblocks,
+                chd.Blocksize,
+                unitbytes,
+                out chd.Map
+            )
+            : uncompressed_v5_map(
+                br,
+                mapoffset,
+                chd.Totalblocks,
+                chd.Blocksize,
+                !Util.IsAllZeroArray(chd.Parentsha1),
+                out chd.Map
+            );
 
         return err;
     }
 
-
-    private static ChdError uncompressed_v5_map(BinaryReader br, ulong mapoffset, uint totalblocks, uint blocksize,
-        bool hasParent, out MapEntry[] map)
+    private static ChdError uncompressed_v5_map(
+        BinaryReader br,
+        ulong mapoffset,
+        uint totalblocks,
+        uint blocksize,
+        bool hasParent,
+        out MapEntry[] map
+    )
     {
         var streamLen = (ulong)br.BaseStream.Length;
         var mapSize = (ulong)totalblocks * 4;
@@ -464,8 +507,14 @@ internal static class ChdHeaders
         return ChdError.Chderrnone;
     }
 
-    private static ChdError compressed_v5_map(BinaryReader br, ulong mapoffset, uint totalBlocks, uint blocksize,
-        uint unitbytes, out MapEntry[] map)
+    private static ChdError compressed_v5_map(
+        BinaryReader br,
+        ulong mapoffset,
+        uint totalBlocks,
+        uint blocksize,
+        uint unitbytes,
+        out MapEntry[] map
+    )
     {
         var streamLen = (ulong)br.BaseStream.Length;
 
@@ -511,7 +560,8 @@ internal static class ChdHeaders
         var decoder = new HuffmanDecoder(16, 8, bitbuf);
 
         var err = decoder.ImportTreeRle();
-        if (err != HuffmanError.HufferrNone) return ChdError.Chderrdecompressionerror;
+        if (err != HuffmanError.HufferrNone)
+            return ChdError.Chderrdecompressionerror;
 
         var repcount = 0;
         var lastcomp = CompressionType.Compressiontype0;
@@ -613,7 +663,6 @@ internal static class ChdHeaders
             map[blockIndex].Offset = offset;
             map[blockIndex].Crc16 = crc16;
         }
-
 
         /* verify the final CRC */
         var rawmap = new byte[checked(totalBlocks * 12)];

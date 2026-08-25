@@ -60,7 +60,13 @@ internal class MainViewModel : INotifyPropertyChanged
         AddFilesCommand = new RelayCommand(_ => AddFiles());
         AddFolderCommand = new RelayCommand(_ => AddFolder());
         RemoveFileCommand = new RelayCommand(RemoveFile);
-        RunTestsCommand = new RelayCommand(_ => { _runTask = RunTestsAsync(); }, _ => CanRunTests);
+        RunTestsCommand = new RelayCommand(
+            _ =>
+            {
+                _runTask = RunTestsAsync();
+            },
+            _ => CanRunTests
+        );
         CancelTestsCommand = new RelayCommand(_ => CancelTests(), _ => IsRunning);
         ExportPdfCommand = new RelayCommand(_ => ExportPdfAsync(), _ => HasResults);
         CopyLogCommand = new RelayCommand(_ => CopyLog());
@@ -259,11 +265,12 @@ internal class MainViewModel : INotifyPropertyChanged
     public int SummarySkipped => SessionResult?.SkippedFiles ?? 0;
 
     /// <summary>Gets a formatted summary string for the last session.</summary>
-    public string SummaryText => SessionResult != null
-        ? $"{SessionResult.TotalFiles} files tested | " +
-          $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, {SessionResult.SkippedSubTests} skipped | " +
-          $"{SessionResult.TotalElapsedSeconds:N1}s total"
-        : string.Empty;
+    public string SummaryText =>
+        SessionResult != null
+            ? $"{SessionResult.TotalFiles} files tested | "
+                + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, {SessionResult.SkippedSubTests} skipped | "
+                + $"{SessionResult.TotalElapsedSeconds:N1}s total"
+            : string.Empty;
 
     /// <summary>Gets or sets the sub-summary text shown below the main summary.</summary>
     public string SummarySubText
@@ -282,9 +289,10 @@ internal class MainViewModel : INotifyPropertyChanged
         get
         {
             if (_cachedFileResults == null)
-                _cachedFileResults = SessionResult?.FileResults != null
-                    ? new ObservableCollection<PerFileResult>(SessionResult.FileResults)
-                    : [];
+                _cachedFileResults =
+                    SessionResult?.FileResults != null
+                        ? new ObservableCollection<PerFileResult>(SessionResult.FileResults)
+                        : [];
 
             return _cachedFileResults;
         }
@@ -296,7 +304,8 @@ internal class MainViewModel : INotifyPropertyChanged
     private void AutoDetectChdman()
     {
         var candidate = Path.Combine(AppContext.BaseDirectory, "chdman.exe");
-        if (File.Exists(candidate)) ChdmanPath = candidate;
+        if (File.Exists(candidate))
+            ChdmanPath = candidate;
     }
 
     private void BrowseChdman()
@@ -305,7 +314,7 @@ internal class MainViewModel : INotifyPropertyChanged
         {
             Title = "Select chdman.exe",
             Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
-            FileName = "chdman.exe"
+            FileName = "chdman.exe",
         };
         if (dlg.ShowDialog() == true)
         {
@@ -320,11 +329,12 @@ internal class MainViewModel : INotifyPropertyChanged
         {
             Title = "Select CHD files",
             Filter = "CHD files (*.chd)|*.chd|All files (*.*)|*.*",
-            Multiselect = true
+            Multiselect = true,
         };
         if (dlg.ShowDialog() == true)
         {
-            foreach (var path in dlg.FileNames) AddFileIfNew(path);
+            foreach (var path in dlg.FileNames)
+                AddFileIfNew(path);
 
             UpdateFilesSummary();
             AddLog($"Added {dlg.FileNames.Length} file(s). Total: {Files.Count}");
@@ -333,15 +343,17 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private void AddFolder()
     {
-        var dlg = new OpenFolderDialog
-        {
-            Title = "Select folder with CHD files"
-        };
+        var dlg = new OpenFolderDialog { Title = "Select folder with CHD files" };
         if (dlg.ShowDialog() == true)
             try
             {
-                var chdFiles = Directory.GetFiles(dlg.FolderName, "*.chd", SearchOption.AllDirectories);
-                foreach (var path in chdFiles) AddFileIfNew(path);
+                var chdFiles = Directory.GetFiles(
+                    dlg.FolderName,
+                    "*.chd",
+                    SearchOption.AllDirectories
+                );
+                foreach (var path in chdFiles)
+                    AddFileIfNew(path);
 
                 UpdateFilesSummary();
                 AddLog($"Added {chdFiles.Length} file(s) from folder. Total: {Files.Count}");
@@ -390,7 +402,7 @@ internal class MainViewModel : INotifyPropertyChanged
             < 1024 => $"{totalSize} B",
             < 1024 * 1024 => $"{totalSize / 1024.0:F1} KB",
             < 1024L * 1024 * 1024 => $"{totalSize / (1024.0 * 1024):F1} MB",
-            _ => $"{totalSize / (1024.0 * 1024 * 1024):F2} GB"
+            _ => $"{totalSize / (1024.0 * 1024 * 1024):F2} GB",
         };
         FilesSummary = $"{Files.Count} file(s) — {sizeStr} total";
         OnPropertyChanged(nameof(CanRunTests));
@@ -398,7 +410,8 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private async Task RunTestsAsync()
     {
-        if (IsRunning || Files.Count == 0) return;
+        if (IsRunning || Files.Count == 0)
+            return;
 
         IsRunning = true;
         CommandManager.InvalidateRequerySuggested();
@@ -416,7 +429,8 @@ internal class MainViewModel : INotifyPropertyChanged
         var token = _cts.Token;
 
         var chdmanPath = IsChdmanValid ? ChdmanPath : string.Empty;
-        if (!IsChdmanValid) AddLog("WARNING: chdman.exe not selected. Tests requiring chdman will be skipped.");
+        if (!IsChdmanValid)
+            AddLog("WARNING: chdman.exe not selected. Tests requiring chdman will be skipped.");
 
         var progress = new Progress<TestProgress>(p =>
         {
@@ -440,8 +454,9 @@ internal class MainViewModel : INotifyPropertyChanged
             StatusText =
                 $"Completed: {session.PassedFiles} passed, {session.FailedFiles} failed, {session.SkippedFiles} skipped";
 
-            SummarySubText = $"Sub-tests: {session.PassedSubTests} passed, {session.FailedSubTests} failed, " +
-                             $"{session.SkippedSubTests} skipped | {session.TotalElapsedSeconds:N1}s";
+            SummarySubText =
+                $"Sub-tests: {session.PassedSubTests} passed, {session.FailedSubTests} failed, "
+                + $"{session.SkippedSubTests} skipped | {session.TotalElapsedSeconds:N1}s";
 
             OnPropertyChanged(nameof(FileResults));
         }
@@ -508,13 +523,14 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         try
         {
-            if (SessionResult == null) return;
+            if (SessionResult == null)
+                return;
 
             var dlg = new SaveFileDialog
             {
                 Title = "Export Results to PDF",
                 Filter = "PDF files (*.pdf)|*.pdf",
-                FileName = $"CHDSharpTester_Results_{DateTime.Now:yyyyMMdd_HHmmss}.pdf"
+                FileName = $"CHDSharpTester_Results_{DateTime.Now:yyyyMMdd_HHmmss}.pdf",
             };
             if (dlg.ShowDialog() == true)
             {
@@ -525,8 +541,12 @@ internal class MainViewModel : INotifyPropertyChanged
                 await Task.Run(() => PdfExporter.Export(session, version, path));
                 AddLog($"PDF exported: {path}");
                 StatusText = "Ready.";
-                MessageBox.Show($"Results exported successfully to:\n{path}",
-                    "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(
+                    $"Results exported successfully to:\n{path}",
+                    "Export Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
             }
         }
         catch (Exception ex)
@@ -534,8 +554,12 @@ internal class MainViewModel : INotifyPropertyChanged
             AddLog($"PDF export failed: {ex.Message}");
             StatusText = "Ready.";
             Log.Error(ex, "PDF export failed");
-            MessageBox.Show($"Export failed: {ex.Message}", "Export Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(
+                $"Export failed: {ex.Message}",
+                "Export Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error
+            );
         }
     }
 
@@ -554,31 +578,42 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private void CopyResults()
     {
-        if (SessionResult == null) return;
+        if (SessionResult == null)
+            return;
 
         var sb = new StringBuilder();
         sb.AppendLine("=== CHDSharp Tester Results ===");
         sb.AppendLine(CultureInfo.InvariantCulture, $"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"Summary: {SessionResult.TotalFiles} files | " +
-                                                    $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, " +
-                                                    $"{SessionResult.SkippedSubTests} skipped | {SessionResult.TotalElapsedSeconds:N1}s");
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
+            $"Summary: {SessionResult.TotalFiles} files | "
+                + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, "
+                + $"{SessionResult.SkippedSubTests} skipped | {SessionResult.TotalElapsedSeconds:N1}s"
+        );
         sb.AppendLine();
 
         foreach (var file in SessionResult.FileResults)
         {
-            var status = file.AllPassed ? "PASS" : file.Failed > 0 ? "FAIL" : "SKIP";
-            sb.AppendLine(CultureInfo.InvariantCulture,
-                $"--- {file.FileName} ({file.FileSize}) [{status}] {file.ElapsedSeconds:N2}s ---");
+            var status =
+                file.AllPassed ? "PASS"
+                : file.Failed > 0 ? "FAIL"
+                : "SKIP";
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"--- {file.FileName} ({file.FileSize}) [{status}] {file.ElapsedSeconds:N2}s ---"
+            );
             foreach (var t in file.SubTests)
             {
                 var icon = t.Status switch
                 {
                     TestStatus.Passed => "[PASS]",
                     TestStatus.Failed => "[FAIL]",
-                    _ => "[SKIP]"
+                    _ => "[SKIP]",
                 };
-                sb.AppendLine(CultureInfo.InvariantCulture,
-                    $"  {icon} {t.TestName,-22} {t.ElapsedSeconds,6:N2}s  {t.Detail}");
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"  {icon} {t.TestName, -22} {t.ElapsedSeconds, 6:N2}s  {t.Detail}"
+                );
             }
 
             sb.AppendLine();
@@ -604,10 +639,7 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private static void ShowAbout()
     {
-        var about = new AboutWindow
-        {
-            Owner = Application.Current?.MainWindow
-        };
+        var about = new AboutWindow { Owner = Application.Current?.MainWindow };
         about.ShowDialog();
     }
 

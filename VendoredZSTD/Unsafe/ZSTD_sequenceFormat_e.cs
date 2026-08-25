@@ -6,5 +6,5 @@ public enum ZSTD_sequenceFormat_e
     ZSTD_sf_noBlockDelimiters = 0,
 
     /* Representation of ZSTD_Sequence contains explicit block delimiters */
-    ZSTD_sf_explicitBlockDelimiters = 1
+    ZSTD_sf_explicitBlockDelimiters = 1,
 }

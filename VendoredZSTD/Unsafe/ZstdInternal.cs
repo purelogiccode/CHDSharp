@@ -18,11 +18,11 @@ public static unsafe partial class Methods
     private static ReadOnlySpan<uint> Span_repStartValue => new uint[3] { 1, 4, 8 };
     private static uint* repStartValue =>
         (uint*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_repStartValue)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_repStartValue)
+            );
 #else
-        private static readonly uint* repStartValue = GetArrayPointer(new uint[3] { 1, 4, 8 });
+    private static readonly uint* repStartValue = GetArrayPointer(new uint[3] { 1, 4, 8 });
 #endif
     private static readonly nuint* ZSTD_fcs_fieldSize = GetArrayPointer(
         new nuint[4] { 0, 2, 4, 8 }
@@ -72,56 +72,56 @@ public static unsafe partial class Methods
             13,
             14,
             15,
-            16
+            16,
         };
 
     private static byte* LL_bits =>
         (byte*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_LL_bits)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_LL_bits)
+            );
 #else
-        private static readonly byte* LL_bits = GetArrayPointer(
-            new byte[36]
-            {
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                1,
-                1,
-                1,
-                1,
-                2,
-                2,
-                3,
-                3,
-                4,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-            }
-        );
+    private static readonly byte* LL_bits = GetArrayPointer(
+        new byte[36]
+        {
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            3,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+        }
+    );
 #endif
 #if NET8_0_OR_GREATER
     private static ReadOnlySpan<short> Span_LL_defaultNorm =>
@@ -162,56 +162,56 @@ public static unsafe partial class Methods
             -1,
             -1,
             -1,
-            -1
+            -1,
         };
 
     private static short* LL_defaultNorm =>
         (short*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_LL_defaultNorm)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_LL_defaultNorm)
+            );
 #else
-        private static readonly short* LL_defaultNorm = GetArrayPointer(
-            new short[36]
-            {
-                4,
-                3,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                1,
-                1,
-                1,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                3,
-                2,
-                1,
-                1,
-                1,
-                1,
-                1,
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-            }
-        );
+    private static readonly short* LL_defaultNorm = GetArrayPointer(
+        new short[36]
+        {
+            4,
+            3,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            3,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+        }
+    );
 #endif
     private const uint LL_defaultNormLog = 6;
 #if NET7_0_OR_GREATER
@@ -270,73 +270,73 @@ public static unsafe partial class Methods
             13,
             14,
             15,
-            16
+            16,
         };
 
     private static byte* ML_bits =>
         (byte*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_ML_bits)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_ML_bits)
+            );
 #else
-        private static readonly byte* ML_bits = GetArrayPointer(
-            new byte[53]
-            {
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                1,
-                1,
-                1,
-                1,
-                2,
-                2,
-                3,
-                3,
-                4,
-                4,
-                5,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-            }
-        );
+    private static readonly byte* ML_bits = GetArrayPointer(
+        new byte[53]
+        {
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            3,
+            3,
+            4,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+        }
+    );
 #endif
 #if NET8_0_OR_GREATER
     private static ReadOnlySpan<short> Span_ML_defaultNorm =>
@@ -394,73 +394,73 @@ public static unsafe partial class Methods
             -1,
             -1,
             -1,
-            -1
+            -1,
         };
 
     private static short* ML_defaultNorm =>
         (short*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_ML_defaultNorm)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_ML_defaultNorm)
+            );
 #else
-        private static readonly short* ML_defaultNorm = GetArrayPointer(
-            new short[53]
-            {
-                1,
-                4,
-                3,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-            }
-        );
+    private static readonly short* ML_defaultNorm = GetArrayPointer(
+        new short[53]
+        {
+            1,
+            4,
+            3,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+        }
+    );
 #endif
     private const uint ML_defaultNormLog = 6;
 #if NET8_0_OR_GREATER
@@ -495,49 +495,49 @@ public static unsafe partial class Methods
             -1,
             -1,
             -1,
-            -1
+            -1,
         };
 
     private static short* OF_defaultNorm =>
         (short*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_OF_defaultNorm)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_OF_defaultNorm)
+            );
 #else
-        private static readonly short* OF_defaultNorm = GetArrayPointer(
-            new short[29]
-            {
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                2,
-                2,
-                2,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-                (short)(-1),
-            }
-        );
+    private static readonly short* OF_defaultNorm = GetArrayPointer(
+        new short[29]
+        {
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+            (short)(-1),
+        }
+    );
 #endif
     private const uint OF_defaultNormLog = 5;
 
@@ -572,9 +572,7 @@ public static unsafe partial class Methods
 #endif
         {
             var v1 = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<ulong>((ulong*)src);
-            var v2 = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<ulong>(
-                (ulong*)src + 1
-            );
+            var v2 = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<ulong>((ulong*)src + 1);
             System.Runtime.CompilerServices.Unsafe.WriteUnaligned((ulong*)dst, v1);
             System.Runtime.CompilerServices.Unsafe.WriteUnaligned((ulong*)dst + 1, v2);
         }
@@ -632,7 +630,8 @@ public static unsafe partial class Methods
     private static nuint ZSTD_limitCopy(void* dst, nuint dstCapacity, void* src, nuint srcSize)
     {
         var length = dstCapacity < srcSize ? dstCapacity : srcSize;
-        if (length > 0) memcpy(dst, src, (uint)length);
+        if (length > 0)
+            memcpy(dst, src, (uint)length);
 
         return length;
     }
@@ -642,19 +641,18 @@ public static unsafe partial class Methods
      * indicated by longLengthPos and longLengthType, and adds MINMATCH back to matchLength.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ZSTD_sequenceLength ZSTD_getSequenceLength(
-        seqStore_t* seqStore,
-        seqDef_s* seq
-    )
+    private static ZSTD_sequenceLength ZSTD_getSequenceLength(seqStore_t* seqStore, seqDef_s* seq)
     {
         ZSTD_sequenceLength seqLen;
         seqLen.litLength = seq->litLength;
         seqLen.matchLength = (uint)(seq->mlBase + 3);
         if (seqStore->longLengthPos == (uint)(seq - seqStore->sequencesStart))
         {
-            if (seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_literalLength) seqLen.litLength += 0x10000;
+            if (seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_literalLength)
+                seqLen.litLength += 0x10000;
 
-            if (seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_matchLength) seqLen.matchLength += 0x10000;
+            if (seqStore->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_matchLength)
+                seqLen.matchLength += 0x10000;
         }
 
         return seqLen;

@@ -30,7 +30,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -51,7 +52,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -72,7 +74,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -97,7 +100,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -117,7 +121,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -125,7 +130,8 @@ public class ChdEncoderTests
     public void FileHasExpectedLayout()
     {
         var source = new byte[8192];
-        for (var i = 0; i < source.Length; i++) source[i] = (byte)((i * 7) & 0xFF);
+        for (var i = 0; i < source.Length; i++)
+            source[i] = (byte)((i * 7) & 0xFF);
 
         var chdPath = Path.GetTempFileName();
 
@@ -147,7 +153,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -170,7 +177,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -180,7 +188,8 @@ public class ChdEncoderTests
         // the raw SHA-1 must cover the actual source bytes, not the zero-padded
         // final hunk, so that chdman verify succeeds for non-aligned sizes
         var source = new byte[10000];
-        for (var i = 0; i < source.Length; i++) source[i] = (byte)((i * 13) & 0xFF);
+        for (var i = 0; i < source.Length; i++)
+            source[i] = (byte)((i * 13) & 0xFF);
 
         var chdPath = Path.GetTempFileName();
 
@@ -197,7 +206,8 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
@@ -205,7 +215,9 @@ public class ChdEncoderTests
     public void InvalidHunkUnitRatio_throws()
     {
         using var ms = new MemoryStream(new byte[4096]);
-        Assert.Throws<ArgumentException>(() => ChdEncoder.EncodeRaw(ms, Path.GetTempFileName(), 4096, 1000));
+        Assert.Throws<ArgumentException>(() =>
+            ChdEncoder.EncodeRaw(ms, Path.GetTempFileName(), 4096, 1000)
+        );
     }
 
     [Fact]
@@ -217,7 +229,8 @@ public class ChdEncoderTests
         try
         {
             var source = new byte[4096];
-            for (var i = 0; i < source.Length; i++) source[i] = (byte)((i * 3 + 1) & 0xFF);
+            for (var i = 0; i < source.Length; i++)
+                source[i] = (byte)((i * 3 + 1) & 0xFF);
 
             File.WriteAllBytes(srcPath, source);
 
@@ -228,15 +241,19 @@ public class ChdEncoderTests
         }
         finally
         {
-            if (File.Exists(srcPath)) File.Delete(srcPath);
-            if (File.Exists(chdPath)) File.Delete(chdPath);
+            if (File.Exists(srcPath))
+                File.Delete(srcPath);
+            if (File.Exists(chdPath))
+                File.Delete(chdPath);
         }
     }
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) | ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) | data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 
     private static ulong ReadU64Be(byte[] data, int offset)

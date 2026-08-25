@@ -26,9 +26,7 @@ public static unsafe partial class Methods
     {
         FSE_initCState(statePtr, ct);
         {
-            var symbolTT = (
-                (FSE_symbolCompressionTransform*)statePtr->symbolTT
-            )[symbol];
+            var symbolTT = ((FSE_symbolCompressionTransform*)statePtr->symbolTT)[symbol];
             var stateTable = (ushort*)statePtr->stateTable;
             var nbBitsOut = (symbolTT.deltaNbBits + (1 << 15)) >> 16;
             statePtr->value = (nint)((nbBitsOut << 16) - symbolTT.deltaNbBits);
@@ -39,21 +37,13 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_encodeSymbol(
-        BIT_CStream_t* bitC,
-        FSE_CState_t* statePtr,
-        uint symbol
-    )
+    private static void FSE_encodeSymbol(BIT_CStream_t* bitC, FSE_CState_t* statePtr, uint symbol)
     {
-        var symbolTT = (
-            (FSE_symbolCompressionTransform*)statePtr->symbolTT
-        )[symbol];
+        var symbolTT = ((FSE_symbolCompressionTransform*)statePtr->symbolTT)[symbol];
         var stateTable = (ushort*)statePtr->stateTable;
         var nbBitsOut = ((uint)statePtr->value + symbolTT.deltaNbBits) >> 16;
         BIT_addBits(bitC, (nuint)statePtr->value, nbBitsOut);
-        statePtr->value = stateTable[
-            (statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState
-        ];
+        statePtr->value = stateTable[(statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,8 +84,7 @@ public static unsafe partial class Methods
         assert(accuracyLog < 31 - tableLog);
         {
             var tableSize = (uint)(1 << (int)tableLog);
-            var deltaFromThreshold =
-                threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
+            var deltaFromThreshold = threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
             /* linear interpolation (very approximate) */
             var normalizedDeltaFromThreshold =
                 (deltaFromThreshold << (int)accuracyLog) >> (int)tableLog;

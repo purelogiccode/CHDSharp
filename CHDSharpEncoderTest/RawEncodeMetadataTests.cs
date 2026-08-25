@@ -41,7 +41,7 @@ public class RawEncodeMetadataTests : IDisposable
         {
             Tag = 0x54455354, // 'TEST'
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "hello\0"u8.ToArray()
+            Payload = "hello\0"u8.ToArray(),
         };
 
         var chdPath = Path.Combine(_dir, "user.chd");
@@ -70,10 +70,14 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "user_only.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions
-        {
-            Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)]
-        });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            options: new ChdEncodeOptions
+            {
+                Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)],
+            }
+        );
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -103,7 +107,9 @@ public class RawEncodeMetadataTests : IDisposable
             Assert.True(file!.IsHdd);
             Assert.False(file.IsDvd);
 
-            var meta = file.Metadata.Single(m => string.Equals(m.Tag, "GDDD", StringComparison.Ordinal));
+            var meta = file.Metadata.Single(m =>
+                string.Equals(m.Tag, "GDDD", StringComparison.Ordinal)
+            );
             var text = meta.GetText();
             Assert.StartsWith("CYLS:", text, StringComparison.Ordinal);
             Assert.Contains("HEADS:4", text, StringComparison.Ordinal);
@@ -153,7 +159,13 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "dvd_custom.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 8192, 4096, options: new ChdEncodeOptions { AutoClassify = true });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            8192,
+            4096,
+            options: new ChdEncodeOptions { AutoClassify = true }
+        );
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -195,11 +207,15 @@ public class RawEncodeMetadataTests : IDisposable
 
         var chdPath = Path.Combine(_dir, "sha1.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, options: new ChdEncodeOptions
-        {
-            AutoClassify = true,
-            Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)]
-        });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            options: new ChdEncodeOptions
+            {
+                AutoClassify = true,
+                Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)],
+            }
+        );
 
         using var fs = File.OpenRead(chdPath);
         var checkErr = Chd.CheckFile(fs, chdPath, true, out _, out _, out _);
@@ -219,11 +235,15 @@ public class RawEncodeMetadataTests : IDisposable
         {
             Tag = 0x54455354, // 'TEST'
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "extra\0"u8.ToArray()
+            Payload = "extra\0"u8.ToArray(),
         };
 
         var chdPath = Path.Combine(_dir, "cd_meta.chd");
-        ChdEncoder.EncodeCd(cuePath, chdPath, options: new ChdEncodeOptions { Metadata = [userEntry] });
+        ChdEncoder.EncodeCd(
+            cuePath,
+            chdPath,
+            options: new ChdEncodeOptions { Metadata = [userEntry] }
+        );
 
         var err = ChdFile.Open(chdPath, out var file);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -231,20 +251,26 @@ public class RawEncodeMetadataTests : IDisposable
         {
             var meta = file!.Metadata;
             Assert.Contains(meta, m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal));
-            Assert.Contains(meta,
-                m => string.Equals(m.Tag, "TEST", StringComparison.Ordinal) &&
-                     string.Equals(m.GetText(), "extra\0", StringComparison.Ordinal));
+            Assert.Contains(
+                meta,
+                m =>
+                    string.Equals(m.Tag, "TEST", StringComparison.Ordinal)
+                    && string.Equals(m.GetText(), "extra\0", StringComparison.Ordinal)
+            );
         }
     }
 
     private string WriteSimpleCue()
     {
         var cuePath = Path.Combine(_dir, "cd.cue");
-        File.WriteAllText(cuePath, """
-                                   FILE "cd.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "cd.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
         return cuePath;
     }
 }

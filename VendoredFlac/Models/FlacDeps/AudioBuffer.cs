@@ -91,10 +91,19 @@ internal class AudioBuffer
     {
         get
         {
-            if (_samples == null || _samples.GetLength(0) < Length) _samples = new int[Size, Pcm.ChannelCount];
+            if (_samples == null || _samples.GetLength(0) < Length)
+                _samples = new int[Size, Pcm.ChannelCount];
 
             if (!_dataInSamples && _dataInBytes && _bytes != null && Length != 0)
-                BytesToFlacSamples(_bytes, 0, _samples, 0, Length, Pcm.ChannelCount, Pcm.BitsPerSample);
+                BytesToFlacSamples(
+                    _bytes,
+                    0,
+                    _samples,
+                    0,
+                    Length,
+                    Pcm.ChannelCount,
+                    Pcm.BitsPerSample
+                );
             _dataInSamples = true;
             return _samples;
         }
@@ -107,7 +116,8 @@ internal class AudioBuffer
     {
         get
         {
-            if (_fsamples == null || _fsamples.GetLength(0) < Length) _fsamples = new float[Size, Pcm.ChannelCount];
+            if (_fsamples == null || _fsamples.GetLength(0) < Length)
+                _fsamples = new float[Size, Pcm.ChannelCount];
 
             if (!_dataInFloat && _dataInBytes && _bytes != null && Length != 0)
                 switch (Pcm.BitsPerSample)
@@ -134,14 +144,31 @@ internal class AudioBuffer
     {
         get
         {
-            if (_bytes == null || _bytes.Length < Length * Pcm.BlockAlign) _bytes = new byte[Size * Pcm.BlockAlign];
+            if (_bytes == null || _bytes.Length < Length * Pcm.BlockAlign)
+                _bytes = new byte[Size * Pcm.BlockAlign];
 
             if (!_dataInBytes && Length != 0)
             {
                 if (_dataInSamples && _samples != null)
-                    FlacSamplesToBytes(_samples, 0, _bytes, 0, Length, Pcm.ChannelCount, Pcm.BitsPerSample);
+                    FlacSamplesToBytes(
+                        _samples,
+                        0,
+                        _bytes,
+                        0,
+                        Length,
+                        Pcm.ChannelCount,
+                        Pcm.BitsPerSample
+                    );
                 else if (_dataInFloat && _fsamples != null)
-                    FloatToBytes(_fsamples, 0, _bytes, 0, Length, Pcm.ChannelCount, Pcm.BitsPerSample);
+                    FloatToBytes(
+                        _fsamples,
+                        0,
+                        _bytes,
+                        0,
+                        Length,
+                        Pcm.ChannelCount,
+                        Pcm.BitsPerSample
+                    );
             }
 
             _dataInBytes = true;
@@ -157,13 +184,18 @@ internal class AudioBuffer
     /// <exception cref="Exception">Thrown if the source PCM format does not match.</exception>
     public void Prepare(IAudioSource source, int maxLength)
     {
-        if (source.Pcm.ChannelCount != Pcm.ChannelCount || source.Pcm.BitsPerSample != Pcm.BitsPerSample)
+        if (
+            source.Pcm.ChannelCount != Pcm.ChannelCount
+            || source.Pcm.BitsPerSample != Pcm.BitsPerSample
+        )
             throw new InvalidOperationException("AudioBuffer format mismatch");
 
         Length = Size;
-        if (maxLength >= 0) Length = Math.Min(Length, maxLength);
+        if (maxLength >= 0)
+            Length = Math.Min(Length, maxLength);
 
-        if (source.Remaining >= 0) Length = (int)Math.Min(Length, source.Remaining);
+        if (source.Remaining >= 0)
+            Length = (int)Math.Min(Length, source.Remaining);
 
         _dataInBytes = false;
         _dataInSamples = false;
@@ -177,7 +209,8 @@ internal class AudioBuffer
     public void Prepare(int maxLength)
     {
         Length = Size;
-        if (maxLength >= 0) Length = Math.Min(Length, maxLength);
+        if (maxLength >= 0)
+            Length = Math.Min(Length, maxLength);
 
         _dataInBytes = false;
         _dataInSamples = false;
@@ -224,14 +257,29 @@ internal class AudioBuffer
     internal void Load(int dstOffset, AudioBuffer src, int srcOffset, int copyLength)
     {
         if (_dataInBytes)
-            Buffer.BlockCopy(src.Bytes, srcOffset * Pcm.BlockAlign, Bytes, dstOffset * Pcm.BlockAlign,
-                copyLength * Pcm.BlockAlign);
+            Buffer.BlockCopy(
+                src.Bytes,
+                srcOffset * Pcm.BlockAlign,
+                Bytes,
+                dstOffset * Pcm.BlockAlign,
+                copyLength * Pcm.BlockAlign
+            );
         if (_dataInSamples)
-            Buffer.BlockCopy(src.Samples, srcOffset * Pcm.ChannelCount * 4, Samples, dstOffset * Pcm.ChannelCount * 4,
-                copyLength * Pcm.ChannelCount * 4);
+            Buffer.BlockCopy(
+                src.Samples,
+                srcOffset * Pcm.ChannelCount * 4,
+                Samples,
+                dstOffset * Pcm.ChannelCount * 4,
+                copyLength * Pcm.ChannelCount * 4
+            );
         if (_dataInFloat)
-            Buffer.BlockCopy(src.FloatSamples, srcOffset * Pcm.ChannelCount * 4, FloatSamples,
-                dstOffset * Pcm.ChannelCount * 4, copyLength * Pcm.ChannelCount * 4);
+            Buffer.BlockCopy(
+                src.FloatSamples,
+                srcOffset * Pcm.ChannelCount * 4,
+                FloatSamples,
+                dstOffset * Pcm.ChannelCount * 4,
+                copyLength * Pcm.ChannelCount * 4
+            );
     }
 
     /// <summary>
@@ -243,7 +291,8 @@ internal class AudioBuffer
     public void Prepare(AudioBuffer src, int offset, int length)
     {
         Length = Math.Min(Size, src.Length - offset);
-        if (length >= 0) Length = Math.Min(Length, length);
+        if (length >= 0)
+            Length = Math.Min(Length, length);
 
         _dataInBytes = false;
         _dataInFloat = false;
@@ -252,7 +301,8 @@ internal class AudioBuffer
             _dataInBytes = true;
         else if (src._dataInSamples)
             _dataInSamples = true;
-        else if (src._dataInFloat) _dataInFloat = true;
+        else if (src._dataInFloat)
+            _dataInFloat = true;
 
         Load(0, src, offset, Length);
     }
@@ -264,7 +314,10 @@ internal class AudioBuffer
     /// <exception cref="Exception">Thrown if the PCM formats do not match.</exception>
     public void Swap(AudioBuffer buffer)
     {
-        if (Pcm.BitsPerSample != buffer.Pcm.BitsPerSample || Pcm.ChannelCount != buffer.Pcm.ChannelCount)
+        if (
+            Pcm.BitsPerSample != buffer.Pcm.BitsPerSample
+            || Pcm.ChannelCount != buffer.Pcm.ChannelCount
+        )
             throw new InvalidOperationException("AudioBuffer format mismatch");
 
         var samplesTmp = _samples;
@@ -299,7 +352,8 @@ internal class AudioBuffer
     /// <exception cref="Exception">Thrown if the PCM is not stereo or the bit depth is not 16 or 24.</exception>
     public unsafe void Interlace(int pos, int* src1, int* src2, int n)
     {
-        if (Pcm.ChannelCount != 2) throw new InvalidOperationException("Must be stereo");
+        if (Pcm.ChannelCount != 2)
+            throw new InvalidOperationException("Must be stereo");
 
         switch (Pcm.BitsPerSample)
         {
@@ -308,7 +362,8 @@ internal class AudioBuffer
                 fixed (byte* bs = Bytes)
                 {
                     var res = (int*)bs + pos;
-                    for (var i = n; i > 0; i--) *res++ = (*src1++ & 0xffff) ^ (*src2++ << 16);
+                    for (var i = n; i > 0; i--)
+                        *res++ = (*src1++ & 0xffff) ^ (*src2++ << 16);
                 }
 
                 break;
@@ -353,17 +408,26 @@ internal class AudioBuffer
     /// <param name="sampleCount">Number of samples (per channel) to convert.</param>
     /// <param name="channelCount">Number of channels.</param>
     /// <exception cref="IndexOutOfRangeException">Thrown if the sample offset exceeds the array bounds.</exception>
-    public static unsafe void FlacSamplesToBytes16(int[,] inSamples, int inSampleOffset,
-        byte* outSamples, int sampleCount, int channelCount)
+    public static unsafe void FlacSamplesToBytes16(
+        int[,] inSamples,
+        int inSampleOffset,
+        byte* outSamples,
+        int sampleCount,
+        int channelCount
+    )
     {
         var loopCount = sampleCount * channelCount;
 
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(sampleCount, inSamples.GetLength(0) - inSampleOffset);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(
+            sampleCount,
+            inSamples.GetLength(0) - inSampleOffset
+        );
 
         fixed (int* pInSamplesFixed = &inSamples[inSampleOffset, 0])
         {
             var pOutSamples = (short*)outSamples;
-            for (var i = 0; i < loopCount; i++) pOutSamples[i] = (short)pInSamplesFixed[i];
+            for (var i = 0; i < loopCount; i++)
+                pOutSamples[i] = (short)pInSamplesFixed[i];
             //*(pOutSamples++) = (short)*(pInSamples++);
         }
     }
@@ -378,19 +442,36 @@ internal class AudioBuffer
     /// <param name="sampleCount">Number of samples (per channel) to convert.</param>
     /// <param name="channelCount">Number of channels.</param>
     /// <exception cref="IndexOutOfRangeException">Thrown if array bounds are exceeded.</exception>
-    public static unsafe void FlacSamplesToBytes16(int[,] inSamples, int inSampleOffset,
-        byte[] outSamples, int outByteOffset, int sampleCount, int channelCount)
+    public static unsafe void FlacSamplesToBytes16(
+        int[,] inSamples,
+        int inSampleOffset,
+        byte[] outSamples,
+        int outByteOffset,
+        int sampleCount,
+        int channelCount
+    )
     {
         var loopCount = sampleCount * channelCount;
 
-        if (inSamples.GetLength(0) - inSampleOffset < sampleCount ||
-            outSamples.Length - outByteOffset < loopCount * 2)
-            throw new ArgumentOutOfRangeException(nameof(sampleCount), sampleCount,
-                "sampleCount exceeds available space in inSamples or outSamples buffer");
+        if (
+            inSamples.GetLength(0) - inSampleOffset < sampleCount
+            || outSamples.Length - outByteOffset < loopCount * 2
+        )
+            throw new ArgumentOutOfRangeException(
+                nameof(sampleCount),
+                sampleCount,
+                "sampleCount exceeds available space in inSamples or outSamples buffer"
+            );
 
         fixed (byte* pOutSamplesFixed = &outSamples[outByteOffset])
         {
-            FlacSamplesToBytes16(inSamples, inSampleOffset, pOutSamplesFixed, sampleCount, channelCount);
+            FlacSamplesToBytes16(
+                inSamples,
+                inSampleOffset,
+                pOutSamplesFixed,
+                sampleCount,
+                channelCount
+            );
         }
     }
 
@@ -405,15 +486,27 @@ internal class AudioBuffer
     /// <param name="channelCount">Number of channels.</param>
     /// <param name="wastedBits">Number of wasted bits to shift the samples left before conversion.</param>
     /// <exception cref="IndexOutOfRangeException">Thrown if array bounds are exceeded.</exception>
-    public static unsafe void FlacSamplesToBytes24(int[,] inSamples, int inSampleOffset,
-        byte[] outSamples, int outByteOffset, int sampleCount, int channelCount, int wastedBits)
+    public static unsafe void FlacSamplesToBytes24(
+        int[,] inSamples,
+        int inSampleOffset,
+        byte[] outSamples,
+        int outByteOffset,
+        int sampleCount,
+        int channelCount,
+        int wastedBits
+    )
     {
         var loopCount = sampleCount * channelCount;
 
-        if (inSamples.GetLength(0) - inSampleOffset < sampleCount ||
-            outSamples.Length - outByteOffset < loopCount * 3)
-            throw new ArgumentOutOfRangeException(nameof(sampleCount), sampleCount,
-                "sampleCount exceeds available space in inSamples or outSamples buffer");
+        if (
+            inSamples.GetLength(0) - inSampleOffset < sampleCount
+            || outSamples.Length - outByteOffset < loopCount * 3
+        )
+            throw new ArgumentOutOfRangeException(
+                nameof(sampleCount),
+                sampleCount,
+                "sampleCount exceeds available space in inSamples or outSamples buffer"
+            );
 
         fixed (int* pInSamplesFixed = &inSamples[inSampleOffset, 0])
         {
@@ -445,13 +538,21 @@ internal class AudioBuffer
     /// <param name="sampleCount">Number of samples per channel.</param>
     /// <param name="channelCount">Number of channels.</param>
     /// <exception cref="IndexOutOfRangeException">Thrown if array bounds are exceeded.</exception>
-    public static unsafe void FloatToBytes16(float[,] inSamples, int inSampleOffset,
-        byte[] outSamples, int outByteOffset, int sampleCount, int channelCount)
+    public static unsafe void FloatToBytes16(
+        float[,] inSamples,
+        int inSampleOffset,
+        byte[] outSamples,
+        int outByteOffset,
+        int sampleCount,
+        int channelCount
+    )
     {
         var loopCount = sampleCount * channelCount;
 
-        if (inSamples.GetLength(0) - inSampleOffset < sampleCount ||
-            outSamples.Length - outByteOffset < loopCount * 2)
+        if (
+            inSamples.GetLength(0) - inSampleOffset < sampleCount
+            || outSamples.Length - outByteOffset < loopCount * 2
+        )
             throw new ArgumentOutOfRangeException(nameof(inSampleOffset));
 
         fixed (float* pInSamplesFixed = &inSamples[inSampleOffset, 0])
@@ -461,7 +562,8 @@ internal class AudioBuffer
                 var pInSamples = pInSamplesFixed;
                 var pOutSamples = (short*)pOutSamplesFixed;
 
-                for (var i = 0; i < loopCount; i++) *pOutSamples++ = (short)(32758 * *pInSamples++);
+                for (var i = 0; i < loopCount; i++)
+                    *pOutSamples++ = (short)(32758 * *pInSamples++);
             }
         }
     }
@@ -477,17 +579,36 @@ internal class AudioBuffer
     /// <param name="channelCount">Number of channels.</param>
     /// <param name="bitsPerSample">Target bits per sample (16 or 32).</param>
     /// <exception cref="Exception">Thrown if <paramref name="bitsPerSample" /> is not 16 or 32.</exception>
-    public static void FloatToBytes(float[,] inSamples, int inSampleOffset,
-        byte[] outSamples, int outByteOffset, int sampleCount, int channelCount, int bitsPerSample)
+    public static void FloatToBytes(
+        float[,] inSamples,
+        int inSampleOffset,
+        byte[] outSamples,
+        int outByteOffset,
+        int sampleCount,
+        int channelCount,
+        int bitsPerSample
+    )
     {
         switch (bitsPerSample)
         {
             case 16:
-                FloatToBytes16(inSamples, inSampleOffset, outSamples, outByteOffset, sampleCount, channelCount);
+                FloatToBytes16(
+                    inSamples,
+                    inSampleOffset,
+                    outSamples,
+                    outByteOffset,
+                    sampleCount,
+                    channelCount
+                );
                 break;
             case 32:
-                Buffer.BlockCopy(inSamples, inSampleOffset * 4 * channelCount, outSamples, outByteOffset,
-                    sampleCount * 4 * channelCount);
+                Buffer.BlockCopy(
+                    inSamples,
+                    inSampleOffset * 4 * channelCount,
+                    outSamples,
+                    outByteOffset,
+                    sampleCount * 4 * channelCount
+                );
                 break;
             default:
                 throw new NotSupportedException("Unsupported bitsPerSample value");
@@ -505,17 +626,38 @@ internal class AudioBuffer
     /// <param name="channelCount">Number of channels.</param>
     /// <param name="bitsPerSample">Bits per sample (16 or up to 24).</param>
     /// <exception cref="Exception">Thrown if <paramref name="bitsPerSample" /> is not supported.</exception>
-    public static void FlacSamplesToBytes(int[,] inSamples, int inSampleOffset,
-        byte[] outSamples, int outByteOffset, int sampleCount, int channelCount, int bitsPerSample)
+    public static void FlacSamplesToBytes(
+        int[,] inSamples,
+        int inSampleOffset,
+        byte[] outSamples,
+        int outByteOffset,
+        int sampleCount,
+        int channelCount,
+        int bitsPerSample
+    )
     {
         switch (bitsPerSample)
         {
             case 16:
-                FlacSamplesToBytes16(inSamples, inSampleOffset, outSamples, outByteOffset, sampleCount, channelCount);
+                FlacSamplesToBytes16(
+                    inSamples,
+                    inSampleOffset,
+                    outSamples,
+                    outByteOffset,
+                    sampleCount,
+                    channelCount
+                );
                 break;
             case > 16 and <= 24:
-                FlacSamplesToBytes24(inSamples, inSampleOffset, outSamples, outByteOffset, sampleCount, channelCount,
-                    24 - bitsPerSample);
+                FlacSamplesToBytes24(
+                    inSamples,
+                    inSampleOffset,
+                    outSamples,
+                    outByteOffset,
+                    sampleCount,
+                    channelCount,
+                    24 - bitsPerSample
+                );
                 break;
             default:
                 throw new NotSupportedException("Unsupported bitsPerSample value");
@@ -532,8 +674,14 @@ internal class AudioBuffer
     /// <param name="channelCount">Number of channels.</param>
     /// <param name="bitsPerSample">Bits per sample (must be 16).</param>
     /// <exception cref="Exception">Thrown if <paramref name="bitsPerSample" /> is not 16.</exception>
-    public static unsafe void FlacSamplesToBytes(int[,] inSamples, int inSampleOffset,
-        byte* outSamples, int sampleCount, int channelCount, int bitsPerSample)
+    public static unsafe void FlacSamplesToBytes(
+        int[,] inSamples,
+        int inSampleOffset,
+        byte* outSamples,
+        int sampleCount,
+        int channelCount,
+        int bitsPerSample
+    )
     {
         if (bitsPerSample == 16)
             FlacSamplesToBytes16(inSamples, inSampleOffset, outSamples, sampleCount, channelCount);
@@ -551,13 +699,21 @@ internal class AudioBuffer
     /// <param name="sampleCount">Number of samples per channel.</param>
     /// <param name="channelCount">Number of channels.</param>
     /// <exception cref="IndexOutOfRangeException">Thrown if array bounds are exceeded.</exception>
-    public static unsafe void Bytes16ToFloat(byte[] inSamples, int inByteOffset,
-        float[,] outSamples, int outSampleOffset, int sampleCount, int channelCount)
+    public static unsafe void Bytes16ToFloat(
+        byte[] inSamples,
+        int inByteOffset,
+        float[,] outSamples,
+        int outSampleOffset,
+        int sampleCount,
+        int channelCount
+    )
     {
         var loopCount = sampleCount * channelCount;
 
-        if (inSamples.Length - inByteOffset < loopCount * 2 ||
-            outSamples.GetLength(0) - outSampleOffset < sampleCount)
+        if (
+            inSamples.Length - inByteOffset < loopCount * 2
+            || outSamples.GetLength(0) - outSampleOffset < sampleCount
+        )
             throw new ArgumentOutOfRangeException(nameof(inByteOffset));
 
         fixed (byte* pInSamplesFixed = &inSamples[inByteOffset])
@@ -566,7 +722,8 @@ internal class AudioBuffer
             {
                 var pInSamples = (short*)pInSamplesFixed;
                 var pOutSamples = pOutSamplesFixed;
-                for (var i = 0; i < loopCount; i++) *pOutSamples++ = *pInSamples++ / 32768.0f;
+                for (var i = 0; i < loopCount; i++)
+                    *pOutSamples++ = *pInSamples++ / 32768.0f;
             }
         }
     }
@@ -581,13 +738,21 @@ internal class AudioBuffer
     /// <param name="sampleCount">Number of samples per channel.</param>
     /// <param name="channelCount">Number of channels.</param>
     /// <exception cref="IndexOutOfRangeException">Thrown if array bounds are exceeded.</exception>
-    public static unsafe void BytesToFlacSamples16(byte[] inSamples, int inByteOffset,
-        int[,] outSamples, int outSampleOffset, int sampleCount, int channelCount)
+    public static unsafe void BytesToFlacSamples16(
+        byte[] inSamples,
+        int inByteOffset,
+        int[,] outSamples,
+        int outSampleOffset,
+        int sampleCount,
+        int channelCount
+    )
     {
         var loopCount = sampleCount * channelCount;
 
-        if (inSamples.Length - inByteOffset < loopCount * 2 ||
-            outSamples.GetLength(0) - outSampleOffset < sampleCount)
+        if (
+            inSamples.Length - inByteOffset < loopCount * 2
+            || outSamples.GetLength(0) - outSampleOffset < sampleCount
+        )
             throw new ArgumentOutOfRangeException(nameof(inByteOffset));
 
         fixed (byte* pInSamplesFixed = &inSamples[inByteOffset])
@@ -597,7 +762,8 @@ internal class AudioBuffer
                 var pInSamples = (short*)pInSamplesFixed;
                 var pOutSamples = pOutSamplesFixed;
 
-                for (var i = 0; i < loopCount; i++) *pOutSamples++ = *pInSamples++;
+                for (var i = 0; i < loopCount; i++)
+                    *pOutSamples++ = *pInSamples++;
             }
         }
     }
@@ -613,13 +779,22 @@ internal class AudioBuffer
     /// <param name="channelCount">Number of channels.</param>
     /// <param name="wastedBits">Number of wasted bits to shift right after conversion.</param>
     /// <exception cref="IndexOutOfRangeException">Thrown if array bounds are exceeded.</exception>
-    public static unsafe void BytesToFlacSamples24(byte[] inSamples, int inByteOffset,
-        int[,] outSamples, int outSampleOffset, int sampleCount, int channelCount, int wastedBits)
+    public static unsafe void BytesToFlacSamples24(
+        byte[] inSamples,
+        int inByteOffset,
+        int[,] outSamples,
+        int outSampleOffset,
+        int sampleCount,
+        int channelCount,
+        int wastedBits
+    )
     {
         var loopCount = sampleCount * channelCount;
 
-        if (inSamples.Length - inByteOffset < loopCount * 3 ||
-            outSamples.GetLength(0) - outSampleOffset < sampleCount)
+        if (
+            inSamples.Length - inByteOffset < loopCount * 3
+            || outSamples.GetLength(0) - outSampleOffset < sampleCount
+        )
             throw new ArgumentOutOfRangeException(nameof(inByteOffset));
 
         fixed (byte* pInSamplesFixed = &inSamples[inByteOffset])
@@ -650,17 +825,38 @@ internal class AudioBuffer
     /// <param name="channelCount">Number of channels.</param>
     /// <param name="bitsPerSample">Bits per sample (16 or up to 24).</param>
     /// <exception cref="Exception">Thrown if <paramref name="bitsPerSample" /> is not supported.</exception>
-    public static void BytesToFlacSamples(byte[] inSamples, int inByteOffset,
-        int[,] outSamples, int outSampleOffset, int sampleCount, int channelCount, int bitsPerSample)
+    public static void BytesToFlacSamples(
+        byte[] inSamples,
+        int inByteOffset,
+        int[,] outSamples,
+        int outSampleOffset,
+        int sampleCount,
+        int channelCount,
+        int bitsPerSample
+    )
     {
         switch (bitsPerSample)
         {
             case 16:
-                BytesToFlacSamples16(inSamples, inByteOffset, outSamples, outSampleOffset, sampleCount, channelCount);
+                BytesToFlacSamples16(
+                    inSamples,
+                    inByteOffset,
+                    outSamples,
+                    outSampleOffset,
+                    sampleCount,
+                    channelCount
+                );
                 break;
             case > 16 and <= 24:
-                BytesToFlacSamples24(inSamples, inByteOffset, outSamples, outSampleOffset, sampleCount, channelCount,
-                    24 - bitsPerSample);
+                BytesToFlacSamples24(
+                    inSamples,
+                    inByteOffset,
+                    outSamples,
+                    outSampleOffset,
+                    sampleCount,
+                    channelCount,
+                    24 - bitsPerSample
+                );
                 break;
             default:
                 throw new NotSupportedException("Unsupported bitsPerSample value");

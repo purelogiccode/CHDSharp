@@ -190,26 +190,22 @@ public static unsafe partial class Methods
             @params->hashLog = 6 > @params->windowLog - 7 ? 6 : @params->windowLog - 7;
             assert(
                 @params->hashLog
-                <= (uint)(
-                    (sizeof(nuint) == 4 ? 30 : 31) < 30
-                        ? sizeof(nuint) == 4
-                            ? 30
-                            : 31
-                        : 30
-                )
+                    <= (uint)(
+                        (sizeof(nuint) == 4 ? 30 : 31) < 30
+                            ? sizeof(nuint) == 4
+                                ? 30
+                                : 31
+                            : 30
+                    )
             );
         }
 
         if (@params->hashRateLog == 0)
             @params->hashRateLog =
-                @params->windowLog < @params->hashLog
-                    ? 0
-                    : @params->windowLog - @params->hashLog;
+                @params->windowLog < @params->hashLog ? 0 : @params->windowLog - @params->hashLog;
 
         @params->bucketSizeLog =
-            @params->bucketSizeLog < @params->hashLog
-                ? @params->bucketSizeLog
-                : @params->hashLog;
+            @params->bucketSizeLog < @params->hashLog ? @params->bucketSizeLog : @params->hashLog;
     }
 
     /**
@@ -312,7 +308,8 @@ public static unsafe partial class Methods
     )
     {
         var matchLength = ZSTD_ldm_countBackwardsMatch(pIn, pAnchor, pMatch, pMatchBase);
-        if (pMatch - matchLength != pMatchBase || pMatchBase == pExtDictStart) return matchLength;
+        if (pMatch - matchLength != pMatchBase || pMatchBase == pExtDictStart)
+            return matchLength;
 
         matchLength += ZSTD_ldm_countBackwardsMatch(
             pIn - matchLength,
@@ -466,13 +463,7 @@ public static unsafe partial class Methods
             nuint hashed;
             uint n;
             numSplits = 0;
-            hashed = ZSTD_ldm_gear_feed(
-                &hashState,
-                ip,
-                (nuint)(ilimit - ip),
-                splits,
-                &numSplits
-            );
+            hashed = ZSTD_ldm_gear_feed(&hashState, ip, (nuint)(ilimit - ip), splits, &numSplits);
             for (n = 0; n < numSplits; n++)
             {
                 var split = ip + splits[n] - minMatchLength;
@@ -483,7 +474,8 @@ public static unsafe partial class Methods
                 candidates[n].checksum = (uint)(xxhash >> 32);
                 candidates[n].bucket = ZSTD_ldm_getBucket(ldmState, hash, *@params);
 #if NETCOREAPP3_0_OR_GREATER
-                if (Sse.IsSupported) Sse.Prefetch0(candidates[n].bucket);
+                if (Sse.IsSupported)
+                    Sse.Prefetch0(candidates[n].bucket);
 #endif
             }
 
@@ -514,7 +506,8 @@ public static unsafe partial class Methods
                     nuint curForwardMatchLength,
                         curBackwardMatchLength,
                         curTotalMatchLength;
-                    if (cur->checksum != checksum || cur->offset <= lowestIndex) continue;
+                    if (cur->checksum != checksum || cur->offset <= lowestIndex)
+                        continue;
 
                     if (extDict != 0)
                     {
@@ -529,7 +522,8 @@ public static unsafe partial class Methods
                             matchEnd,
                             lowPrefixPtr
                         );
-                        if (curForwardMatchLength < minMatchLength) continue;
+                        if (curForwardMatchLength < minMatchLength)
+                            continue;
 
                         curBackwardMatchLength = ZSTD_ldm_countBackwardsMatch_2segments(
                             split,
@@ -544,7 +538,8 @@ public static unsafe partial class Methods
                     {
                         var pMatch = @base + cur->offset;
                         curForwardMatchLength = ZSTD_count(split, pMatch, iend);
-                        if (curForwardMatchLength < minMatchLength) continue;
+                        if (curForwardMatchLength < minMatchLength)
+                            continue;
 
                         curBackwardMatchLength = ZSTD_ldm_countBackwardsMatch(
                             split,
@@ -575,9 +570,7 @@ public static unsafe partial class Methods
                 {
                     var seq = rawSeqStore->seq + rawSeqStore->size;
                     if (rawSeqStore->size == rawSeqStore->capacity)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     seq->litLength = (uint)(split - backwardMatchLength - anchor);
                     seq->matchLength = (uint)mLength;
                     seq->offset = offset;
@@ -638,13 +631,12 @@ public static unsafe partial class Methods
         var istart = (byte*)src;
         var iend = istart + srcSize;
         const nuint kMaxChunkSize = 1 << 20;
-        var nbChunks =
-            srcSize / kMaxChunkSize + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
+        var nbChunks = srcSize / kMaxChunkSize + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
         nuint chunk;
         nuint leftoverSize = 0;
         assert(
             unchecked((uint)-1) - ((3U << 29) + (1U << (sizeof(nuint) == 4 ? 30 : 31)))
-            >= kMaxChunkSize
+                >= kMaxChunkSize
         );
         assert(ldmState->window.nextSrc >= (byte*)src + srcSize);
         assert(sequences->pos <= sequences->size);
@@ -740,7 +732,8 @@ public static unsafe partial class Methods
                 seq->matchLength -= (uint)srcSize;
                 if (seq->matchLength < minMatch)
                 {
-                    if (rawSeqStore->pos + 1 < rawSeqStore->size) seq[1].litLength += seq[0].matchLength;
+                    if (rawSeqStore->pos + 1 < rawSeqStore->size)
+                        seq[1].litLength += seq[0].matchLength;
 
                     rawSeqStore->pos++;
                 }
@@ -782,7 +775,8 @@ public static unsafe partial class Methods
         else if (remaining < sequence.litLength + sequence.matchLength)
         {
             sequence.matchLength = remaining - sequence.litLength;
-            if (sequence.matchLength < minMatch) sequence.offset = 0;
+            if (sequence.matchLength < minMatch)
+                sequence.offset = 0;
         }
 
         ZSTD_ldm_skipSequences(rawSeqStore, remaining, minMatch);
@@ -812,7 +806,8 @@ public static unsafe partial class Methods
             }
         }
 
-        if (currPos == 0 || rawSeqStore->pos == rawSeqStore->size) rawSeqStore->posInSequence = 0;
+        if (currPos == 0 || rawSeqStore->pos == rawSeqStore->size)
+            rawSeqStore->posInSequence = 0;
     }
 
     /**

@@ -16,7 +16,8 @@ internal partial class MainPage
 
     private void LogTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
     {
-        if (sender is TextBox tb) tb.ScrollToEnd();
+        if (sender is TextBox tb)
+            tb.ScrollToEnd();
     }
 }
 
@@ -38,7 +39,7 @@ public class StatusIconConverter : IValueConverter
                 TestStatus.Passed => "✓",
                 TestStatus.Failed => "✗",
                 TestStatus.Skipped => "○",
-                _ => "?"
+                _ => "?",
             }
             : "?";
     }

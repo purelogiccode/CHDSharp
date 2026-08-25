@@ -11,7 +11,8 @@ public static unsafe class DictBuilder
         int dictCapacity = DefaultDictCapacity
     )
     {
-        return TrainFromBufferFastCover(samples, Methods.ZSTD_defaultCLevel(), dictCapacity).ToArray();
+        return TrainFromBufferFastCover(samples, Methods.ZSTD_defaultCLevel(), dictCapacity)
+            .ToArray();
     }
 
     public static Span<byte> TrainFromBufferFastCover(
@@ -27,7 +28,7 @@ public static unsafe class DictBuilder
             {
                 d = 8,
                 steps = 4,
-                zParams = new ZDICT_params_t { compressionLevel = level }
+                zParams = new ZDICT_params_t { compressionLevel = level },
             },
             dictCapacity
         );

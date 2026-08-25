@@ -66,7 +66,9 @@ public sealed class NrgParser
                 var endTrack = (byte)file.ReadByte();
                 var numTracks = endTrack - startTrack + 1;
                 if (numTracks is <= 0 or > CdConstants.MaxTracks)
-                    throw new InvalidDataException($"Invalid NRG track range {startTrack}-{endTrack}");
+                    throw new InvalidDataException(
+                        $"Invalid NRG track range {startTrack}-{endTrack}"
+                    );
 
                 tracks = new List<CdTrack>(numTracks);
                 ulong offset = 0;
@@ -102,7 +104,7 @@ public sealed class NrgParser
                         FileOffset = (long)(offset + (index1 - index0)),
                         // MAME reports the pregap (INDEX 00 → INDEX 01) without physical data.
                         Pregap = (int)((index1 - index0) / size),
-                        Frames = (int)((index1 - index0) / size + (trackEnd - index1) / size)
+                        Frames = (int)((index1 - index0) / size + (trackEnd - index1) / size),
                     };
 
                     switch (mode)
@@ -124,7 +126,8 @@ public sealed class NrgParser
                             break;
                         default:
                             throw new InvalidDataException(
-                                $"Unsupported NRG track mode 0x{mode:X4} in track {track}");
+                                $"Unsupported NRG track mode 0x{mode:X4} in track {track}"
+                            );
                     }
 
                     tracks.Add(trackInfo);

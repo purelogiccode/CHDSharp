@@ -57,7 +57,7 @@ public class ChdFileEntry : INotifyPropertyChanged
                 < 1024 => $"{fi.Length} B",
                 < 1024 * 1024 => $"{fi.Length / 1024.0:F1} KB",
                 < 1024L * 1024 * 1024 => $"{fi.Length / (1024.0 * 1024):F1} MB",
-                _ => $"{fi.Length / (1024.0 * 1024 * 1024):F2} GB"
+                _ => $"{fi.Length / (1024.0 * 1024 * 1024):F2} GB",
             };
         }
         catch (FileNotFoundException)

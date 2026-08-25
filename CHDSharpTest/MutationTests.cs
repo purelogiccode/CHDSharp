@@ -25,16 +25,18 @@ public class MutationTests
     {
         // One file per version/codec family: V1 (legacy map), V3 (zlib), V4 (avhuff), V5 zlib,
         // V5 CD compound, V5 uncompressed, and a child CHD (read against its parent).
-        foreach (var name in new[]
-                 {
-                     "v1_zlib.chd",
-                     "v3_av.chd",
-                     "v4_av.chd",
-                     "v5_zlib.chd",
-                     "v5_cd_default.chd",
-                     "v5_none.chd",
-                     "v5_child.chd"
-                 })
+        foreach (
+            var name in new[]
+            {
+                "v1_zlib.chd",
+                "v3_av.chd",
+                "v4_av.chd",
+                "v5_zlib.chd",
+                "v5_cd_default.chd",
+                "v5_none.chd",
+                "v5_child.chd",
+            }
+        )
         {
             var path = Path.Combine(TestDataDir, name);
             if (File.Exists(path))
@@ -67,7 +69,8 @@ public class MutationTests
             case 0:
                 // random byte flips (1-8 flips)
                 var flips = rng.Next(1, 9);
-                for (var i = 0; i < flips; i++) bytes[rng.Next(bytes.Length)] ^= (byte)(1 << rng.Next(8));
+                for (var i = 0; i < flips; i++)
+                    bytes[rng.Next(bytes.Length)] ^= (byte)(1 << rng.Next(8));
 
                 break;
             case 1:
@@ -78,7 +81,8 @@ public class MutationTests
                 // header field corruption (bytes 8..124 are header fields)
                 var start = rng.Next(8, Math.Min(bytes.Length, 124));
                 var length = Math.Min(rng.Next(1, 20), bytes.Length - start);
-                for (var i = 0; i < length; i++) bytes[start + i] = (byte)rng.Next(256);
+                for (var i = 0; i < length; i++)
+                    bytes[start + i] = (byte)rng.Next(256);
 
                 break;
             case 3:
@@ -89,7 +93,10 @@ public class MutationTests
                 break;
         }
 
-        var mutatedPath = Path.Combine(Path.GetTempPath(), $"chdsharp_mut_{seed}_{Guid.NewGuid():N}.chd");
+        var mutatedPath = Path.Combine(
+            Path.GetTempPath(),
+            $"chdsharp_mut_{seed}_{Guid.NewGuid():N}.chd"
+        );
         try
         {
             File.WriteAllBytes(mutatedPath, bytes);
@@ -109,13 +116,20 @@ public class MutationTests
                 var buffer = new byte[chd.HunkBytes];
                 for (uint h = 0; h < chd.HunkCount; h++)
                 {
-                    Assert.True(sw.Elapsed < TimeSpan.FromSeconds(60), $"Read hung on seed {seed} at hunk {h}");
+                    Assert.True(
+                        sw.Elapsed < TimeSpan.FromSeconds(60),
+                        $"Read hung on seed {seed} at hunk {h}"
+                    );
                     var hunkErr = chd.ReadHunk(h, buffer, cts.Token);
                     Assert.True(
-                        hunkErr is ChdError.Chderrnone or ChdError.Chderrdecompressionerror
-                            or ChdError.Chderrinvaliddata or ChdError.Chderrrequiresparent
-                            or ChdError.Chderrinvalidparent,
-                        $"Unexpected hunk error {hunkErr} on seed {seed} at hunk {h}");
+                        hunkErr
+                            is ChdError.Chderrnone
+                                or ChdError.Chderrdecompressionerror
+                                or ChdError.Chderrinvaliddata
+                                or ChdError.Chderrrequiresparent
+                                or ChdError.Chderrinvalidparent,
+                        $"Unexpected hunk error {hunkErr} on seed {seed} at hunk {h}"
+                    );
                 }
 
                 try
@@ -133,26 +147,36 @@ public class MutationTests
             try
             {
                 var token = cts.Token;
-                await Task.Run(async () =>
-                {
-                    var err2 = ChdFile.Open(mutatedPath, out var chd2, token);
-                    if (err2 != ChdError.Chderrnone || chd2 == null)
-                        return err2;
-
-                    await using (chd2)
-                    {
-                        var b = new byte[chd2.HunkBytes];
-                        for (uint h = 0; h < chd2.HunkCount; h++)
+                await Task.Run(
+                        async () =>
                         {
-                            var e = await chd2.ReadHunkAsync(h, b, token);
-                            if (e is not (ChdError.Chderrnone or ChdError.Chderrdecompressionerror
-                                or ChdError.Chderrinvaliddata))
-                                return e;
-                        }
-                    }
+                            var err2 = ChdFile.Open(mutatedPath, out var chd2, token);
+                            if (err2 != ChdError.Chderrnone || chd2 == null)
+                                return err2;
 
-                    return ChdError.Chderrnone;
-                }, token).WaitAsync(TimeSpan.FromSeconds(60));
+                            await using (chd2)
+                            {
+                                var b = new byte[chd2.HunkBytes];
+                                for (uint h = 0; h < chd2.HunkCount; h++)
+                                {
+                                    var e = await chd2.ReadHunkAsync(h, b, token);
+                                    if (
+                                        e
+                                        is not (
+                                            ChdError.Chderrnone
+                                            or ChdError.Chderrdecompressionerror
+                                            or ChdError.Chderrinvaliddata
+                                        )
+                                    )
+                                        return e;
+                                }
+                            }
+
+                            return ChdError.Chderrnone;
+                        },
+                        token
+                    )
+                    .WaitAsync(TimeSpan.FromSeconds(60));
             }
             catch (TimeoutException)
             {
@@ -170,12 +194,21 @@ public class MutationTests
         catch (AggregateException ex)
         {
             Assert.Fail(
-                $"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.InnerException?.Message}");
+                $"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.InnerException?.Message}"
+            );
         }
-        catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException
-                                       or IndexOutOfRangeException or EndOfStreamException)
+        catch (Exception ex)
+            when (ex
+                    is ArgumentException
+                        or InvalidDataException
+                        or IOException
+                        or IndexOutOfRangeException
+                        or EndOfStreamException
+            )
         {
-            Assert.Fail($"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.Message}");
+            Assert.Fail(
+                $"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.Message}"
+            );
         }
         finally
         {
@@ -199,8 +232,11 @@ public class MutationTests
     {
         foreach (var file in CorpusFiles())
         {
-            var parent = string.Equals(Path.GetFileName(file), "v5_child.chd"
-                , StringComparison.Ordinal)
+            var parent = string.Equals(
+                Path.GetFileName(file),
+                "v5_child.chd",
+                StringComparison.Ordinal
+            )
                 ? Path.Combine(TestDataDir, "v5_parent.chd")
                 : null;
             var err = ChdFile.Open(file, parent, out var chd);
@@ -208,7 +244,8 @@ public class MutationTests
             using (chd)
             {
                 var buffer = new byte[chd!.HunkBytes];
-                for (uint h = 0; h < chd.HunkCount; h++) Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(h, buffer));
+                for (uint h = 0; h < chd.HunkCount; h++)
+                    Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(h, buffer));
             }
         }
     }

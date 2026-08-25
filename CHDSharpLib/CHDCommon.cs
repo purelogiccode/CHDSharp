@@ -13,10 +13,13 @@ internal static class ChdCommon
     {
         switch (ct)
         {
-            case 0: return ChdCodec.None;
+            case 0:
+                return ChdCodec.None;
             case 1:
-            case 2: return ChdCodec.Zlib;
-            case 3: return ChdCodec.Avhuff;
+            case 2:
+                return ChdCodec.Zlib;
+            case 3:
+                return ChdCodec.Avhuff;
             default:
                 return ChdCodec.Error;
         }
@@ -32,13 +35,20 @@ internal static class ChdCommon
     {
         switch (mapEntryFlag & MapEntryFlag.Mapentryflagtypemask)
         {
-            case MapEntryFlag.Mapentrytypeinvalid: return CompressionType.Compressionerror;
-            case MapEntryFlag.Mapentrytypecompressed: return CompressionType.Compressiontype0;
-            case MapEntryFlag.Mapentrytypeuncompressed: return CompressionType.Compressionnone;
-            case MapEntryFlag.Mapentrytypemini: return CompressionType.Compressionmini;
-            case MapEntryFlag.Mapentrytypeselfhunk: return CompressionType.Compressionself;
-            case MapEntryFlag.Mapentrytypeparenthunk: return CompressionType.Compressionparent;
-            case MapEntryFlag.Mapentrytype2Ndcompressed: return CompressionType.Compressiontype2Nd;
+            case MapEntryFlag.Mapentrytypeinvalid:
+                return CompressionType.Compressionerror;
+            case MapEntryFlag.Mapentrytypecompressed:
+                return CompressionType.Compressiontype0;
+            case MapEntryFlag.Mapentrytypeuncompressed:
+                return CompressionType.Compressionnone;
+            case MapEntryFlag.Mapentrytypemini:
+                return CompressionType.Compressionmini;
+            case MapEntryFlag.Mapentrytypeselfhunk:
+                return CompressionType.Compressionself;
+            case MapEntryFlag.Mapentrytypeparenthunk:
+                return CompressionType.Compressionparent;
+            case MapEntryFlag.Mapentrytype2Ndcompressed:
+                return CompressionType.Compressiontype2Nd;
             default:
                 return CompressionType.Compressionerror;
         }

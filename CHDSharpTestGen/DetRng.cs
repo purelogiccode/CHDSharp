@@ -37,9 +37,11 @@ internal sealed class DetRng
         while (i + 8 <= buffer.Length)
         {
             var v = NextU64();
-            for (var b = 0; b < 8; b++) buffer[i++] = (byte)(v >> (b * 8));
+            for (var b = 0; b < 8; b++)
+                buffer[i++] = (byte)(v >> (b * 8));
         }
 
-        while (i < buffer.Length) buffer[i++] = NextByte();
+        while (i < buffer.Length)
+            buffer[i++] = NextByte();
     }
 }

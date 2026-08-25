@@ -21,13 +21,7 @@ public unsafe struct rawSeqStore_t
     /* The capacity starting from `seq` pointer */
     public nuint capacity;
 
-    public rawSeqStore_t(
-        rawSeq* seq,
-        nuint pos,
-        nuint posInSequence,
-        nuint size,
-        nuint capacity
-    )
+    public rawSeqStore_t(rawSeq* seq, nuint pos, nuint posInSequence, nuint size, nuint capacity)
     {
         this.seq = seq;
         this.pos = pos;

@@ -7,10 +7,8 @@ internal class HuffmanDecoderRle : HuffmanDecoder
     private int _rlecount;
 
     /// <summary>Initializes a new instance of the <see cref="HuffmanDecoderRle" /> class.</summary>
-    public HuffmanDecoderRle(uint numcodes, byte maxbits, BitStream bitbuf, ushort[] buffLookup) : base(numcodes,
-        maxbits, bitbuf, buffLookup)
-    {
-    }
+    public HuffmanDecoderRle(uint numcodes, byte maxbits, BitStream bitbuf, ushort[] buffLookup)
+        : base(numcodes, maxbits, bitbuf, buffLookup) { }
 
     /// <summary>Resets the RLE state, clearing any pending run.</summary>
     public void Reset()
@@ -60,7 +58,7 @@ internal class HuffmanDecoderRle : HuffmanDecoder
         {
             0x00 => 1,
             <= 0x107 => 8 + (code - 0x100),
-            _ => 16 << (code - 0x108)
+            _ => 16 << (code - 0x108),
         };
     }
 }

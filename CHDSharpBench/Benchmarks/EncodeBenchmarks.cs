@@ -24,7 +24,8 @@ public class EncodeBenchmarks
     private readonly Dictionary<uint, byte[]> _images = new();
     private readonly Dictionary<uint, string> _tempDirs = new();
 
-    [ParamsSource(nameof(WorkerCounts))] public int TaskCount { get; set; }
+    [ParamsSource(nameof(WorkerCounts))]
+    public int TaskCount { get; set; }
 
     [GlobalSetup]
     public void Setup()
@@ -55,7 +56,8 @@ public class EncodeBenchmarks
     {
         if (!_images.TryGetValue(codec, out var image))
             throw new InvalidOperationException(
-                $"Benchmark image for codec {CodecTags.ToString(codec)} was not created (setup failed)");
+                $"Benchmark image for codec {CodecTags.ToString(codec)} was not created (setup failed)"
+            );
 
         var outDir = GetTempDir(codec);
         var outPath = Path.Combine(outDir, "bench.chd");
@@ -184,7 +186,8 @@ public class EncodeBenchmarks
         {
             var off = frame * frameSize;
             var len = Math.Min(frameSize, sizeBytes - off);
-            for (var i = 0; i < len; i++) data[off + i] = (byte)rng.Next(256);
+            for (var i = 0; i < len; i++)
+                data[off + i] = (byte)rng.Next(256);
         }
 
         return data;
@@ -204,7 +207,8 @@ public class EncodeBenchmarks
             {
                 sample = (sample + rng.Next(64000)) & 0xFFFF;
                 data[off + i] = (byte)sample;
-                if (i + 1 < len) data[off + i + 1] = (byte)(sample >> 8);
+                if (i + 1 < len)
+                    data[off + i + 1] = (byte)(sample >> 8);
             }
         }
 

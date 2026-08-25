@@ -22,7 +22,8 @@ public class LruCacheTests
         Write("MComprHD"u8.ToArray());
         Write(EndianHelpers.Be(124));
         Write(EndianHelpers.Be(5));
-        for (var i = 0; i < 4; i++) Write(EndianHelpers.Be(0)); // all None → uncompressed map
+        for (var i = 0; i < 4; i++)
+            Write(EndianHelpers.Be(0)); // all None → uncompressed map
 
         var totalBytes = (ulong)hunkCount * Blocksize;
         Write(EndianHelpers.Be64(totalBytes));
@@ -36,7 +37,8 @@ public class LruCacheTests
         for (uint h = 0; h < hunkCount; h++)
         {
             var block = new byte[Blocksize];
-            for (var i = 0; i < Blocksize; i++) block[i] = (byte)(h + i);
+            for (var i = 0; i < Blocksize; i++)
+                block[i] = (byte)(h + i);
 
             ms.Seek((h + 1) * Blocksize, SeekOrigin.Begin);
             Write(block);
@@ -59,7 +61,8 @@ public class LruCacheTests
     private static byte[] ExpectedPattern(uint h, int count = (int)Blocksize)
     {
         var data = new byte[count];
-        for (var i = 0; i < count; i++) data[i] = (byte)(h + i);
+        for (var i = 0; i < count; i++)
+            data[i] = (byte)(h + i);
 
         return data;
     }
@@ -175,7 +178,8 @@ public class LruCacheTests
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         var childPath = Path.Combine(testDataDir, "v5_child.chd");
         var parentPath = Path.Combine(testDataDir, "v5_parent.chd");
-        if (!File.Exists(childPath) || !File.Exists(parentPath)) Assert.Skip("Test data missing");
+        if (!File.Exists(childPath) || !File.Exists(parentPath))
+            Assert.Skip("Test data missing");
 
         var pErr = ChdFile.Open(parentPath, out var parent);
         Assert.Equal(ChdError.Chderrnone, pErr);

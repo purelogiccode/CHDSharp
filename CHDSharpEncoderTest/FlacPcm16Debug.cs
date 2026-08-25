@@ -19,7 +19,10 @@ namespace CHDSharpEncoderTest;
 /// </remarks>
 public class FlacPcm16Debug : IDisposable
 {
-    private readonly string _dir = Path.Combine(Path.GetTempPath(), "flac_dbg_" + Guid.NewGuid().ToString("N"));
+    private readonly string _dir = Path.Combine(
+        Path.GetTempPath(),
+        "flac_dbg_" + Guid.NewGuid().ToString("N")
+    );
 
     public FlacPcm16Debug()
     {
@@ -50,8 +53,20 @@ public class FlacPcm16Debug : IDisposable
         File.WriteAllBytes(srcPath, source);
 
         ChdEncoder.EncodeRaw(srcPath, oursPath, 4096, 512, [CodecTags.Flac]);
-        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", refPath, "-c", "flac",
-            "-hs", "4096", "-us", "512", "-f");
+        var (createExit, cOut, cErr) = ChdmanHelper.RunChdman(
+            "createraw",
+            "-i",
+            srcPath,
+            "-o",
+            refPath,
+            "-c",
+            "flac",
+            "-hs",
+            "4096",
+            "-us",
+            "512",
+            "-f"
+        );
         Assert.True(createExit == 0, $"chdman createraw failed\n{cOut}{cErr}");
 
         var ours = ChdFile.Open(oursPath, out var oFile);
@@ -64,7 +79,8 @@ public class FlacPcm16Debug : IDisposable
         {
             var oRaw = oFile.ReadRawHunk(h);
             var rRaw = rFile!.ReadRawHunk(h);
-            if (oRaw == null || rRaw == null) continue;
+            if (oRaw == null || rRaw == null)
+                continue;
 
             if (!oRaw.AsSpan().SequenceEqual(rRaw))
             {
@@ -85,7 +101,8 @@ public class FlacPcm16Debug : IDisposable
         double phase = 0;
         for (var i = 0; i < samples; i++)
         {
-            if (i % 4096 == 0) freq = 180 + rng.NextDouble() * 1200;
+            if (i % 4096 == 0)
+                freq = 180 + rng.NextDouble() * 1200;
 
             phase += 2 * Math.PI * freq / 44100.0;
             var sample = (short)(Math.Sin(phase) * 11000 + (rng.NextDouble() - 0.5) * 400);

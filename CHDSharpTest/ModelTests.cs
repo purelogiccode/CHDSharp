@@ -33,9 +33,26 @@ public class ModelTests
     {
         var sha1 = new byte[]
         {
-            0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89,
-            0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89,
-            0xAB, 0xCD, 0xEF, 0x01
+            0xAB,
+            0xCD,
+            0xEF,
+            0x01,
+            0x23,
+            0x45,
+            0x67,
+            0x89,
+            0xAB,
+            0xCD,
+            0xEF,
+            0x01,
+            0x23,
+            0x45,
+            0x67,
+            0x89,
+            0xAB,
+            0xCD,
+            0xEF,
+            0x01,
         };
         var result = new ChdResult(ChdError.Chderrnone, 5, sha1, null);
         Assert.Equal("abcdef0123456789abcdef0123456789abcdef01", result.Sha1Hex);
@@ -46,8 +63,22 @@ public class ModelTests
     {
         var md5 = new byte[]
         {
-            0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE,
-            0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE
+            0xDE,
+            0xAD,
+            0xBE,
+            0xEF,
+            0xCA,
+            0xFE,
+            0xBA,
+            0xBE,
+            0xDE,
+            0xAD,
+            0xBE,
+            0xEF,
+            0xCA,
+            0xFE,
+            0xBA,
+            0xBE,
         };
         var result = new ChdResult(ChdError.Chderrnone, 3, null, md5);
         Assert.Equal("deadbeefcafebabe deadbeefcafebabe".Replace(" ", ""), result.Md5Hex);
@@ -169,9 +200,10 @@ public class ModelTests
             ["track01.bin", "track02.bin"],
             [
                 new TrackExtractResult(1, "track01.bin", ChdError.Chderrnone),
-                new TrackExtractResult(2, "track02.bin", ChdError.Chderrnone)
+                new TrackExtractResult(2, "track02.bin", ChdError.Chderrnone),
             ],
-            ChdError.Chderrnone);
+            ChdError.Chderrnone
+        );
 
         Assert.True(result.IsCompleteSuccess);
         Assert.False(result.HasTrackFailures);
@@ -182,10 +214,9 @@ public class ModelTests
     {
         var result = new ExtractResult(
             ["track01.bin"],
-            [
-                new TrackExtractResult(1, null, ChdError.Chderrdecompressionerror)
-            ],
-            ChdError.Chderrnone);
+            [new TrackExtractResult(1, null, ChdError.Chderrdecompressionerror)],
+            ChdError.Chderrnone
+        );
 
         Assert.False(result.IsCompleteSuccess);
         Assert.True(result.HasTrackFailures);
@@ -194,10 +225,7 @@ public class ModelTests
     [Fact]
     public void ExtractResult_overall_error()
     {
-        var result = new ExtractResult(
-            [],
-            [],
-            ChdError.Chderrwriteerror);
+        var result = new ExtractResult([], [], ChdError.Chderrwriteerror);
 
         Assert.False(result.IsCompleteSuccess);
     }
@@ -216,7 +244,7 @@ public class ModelTests
             (ChdTrackType.Mode2Form2, "MODE2/2324"),
             (ChdTrackType.Mode2FormMix, "MODE2/2336"),
             (ChdTrackType.Mode2Raw, "MODE2/2352"),
-            (ChdTrackType.Audio, "AUDIO")
+            (ChdTrackType.Audio, "AUDIO"),
         };
 
         foreach (var (type, expected) in cases)
@@ -254,7 +282,7 @@ public class ModelTests
             Frames = 150,
             PreGap = 150,
             PostGap = 0,
-            StartFrame = 0
+            StartFrame = 0,
         };
 
         Assert.Equal(2, track.TrackNumber);

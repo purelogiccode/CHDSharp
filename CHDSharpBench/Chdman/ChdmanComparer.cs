@@ -21,7 +21,18 @@ public static class ChdmanComparer
     private static readonly TimeSpan Timeout = TimeSpan.FromMinutes(30);
 
     private static readonly string[] AllCodecs =
-        ["zlib", "zstd", "lzma", "huff", "flac", "none", "cdzl", "cdlz", "cdzs", "cdfl"];
+    [
+        "zlib",
+        "zstd",
+        "lzma",
+        "huff",
+        "flac",
+        "none",
+        "cdzl",
+        "cdlz",
+        "cdzs",
+        "cdfl",
+    ];
 
     public static void Run(string chdmanExe, string corpusDir, IReadOnlyList<string> args)
     {
@@ -38,7 +49,8 @@ public static class ChdmanComparer
             Console.WriteLine($"chdman      : {Path.GetFullPath(chdmanExe)}");
             Console.WriteLine($"corpus      : {Corpus.Dir}");
             Console.WriteLine(
-                $"synthetic   : {sizeMb} MiB, codecs [{string.Join(", ", codecs)}], median of {runs} runs");
+                $"synthetic   : {sizeMb} MiB, codecs [{string.Join(", ", codecs)}], median of {runs} runs"
+            );
             Console.WriteLine();
 
             var failures = new List<string>();
@@ -64,14 +76,20 @@ public static class ChdmanComparer
             {
                 if (!AllCodecs.Contains(codec, StringComparer.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine($"skipping unknown codec '{codec}' (supported: {string.Join(", ", AllCodecs)})");
+                    Console.WriteLine(
+                        $"skipping unknown codec '{codec}' (supported: {string.Join(", ", AllCodecs)})"
+                    );
                     continue;
                 }
 
                 var chdmanOut = Path.Combine(outDir, $"chdman_{codec}.chd");
                 var libOut = Path.Combine(outDir, $"lib_{codec}.chd");
 
-                var chdmanMs = Time(() => RunChdmanCreate(chdmanExe, codec, bin, chdmanOut), runs, failures);
+                var chdmanMs = Time(
+                    () => RunChdmanCreate(chdmanExe, codec, bin, chdmanOut),
+                    runs,
+                    failures
+                );
                 var libMs = Time(() => RunLibEncode(bin, libOut, codec), runs, failures);
                 rows.Add(("createhd -c " + codec, Ms(chdmanMs), Ms(libMs)));
             }
@@ -92,9 +110,7 @@ public static class ChdmanComparer
             {
                 Directory.Delete(outDir, true);
             }
-            catch (IOException)
-            {
-            }
+            catch (IOException) { }
         }
     }
 
@@ -140,14 +156,18 @@ public static class ChdmanComparer
     {
         var rc = RunProcess(chdmanExe, $"verify -i \"{file}\"{extraArgs}");
         if (rc != 0)
-            throw new InvalidOperationException($"chdman verify {Path.GetFileName(file)} exit {rc}");
+            throw new InvalidOperationException(
+                $"chdman verify {Path.GetFileName(file)} exit {rc}"
+            );
     }
 
     private static void RunLibVerify(string file, string? parent)
     {
         var result = Chd.CheckFileWithParent(file, parent);
         if (result.Error != ChdError.Chderrnone)
-            throw new InvalidOperationException($"library verify {Path.GetFileName(file)}: {result.Error}");
+            throw new InvalidOperationException(
+                $"library verify {Path.GetFileName(file)}: {result.Error}"
+            );
     }
 
     private static void RunChdmanCreate(string chdmanExe, string codec, string bin, string outChd)
@@ -174,10 +194,11 @@ public static class ChdmanComparer
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
-        using var proc = Process.Start(psi) ?? throw new InvalidOperationException("process start failed");
+        using var proc =
+            Process.Start(psi) ?? throw new InvalidOperationException("process start failed");
         proc.OutputDataReceived += (_, _) => { };
         proc.ErrorDataReceived += (_, _) => { };
         proc.BeginOutputReadLine();
@@ -193,7 +214,9 @@ public static class ChdmanComparer
                 // ignored
             }
 
-            throw new InvalidOperationException($"'{Path.GetFileName(exePath)} {arguments}' timed out after {Timeout}");
+            throw new InvalidOperationException(
+                $"'{Path.GetFileName(exePath)} {arguments}' timed out after {Timeout}"
+            );
         }
 
         return proc.ExitCode;
@@ -209,7 +232,8 @@ public static class ChdmanComparer
         var data = new byte[sizeBytes];
         rng.NextBytes(data);
         var half = sizeBytes / 2;
-        for (var i = half; i < sizeBytes; i++) data[i] = (byte)((i / 97) & 0xFF);
+        for (var i = half; i < sizeBytes; i++)
+            data[i] = (byte)((i / 97) & 0xFF);
 
         return data;
     }
@@ -227,11 +251,13 @@ public static class ChdmanComparer
         var rule = new string('-', widthName + widthCm + widthLib + 12);
         Console.WriteLine(rule);
         Console.WriteLine(
-            $"  {"target".PadRight(widthName)}{"chdman".PadLeft(widthCm + 2)}{"library".PadLeft(widthLib + 2)}");
+            $"  {"target".PadRight(widthName)}{"chdman".PadLeft(widthCm + 2)}{"library".PadLeft(widthLib + 2)}"
+        );
         Console.WriteLine(rule);
         foreach (var (name, chdman, lib) in rows)
             Console.WriteLine(
-                $"  {name.PadRight(widthName)}{(" " + chdman).PadLeft(widthCm + 2)}{(" " + lib).PadLeft(widthLib + 2)}");
+                $"  {name.PadRight(widthName)}{(" " + chdman).PadLeft(widthCm + 2)}{(" " + lib).PadLeft(widthLib + 2)}"
+            );
 
         Console.WriteLine(rule);
     }
@@ -241,10 +267,18 @@ public static class ChdmanComparer
         for (var i = 0; i < args.Count; i++)
         {
             if (args[i].StartsWith("--codec=", StringComparison.Ordinal))
-                return args[i]["--codec=".Length..].Split(',',
-                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return args[i]
+                    ["--codec=".Length..]
+                    .Split(
+                        ',',
+                        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                    );
             if (string.Equals(args[i], "--codecs", StringComparison.Ordinal) && i + 1 < args.Count)
-                return args[++i].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return args[++i]
+                    .Split(
+                        ',',
+                        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                    );
         }
 
         return ["zlib", "zstd"];
@@ -253,10 +287,19 @@ public static class ChdmanComparer
     private static int ParseIntArg(IReadOnlyList<string> args, string prefix, string flag, int dflt)
     {
         for (var i = 0; i < args.Count; i++)
-            if ((args[i].StartsWith(prefix, StringComparison.Ordinal) &&
-                 int.TryParse(args[i][prefix.Length..], out var n) && n > 0) ||
-                (string.Equals(args[i], flag, StringComparison.Ordinal) && i + 1 < args.Count &&
-                 int.TryParse(args[i + 1], out n) && n > 0))
+            if (
+                (
+                    args[i].StartsWith(prefix, StringComparison.Ordinal)
+                    && int.TryParse(args[i][prefix.Length..], out var n)
+                    && n > 0
+                )
+                || (
+                    string.Equals(args[i], flag, StringComparison.Ordinal)
+                    && i + 1 < args.Count
+                    && int.TryParse(args[i + 1], out n)
+                    && n > 0
+                )
+            )
                 return n;
 
         return dflt;

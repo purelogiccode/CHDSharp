@@ -10,5 +10,5 @@ public enum XXH_alignment
     XXH_aligned,
 
     /*!< Possibly unaligned */
-    XXH_unaligned
+    XXH_unaligned,
 }

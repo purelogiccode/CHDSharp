@@ -15,10 +15,18 @@ internal static class FlacLpcMath
     ///     FLAC__fixed_compute_best_predictor (32-bit accumulators, float residual bits/sample).
     ///     data is the full signal array; dataStart is the index of the first residual sample (typically 4 for 16-bit).
     /// </summary>
-    public static uint FixedComputeBestPredictor(ReadOnlySpan<int> data, int dataStart, uint dataLen,
-        Span<float> residualBitsPerSample)
+    public static uint FixedComputeBestPredictor(
+        ReadOnlySpan<int> data,
+        int dataStart,
+        uint dataLen,
+        Span<float> residualBitsPerSample
+    )
     {
-        uint e0 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+        uint e0 = 0,
+            e1 = 0,
+            e2 = 0,
+            e3 = 0,
+            e4 = 0;
         for (var i = dataStart; i < dataStart + (int)dataLen; i++)
         {
             var d = data[i];
@@ -26,7 +34,8 @@ internal static class FlacLpcMath
             e1 += (uint)Math.Abs(d - data[i - 1]);
             e2 += (uint)Math.Abs(d - 2 * data[i - 1] + data[i - 2]);
             e3 += (uint)Math.Abs(d - 3 * data[i - 1] + 3 * data[i - 2] - data[i - 3]);
-            e4 += (uint)Math.Abs(d - 4 * data[i - 1] + 6 * data[i - 2] - 4 * data[i - 3] + data[i - 4]);
+            e4 += (uint)
+                Math.Abs(d - 4 * data[i - 1] + 6 * data[i - 2] - 4 * data[i - 3] + data[i - 4]);
         }
 
         uint order;
@@ -51,10 +60,17 @@ internal static class FlacLpcMath
     }
 
     /// <summary>FLAC__fixed_compute_best_predictor_wide (64-bit accumulators, float residual bits/sample).</summary>
-    public static uint FixedComputeBestPredictorWide(ReadOnlySpan<int> data, uint dataLen,
-        Span<float> residualBitsPerSample)
+    public static uint FixedComputeBestPredictorWide(
+        ReadOnlySpan<int> data,
+        uint dataLen,
+        Span<float> residualBitsPerSample
+    )
     {
-        ulong e0 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+        ulong e0 = 0,
+            e1 = 0,
+            e2 = 0,
+            e3 = 0,
+            e4 = 0;
         for (var i = 0; i < (int)dataLen; i++)
         {
             var d = data[i];
@@ -62,7 +78,8 @@ internal static class FlacLpcMath
             e1 += (ulong)Math.Abs((long)d - data[i - 1]);
             e2 += (ulong)Math.Abs(d - 2L * data[i - 1] + data[i - 2]);
             e3 += (ulong)Math.Abs(d - 3L * data[i - 1] + 3L * data[i - 2] - data[i - 3]);
-            e4 += (ulong)Math.Abs(d - 4L * data[i - 1] + 6L * data[i - 2] - 4L * data[i - 3] + data[i - 4]);
+            e4 += (ulong)
+                Math.Abs(d - 4L * data[i - 1] + 6L * data[i - 2] - 4L * data[i - 3] + data[i - 4]);
         }
 
         uint order;
@@ -92,8 +109,13 @@ internal static class FlacLpcMath
     ///     FLAC__fixed_compute_residual (32-bit arithmetic). data is the full signal; dataStart is the first sample
     ///     index.
     /// </summary>
-    public static void FixedComputeResidual(ReadOnlySpan<int> data, int dataStart, uint dataLen, uint order,
-        Span<int> residual)
+    public static void FixedComputeResidual(
+        ReadOnlySpan<int> data,
+        int dataStart,
+        uint dataLen,
+        uint order,
+        Span<int> residual
+    )
     {
         for (var i = 0; i < (int)dataLen; i++)
         {
@@ -104,7 +126,11 @@ internal static class FlacLpcMath
                 1 => data[idx] - data[idx - 1],
                 2 => data[idx] - 2 * data[idx - 1] + data[idx - 2],
                 3 => data[idx] - 3 * data[idx - 1] + 3 * data[idx - 2] - data[idx - 3],
-                _ => data[idx] - 4 * data[idx - 1] + 6 * data[idx - 2] - 4 * data[idx - 3] + data[idx - 4]
+                _ => data[idx]
+                    - 4 * data[idx - 1]
+                    + 6 * data[idx - 2]
+                    - 4 * data[idx - 3]
+                    + data[idx - 4],
             };
         }
     }
@@ -130,43 +156,61 @@ internal static class FlacLpcMath
             for (var n = 0; n <= np; n++)
             {
                 window[n] = (float)(0.5f - 0.5f * Math.Cos(Math.PI * n / np));
-                window[length - np - 1 + n] = (float)(0.5f - 0.5f * Math.Cos(Math.PI * (n + np) / np));
+                window[length - np - 1 + n] = (float)(
+                    0.5f - 0.5f * Math.Cos(Math.PI * (n + np) / np)
+                );
             }
     }
 
     private static void WindowRectangle(Span<float> window, int length)
     {
-        for (var n = 0; n < length; n++) window[n] = 1.0f;
+        for (var n = 0; n < length; n++)
+            window[n] = 1.0f;
     }
 
     private static void WindowHann(Span<float> window, int length)
     {
         var nMinus1 = length - 1;
-        for (var n = 0; n < length; n++) window[n] = (float)(0.5f - 0.5f * Math.Cos(2.0f * Math.PI * n / nMinus1));
+        for (var n = 0; n < length; n++)
+            window[n] = (float)(0.5f - 0.5f * Math.Cos(2.0f * Math.PI * n / nMinus1));
     }
 
     // ---------------- lpc.c: windowed autocorrelation ----------------
 
     /// <summary>FLAC__lpc_window_data: out[i] = in[i] * window[i].</summary>
-    public static void WindowData(ReadOnlySpan<int> input, ReadOnlySpan<float> window, Span<float> output, uint dataLen)
+    public static void WindowData(
+        ReadOnlySpan<int> input,
+        ReadOnlySpan<float> window,
+        Span<float> output,
+        uint dataLen
+    )
     {
-        for (var i = 0; i < (int)dataLen; i++) output[i] = input[i] * window[i];
+        for (var i = 0; i < (int)dataLen; i++)
+            output[i] = input[i] * window[i];
     }
 
     /// <summary>FLAC__lpc_window_data_partial for subdivide-tukey sub-blocks.</summary>
-    public static void WindowDataPartial(ReadOnlySpan<int> input, ReadOnlySpan<float> window, Span<float> output,
-        uint dataLen, uint partSize, uint dataShift)
+    public static void WindowDataPartial(
+        ReadOnlySpan<int> input,
+        ReadOnlySpan<float> window,
+        Span<float> output,
+        uint dataLen,
+        uint partSize,
+        uint dataShift
+    )
     {
         if (partSize + dataShift < dataLen)
         {
             int i;
-            for (i = 0; i < (int)partSize; i++) output[i] = input[(int)(dataShift + i)] * window[i];
+            for (i = 0; i < (int)partSize; i++)
+                output[i] = input[(int)(dataShift + i)] * window[i];
 
             i = Math.Min(i, (int)(dataLen - partSize - dataShift));
             for (var j = (int)(dataLen - partSize); j < (int)dataLen; i++, j++)
                 output[i] = input[(int)(dataShift + i)] * window[j];
 
-            if (i < (int)dataLen) output[i] = 0.0f;
+            if (i < (int)dataLen)
+                output[i] = 0.0f;
         }
     }
 
@@ -179,12 +223,18 @@ internal static class FlacLpcMath
     ///     identical to the scalar lpc.c path for lag &lt;= 16. The lag parameter is ignored by the C
     ///     code ((void) lag); 16 coefficients are always computed.
     /// </summary>
-    public static void ComputeAutocorrelation(ReadOnlySpan<float> data, uint dataLen, uint lag, Span<double> autoc)
+    public static void ComputeAutocorrelation(
+        ReadOnlySpan<float> data,
+        uint dataLen,
+        uint lag,
+        Span<double> autoc
+    )
     {
         const int maxLag = 16;
         var n = (int)dataLen;
 
-        for (var i = 0; i < maxLag; i++) autoc[i] = 0.0;
+        for (var i = 0; i < maxLag; i++)
+            autoc[i] = 0.0;
 
         // head: samples 0..15 with the triangular j<=i access pattern
         var head = Math.Min(maxLag, n);
@@ -201,8 +251,12 @@ internal static class FlacLpcMath
     // ---------------- lpc.c: LP coefficients (Levinson-Durbin) ----------------
 
     /// <summary>FLAC__lpc_compute_lp_coefficients. lpCoeff[order-1][] holds the negated predictor coefficients for each order.</summary>
-    public static void ComputeLpCoefficients(ReadOnlySpan<double> autoc, ref uint maxOrder, Span2D<double> lpCoeff,
-        Span<double> error)
+    public static void ComputeLpCoefficients(
+        ReadOnlySpan<double> autoc,
+        ref uint maxOrder,
+        Span2D<double> lpCoeff,
+        Span<double> error
+    )
     {
         var err = autoc[0];
         var lpc = new double[FlacBitMath.MaxLpcOrder];
@@ -212,7 +266,8 @@ internal static class FlacLpcMath
         {
             var r = -autoc[i + 1];
             int j;
-            for (j = 0; j < i; j++) r -= lpc[j] * autoc[i - j];
+            for (j = 0; j < i; j++)
+                r -= lpc[j] * autoc[i - j];
 
             r /= err;
 
@@ -224,11 +279,13 @@ internal static class FlacLpcMath
                 lpc[i - 1 - j] += r * tmp;
             }
 
-            if ((i & 1) != 0) lpc[j] += lpc[j] * r;
+            if ((i & 1) != 0)
+                lpc[j] += lpc[j] * r;
 
             err *= 1.0 - r * r;
 
-            for (j = 0; j <= i; j++) lpCoeff[i, j] = -lpc[j];
+            for (j = 0; j <= i; j++)
+                lpCoeff[i, j] = -lpc[j];
 
             error[i] = err;
 
@@ -241,16 +298,24 @@ internal static class FlacLpcMath
     }
 
     /// <summary>FLAC__lpc_compute_best_order: picks the order with the lowest estimated total bits.</summary>
-    public static uint ComputeBestOrder(ReadOnlySpan<double> lpcError, uint maxOrder, uint totalSamples,
-        uint overheadBitsPerOrder)
+    public static uint ComputeBestOrder(
+        ReadOnlySpan<double> lpcError,
+        uint maxOrder,
+        uint totalSamples,
+        uint overheadBitsPerOrder
+    )
     {
         var errorScale = 0.5 / totalSamples;
         uint bestOrder = 1;
         var bestBits = double.MaxValue;
         for (uint order = 1; order <= maxOrder; order++)
         {
-            var bits = ComputeExpectedBitsPerResidualSampleWithErrorScale(lpcError[(int)(order - 1)], errorScale) *
-                (totalSamples - order) + order * (double)overheadBitsPerOrder;
+            var bits =
+                ComputeExpectedBitsPerResidualSampleWithErrorScale(
+                    lpcError[(int)(order - 1)],
+                    errorScale
+                ) * (totalSamples - order)
+                + order * (double)overheadBitsPerOrder;
             if (bits < bestBits)
             {
                 bestBits = bits;
@@ -262,7 +327,10 @@ internal static class FlacLpcMath
     }
 
     /// <summary>FLAC__lpc_compute_expected_bits_per_residual_sample with an explicit error scale.</summary>
-    public static double ComputeExpectedBitsPerResidualSampleWithErrorScale(double lpcError, double errorScale)
+    public static double ComputeExpectedBitsPerResidualSampleWithErrorScale(
+        double lpcError,
+        double errorScale
+    )
     {
         if (lpcError > 0.0)
         {
@@ -283,14 +351,20 @@ internal static class FlacLpcMath
     // ---------------- lpc.c: coefficient quantization ----------------
 
     /// <summary>FLAC__lpc_quantize_coefficients. Returns false on failure.</summary>
-    public static bool QuantizeCoefficients(ReadOnlySpan<double> lpCoeff, uint order, uint precision,
-        Span<int> qlpCoeff, out int shift)
+    public static bool QuantizeCoefficients(
+        ReadOnlySpan<double> lpCoeff,
+        uint order,
+        uint precision,
+        Span<int> qlpCoeff,
+        out int shift
+    )
     {
         var cmax = 0.0;
         for (var i = 0; i < (int)order; i++)
         {
             var d = Math.Abs(lpCoeff[i]);
-            if (d > cmax) cmax = d;
+            if (d > cmax)
+                cmax = d;
         }
 
         if (cmax <= 0.0)
@@ -329,7 +403,8 @@ internal static class FlacLpcMath
                 var q = (int)Math.Round(error, MidpointRounding.AwayFromZero);
                 if (q > qmax)
                     q = qmax;
-                else if (q < qmin) q = qmin;
+                else if (q < qmin)
+                    q = qmin;
 
                 error -= q;
                 qlpCoeff[i] = q;
@@ -345,7 +420,8 @@ internal static class FlacLpcMath
                 var q = (int)Math.Round(error, MidpointRounding.AwayFromZero);
                 if (q > qmax)
                     q = qmax;
-                else if (q < qmin) q = qmin;
+                else if (q < qmin)
+                    q = qmin;
 
                 error -= q;
                 qlpCoeff[i] = q;
@@ -363,14 +439,22 @@ internal static class FlacLpcMath
     ///     FLAC__lpc_compute_residual_from_qlp_coefficients (32-bit sum; verified bit-identical to the SSE2 16-bit path).
     ///     data is the full signal array; dataStart is the first residual sample index.
     /// </summary>
-    public static void ComputeResidualFromQlp(ReadOnlySpan<int> data, int dataStart, uint dataLen,
-        ReadOnlySpan<int> qlpCoeff, uint order, int lpQuantization, Span<int> residual)
+    public static void ComputeResidualFromQlp(
+        ReadOnlySpan<int> data,
+        int dataStart,
+        uint dataLen,
+        ReadOnlySpan<int> qlpCoeff,
+        uint order,
+        int lpQuantization,
+        Span<int> residual
+    )
     {
         for (var i = 0; i < (int)dataLen; i++)
         {
             var idx = dataStart + i;
             var sum = 0;
-            for (var j = 0; j < (int)order; j++) sum += qlpCoeff[j] * data[idx - j - 1];
+            for (var j = 0; j < (int)order; j++)
+                sum += qlpCoeff[j] * data[idx - j - 1];
 
             residual[i] = data[idx] - (sum >> lpQuantization);
         }
@@ -380,14 +464,22 @@ internal static class FlacLpcMath
     ///     FLAC__lpc_compute_residual_from_qlp_coefficients_wide (64-bit sum, 32-bit result).
     ///     data is the full signal array; dataStart is the first residual sample index.
     /// </summary>
-    public static void ComputeResidualFromQlpWide(ReadOnlySpan<int> data, int dataStart, uint dataLen,
-        ReadOnlySpan<int> qlpCoeff, uint order, int lpQuantization, Span<int> residual)
+    public static void ComputeResidualFromQlpWide(
+        ReadOnlySpan<int> data,
+        int dataStart,
+        uint dataLen,
+        ReadOnlySpan<int> qlpCoeff,
+        uint order,
+        int lpQuantization,
+        Span<int> residual
+    )
     {
         for (var i = 0; i < (int)dataLen; i++)
         {
             var idx = dataStart + i;
             long sum = 0;
-            for (var j = 0; j < (int)order; j++) sum += (long)qlpCoeff[j] * data[idx - j - 1];
+            for (var j = 0; j < (int)order; j++)
+                sum += (long)qlpCoeff[j] * data[idx - j - 1];
 
             residual[i] = data[idx] - (int)(sum >> lpQuantization);
         }
@@ -397,14 +489,22 @@ internal static class FlacLpcMath
     ///     FLAC__lpc_compute_residual_from_qlp_coefficients_limit_residual. Returns false on overflow.
     ///     data is the full signal array; dataStart is the first residual sample index.
     /// </summary>
-    public static bool ComputeResidualFromQlpLimitResidual(ReadOnlySpan<int> data, int dataStart, uint dataLen,
-        ReadOnlySpan<int> qlpCoeff, uint order, int lpQuantization, Span<int> residual)
+    public static bool ComputeResidualFromQlpLimitResidual(
+        ReadOnlySpan<int> data,
+        int dataStart,
+        uint dataLen,
+        ReadOnlySpan<int> qlpCoeff,
+        uint order,
+        int lpQuantization,
+        Span<int> residual
+    )
     {
         for (var i = 0; i < (int)dataLen; i++)
         {
             var idx = dataStart + i;
             long sum = 0;
-            for (var j = 0; j < (int)order; j++) sum += (long)qlpCoeff[j] * data[idx - j - 1];
+            for (var j = 0; j < (int)order; j++)
+                sum += (long)qlpCoeff[j] * data[idx - j - 1];
 
             var residualToCheck = data[idx] - (sum >> lpQuantization);
             if (residualToCheck is <= int.MinValue or > int.MaxValue)
@@ -417,20 +517,32 @@ internal static class FlacLpcMath
     }
 
     /// <summary>FLAC__lpc_max_prediction_before_shift_bps: subframe_bps + silog2(sum of |coeffs|).</summary>
-    public static uint MaxPredictionBeforeShiftBps(uint subframeBps, ReadOnlySpan<int> qlpCoeff, uint order)
+    public static uint MaxPredictionBeforeShiftBps(
+        uint subframeBps,
+        ReadOnlySpan<int> qlpCoeff,
+        uint order
+    )
     {
         long absSum = 0;
-        for (var i = 0; i < (int)order; i++) absSum += Math.Abs((long)qlpCoeff[i]);
+        for (var i = 0; i < (int)order; i++)
+            absSum += Math.Abs((long)qlpCoeff[i]);
 
-        if (absSum == 0) absSum = 1;
+        if (absSum == 0)
+            absSum = 1;
 
         return subframeBps + FlacBitMath.Silog2(absSum);
     }
 
     /// <summary>FLAC__lpc_max_residual_bps: max of subframe_bps+1 and predictor_sum_bps+1.</summary>
-    public static uint MaxResidualBps(uint subframeBps, ReadOnlySpan<int> qlpCoeff, uint order, int lpQuantization)
+    public static uint MaxResidualBps(
+        uint subframeBps,
+        ReadOnlySpan<int> qlpCoeff,
+        uint order,
+        int lpQuantization
+    )
     {
-        var predictorSumBps = (int)MaxPredictionBeforeShiftBps(subframeBps, qlpCoeff, order) - lpQuantization;
+        var predictorSumBps =
+            (int)MaxPredictionBeforeShiftBps(subframeBps, qlpCoeff, order) - lpQuantization;
         return (int)subframeBps > predictorSumBps ? subframeBps + 1 : (uint)(predictorSumBps + 1);
     }
 }

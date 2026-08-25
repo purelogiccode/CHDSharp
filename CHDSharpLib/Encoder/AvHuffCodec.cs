@@ -18,7 +18,13 @@ public sealed class AvHuffCodec : IChdCodec
     /// <inheritdoc />
     public byte[]? Compress(byte[] data)
     {
-        if (data.Length < 12 || data[0] != 'c' || data[1] != 'h' || data[2] != 'a' || data[3] != 'v')
+        if (
+            data.Length < 12
+            || data[0] != 'c'
+            || data[1] != 'h'
+            || data[2] != 'a'
+            || data[3] != 'v'
+        )
             return null;
 
         // Determine raw frame size from the 'chav' header. The hunk may hold several

@@ -10,7 +10,8 @@ internal static class FlacCrc
     public static byte ComputeCrc8(ReadOnlySpan<byte> data)
     {
         byte crc = 0;
-        foreach (var b in data) crc = Table8[crc ^ b];
+        foreach (var b in data)
+            crc = Table8[crc ^ b];
 
         return crc;
     }
@@ -19,7 +20,8 @@ internal static class FlacCrc
     public static ushort ComputeCrc16(ReadOnlySpan<byte> data)
     {
         ushort crc = 0;
-        foreach (var b in data) crc = (ushort)((crc << 8) ^ Table16[((crc >> 8) ^ b) & 0xFF]);
+        foreach (var b in data)
+            crc = (ushort)((crc << 8) ^ Table16[((crc >> 8) ^ b) & 0xFF]);
 
         return crc;
     }
@@ -30,7 +32,8 @@ internal static class FlacCrc
         for (var i = 0; i < 256; i++)
         {
             var crc = (byte)i;
-            for (var j = 0; j < 8; j++) crc = (crc & 0x80) != 0 ? (byte)((crc << 1) ^ 0x07) : (byte)(crc << 1);
+            for (var j = 0; j < 8; j++)
+                crc = (crc & 0x80) != 0 ? (byte)((crc << 1) ^ 0x07) : (byte)(crc << 1);
 
             table[i] = crc;
         }
@@ -44,7 +47,8 @@ internal static class FlacCrc
         for (var i = 0; i < 256; i++)
         {
             var crc = (ushort)(i << 8);
-            for (var j = 0; j < 8; j++) crc = (crc & 0x8000) != 0 ? (ushort)((crc << 1) ^ 0x8005) : (ushort)(crc << 1);
+            for (var j = 0; j < 8; j++)
+                crc = (crc & 0x8000) != 0 ? (ushort)((crc << 1) ^ 0x8005) : (ushort)(crc << 1);
 
             table[i] = crc;
         }

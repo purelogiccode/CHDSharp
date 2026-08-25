@@ -11,7 +11,8 @@ namespace VendoredZLib;
 ///     This implementation keeps a cache of retained objects. This means that if objects are returned when the pool
 ///     has already reached "maximumRetained" objects they will be available to be garbage collected.
 /// </remarks>
-internal class ObjectPool<T> where T : class, new()
+internal class ObjectPool<T>
+    where T : class, new()
 {
     private protected readonly ConcurrentQueue<T> Items = new();
     private readonly int _maxCapacity;
@@ -21,9 +22,8 @@ internal class ObjectPool<T> where T : class, new()
     /// <summary>
     ///     Creates an instance of <see cref="ObjectPool{T}" />.
     /// </summary>
-    public ObjectPool() : this(Environment.ProcessorCount * 2)
-    {
-    }
+    public ObjectPool()
+        : this(Environment.ProcessorCount * 2) { }
 
     /// <summary>
     ///     Creates an instance of <see cref="ObjectPool{T}" />.

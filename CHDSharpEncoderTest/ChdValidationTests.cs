@@ -10,7 +10,10 @@ public class ChdValidationTests : IDisposable
     public ChdValidationTests()
     {
         // unique per test class instance: the test host runs per-TFM in parallel
-        _testDataDir = Path.Combine(Path.GetTempPath(), "chd_validation_tests_" + Guid.NewGuid().ToString("N"));
+        _testDataDir = Path.Combine(
+            Path.GetTempPath(),
+            "chd_validation_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_testDataDir);
     }
 
@@ -274,7 +277,8 @@ public class ChdValidationTests : IDisposable
             var chd = File.ReadAllBytes(chdPath);
 
             // Check that data at offset 124 matches source (for uncompressed hunk)
-            for (var i = 0; i < 20; i++) Assert.Equal(source[i], chd[124 + i]);
+            for (var i = 0; i < 20; i++)
+                Assert.Equal(source[i], chd[124 + i]);
         }
         finally
         {

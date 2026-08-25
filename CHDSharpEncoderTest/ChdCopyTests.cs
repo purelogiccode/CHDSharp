@@ -71,11 +71,18 @@ public class ChdCopyTests : IDisposable
         {
             Tag = MetadataWriter.TagFromString("GAME"),
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray()
+            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray(),
         };
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, srcChd, 4096, 512, null, new ChdEncodeOptions { Metadata = [meta] });
+            ChdEncoder.EncodeRaw(
+                ms,
+                srcChd,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { Metadata = [meta] }
+            );
         }
 
         ChdEncoder.Copy(srcChd, dstChd);
@@ -84,7 +91,9 @@ public class ChdCopyTests : IDisposable
         Assert.Equal(ChdError.Chderrnone, err);
         using (chd)
         {
-            var copied = chd!.Metadata.SingleOrDefault(m => string.Equals(m.Tag, "GAME", StringComparison.Ordinal));
+            var copied = chd!.Metadata.SingleOrDefault(m =>
+                string.Equals(m.Tag, "GAME", StringComparison.Ordinal)
+            );
             Assert.NotNull(copied);
             Assert.Equal(meta.Payload, copied.Data);
             Assert.Equal(meta.Flags, copied.Flags);
@@ -102,13 +111,16 @@ public class ChdCopyTests : IDisposable
 
         // Create a CHD with CD tracks using CHT2 metadata first
         var cuePath = Path.Combine(_dir, "legacy_cd.cue");
-        File.WriteAllText(cuePath, """
-                                   FILE "legacy_cd.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                     TRACK 02 AUDIO
-                                       INDEX 01 00:00:40
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "legacy_cd.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 00:00:40
+            """
+        );
         var bin = new byte[80 * CdConstants.MaxSectorData];
         var rng = new Random(200);
         rng.NextBytes(bin);
@@ -139,12 +151,15 @@ public class ChdCopyTests : IDisposable
             Assert.Equal(2, dstChdFile.Tracks.Count);
 
             // Verify CHT2 metadata is present (not CHTR or CHCD)
-            var cht2Entries = dstChdFile.Metadata.Where(m =>
-                string.Equals(m.Tag, "CHT2", StringComparison.Ordinal)).ToList();
-            var chtrEntries = dstChdFile.Metadata.Where(m =>
-                string.Equals(m.Tag, "CHTR", StringComparison.Ordinal)).ToList();
-            var chcdEntries = dstChdFile.Metadata.Where(m =>
-                string.Equals(m.Tag, "CHCD", StringComparison.Ordinal)).ToList();
+            var cht2Entries = dstChdFile
+                .Metadata.Where(m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal))
+                .ToList();
+            var chtrEntries = dstChdFile
+                .Metadata.Where(m => string.Equals(m.Tag, "CHTR", StringComparison.Ordinal))
+                .ToList();
+            var chcdEntries = dstChdFile
+                .Metadata.Where(m => string.Equals(m.Tag, "CHCD", StringComparison.Ordinal))
+                .ToList();
 
             Assert.Equal(2, cht2Entries.Count); // One per track
             Assert.Empty(chtrEntries); // No legacy CHTR
@@ -162,11 +177,14 @@ public class ChdCopyTests : IDisposable
 
         // Create a CHD with CD tracks and additional GAME metadata
         var cuePath = Path.Combine(_dir, "mixed_cd.cue");
-        File.WriteAllText(cuePath, """
-                                   FILE "mixed_cd.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "mixed_cd.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
         var bin = new byte[40 * CdConstants.MaxSectorData];
         var rng = new Random(201);
         rng.NextBytes(bin);
@@ -176,11 +194,15 @@ public class ChdCopyTests : IDisposable
         {
             Tag = MetadataWriter.TagFromString("GAME"),
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray()
+            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray(),
         };
 
-        ChdEncoder.EncodeCd(cuePath, srcChd, codecTags: [CodecTags.Zlib],
-            options: new ChdEncodeOptions { Metadata = [gameMeta] });
+        ChdEncoder.EncodeCd(
+            cuePath,
+            srcChd,
+            codecTags: [CodecTags.Zlib],
+            options: new ChdEncodeOptions { Metadata = [gameMeta] }
+        );
 
         ChdEncoder.Copy(srcChd, dstChd, [CodecTags.Zlib]);
 
@@ -189,13 +211,15 @@ public class ChdCopyTests : IDisposable
         using (chd)
         {
             // CHT2 entries should be present
-            var cht2Entries = chd!.Metadata.Where(m =>
-                string.Equals(m.Tag, "CHT2", StringComparison.Ordinal)).ToList();
+            var cht2Entries = chd!
+                .Metadata.Where(m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal))
+                .ToList();
             Assert.Single(cht2Entries);
 
             // GAME metadata should be preserved
             var copiedGame = chd.Metadata.SingleOrDefault(m =>
-                string.Equals(m.Tag, "GAME", StringComparison.Ordinal));
+                string.Equals(m.Tag, "GAME", StringComparison.Ordinal)
+            );
             Assert.NotNull(copiedGame);
             Assert.Equal(gameMeta.Payload, copiedGame.Data);
         }
@@ -212,13 +236,16 @@ public class ChdCopyTests : IDisposable
 
         // Create a CHD with CD tracks
         var cuePath = Path.Combine(_dir, "no_upgrade_cd.cue");
-        File.WriteAllText(cuePath, """
-                                   FILE "no_upgrade_cd.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                     TRACK 02 AUDIO
-                                       INDEX 01 00:00:40
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "no_upgrade_cd.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 00:00:40
+            """
+        );
         var bin = new byte[80 * CdConstants.MaxSectorData];
         var rng = new Random(202);
         rng.NextBytes(bin);
@@ -227,16 +254,21 @@ public class ChdCopyTests : IDisposable
         ChdEncoder.EncodeCd(cuePath, srcChd, codecTags: [CodecTags.Zlib]);
 
         // Copy with NoMetadataUpgrade = true
-        ChdEncoder.Copy(srcChd, dstChd, [CodecTags.Zlib],
-            new ChdEncodeOptions { NoMetadataUpgrade = true });
+        ChdEncoder.Copy(
+            srcChd,
+            dstChd,
+            [CodecTags.Zlib],
+            new ChdEncodeOptions { NoMetadataUpgrade = true }
+        );
 
         var err = ChdFile.Open(dstChd, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
         using (chd)
         {
             // CHT2 entries should still be present (source already has CHT2)
-            var cht2Entries = chd!.Metadata.Where(m =>
-                string.Equals(m.Tag, "CHT2", StringComparison.Ordinal)).ToList();
+            var cht2Entries = chd!
+                .Metadata.Where(m => string.Equals(m.Tag, "CHT2", StringComparison.Ordinal))
+                .ToList();
             Assert.Equal(2, cht2Entries.Count);
         }
     }
@@ -262,11 +294,23 @@ public class ChdCopyTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         // copying the child requires its parent to resolve hunks
-        ChdEncoder.Copy(childPath, copyPath, [CodecTags.Zstd], new ChdEncodeOptions { SourceParentPath = parentPath });
+        ChdEncoder.Copy(
+            childPath,
+            copyPath,
+            [CodecTags.Zstd],
+            new ChdEncodeOptions { SourceParentPath = parentPath }
+        );
 
         var err = ChdFile.Open(copyPath, out var chd);
         Assert.Equal(ChdError.Chderrnone, err);
@@ -290,10 +334,19 @@ public class ChdCopyTests : IDisposable
 
         using (var ms = new MemoryStream(parentData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
-        var ex = Assert.Throws<IOException>(() => ChdEncoder.Copy(childPath, Path.Combine(_dir, "x.chd")));
+        var ex = Assert.Throws<IOException>(() =>
+            ChdEncoder.Copy(childPath, Path.Combine(_dir, "x.chd"))
+        );
         Assert.Contains("parent", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -322,11 +375,18 @@ public class ChdCopyTests : IDisposable
         }
 
         // re-encode the standalone CHD as a delta child of another parent
-        ChdEncoder.Copy(srcChd, deltaPath, [CodecTags.Zstd], new ChdEncodeOptions { ParentPath = parentPath });
+        ChdEncoder.Copy(
+            srcChd,
+            deltaPath,
+            [CodecTags.Zstd],
+            new ChdEncodeOptions { ParentPath = parentPath }
+        );
 
         // most hunks are parent references: much smaller than the standalone source
-        Assert.True(new FileInfo(deltaPath).Length < new FileInfo(srcChd).Length / 2,
-            $"expected a delta, delta={new FileInfo(deltaPath).Length} standalone={new FileInfo(srcChd).Length}");
+        Assert.True(
+            new FileInfo(deltaPath).Length < new FileInfo(srcChd).Length / 2,
+            $"expected a delta, delta={new FileInfo(deltaPath).Length} standalone={new FileInfo(srcChd).Length}"
+        );
 
         var result = Chd.CheckFileWithParent(deltaPath, parentPath);
         Assert.Equal(ChdError.Chderrnone, result.Error);
@@ -344,8 +404,18 @@ public class ChdCopyTests : IDisposable
             ChdEncoder.EncodeRaw(ms, srcChd, 4096, 512, [CodecTags.Zlib, CodecTags.Lzma]);
         }
 
-        ChdEncoder.Copy(srcChd, singlePath, [CodecTags.Zstd, CodecTags.Zlib], new ChdEncodeOptions { TaskCount = 1 });
-        ChdEncoder.Copy(srcChd, parallelPath, [CodecTags.Zstd, CodecTags.Zlib], new ChdEncodeOptions { TaskCount = 8 });
+        ChdEncoder.Copy(
+            srcChd,
+            singlePath,
+            [CodecTags.Zstd, CodecTags.Zlib],
+            new ChdEncodeOptions { TaskCount = 1 }
+        );
+        ChdEncoder.Copy(
+            srcChd,
+            parallelPath,
+            [CodecTags.Zstd, CodecTags.Zlib],
+            new ChdEncodeOptions { TaskCount = 8 }
+        );
 
         Assert.Equal(File.ReadAllBytes(singlePath), File.ReadAllBytes(parallelPath));
     }
@@ -354,13 +424,16 @@ public class ChdCopyTests : IDisposable
     public void Copy_Cd_RoundTrips()
     {
         var cuePath = Path.Combine(_dir, "cd.cue");
-        File.WriteAllText(cuePath, """
-                                   FILE "cd.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                     TRACK 02 AUDIO
-                                       INDEX 01 00:00:40
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "cd.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 00:00:40
+            """
+        );
         var bin = new byte[80 * CdConstants.MaxSectorData];
         var rng = new Random(48);
         rng.NextBytes(bin);
@@ -414,13 +487,15 @@ public class ChdCopyTests : IDisposable
     public void Copy_MissingSource_Throws()
     {
         Assert.Throws<IOException>(() =>
-            ChdEncoder.Copy(Path.Combine(_dir, "no_such.chd"), Path.Combine(_dir, "out.chd")));
+            ChdEncoder.Copy(Path.Combine(_dir, "no_such.chd"), Path.Combine(_dir, "out.chd"))
+        );
     }
 
     [Fact]
     public void Copy_Chdman_VerifiesAndExtracts()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         var source = CreateTestFile(4096 * 24, 50);
         var srcChd = Path.Combine(_dir, "cm_src.chd");
@@ -436,15 +511,26 @@ public class ChdCopyTests : IDisposable
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", dstChd);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", dstChd, "-o", extractPath, "-f");
-        Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            dstChd,
+            "-o",
+            extractPath,
+            "-f"
+        );
+        Assert.True(
+            extractExit == 0,
+            $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}"
+        );
         Assert.Equal(source, File.ReadAllBytes(extractPath));
     }
 
     [Fact]
     public void Copy_ChildSource_Chdman_VerifiesAndExtracts()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         var parentData = CreateTestFile(4096 * 16, 51);
         var childData = (byte[])parentData.Clone();
@@ -465,16 +551,38 @@ public class ChdCopyTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, null, new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                null,
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
-        ChdEncoder.Copy(childPath, copyPath, [CodecTags.Zstd], new ChdEncodeOptions { SourceParentPath = parentPath });
+        ChdEncoder.Copy(
+            childPath,
+            copyPath,
+            [CodecTags.Zstd],
+            new ChdEncodeOptions { SourceParentPath = parentPath }
+        );
 
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", copyPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", copyPath, "-o", extractPath, "-f");
-        Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            copyPath,
+            "-o",
+            extractPath,
+            "-f"
+        );
+        Assert.True(
+            extractExit == 0,
+            $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}"
+        );
         Assert.Equal(childData, File.ReadAllBytes(extractPath));
     }
 

@@ -19,9 +19,15 @@ internal static class V2Patcher
     {
         var src = File.ReadAllBytes(v1Path);
 
-        if (src.Length < V1HeaderSize ||
-            !string.Equals(Encoding.ASCII.GetString(src, 0, 8), "MComprHD", StringComparison.Ordinal) ||
-            BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(12)) != 1)
+        if (
+            src.Length < V1HeaderSize
+            || !string.Equals(
+                Encoding.ASCII.GetString(src, 0, 8),
+                "MComprHD",
+                StringComparison.Ordinal
+            )
+            || BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(12)) != 1
+        )
             throw new InvalidDataException($"{v1Path} is not a V1 CHD");
 
         var totalHunks = BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(28));

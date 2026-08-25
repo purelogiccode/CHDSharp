@@ -7,13 +7,7 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static readonly rawSeqStore_t kNullRawSeqStore = new(
-        null,
-        0,
-        0,
-        0,
-        0
-    );
+    private static readonly rawSeqStore_t kNullRawSeqStore = new(null, 0, 0, 0, 0);
 #if NET7_0_OR_GREATER
     private static ReadOnlySpan<byte> Span_LL_Code =>
         new byte[64]
@@ -81,84 +75,84 @@ public static unsafe partial class Methods
             24,
             24,
             24,
-            24
+            24,
         };
 
     private static byte* LL_Code =>
         (byte*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_LL_Code)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_LL_Code)
+            );
 #else
-        private static readonly byte* LL_Code = GetArrayPointer(
-            new byte[64]
-            {
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-                16,
-                17,
-                17,
-                18,
-                18,
-                19,
-                19,
-                20,
-                20,
-                20,
-                20,
-                21,
-                21,
-                21,
-                21,
-                22,
-                22,
-                22,
-                22,
-                22,
-                22,
-                22,
-                22,
-                23,
-                23,
-                23,
-                23,
-                23,
-                23,
-                23,
-                23,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-                24,
-            }
-        );
+    private static readonly byte* LL_Code = GetArrayPointer(
+        new byte[64]
+        {
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            16,
+            17,
+            17,
+            18,
+            18,
+            19,
+            19,
+            20,
+            20,
+            20,
+            20,
+            21,
+            21,
+            21,
+            21,
+            22,
+            22,
+            22,
+            22,
+            22,
+            22,
+            22,
+            22,
+            23,
+            23,
+            23,
+            23,
+            23,
+            23,
+            23,
+            23,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+        }
+    );
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -299,148 +293,148 @@ public static unsafe partial class Methods
             42,
             42,
             42,
-            42
+            42,
         };
 
     private static byte* ML_Code =>
         (byte*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_ML_Code)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_ML_Code)
+            );
 #else
-        private static readonly byte* ML_Code = GetArrayPointer(
-            new byte[128]
-            {
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22,
-                23,
-                24,
-                25,
-                26,
-                27,
-                28,
-                29,
-                30,
-                31,
-                32,
-                32,
-                33,
-                33,
-                34,
-                34,
-                35,
-                35,
-                36,
-                36,
-                36,
-                36,
-                37,
-                37,
-                37,
-                37,
-                38,
-                38,
-                38,
-                38,
-                38,
-                38,
-                38,
-                38,
-                39,
-                39,
-                39,
-                39,
-                39,
-                39,
-                39,
-                39,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                40,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                41,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-                42,
-            }
-        );
+    private static readonly byte* ML_Code = GetArrayPointer(
+        new byte[128]
+        {
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            32,
+            33,
+            33,
+            34,
+            34,
+            35,
+            35,
+            36,
+            36,
+            36,
+            36,
+            37,
+            37,
+            37,
+            37,
+            38,
+            38,
+            38,
+            38,
+            38,
+            38,
+            38,
+            38,
+            39,
+            39,
+            39,
+            39,
+            39,
+            39,
+            39,
+            39,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            41,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+            42,
+        }
+    );
 #endif
     /* ZSTD_MLcode() :
      * note : mlBase = matchLength - MINMATCH;
@@ -480,8 +474,7 @@ public static unsafe partial class Methods
         uint lastBlock
     )
     {
-        var cBlockHeader24 =
-            lastBlock + ((uint)blockType_e.bt_raw << 1) + (uint)(srcSize << 3);
+        var cBlockHeader24 = lastBlock + ((uint)blockType_e.bt_raw << 1) + (uint)(srcSize << 3);
         if (srcSize + ZSTD_blockHeaderSize > dstCapacity)
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
@@ -501,7 +494,8 @@ public static unsafe partial class Methods
     {
         var op = (byte*)dst;
         var cBlockHeader = lastBlock + ((uint)blockType_e.bt_rle << 1) + (uint)(srcSize << 3);
-        if (dstCapacity < 4) return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        if (dstCapacity < 4)
+            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
         MEM_writeLE24(op, cBlockHeader);
         op[3] = src;
@@ -536,8 +530,8 @@ public static unsafe partial class Methods
                 return
                     cctxParams->cParams.strategy == ZSTD_strategy.ZSTD_fast
                     && cctxParams->cParams.targetLength > 0
-                        ? 1
-                        : 0;
+                    ? 1
+                    : 0;
         }
     }
 
@@ -580,8 +574,7 @@ public static unsafe partial class Methods
         var litLimit_w = litLimit - 32;
         var litEnd = literals + litLength;
         assert(
-            (nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart)
-            < seqStorePtr->maxNbSeq
+            (nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart) < seqStorePtr->maxNbSeq
         );
         assert(seqStorePtr->maxNbLit <= 128 * (1 << 10));
         assert(seqStorePtr->lit + litLength <= seqStorePtr->litStart + seqStorePtr->maxNbLit);
@@ -982,10 +975,9 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_window_isEmpty(ZSTD_window_t window)
     {
-        return
-            window.dictLimit == 2 && window.lowLimit == 2 && window.nextSrc - window.@base == 2
-                ? 1U
-                : 0U;
+        return window.dictLimit == 2 && window.lowLimit == 2 && window.nextSrc - window.@base == 2
+            ? 1U
+            : 0U;
     }
 
     /**
@@ -1006,13 +998,12 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ZSTD_dictMode_e ZSTD_matchState_dictMode(ZSTD_matchState_t* ms)
     {
-        return ZSTD_window_hasExtDict(ms->window) != 0
-            ? ZSTD_dictMode_e.ZSTD_extDict
+        return ZSTD_window_hasExtDict(ms->window) != 0 ? ZSTD_dictMode_e.ZSTD_extDict
             : ms->dictMatchState != null
                 ? ms->dictMatchState->dedicatedDictSearch != 0
-                    ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+                        ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
                     : ZSTD_dictMode_e.ZSTD_dictMatchState
-                : ZSTD_dictMode_e.ZSTD_noDict;
+            : ZSTD_dictMode_e.ZSTD_noDict;
     }
 
     /**
@@ -1031,8 +1022,7 @@ public static unsafe partial class Methods
     {
         var cycleSize = 1U << (int)cycleLog;
         var curr = (uint)((byte*)src - window.@base);
-        var minIndexToOverflowCorrect =
-            cycleSize + (maxDist > cycleSize ? maxDist : cycleSize) + 2;
+        var minIndexToOverflowCorrect = cycleSize + (maxDist > cycleSize ? maxDist : cycleSize) + 2;
         /* Adjust the min index to backoff the overflow correction frequency,
          * so we don't waste too much CPU in overflow correction. If this
          * computation overflows we don't really care, we just need to make
@@ -1186,7 +1176,8 @@ public static unsafe partial class Methods
             var newLowLimit = blockEndIdx - maxDist;
             if (window->lowLimit < newLowLimit)
                 window->lowLimit = newLowLimit;
-            if (window->dictLimit < window->lowLimit) window->dictLimit = window->lowLimit;
+            if (window->dictLimit < window->lowLimit)
+                window->dictLimit = window->lowLimit;
 
             if (loadedDictEndPtr != null)
                 *loadedDictEndPtr = 0;
@@ -1228,11 +1219,11 @@ public static unsafe partial class Methods
     private static ReadOnlySpan<byte> Span_stringToByte_20_00 => new byte[] { 32, 0 };
     private static byte* stringToByte_20_00 =>
         (byte*)
-        System.Runtime.CompilerServices.Unsafe.AsPointer(
-            ref MemoryMarshal.GetReference(Span_stringToByte_20_00)
-        );
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_stringToByte_20_00)
+            );
 #else
-        private static readonly byte* stringToByte_20_00 = GetArrayPointer(new byte[] { 32, 0 });
+    private static readonly byte* stringToByte_20_00 = GetArrayPointer(new byte[] { 32, 0 });
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1301,11 +1292,7 @@ public static unsafe partial class Methods
      * Returns the lowest allowed match index. It may either be in the ext-dict or the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_getLowestMatchIndex(
-        ZSTD_matchState_t* ms,
-        uint curr,
-        uint windowLog
-    )
+    private static uint ZSTD_getLowestMatchIndex(ZSTD_matchState_t* ms, uint curr, uint windowLog)
     {
         var maxDistance = 1U << (int)windowLog;
         var lowestValid = ms->window.lowLimit;
@@ -1323,11 +1310,7 @@ public static unsafe partial class Methods
      * Returns the lowest allowed match index in the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_getLowestPrefixIndex(
-        ZSTD_matchState_t* ms,
-        uint curr,
-        uint windowLog
-    )
+    private static uint ZSTD_getLowestPrefixIndex(ZSTD_matchState_t* ms, uint curr, uint windowLog)
     {
         var maxDistance = 1U << (int)windowLog;
         var lowestValid = ms->window.dictLimit;

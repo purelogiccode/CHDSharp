@@ -13,5 +13,5 @@ internal enum CodeType : byte
 {
     Codes,
     Lens,
-    Dists
+    Dists,
 }

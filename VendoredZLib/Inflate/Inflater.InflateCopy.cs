@@ -92,65 +92,79 @@ internal static partial class Inflater
 
         ref var sourceLens = ref
 #if NET7_0_OR_GREATER
-            sourceRefs.Lens;
+        sourceRefs.Lens;
 #else
         MemoryMarshal.GetReference<ushort>(state.lens);
 #endif
         ref var sourceWork = ref
 #if NET7_0_OR_GREATER
-            sourceRefs.Work;
+        sourceRefs.Work;
 #else
         MemoryMarshal.GetReference<ushort>(state.work);
 #endif
         ref var sourceCodes = ref
 #if NET7_0_OR_GREATER
-            sourceRefs.Codes;
+        sourceRefs.Codes;
 #else
         MemoryMarshal.GetReference<Code>(state.codes);
 #endif
 
         ref var destLens = ref
 #if NET7_0_OR_GREATER
-            destRefs.Lens;
+        destRefs.Lens;
 #else
         MemoryMarshal.GetReference<ushort>(copy.lens);
 #endif
         ref var destWork = ref
 #if NET7_0_OR_GREATER
-            destRefs.Work;
+        destRefs.Work;
 #else
         MemoryMarshal.GetReference<ushort>(copy.work);
 #endif
         ref var destCodes = ref
 #if NET7_0_OR_GREATER
-            destRefs.Codes;
+        destRefs.Codes;
 #else
         MemoryMarshal.GetReference<Code>(copy.codes);
 #endif
 
-        netUnsafe.CopyBlock(ref netUnsafe.As<ushort, byte>(ref destLens),
-            ref netUnsafe.As<ushort, byte>(ref sourceLens), (uint)(state.Lens.Length * sizeof(ushort)));
+        netUnsafe.CopyBlock(
+            ref netUnsafe.As<ushort, byte>(ref destLens),
+            ref netUnsafe.As<ushort, byte>(ref sourceLens),
+            (uint)(state.Lens.Length * sizeof(ushort))
+        );
 
-        netUnsafe.CopyBlock(ref netUnsafe.As<ushort, byte>(ref destWork),
-            ref netUnsafe.As<ushort, byte>(ref sourceWork), (uint)(state.Work.Length * sizeof(ushort)));
+        netUnsafe.CopyBlock(
+            ref netUnsafe.As<ushort, byte>(ref destWork),
+            ref netUnsafe.As<ushort, byte>(ref sourceWork),
+            (uint)(state.Work.Length * sizeof(ushort))
+        );
 
-        netUnsafe.CopyBlock(ref netUnsafe.As<Code, byte>(ref destCodes),
-            ref netUnsafe.As<Code, byte>(ref sourceCodes), (uint)(state.Codes.Length * Code.Size));
+        netUnsafe.CopyBlock(
+            ref netUnsafe.As<Code, byte>(ref destCodes),
+            ref netUnsafe.As<Code, byte>(ref sourceCodes),
+            (uint)(state.Codes.Length * Code.Size)
+        );
 
         if (state.Lencode == SLenfix)
             copy.Lencode = SLenfix;
-        else if (state.Lencode == state.Codes) copy.Lencode = copy.Codes;
+        else if (state.Lencode == state.Codes)
+            copy.Lencode = copy.Codes;
 
         if (state.Distcode == SDistfix)
             copy.Distcode = SDistfix;
-        else if (state.Distcode == state.Codes) copy.Distcode = copy.Codes;
+        else if (state.Distcode == state.Codes)
+            copy.Distcode = copy.Codes;
 
         copy.Next = state.Next;
         copy.Diststart = state.Diststart;
 
         if (window != null)
-            netUnsafe.CopyBlock(ref MemoryMarshal.GetReference(window),
-                ref MemoryMarshal.GetReference(state.Window), (uint)wsize);
+            netUnsafe.CopyBlock(
+                ref MemoryMarshal.GetReference(window),
+                ref MemoryMarshal.GetReference(state.Window),
+                (uint)wsize
+            );
 
         copy.Window = window;
         return ZOk;
@@ -159,7 +173,8 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
     private static void InitRefFields(InflateState s, ref InflateRefs refs)
     {
-        if (netUnsafe.IsNullRef(ref refs.Lens)) refs.Lens = ref MemoryMarshal.GetReference(s.Lens);
+        if (netUnsafe.IsNullRef(ref refs.Lens))
+            refs.Lens = ref MemoryMarshal.GetReference(s.Lens);
 
         if (netUnsafe.IsNullRef(ref refs.Codes))
         {

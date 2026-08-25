@@ -13,7 +13,7 @@ public class ChdHeaderV5Tests
             Compressors = new[] { CodecTags.Zlib, 0u, 0u, 0u },
             LogicalBytes = 1048576,
             HunkBytes = 4096,
-            UnitBytes = 512
+            UnitBytes = 512,
         };
 
         var data = header.Serialize();
@@ -75,7 +75,7 @@ public class ChdHeaderV5Tests
             UnitBytes = 2448,
             RawSha1 = Enumerable.Range(0, 20).Select(i => (byte)i).ToArray(),
             Sha1 = Enumerable.Range(20, 20).Select(i => (byte)i).ToArray(),
-            ParentSha1 = Enumerable.Range(40, 20).Select(i => (byte)i).ToArray()
+            ParentSha1 = Enumerable.Range(40, 20).Select(i => (byte)i).ToArray(),
         };
 
         var data = header.Serialize();
@@ -100,7 +100,7 @@ public class ChdHeaderV5Tests
             UnitBytes = 2048,
             RawSha1 = Enumerable.Range(0, 20).Select(i => (byte)(i * 3)).ToArray(),
             Sha1 = Enumerable.Range(0, 20).Select(i => (byte)(i * 5)).ToArray(),
-            ParentSha1 = Enumerable.Range(0, 20).Select(i => (byte)(i * 7)).ToArray()
+            ParentSha1 = Enumerable.Range(0, 20).Select(i => (byte)(i * 7)).ToArray(),
         };
 
         var serialized = original.Serialize();
@@ -185,10 +185,10 @@ public class ChdHeaderV5Tests
 
     private static uint ReadU32Be(byte[] data, int offset)
     {
-        return ((uint)data[offset] << 24) |
-               ((uint)data[offset + 1] << 16) |
-               ((uint)data[offset + 2] << 8) |
-               data[offset + 3];
+        return ((uint)data[offset] << 24)
+            | ((uint)data[offset + 1] << 16)
+            | ((uint)data[offset + 2] << 8)
+            | data[offset + 3];
     }
 
     private static ulong ReadU64Be(byte[] data, int offset)

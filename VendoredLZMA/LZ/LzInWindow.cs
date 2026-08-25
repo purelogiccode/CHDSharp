@@ -19,23 +19,27 @@ internal class InWindow
     internal void MoveBlock()
     {
         var offset = BufferOffset + Pos - _keepSizeBefore;
-        if (offset > 0) offset--;
+        if (offset > 0)
+            offset--;
 
         var numBytes = BufferOffset + StreamPos - offset;
 
-        for (uint i = 0; i < numBytes; i++) BufferBase[i] = BufferBase[offset + i];
+        for (uint i = 0; i < numBytes; i++)
+            BufferBase[i] = BufferBase[offset + i];
 
         BufferOffset -= offset;
     }
 
     internal virtual void ReadBlock()
     {
-        if (_streamEndWasReached) return;
+        if (_streamEndWasReached)
+            return;
 
         while (true)
         {
             var size = (int)(0 - BufferOffset + BlockSize - StreamPos);
-            if (size == 0) return;
+            if (size == 0)
+                return;
 
             var numReadBytes = _stream.Read(BufferBase, (int)(BufferOffset + StreamPos), size);
             if (numReadBytes == 0)
@@ -50,7 +54,8 @@ internal class InWindow
             }
 
             StreamPos += (uint)numReadBytes;
-            if (StreamPos >= Pos + _keepSizeAfter) _posLimit = StreamPos - _keepSizeAfter;
+            if (StreamPos >= Pos + _keepSizeAfter)
+                _posLimit = StreamPos - _keepSizeAfter;
         }
     }
 
@@ -99,7 +104,8 @@ internal class InWindow
         if (Pos > _posLimit)
         {
             var pointerToPosition = BufferOffset + Pos;
-            if (pointerToPosition > _pointerToLastSafePosition) MoveBlock();
+            if (pointerToPosition > _pointerToLastSafePosition)
+                MoveBlock();
 
             ReadBlock();
         }
@@ -120,9 +126,7 @@ internal class InWindow
         var pby = BufferOffset + Pos + (uint)index;
 
         uint i;
-        for (i = 0; i < limit && BufferBase[pby + i] == BufferBase[pby + i - distance]; i++)
-        {
-        }
+        for (i = 0; i < limit && BufferBase[pby + i] == BufferBase[pby + i - distance]; i++) { }
 
         return i;
     }

@@ -22,8 +22,14 @@ internal static class V3ToV4Patcher
     {
         var src = File.ReadAllBytes(v3Path);
 
-        if (!string.Equals(Encoding.ASCII.GetString(src, 0, 8), "MComprHD", StringComparison.Ordinal) ||
-            BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(12)) != 3)
+        if (
+            !string.Equals(
+                Encoding.ASCII.GetString(src, 0, 8),
+                "MComprHD",
+                StringComparison.Ordinal
+            )
+            || BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(12)) != 3
+        )
             throw new InvalidDataException($"{v3Path} is not a V3 CHD");
 
         var flags = BinaryPrimitives.ReadUInt32BigEndian(src.AsSpan(16));
@@ -47,7 +53,10 @@ internal static class V3ToV4Patcher
         BinaryPrimitives.WriteUInt32BigEndian(dst.AsSpan(20), compression);
         BinaryPrimitives.WriteUInt32BigEndian(dst.AsSpan(24), totalHunks);
         BinaryPrimitives.WriteUInt64BigEndian(dst.AsSpan(28), logicalBytes);
-        BinaryPrimitives.WriteUInt64BigEndian(dst.AsSpan(36), metaOffset == 0 ? 0 : metaOffset - Delta);
+        BinaryPrimitives.WriteUInt64BigEndian(
+            dst.AsSpan(36),
+            metaOffset == 0 ? 0 : metaOffset - Delta
+        );
         BinaryPrimitives.WriteUInt32BigEndian(dst.AsSpan(44), hunkBytes);
         // sha1 @48 (combined, patched below), parentsha1 @68 (zeros), rawsha1 @88
         rawSha1.CopyTo(dst.AsSpan(88));
@@ -103,7 +112,8 @@ internal static class V3ToV4Patcher
             {
                 var entry = new byte[24];
                 BinaryPrimitives.WriteUInt32BigEndian(entry, tag);
-                SHA1.HashData(file.AsSpan(pos + MetadataHeaderSize, metaLength)).CopyTo(entry.AsSpan(4));
+                SHA1.HashData(file.AsSpan(pos + MetadataHeaderSize, metaLength))
+                    .CopyTo(entry.AsSpan(4));
                 hashes.Add(entry);
             }
 
@@ -112,11 +122,13 @@ internal static class V3ToV4Patcher
 
         hashes.Sort((a, b) => a.AsSpan().SequenceCompareTo(b));
 
-        using var sha1 = SHA1.Create() ?? throw new InvalidOperationException("SHA1.Create() returned null");
+        using var sha1 =
+            SHA1.Create() ?? throw new InvalidOperationException("SHA1.Create() returned null");
         sha1.TransformBlock(rawSha1, 0, 20, null, 0);
         foreach (var entry in hashes)
             sha1.TransformBlock(entry, 0, 24, null, 0);
         sha1.TransformFinalBlock([], 0, 0);
-        return sha1.Hash ?? throw new InvalidOperationException("SHA1 hash computation returned null");
+        return sha1.Hash
+            ?? throw new InvalidOperationException("SHA1 hash computation returned null");
     }
 }

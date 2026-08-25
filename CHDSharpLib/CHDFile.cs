@@ -58,7 +58,7 @@ public delegate ChdFile? ParentResolver(byte[]? parentSha1, byte[]? parentMd5);
 /// {
 ///     var hunk = new byte[chd.HunkBytes];
 ///     chd.ReadHunk(0, hunk);          // first decompressed hunk
-/// 
+///
 ///     var buf = new byte[1024];
 ///     chd.Read(0x10000, buf, 0, buf.Length); // arbitrary byte range
 /// }
@@ -79,7 +79,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     Per-thread codec state for <see cref="ReadHunkConcurrent" />: each calling thread
     ///     decompresses with its own scratch buffers, so concurrent readers never share codec state.
     /// </summary>
-    private readonly ThreadLocal<ChdCodecState> _concurrentCodec = new(() => new ChdCodecState(), true);
+    private readonly ThreadLocal<ChdCodecState> _concurrentCodec = new(
+        () => new ChdCodecState(),
+        true
+    );
 
     private readonly bool _leaveOpen;
 
@@ -168,9 +171,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     public uint MaxCompressedBlockBytes
     {
         get => _chd.MaxCompressedBlockCap;
-        set => _chd.MaxCompressedBlockCap = value == 0
-            ? checked(_chd.Blocksize * ChdHeaders.DefaultMaxCompressedMultiple)
-            : Math.Max(value, _chd.Blocksize);
+        set =>
+            _chd.MaxCompressedBlockCap =
+                value == 0
+                    ? checked(_chd.Blocksize * ChdHeaders.DefaultMaxCompressedMultiple)
+                    : Math.Max(value, _chd.Blocksize);
     }
 
     /// <summary>
@@ -232,7 +237,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     public byte[] Md5 => _chd.Md5!;
 
     /// <summary>True if this CHD is a differential child that requires a parent CHD to read.</summary>
-    public bool RequiresParent => !Util.IsAllZeroArray(_chd.Parentmd5) || !Util.IsAllZeroArray(_chd.Parentsha1);
+    public bool RequiresParent =>
+        !Util.IsAllZeroArray(_chd.Parentmd5) || !Util.IsAllZeroArray(_chd.Parentsha1);
 
     /// <summary>True if this CHD is a differential child. Alias for <see cref="RequiresParent" />.</summary>
     public bool IsChild => RequiresParent;
@@ -312,7 +318,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         get
         {
             EnsureMetadataLoaded();
-            if (_metadata == null) return null;
+            if (_metadata == null)
+                return null;
 
             foreach (var entry in _metadata)
                 if (string.Equals(entry.Tag, "CIS ", StringComparison.Ordinal))
@@ -332,7 +339,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         get
         {
             EnsureMetadataLoaded();
-            if (_metadata == null) return null;
+            if (_metadata == null)
+                return null;
 
             foreach (var entry in _metadata)
                 if (string.Equals(entry.Tag, "KEY ", StringComparison.Ordinal))
@@ -353,7 +361,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         get
         {
             EnsureMetadataLoaded();
-            if (_metadata == null) return null;
+            if (_metadata == null)
+                return null;
 
             foreach (var entry in _metadata)
                 if (string.Equals(entry.Tag, "IDNT", StringComparison.Ordinal))
@@ -391,7 +400,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         set
         {
             if (value < 0)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "MemoryBudget must be >= 0");
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    value,
+                    "MemoryBudget must be >= 0"
+                );
 
             var hunks = value / HunkBytes;
             ConfigureCache(hunks > 0 ? (int)Math.Min(hunks, int.MaxValue) : 1);
@@ -425,7 +438,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
 
         _disposed = true;
 
@@ -459,7 +473,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
 
         _disposed = true;
 
@@ -484,7 +499,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <param name="maxHunks">Maximum number of hunks to keep decompressed.</param>
     public void ConfigureCache(int maxHunks)
     {
-        if (maxHunks <= 0) maxHunks = 1;
+        if (maxHunks <= 0)
+            maxHunks = 1;
 
         _cacheSize = maxHunks;
 
@@ -570,7 +586,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="ChdError.Chderrmetadatanotfound" /> when the metadata chain could not be read;
     ///     otherwise a write/IO error code.
     /// </returns>
-    public ChdError SetMetadata(string tag, byte[] data, uint index = 0, byte flags = MetadataChecksumFlag)
+    public ChdError SetMetadata(
+        string tag,
+        byte[] data,
+        uint index = 0,
+        byte flags = MetadataChecksumFlag
+    )
     {
         ArgumentNullException.ThrowIfNull(tag);
         ArgumentNullException.ThrowIfNull(data);
@@ -732,8 +753,15 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         try
         {
             var headerLen = HeaderLengthForVersion(Version);
-            using (var temp = new FileStream(tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None,
-                       128 * 4096))
+            using (
+                var temp = new FileStream(
+                    tempPath,
+                    FileMode.Create,
+                    FileAccess.ReadWrite,
+                    FileShare.None,
+                    128 * 4096
+                )
+            )
             {
                 // 1. Header, with patched metaoffset (+ combined sha1 for V4/V5).
                 _stream.Position = 0;
@@ -781,7 +809,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         // Reopen against the rewritten file and refresh the cached state.
         try
         {
-            _stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 4096);
+            _stream = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                128 * 4096
+            );
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -790,7 +824,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
 
         _chd.Metaoffset = (ulong)chainOffset;
-        if (Version >= 4 && combinedSha1 != null) Array.Copy(combinedSha1, 0, _chd.Sha1!, 0, 20);
+        if (Version >= 4 && combinedSha1 != null)
+            Array.Copy(combinedSha1, 0, _chd.Sha1!, 0, 20);
 
         _metadata = new List<ChdMetadataEntry>(entries);
         _metadataLoaded = true;
@@ -824,7 +859,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     private static long EntriesBytesBefore(IReadOnlyList<ChdMetadataEntry> entries, int index)
     {
         long total = 0;
-        for (var i = 0; i < index; i++) total += 16 + entries[i].Data.Length;
+        for (var i = 0; i < index; i++)
+            total += 16 + entries[i].Data.Length;
 
         return total;
     }
@@ -842,7 +878,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             2 => 80,
             3 => 120,
             4 => 108,
-            _ => 124
+            _ => 124,
         };
     }
 
@@ -863,7 +899,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     each hash is the big-endian 4-byte metadata tag followed by the SHA-1 of the entry payload
     ///     (checksummed entries only, sorted byte-wise) — MAME <c>compute_overall_sha1</c> parity.
     /// </summary>
-    private static byte[] ComputeCombinedSha1(byte[] rawSha1, IReadOnlyList<ChdMetadataEntry> entries)
+    private static byte[] ComputeCombinedSha1(
+        byte[] rawSha1,
+        IReadOnlyList<ChdMetadataEntry> entries
+    )
     {
         var hashes = new List<byte[]>();
         foreach (var entry in entries)
@@ -961,7 +1000,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             return;
         }
 
-        if (_readAhead != null) _readAhead.Dispose();
+        if (_readAhead != null)
+            _readAhead.Dispose();
 
         _readAhead = new ReadAheadManager(this, lookAhead);
     }
@@ -1071,7 +1111,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="Chd.ReadHeader(string, out CHDSharp.Models.ChdHeaderInfo?)" /> so a header-only
     ///     read reports the same unit size as an open <see cref="ChdFile" />.
     /// </summary>
-    internal static uint GuessUnitBytesFromMetadata(IReadOnlyList<ChdMetadataEntry> metadata, ChdHeader chd)
+    internal static uint GuessUnitBytesFromMetadata(
+        IReadOnlyList<ChdMetadataEntry> metadata,
+        ChdHeader chd
+    )
     {
         foreach (var entry in metadata)
             if (entry is { Tag: "GDDD", IsText: true })
@@ -1082,8 +1125,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 if (text.Contains('/'))
                 {
                     var slashParts = text.Split('/');
-                    if (slashParts.Length == 4 &&
-                        uint.TryParse(slashParts[3], out var bps2) && bps2 > 0)
+                    if (
+                        slashParts.Length == 4
+                        && uint.TryParse(slashParts[3], out var bps2)
+                        && bps2 > 0
+                    )
                         return bps2;
                 }
 
@@ -1092,8 +1138,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 foreach (var p in parts)
                 {
                     var trimmed = p.Trim();
-                    if (trimmed.StartsWith("BPS:", StringComparison.Ordinal) &&
-                        uint.TryParse(trimmed.AsSpan(4), out var bps) && bps > 0)
+                    if (
+                        trimmed.StartsWith("BPS:", StringComparison.Ordinal)
+                        && uint.TryParse(trimmed.AsSpan(4), out var bps)
+                        && bps > 0
+                    )
                         return bps;
                 }
 
@@ -1109,7 +1158,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
     private void EnsureTracksLoaded()
     {
-        if (_tracksLoaded) return;
+        if (_tracksLoaded)
+            return;
 
         _tracksLoaded = true;
         EnsureMetadataLoaded();
@@ -1133,14 +1183,19 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A task producing a tuple of the <see cref="ChdError" /> result and the opened <see cref="ChdFile" /> (or
     ///     <c>null</c> on error).
     /// </returns>
-    public static Task<(ChdError error, ChdFile? file)> OpenAsync(string filename,
-        CancellationToken cancellationToken = default)
+    public static Task<(ChdError error, ChdFile? file)> OpenAsync(
+        string filename,
+        CancellationToken cancellationToken = default
+    )
     {
-        return Task.Run(() =>
-        {
-            var err = Open(filename, out var chd, cancellationToken);
-            return (err, chd);
-        }, cancellationToken);
+        return Task.Run(
+            () =>
+            {
+                var err = Open(filename, out var chd, cancellationToken);
+                return (err, chd);
+            },
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -1158,14 +1213,20 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A task producing a tuple of the <see cref="ChdError" /> result and the opened <see cref="ChdFile" /> (or
     ///     <c>null</c> on error).
     /// </returns>
-    public static Task<(ChdError error, ChdFile? file)> OpenAsync(string filename, string? parentFilename,
-        CancellationToken cancellationToken = default)
+    public static Task<(ChdError error, ChdFile? file)> OpenAsync(
+        string filename,
+        string? parentFilename,
+        CancellationToken cancellationToken = default
+    )
     {
-        return Task.Run(() =>
-        {
-            var err = Open(filename, parentFilename, out var chd, cancellationToken);
-            return (err, chd);
-        }, cancellationToken);
+        return Task.Run(
+            () =>
+            {
+                var err = Open(filename, parentFilename, out var chd, cancellationToken);
+                return (err, chd);
+            },
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -1185,14 +1246,20 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A task producing a tuple of the <see cref="ChdError" /> result and the opened <see cref="ChdFile" /> (or
     ///     <c>null</c> on error).
     /// </returns>
-    public static Task<(ChdError error, ChdFile? file)> OpenAsync(string filename, ChdFile? parent,
-        CancellationToken cancellationToken = default)
+    public static Task<(ChdError error, ChdFile? file)> OpenAsync(
+        string filename,
+        ChdFile? parent,
+        CancellationToken cancellationToken = default
+    )
     {
-        return Task.Run(() =>
-        {
-            var err = Open(filename, parent, out var chd, cancellationToken);
-            return (err, chd);
-        }, cancellationToken);
+        return Task.Run(
+            () =>
+            {
+                var err = Open(filename, parent, out var chd, cancellationToken);
+                return (err, chd);
+            },
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -1209,14 +1276,20 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A task producing a tuple of the <see cref="ChdError" /> result and the opened <see cref="ChdFile" /> (or
     ///     <c>null</c> on error).
     /// </returns>
-    public static Task<(ChdError error, ChdFile? file)> OpenAsync(Stream stream, bool leaveOpen,
-        CancellationToken cancellationToken = default)
+    public static Task<(ChdError error, ChdFile? file)> OpenAsync(
+        Stream stream,
+        bool leaveOpen,
+        CancellationToken cancellationToken = default
+    )
     {
-        return Task.Run(() =>
-        {
-            var err = Open(stream, leaveOpen, out var chd, cancellationToken);
-            return (err, chd);
-        }, cancellationToken);
+        return Task.Run(
+            () =>
+            {
+                var err = Open(stream, leaveOpen, out var chd, cancellationToken);
+                return (err, chd);
+            },
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -1238,14 +1311,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A task producing a tuple of the <see cref="ChdError" /> result and the opened <see cref="ChdFile" /> (or
     ///     <c>null</c> on error).
     /// </returns>
-    public static Task<(ChdError error, ChdFile? file)> OpenAsync(Stream stream, bool leaveOpen, ChdFile? parent,
-        CancellationToken cancellationToken = default)
+    public static Task<(ChdError error, ChdFile? file)> OpenAsync(
+        Stream stream,
+        bool leaveOpen,
+        ChdFile? parent,
+        CancellationToken cancellationToken = default
+    )
     {
-        return Task.Run(() =>
-        {
-            var err = Open(stream, leaveOpen, parent, out var chd, cancellationToken);
-            return (err, chd);
-        }, cancellationToken);
+        return Task.Run(
+            () =>
+            {
+                var err = Open(stream, leaveOpen, parent, out var chd, cancellationToken);
+                return (err, chd);
+            },
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -1260,14 +1340,20 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A task producing a tuple of the <see cref="ChdError" /> result and the opened <see cref="ChdFile" /> (or
     ///     <c>null</c> on error).
     /// </returns>
-    public static Task<(ChdError error, ChdFile? file)> OpenAsync(string filename, ParentResolver? parentResolver,
-        CancellationToken cancellationToken = default)
+    public static Task<(ChdError error, ChdFile? file)> OpenAsync(
+        string filename,
+        ParentResolver? parentResolver,
+        CancellationToken cancellationToken = default
+    )
     {
-        return Task.Run(() =>
-        {
-            var err = Open(filename, parentResolver, out var chd, cancellationToken);
-            return (err, chd);
-        }, cancellationToken);
+        return Task.Run(
+            () =>
+            {
+                var err = Open(filename, parentResolver, out var chd, cancellationToken);
+                return (err, chd);
+            },
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -1283,14 +1369,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A task producing a tuple of the <see cref="ChdError" /> result and the opened <see cref="ChdFile" /> (or
     ///     <c>null</c> on error).
     /// </returns>
-    public static Task<(ChdError error, ChdFile? file)> OpenAsync(Stream stream, bool leaveOpen,
-        ParentResolver? parentResolver, CancellationToken cancellationToken = default)
+    public static Task<(ChdError error, ChdFile? file)> OpenAsync(
+        Stream stream,
+        bool leaveOpen,
+        ParentResolver? parentResolver,
+        CancellationToken cancellationToken = default
+    )
     {
-        return Task.Run(() =>
-        {
-            var err = Open(stream, leaveOpen, parentResolver, out var chd, cancellationToken);
-            return (err, chd);
-        }, cancellationToken);
+        return Task.Run(
+            () =>
+            {
+                var err = Open(stream, leaveOpen, parentResolver, out var chd, cancellationToken);
+                return (err, chd);
+            },
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -1307,8 +1400,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     cancellation is requested.
     /// </param>
     /// <returns>A task producing the <see cref="ChdError" /> result.</returns>
-    public async Task<ChdError> ReadHunkAsync(uint hunknum, byte[] buffer,
-        CancellationToken cancellationToken = default)
+    public async Task<ChdError> ReadHunkAsync(
+        uint hunknum,
+        byte[] buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (hunknum >= _chd.Totalblocks)
@@ -1322,7 +1418,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             return await ReadParentHunkAsync(me, buffer, cancellationToken).ConfigureAwait(false);
 
         var dataEntry = me;
-        while (dataEntry is { Comptype: CompressionType.Compressionself }) dataEntry = dataEntry.SelfMapEntry;
+        while (dataEntry is { Comptype: CompressionType.Compressionself })
+            dataEntry = dataEntry.SelfMapEntry;
 
         if (dataEntry is null)
             return ChdError.Chderrinvaliddata;
@@ -1334,21 +1431,33 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             {
                 if (dataEntry.Length > _chd.MaxCompressedBlockCap)
                 {
-                    Log.LogWarning("Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}", hunknum,
-                        dataEntry.Length, _chd.MaxCompressedBlockCap);
+                    Log.LogWarning(
+                        "Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}",
+                        hunknum,
+                        dataEntry.Length,
+                        _chd.MaxCompressedBlockCap
+                    );
                     return ChdError.Chderrinvaliddata;
                 }
 
                 compressed = new byte[dataEntry.Length];
-                await ReadDataAtAsync((long)dataEntry.Offset, compressed, cancellationToken).ConfigureAwait(false);
+                await ReadDataAtAsync((long)dataEntry.Offset, compressed, cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             // Decompression is CPU-bound. A per-call codec state keeps the async path safe even
             // when multiple awaited reads interleave (await continuations can resume on other
             // threads, so a shared or thread-local state would race).
             using var codec = new ChdCodecState();
-            return ChdBlockRead.ReadBlock(me, new ArrayPool(_chd.Blocksize), _chd.ChdReader, codec, buffer,
-                (int)_chd.Blocksize, compressed);
+            return ChdBlockRead.ReadBlock(
+                me,
+                new ArrayPool(_chd.Blocksize),
+                _chd.ChdReader,
+                codec,
+                buffer,
+                (int)_chd.Blocksize,
+                compressed
+            );
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -1361,7 +1470,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     Parent-hunk resolution for <see cref="ReadHunkAsync" /> (mirrors
     ///     <see cref="ReadParentHunk" /> with async I/O and a local stitch buffer).
     /// </summary>
-    private async Task<ChdError> ReadParentHunkAsync(MapEntry me, byte[] buffer, CancellationToken cancellationToken)
+    private async Task<ChdError> ReadParentHunkAsync(
+        MapEntry me,
+        byte[] buffer,
+        CancellationToken cancellationToken
+    )
     {
         if (_parent == null)
         {
@@ -1383,7 +1496,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             if (me.Offset >= _parent!.HunkCount)
                 return ChdError.Chderrinvalidparent;
 
-            return await _parent.ReadHunkAsync((uint)me.Offset, buffer, cancellationToken).ConfigureAwait(false);
+            return await _parent
+                .ReadHunkAsync((uint)me.Offset, buffer, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         var unitsInHunk = hunkbytes / unitbytes;
@@ -1396,21 +1511,27 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             if (parentHunk >= _parent!.HunkCount)
                 return ChdError.Chderrinvalidparent;
 
-            return await _parent.ReadHunkAsync((uint)parentHunk, buffer, cancellationToken).ConfigureAwait(false);
+            return await _parent
+                .ReadHunkAsync((uint)parentHunk, buffer, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         if (parentHunk + 1 >= _parent!.HunkCount)
             return ChdError.Chderrinvalidparent;
 
         var scratch = new byte[hunkbytes];
-        var e1 = await _parent.ReadHunkAsync((uint)parentHunk, scratch, cancellationToken).ConfigureAwait(false);
+        var e1 = await _parent
+            .ReadHunkAsync((uint)parentHunk, scratch, cancellationToken)
+            .ConfigureAwait(false);
         if (e1 != ChdError.Chderrnone)
             return e1;
 
         var firstBytes = (int)((unitsInHunk - unitInHunk) * unitbytes);
         Array.Copy(scratch, (int)(unitInHunk * unitbytes), buffer, 0, firstBytes);
 
-        var e2 = await _parent.ReadHunkAsync((uint)parentHunk + 1, scratch, cancellationToken).ConfigureAwait(false);
+        var e2 = await _parent
+            .ReadHunkAsync((uint)parentHunk + 1, scratch, cancellationToken)
+            .ConfigureAwait(false);
         if (e2 != ChdError.Chderrnone)
             return e2;
 
@@ -1424,7 +1545,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <paramref name="offset" /> with real async I/O (no thread-pool hopping for file-backed
     ///     instances).
     /// </summary>
-    private async ValueTask ReadDataAtAsync(long offset, byte[] buffer, CancellationToken cancellationToken)
+    private async ValueTask ReadDataAtAsync(
+        long offset,
+        byte[] buffer,
+        CancellationToken cancellationToken
+    )
     {
         if (_precache != null)
         {
@@ -1446,7 +1571,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             while (remaining > 0)
             {
                 var read = await RandomAccess
-                    .ReadAsync(handle, buffer.AsMemory(buffer.Length - remaining), position, cancellationToken)
+                    .ReadAsync(
+                        handle,
+                        buffer.AsMemory(buffer.Length - remaining),
+                        position,
+                        cancellationToken
+                    )
                     .ConfigureAwait(false);
                 if (read == 0)
                     throw new EndOfStreamException($"Unexpected end of file at offset {position}");
@@ -1476,12 +1606,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     cancellation is requested.
     /// </param>
     /// <returns>A task producing the <see cref="ChdError" /> result.</returns>
-    public async Task<ChdError> ReadAsync(ulong byteOffset, byte[] destination, int destinationOffset, int count,
-        CancellationToken cancellationToken = default)
+    public async Task<ChdError> ReadAsync(
+        ulong byteOffset,
+        byte[] destination,
+        int destinationOffset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
     {
-        if (destinationOffset < 0 || count < 0 ||
-            count > destination.Length - destinationOffset ||
-            byteOffset > _chd.Totalbytes || (ulong)count > _chd.Totalbytes - byteOffset)
+        if (
+            destinationOffset < 0
+            || count < 0
+            || count > destination.Length - destinationOffset
+            || byteOffset > _chd.Totalbytes
+            || (ulong)count > _chd.Totalbytes - byteOffset
+        )
             return ChdError.Chderrinvalidparameter;
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -1493,7 +1632,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             var within = (int)(byteOffset % _chd.Blocksize);
             var chunk = Math.Min(count, (int)_chd.Blocksize - within);
 
-            var err = await ReadHunkAsync((uint)hunk, hunkBuffer, cancellationToken).ConfigureAwait(false);
+            var err = await ReadHunkAsync((uint)hunk, hunkBuffer, cancellationToken)
+                .ConfigureAwait(false);
             if (err != ChdError.Chderrnone)
                 return err;
 
@@ -1529,8 +1669,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     Be cautious: CHD images can be tens of gigabytes. Prefer <see cref="EnumerateHunks" /> or
     ///     <see cref="Read(ulong, byte[], int, int, CancellationToken)" /> for large images.
     /// </remarks>
-    public ChdError ReadAllBytes(out byte[] data, IProgress<ChdProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public ChdError ReadAllBytes(
+        out byte[] data,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         data = [];
         cancellationToken.ThrowIfCancellationRequested();
@@ -1553,10 +1696,18 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
             bytesRead += count;
             var currentHunk = bytesRead / _chd.Blocksize;
-            if (bytesRead % _chd.Blocksize != 0) currentHunk++;
+            if (bytesRead % _chd.Blocksize != 0)
+                currentHunk++;
 
             progress.Report(
-                new ChdProgress(currentHunk, _chd.Totalblocks, bytesRead, (long)_chd.Totalbytes, sw.Elapsed));
+                new ChdProgress(
+                    currentHunk,
+                    _chd.Totalblocks,
+                    bytesRead,
+                    (long)_chd.Totalbytes,
+                    sw.Elapsed
+                )
+            );
         }
 
         return ChdError.Chderrnone;
@@ -1583,14 +1734,19 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             var err = ReadHunk(i, buffer);
             if (err != ChdError.Chderrnone)
-                throw new InvalidDataException($"Failed to read hunk {i}: {err.GetMessage()} ({err})");
+                throw new InvalidDataException(
+                    $"Failed to read hunk {i}: {err.GetMessage()} ({err})"
+                );
 
-            progress?.Report(new ChdProgress(
-                i + 1,
-                _chd.Totalblocks,
-                (long)Math.Min((i + 1) * (ulong)_chd.Blocksize, _chd.Totalbytes),
-                (long)_chd.Totalbytes,
-                sw!.Elapsed));
+            progress?.Report(
+                new ChdProgress(
+                    i + 1,
+                    _chd.Totalblocks,
+                    (long)Math.Min((i + 1) * (ulong)_chd.Blocksize, _chd.Totalbytes),
+                    (long)_chd.Totalbytes,
+                    sw!.Elapsed
+                )
+            );
             yield return buffer;
         }
     }
@@ -1610,7 +1766,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     (e.g. <see cref="ChdError.Chderrfilenotfound" />, <see cref="ChdError.Chderrinvalidfile" />,
     ///     <see cref="ChdError.Chderrrequiresparent" />).
     /// </returns>
-    public static ChdError Open(string filename, out ChdFile? chdFile, CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        string filename,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         return Open(filename, (ChdFile?)null, out chdFile, cancellationToken);
     }
@@ -1629,8 +1789,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <param name="chdFile">When this method returns, contains the opened <see cref="ChdFile" />, or <c>null</c> on error.</param>
     /// <param name="cancellationToken">A token to cancel the open.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError Open(string filename, bool memoryMapped, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        string filename,
+        bool memoryMapped,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         return Open(filename, (ChdFile?)null, memoryMapped, out chdFile, cancellationToken);
     }
@@ -1641,8 +1805,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     (see <see cref="Open(string, string, out ChdFile, CancellationToken)" /> and
     ///     <see cref="Open(string, bool, out ChdFile, CancellationToken)" />).
     /// </summary>
-    public static ChdError Open(string filename, string? parentFilename, bool memoryMapped, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        string filename,
+        string? parentFilename,
+        bool memoryMapped,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         chdFile = null;
         cancellationToken.ThrowIfCancellationRequested();
@@ -1650,7 +1819,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         ChdFile? parent = null;
         if (!string.IsNullOrEmpty(parentFilename))
         {
-            var perr = Open(parentFilename, (ChdFile?)null, memoryMapped, out parent, cancellationToken);
+            var perr = Open(
+                parentFilename,
+                (ChdFile?)null,
+                memoryMapped,
+                out parent,
+                cancellationToken
+            );
             if (perr != ChdError.Chderrnone)
                 return perr;
         }
@@ -1663,7 +1838,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
 
         // Transfer ownership of the internally-opened parent to the child.
-        if (parent != null) chdFile!._ownsParent = true;
+        if (parent != null)
+            chdFile!._ownsParent = true;
 
         return ChdError.Chderrnone;
     }
@@ -1673,14 +1849,20 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     resolving parent references against an already-open <paramref name="parent" />
     ///     (see <see cref="Open(string, ChdFile, out ChdFile, CancellationToken)" />).
     /// </summary>
-    public static ChdError Open(string filename, ChdFile? parent, bool memoryMapped, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        string filename,
+        ChdFile? parent,
+        bool memoryMapped,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         var err = Open(filename, parent, out chdFile, cancellationToken);
         if (err != ChdError.Chderrnone || chdFile == null)
             return err;
 
-        if (memoryMapped) chdFile.TryEnableMemoryMapping();
+        if (memoryMapped)
+            chdFile.TryEnableMemoryMapping();
 
         return ChdError.Chderrnone;
     }
@@ -1698,14 +1880,24 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             // No 'using': the mapping is owned by this instance and disposed with it (the view
             // accessor keeps the mapping alive independently).
             mmf = MemoryMappedFile.CreateFromFile(
-                (FileStream)_stream, null, 0, MemoryMappedFileAccess.Read,
-                HandleInheritability.None, true);
+                (FileStream)_stream,
+                null,
+                0,
+                MemoryMappedFileAccess.Read,
+                HandleInheritability.None,
+                true
+            );
             var view = mmf.CreateViewAccessor(0, _stream.Length, MemoryMappedFileAccess.Read);
             _mmfView = view;
             _mmf = mmf;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
-                                       or ArgumentException)
+        catch (Exception ex)
+            when (ex
+                    is IOException
+                        or UnauthorizedAccessException
+                        or NotSupportedException
+                        or ArgumentException
+            )
         {
             Log.LogDebug("Memory-mapped open unavailable for this file: {Message}", ex.Message);
             _mmfView?.Dispose();
@@ -1730,8 +1922,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="ChdError.Chderrnone" /> on success; otherwise an error code
     ///     (e.g. <see cref="ChdError.Chderrinvalidparent" /> if the parent's hashes do not match).
     /// </returns>
-    public static ChdError Open(string filename, string? parentFilename, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        string filename,
+        string? parentFilename,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         chdFile = null;
         cancellationToken.ThrowIfCancellationRequested();
@@ -1752,7 +1948,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
 
         // Transfer ownership of the internally-opened parent to the child.
-        if (parent != null) chdFile!._ownsParent = true;
+        if (parent != null)
+            chdFile!._ownsParent = true;
 
         return ChdError.Chderrnone;
     }
@@ -1774,8 +1971,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     cancellation is requested.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError Open(string filename, ChdFile? parent, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        string filename,
+        ChdFile? parent,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         chdFile = null;
         cancellationToken.ThrowIfCancellationRequested();
@@ -1785,7 +1986,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         FileStream fs;
         try
         {
-            fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 4096);
+            fs = new FileStream(
+                filename,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                128 * 4096
+            );
         }
         catch (FileNotFoundException)
         {
@@ -1820,8 +2027,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     cancellation is requested.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError Open(Stream stream, bool leaveOpen, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        Stream stream,
+        bool leaveOpen,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         return Open(stream, leaveOpen, (ChdFile?)null, out chdFile, cancellationToken);
     }
@@ -1845,8 +2056,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     cancellation is requested.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError Open(Stream stream, bool leaveOpen, ChdFile? parent, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        Stream stream,
+        bool leaveOpen,
+        ChdFile? parent,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         return Open(stream, leaveOpen, parent, null, out chdFile, cancellationToken);
     }
@@ -1875,8 +2091,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     cancellation is requested.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError Open(Stream stream, bool leaveOpen, ChdFile? parent, ParentResolver? parentResolver,
-        out ChdFile? chdFile, CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        Stream stream,
+        bool leaveOpen,
+        ChdFile? parent,
+        ParentResolver? parentResolver,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         chdFile = null;
         cancellationToken.ThrowIfCancellationRequested();
@@ -1887,7 +2109,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         try
         {
             stream.Seek(0, SeekOrigin.Begin);
-            if (!Chd.CheckHeader(stream, out _, out version)) return ChdError.Chderrinvalidfile;
+            if (!Chd.CheckHeader(stream, out _, out version))
+                return ChdError.Chderrinvalidfile;
         }
         catch (IOException ex)
         {
@@ -1906,11 +2129,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             switch (version)
             {
-                case 1: valid = ChdHeaders.ReadHeaderV1(stream, out chd); break;
-                case 2: valid = ChdHeaders.ReadHeaderV2(stream, out chd); break;
-                case 3: valid = ChdHeaders.ReadHeaderV3(stream, out chd); break;
-                case 4: valid = ChdHeaders.ReadHeaderV4(stream, out chd); break;
-                case 5: valid = ChdHeaders.ReadHeaderV5(stream, out chd); break;
+                case 1:
+                    valid = ChdHeaders.ReadHeaderV1(stream, out chd);
+                    break;
+                case 2:
+                    valid = ChdHeaders.ReadHeaderV2(stream, out chd);
+                    break;
+                case 3:
+                    valid = ChdHeaders.ReadHeaderV3(stream, out chd);
+                    break;
+                case 4:
+                    valid = ChdHeaders.ReadHeaderV4(stream, out chd);
+                    break;
+                case 5:
+                    valid = ChdHeaders.ReadHeaderV5(stream, out chd);
+                    break;
                 default:
                     return ChdError.Chderrunsupportedversion;
             }
@@ -1934,7 +2167,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         if (valid != ChdError.Chderrnone)
             return valid;
 
-        var needsParent = !Util.IsAllZeroArray(chd.Parentmd5) || !Util.IsAllZeroArray(chd.Parentsha1);
+        var needsParent =
+            !Util.IsAllZeroArray(chd.Parentmd5) || !Util.IsAllZeroArray(chd.Parentsha1);
         if (needsParent)
         {
             if (parent == null && parentResolver == null)
@@ -1977,8 +2211,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <param name="chdFile">When this method returns, contains the opened <see cref="ChdFile" />, or <c>null</c> on error.</param>
     /// <param name="cancellationToken">A token to cancel the open.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError Open(string filename, ParentResolver? parentResolver, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        string filename,
+        ParentResolver? parentResolver,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         chdFile = null;
         cancellationToken.ThrowIfCancellationRequested();
@@ -1988,7 +2226,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         FileStream fs;
         try
         {
-            fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 4096);
+            fs = new FileStream(
+                filename,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                128 * 4096
+            );
         }
         catch (FileNotFoundException)
         {
@@ -2025,8 +2269,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// </param>
     /// <param name="cancellationToken">A token to cancel the open.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError Open(Stream stream, bool leaveOpen, ParentResolver? parentResolver, out ChdFile? chdFile,
-        CancellationToken cancellationToken = default)
+    public static ChdError Open(
+        Stream stream,
+        bool leaveOpen,
+        ParentResolver? parentResolver,
+        out ChdFile? chdFile,
+        CancellationToken cancellationToken = default
+    )
     {
         // Open without a parent at open time. If the CHD needs a parent, we defer resolution
         // to ReadHunk via the resolver callback.
@@ -2047,8 +2296,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <param name="cancellationToken">A token to cancel the open operation.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
     /// <remarks>Disposing the returned stream disposes the underlying <see cref="ChdFile" />.</remarks>
-    public static ChdError OpenAsStream(string filename, out ChdImageStream? stream,
-        CancellationToken cancellationToken = default)
+    public static ChdError OpenAsStream(
+        string filename,
+        out ChdImageStream? stream,
+        CancellationToken cancellationToken = default
+    )
     {
         var err = Open(filename, out var chd, cancellationToken);
         stream = err == ChdError.Chderrnone && chd != null ? new ChdImageStream(chd, true) : null;
@@ -2067,8 +2319,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// </param>
     /// <param name="cancellationToken">A token to cancel the open operation.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
-    public static ChdError OpenAsStream(string filename, string? parentFilename, out ChdImageStream? stream,
-        CancellationToken cancellationToken = default)
+    public static ChdError OpenAsStream(
+        string filename,
+        string? parentFilename,
+        out ChdImageStream? stream,
+        CancellationToken cancellationToken = default
+    )
     {
         var err = Open(filename, parentFilename, out var chd, cancellationToken);
         stream = err == ChdError.Chderrnone && chd != null ? new ChdImageStream(chd, true) : null;
@@ -2118,8 +2374,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A tuple of (<see cref="ChdError" />, <see cref="ChdImageStream" />?). Error is
     ///     <see cref="ChdError.Chderrnone" /> on success; stream is non-null on success.
     /// </returns>
-    public static async Task<(ChdError error, ChdImageStream? stream)> OpenAsStreamAsync(string filename,
-        CancellationToken cancellationToken = default)
+    public static async Task<(ChdError error, ChdImageStream? stream)> OpenAsStreamAsync(
+        string filename,
+        CancellationToken cancellationToken = default
+    )
     {
         var (error, chd) = await OpenAsync(filename, cancellationToken).ConfigureAwait(false);
         if (error != ChdError.Chderrnone || chd == null)
@@ -2139,10 +2397,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     A tuple of (<see cref="ChdError" />, <see cref="ChdImageStream" />?). Error is
     ///     <see cref="ChdError.Chderrnone" /> on success; stream is non-null on success.
     /// </returns>
-    public static async Task<(ChdError error, ChdImageStream? stream)> OpenAsStreamAsync(string filename,
-        string? parentFilename, CancellationToken cancellationToken = default)
+    public static async Task<(ChdError error, ChdImageStream? stream)> OpenAsStreamAsync(
+        string filename,
+        string? parentFilename,
+        CancellationToken cancellationToken = default
+    )
     {
-        var (error, chd) = await OpenAsync(filename, parentFilename, cancellationToken).ConfigureAwait(false);
+        var (error, chd) = await OpenAsync(filename, parentFilename, cancellationToken)
+            .ConfigureAwait(false);
         if (error != ChdError.Chderrnone || chd == null)
             return (error, null);
 
@@ -2153,14 +2415,20 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     {
         var childMd5 = child.Parentmd5;
         var parentMd5 = parent.Md5;
-        if (!Util.IsAllZeroArray(childMd5) && !Util.IsAllZeroArray(parentMd5) &&
-            !Util.ByteArrEquals(childMd5, parentMd5))
+        if (
+            !Util.IsAllZeroArray(childMd5)
+            && !Util.IsAllZeroArray(parentMd5)
+            && !Util.ByteArrEquals(childMd5, parentMd5)
+        )
             return ChdError.Chderrinvalidparent;
 
         var childSha1 = child.Parentsha1;
         var parentSha1 = parent.Sha1;
-        if (!Util.IsAllZeroArray(childSha1) && !Util.IsAllZeroArray(parentSha1) &&
-            !Util.ByteArrEquals(childSha1, parentSha1))
+        if (
+            !Util.IsAllZeroArray(childSha1)
+            && !Util.IsAllZeroArray(parentSha1)
+            && !Util.ByteArrEquals(childSha1, parentSha1)
+        )
             return ChdError.Chderrinvalidparent;
 
         return ChdError.Chderrnone;
@@ -2191,7 +2459,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
                 var self = chd.Map[me.Offset];
                 me.SelfMapEntry = self;
-                if (self.Comptype == CompressionType.Compressiontype2Nd) me.SecondaryReader = self.SecondaryReader;
+                if (self.Comptype == CompressionType.Compressiontype2Nd)
+                    me.SecondaryReader = self.SecondaryReader;
             }
 
         return ChdError.Chderrnone;
@@ -2217,7 +2486,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     The final hunk of an image whose size is not a multiple of <see cref="HunkBytes" /> is
     ///     still <see cref="HunkBytes" /> long (padded as stored in the file).
     /// </remarks>
-    public ChdError ReadHunk(uint hunknum, byte[] buffer, CancellationToken cancellationToken = default)
+    public ChdError ReadHunk(
+        uint hunknum,
+        byte[] buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (hunknum >= _chd.Totalblocks)
@@ -2253,7 +2526,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
         // Resolve the entry that actually holds compressed data (follow SELF links).
         var dataEntry = me;
-        while (dataEntry is { Comptype: CompressionType.Compressionself }) dataEntry = dataEntry.SelfMapEntry;
+        while (dataEntry is { Comptype: CompressionType.Compressionself })
+            dataEntry = dataEntry.SelfMapEntry;
 
         if (dataEntry is null)
             return ChdError.Chderrinvaliddata;
@@ -2268,8 +2542,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 // an out-of-memory allocation of unbounded size.
                 if (dataEntry.Length > _chd.MaxCompressedBlockCap)
                 {
-                    Log.LogWarning("Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}", hunknum,
-                        dataEntry.Length, _chd.MaxCompressedBlockCap);
+                    Log.LogWarning(
+                        "Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}",
+                        hunknum,
+                        dataEntry.Length,
+                        _chd.MaxCompressedBlockCap
+                    );
                     return ChdError.Chderrinvaliddata;
                 }
 
@@ -2281,8 +2559,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 loaded = true;
             }
 
-            var rbErr = ChdBlockRead.ReadBlock(me, new ArrayPool(_chd.Blocksize), _chd.ChdReader, _codec, buffer,
-                (int)_chd.Blocksize);
+            var rbErr = ChdBlockRead.ReadBlock(
+                me,
+                new ArrayPool(_chd.Blocksize),
+                _chd.ChdReader,
+                _codec,
+                buffer,
+                (int)_chd.Blocksize
+            );
             if (rbErr == ChdError.Chderrnone && _cacheSize > 1)
                 AddToCache(hunknum, buffer);
 
@@ -2298,7 +2582,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
         finally
         {
-            if (loaded) dataEntry.BuffIn = null;
+            if (loaded)
+                dataEntry.BuffIn = null;
         }
     }
 
@@ -2316,7 +2601,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     if <paramref name="hunknum" /> is out of range; <see cref="ChdError.Chderrinvalidparameter" />
     ///     if <paramref name="buffer" /> is too short; otherwise a decompression error.
     /// </returns>
-    public ChdError ReadHunk(uint hunknum, Span<byte> buffer, CancellationToken cancellationToken = default)
+    public ChdError ReadHunk(
+        uint hunknum,
+        Span<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         if (buffer.Length < (int)_chd.Blocksize)
             return ChdError.Chderrinvalidparameter;
@@ -2348,7 +2637,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <param name="buffer">Destination buffer of at least <see cref="HunkBytes" /> bytes.</param>
     /// <param name="cancellationToken">A token to cancel the decompression.</param>
     /// <returns>The same result codes as <see cref="ReadHunk(uint, byte[], CancellationToken)" />.</returns>
-    public ChdError ReadHunkConcurrent(uint hunknum, byte[] buffer, CancellationToken cancellationToken = default)
+    public ChdError ReadHunkConcurrent(
+        uint hunknum,
+        byte[] buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (hunknum >= _chd.Totalblocks)
@@ -2363,7 +2656,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
         // Resolve the entry that actually holds compressed data (follow SELF links).
         var dataEntry = me;
-        while (dataEntry is { Comptype: CompressionType.Compressionself }) dataEntry = dataEntry.SelfMapEntry;
+        while (dataEntry is { Comptype: CompressionType.Compressionself })
+            dataEntry = dataEntry.SelfMapEntry;
 
         if (dataEntry is null)
             return ChdError.Chderrinvaliddata;
@@ -2375,8 +2669,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             {
                 if (dataEntry.Length > _chd.MaxCompressedBlockCap)
                 {
-                    Log.LogWarning("Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}", hunknum,
-                        dataEntry.Length, _chd.MaxCompressedBlockCap);
+                    Log.LogWarning(
+                        "Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}",
+                        hunknum,
+                        dataEntry.Length,
+                        _chd.MaxCompressedBlockCap
+                    );
                     return ChdError.Chderrinvaliddata;
                 }
 
@@ -2387,8 +2685,15 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
             using var codec = _concurrentCodec.Value;
             ArgumentNullException.ThrowIfNull(codec);
-            return ChdBlockRead.ReadBlock(me, new ArrayPool(_chd.Blocksize), _chd.ChdReader, codec, buffer,
-                (int)_chd.Blocksize, compressed);
+            return ChdBlockRead.ReadBlock(
+                me,
+                new ArrayPool(_chd.Blocksize),
+                _chd.ChdReader,
+                codec,
+                buffer,
+                (int)_chd.Blocksize,
+                compressed
+            );
         }
         catch (Exception ex)
         {
@@ -2424,7 +2729,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             var remaining = buffer.Length;
             while (remaining > 0)
             {
-                var read = RandomAccess.Read(handle, buffer.AsSpan(buffer.Length - remaining), position);
+                var read = RandomAccess.Read(
+                    handle,
+                    buffer.AsSpan(buffer.Length - remaining),
+                    position
+                );
                 if (read == 0)
                     throw new EndOfStreamException($"Unexpected end of file at offset {position}");
 
@@ -2528,12 +2837,15 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     public byte[]? ReadRawHunk(uint hunknum)
     {
         if (hunknum >= _chd.Totalblocks)
-            throw new ArgumentOutOfRangeException(nameof(hunknum),
-                $"Hunk {hunknum} is out of range (0..{_chd.Totalblocks - 1})");
+            throw new ArgumentOutOfRangeException(
+                nameof(hunknum),
+                $"Hunk {hunknum} is out of range (0..{_chd.Totalblocks - 1})"
+            );
 
         // Resolve the entry that actually holds the stored data (follow SELF links).
         var dataEntry = _chd.Map[hunknum];
-        while (dataEntry is { Comptype: CompressionType.Compressionself }) dataEntry = dataEntry.SelfMapEntry;
+        while (dataEntry is { Comptype: CompressionType.Compressionself })
+            dataEntry = dataEntry.SelfMapEntry;
 
         if (dataEntry is null || dataEntry.Length == 0)
             return null;
@@ -2541,10 +2853,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         // Entries without on-disk data: parent references read from another CHD,
         // V3/V4 mini entries store the 8-byte pattern inline in the map offset field,
         // and V5 zero-fill hunks have no stored bytes at all.
-        if (dataEntry.Comptype is CompressionType.Compressionparent
-            or CompressionType.Compressionmini
-            or CompressionType.Compressionzero
-            or CompressionType.Compressionerror)
+        if (
+            dataEntry.Comptype
+            is CompressionType.Compressionparent
+                or CompressionType.Compressionmini
+                or CompressionType.Compressionzero
+                or CompressionType.Compressionerror
+        )
             return null;
 
         var fileLength = (ulong)(_precache?.Length ?? _stream.Length);
@@ -2566,22 +2881,31 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     cancellation is requested.
     /// </param>
     /// <returns>A task producing the raw stored bytes (<c>null</c> when the hunk has no on-disk data).</returns>
-    public async Task<byte[]?> ReadRawHunkAsync(uint hunknum, CancellationToken cancellationToken = default)
+    public async Task<byte[]?> ReadRawHunkAsync(
+        uint hunknum,
+        CancellationToken cancellationToken = default
+    )
     {
         if (hunknum >= _chd.Totalblocks)
-            throw new ArgumentOutOfRangeException(nameof(hunknum),
-                $"Hunk {hunknum} is out of range (0..{_chd.Totalblocks - 1})");
+            throw new ArgumentOutOfRangeException(
+                nameof(hunknum),
+                $"Hunk {hunknum} is out of range (0..{_chd.Totalblocks - 1})"
+            );
 
         var dataEntry = _chd.Map[hunknum];
-        while (dataEntry is { Comptype: CompressionType.Compressionself }) dataEntry = dataEntry.SelfMapEntry;
+        while (dataEntry is { Comptype: CompressionType.Compressionself })
+            dataEntry = dataEntry.SelfMapEntry;
 
         if (dataEntry is null || dataEntry.Length == 0)
             return null;
 
-        if (dataEntry.Comptype is CompressionType.Compressionparent
-            or CompressionType.Compressionmini
-            or CompressionType.Compressionzero
-            or CompressionType.Compressionerror)
+        if (
+            dataEntry.Comptype
+            is CompressionType.Compressionparent
+                or CompressionType.Compressionmini
+                or CompressionType.Compressionzero
+                or CompressionType.Compressionerror
+        )
             return null;
 
         var fileLength = (ulong)(_precache?.Length ?? _stream.Length);
@@ -2763,12 +3087,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="ChdError.Chderrinvalidparameter" /> if the requested range is outside the image or
     ///     the destination bounds; otherwise a decompression error code.
     /// </returns>
-    public ChdError Read(ulong byteOffset, byte[] destination, int destinationOffset, int count,
-        CancellationToken cancellationToken = default)
+    public ChdError Read(
+        ulong byteOffset,
+        byte[] destination,
+        int destinationOffset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
     {
-        if (destinationOffset < 0 || count < 0 ||
-            count > destination.Length - destinationOffset ||
-            byteOffset > _chd.Totalbytes || (ulong)count > _chd.Totalbytes - byteOffset)
+        if (
+            destinationOffset < 0
+            || count < 0
+            || count > destination.Length - destinationOffset
+            || byteOffset > _chd.Totalbytes
+            || (ulong)count > _chd.Totalbytes - byteOffset
+        )
             return ChdError.Chderrinvalidparameter;
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -2814,11 +3147,19 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="ChdError.Chderrnone" /> on success; <see cref="ChdError.Chderrinvalidparameter" />
     ///     if the requested range is out of bounds; otherwise a hunk read error.
     /// </returns>
-    public ChdError Read(ulong byteOffset, Span<byte> destination, int count,
-        CancellationToken cancellationToken = default)
+    public ChdError Read(
+        ulong byteOffset,
+        Span<byte> destination,
+        int count,
+        CancellationToken cancellationToken = default
+    )
     {
-        if (count < 0 || count > destination.Length ||
-            byteOffset > _chd.Totalbytes || (ulong)count > _chd.Totalbytes - byteOffset)
+        if (
+            count < 0
+            || count > destination.Length
+            || byteOffset > _chd.Totalbytes
+            || (ulong)count > _chd.Totalbytes - byteOffset
+        )
             return ChdError.Chderrinvalidparameter;
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -2870,7 +3211,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="ChdError.Chderrinvalidparameter" /> if <paramref name="buffer" /> is too small or
     ///     <paramref name="lba" /> falls outside the decompressed image.
     /// </returns>
-    public ChdError ReadSector(uint lba, byte[] buffer, CancellationToken cancellationToken = default)
+    public ChdError ReadSector(
+        uint lba,
+        byte[] buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         return ReadSectorCore(lba, ChdReaders.CdMaxSectorData, buffer, cancellationToken);
     }
@@ -2891,7 +3236,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="ChdError.Chderrinvalidparameter" /> if <paramref name="buffer" /> is too small, the
     ///     MSF address precedes 00:02:00 (negative LBA), or the address falls outside the decompressed image.
     /// </returns>
-    public ChdError ReadSectorMsf(byte m, byte s, byte f, byte[] buffer, CancellationToken cancellationToken = default)
+    public ChdError ReadSectorMsf(
+        byte m,
+        byte s,
+        byte f,
+        byte[] buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         var lba = CdRomAddress.MsfToLba(m, s, f);
         if (lba < 0)
@@ -2914,12 +3265,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     <see cref="ChdError.Chderrinvalidparameter" /> if <paramref name="buffer" /> is too small or
     ///     <paramref name="lba" /> falls outside the decompressed image.
     /// </returns>
-    public ChdError ReadFrame(uint lba, byte[] buffer, CancellationToken cancellationToken = default)
+    public ChdError ReadFrame(
+        uint lba,
+        byte[] buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         return ReadSectorCore(lba, UnitBytes, buffer, cancellationToken);
     }
 
-    private ChdError ReadSectorCore(uint lba, ulong bytesToRead, byte[] buffer, CancellationToken cancellationToken)
+    private ChdError ReadSectorCore(
+        uint lba,
+        ulong bytesToRead,
+        byte[] buffer,
+        CancellationToken cancellationToken
+    )
     {
         EnsureTracksLoaded();
         if (_tracks is not { Count: > 0 })
@@ -2983,29 +3343,49 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 ChdTrackType.Mode2FormMix => $"MODE2/{track.DataSize:D4}",
                 ChdTrackType.Mode2Raw => $"MODE2/{track.DataSize:D4}",
                 ChdTrackType.Audio => "AUDIO",
-                _ => $"MODE1/{track.DataSize:D4}"
+                _ => $"MODE1/{track.DataSize:D4}",
             };
 
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  TRACK {track.TrackNumber:D2} {modeStr}");
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"  TRACK {track.TrackNumber:D2} {modeStr}"
+            );
 
             switch (track.PreGap)
             {
                 case > 0 when track.PreGapDataSize == 0:
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"    PREGAP {FramesToMsf(track.PreGap)}");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"    INDEX 01 {FramesToMsf(discoffs)}");
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"    PREGAP {FramesToMsf(track.PreGap)}"
+                    );
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"    INDEX 01 {FramesToMsf(discoffs)}"
+                    );
                     break;
                 case > 0 when track.PreGapDataSize > 0:
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"    INDEX 00 {FramesToMsf(discoffs)}");
-                    sb.AppendLine(CultureInfo.InvariantCulture,
-                        $"    INDEX 01 {FramesToMsf(discoffs + (ulong)track.PreGap)}");
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"    INDEX 00 {FramesToMsf(discoffs)}"
+                    );
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"    INDEX 01 {FramesToMsf(discoffs + (ulong)track.PreGap)}"
+                    );
                     break;
                 default:
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"    INDEX 01 {FramesToMsf(discoffs)}");
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"    INDEX 01 {FramesToMsf(discoffs)}"
+                    );
                     break;
             }
 
             if (track.PostGap > 0)
-                sb.AppendLine(CultureInfo.InvariantCulture, $"    POSTGAP {FramesToMsf(track.PostGap)}");
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"    POSTGAP {FramesToMsf(track.PostGap)}"
+                );
 
             // Advance the output offset by this track's frames. The pregap of the NEXT
             // track is baked into this track's Frames count (chdman stores it that way),
@@ -3013,7 +3393,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             discoffs += (ulong)track.Frames;
         }
 
-        return style == CueStyle.Chdman ? sb.ToString() : CueConverter.ConvertCue(sb.ToString(), style);
+        return style == CueStyle.Chdman
+            ? sb.ToString()
+            : CueConverter.ConvertCue(sb.ToString(), style);
     }
 
     /// <summary>
@@ -3027,7 +3409,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         if (!_isGdRom || _tracks == null || _tracks.Count == 0)
             throw new InvalidOperationException("This CHD does not contain GD-ROM track metadata.");
         if (trackFiles.Length != _tracks.Count)
-            throw new ArgumentException($"Expected {_tracks.Count} track filenames, got {trackFiles.Length}.");
+            throw new ArgumentException(
+                $"Expected {_tracks.Count} track filenames, got {trackFiles.Length}."
+            );
 
         var sb = new StringBuilder();
         sb.AppendLine(_tracks.Count.ToString(CultureInfo.InvariantCulture));
@@ -3037,8 +3421,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             var track = _tracks[i];
             var trackType = track.TrackType == ChdTrackType.Audio ? 0 : 4;
             var quotedName = trackFiles[i].Contains(' ') ? $"\"{trackFiles[i]}\"" : trackFiles[i];
-            sb.AppendLine(CultureInfo.InvariantCulture,
-                $"{track.TrackNumber} {(uint)track.StartFrame} {trackType} {track.DataSize} {quotedName} 0");
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"{track.TrackNumber} {(uint)track.StartFrame} {trackType} {track.DataSize} {quotedName} 0"
+            );
         }
 
         return sb.ToString();
@@ -3052,12 +3438,23 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             return "No CD/GD-ROM track metadata found.";
 
         var sb = new StringBuilder();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"Version: V{Version}, Total bytes: {TotalBytes:N0}");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"Type: {(_isGdRom ? "GD-ROM" : _isCd ? "CD-ROM" : "Unknown")}");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"Hunk size: {HunkBytes:N0}, Unit size: {UnitBytes:N0}");
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
+            $"Version: V{Version}, Total bytes: {TotalBytes:N0}"
+        );
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
+            $"Type: {(_isGdRom ? "GD-ROM" : _isCd ? "CD-ROM" : "Unknown")}"
+        );
+        sb.AppendLine(
+            CultureInfo.InvariantCulture,
+            $"Hunk size: {HunkBytes:N0}, Unit size: {UnitBytes:N0}"
+        );
 
-        if (_isDvd) sb.AppendLine("DVD metadata present.");
-        if (_isHdd) sb.AppendLine("HDD metadata present.");
+        if (_isDvd)
+            sb.AppendLine("DVD metadata present.");
+        if (_isHdd)
+            sb.AppendLine("HDD metadata present.");
 
         sb.AppendLine();
         sb.AppendLine("Track  Type              Frames     Start      Sector Size");
@@ -3065,15 +3462,25 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
         foreach (var t in _tracks)
         {
-            sb.AppendLine(CultureInfo.InvariantCulture,
-                $"{t.TrackNumber,3:D2}    {t.GetTypeString(),-16}  {t.Frames,9:N0}  {t.StartFrame,9}  {t.DataSize,11}");
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"{t.TrackNumber, 3:D2}    {t.GetTypeString(), -16}  {t.Frames, 9:N0}  {t.StartFrame, 9}  {t.DataSize, 11}"
+            );
             if (t.PreGap > 0)
-                sb.AppendLine(CultureInfo.InvariantCulture,
-                    $"       Pregap: {t.PreGap:N0} frames{(t.PreGapDataSize > 0 ? " (data in file)" : "")}");
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"       Pregap: {t.PreGap:N0} frames{(t.PreGapDataSize > 0 ? " (data in file)" : "")}"
+                );
             if (t.PostGap > 0)
-                sb.AppendLine(CultureInfo.InvariantCulture, $"       Postgap: {t.PostGap:N0} frames");
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"       Postgap: {t.PostGap:N0} frames"
+                );
             if (t.ExtraFrames > 0)
-                sb.AppendLine(CultureInfo.InvariantCulture, $"       Padding: {t.ExtraFrames:N0} frames");
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"       Padding: {t.ExtraFrames:N0} frames"
+                );
         }
 
         return sb.ToString();
@@ -3095,17 +3502,30 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     is thrown if cancellation is requested between hunk writes.
     /// </param>
     /// <returns>List of created file paths.</returns>
-    public IReadOnlyList<string> ExtractToDirectory(string outputDir, string baseFileName,
-        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public IReadOnlyList<string> ExtractToDirectory(
+        string outputDir,
+        string baseFileName,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        var result = ExtractToDirectoryWithReporting(outputDir, baseFileName, progress, cancellationToken);
+        var result = ExtractToDirectoryWithReporting(
+            outputDir,
+            baseFileName,
+            progress,
+            cancellationToken
+        );
         if (result.Error != ChdError.Chderrnone)
             throw new InvalidDataException($"Extraction failed: {result.Error}");
 
         if (result.HasTrackFailures)
         {
-            var failed = result.TrackResults.Where(t => !t.IsSuccess).Select(t => $"track {t.TrackNumber}: {t.Error}");
-            throw new InvalidDataException($"Track extraction failures: {string.Join(", ", failed)}");
+            var failed = result
+                .TrackResults.Where(t => !t.IsSuccess)
+                .Select(t => $"track {t.TrackNumber}: {t.Error}");
+            throw new InvalidDataException(
+                $"Track extraction failures: {string.Join(", ", failed)}"
+            );
         }
 
         return result.CreatedFiles;
@@ -3127,8 +3547,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     is thrown if cancellation is requested between hunk writes.
     /// </param>
     /// <returns>An <see cref="ExtractResult" /> with created files, per-track results, and overall error.</returns>
-    public ExtractResult ExtractToDirectoryWithReporting(string outputDir, string baseFileName,
-        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public ExtractResult ExtractToDirectoryWithReporting(
+        string outputDir,
+        string baseFileName,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         var created = new List<string>();
         var trackResults = new List<TrackExtractResult>();
@@ -3201,14 +3625,29 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
         catch (Exception ex)
         {
-            return new ExtractResult(created, trackResults,
-                ex is InvalidDataException ? ChdError.Chderrdecompressionerror : ChdError.Chderrwriteerror);
+            return new ExtractResult(
+                created,
+                trackResults,
+                ex is InvalidDataException
+                    ? ChdError.Chderrdecompressionerror
+                    : ChdError.Chderrwriteerror
+            );
         }
     }
 
-    private void WriteAllBytesSlow(string path, IProgress<ChdProgress>? progress, CancellationToken cancellationToken)
+    private void WriteAllBytesSlow(
+        string path,
+        IProgress<ChdProgress>? progress,
+        CancellationToken cancellationToken
+    )
     {
-        using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024);
+        using var fs = new FileStream(
+            path,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            1024 * 1024
+        );
         var sw = progress != null ? Stopwatch.StartNew() : null;
         var buf = new byte[HunkBytes];
         for (uint i = 0; i < HunkCount; i++)
@@ -3218,17 +3657,19 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             if (err != ChdError.Chderrnone)
                 throw new InvalidDataException($"Failed to read hunk {i}: {err}");
 
-            var bytesToWrite = i == HunkCount - 1
-                ? (int)(TotalBytes - (ulong)i * HunkBytes)
-                : (int)HunkBytes;
+            var bytesToWrite =
+                i == HunkCount - 1 ? (int)(TotalBytes - (ulong)i * HunkBytes) : (int)HunkBytes;
             fs.Write(buf, 0, bytesToWrite);
 
-            progress?.Report(new ChdProgress(
-                i + 1,
-                HunkCount,
-                (long)Math.Min((i + 1) * (ulong)HunkBytes, TotalBytes),
-                (long)TotalBytes,
-                sw!.Elapsed));
+            progress?.Report(
+                new ChdProgress(
+                    i + 1,
+                    HunkCount,
+                    (long)Math.Min((i + 1) * (ulong)HunkBytes, TotalBytes),
+                    (long)TotalBytes,
+                    sw!.Elapsed
+                )
+            );
         }
     }
 
@@ -3238,14 +3679,22 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <param name="progress">Optional progress reporter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success.</returns>
-    public ChdError WriteTrackToFile(ChdTrackInfo track, string path, IProgress<ChdProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public ChdError WriteTrackToFile(
+        ChdTrackInfo track,
+        string path,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         return TryWriteTrackToFile(track, path, progress, cancellationToken);
     }
 
-    private ChdError TryWriteTrackToFile(ChdTrackInfo track, string path, IProgress<ChdProgress>? progress,
-        CancellationToken cancellationToken)
+    private ChdError TryWriteTrackToFile(
+        ChdTrackInfo track,
+        string path,
+        IProgress<ChdProgress>? progress,
+        CancellationToken cancellationToken
+    )
     {
         var unitBytes = UnitBytes;
         var startByte = track.StartFrame * unitBytes;
@@ -3253,13 +3702,20 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
         // Legacy GD-ROMs (CD_FLAG_GDROMLE) store CDDA audio little-endian. MAME byte-swaps only
         // the AUDIO track's 16-bit samples when reading them (cdrom.cpp:402), so do the same here.
-        var swapCdda = _isLegacyGdRom &&
-                       track.TrackType == ChdTrackType.Audio &&
-                       unitBytes == ChdReaders.CdFrameSize;
+        var swapCdda =
+            _isLegacyGdRom
+            && track.TrackType == ChdTrackType.Audio
+            && unitBytes == ChdReaders.CdFrameSize;
 
         try
         {
-            using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024);
+            using var fs = new FileStream(
+                path,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                1024 * 1024
+            );
             var sw = progress != null ? Stopwatch.StartNew() : null;
             var buf = new byte[HunkBytes];
             var hunkSize = HunkBytes;
@@ -3276,7 +3732,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
                 if (swapCdda)
                     // Swap only the 2352-byte sector-data portion of each 2448-byte frame.
-                    ChdReaders.SwapCdda16(buf, toRead, ChdReaders.CdMaxSectorData, ChdReaders.CdFrameSize);
+                    ChdReaders.SwapCdda16(
+                        buf,
+                        toRead,
+                        ChdReaders.CdMaxSectorData,
+                        ChdReaders.CdFrameSize
+                    );
 
                 fs.Write(buf, 0, toRead);
                 offset += (ulong)toRead;
@@ -3286,9 +3747,18 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 {
                     var processed = (long)Math.Min(offset, TotalBytes);
                     var currentHunk = processed / hunkSize;
-                    if (processed % hunkSize != 0) currentHunk++;
+                    if (processed % hunkSize != 0)
+                        currentHunk++;
 
-                    progress.Report(new ChdProgress(currentHunk, HunkCount, processed, (long)TotalBytes, sw!.Elapsed));
+                    progress.Report(
+                        new ChdProgress(
+                            currentHunk,
+                            HunkCount,
+                            processed,
+                            (long)TotalBytes,
+                            sw!.Elapsed
+                        )
+                    );
                 }
             }
 

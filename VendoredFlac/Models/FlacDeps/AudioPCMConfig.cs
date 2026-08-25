@@ -77,34 +77,58 @@ internal class AudioPcmConfig
         Ksaudiospeakerstereo = Speakerfrontleft | Speakerfrontright,
 
         /// <summary>Quadraphonic speaker configuration (front left/right + back left/right).</summary>
-        Ksaudiospeakerquad = Speakerfrontleft | Speakerfrontright | Speakerbackleft | Speakerbackright,
+        Ksaudiospeakerquad =
+            Speakerfrontleft | Speakerfrontright | Speakerbackleft | Speakerbackright,
 
         /// <summary>Surround speaker configuration (front left/right/center + back center).</summary>
-        Ksaudiospeakersurround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerbackcenter,
+        Ksaudiospeakersurround =
+            Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerbackcenter,
 
         /// <summary>5.1 surround speaker configuration (front left/right/center + LFE + back left/right).</summary>
-        Ksaudiospeaker5Point1 = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency |
-                                Speakerbackleft | Speakerbackright,
+        Ksaudiospeaker5Point1 =
+            Speakerfrontleft
+            | Speakerfrontright
+            | Speakerfrontcenter
+            | Speakerlowfrequency
+            | Speakerbackleft
+            | Speakerbackright,
 
         /// <summary>5.1 surround speaker configuration using side speakers (front left/right/center + LFE + side left/right).</summary>
-        Ksaudiospeaker5Point1Surround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter |
-                                        Speakerlowfrequency | Speakersideleft | Speakersideright,
+        Ksaudiospeaker5Point1Surround =
+            Speakerfrontleft
+            | Speakerfrontright
+            | Speakerfrontcenter
+            | Speakerlowfrequency
+            | Speakersideleft
+            | Speakersideright,
 
         /// <summary>
         ///     7.1 surround speaker configuration (front left/right/center + LFE + back left/right + front left/right of
         ///     center).
         /// </summary>
-        Ksaudiospeaker7Point1 = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter | Speakerlowfrequency |
-                                Speakerbackleft | Speakerbackright | Speakerfrontleftofcenter |
-                                Speakerfrontrightofcenter,
+        Ksaudiospeaker7Point1 =
+            Speakerfrontleft
+            | Speakerfrontright
+            | Speakerfrontcenter
+            | Speakerlowfrequency
+            | Speakerbackleft
+            | Speakerbackright
+            | Speakerfrontleftofcenter
+            | Speakerfrontrightofcenter,
 
         /// <summary>
         ///     7.1 surround speaker configuration using side speakers (front left/right/center + LFE + back left/right + side
         ///     left/right).
         /// </summary>
-        Ksaudiospeaker7Point1Surround = Speakerfrontleft | Speakerfrontright | Speakerfrontcenter |
-                                        Speakerlowfrequency | Speakerbackleft | Speakerbackright | Speakersideleft |
-                                        Speakersideright,
+        Ksaudiospeaker7Point1Surround =
+            Speakerfrontleft
+            | Speakerfrontright
+            | Speakerfrontcenter
+            | Speakerlowfrequency
+            | Speakerbackleft
+            | Speakerbackright
+            | Speakersideleft
+            | Speakersideright,
 
         /// <summary>DVD Audio channel group 1, channel 0 (front center).</summary>
         Dvdaudiogr10 = Speakerfrontcenter,
@@ -206,7 +230,8 @@ internal class AudioPcmConfig
         Dvdaudiogr211 = Speakerfrontcenter | Speakerlowfrequency | Speakerbackcenter,
 
         /// <summary>DVD Audio channel group 2, channel 12 (front center + LFE + back left/right).</summary>
-        Dvdaudiogr212 = Speakerfrontcenter | Speakerlowfrequency | Speakerbackleft | Speakerbackright,
+        Dvdaudiogr212 =
+            Speakerfrontcenter | Speakerlowfrequency | Speakerbackleft | Speakerbackright,
 
         /// <summary>DVD Audio channel group 2, channel 13 (back center).</summary>
         Dvdaudiogr213 = Speakerbackcenter,
@@ -228,6 +253,7 @@ internal class AudioPcmConfig
 
         /// <summary>DVD Audio channel group 2, channel 19 (front center).</summary>
         Dvdaudiogr219 = Speakerfrontcenter,
+
         /// <summary>DVD Audio channel group 2, channel 20 (front center + LFE).</summary>
         Dvdaudiogr220 = Speakerfrontcenter | Speakerlowfrequency
 #pragma warning restore CA1069
@@ -243,13 +269,20 @@ internal class AudioPcmConfig
     ///     The speaker configuration mask. If <see cref="SpeakerConfig.Directout" />, a default mask is
     ///     assigned based on channel count.
     /// </param>
-    public AudioPcmConfig(int bitsPerSample, int channelCount, int sampleRate,
-        SpeakerConfig channelMask = SpeakerConfig.Directout)
+    public AudioPcmConfig(
+        int bitsPerSample,
+        int channelCount,
+        int sampleRate,
+        SpeakerConfig channelMask = SpeakerConfig.Directout
+    )
     {
         BitsPerSample = bitsPerSample;
         ChannelCount = channelCount;
         SampleRate = sampleRate;
-        ChannelMask = channelMask == SpeakerConfig.Directout ? GetDefaultChannelMask(channelCount) : channelMask;
+        ChannelMask =
+            channelMask == SpeakerConfig.Directout
+                ? GetDefaultChannelMask(channelCount)
+                : channelMask;
     }
 
     /// <summary>
@@ -317,11 +350,13 @@ internal class AudioPcmConfig
             case 4:
                 return SpeakerConfig.Ksaudiospeakerquad;
             case 5:
-                return SpeakerConfig.Ksaudiospeaker5Point1Surround & ~SpeakerConfig.Speakerlowfrequency;
+                return SpeakerConfig.Ksaudiospeaker5Point1Surround
+                    & ~SpeakerConfig.Speakerlowfrequency;
             case 6:
                 return SpeakerConfig.Ksaudiospeaker5Point1Surround;
             case 7:
-                return SpeakerConfig.Ksaudiospeaker5Point1Surround | SpeakerConfig.Speakerbackcenter;
+                return SpeakerConfig.Ksaudiospeaker5Point1Surround
+                    | SpeakerConfig.Speakerbackcenter;
             case 8:
                 return SpeakerConfig.Ksaudiospeaker7Point1Surround;
         }

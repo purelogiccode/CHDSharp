@@ -40,11 +40,21 @@ internal sealed class AvHuffEncoder
     /// <param name="channels">Number of audio channels.</param>
     /// <param name="numSamples">Samples per channel in this frame.</param>
     /// <param name="samples">Planar audio: <paramref name="samples" />[channel][sample].</param>
-    internal static void AssembleData(Span<byte> buffer, ReadOnlySpan<byte> video, int width, int height,
-        int channels, int numSamples, ReadOnlySpan<short[]> samples)
+    internal static void AssembleData(
+        Span<byte> buffer,
+        ReadOnlySpan<byte> video,
+        int width,
+        int height,
+        int channels,
+        int numSamples,
+        ReadOnlySpan<short[]> samples
+    )
     {
         if (buffer.Length != 12 + channels * numSamples * 2 + width * height * 2)
-            throw new ArgumentException("Buffer size does not match the frame geometry", nameof(buffer));
+            throw new ArgumentException(
+                "Buffer size does not match the frame geometry",
+                nameof(buffer)
+            );
 
         buffer[0] = (byte)'c';
         buffer[1] = (byte)'h';
@@ -80,8 +90,13 @@ internal sealed class AvHuffEncoder
     /// </summary>
     internal int EncodeData(ReadOnlySpan<byte> source, Span<byte> dest)
     {
-        if (source.Length < 12 || source[0] != (byte)'c' || source[1] != (byte)'h' || source[2] != (byte)'a' ||
-            source[3] != (byte)'v')
+        if (
+            source.Length < 12
+            || source[0] != (byte)'c'
+            || source[1] != (byte)'h'
+            || source[2] != (byte)'a'
+            || source[3] != (byte)'v'
+        )
             throw new InvalidDataException("AVHuff source does not start with a 'chav' header");
 
         uint metaSize = source[4];
@@ -114,9 +129,11 @@ internal sealed class AvHuffEncoder
 
             // advance past the audio data (tree size 0xFFFF means FLAC: no tree bytes stored)
             uint treeSize = ReadU16Be(dest[8..]);
-            if (treeSize != 0xFFFF) dstOffs += (int)treeSize;
+            if (treeSize != 0xFFFF)
+                dstOffs += (int)treeSize;
 
-            for (var ch = 0; ch < channels; ch++) dstOffs += ReadU16Be(dest[(10 + 2 * ch)..]);
+            for (var ch = 0; ch < channels; ch++)
+                dstOffs += ReadU16Be(dest[(10 + 2 * ch)..]);
         }
         else
         {
@@ -142,7 +159,13 @@ internal sealed class AvHuffEncoder
     ///     <c>flac_encoder::reset(dest, samples * 2)</c> (bytes beyond the cap are dropped but
     ///     still counted in the recorded stream size).
     /// </summary>
-    private static void EncodeAudio(ReadOnlySpan<byte> source, int channels, int samples, Span<byte> dest, int dstOffs)
+    private static void EncodeAudio(
+        ReadOnlySpan<byte> source,
+        int channels,
+        int samples,
+        Span<byte> dest,
+        int dstOffs
+    )
     {
         // set huffman tree size to 0xffff to indicate FLAC
         dest[8] = 0xFF;
@@ -187,7 +210,13 @@ internal sealed class AvHuffEncoder
     ///     bytes like MAME's <c>bitstream_out bitbuf(dest, width * height * 2)</c>: writes beyond
     ///     the cap are dropped but still counted in the returned length. Returns that length.
     /// </summary>
-    private int EncodeVideoLossless(ReadOnlySpan<byte> source, int width, int height, Span<byte> dest, int dstOffs)
+    private int EncodeVideoLossless(
+        ReadOnlySpan<byte> source,
+        int width,
+        int height,
+        Span<byte> dest,
+        int dstOffs
+    )
     {
         var videoRegionSize = width * height * 2;
 
@@ -210,7 +239,9 @@ internal sealed class AvHuffEncoder
         bitbuf.Flush();
 
         // encode the data using the trees (Y,Cb,Y,Cr per pixel pair)
-        int yPos = 0, cbPos = 0, crPos = 0;
+        int yPos = 0,
+            cbPos = 0,
+            crPos = 0;
         for (var sy = 0; sy < height; sy++)
         {
             _yContext.FlushRle();
@@ -226,7 +257,10 @@ internal sealed class AvHuffEncoder
         }
 
         var compLength = bitbuf.Flush();
-        var store = Math.Min(compLength, Math.Min(scratch.Length, Math.Max(dest.Length - dstOffs, 0)));
+        var store = Math.Min(
+            compLength,
+            Math.Min(scratch.Length, Math.Max(dest.Length - dstOffs, 0))
+        );
         scratch.AsSpan(0, store).CopyTo(dest[dstOffs..]);
         return compLength;
     }
@@ -306,10 +340,16 @@ internal sealed class AvHuffEncoder
         /// <param name="itemsPerRow">Items per row (pixels).</param>
         /// <param name="itemAdvance">Bytes between consecutive items.</param>
         /// <param name="rowCount">Number of rows.</param>
-        internal void RleAndHistoBitmap(ReadOnlySpan<byte> source, int start, int itemsPerRow, int itemAdvance,
-            int rowCount)
+        internal void RleAndHistoBitmap(
+            ReadOnlySpan<byte> source,
+            int start,
+            int itemsPerRow,
+            int itemAdvance,
+            int rowCount
+        )
         {
-            if (_rleBuffer.Length < itemsPerRow * rowCount) _rleBuffer = new ushort[itemsPerRow * rowCount];
+            if (_rleBuffer.Length < itemsPerRow * rowCount)
+                _rleBuffer = new ushort[itemsPerRow * rowCount];
 
             _rleLength = itemsPerRow * rowCount;
             var destPos = 0;
@@ -339,7 +379,8 @@ internal sealed class AvHuffEncoder
                         }
 
                         // if we hit the end of a row, maximize the count
-                        if (scan >= end && zeroCount >= 8) zeroCount = 100000;
+                        if (scan >= end && zeroCount >= 8)
+                            zeroCount = 100000;
 
                         // encode the maximal count we can
                         var rleCode = RleCountToCode(zeroCount);
@@ -382,7 +423,8 @@ internal sealed class AvHuffEncoder
 
             var data = _rleBuffer[rlePos++];
             _encoder.Encode(bitbuf, data);
-            if (data >= 0x100) _rleCount = CodeToRleCount(data) - 1;
+            if (data >= 0x100)
+                _rleCount = CodeToRleCount(data) - 1;
         }
 
         /// <summary>Writes the Huffman tree in RLE form (MAME's <c>export_tree_rle</c>).</summary>

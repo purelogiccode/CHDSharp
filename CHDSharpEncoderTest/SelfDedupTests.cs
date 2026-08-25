@@ -33,7 +33,8 @@ public class SelfDedupTests : IDisposable
     {
         // 256 hunks of identical content
         var source = new byte[4096 * 256];
-        for (var i = 0; i < 4096; i++) source[i] = (byte)(i & 0xFF);
+        for (var i = 0; i < 4096; i++)
+            source[i] = (byte)(i & 0xFF);
 
         for (var h = 1; h < 256; h++)
             Array.Copy(source, 0, source, h * 4096, 4096);
@@ -43,8 +44,10 @@ public class SelfDedupTests : IDisposable
         ChdEncoder.EncodeRaw(ms, chdPath);
 
         // only the first hunk is stored as data; 255 are SELF references
-        Assert.True(new FileInfo(chdPath).Length < 4096 * 16,
-            $"expected a deduplicated CHD, got {new FileInfo(chdPath).Length} bytes");
+        Assert.True(
+            new FileInfo(chdPath).Length < 4096 * 16,
+            $"expected a deduplicated CHD, got {new FileInfo(chdPath).Length} bytes"
+        );
 
         // the full image must still decode correctly
         var openErr = ChdFile.Open(chdPath, out var chd);
@@ -114,9 +117,20 @@ public class SelfDedupTests : IDisposable
         // 10 hunks: hunk 0 stored, hunks 1..9 SELF references to hunk 7 (max self = 7)
         var entries = new MapEntry[10];
         entries[0] = new MapEntry
-            { Compression = MapEntry.CompressionNone, CompLength = 4096, Offset = 124, Crc16 = 0xFFFF };
+        {
+            Compression = MapEntry.CompressionNone,
+            CompLength = 4096,
+            Offset = 124,
+            Crc16 = 0xFFFF,
+        };
         for (var i = 1; i < 10; i++)
-            entries[i] = new MapEntry { Compression = MapEntry.CompressionSelf, CompLength = 0, Offset = 7, Crc16 = 0 };
+            entries[i] = new MapEntry
+            {
+                Compression = MapEntry.CompressionSelf,
+                CompLength = 0,
+                Offset = 7,
+                Crc16 = 0,
+            };
 
         var compressed = MapCompressor.Compress(entries, 10, 4096, 512);
 
@@ -131,9 +145,20 @@ public class SelfDedupTests : IDisposable
         // (refHunk == lastSelf), so maxSelf stays 0 → selfbits = 0
         var entries = new MapEntry[4];
         entries[0] = new MapEntry
-            { Compression = MapEntry.CompressionType0, CompLength = 100, Offset = 124, Crc16 = 1 };
+        {
+            Compression = MapEntry.CompressionType0,
+            CompLength = 100,
+            Offset = 124,
+            Crc16 = 1,
+        };
         for (var i = 1; i < 4; i++)
-            entries[i] = new MapEntry { Compression = MapEntry.CompressionSelf, CompLength = 0, Offset = 0, Crc16 = 0 };
+            entries[i] = new MapEntry
+            {
+                Compression = MapEntry.CompressionSelf,
+                CompLength = 0,
+                Offset = 0,
+                Crc16 = 0,
+            };
 
         var compressed = MapCompressor.Compress(entries, 4, 4096, 512);
 
@@ -146,9 +171,26 @@ public class SelfDedupTests : IDisposable
         // the uncompressed-map CRC must include the raw 12-byte SELF entries
         var entries = new MapEntry[3];
         entries[0] = new MapEntry
-            { Compression = MapEntry.CompressionNone, CompLength = 4096, Offset = 124, Crc16 = 0x1234 };
-        entries[1] = new MapEntry { Compression = MapEntry.CompressionSelf, CompLength = 0, Offset = 0, Crc16 = 0 };
-        entries[2] = new MapEntry { Compression = MapEntry.CompressionSelf, CompLength = 0, Offset = 0, Crc16 = 0 };
+        {
+            Compression = MapEntry.CompressionNone,
+            CompLength = 4096,
+            Offset = 124,
+            Crc16 = 0x1234,
+        };
+        entries[1] = new MapEntry
+        {
+            Compression = MapEntry.CompressionSelf,
+            CompLength = 0,
+            Offset = 0,
+            Crc16 = 0,
+        };
+        entries[2] = new MapEntry
+        {
+            Compression = MapEntry.CompressionSelf,
+            CompLength = 0,
+            Offset = 0,
+            Crc16 = 0,
+        };
 
         var compressed = MapCompressor.Compress(entries, 3, 4096, 512);
 
@@ -166,13 +208,13 @@ public class SelfDedupTests : IDisposable
     {
         // two audio tracks of silence (all-zero sectors) → every hunk identical
         const string cue = """
-                           FILE "game.bin" BINARY
-                             TRACK 01 AUDIO
-                               INDEX 01 00:00:00
-                             TRACK 02 AUDIO
-                               INDEX 00 00:01:00
-                               INDEX 01 00:01:02
-                           """;
+            FILE "game.bin" BINARY
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 00 00:01:00
+                INDEX 01 00:01:02
+            """;
         var cuePath = Path.Combine(_dir, "silent.cue");
         File.WriteAllText(cuePath, cue);
         using (var fs = File.Create(Path.Combine(_dir, "game.bin")))
@@ -185,8 +227,10 @@ public class SelfDedupTests : IDisposable
         ChdEncoder.EncodeCd(cuePath, chdPath);
 
         // 9008 frames ≈ 22MB logical; dedup must collapse it to a handful of stored hunks
-        Assert.True(new FileInfo(chdPath).Length < 1024 * 1024,
-            $"expected a deduplicated CD CHD, got {new FileInfo(chdPath).Length} bytes");
+        Assert.True(
+            new FileInfo(chdPath).Length < 1024 * 1024,
+            $"expected a deduplicated CD CHD, got {new FileInfo(chdPath).Length} bytes"
+        );
 
         var openErr = ChdFile.Open(chdPath, out var chd);
         Assert.Equal(ChdError.Chderrnone, openErr);

@@ -80,5 +80,5 @@ public enum ZSTD_dParameter
      * Because they are not stable, it's necessary to define ZSTD_STATIC_LINKING_ONLY to access them.
      * note : never ever use experimentalParam? names directly
      */
-    ZSTD_d_experimentalParam5 = 1004
+    ZSTD_d_experimentalParam5 = 1004,
 }

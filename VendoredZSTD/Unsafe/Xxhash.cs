@@ -41,7 +41,8 @@ public static unsafe partial class Methods
 
     private static uint XXH_readLE32_align(void* ptr, XXH_alignment align)
     {
-        if (align == XXH_alignment.XXH_unaligned) return XXH_readLE32(ptr);
+        if (align == XXH_alignment.XXH_unaligned)
+            return XXH_readLE32(ptr);
 
         return BitConverter.IsLittleEndian
             ? *(uint*)ptr
@@ -145,12 +146,7 @@ public static unsafe partial class Methods
      * @param align Whether @p input is aligned.
      * @return The calculated hash.
      */
-    private static uint XXH32_endian_align(
-        byte* input,
-        nuint len,
-        uint seed,
-        XXH_alignment align
-    )
+    private static uint XXH32_endian_align(byte* input, nuint len, uint seed, XXH_alignment align)
     {
         uint h32;
         if (len >= 16)
@@ -230,7 +226,8 @@ public static unsafe partial class Methods
     /*! @ingroup xxh32_family */
     private static XXH_errorcode ZSTD_XXH32_update(XXH32_state_s* state, void* input, nuint len)
     {
-        if (input == null) return XXH_errorcode.XXH_OK;
+        if (input == null)
+            return XXH_errorcode.XXH_OK;
 
         {
             var p = (byte*)input;
@@ -302,12 +299,7 @@ public static unsafe partial class Methods
             h32 = state->v[2] + 0x165667B1U;
 
         h32 += state->total_len_32;
-        return XXH32_finalize(
-            h32,
-            (byte*)state->mem32,
-            state->memsize,
-            XXH_alignment.XXH_aligned
-        );
+        return XXH32_finalize(h32, (byte*)state->mem32, state->memsize, XXH_alignment.XXH_aligned);
     }
 
     /*!
@@ -398,8 +390,7 @@ public static unsafe partial class Methods
             var k1 = XXH64_round(0, XXH_readLE64_align(ptr, align));
             ptr += 8;
             h64 ^= k1;
-            h64 =
-                BitOperations.RotateLeft(h64, 27) * 0x9E3779B185EBCA87UL + 0x85EBCA77C2B2AE63UL;
+            h64 = BitOperations.RotateLeft(h64, 27) * 0x9E3779B185EBCA87UL + 0x85EBCA77C2B2AE63UL;
             len -= 8;
         }
 
@@ -407,8 +398,7 @@ public static unsafe partial class Methods
         {
             h64 ^= XXH_readLE32_align(ptr, align) * 0x9E3779B185EBCA87UL;
             ptr += 4;
-            h64 =
-                BitOperations.RotateLeft(h64, 23) * 0xC2B2AE3D27D4EB4FUL + 0x165667B19E3779F9UL;
+            h64 = BitOperations.RotateLeft(h64, 23) * 0xC2B2AE3D27D4EB4FUL + 0x165667B19E3779F9UL;
             len -= 4;
         }
 
@@ -422,12 +412,7 @@ public static unsafe partial class Methods
         return XXH64_avalanche(h64);
     }
 
-    private static ulong XXH64_endian_align(
-        byte* input,
-        nuint len,
-        ulong seed,
-        XXH_alignment align
-    )
+    private static ulong XXH64_endian_align(byte* input, nuint len, ulong seed, XXH_alignment align)
     {
         ulong h64;
         if (len >= 32)
@@ -508,7 +493,8 @@ public static unsafe partial class Methods
     /*! @ingroup xxh64_family */
     private static XXH_errorcode ZSTD_XXH64_update(XXH64_state_s* state, void* input, nuint len)
     {
-        if (input == null) return XXH_errorcode.XXH_OK;
+        if (input == null)
+            return XXH_errorcode.XXH_OK;
 
         {
             var p = (byte*)input;

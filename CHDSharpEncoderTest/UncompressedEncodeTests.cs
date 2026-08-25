@@ -17,7 +17,10 @@ public class UncompressedEncodeTests : IDisposable
 
     public UncompressedEncodeTests()
     {
-        _dir = Path.Combine(Path.GetTempPath(), "uncompressed_encode_tests_" + Guid.NewGuid().ToString("N"));
+        _dir = Path.Combine(
+            Path.GetTempPath(),
+            "uncompressed_encode_tests_" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(_dir);
     }
 
@@ -36,7 +39,8 @@ public class UncompressedEncodeTests : IDisposable
     [Fact]
     public void NoneCodec_ProducesChdmanIdenticalFile()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         // mixed corpus: random + all-zero + compressible hunks exercises the zero-skip path
         var source = new byte[4096 * 9];
@@ -59,8 +63,20 @@ public class UncompressedEncodeTests : IDisposable
         var oursPath = Path.Combine(_dir, "ours_none.chd");
         File.WriteAllBytes(srcPath, source);
 
-        var (exit, stdout, stderr) = ChdmanHelper.RunChdman("createraw", "-i", srcPath, "-o", chdmanPath,
-            "-c", "none", "-hs", "4096", "-us", "512", "-f");
+        var (exit, stdout, stderr) = ChdmanHelper.RunChdman(
+            "createraw",
+            "-i",
+            srcPath,
+            "-o",
+            chdmanPath,
+            "-c",
+            "none",
+            "-hs",
+            "4096",
+            "-us",
+            "512",
+            "-f"
+        );
         Assert.True(exit == 0, $"chdman createraw -c none failed (exit={exit})\n{stdout}{stderr}");
 
         using (var ms = new MemoryStream(source))
@@ -89,7 +105,10 @@ public class UncompressedEncodeTests : IDisposable
 
         // header: compressor slots all zero, hashes zero (nothing to verify)
         var raw = File.ReadAllBytes(chdPath);
-        Assert.True(raw.AsSpan(16, 16).IndexOfAnyExcept((byte)0) < 0, "compressor slots must be zero");
+        Assert.True(
+            raw.AsSpan(16, 16).IndexOfAnyExcept((byte)0) < 0,
+            "compressor slots must be zero"
+        );
 
         var openErr = ChdFile.Open(chdPath, out var chd);
         Assert.Equal(ChdError.Chderrnone, openErr);
@@ -163,20 +182,29 @@ public class UncompressedEncodeTests : IDisposable
         {
             Tag = MetadataWriter.TagFromString("GAME"),
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "Uncompressed"u8.ToArray().Append((byte)0).ToArray()
+            Payload = "Uncompressed"u8.ToArray().Append((byte)0).ToArray(),
         };
 
         var chdPath = Path.Combine(_dir, "meta_none.chd");
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, [CodecTags.None], new ChdEncodeOptions { Metadata = [meta] });
+            ChdEncoder.EncodeRaw(
+                ms,
+                chdPath,
+                4096,
+                512,
+                [CodecTags.None],
+                new ChdEncodeOptions { Metadata = [meta] }
+            );
         }
 
         var openErr = ChdFile.Open(chdPath, out var chd);
         Assert.Equal(ChdError.Chderrnone, openErr);
         using (chd)
         {
-            var copied = chd!.Metadata.SingleOrDefault(m => string.Equals(m.Tag, "GAME", StringComparison.Ordinal));
+            var copied = chd!.Metadata.SingleOrDefault(m =>
+                string.Equals(m.Tag, "GAME", StringComparison.Ordinal)
+            );
             Assert.NotNull(copied);
             Assert.Equal(meta.Payload, copied.Data);
 
@@ -207,8 +235,14 @@ public class UncompressedEncodeTests : IDisposable
 
         using (var ms = new MemoryStream(childData))
         {
-            ChdEncoder.EncodeRaw(ms, childPath, 4096, 512, [CodecTags.None],
-                new ChdEncodeOptions { ParentPath = parentPath });
+            ChdEncoder.EncodeRaw(
+                ms,
+                childPath,
+                4096,
+                512,
+                [CodecTags.None],
+                new ChdEncodeOptions { ParentPath = parentPath }
+            );
         }
 
         // the child header must carry the parent's SHA-1
@@ -236,13 +270,16 @@ public class UncompressedEncodeTests : IDisposable
     public void NoneCodec_EncodeCd_RoundTrips()
     {
         var cuePath = Path.Combine(_dir, "none.cue");
-        File.WriteAllText(cuePath, """
-                                   FILE "none.bin" BINARY
-                                     TRACK 01 MODE1/2352
-                                       INDEX 01 00:00:00
-                                     TRACK 02 AUDIO
-                                       INDEX 01 00:00:16
-                                   """);
+        File.WriteAllText(
+            cuePath,
+            """
+            FILE "none.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 00:00:16
+            """
+        );
         var bin = new byte[64 * CdConstants.MaxSectorData];
         var rng = new Random(36);
         rng.NextBytes(bin);
@@ -276,12 +313,26 @@ public class UncompressedEncodeTests : IDisposable
         var parallelPath = Path.Combine(_dir, "n8.chd");
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, singlePath, 4096, 512, [CodecTags.None], new ChdEncodeOptions { TaskCount = 1 });
+            ChdEncoder.EncodeRaw(
+                ms,
+                singlePath,
+                4096,
+                512,
+                [CodecTags.None],
+                new ChdEncodeOptions { TaskCount = 1 }
+            );
         }
 
         using (var ms = new MemoryStream(source))
         {
-            ChdEncoder.EncodeRaw(ms, parallelPath, 4096, 512, [CodecTags.None], new ChdEncodeOptions { TaskCount = 8 });
+            ChdEncoder.EncodeRaw(
+                ms,
+                parallelPath,
+                4096,
+                512,
+                [CodecTags.None],
+                new ChdEncodeOptions { TaskCount = 8 }
+            );
         }
 
         Assert.Equal(File.ReadAllBytes(singlePath), File.ReadAllBytes(parallelPath));
@@ -296,8 +347,14 @@ public class UncompressedEncodeTests : IDisposable
         var reports = new List<HunkProgress>();
         var chdPath = Path.Combine(_dir, "prog_none.chd");
         using var ms = new MemoryStream(source);
-        ChdEncoder.EncodeRaw(ms, chdPath, 4096, 512, [CodecTags.None],
-            new ChdEncodeOptions { HunkCompleted = reports.Add });
+        ChdEncoder.EncodeRaw(
+            ms,
+            chdPath,
+            4096,
+            512,
+            [CodecTags.None],
+            new ChdEncodeOptions { HunkCompleted = reports.Add }
+        );
 
         Assert.Equal(4, reports.Count);
         foreach (var r in reports)
@@ -310,13 +367,16 @@ public class UncompressedEncodeTests : IDisposable
     [Fact]
     public void NoneCodec_CombinedWithOtherCodecs_Throws()
     {
-        Assert.Throws<ArgumentException>(() => ChdCodecs.CreateAll([CodecTags.Zlib, CodecTags.None], 4096));
+        Assert.Throws<ArgumentException>(() =>
+            ChdCodecs.CreateAll([CodecTags.Zlib, CodecTags.None], 4096)
+        );
     }
 
     [Fact]
     public void NoneCodec_ChdmanVerify_AndExtractRaw()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         var source = new byte[4096 * 10];
         new Random(39).NextBytes(source);
@@ -334,15 +394,26 @@ public class UncompressedEncodeTests : IDisposable
         var (verifyExit, vOut, vErr) = ChdmanHelper.RunChdman("verify", "-i", chdPath);
         Assert.True(verifyExit == 0, $"chdman verify failed (exit={verifyExit})\n{vOut}{vErr}");
 
-        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman("extractraw", "-i", chdPath, "-o", extractPath, "-f");
-        Assert.True(extractExit == 0, $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}");
+        var (extractExit, eOut, eErr) = ChdmanHelper.RunChdman(
+            "extractraw",
+            "-i",
+            chdPath,
+            "-o",
+            extractPath,
+            "-f"
+        );
+        Assert.True(
+            extractExit == 0,
+            $"chdman extractraw failed (exit={extractExit})\n{eOut}{eErr}"
+        );
         Assert.Equal(source, File.ReadAllBytes(extractPath));
     }
 
     [Fact]
     public void NoneCodec_ChdmanInfo_ReportsUncompressed()
     {
-        if (ChdmanHelper.ChdmanPath == null) return;
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
 
         var source = new byte[4096 * 4];
         new Random(40).NextBytes(source);

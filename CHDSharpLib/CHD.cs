@@ -48,33 +48,60 @@ public static partial class Chd
         LoggerMessage.Define<uint>(LogLevel.Warning, new EventId(2), "Unknown version {Version}");
 
     private static readonly Action<ILogger, ChdError, Exception?> LogHeaderReadFailed =
-        LoggerMessage.Define<ChdError>(LogLevel.Warning, new EventId(12), "Header/map read failed: {Error}");
+        LoggerMessage.Define<ChdError>(
+            LogLevel.Warning,
+            new EventId(12),
+            "Header/map read failed: {Error}"
+        );
 
-    private static readonly Action<ILogger, Exception?> LogChildChdFound =
-        LoggerMessage.Define(LogLevel.Warning, new EventId(3), "Child CHD found, cannot be processed");
+    private static readonly Action<ILogger, Exception?> LogChildChdFound = LoggerMessage.Define(
+        LogLevel.Warning,
+        new EventId(3),
+        "Child CHD found, cannot be processed"
+    );
 
     private static readonly Action<ILogger, ulong, ulong, Exception?> LogBlockSizeMismatch =
-        LoggerMessage.Define<ulong, ulong>(LogLevel.Debug, new EventId(4), "{BlocksXSize} != {TotalBytes}");
+        LoggerMessage.Define<ulong, ulong>(
+            LogLevel.Debug,
+            new EventId(4),
+            "{BlocksXSize} != {TotalBytes}"
+        );
 
     private static readonly Action<ILogger, string, uint, string, Exception?> LogFileInfo =
-        LoggerMessage.Define<string, uint, string>(LogLevel.Information, new EventId(5),
-            "{Filename}, V:{Version} {Compression}");
+        LoggerMessage.Define<string, uint, string>(
+            LogLevel.Information,
+            new EventId(5),
+            "{Filename}, V:{Version} {Compression}"
+        );
 
     private static readonly Action<ILogger, ChdError, Exception?> LogDecompressFailed =
-        LoggerMessage.Define<ChdError>(LogLevel.Error, new EventId(6), "Data Decompress Failed: {Error}");
+        LoggerMessage.Define<ChdError>(
+            LogLevel.Error,
+            new EventId(6),
+            "Data Decompress Failed: {Error}"
+        );
 
-    private static readonly Action<ILogger, Exception?> LogValid =
-        LoggerMessage.Define(LogLevel.Information, new EventId(8), "Valid");
+    private static readonly Action<ILogger, Exception?> LogValid = LoggerMessage.Define(
+        LogLevel.Information,
+        new EventId(8),
+        "Valid"
+    );
 
     private static readonly Action<ILogger, long, Exception?> LogVerifyingPercent =
         LoggerMessage.Define<long>(LogLevel.Debug, new EventId(9), "Verifying: {Percent:N0}%");
 
-    private static readonly Action<ILogger, Exception?> LogVerifyingComplete =
-        LoggerMessage.Define(LogLevel.Debug, new EventId(10), "Verifying, 100% complete");
+    private static readonly Action<ILogger, Exception?> LogVerifyingComplete = LoggerMessage.Define(
+        LogLevel.Debug,
+        new EventId(10),
+        "Verifying, 100% complete"
+    );
 
     private static readonly Action<ILogger, string, int, int, uint, Exception?> LogArrayStats =
-        LoggerMessage.Define<string, int, int, uint>(LogLevel.Debug, new EventId(11),
-            "{Where}: Issued Arrays Total {Issued}, returned Arrays Total {Returned}, block size {BlockSize}");
+        LoggerMessage.Define<string, int, int, uint>(
+            LogLevel.Debug,
+            new EventId(11),
+            "{Where}: Issued Arrays Total {Issued}, returned Arrays Total {Returned}, block size {BlockSize}"
+        );
 
     private static volatile int _taskCount = 8;
 
@@ -107,7 +134,11 @@ public static partial class Chd
         set
         {
             if (value is < 1 or > 64)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "TaskCount must be between 1 and 64.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    value,
+                    "TaskCount must be between 1 and 64."
+                );
 
             _taskCount = value;
         }
@@ -140,11 +171,24 @@ public static partial class Chd
     ///         cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
     ///     instead.
     /// </remarks>
-    public static ChdResult CheckFile(Stream s, string filename, bool deepCheck,
-        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public static ChdResult CheckFile(
+        Stream s,
+        string filename,
+        bool deepCheck,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        var err = CheckFile(s, filename, deepCheck, out var ver, out var sha1, out var md5, progress,
-            cancellationToken);
+        var err = CheckFile(
+            s,
+            filename,
+            deepCheck,
+            out var ver,
+            out var sha1,
+            out var md5,
+            progress,
+            cancellationToken
+        );
         return new ChdResult(err, ver, sha1, md5);
     }
 
@@ -176,8 +220,12 @@ public static partial class Chd
     ///     Thrown when <paramref name="cancellationToken" />
     ///     is cancelled while hunks are being decompressed or hashed.
     /// </exception>
-    public static ChdResult CheckFileAndRepair(string filename, out bool repaired,
-        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public static ChdResult CheckFileAndRepair(
+        string filename,
+        out bool repaired,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         repaired = false;
         if (string.IsNullOrEmpty(filename) || !File.Exists(filename))
@@ -193,7 +241,15 @@ public static partial class Chd
         uint rawSha1Offset;
         uint? combinedSha1Offset;
 
-        using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 4096))
+        using (
+            var fs = new FileStream(
+                filename,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                128 * 4096
+            )
+        )
         {
             if (!CheckHeader(fs, out _, out var version))
                 return new ChdResult(ChdError.Chderrinvalidfile, null, null, null);
@@ -202,8 +258,17 @@ public static partial class Chd
             if (version < 3)
                 return new ChdResult(ChdError.Chderrnone, version, null, null);
 
-            var err = VerifyDeep(fs, version, progress, cancellationToken,
-                out ver, out headerSha1, out headerMd5, out computedRawSha1, out var decompressionOk);
+            var err = VerifyDeep(
+                fs,
+                version,
+                progress,
+                cancellationToken,
+                out ver,
+                out headerSha1,
+                out headerMd5,
+                out computedRawSha1,
+                out var decompressionOk
+            );
             if (err != ChdError.Chderrnone)
                 return new ChdResult(err, ver, headerSha1, headerMd5);
 
@@ -252,7 +317,8 @@ public static partial class Chd
                 return new ChdResult(ChdError.Chderrreaderror, ver, headerSha1, headerMd5);
             }
 
-            if (Util.ByteArrEquals(storedRaw, computedRawSha1)) needRaw = false;
+            if (Util.ByteArrEquals(storedRaw, computedRawSha1))
+                needRaw = false;
 
             if (needCombined)
             {
@@ -269,12 +335,21 @@ public static partial class Chd
                     combined = null;
                 }
 
-                if (combined != null && storedCombined != null && Util.ByteArrEquals(combined, storedCombined))
+                if (
+                    combined != null
+                    && storedCombined != null
+                    && Util.ByteArrEquals(combined, storedCombined)
+                )
                     needCombined = false;
             }
 
             if (!needRaw && !needCombined)
-                return new ChdResult(ChdError.Chderrnone, ver, storedCombined ?? computedRawSha1, headerMd5);
+                return new ChdResult(
+                    ChdError.Chderrnone,
+                    ver,
+                    storedCombined ?? computedRawSha1,
+                    headerMd5
+                );
         }
 
         // The read handle is closed above (using scope); the patch opens the file read-write,
@@ -285,7 +360,12 @@ public static partial class Chd
         // self-describing, and re-runnable). chdman's --fix uses the same in-place approach.
         try
         {
-            using var writeFs = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
+            using var writeFs = new FileStream(
+                filename,
+                FileMode.Open,
+                FileAccess.ReadWrite,
+                FileShare.Read
+            );
             if (needRaw)
             {
                 writeFs.Position = rawSha1Offset;
@@ -344,9 +424,16 @@ public static partial class Chd
     ///     is thrown if cancellation is requested while hunks are being decompressed or hashed.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
-    public static ChdError CheckFile(Stream s, string filename, bool deepCheck, out uint? chdVersion,
-        out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public static ChdError CheckFile(
+        Stream s,
+        string filename,
+        bool deepCheck,
+        out uint? chdVersion,
+        out byte[]? chdSha1,
+        out byte[]? chdMd5,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         chdSha1 = null;
         chdMd5 = null;
@@ -427,10 +514,16 @@ public static partial class Chd
                 return ChdError.Chderrnone;
 
             if (chd.Totalblocks * (ulong)chd.Blocksize != chd.Totalbytes)
-                LogBlockSizeMismatch(Log, chd.Totalblocks * (ulong)chd.Blocksize, chd.Totalbytes, null);
+                LogBlockSizeMismatch(
+                    Log,
+                    chd.Totalblocks * (ulong)chd.Blocksize,
+                    chd.Totalbytes,
+                    null
+                );
 
             var strComp = "";
-            foreach (var t in chd.Compression) strComp += $", {t}";
+            foreach (var t in chd.Compression)
+                strComp += $", {t}";
 
             LogFileInfo(Log, Path.GetFileName(filename), version, strComp, null);
 
@@ -456,7 +549,6 @@ public static partial class Chd
             return valid;
         }
 
-
         LogValid(Log, null);
         return ChdError.Chderrnone;
     }
@@ -467,10 +559,17 @@ public static partial class Chd
     ///     combined metadata SHA-1 — used by <see cref="CheckFileAndRepair" /> so that a corrupt
     ///     header hash field is reported as repairable instead of as a verification failure.
     /// </summary>
-    private static ChdError VerifyDeep(Stream s, uint version,
-        IProgress<ChdProgress>? progress, CancellationToken cancellationToken,
-        out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5,
-        out byte[]? computedRawSha1, out bool decompressionOk)
+    private static ChdError VerifyDeep(
+        Stream s,
+        uint version,
+        IProgress<ChdProgress>? progress,
+        CancellationToken cancellationToken,
+        out uint? chdVersion,
+        out byte[]? chdSha1,
+        out byte[]? chdMd5,
+        out byte[]? computedRawSha1,
+        out bool decompressionOk
+    )
     {
         chdVersion = null;
         chdSha1 = null;
@@ -507,7 +606,14 @@ public static partial class Chd
         var blocksToKeep = 1024 * 1024 * 512 / (int)chd.Blocksize;
         ChdBlockRead.KeepMostRepeatedBlocks(chd, blocksToKeep);
 
-        var err = DecompressDataParallel(s, chd, out computedRawSha1, progress, cancellationToken, false);
+        var err = DecompressDataParallel(
+            s,
+            chd,
+            out computedRawSha1,
+            progress,
+            cancellationToken,
+            false
+        );
         if (err != ChdError.Chderrnone)
             return err;
 
@@ -540,11 +646,22 @@ public static partial class Chd
     ///     parent does not match, and <see cref="ChdError.Chderrrequiresparent" /> when the CHD is a child
     ///     and no parent was supplied.
     /// </remarks>
-    public static ChdResult CheckFileWithParent(string filename, string? parentFilename,
-        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public static ChdResult CheckFileWithParent(
+        string filename,
+        string? parentFilename,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        var err = CheckFileWithParent(filename, parentFilename, out var ver, out var sha1, out var md5, progress,
-            cancellationToken);
+        var err = CheckFileWithParent(
+            filename,
+            parentFilename,
+            out var ver,
+            out var sha1,
+            out var md5,
+            progress,
+            cancellationToken
+        );
         return new ChdResult(err, ver, sha1, md5);
     }
 
@@ -570,9 +687,15 @@ public static partial class Chd
     ///     is thrown if cancellation is requested while hunks are being read.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
-    public static ChdError CheckFileWithParent(string filename, string? parentFilename,
-        out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public static ChdError CheckFileWithParent(
+        string filename,
+        string? parentFilename,
+        out uint? chdVersion,
+        out byte[]? chdSha1,
+        out byte[]? chdMd5,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         chdVersion = null;
         chdSha1 = null;
@@ -617,10 +740,18 @@ public static partial class Chd
                 {
                     var processed = (long)offset;
                     var currentHunk = processed / chd.HunkBytes;
-                    if (processed % chd.HunkBytes != 0) currentHunk++;
+                    if (processed % chd.HunkBytes != 0)
+                        currentHunk++;
 
-                    progress.Report(new ChdProgress(currentHunk, chd.HunkCount, processed, (long)chd.TotalBytes,
-                        sw!.Elapsed));
+                    progress.Report(
+                        new ChdProgress(
+                            currentHunk,
+                            chd.HunkCount,
+                            processed,
+                            (long)chd.TotalBytes,
+                            sw!.Elapsed
+                        )
+                    );
                 }
             }
 
@@ -628,9 +759,16 @@ public static partial class Chd
             md5Check?.TransformFinalBlock(tmp, 0, 0);
             sha1Check?.TransformFinalBlock(tmp, 0, 0);
 
-            var md5Mismatch = haveMd5 && md5Check?.Hash != null && !Util.ByteArrEquals(expectedMd5, md5Check.Hash);
-            var sha1Mismatch = haveSha1 && sha1Check?.Hash != null && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
-            if (md5Mismatch || sha1Mismatch) return ChdError.Chderrdecompressionerror;
+            var md5Mismatch =
+                haveMd5
+                && md5Check?.Hash != null
+                && !Util.ByteArrEquals(expectedMd5, md5Check.Hash);
+            var sha1Mismatch =
+                haveSha1
+                && sha1Check?.Hash != null
+                && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
+            if (md5Mismatch || sha1Mismatch)
+                return ChdError.Chderrdecompressionerror;
 
             return ChdError.Chderrnone;
         }
@@ -648,11 +786,22 @@ public static partial class Chd
     /// <param name="progress">An optional progress reporter, or <c>null</c>.</param>
     /// <param name="cancellationToken">A token to cancel verification.</param>
     /// <returns>A <see cref="ChdResult" /> with the verification result, CHD version, and header hashes.</returns>
-    public static ChdResult CheckFileWithParent(string filename, ParentResolver? parentResolver,
-        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default)
+    public static ChdResult CheckFileWithParent(
+        string filename,
+        ParentResolver? parentResolver,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        var err = CheckFileWithParent(filename, parentResolver, out var ver, out var sha1, out var md5, progress,
-            cancellationToken);
+        var err = CheckFileWithParent(
+            filename,
+            parentResolver,
+            out var ver,
+            out var sha1,
+            out var md5,
+            progress,
+            cancellationToken
+        );
         return new ChdResult(err, ver, sha1, md5);
     }
 
@@ -672,9 +821,15 @@ public static partial class Chd
     /// <param name="progress">An optional progress reporter, or <c>null</c>.</param>
     /// <param name="cancellationToken">A token to cancel verification.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
-    public static ChdError CheckFileWithParent(string filename, ParentResolver? parentResolver,
-        out uint? chdVersion, out byte[]? chdSha1, out byte[]? chdMd5, IProgress<ChdProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public static ChdError CheckFileWithParent(
+        string filename,
+        ParentResolver? parentResolver,
+        out uint? chdVersion,
+        out byte[]? chdSha1,
+        out byte[]? chdMd5,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         chdVersion = null;
         chdSha1 = null;
@@ -719,10 +874,18 @@ public static partial class Chd
                 {
                     var processed = (long)offset;
                     var currentHunk = processed / chd.HunkBytes;
-                    if (processed % chd.HunkBytes != 0) currentHunk++;
+                    if (processed % chd.HunkBytes != 0)
+                        currentHunk++;
 
-                    progress.Report(new ChdProgress(currentHunk, chd.HunkCount, processed, (long)chd.TotalBytes,
-                        sw!.Elapsed));
+                    progress.Report(
+                        new ChdProgress(
+                            currentHunk,
+                            chd.HunkCount,
+                            processed,
+                            (long)chd.TotalBytes,
+                            sw!.Elapsed
+                        )
+                    );
                 }
             }
 
@@ -730,9 +893,16 @@ public static partial class Chd
             md5Check?.TransformFinalBlock(tmp, 0, 0);
             sha1Check?.TransformFinalBlock(tmp, 0, 0);
 
-            var md5Mismatch = haveMd5 && md5Check?.Hash != null && !Util.ByteArrEquals(expectedMd5, md5Check.Hash);
-            var sha1Mismatch = haveSha1 && sha1Check?.Hash != null && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
-            if (md5Mismatch || sha1Mismatch) return ChdError.Chderrdecompressionerror;
+            var md5Mismatch =
+                haveMd5
+                && md5Check?.Hash != null
+                && !Util.ByteArrEquals(expectedMd5, md5Check.Hash);
+            var sha1Mismatch =
+                haveSha1
+                && sha1Check?.Hash != null
+                && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
+            if (md5Mismatch || sha1Mismatch)
+                return ChdError.Chderrdecompressionerror;
 
             return ChdError.Chderrnone;
         }
@@ -780,7 +950,8 @@ public static partial class Chd
     {
         classification = null;
         var err = ChdFile.Open(filename, out var chd);
-        if (err != ChdError.Chderrnone || chd == null) return err;
+        if (err != ChdError.Chderrnone || chd == null)
+            return err;
 
         using (chd)
         {
@@ -877,7 +1048,13 @@ public static partial class Chd
         FileStream fs;
         try
         {
-            fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 4096);
+            fs = new FileStream(
+                filename,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                128 * 4096
+            );
         }
         catch (FileNotFoundException)
         {
@@ -942,11 +1119,21 @@ public static partial class Chd
         {
             switch (version)
             {
-                case 1: valid = ChdHeaders.ReadHeaderV1(stream, out chd); break;
-                case 2: valid = ChdHeaders.ReadHeaderV2(stream, out chd); break;
-                case 3: valid = ChdHeaders.ReadHeaderV3(stream, out chd); break;
-                case 4: valid = ChdHeaders.ReadHeaderV4(stream, out chd); break;
-                case 5: valid = ChdHeaders.ReadHeaderV5(stream, out chd); break;
+                case 1:
+                    valid = ChdHeaders.ReadHeaderV1(stream, out chd);
+                    break;
+                case 2:
+                    valid = ChdHeaders.ReadHeaderV2(stream, out chd);
+                    break;
+                case 3:
+                    valid = ChdHeaders.ReadHeaderV3(stream, out chd);
+                    break;
+                case 4:
+                    valid = ChdHeaders.ReadHeaderV4(stream, out chd);
+                    break;
+                case 5:
+                    valid = ChdHeaders.ReadHeaderV5(stream, out chd);
+                    break;
                 default:
                     LogUnknownVersion(Log, version, null);
                     return ChdError.Chderrunsupportedversion;
@@ -1016,7 +1203,7 @@ public static partial class Chd
             ObsoleteCylinders = chd.ObsoleteCylinders,
             ObsoleteHeads = chd.ObsoleteHeads,
             ObsoleteSectors = chd.ObsoleteSectors,
-            ObsoleteHunksize = chd.ObsoleteHunksize
+            ObsoleteHunksize = chd.ObsoleteHunksize,
         };
     }
 
@@ -1033,14 +1220,18 @@ public static partial class Chd
         if (version < 3 && chd.ObsoleteHunksize > 0)
         {
             var bps = chd.Blocksize / chd.ObsoleteHunksize;
-            var gddd = $"CYLS:{chd.ObsoleteCylinders},HEADS:{chd.ObsoleteHeads},SECS:{chd.ObsoleteSectors},BPS:{bps}";
+            var gddd =
+                $"CYLS:{chd.ObsoleteCylinders},HEADS:{chd.ObsoleteHeads},SECS:{chd.ObsoleteSectors},BPS:{bps}";
             metadata.Add(new ChdMetadataEntry("GDDD", Encoding.ASCII.GetBytes(gddd)));
         }
         else if (chd.Metaoffset != 0)
         {
             try
             {
-                if (ChdMetaData.ReadMetaDataEntries(stream, chd, out var entries) == ChdError.Chderrnone)
+                if (
+                    ChdMetaData.ReadMetaDataEntries(stream, chd, out var entries)
+                    == ChdError.Chderrnone
+                )
                     metadata.AddRange(entries);
             }
             catch (Exception)
@@ -1049,9 +1240,10 @@ public static partial class Chd
             }
         }
 
-        return metadata.Count > 0 ? ChdFile.GuessUnitBytesFromMetadata(metadata, chd) : chd.Blocksize;
+        return metadata.Count > 0
+            ? ChdFile.GuessUnitBytesFromMetadata(metadata, chd)
+            : chd.Blocksize;
     }
-
 
     /// <summary>
     ///     Reads and decompresses all hunk data from the CHD file in parallel, validating CRC and building SHA1/MD5
@@ -1080,9 +1272,14 @@ public static partial class Chd
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-    private static ChdError DecompressDataParallel(Stream file, ChdHeader chd, out byte[]? computedRawSha1,
-        IProgress<ChdProgress>? progress = null, CancellationToken cancellationToken = default,
-        bool verifyHashes = true)
+    private static ChdError DecompressDataParallel(
+        Stream file,
+        ChdHeader chd,
+        out byte[]? computedRawSha1,
+        IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default,
+        bool verifyHashes = true
+    )
     {
         computedRawSha1 = null;
 
@@ -1112,174 +1309,213 @@ public static partial class Chd
             var blocksToKeep = 1024 * 1024 * 512 / (int)chd.Blocksize;
             var aheadLock = new SemaphoreSlim(blocksToKeep, blocksToKeep);
 
-            var producerThread = Task.Factory.StartNew(() =>
-            {
-                try
+            var producerThread = Task.Factory.StartNew(
+                () =>
                 {
-                    var blockPercent = chd.Totalblocks / 100;
-                    if (blockPercent == 0) blockPercent = 1;
-
-                    for (var block = 0; block < chd.Totalblocks; block++)
+                    try
                     {
-                        if (ct.IsCancellationRequested)
-                            break;
+                        var blockPercent = chd.Totalblocks / 100;
+                        if (blockPercent == 0)
+                            blockPercent = 1;
 
-                        /* progress */
-                        if (block % blockPercent == 0)
-                            LogVerifyingPercent(Log, (long)block * 100 / chd.Totalblocks, null);
-
-                        var mapEntry = chd.Map[block];
-
-                        if (mapEntry.Length > 0)
+                        for (var block = 0; block < chd.Totalblocks; block++)
                         {
-                            // The compressed length is attacker-controlled data from the hunk map.
-                            // Reject any hunk claiming more than the cap before reading/allocating,
-                            // mirroring the ReadHunk bounds check. Break (not return) so the sentinel
-                            // values that terminate the decompression workers are still enqueued below;
-                            // the cancelled token additionally unblocks any in-flight Wait/Take.
-                            if (mapEntry.Length > chd.MaxCompressedBlockCap)
-                            {
-                                Log.LogWarning("Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}", block,
-                                    mapEntry.Length, chd.MaxCompressedBlockCap);
-                                ts.Cancel();
-                                Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvaliddata,
-                                    (long)ChdError.Chderrnone);
-
+                            if (ct.IsCancellationRequested)
                                 break;
+
+                            /* progress */
+                            if (block % blockPercent == 0)
+                                LogVerifyingPercent(Log, (long)block * 100 / chd.Totalblocks, null);
+
+                            var mapEntry = chd.Map[block];
+
+                            if (mapEntry.Length > 0)
+                            {
+                                // The compressed length is attacker-controlled data from the hunk map.
+                                // Reject any hunk claiming more than the cap before reading/allocating,
+                                // mirroring the ReadHunk bounds check. Break (not return) so the sentinel
+                                // values that terminate the decompression workers are still enqueued below;
+                                // the cancelled token additionally unblocks any in-flight Wait/Take.
+                                if (mapEntry.Length > chd.MaxCompressedBlockCap)
+                                {
+                                    Log.LogWarning(
+                                        "Hunk {HunkNumber} compressed length {Length} exceeds cap {Cap}",
+                                        block,
+                                        mapEntry.Length,
+                                        chd.MaxCompressedBlockCap
+                                    );
+                                    ts.Cancel();
+                                    Interlocked.CompareExchange(
+                                        ref errMaster.Value,
+                                        (long)ChdError.Chderrinvaliddata,
+                                        (long)ChdError.Chderrnone
+                                    );
+
+                                    break;
+                                }
+
+                                if (file.Position != (long)mapEntry.Offset)
+                                    file.Seek((long)mapEntry.Offset, SeekOrigin.Begin);
+
+                                mapEntry.BuffIn = arrPoolIn.Rent();
+                                file.ReadExactly(mapEntry.BuffIn, 0, (int)mapEntry.Length);
                             }
 
-                            if (file.Position != (long)mapEntry.Offset)
-                                file.Seek((long)mapEntry.Offset, SeekOrigin.Begin);
-
-                            mapEntry.BuffIn = arrPoolIn.Rent();
-                            file.ReadExactly(mapEntry.BuffIn, 0, (int)mapEntry.Length);
+                            blocksToDecompress.Add(block, ct);
                         }
 
-                        blocksToDecompress.Add(block, ct);
+                        // this must be done to tell all the decompression threads to stop working and return.
+                        for (var i = 0; i < taskCount; i++)
+                            blocksToDecompress.Add(-1, ct);
                     }
-
-                    // this must be done to tell all the decompression threads to stop working and return.
-                    for (var i = 0; i < taskCount; i++)
-                        blocksToDecompress.Add(-1, ct);
-                }
-                catch (OperationCanceledException)
-                {
-                }
-                catch (Exception)
-                {
-                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrinvalidfile,
-                        (long)ChdError.Chderrnone);
-                    ts.Cancel();
-                }
-            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    catch (OperationCanceledException) { }
+                    catch (Exception)
+                    {
+                        Interlocked.CompareExchange(
+                            ref errMaster.Value,
+                            (long)ChdError.Chderrinvalidfile,
+                            (long)ChdError.Chderrnone
+                        );
+                        ts.Cancel();
+                    }
+                },
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
             allTasks.Add(producerThread);
 
             for (var i = 0; i < taskCount; i++)
             {
-                var decompressionThread = Task.Factory.StartNew(() =>
-                {
-                    try
+                var decompressionThread = Task.Factory.StartNew(
+                    () =>
                     {
-                        var codec = new ChdCodecState();
-                        while (true)
+                        try
                         {
-                            aheadLock.Wait(ct);
-                            var block = blocksToDecompress.Take(ct);
-                            if (block == -1)
-                                return;
-
-                            var mapEntry = chd.Map[block];
-                            var outBuf = arrPoolOut.Rent();
-                            mapEntry.BuffOut = outBuf;
-                            var err = ChdBlockRead.ReadBlock(mapEntry, arrPoolCache, chd.ChdReader, codec, outBuf,
-                                (int)chd.Blocksize);
-                            if (err != ChdError.Chderrnone)
+                            var codec = new ChdCodecState();
+                            while (true)
                             {
-                                arrPoolOut.Return(outBuf);
-                                mapEntry.BuffOut = null;
-                                ts.Cancel();
-                                Interlocked.CompareExchange(ref errMaster.Value, (long)err, (long)ChdError.Chderrnone);
-                                return;
-                            }
+                                aheadLock.Wait(ct);
+                                var block = blocksToDecompress.Take(ct);
+                                if (block == -1)
+                                    return;
 
-                            blocksToHash.Add(block, ct);
+                                var mapEntry = chd.Map[block];
+                                var outBuf = arrPoolOut.Rent();
+                                mapEntry.BuffOut = outBuf;
+                                var err = ChdBlockRead.ReadBlock(
+                                    mapEntry,
+                                    arrPoolCache,
+                                    chd.ChdReader,
+                                    codec,
+                                    outBuf,
+                                    (int)chd.Blocksize
+                                );
+                                if (err != ChdError.Chderrnone)
+                                {
+                                    arrPoolOut.Return(outBuf);
+                                    mapEntry.BuffOut = null;
+                                    ts.Cancel();
+                                    Interlocked.CompareExchange(
+                                        ref errMaster.Value,
+                                        (long)err,
+                                        (long)ChdError.Chderrnone
+                                    );
+                                    return;
+                                }
 
-                            if (mapEntry.Length > 0)
-                            {
-                                arrPoolIn.Return(mapEntry.BuffIn!);
-                                mapEntry.BuffIn = null;
+                                blocksToHash.Add(block, ct);
+
+                                if (mapEntry.Length > 0)
+                                {
+                                    arrPoolIn.Return(mapEntry.BuffIn!);
+                                    mapEntry.BuffIn = null;
+                                }
                             }
                         }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                    }
-                    catch (Exception)
-                    {
-                        Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror,
-                            (long)ChdError.Chderrnone);
-                        ts.Cancel();
-                    }
-                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                        catch (OperationCanceledException) { }
+                        catch (Exception)
+                        {
+                            Interlocked.CompareExchange(
+                                ref errMaster.Value,
+                                (long)ChdError.Chderrdecompressionerror,
+                                (long)ChdError.Chderrnone
+                            );
+                            ts.Cancel();
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default
+                );
 
                 allTasks.Add(decompressionThread);
             }
 
             var sizetoGo = chd.Totalbytes;
             var proc = 0;
-            var hashingThread = Task.Factory.StartNew(() =>
-            {
-                try
+            var hashingThread = Task.Factory.StartNew(
+                () =>
                 {
-                    while (true)
+                    try
                     {
-                        var item = blocksToHash.Take(ct);
-
-                        chd.Map[item].Processed = true;
-                        while (chd.Map[proc].Processed)
+                        while (true)
                         {
-                            var sizenext = sizetoGo > chd.Blocksize ? (int)chd.Blocksize : (int)sizetoGo;
+                            var item = blocksToHash.Take(ct);
 
-                            var mapEntry = chd.Map[proc];
-                            var outBuf = mapEntry.BuffOut!;
-                            md5Check?.TransformBlock(outBuf, 0, sizenext, null, 0);
-                            sha1Check?.TransformBlock(outBuf, 0, sizenext, null, 0);
+                            chd.Map[item].Processed = true;
+                            while (chd.Map[proc].Processed)
+                            {
+                                var sizenext =
+                                    sizetoGo > chd.Blocksize ? (int)chd.Blocksize : (int)sizetoGo;
 
-                            arrPoolOut.Return(outBuf);
-                            mapEntry.BuffOut = null;
-                            aheadLock.Release();
+                                var mapEntry = chd.Map[proc];
+                                var outBuf = mapEntry.BuffOut!;
+                                md5Check?.TransformBlock(outBuf, 0, sizenext, null, 0);
+                                sha1Check?.TransformBlock(outBuf, 0, sizenext, null, 0);
 
-                            /* prepare for the next block */
-                            sizetoGo -= (ulong)sizenext;
+                                arrPoolOut.Return(outBuf);
+                                mapEntry.BuffOut = null;
+                                aheadLock.Release();
 
-                            proc++;
-                            if (progress != null)
-                                progress.Report(new ChdProgress(
-                                    proc,
-                                    chd.Totalblocks,
-                                    (long)(chd.Totalbytes - sizetoGo),
-                                    (long)chd.Totalbytes,
-                                    sw!.Elapsed));
+                                /* prepare for the next block */
+                                sizetoGo -= (ulong)sizenext;
 
-                            if (proc == chd.Totalblocks)
-                                return;
+                                proc++;
+                                if (progress != null)
+                                    progress.Report(
+                                        new ChdProgress(
+                                            proc,
+                                            chd.Totalblocks,
+                                            (long)(chd.Totalbytes - sizetoGo),
+                                            (long)chd.Totalbytes,
+                                            sw!.Elapsed
+                                        )
+                                    );
+
+                                if (proc == chd.Totalblocks)
+                                    return;
+                            }
                         }
                     }
-                }
-                catch (OperationCanceledException)
-                {
-                }
-                catch (Exception)
-                {
-                    Interlocked.CompareExchange(ref errMaster.Value, (long)ChdError.Chderrdecompressionerror,
-                        (long)ChdError.Chderrnone);
-                    ts.Cancel();
-                }
-            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    catch (OperationCanceledException) { }
+                    catch (Exception)
+                    {
+                        Interlocked.CompareExchange(
+                            ref errMaster.Value,
+                            (long)ChdError.Chderrdecompressionerror,
+                            (long)ChdError.Chderrnone
+                        );
+                        ts.Cancel();
+                    }
+                },
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
             allTasks.Add(hashingThread);
 
             Task.WaitAll(allTasks.ToArray());
-
 
             LogVerifyingComplete(Log, null);
 
@@ -1288,7 +1524,14 @@ public static partial class Chd
             arrPoolOut.ReadStats(out issuedArraysTotal, out returnedArraysTotal);
             LogArrayStats(Log, "Out", issuedArraysTotal, returnedArraysTotal, chd.Blocksize, null);
             arrPoolCache.ReadStats(out issuedArraysTotal, out returnedArraysTotal);
-            LogArrayStats(Log, "Cache", issuedArraysTotal, returnedArraysTotal, chd.Blocksize, null);
+            LogArrayStats(
+                Log,
+                "Cache",
+                issuedArraysTotal,
+                returnedArraysTotal,
+                chd.Blocksize,
+                null
+            );
 
             if (Interlocked.Read(ref errMaster.Value) != (long)ChdError.Chderrnone)
                 return (ChdError)Interlocked.Read(ref errMaster.Value);
@@ -1308,11 +1551,19 @@ public static partial class Chd
                 return ChdError.Chderrnone;
 
             // here it is now using the rawsha1 value from the header to validate the raw binary data.
-            if (!Util.IsAllZeroArray(chd.Md5) && computedMd5 is not null && !Util.ByteArrEquals(chd.Md5, computedMd5))
+            if (
+                !Util.IsAllZeroArray(chd.Md5)
+                && computedMd5 is not null
+                && !Util.ByteArrEquals(chd.Md5, computedMd5)
+            )
                 return ChdError.Chderrdecompressionerror;
 
-            if (!Util.IsAllZeroArray(chd.Rawsha1) && computedRawSha1 is not null &&
-                !Util.ByteArrEquals(chd.Rawsha1, computedRawSha1)) return ChdError.Chderrdecompressionerror;
+            if (
+                !Util.IsAllZeroArray(chd.Rawsha1)
+                && computedRawSha1 is not null
+                && !Util.ByteArrEquals(chd.Rawsha1, computedRawSha1)
+            )
+                return ChdError.Chderrdecompressionerror;
 
             return ChdError.Chderrnone;
         }

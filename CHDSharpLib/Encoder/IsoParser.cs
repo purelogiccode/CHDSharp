@@ -34,7 +34,7 @@ public class IsoParser
             SubType = CdSubType.None,
             SubSize = 0,
             PgSub = CdSubType.None,
-            Swap = false
+            Swap = false,
         };
 
         if (size % 2048 == 0)
@@ -43,7 +43,9 @@ public class IsoParser
             track.DataSize = 2048;
             var frames = size / 2048;
             if (frames > int.MaxValue)
-                throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+                throw new InvalidDataException(
+                    $"ISO frame count ({frames}) exceeds the maximum supported value"
+                );
 
             track.Frames = (int)frames;
         }
@@ -54,7 +56,9 @@ public class IsoParser
             track.DataSize = 2336;
             var frames = size / 2336;
             if (frames > int.MaxValue)
-                throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+                throw new InvalidDataException(
+                    $"ISO frame count ({frames}) exceeds the maximum supported value"
+                );
 
             track.Frames = (int)frames;
         }
@@ -65,14 +69,17 @@ public class IsoParser
             track.DataSize = 2352;
             var frames = size / 2352;
             if (frames > int.MaxValue)
-                throw new InvalidDataException($"ISO frame count ({frames}) exceeds the maximum supported value");
+                throw new InvalidDataException(
+                    $"ISO frame count ({frames}) exceeds the maximum supported value"
+                );
 
             track.Frames = (int)frames;
         }
         else
         {
             throw new InvalidDataException(
-                $"Unrecognized ISO sector size ({size} bytes is not a multiple of 2048, 2336 or 2352)");
+                $"Unrecognized ISO sector size ({size} bytes is not a multiple of 2048, 2336 or 2352)"
+            );
         }
 
         var toc = new CdToc();

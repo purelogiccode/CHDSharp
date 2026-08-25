@@ -10,7 +10,13 @@ namespace VendoredZLib.Inflate;
 
 internal static partial class Inflater
 {
-    private static void InflateFast(ref ZStream strm, uint start, ref byte window, ref Code lcode, ref Code dcode)
+    private static void InflateFast(
+        ref ZStream strm,
+        uint start,
+        ref byte window,
+        ref Code lcode,
+        ref Code dcode
+    )
     {
         var state = strm.InflateState;
         var last = strm.NextInput + (strm.AvailIn - 5); // have enough input while in < last
@@ -27,15 +33,15 @@ internal static partial class Inflater
 
         ref var @in = ref
 #if NET7_0_OR_GREATER
-            Unsafe.Add(ref strm.InputPtr, strm.NextInput);
+        Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
-            MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
+        MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
         ref var @out = ref
 #if NET7_0_OR_GREATER
-            Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
+        Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
 #else
-            MemoryMarshal.GetReference(strm.Output2.Slice((int)strm.NextOutput));
+        MemoryMarshal.GetReference(strm.Output2.Slice((int)strm.NextOutput));
 #endif
 
         // decode literals and length/distances until end-of-block or not enough input data or output space
@@ -67,9 +73,11 @@ internal static partial class Inflater
             op = here.op;
             if (op == 0) // literal
             {
-                Trace.Tracevv(here.val is >= 0x20 and < 0x7f
-                    ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n"
-                    : $"inflate:         literal 0x{here.val:X2}\n");
+                Trace.Tracevv(
+                    here.val is >= 0x20 and < 0x7f
+                        ? $"inflate:         literal '{Convert.ToChar(here.val)}'\n"
+                        : $"inflate:         literal 0x{here.val:X2}\n"
+                );
                 @out = (byte)here.val;
                 @out = ref Unsafe.Add(ref @out, 1U);
                 strm.NextOutput++;
@@ -329,8 +337,10 @@ internal static partial class Inflater
         hold &= (1U << (int)bits) - 1;
 
         // update state and return
-        strm.AvailIn = strm.NextInput < last ? 5 + (last - strm.NextInput) : 5 - (strm.NextInput - last);
-        strm.AvailOut = strm.NextOutput < end ? 257 + (end - strm.NextOutput) : 257 - (strm.NextOutput - end);
+        strm.AvailIn =
+            strm.NextInput < last ? 5 + (last - strm.NextInput) : 5 - (strm.NextInput - last);
+        strm.AvailOut =
+            strm.NextOutput < end ? 257 + (end - strm.NextOutput) : 257 - (strm.NextOutput - end);
 
         state.Hold = hold;
         state.Bits = bits;

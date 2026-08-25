@@ -33,11 +33,13 @@ internal static class Crc16
         }
 
         SubstractTable[0, Gf2Dim - 1] = ReversePolynomial;
-        for (var n = 1; n < Gf2Dim; n++) SubstractTable[0, n - 1] = (ushort)(1 << n);
+        for (var n = 1; n < Gf2Dim; n++)
+            SubstractTable[0, n - 1] = (ushort)(1 << n);
 
         fixed (ushort* st = &SubstractTable[0, 0])
         {
-            for (var i = 1; i < Gf2Dim; i++) gf2_matrix_square(st + i * Gf2Dim, st + (i - 1) * Gf2Dim);
+            for (var i = 1; i < Gf2Dim; i++)
+                gf2_matrix_square(st + i * Gf2Dim, st + (i - 1) * Gf2Dim);
         }
     }
 
@@ -69,7 +71,8 @@ internal static class Crc16
     {
         fixed (ushort* t = Table)
         {
-            for (var i = count; i > 0; i--) crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ *bytes++]);
+            for (var i = count; i > 0; i--)
+                crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ *bytes++]);
         }
 
         return crc;
@@ -79,27 +82,29 @@ internal static class Crc16
     {
         var vec = uvec << 16;
         return (ushort)(
-            (*mat++ & ((vec << 15) >> 31)) ^
-            (*mat++ & ((vec << 14) >> 31)) ^
-            (*mat++ & ((vec << 13) >> 31)) ^
-            (*mat++ & ((vec << 12) >> 31)) ^
-            (*mat++ & ((vec << 11) >> 31)) ^
-            (*mat++ & ((vec << 10) >> 31)) ^
-            (*mat++ & ((vec << 09) >> 31)) ^
-            (*mat++ & ((vec << 08) >> 31)) ^
-            (*mat++ & ((vec << 07) >> 31)) ^
-            (*mat++ & ((vec << 06) >> 31)) ^
-            (*mat++ & ((vec << 05) >> 31)) ^
-            (*mat++ & ((vec << 04) >> 31)) ^
-            (*mat++ & ((vec << 03) >> 31)) ^
-            (*mat++ & ((vec << 02) >> 31)) ^
-            (*mat++ & ((vec << 01) >> 31)) ^
-            (*mat & (vec >> 31)));
+            (*mat++ & ((vec << 15) >> 31))
+            ^ (*mat++ & ((vec << 14) >> 31))
+            ^ (*mat++ & ((vec << 13) >> 31))
+            ^ (*mat++ & ((vec << 12) >> 31))
+            ^ (*mat++ & ((vec << 11) >> 31))
+            ^ (*mat++ & ((vec << 10) >> 31))
+            ^ (*mat++ & ((vec << 09) >> 31))
+            ^ (*mat++ & ((vec << 08) >> 31))
+            ^ (*mat++ & ((vec << 07) >> 31))
+            ^ (*mat++ & ((vec << 06) >> 31))
+            ^ (*mat++ & ((vec << 05) >> 31))
+            ^ (*mat++ & ((vec << 04) >> 31))
+            ^ (*mat++ & ((vec << 03) >> 31))
+            ^ (*mat++ & ((vec << 02) >> 31))
+            ^ (*mat++ & ((vec << 01) >> 31))
+            ^ (*mat & (vec >> 31))
+        );
     }
 
     private static unsafe void gf2_matrix_square(ushort* square, ushort* mat)
     {
-        for (var n = 0; n < Gf2Dim; n++) square[n] = gf2_matrix_times(mat, mat[n]);
+        for (var n = 0; n < Gf2Dim; n++)
+            square[n] = gf2_matrix_times(mat, mat[n]);
     }
 
     /// <summary>
@@ -141,7 +146,8 @@ internal static class Crc16
             do
             {
                 /* apply zeros operator for this bit of len2 */
-                if ((len2 & 1) != 0) crc1 = gf2_matrix_times(st + Gf2Dim * n, crc1);
+                if ((len2 & 1) != 0)
+                    crc1 = gf2_matrix_times(st + Gf2Dim * n, crc1);
 
                 len2 >>= 1;
                 n = (n + 1) & (Gf2Dim - 1);

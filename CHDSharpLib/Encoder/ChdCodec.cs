@@ -75,7 +75,7 @@ public static class CodecTags
             "cdfl" => Cdfl,
             "avhu" => Avhu,
             "none" => None,
-            _ => throw new ArgumentException($"Unknown codec [{name}]")
+            _ => throw new ArgumentException($"Unknown codec [{name}]"),
         };
     }
 }
@@ -109,9 +109,7 @@ public sealed class ZstdCodec : IChdCodec
     private readonly Compressor _compressor = new(Compressor.MaxCompressionLevel);
 
     /// <summary>Creates the codec.</summary>
-    public ZstdCodec()
-    {
-    }
+    public ZstdCodec() { }
 
     /// <inheritdoc />
     public uint Tag => CodecTags.Zstd;
@@ -121,9 +119,7 @@ public sealed class ZstdCodec : IChdCodec
     {
         var dest = new byte[Compressor.GetCompressBound(data.Length)];
         var written = _compressor.Wrap(data, dest, 0);
-        return written >= 0 && written < data.Length
-            ? dest.AsSpan(0, written).ToArray()
-            : null;
+        return written >= 0 && written < data.Length ? dest.AsSpan(0, written).ToArray() : null;
     }
 }
 
@@ -161,7 +157,7 @@ public sealed class LzmaCodec : IChdCodec
                 CoderPropId.Algorithm,
                 CoderPropId.NumFastBytes,
                 CoderPropId.MatchFinder,
-                CoderPropId.EndMarker
+                CoderPropId.EndMarker,
             ],
             [
                 (int)hunkBytes,
@@ -171,8 +167,9 @@ public sealed class LzmaCodec : IChdCodec
                 1, // normal algorithm (fast mode off, as chdman's level-8 profile)
                 64, // fast bytes (chdman's level-8 profile; 32 was the old default)
                 "bt4", // binary-tree 4 match finder
-                false // no end marker; CHD tracks the hunk size in the map entry
-            ]);
+                false, // no end marker; CHD tracks the hunk size in the map entry
+            ]
+        );
         _ms = new MemoryStream((int)hunkBytes / 2);
     }
 
@@ -202,7 +199,8 @@ public sealed class LzmaCodec : IChdCodec
 public static class ChdCodecs
 {
     /// <summary>Comma-separated list of codec names the encoder can actually compress with.</summary>
-    public const string SupportedCodecNames = "zlib, zstd, lzma, huff, flac, cdzl, cdlz, cdzs, cdfl, avhu, none";
+    public const string SupportedCodecNames =
+        "zlib, zstd, lzma, huff, flac, cdzl, cdlz, cdzs, cdfl, avhu, none";
 
     /// <summary>
     ///     Creates one codec instance per tag, in order (up to 4, per the CHD header).
@@ -226,10 +224,14 @@ public static class ChdCodecs
         {
             case 0:
                 throw new ArgumentException(
-                    "At least one codec is required; use 'zlib', 'zstd', 'lzma', 'cdfl' or 'none'", nameof(codecTags));
+                    "At least one codec is required; use 'zlib', 'zstd', 'lzma', 'cdfl' or 'none'",
+                    nameof(codecTags)
+                );
             case > 4:
-                throw new ArgumentException($"At most 4 codecs are supported, got {codecTags.Count}",
-                    nameof(codecTags));
+                throw new ArgumentException(
+                    $"At most 4 codecs are supported, got {codecTags.Count}",
+                    nameof(codecTags)
+                );
         }
 
         if (codecTags is [CodecTags.None])
@@ -239,7 +241,10 @@ public static class ChdCodecs
         foreach (var tag in codecTags)
         {
             if (tag == CodecTags.None)
-                throw new ArgumentException("Codec 'none' cannot be combined with other codecs", nameof(codecTags));
+                throw new ArgumentException(
+                    "Codec 'none' cannot be combined with other codecs",
+                    nameof(codecTags)
+                );
 
             var codec = tag switch
             {
@@ -249,16 +254,25 @@ public static class ChdCodecs
                 CodecTags.Huff => new HuffCodec(),
                 CodecTags.Flac => new FlacCodec(hunkBytes),
                 // CD codecs only apply to CD-sized hunks (whole frames); elsewhere they can't compress
-                CodecTags.Cdfl when hunkBytes % CdConstants.FrameSize == 0 => new CdflCodec(hunkBytes),
-                CodecTags.Cdzl or CodecTags.Cdlz or CodecTags.Cdzs when hunkBytes % CdConstants.FrameSize == 0 =>
-                    CreateCdCodec(tag, hunkBytes),
-                CodecTags.Cdfl or CodecTags.Cdzl or CodecTags.Cdlz or CodecTags.Cdzs => throw new ArgumentException(
-                    $"Codec '{CodecTags.ToString(tag)}' requires CD-sized hunks (multiple of {CdConstants.FrameSize} bytes); hunk is {hunkBytes} bytes",
-                    nameof(codecTags)),
+                CodecTags.Cdfl when hunkBytes % CdConstants.FrameSize == 0 => new CdflCodec(
+                    hunkBytes
+                ),
+                CodecTags.Cdzl
+                or CodecTags.Cdlz
+                or CodecTags.Cdzs when hunkBytes % CdConstants.FrameSize == 0 => CreateCdCodec(
+                    tag,
+                    hunkBytes
+                ),
+                CodecTags.Cdfl or CodecTags.Cdzl or CodecTags.Cdlz or CodecTags.Cdzs =>
+                    throw new ArgumentException(
+                        $"Codec '{CodecTags.ToString(tag)}' requires CD-sized hunks (multiple of {CdConstants.FrameSize} bytes); hunk is {hunkBytes} bytes",
+                        nameof(codecTags)
+                    ),
                 CodecTags.Avhu => new AvHuffCodec(),
                 _ => throw new ArgumentException(
                     $"Unknown codec tag [{CodecTags.ToString(tag)}]; supported codecs: {SupportedCodecNames}",
-                    nameof(codecTags))
+                    nameof(codecTags)
+                ),
             };
             result.Add(codec);
         }
@@ -273,7 +287,7 @@ public static class ChdCodecs
             CodecTags.Cdzl => new CdzlCodec(hunkBytes),
             CodecTags.Cdlz => new CdlzCodec(hunkBytes),
             CodecTags.Cdzs => new CdzsCodec(hunkBytes),
-            _ => throw new ArgumentException($"Unknown CD codec tag [{CodecTags.ToString(tag)}]")
+            _ => throw new ArgumentException($"Unknown CD codec tag [{CodecTags.ToString(tag)}]"),
         };
     }
 
@@ -287,23 +301,29 @@ public static class ChdCodecs
             return [CodecTags.Zlib];
 
         var tags = new List<uint>();
-        foreach (var name in codecString.Split(',',
-                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            tags.Add(name.ToLowerInvariant() switch
-            {
-                "zlib" => CodecTags.Zlib,
-                "zstd" => CodecTags.Zstd,
-                "lzma" => CodecTags.Lzma,
-                "huff" => CodecTags.Huff,
-                "flac" => CodecTags.Flac,
-                "cdzl" => CodecTags.Cdzl,
-                "cdlz" => CodecTags.Cdlz,
-                "cdzs" => CodecTags.Cdzs,
-                "cdfl" => CodecTags.Cdfl,
-                "avhu" => CodecTags.Avhu,
-                "none" => CodecTags.None,
-                _ => throw new ArgumentException($"Unknown codec [{name}]")
-            });
+        foreach (
+            var name in codecString.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
+        )
+            tags.Add(
+                name.ToLowerInvariant() switch
+                {
+                    "zlib" => CodecTags.Zlib,
+                    "zstd" => CodecTags.Zstd,
+                    "lzma" => CodecTags.Lzma,
+                    "huff" => CodecTags.Huff,
+                    "flac" => CodecTags.Flac,
+                    "cdzl" => CodecTags.Cdzl,
+                    "cdlz" => CodecTags.Cdlz,
+                    "cdzs" => CodecTags.Cdzs,
+                    "cdfl" => CodecTags.Cdfl,
+                    "avhu" => CodecTags.Avhu,
+                    "none" => CodecTags.None,
+                    _ => throw new ArgumentException($"Unknown codec [{name}]"),
+                }
+            );
 
         return tags.ToArray();
     }

@@ -48,7 +48,23 @@ internal class FlakeConstants
     ///     Table of FLAC block sizes indexed by the block size code from the frame header.
     /// </summary>
     internal static readonly int[] FlacBlocksizes =
-        [0, 192, 576, 1152, 2304, 4608, 0, 0, 256, 512, 1024, 2048, 4096, 8192, 16384];
+    [
+        0,
+        192,
+        576,
+        1152,
+        2304,
+        4608,
+        0,
+        0,
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+    ];
 
     //0110 : get 8 bit (blocksize-1) from end of header
     //0111 : get 16 bit (blocksize-1) from end of header

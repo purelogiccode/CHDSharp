@@ -149,7 +149,7 @@ public class ChdTocParserTests
         var entries = new List<ChdMetadataEntry>
         {
             new("CHT2", Encoding.ASCII.GetBytes(text1)),
-            new("CHT2", Encoding.ASCII.GetBytes(text2))
+            new("CHT2", Encoding.ASCII.GetBytes(text2)),
         };
 
         var result = ChdTocParser.ParseTracks(entries, out _);
@@ -263,7 +263,11 @@ public class ChdTocParserTests
     [InlineData("MODE2/2324", ChdTrackType.Mode2Form2, 2324)]
     [InlineData("MODE2/2352", ChdTrackType.Mode2Raw, 2352)]
     [InlineData("AUDIO", ChdTrackType.Audio, 2352)]
-    public void ParseTracks_type_string_variants(string typeStr, ChdTrackType expectedType, int expectedSize)
+    public void ParseTracks_type_string_variants(
+        string typeStr,
+        ChdTrackType expectedType,
+        int expectedSize
+    )
     {
         var text = $"TRACK: 1 TYPE: {typeStr} SUBTYPE: NONE FRAMES: 100";
         var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));
@@ -281,7 +285,11 @@ public class ChdTocParserTests
     [InlineData("NONE", ChdSubType.None, 0)]
     [InlineData("RW", ChdSubType.Normal, 96)]
     [InlineData("RW_RAW", ChdSubType.Raw, 96)]
-    public void ParseTracks_subtype_string_variants(string subStr, ChdSubType expectedSub, int expectedSize)
+    public void ParseTracks_subtype_string_variants(
+        string subStr,
+        ChdSubType expectedSub,
+        int expectedSize
+    )
     {
         var text = $"TRACK: 1 TYPE: MODE1/2048 SUBTYPE: {subStr} FRAMES: 100";
         var entry = new ChdMetadataEntry("CHT2", Encoding.ASCII.GetBytes(text));

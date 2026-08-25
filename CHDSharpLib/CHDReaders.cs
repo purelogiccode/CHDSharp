@@ -12,8 +12,13 @@ namespace CHDSharp;
 ///     Delegate for decompressing a single CHD hunk: reads compressed data from <paramref name="buffIn" /> and writes
 ///     decompressed output to <paramref name="buffOut" />.
 /// </summary>
-internal delegate ChdError ChdReader(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-    ChdCodecState codec);
+internal delegate ChdError ChdReader(
+    byte[] buffIn,
+    int buffInLength,
+    byte[] buffOut,
+    int buffOutLength,
+    ChdCodecState codec
+);
 
 /// <summary>
 ///     Contains all CHD decompression codec implementations as reader delegates: zlib, LZMA, Huffman, FLAC, Zstd, and
@@ -33,11 +38,29 @@ internal static partial class ChdReaders
     internal const int CdFrameSize = CdMaxSectorData + CdMaxSubcodeData;
 
     private static readonly byte[] SCdSyncHeader =
-        [0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00];
+    [
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+    ];
 
     /// <summary>Dummy reader for unused / error codec slots; always returns <see cref="ChdError.Chderrdecompressionerror" />.</summary>
-    internal static ChdError None(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError None(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         return ChdError.Chderrdecompressionerror;
     }
@@ -46,13 +69,24 @@ internal static partial class ChdReaders
     ///     Decompresses a DEFLATE (zlib) compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />
     ///     .
     /// </summary>
-    internal static ChdError Zlib(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Zlib(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         return Zlib(buffIn, 0, buffInLength, buffOut, buffOutLength);
     }
 
-    private static ChdError Zlib(byte[] buffIn, int buffInStart, int buffInLength, byte[] buffOut, int buffOutLength)
+    private static ChdError Zlib(
+        byte[] buffIn,
+        int buffInStart,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength
+    )
     {
         using var memStream = new MemoryStream(buffIn, buffInStart, buffInLength, false);
         using var compStream = new DeflateStream(memStream, CompressionMode.Decompress, true);
@@ -70,14 +104,26 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses a Zstandard-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />.</summary>
-    internal static ChdError Zstd(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Zstd(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         return Zstd(buffIn, 0, buffInLength, buffOut, 0, buffOutLength, codec);
     }
 
-    private static ChdError Zstd(byte[] buffIn, int buffInStart, int buffInLength, byte[] buffOut, int buffOutStart,
-        int buffOutLength, ChdCodecState codec)
+    private static ChdError Zstd(
+        byte[] buffIn,
+        int buffInStart,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutStart,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         codec.BZstd ??= new Decompressor();
 
@@ -85,7 +131,8 @@ internal static partial class ChdReaders
         {
             var written = codec.BZstd.Unwrap(
                 new ReadOnlySpan<byte>(buffIn, buffInStart, buffInLength),
-                new Span<byte>(buffOut, buffOutStart, buffOutLength));
+                new Span<byte>(buffOut, buffOutStart, buffOutLength)
+            );
             if (written != buffOutLength)
                 return ChdError.Chderrdecompressionerror;
         }
@@ -102,14 +149,25 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses an LZMA-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />.</summary>
-    internal static ChdError Lzma(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Lzma(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         return Lzma(buffIn, 0, buffInLength, buffOut, buffOutLength, codec);
     }
 
-    private static ChdError Lzma(byte[] buffIn, int buffInStart, int compsize, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    private static ChdError Lzma(
+        byte[] buffIn,
+        int buffInStart,
+        int compsize,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         // CHD LZMA hunks are RAW, headerless LZMA payloads. There is no 5-byte
         // LZMA properties header stored in the stream (unlike a .lzma file).
@@ -127,12 +185,22 @@ internal static partial class ChdReaders
         const int numLiteralPosStateBits = 0;
         const int numLiteralContextBits = 3;
         properties[0] = (posStateBits * 5 + numLiteralPosStateBits) * 9 + numLiteralContextBits;
-        for (var j = 0; j < 4; j++) properties[1 + j] = (byte)((buffOutLength >> (8 * j)) & 0xFF);
+        for (var j = 0; j < 4; j++)
+            properties[1 + j] = (byte)((buffOutLength >> (8 * j)) & 0xFF);
 
-        if (codec.Blzma == null) codec.Blzma = new byte[buffOutLength];
+        if (codec.Blzma == null)
+            codec.Blzma = new byte[buffOutLength];
 
         using var memStream = new MemoryStream(buffIn, buffInStart, compsize, false);
-        using Stream compStream = new LzmaStream(properties, memStream, -1, -1, null, false, codec.Blzma);
+        using Stream compStream = new LzmaStream(
+            properties,
+            memStream,
+            -1,
+            -1,
+            null,
+            false,
+            codec.Blzma
+        );
         var bytesRead = 0;
         while (bytesRead < buffOutLength)
         {
@@ -147,10 +215,16 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses a Huffman-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />.</summary>
-    internal static ChdError Huffman(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Huffman(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
-        if (codec.BHuffman == null) codec.BHuffman = new ushort[1 << 16];
+        if (codec.BHuffman == null)
+            codec.BHuffman = new ushort[1 << 16];
 
         var bitbuf = new BitStream(buffIn, 0, buffInLength);
         var hd = new HuffmanDecoder(256, 16, bitbuf, codec.BHuffman);
@@ -158,7 +232,8 @@ internal static partial class ChdReaders
         if (hd.ImportTreeHuffman() != HuffmanError.HufferrNone)
             return ChdError.Chderrinvaliddata;
 
-        for (var j = 0; j < buffOutLength; j++) buffOut[j] = (byte)hd.DecodeOne();
+        for (var j = 0; j < buffOutLength; j++)
+            buffOut[j] = (byte)hd.DecodeOne();
 
         return ChdError.Chderrnone;
     }
@@ -167,8 +242,13 @@ internal static partial class ChdReaders
     ///     Decompresses a FLAC-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />, with
     ///     optional endian swapping.
     /// </summary>
-    internal static ChdError Flac(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Flac(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         var endianType = buffIn[0];
         //CHD adds a leading char to indicate endian. Not part of the flac format.
@@ -176,8 +256,16 @@ internal static partial class ChdReaders
         return Flac(buffIn, 1, buffInLength, buffOut, buffOutLength, swapEndian, codec, out _);
     }
 
-    private static ChdError Flac(byte[] buffIn, int buffInStart, int buffInLength, byte[] buffOut, int buffOutLength,
-        bool swapEndian, ChdCodecState codec, out int srcPos)
+    private static ChdError Flac(
+        byte[] buffIn,
+        int buffInStart,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        bool swapEndian,
+        ChdCodecState codec,
+        out int srcPos
+    )
     {
         codec.FlacSettings ??= new AudioPcmConfig(16, 2, 44100);
         codec.FlacAudioDecoder ??= new AudioDecoder(codec.FlacSettings);
@@ -192,8 +280,17 @@ internal static partial class ChdReaders
                 return ChdError.Chderrinvaliddata;
 
             var read = codec.FlacAudioDecoder.DecodeFrame(buffIn, srcPos, buffInLength - srcPos);
-            codec.FlacAudioDecoder.Read(codec.FlacAudioBuffer, (int)codec.FlacAudioDecoder.Remaining);
-            Array.Copy(codec.FlacAudioBuffer.Bytes, 0, buffOut, dstPos, codec.FlacAudioBuffer.ByteLength);
+            codec.FlacAudioDecoder.Read(
+                codec.FlacAudioBuffer,
+                (int)codec.FlacAudioDecoder.Remaining
+            );
+            Array.Copy(
+                codec.FlacAudioBuffer.Bytes,
+                0,
+                buffOut,
+                dstPos,
+                codec.FlacAudioBuffer.ByteLength
+            );
             dstPos += codec.FlacAudioBuffer.ByteLength;
             srcPos += read;
         }
@@ -215,7 +312,12 @@ internal static partial class ChdReaders
     ///     <paramref name="frameBytes" /> is the full frame stride including any subcode (typically 2448).
     ///     Only the first <paramref name="sectorBytes" /> bytes of each frame are swapped, leaving subcode intact.
     /// </summary>
-    internal static void SwapCdda16(byte[] buffer, int bufferLength, int sectorBytes, int frameBytes)
+    internal static void SwapCdda16(
+        byte[] buffer,
+        int bufferLength,
+        int sectorBytes,
+        int frameBytes
+    )
     {
         if (sectorBytes <= 0 || frameBytes < sectorBytes)
             return;
@@ -223,13 +325,19 @@ internal static partial class ChdReaders
         for (var frameStart = 0; frameStart + sectorBytes <= bufferLength; frameStart += frameBytes)
         {
             var end = frameStart + sectorBytes;
-            for (var i = frameStart; i < end; i += 2) (buffer[i], buffer[i + 1]) = (buffer[i + 1], buffer[i]);
+            for (var i = frameStart; i < end; i += 2)
+                (buffer[i], buffer[i + 1]) = (buffer[i + 1], buffer[i]);
         }
     }
 
     /// <summary>Decompresses a CD sector hunk using DEFLATE (zlib) for both sector data and subcode.</summary>
-    internal static ChdError Cdzlib(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Cdzlib(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         /* determine header bytes */
         var frames = buffOutLength / CdFrameSize;
@@ -241,7 +349,8 @@ internal static partial class ChdReaders
 
         /* extract compressed length of base */
         var complenBase = (buffIn[eccBytes + 0] << 8) | buffIn[eccBytes + 1];
-        if (complenBytes > 2) complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
+        if (complenBytes > 2)
+            complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
 
         if (headerBytes + complenBase > buffInLength)
             return ChdError.Chderrinvaliddata;
@@ -253,17 +362,33 @@ internal static partial class ChdReaders
         if (err != ChdError.Chderrnone)
             return err;
 
-        err = Zlib(buffIn, headerBytes + complenBase, buffInLength - headerBytes - complenBase, codec.BSubcode,
-            frames * CdMaxSubcodeData);
+        err = Zlib(
+            buffIn,
+            headerBytes + complenBase,
+            buffInLength - headerBytes - complenBase,
+            codec.BSubcode,
+            frames * CdMaxSubcodeData
+        );
         if (err != ChdError.Chderrnone)
             return err;
 
         /* reassemble the data */
         for (var framenum = 0; framenum < frames; framenum++)
         {
-            Array.Copy(codec.BSector, framenum * CdMaxSectorData, buffOut, framenum * CdFrameSize, CdMaxSectorData);
-            Array.Copy(codec.BSubcode, framenum * CdMaxSubcodeData, buffOut, framenum * CdFrameSize + CdMaxSectorData,
-                CdMaxSubcodeData);
+            Array.Copy(
+                codec.BSector,
+                framenum * CdMaxSectorData,
+                buffOut,
+                framenum * CdFrameSize,
+                CdMaxSectorData
+            );
+            Array.Copy(
+                codec.BSubcode,
+                framenum * CdMaxSubcodeData,
+                buffOut,
+                framenum * CdFrameSize + CdMaxSectorData,
+                CdMaxSubcodeData
+            );
 
             // reconstitute the ECC data and sync header
             var sectorStart = framenum * CdFrameSize;
@@ -278,8 +403,13 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses a CD sector hunk using LZMA for sector data and DEFLATE for subcode.</summary>
-    internal static ChdError Cdlzma(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Cdlzma(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         /* determine header bytes */
         var frames = buffOutLength / CdFrameSize;
@@ -291,7 +421,8 @@ internal static partial class ChdReaders
 
         /* extract compressed length of base */
         var complenBase = (buffIn[eccBytes + 0] << 8) | buffIn[eccBytes + 1];
-        if (complenBytes > 2) complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
+        if (complenBytes > 2)
+            complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
 
         if (headerBytes + complenBase > buffInLength)
             return ChdError.Chderrinvaliddata;
@@ -299,21 +430,44 @@ internal static partial class ChdReaders
         codec.BSector ??= new byte[frames * CdMaxSectorData];
         codec.BSubcode ??= new byte[frames * CdMaxSubcodeData];
 
-        var err = Lzma(buffIn, headerBytes, complenBase, codec.BSector, frames * CdMaxSectorData, codec);
+        var err = Lzma(
+            buffIn,
+            headerBytes,
+            complenBase,
+            codec.BSector,
+            frames * CdMaxSectorData,
+            codec
+        );
         if (err != ChdError.Chderrnone)
             return err;
 
-        err = Zlib(buffIn, headerBytes + complenBase, buffInLength - headerBytes - complenBase, codec.BSubcode,
-            frames * CdMaxSubcodeData);
+        err = Zlib(
+            buffIn,
+            headerBytes + complenBase,
+            buffInLength - headerBytes - complenBase,
+            codec.BSubcode,
+            frames * CdMaxSubcodeData
+        );
         if (err != ChdError.Chderrnone)
             return err;
 
         /* reassemble the data */
         for (var framenum = 0; framenum < frames; framenum++)
         {
-            Array.Copy(codec.BSector, framenum * CdMaxSectorData, buffOut, framenum * CdFrameSize, CdMaxSectorData);
-            Array.Copy(codec.BSubcode, framenum * CdMaxSubcodeData, buffOut, framenum * CdFrameSize + CdMaxSectorData,
-                CdMaxSubcodeData);
+            Array.Copy(
+                codec.BSector,
+                framenum * CdMaxSectorData,
+                buffOut,
+                framenum * CdFrameSize,
+                CdMaxSectorData
+            );
+            Array.Copy(
+                codec.BSubcode,
+                framenum * CdMaxSubcodeData,
+                buffOut,
+                framenum * CdFrameSize + CdMaxSectorData,
+                CdMaxSubcodeData
+            );
 
             // reconstitute the ECC data and sync header
             var sectorStart = framenum * CdFrameSize;
@@ -328,15 +482,29 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses a CD sector hunk using FLAC for sector data and DEFLATE for subcode.</summary>
-    internal static ChdError Cdflac(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Cdflac(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         var frames = buffOutLength / CdFrameSize;
 
         codec.BSector ??= new byte[frames * CdMaxSectorData];
         codec.BSubcode ??= new byte[frames * CdMaxSubcodeData];
 
-        var err = Flac(buffIn, 0, buffInLength, codec.BSector, frames * CdMaxSectorData, true, codec, out var pos);
+        var err = Flac(
+            buffIn,
+            0,
+            buffInLength,
+            codec.BSector,
+            frames * CdMaxSectorData,
+            true,
+            codec,
+            out var pos
+        );
         if (err != ChdError.Chderrnone)
             return err;
 
@@ -347,18 +515,33 @@ internal static partial class ChdReaders
         /* reassemble the data */
         for (var framenum = 0; framenum < frames; framenum++)
         {
-            Array.Copy(codec.BSector, framenum * CdMaxSectorData, buffOut, framenum * CdFrameSize, CdMaxSectorData);
-            Array.Copy(codec.BSubcode, framenum * CdMaxSubcodeData, buffOut, framenum * CdFrameSize + CdMaxSectorData,
-                CdMaxSubcodeData);
+            Array.Copy(
+                codec.BSector,
+                framenum * CdMaxSectorData,
+                buffOut,
+                framenum * CdFrameSize,
+                CdMaxSectorData
+            );
+            Array.Copy(
+                codec.BSubcode,
+                framenum * CdMaxSubcodeData,
+                buffOut,
+                framenum * CdFrameSize + CdMaxSectorData,
+                CdMaxSubcodeData
+            );
         }
 
         return ChdError.Chderrnone;
     }
 
-
     /// <summary>Decompresses a CD sector hunk using Zstandard for both sector data and subcode.</summary>
-    internal static ChdError Cdzstd(byte[] buffIn, int buffInLength, byte[] buffOut, int buffOutLength,
-        ChdCodecState codec)
+    internal static ChdError Cdzstd(
+        byte[] buffIn,
+        int buffInLength,
+        byte[] buffOut,
+        int buffOutLength,
+        ChdCodecState codec
+    )
     {
         /* determine header bytes */
         var frames = buffOutLength / CdFrameSize;
@@ -370,7 +553,8 @@ internal static partial class ChdReaders
 
         /* extract compressed length of base */
         var complenBase = (buffIn[eccBytes + 0] << 8) | buffIn[eccBytes + 1];
-        if (complenBytes > 2) complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
+        if (complenBytes > 2)
+            complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
 
         if (headerBytes + complenBase > buffInLength)
             return ChdError.Chderrinvaliddata;
@@ -379,21 +563,47 @@ internal static partial class ChdReaders
         codec.BSubcode ??= new byte[frames * CdMaxSubcodeData];
         codec.BZstd ??= new Decompressor();
 
-        var err = Zstd(buffIn, headerBytes, complenBase, codec.BSector, 0, frames * CdMaxSectorData, codec);
+        var err = Zstd(
+            buffIn,
+            headerBytes,
+            complenBase,
+            codec.BSector,
+            0,
+            frames * CdMaxSectorData,
+            codec
+        );
         if (err != ChdError.Chderrnone)
             return err;
 
-        err = Zstd(buffIn, headerBytes + complenBase, buffInLength - headerBytes - complenBase, codec.BSubcode, 0,
-            frames * CdMaxSubcodeData, codec);
+        err = Zstd(
+            buffIn,
+            headerBytes + complenBase,
+            buffInLength - headerBytes - complenBase,
+            codec.BSubcode,
+            0,
+            frames * CdMaxSubcodeData,
+            codec
+        );
         if (err != ChdError.Chderrnone)
             return err;
 
         /* reassemble the data */
         for (var framenum = 0; framenum < frames; framenum++)
         {
-            Array.Copy(codec.BSector, framenum * CdMaxSectorData, buffOut, framenum * CdFrameSize, CdMaxSectorData);
-            Array.Copy(codec.BSubcode, framenum * CdMaxSubcodeData, buffOut, framenum * CdFrameSize + CdMaxSectorData,
-                CdMaxSubcodeData);
+            Array.Copy(
+                codec.BSector,
+                framenum * CdMaxSectorData,
+                buffOut,
+                framenum * CdFrameSize,
+                CdMaxSectorData
+            );
+            Array.Copy(
+                codec.BSubcode,
+                framenum * CdMaxSubcodeData,
+                buffOut,
+                framenum * CdFrameSize + CdMaxSectorData,
+                CdMaxSubcodeData
+            );
 
             // reconstitute the ECC data and sync header
             var sectorStart = framenum * CdFrameSize;

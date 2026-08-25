@@ -20,8 +20,7 @@ namespace VendoredZLib;
 /// </summary>
 public partial class ZLib : IZLib
 {
-    internal const int
-        MaxWindowBits = 15; // Maximum value for windowBits in deflateInit2 and inflateInit2. 32K LZ77 window.
+    internal const int MaxWindowBits = 15; // Maximum value for windowBits in deflateInit2 and inflateInit2. 32K LZ77 window.
 
     internal const int DefaultWindowBits = MaxWindowBits; // default windowBits for decompression
 
@@ -90,7 +89,14 @@ public partial class ZLib : IZLib
     ///     This method does not perform any compression. Actual compression will be done by
     ///     <see cref="Deflate(ref ZStream, int)" />.
     /// </remarks>
-    public int DeflateInit(ref ZStream strm, int level, int method, int windowBits, int memLevel, int strategy)
+    public int DeflateInit(
+        ref ZStream strm,
+        int level,
+        int method,
+        int windowBits,
+        int memLevel,
+        int strategy
+    )
     {
         return Deflater.DeflateInit(ref strm, level, method, windowBits, memLevel, strategy);
     }
@@ -474,8 +480,11 @@ public partial class ZLib : IZLib
     /// </remarks>
     public int InflateSetDictionary(ref ZStream strm, ReadOnlySpan<byte> dictionary)
     {
-        return Inflater.InflateSetDictionary(ref strm, ref MemoryMarshal.GetReference(dictionary),
-            (uint)dictionary.Length);
+        return Inflater.InflateSetDictionary(
+            ref strm,
+            ref MemoryMarshal.GetReference(dictionary),
+            (uint)dictionary.Length
+        );
     }
 
     /// <summary>
@@ -649,7 +658,13 @@ public partial class ZLib : IZLib
     public int Compress(Span<byte> dest, out int destLen, ReadOnlySpan<byte> source, int level)
     {
         var bytesCompressed = (uint)dest.Length;
-        var ret = Compressor.Compress(dest, ref bytesCompressed, source, (uint)source.Length, level);
+        var ret = Compressor.Compress(
+            dest,
+            ref bytesCompressed,
+            source,
+            (uint)source.Length,
+            level
+        );
         destLen = (int)bytesCompressed;
         return ret;
     }
@@ -760,7 +775,12 @@ public partial class ZLib : IZLib
     ///     In the case where there is not enough room, the method will fill the destination buffer with the uncompressed
     ///     data up to that point.
     /// </remarks>
-    public int Uncompress(Span<byte> dest, out int destLen, ReadOnlySpan<byte> source, out int sourceLen)
+    public int Uncompress(
+        Span<byte> dest,
+        out int destLen,
+        ReadOnlySpan<byte> source,
+        out int sourceLen
+    )
     {
         var bytesUncompressed = (uint)dest.Length;
         var bytesConsumed = (uint)source.Length;
@@ -785,8 +805,10 @@ public partial class ZLib : IZLib
     public uint Adler32(uint adler, byte[] buf, int len)
     {
         if (len < 0 || len > (buf?.Length ?? 0))
-            throw new ArgumentOutOfRangeException(nameof(len),
-                $"Value was out of range. Must be non-negative and less than or equal to the size of {nameof(buf)}.");
+            throw new ArgumentOutOfRangeException(
+                nameof(len),
+                $"Value was out of range. Must be non-negative and less than or equal to the size of {nameof(buf)}."
+            );
 
         return Adler32(adler, buf.AsSpan(len));
     }

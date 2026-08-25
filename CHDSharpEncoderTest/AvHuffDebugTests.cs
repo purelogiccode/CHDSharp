@@ -9,7 +9,10 @@ public class AvHuffDebugTests
     public void EncodeSingleFrame_RoundTripsThroughChdLib()
     {
         // encode one synthetic 'chav' frame directly, bypassing the AVI/encode pipeline
-        const int width = 64, height = 64, channels = 2, maxSamples = 1920;
+        const int width = 64,
+            height = 64,
+            channels = 2,
+            maxSamples = 1920;
         var video = new byte[width * height * 2];
         for (var y = 0; y < height; y++)
         for (var x = 0; x < width; x += 2)
@@ -25,7 +28,8 @@ public class AvHuffDebugTests
         for (var ch = 0; ch < channels; ch++)
         {
             planes[ch] = new short[maxSamples];
-            for (var i = 0; i < maxSamples; i++) planes[ch][i] = (short)(Math.Sin(i * 0.037 + ch) * 9000);
+            for (var i = 0; i < maxSamples; i++)
+                planes[ch][i] = (short)(Math.Sin(i * 0.037 + ch) * 9000);
         }
 
         var rawBytes = AvHuffEncoder.RawDataSize(width, height, channels, maxSamples);
@@ -50,18 +54,20 @@ public class AvHuffDebugTests
             {
                 var buf = new byte[chd.HunkBytes];
                 var readErr = chd.ReadHunk(0, buf);
-                Assert.True(readErr == ChdError.Chderrnone,
-                    $"ReadHunk(0) returned {readErr}; rawBytes={rawBytes} compLen={compLen}\n" +
-                    $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n" +
-                    $"samples={(compressed[2] << 8) | compressed[3]} " +
-                    $"width={(compressed[4] << 8) | compressed[5]} " +
-                    $"height={(compressed[6] << 8) | compressed[7]}\n" +
-                    $"treesize=0x{(compressed[8] << 8) | compressed[9]:X4} " +
-                    $"ch0size={(compressed[10] << 8) | compressed[11]} " +
-                    $"ch1size={(compressed[12] << 8) | compressed[13]}\n" +
-                    $"video starts at {14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])}: " +
-                    $"0x{compressed[14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])]:X2} " +
-                    $"(expect 0x80)");
+                Assert.True(
+                    readErr == ChdError.Chderrnone,
+                    $"ReadHunk(0) returned {readErr}; rawBytes={rawBytes} compLen={compLen}\n"
+                        + $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n"
+                        + $"samples={(compressed[2] << 8) | compressed[3]} "
+                        + $"width={(compressed[4] << 8) | compressed[5]} "
+                        + $"height={(compressed[6] << 8) | compressed[7]}\n"
+                        + $"treesize=0x{(compressed[8] << 8) | compressed[9]:X4} "
+                        + $"ch0size={(compressed[10] << 8) | compressed[11]} "
+                        + $"ch1size={(compressed[12] << 8) | compressed[13]}\n"
+                        + $"video starts at {14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])}: "
+                        + $"0x{compressed[14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])]:X2} "
+                        + $"(expect 0x80)"
+                );
                 Assert.Equal(raw, buf);
             }
         }
@@ -74,7 +80,8 @@ public class AvHuffDebugTests
     [Fact]
     public void EncodeVideoOnlyFrame_RoundTripsThroughChdLib()
     {
-        const int width = 32, height = 32;
+        const int width = 32,
+            height = 32;
         var video = new byte[width * height * 2];
         for (var y = 0; y < height; y++)
         for (var x = 0; x < width; x += 2)
@@ -110,9 +117,11 @@ public class AvHuffDebugTests
                 if (readErr != ChdError.Chderrnone)
                 {
                     const int videoStart = 10;
-                    Assert.Fail($"ReadHunk(0) returned {readErr}; rawBytes={rawBytes} compLen={compLen}\n" +
-                                $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n" +
-                                $"video0x80={compressed[videoStart]:X2}");
+                    Assert.Fail(
+                        $"ReadHunk(0) returned {readErr}; rawBytes={rawBytes} compLen={compLen}\n"
+                            + $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n"
+                            + $"video0x80={compressed[videoStart]:X2}"
+                    );
                 }
 
                 Assert.Equal(raw, buf);
@@ -134,10 +143,12 @@ public class AvHuffDebugTests
         switch (histogramName)
         {
             case "allZeros":
-                for (var j = 0; j < 100; j++) he.CountSymbol(42);
+                for (var j = 0; j < 100; j++)
+                    he.CountSymbol(42);
                 break;
             case "alternating":
-                for (var i = 0; i < 272; i += 2) he.CountSymbol((uint)i);
+                for (var i = 0; i < 272; i += 2)
+                    he.CountSymbol((uint)i);
                 break;
             case "dense":
                 var rng = new Random(42);
@@ -156,8 +167,10 @@ public class AvHuffDebugTests
 
         var imported = ImportTreeRle(bs.ToArray(), 0, byteLen, 272);
         for (var i = 0; i < 272; i++)
-            Assert.True(he.NumBits[i] == imported[i],
-                $"numbits[{i}]: enc={he.NumBits[i]} dec={imported[i]}");
+            Assert.True(
+                he.NumBits[i] == imported[i],
+                $"numbits[{i}]: enc={he.NumBits[i]} dec={imported[i]}"
+            );
     }
 
     [Fact]
@@ -165,7 +178,8 @@ public class AvHuffDebugTests
     {
         // simulate the exact Y-plane histogram from the64x64 gradient video test
         var he = new HuffmanEncoder(272, 16);
-        for (var i = 0; i < 272; i += 2) he.CountSymbol((uint)i);
+        for (var i = 0; i < 272; i += 2)
+            he.CountSymbol((uint)i);
         he.BuildTree();
 
         var bs = new BitStreamOut(2048);
@@ -174,8 +188,10 @@ public class AvHuffDebugTests
 
         var imported = ImportTreeRle(bs.ToArray(), 0, byteLen, 272);
         for (var i = 0; i < 272; i++)
-            Assert.True(he.NumBits[i] == imported[i],
-                $"numbits[{i}]: enc={he.NumBits[i]} dec={imported[i]}");
+            Assert.True(
+                he.NumBits[i] == imported[i],
+                $"numbits[{i}]: enc={he.NumBits[i]} dec={imported[i]}"
+            );
     }
 
     /// <summary>
@@ -192,7 +208,9 @@ public class AvHuffDebugTests
         while (curnode < numCodes)
         {
             if (bitPos + 5 > endBit)
-                throw new InvalidDataException($"tree import underflow at node {curnode}, bit {bitPos}");
+                throw new InvalidDataException(
+                    $"tree import underflow at node {curnode}, bit {bitPos}"
+                );
 
             var nodebits = ReadBits5(data, ref bitPos);
             if (nodebits != 1)
@@ -202,7 +220,9 @@ public class AvHuffDebugTests
             else
             {
                 if (bitPos + 5 > endBit)
-                    throw new InvalidDataException($"tree import underflow in escape at node {curnode}");
+                    throw new InvalidDataException(
+                        $"tree import underflow in escape at node {curnode}"
+                    );
 
                 nodebits = ReadBits5(data, ref bitPos);
                 if (nodebits == 1)
@@ -212,14 +232,18 @@ public class AvHuffDebugTests
                 else
                 {
                     if (bitPos + 5 > endBit)
-                        throw new InvalidDataException($"tree import underflow in repcount at node {curnode}");
+                        throw new InvalidDataException(
+                            $"tree import underflow in repcount at node {curnode}"
+                        );
 
                     var repcount = ReadBits5(data, ref bitPos) + 3;
                     if (curnode + repcount > numCodes)
                         throw new InvalidDataException(
-                            $"tree import overflow at node {curnode}: {repcount} would exceed {numCodes} (bit {bitPos})");
+                            $"tree import overflow at node {curnode}: {repcount} would exceed {numCodes} (bit {bitPos})"
+                        );
 
-                    while (repcount-- > 0) result[curnode++] = nodebits;
+                    while (repcount-- > 0)
+                        result[curnode++] = nodebits;
                 }
             }
         }

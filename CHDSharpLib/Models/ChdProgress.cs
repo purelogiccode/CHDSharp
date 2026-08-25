@@ -22,7 +22,7 @@ namespace CHDSharp.Models;
 ///     <code>
 /// var progress = new Progress&lt;ChdProgress&gt;(p =>
 ///     Console.WriteLine($"{p.Percent:F0}% — {p.BytesProcessed:N0}/{p.TotalBytes:N0} bytes, {p.Elapsed.TotalSeconds:F1}s"));
-/// 
+///
 /// var result = Chd.CheckFile(File.OpenRead("game.chd"), "game.chd", deepCheck: true, progress);
 /// </code>
 /// </example>
@@ -34,7 +34,13 @@ public sealed record ChdProgress
     /// <param name="bytesProcessed">Number of decompressed bytes processed so far.</param>
     /// <param name="totalBytes">Total decompressed size of the image.</param>
     /// <param name="elapsed">Wall-clock time elapsed since the operation started.</param>
-    public ChdProgress(long currentHunk, long totalHunks, long bytesProcessed, long totalBytes, TimeSpan elapsed)
+    public ChdProgress(
+        long currentHunk,
+        long totalHunks,
+        long bytesProcessed,
+        long totalBytes,
+        TimeSpan elapsed
+    )
     {
         CurrentHunk = currentHunk;
         TotalHunks = totalHunks;
@@ -62,7 +68,8 @@ public sealed record ChdProgress
     public TimeSpan Elapsed { get; }
 
     /// <summary>Percentage of hunks completed (<c>0</c>–<c>100</c>).</summary>
-    public double Percent => TotalHunks == 0 ? 100.0 : Math.Min(100.0, CurrentHunk * 100.0 / TotalHunks);
+    public double Percent =>
+        TotalHunks == 0 ? 100.0 : Math.Min(100.0, CurrentHunk * 100.0 / TotalHunks);
 
     /// <summary>Returns a human-readable summary such as "42/100 hunks, 12.5% (5.2s)".</summary>
     public override string ToString()

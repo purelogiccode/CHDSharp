@@ -17,13 +17,14 @@ internal readonly struct BitTreeEncoder
 
     internal void Init()
     {
-        for (uint i = 1; i < 1 << _numBitLevels; i++) _models[i].Init();
+        for (uint i = 1; i < 1 << _numBitLevels; i++)
+            _models[i].Init();
     }
 
     internal void Encode(Encoder rangeEncoder, uint symbol)
     {
         uint m = 1;
-        for (var bitIndex = _numBitLevels; bitIndex > 0;)
+        for (var bitIndex = _numBitLevels; bitIndex > 0; )
         {
             bitIndex--;
             var bit = (symbol >> bitIndex) & 1;
@@ -48,7 +49,7 @@ internal readonly struct BitTreeEncoder
     {
         uint price = 0;
         uint m = 1;
-        for (var bitIndex = _numBitLevels; bitIndex > 0;)
+        for (var bitIndex = _numBitLevels; bitIndex > 0; )
         {
             bitIndex--;
             var bit = (symbol >> bitIndex) & 1;
@@ -74,8 +75,12 @@ internal readonly struct BitTreeEncoder
         return price;
     }
 
-    internal static uint ReverseGetPrice(BitEncoder[] models, uint startIndex,
-        int numBitLevels, uint symbol)
+    internal static uint ReverseGetPrice(
+        BitEncoder[] models,
+        uint startIndex,
+        int numBitLevels,
+        uint symbol
+    )
     {
         uint price = 0;
         uint m = 1;
@@ -90,8 +95,13 @@ internal readonly struct BitTreeEncoder
         return price;
     }
 
-    internal static void ReverseEncode(BitEncoder[] models, uint startIndex,
-        Encoder rangeEncoder, int numBitLevels, uint symbol)
+    internal static void ReverseEncode(
+        BitEncoder[] models,
+        uint startIndex,
+        Encoder rangeEncoder,
+        int numBitLevels,
+        uint symbol
+    )
     {
         uint m = 1;
         for (var i = 0; i < numBitLevels; i++)

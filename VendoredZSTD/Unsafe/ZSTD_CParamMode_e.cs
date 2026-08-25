@@ -25,5 +25,5 @@ public enum ZSTD_cParamMode_e
      * behavior of taking both the source size and the dict size into account
      * when selecting and adjusting parameters.
      */
-    ZSTD_cpm_unknown = 3
+    ZSTD_cpm_unknown = 3,
 }
