@@ -1,23 +1,19 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct ZstdHufCTablesT
+namespace VendoredZSTD.Unsafe
 {
-    public CTableEFixedBuffer CTable;
-    public HufRepeat repeatMode;
-#if NET8_0_OR_GREATER
-    [InlineArray(257)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct CTableEFixedBuffer
+    public unsafe struct ZSTD_hufCTables_t
     {
-        public nuint e0;
-    }
+        public _CTable_e__FixedBuffer CTable;
+        public HUF_repeat repeatMode;
+#if NET8_0_OR_GREATER
+        [InlineArray(257)]
+        public unsafe struct _CTable_e__FixedBuffer
+        {
+            public nuint e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _CTable_e__FixedBuffer
         {
             public nuint e0;
@@ -279,4 +275,5 @@ public struct ZstdHufCTablesT
             public nuint e256;
         }
 #endif
+    }
 }

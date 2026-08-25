@@ -1,12 +1,10 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct LdmMatchCandidateT
+namespace VendoredZSTD.Unsafe
 {
-    public byte* split;
-    public uint hash;
-    public uint checksum;
-    public LdmEntryT* bucket;
+    public unsafe struct ldmMatchCandidate_t
+    {
+        public byte* split;
+        public uint hash;
+        public uint checksum;
+        public ldmEntry_t* bucket;
+    }
 }

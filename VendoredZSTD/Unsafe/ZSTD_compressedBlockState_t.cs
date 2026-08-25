@@ -1,10 +1,8 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZstdCompressedBlockStateT
+namespace VendoredZSTD.Unsafe
 {
-    public ZstdEntropyCTablesT entropy;
-    public fixed uint rep[3];
+    public unsafe struct ZSTD_compressedBlockState_t
+    {
+        public ZSTD_entropyCTables_t entropy;
+        public fixed uint rep[3];
+    }
 }

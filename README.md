@@ -16,7 +16,7 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 ## What's New in v1.4.0
 
 - **Full `chdman` CLI argument parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand: `info`, `verify`, `createraw`, `createhd`, `createcd`, `createdvd`, `createld`, `extractraw`, `extracthd`, `extractcd`, `extractdvd`, `extractld`, `copy`, `addmeta`, `delmeta`, `dumpmeta`, `listtemplates`.
-- **Full `chdman` battle-test parity (587/587)** — the new `CHDSharpBattleTest` harness cross-checks the decoder and encoder against `chdman.exe` on deterministic and real-world CHD corpora.
+- **Full `chdman` battle-test parity (2611/2611)** — the new `CHDSharpBattleTest` harness cross-checks the decoder and encoder against `chdman.exe` on deterministic and real-world CHD corpora.
 - **Byte-for-byte parity for *every* codec** — including `createld` (AVHuff), `cdzs`, and `zstd`.
 - **Zero external NuGet dependencies** — `VendoredZSTD` (a pure C# port of MAME's zstd 1.5.5) replaces the `ZstdSharp.Port` package.
 - **38 bugs fixed** from a deep code review.
@@ -520,7 +520,7 @@ The full wiki lives in [`docs/`](docs/README.md):
 |---------|------|-------------|
 | `CHDSharpTest` | xUnit | Unit + corpus tests (602 tests, 30 CHD fixtures) |
 | `CHDSharpEncoderTest` | xUnit | Encoder tests (434 tests, chdman cross-validation) |
-| `CHDSharpBattleTest` | Console | Battle harness: 587/587 checks vs `chdman` on deterministic + real-world corpora |
+| `CHDSharpBattleTest` | Console | Battle harness: 2611/2611 checks vs `chdman` on deterministic + real-world corpora |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator |
 
@@ -610,7 +610,7 @@ The `VendoredFlac` component (FLAC encoder/decoder) is based on [CUETools.Flake]
 
 - **[MAME](https://www.mamedev.org/)** — CHD format specification and `chdman` reference implementation
 - **[libchdr](https://github.com/rtissera/libchdr)** — C reference library by Romain Tisseraud
-- **[ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp)** — pure C# Zstd port by Oleg Stepanischev, vendored in-repo as `VendoredZSTD`; the port now matches MAME's bundled zstd 1.5.5 frames byte-for-byte
+- **[ZstdSharp.Port](https://github.com/oleg-st/ZstdSharp)** — pure C# Zstd port by Oleg Stepanischev, vendored in-repo as `VendoredZSTD` (ZstdSharp **0.7.6** = libzstd **1.5.5** source); the port matches MAME's bundled zstd 1.5.5 frames byte-for-byte
 
 ---
 

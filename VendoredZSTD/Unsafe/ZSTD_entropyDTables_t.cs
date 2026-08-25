@@ -1,34 +1,27 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct ZstdEntropyDTablesT
+namespace VendoredZSTD.Unsafe
 {
-    /* Note : Space reserved for FSE Tables */
-    public LlTableEFixedBuffer LLTable;
-
-    /* is also used as temporary workspace while building hufTable during DDict creation */
-    public OfTableEFixedBuffer OFTable;
-
-    /* and therefore must be at least HUF_DECOMPRESS_WORKSPACE_SIZE large */
-    public MlTableEFixedBuffer MLTable;
-
-    /* can accommodate HUF_decompress4X */
-    public fixed uint hufTable[4097];
-    public fixed uint rep[3];
-    public fixed uint workspace[157];
-#if NET8_0_OR_GREATER
-    [InlineArray(513)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct LlTableEFixedBuffer
+    public unsafe struct ZSTD_entropyDTables_t
     {
-        public ZstdSeqSymbol e0;
-    }
+        /* Note : Space reserved for FSE Tables */
+        public _LLTable_e__FixedBuffer LLTable;
+        /* is also used as temporary workspace while building hufTable during DDict creation */
+        public _OFTable_e__FixedBuffer OFTable;
+        /* and therefore must be at least HUF_DECOMPRESS_WORKSPACE_SIZE large */
+        public _MLTable_e__FixedBuffer MLTable;
+        /* can accommodate HUF_decompress4X */
+        public fixed uint hufTable[4097];
+        public fixed uint rep[3];
+        public fixed uint workspace[157];
+#if NET8_0_OR_GREATER
+        [InlineArray(513)]
+        public unsafe struct _LLTable_e__FixedBuffer
+        {
+            public ZSTD_seqSymbol e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _LLTable_e__FixedBuffer
         {
             public ZSTD_seqSymbol e0;
@@ -548,15 +541,13 @@ public unsafe struct ZstdEntropyDTablesT
 #endif
 
 #if NET8_0_OR_GREATER
-    [InlineArray(257)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct OfTableEFixedBuffer
-    {
-        public ZstdSeqSymbol e0;
-    }
+        [InlineArray(257)]
+        public unsafe struct _OFTable_e__FixedBuffer
+        {
+            public ZSTD_seqSymbol e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _OFTable_e__FixedBuffer
         {
             public ZSTD_seqSymbol e0;
@@ -820,15 +811,13 @@ public unsafe struct ZstdEntropyDTablesT
 #endif
 
 #if NET8_0_OR_GREATER
-    [InlineArray(513)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MlTableEFixedBuffer
-    {
-        public ZstdSeqSymbol e0;
-    }
+        [InlineArray(513)]
+        public unsafe struct _MLTable_e__FixedBuffer
+        {
+            public ZSTD_seqSymbol e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _MLTable_e__FixedBuffer
         {
             public ZSTD_seqSymbol e0;
@@ -1346,4 +1335,5 @@ public unsafe struct ZstdEntropyDTablesT
             public ZSTD_seqSymbol e512;
         }
 #endif
+    }
 }

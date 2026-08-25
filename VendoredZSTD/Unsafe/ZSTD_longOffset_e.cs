@@ -1,7 +1,8 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum ZstdLongOffsetE
+namespace VendoredZSTD.Unsafe
 {
-    ZstdLoIsRegularOffset,
-    ZstdLoIsLongOffset = 1
+    public enum ZSTD_longOffset_e
+    {
+        ZSTD_lo_isRegularOffset,
+        ZSTD_lo_isLongOffset = 1
+    }
 }

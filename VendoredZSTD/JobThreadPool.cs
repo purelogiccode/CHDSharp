@@ -1,146 +1,146 @@
+using System;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System.Threading;
 
-namespace VendoredZSTD;
-
-internal unsafe class JobThreadPool : IDisposable
+namespace VendoredZSTD
 {
-    private int _numThreads;
-    private readonly List<JobThread> _threads;
-    private readonly BlockingCollection<Job> _queue;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Job
+    internal unsafe class JobThreadPool : IDisposable
     {
-        public void* function;
-        public void* opaque;
-    }
+        private int numThreads;
+        private readonly List<JobThread> threads;
+        private readonly BlockingCollection<Job> queue;
 
-    private class JobThread
-    {
-        private Thread Thread { get; }
-        public CancellationTokenSource CancellationTokenSource { get; }
-
-        public JobThread(Thread thread)
+        private struct Job
         {
-            CancellationTokenSource = new CancellationTokenSource();
-            Thread = thread;
+            public void* function;
+            public void* opaque;
         }
 
-        public void Start()
+        private class JobThread
         {
-            Thread.Start(this);
-        }
+            private Thread Thread { get; }
+            public CancellationTokenSource CancellationTokenSource { get; }
 
-        public void Cancel()
-        {
-            CancellationTokenSource.Cancel();
-        }
-
-        public void Join()
-        {
-            Thread.Join();
-        }
-    }
-
-    private void Worker(object? obj)
-    {
-        if (obj is not JobThread poolThread)
-            return;
-
-        var cancellationToken = poolThread.CancellationTokenSource.Token;
-        while (!_queue.IsCompleted && !cancellationToken.IsCancellationRequested)
-        {
-            try
+            public JobThread(Thread thread)
             {
-                if (_queue.TryTake(out var job, -1, cancellationToken))
-                    ((delegate* managed<void*, void>)job.function)(job.opaque);
+                CancellationTokenSource = new CancellationTokenSource();
+                Thread = thread;
             }
-            catch (InvalidOperationException)
+
+            public void Start()
             {
+                Thread.Start(this);
             }
-            catch (OperationCanceledException)
+
+            public void Cancel()
             {
+                CancellationTokenSource.Cancel();
+            }
+
+            public void Join()
+            {
+                Thread.Join();
             }
         }
-    }
 
-    public JobThreadPool(int num, int queueSize)
-    {
-        _numThreads = num;
-        _queue = new BlockingCollection<Job>(queueSize + 1);
-        _threads = new List<JobThread>(num);
-        for (var i = 0; i < _numThreads; i++)
-            CreateThread();
-    }
-
-    private void CreateThread()
-    {
-        var poolThread = new JobThread(new Thread(Worker));
-        _threads.Add(poolThread);
-        poolThread.Start();
-    }
-
-    public void Resize(int num)
-    {
-        lock (_threads)
+        private void Worker(object obj)
         {
-            if (num < _numThreads)
+            if (obj is not JobThread poolThread)
+                return;
+
+            var cancellationToken = poolThread.CancellationTokenSource.Token;
+            while (!queue.IsCompleted && !cancellationToken.IsCancellationRequested)
             {
-                for (var i = _numThreads - 1; i >= num; i--)
+                try
                 {
-                    _threads[i].Cancel();
-                    _threads.RemoveAt(i);
+                    if (queue.TryTake(out var job, -1, cancellationToken))
+                        ((delegate* managed<void*, void>)job.function)(job.opaque);
+                }
+                catch (InvalidOperationException)
+                {
+                }
+                catch (OperationCanceledException)
+                {
                 }
             }
-            else
+        }
+
+        public JobThreadPool(int num, int queueSize)
+        {
+            numThreads = num;
+            queue = new BlockingCollection<Job>(queueSize + 1);
+            threads = new List<JobThread>(num);
+            for (var i = 0; i < numThreads; i++)
+                CreateThread();
+        }
+
+        private void CreateThread()
+        {
+            var poolThread = new JobThread(new Thread(Worker));
+            threads.Add(poolThread);
+            poolThread.Start();
+        }
+
+        public void Resize(int num)
+        {
+            lock (threads)
             {
-                for (var i = _numThreads; i < num; i++)
-                    CreateThread();
+                if (num < numThreads)
+                {
+                    for (var i = numThreads - 1; i >= num; i--)
+                    {
+                        threads[i].Cancel();
+                        threads.RemoveAt(i);
+                    }
+                }
+                else
+                {
+                    for (var i = numThreads; i < num; i++)
+                        CreateThread();
+                }
             }
+
+            numThreads = num;
         }
 
-        _numThreads = num;
-    }
-
-    public void Add(void* function, void* opaque)
-    {
-        _queue.Add(new Job { function = function, opaque = opaque });
-    }
-
-    public bool TryAdd(void* function, void* opaque)
-    {
-        return _queue.TryAdd(new Job { function = function, opaque = opaque });
-    }
-
-    public void Join(bool cancel = true)
-    {
-        _queue.CompleteAdding();
-        List<JobThread> jobThreads;
-        lock (_threads)
+        public void Add(void* function, void* opaque)
         {
-            jobThreads = new List<JobThread>(_threads);
+            queue.Add(new Job { function = function, opaque = opaque });
         }
 
-        if (cancel)
+        public bool TryAdd(void* function, void* opaque)
         {
+            return queue.TryAdd(new Job { function = function, opaque = opaque });
+        }
+
+        public void Join(bool cancel = true)
+        {
+            queue.CompleteAdding();
+            List<JobThread> jobThreads;
+            lock (threads)
+                jobThreads = new List<JobThread>(threads);
+
+            if (cancel)
+            {
+                foreach (var thread in jobThreads)
+                    thread.Cancel();
+            }
+
             foreach (var thread in jobThreads)
-                thread.Cancel();
+                thread.Join();
         }
 
-        foreach (var thread in jobThreads)
-            thread.Join();
-    }
+        public void Dispose()
+        {
+            queue.Dispose();
+        }
 
-    public void Dispose()
-    {
-        _queue.Dispose();
-    }
-
-    public int Size()
-    {
-        // todo not implemented
-        // https://github.com/dotnet/runtime/issues/24200
-        return 0;
+        public int Size()
+        {
+            // todo not implemented
+            // https://github.com/dotnet/runtime/issues/24200
+            return 0;
+        }
     }
 }

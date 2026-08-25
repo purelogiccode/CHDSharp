@@ -68,7 +68,7 @@ The **`cdfl`** variant uses FLAC (always byte-swapped) for sector data and zlib 
 ## zstd / cdzs
 
 Zstandard via the in-repo `VendoredZSTD` project — a C-to-C# port of the zstd 1.5.5 tree that
-MAME bundles, kept as a local project (no NuGet dependency, no native code). Both the decoder
+MAME bundles (ZstdSharp **0.7.6** source), kept as a local project (no NuGet dependency, no native code). Both the decoder
 and the encoder are included. Each hunk is a single-frame zstd block; the decompressed length
 must exactly equal `hunkbytes`. The **`cdzs`** variant uses zstd for both sector data and
 subcode with ECC/sync regeneration. Because the port mirrors the reference `compressStream2`/

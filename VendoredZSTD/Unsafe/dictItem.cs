@@ -1,11 +1,9 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct DictItem
+namespace VendoredZSTD.Unsafe
 {
-    public uint pos;
-    public uint length;
-    public uint savings;
+    public struct dictItem
+    {
+        public uint pos;
+        public uint length;
+        public uint savings;
+    }
 }

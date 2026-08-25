@@ -1,27 +1,23 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct HufReadDTableX2Workspace
+namespace VendoredZSTD.Unsafe
 {
-    public RankValEFixedBuffer rankVal;
-    public fixed uint rankStats[13];
-    public fixed uint rankStart0[15];
-    public SortedSymbolEFixedBuffer sortedSymbol;
-    public fixed byte weightList[256];
-    public fixed uint calleeWksp[219];
-#if NET8_0_OR_GREATER
-    [InlineArray(12)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RankValEFixedBuffer
+    public unsafe struct HUF_ReadDTableX2_Workspace
     {
-        public RankValColT e0;
-    }
+        public _rankVal_e__FixedBuffer rankVal;
+        public fixed uint rankStats[13];
+        public fixed uint rankStart0[15];
+        public _sortedSymbol_e__FixedBuffer sortedSymbol;
+        public fixed byte weightList[256];
+        public fixed uint calleeWksp[219];
+#if NET8_0_OR_GREATER
+        [InlineArray(12)]
+        public unsafe struct _rankVal_e__FixedBuffer
+        {
+            public rankValCol_t e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _rankVal_e__FixedBuffer
         {
             public rankValCol_t e0;
@@ -40,15 +36,13 @@ public unsafe struct HufReadDTableX2Workspace
 #endif
 
 #if NET8_0_OR_GREATER
-    [InlineArray(256)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct SortedSymbolEFixedBuffer
-    {
-        public SortedSymbolT e0;
-    }
+        [InlineArray(256)]
+        public unsafe struct _sortedSymbol_e__FixedBuffer
+        {
+            public sortedSymbol_t e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _sortedSymbol_e__FixedBuffer
         {
             public sortedSymbol_t e0;
@@ -309,4 +303,5 @@ public unsafe struct HufReadDTableX2Workspace
             public sortedSymbol_t e255;
         }
 #endif
+    }
 }

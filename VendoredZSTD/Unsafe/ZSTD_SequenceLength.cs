@@ -1,10 +1,8 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct ZstdSequenceLength
+namespace VendoredZSTD.Unsafe
 {
-    public uint litLength;
-    public uint matchLength;
+    public struct ZSTD_sequenceLength
+    {
+        public uint litLength;
+        public uint matchLength;
+    }
 }

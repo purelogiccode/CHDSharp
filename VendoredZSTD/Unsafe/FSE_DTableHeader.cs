@@ -1,11 +1,9 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-/* ======    Decompression    ====== */
-[StructLayout(LayoutKind.Sequential)]
-public struct FseDTableHeader
+namespace VendoredZSTD.Unsafe
 {
-    public ushort tableLog;
-    public ushort fastMode;
+    /* ======    Decompression    ====== */
+    public struct FSE_DTableHeader
+    {
+        public ushort tableLog;
+        public ushort fastMode;
+    }
 }

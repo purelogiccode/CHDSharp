@@ -1,10 +1,8 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct RankPos
+namespace VendoredZSTD.Unsafe
 {
-    public ushort @base;
-    public ushort curr;
+    public struct rankPos
+    {
+        public ushort @base;
+        public ushort curr;
+    }
 }

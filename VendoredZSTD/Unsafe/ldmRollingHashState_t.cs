@@ -1,10 +1,8 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct LdmRollingHashStateT
+namespace VendoredZSTD.Unsafe
 {
-    public ulong rolling;
-    public ulong stopMask;
+    public struct ldmRollingHashState_t
+    {
+        public ulong rolling;
+        public ulong stopMask;
+    }
 }

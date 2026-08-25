@@ -1,10 +1,8 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct OffsetCountT
+namespace VendoredZSTD.Unsafe
 {
-    public uint offset;
-    public uint count;
+    public struct offsetCount_t
+    {
+        public uint offset;
+        public uint count;
+    }
 }

@@ -1,338 +1,311 @@
 using static VendoredZSTD.UnsafeHelper;
 
-namespace VendoredZSTD.Unsafe;
-
-public static unsafe partial class Methods
+namespace VendoredZSTD.Unsafe
 {
-    private static int _gDisplayLevel;
-
-    /**
-     * Returns the sum of the sample sizes.
-     */
-    private static nuint COVER_sum(nuint* samplesSizes, uint nbSamples)
+    public static unsafe partial class Methods
     {
-        nuint sum = 0;
-        uint i;
-        for (i = 0; i < nbSamples; ++i)
+        private static int g_displayLevel = 0;
+        /**
+         * Returns the sum of the sample sizes.
+         */
+        private static nuint COVER_sum(nuint* samplesSizes, uint nbSamples)
         {
-            sum += samplesSizes[i];
+            nuint sum = 0;
+            uint i;
+            for (i = 0; i < nbSamples; ++i)
+            {
+                sum += samplesSizes[i];
+            }
+
+            return sum;
         }
 
-        return sum;
-    }
-
-    /**
-     * Warns the user when their corpus is too small.
-     */
-    private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers)
-    {
-        var ratio = nbDmers / (double)maxDictSize;
-        if (ratio >= 10)
+        /**
+         * Warns the user when their corpus is too small.
+         */
+        private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers, int displayLevel)
         {
+            double ratio = nbDmers / (double)maxDictSize;
+            if (ratio >= 10)
+            {
+                return;
+            }
         }
-    }
 
-    /**
-     * Computes the number of epochs and the size of each epoch.
-     * We will make sure that each epoch gets at least 10 * k bytes.
-     *
-     * The COVER algorithms divide the data up into epochs of equal size and
-     * select one segment from each epoch.
-     *
-     * @param maxDictSize The maximum allowed dictionary size.
-     * @param nbDmers     The number of dmers we are training on.
-     * @param k           The parameter k (segment size).
-     * @param passes      The target number of passes over the dmer corpus.
-     *                    More passes means a better dictionary.
-     */
-    private static CoverEpochInfoT COVER_computeEpochs(uint maxDictSize, uint nbDmers, uint k, uint passes)
-    {
-        var minEpochSize = k * 10;
-        CoverEpochInfoT epochs;
-        epochs.num = 1 > maxDictSize / k / passes ? 1 : maxDictSize / k / passes;
-        epochs.size = nbDmers / epochs.num;
-        if (epochs.size >= minEpochSize)
+        /**
+         * Computes the number of epochs and the size of each epoch.
+         * We will make sure that each epoch gets at least 10 * k bytes.
+         *
+         * The COVER algorithms divide the data up into epochs of equal size and
+         * select one segment from each epoch.
+         *
+         * @param maxDictSize The maximum allowed dictionary size.
+         * @param nbDmers     The number of dmers we are training on.
+         * @param k           The parameter k (segment size).
+         * @param passes      The target number of passes over the dmer corpus.
+         *                    More passes means a better dictionary.
+         */
+        private static COVER_epoch_info_t COVER_computeEpochs(uint maxDictSize, uint nbDmers, uint k, uint passes)
         {
+            uint minEpochSize = k * 10;
+            COVER_epoch_info_t epochs;
+            epochs.num = 1 > maxDictSize / k / passes ? 1 : maxDictSize / k / passes;
+            epochs.size = nbDmers / epochs.num;
+            if (epochs.size >= minEpochSize)
+            {
+                assert(epochs.size * epochs.num <= nbDmers);
+                return epochs;
+            }
+
+            epochs.size = minEpochSize < nbDmers ? minEpochSize : nbDmers;
+            epochs.num = nbDmers / epochs.size;
             assert(epochs.size * epochs.num <= nbDmers);
             return epochs;
         }
 
-        epochs.size = minEpochSize < nbDmers ? minEpochSize : nbDmers;
-        epochs.num = nbDmers / epochs.size;
-        assert(epochs.size * epochs.num <= nbDmers);
-        return epochs;
-    }
-
-    /**
-     *  Checks total compressed size of a dictionary
-     */
-    private static nuint COVER_checkTotalCompressedSize(ZdictCoverParamsT parameters, nuint* samplesSizes, byte* samples, nuint* offsets, nuint nbTrainSamples, nuint nbSamples, byte* dict, nuint dictBufferCapacity)
-    {
-        var totalCompressedSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-        /* Pointers */
-        void* dst;
-        /* Local variables */
-        nuint dstCapacity;
-        nuint i;
+        /**
+         *  Checks total compressed size of a dictionary
+         */
+        private static nuint COVER_checkTotalCompressedSize(ZDICT_cover_params_t parameters, nuint* samplesSizes, byte* samples, nuint* offsets, nuint nbTrainSamples, nuint nbSamples, byte* dict, nuint dictBufferCapacity)
         {
-            nuint maxSampleSize = 0;
-            i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
-            for (; i < nbSamples; ++i)
+            nuint totalCompressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            /* Pointers */
+            ZSTD_CCtx_s* cctx;
+            ZSTD_CDict_s* cdict;
+            void* dst;
+            /* Local variables */
+            nuint dstCapacity;
+            nuint i;
             {
-                maxSampleSize = samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
+                nuint maxSampleSize = 0;
+                i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
+                for (; i < nbSamples; ++i)
+                {
+                    maxSampleSize = samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
+                }
+
+                dstCapacity = ZSTD_compressBound(maxSampleSize);
+                dst = malloc(dstCapacity);
             }
 
-            dstCapacity = ZSTD_compressBound(maxSampleSize);
-            dst = malloc(dstCapacity);
-        }
-
-        var cctx = ZSTD_createCCtx();
-        var cdict = ZSTD_createCDict(dict, dictBufferCapacity, parameters.zParams.compressionLevel);
-        if (dst == null || cctx == null || cdict == null)
-        {
-            goto _compressCleanup;
-        }
-
-        totalCompressedSize = dictBufferCapacity;
-        i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
-        for (; i < nbSamples; ++i)
-        {
-            var size = ZSTD_compress_usingCDict(cctx, dst, dstCapacity, samples + offsets[i], samplesSizes[i], cdict);
-            if (ERR_isError(size))
+            cctx = ZSTD_createCCtx();
+            cdict = ZSTD_createCDict(dict, dictBufferCapacity, parameters.zParams.compressionLevel);
+            if (dst == null || cctx == null || cdict == null)
             {
-                totalCompressedSize = size;
                 goto _compressCleanup;
             }
 
-            totalCompressedSize += size;
-        }
-
-        _compressCleanup:
-        ZSTD_freeCCtx(cctx);
-        ZSTD_freeCDict(cdict);
-        if (dst != null)
-        {
-            free(dst);
-        }
-
-        return totalCompressedSize;
-    }
-
-    /**
-     * Initialize the `COVER_best_t`.
-     */
-    private static void COVER_best_init(CoverBestS* best)
-    {
-        if (best == null)
-            return;
-
-        SynchronizationWrapper.Init(&best->mutex);
-        best->liveJobs = 0;
-        best->dict = null;
-        best->dictSize = 0;
-        best->compressedSize = unchecked((nuint)(-1));
-        best->parameters = new ZdictCoverParamsT();
-    }
-
-    /**
-     * Wait until liveJobs == 0.
-     */
-    private static void COVER_best_wait(CoverBestS* best)
-    {
-        if (best == null)
-        {
-            return;
-        }
-
-        SynchronizationWrapper.Enter(&best->mutex);
-        // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
-        while (best->liveJobs != 0)
-        {
-            SynchronizationWrapper.Wait(&best->mutex);
-        }
-
-        SynchronizationWrapper.Exit(&best->mutex);
-    }
-
-    /**
-     * Call COVER_best_wait() and then destroy the COVER_best_t.
-     */
-    private static void COVER_best_destroy(CoverBestS* best)
-    {
-        if (best == null)
-        {
-            return;
-        }
-
-        COVER_best_wait(best);
-        if (best->dict != null)
-        {
-            free(best->dict);
-        }
-
-        SynchronizationWrapper.Free(&best->mutex);
-    }
-
-    /**
-     * Called when a thread is about to be launched.
-     * Increments liveJobs.
-     */
-    private static void COVER_best_start(CoverBestS* best)
-    {
-        if (best == null)
-        {
-            return;
-        }
-
-        SynchronizationWrapper.Enter(&best->mutex);
-        ++best->liveJobs;
-        SynchronizationWrapper.Exit(&best->mutex);
-    }
-
-    /**
-     * Called when a thread finishes executing, both on error or success.
-     * Decrements liveJobs and signals any waiting threads if liveJobs == 0.
-     * If this dictionary is the best so far save it and its parameters.
-     */
-    private static void COVER_best_finish(CoverBestS* best, ZdictCoverParamsT parameters, CoverDictSelection selection)
-    {
-        void* dict = selection.dictContent;
-        var compressedSize = selection.totalCompressedSize;
-        var dictSize = selection.dictSize;
-        if (best == null)
-        {
-            return;
-        }
-
-        {
-            SynchronizationWrapper.Enter(&best->mutex);
-            --best->liveJobs;
-            var liveJobs = best->liveJobs;
-            if (compressedSize < best->compressedSize)
+            totalCompressedSize = dictBufferCapacity;
+            i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
+            for (; i < nbSamples; ++i)
             {
-                if (best->dict == null || best->dictSize < dictSize)
+                nuint size = ZSTD_compress_usingCDict(cctx, dst, dstCapacity, samples + offsets[i], samplesSizes[i], cdict);
+                if (ERR_isError(size))
                 {
-                    if (best->dict != null)
-                    {
-                        free(best->dict);
-                    }
-
-                    best->dict = malloc(dictSize);
-                    if (best->dict == null)
-                    {
-                        best->compressedSize = unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-                        best->dictSize = 0;
-                        SynchronizationWrapper.Pulse(&best->mutex);
-                        SynchronizationWrapper.Exit(&best->mutex);
-                        return;
-                    }
+                    totalCompressedSize = size;
+                    goto _compressCleanup;
                 }
 
-                if (dict != null)
-                {
-                    memcpy(best->dict, dict, (uint)dictSize);
-                    best->dictSize = dictSize;
-                    best->parameters = parameters;
-                    best->compressedSize = compressedSize;
-                }
+                totalCompressedSize += size;
             }
 
-            if (liveJobs == 0)
+        _compressCleanup:
+            ZSTD_freeCCtx(cctx);
+            ZSTD_freeCDict(cdict);
+            if (dst != null)
             {
-                SynchronizationWrapper.PulseAll(&best->mutex);
+                free(dst);
+            }
+
+            return totalCompressedSize;
+        }
+
+        /**
+         * Initialize the `COVER_best_t`.
+         */
+        private static void COVER_best_init(COVER_best_s* best)
+        {
+            if (best == null)
+                return;
+            SynchronizationWrapper.Init(&best->mutex);
+            best->liveJobs = 0;
+            best->dict = null;
+            best->dictSize = 0;
+            best->compressedSize = unchecked((nuint)(-1));
+            memset(&best->parameters, 0, (uint)sizeof(ZDICT_cover_params_t));
+        }
+
+        /**
+         * Wait until liveJobs == 0.
+         */
+        private static void COVER_best_wait(COVER_best_s* best)
+        {
+            if (best == null)
+            {
+                return;
+            }
+
+            SynchronizationWrapper.Enter(&best->mutex);
+            while (best->liveJobs != 0)
+            {
+                SynchronizationWrapper.Wait(&best->mutex);
             }
 
             SynchronizationWrapper.Exit(&best->mutex);
         }
-    }
 
-    private static CoverDictSelection SetDictSelection(byte* buf, nuint s, nuint csz)
-    {
-        CoverDictSelection ds;
-        ds.dictContent = buf;
-        ds.dictSize = s;
-        ds.totalCompressedSize = csz;
-        return ds;
-    }
-
-    /**
-     * Error function for COVER_selectDict function. Returns a struct where
-     * return.totalCompressedSize is a ZSTD error.
-     */
-    private static CoverDictSelection COVER_dictSelectionError(nuint error)
-    {
-        return SetDictSelection(null, 0, error);
-    }
-
-    /**
-     * Error function for COVER_selectDict function. Checks if the return
-     * value is an error.
-     */
-    private static uint COVER_dictSelectionIsError(CoverDictSelection selection)
-    {
-        return ERR_isError(selection.totalCompressedSize) || selection.dictContent == null ? 1U : 0U;
-    }
-
-    /**
-     * Always call after selectDict is called to free up used memory from
-     * newly created dictionary.
-     */
-    private static void COVER_dictSelectionFree(CoverDictSelection selection)
-    {
-        free(selection.dictContent);
-    }
-
-    /**
-     * Called to finalize the dictionary and select one based on whether or not
-     * the shrink-dict flag was enabled. If enabled the dictionary used is the
-     * smallest dictionary within a specified regression of the compressed size
-     * from the largest dictionary.
-     */
-    private static CoverDictSelection COVER_selectDict(byte* customDictContent, nuint dictBufferCapacity, nuint dictContentSize,
-        byte* samplesBuffer, nuint* samplesSizes, uint nbFinalizeSamples, nuint nbCheckSamples, nuint nbSamples,
-        ZdictCoverParamsT @params, nuint* offsets)
-    {
-        var customDictContentEnd = customDictContent + dictContentSize;
-        var largestDictbuffer = (byte*)malloc(dictBufferCapacity);
-        var candidateDictBuffer = (byte*)malloc(dictBufferCapacity);
-        var regressionTolerance = (double)@params.shrinkDictMaxRegression / 100 + 1;
-        if (largestDictbuffer == null || candidateDictBuffer == null)
+        /**
+         * Call COVER_best_wait() and then destroy the COVER_best_t.
+         */
+        private static void COVER_best_destroy(COVER_best_s* best)
         {
-            free(largestDictbuffer);
-            free(candidateDictBuffer);
-            return COVER_dictSelectionError(dictContentSize);
+            if (best == null)
+            {
+                return;
+            }
+
+            COVER_best_wait(best);
+            if (best->dict != null)
+            {
+                free(best->dict);
+            }
+
+            SynchronizationWrapper.Free(&best->mutex);
         }
 
-        memcpy(largestDictbuffer, customDictContent, (uint)dictContentSize);
-        dictContentSize = ZDICT_finalizeDictionary(largestDictbuffer, dictBufferCapacity, customDictContent, dictContentSize, samplesBuffer, samplesSizes, nbFinalizeSamples, @params.zParams);
-        if (ZDICT_isError(dictContentSize))
+        /**
+         * Called when a thread is about to be launched.
+         * Increments liveJobs.
+         */
+        private static void COVER_best_start(COVER_best_s* best)
         {
-            free(largestDictbuffer);
-            free(candidateDictBuffer);
-            return COVER_dictSelectionError(dictContentSize);
+            if (best == null)
+            {
+                return;
+            }
+
+            SynchronizationWrapper.Enter(&best->mutex);
+            ++best->liveJobs;
+            SynchronizationWrapper.Exit(&best->mutex);
         }
 
-        var totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, largestDictbuffer, dictContentSize);
-        if (ERR_isError(totalCompressedSize))
+        /**
+         * Called when a thread finishes executing, both on error or success.
+         * Decrements liveJobs and signals any waiting threads if liveJobs == 0.
+         * If this dictionary is the best so far save it and its parameters.
+         */
+        private static void COVER_best_finish(COVER_best_s* best, ZDICT_cover_params_t parameters, COVER_dictSelection selection)
         {
-            free(largestDictbuffer);
-            free(candidateDictBuffer);
-            return COVER_dictSelectionError(totalCompressedSize);
+            void* dict = selection.dictContent;
+            nuint compressedSize = selection.totalCompressedSize;
+            nuint dictSize = selection.dictSize;
+            if (best == null)
+            {
+                return;
+            }
+
+            {
+                nuint liveJobs;
+                SynchronizationWrapper.Enter(&best->mutex);
+                --best->liveJobs;
+                liveJobs = best->liveJobs;
+                if (compressedSize < best->compressedSize)
+                {
+                    if (best->dict == null || best->dictSize < dictSize)
+                    {
+                        if (best->dict != null)
+                        {
+                            free(best->dict);
+                        }
+
+                        best->dict = malloc(dictSize);
+                        if (best->dict == null)
+                        {
+                            best->compressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                            best->dictSize = 0;
+                            SynchronizationWrapper.Pulse(&best->mutex);
+                            SynchronizationWrapper.Exit(&best->mutex);
+                            return;
+                        }
+                    }
+
+                    if (dict != null)
+                    {
+                        memcpy(best->dict, dict, (uint)dictSize);
+                        best->dictSize = dictSize;
+                        best->parameters = parameters;
+                        best->compressedSize = compressedSize;
+                    }
+                }
+
+                if (liveJobs == 0)
+                {
+                    SynchronizationWrapper.PulseAll(&best->mutex);
+                }
+
+                SynchronizationWrapper.Exit(&best->mutex);
+            }
         }
 
-        if (@params.shrinkDict == 0)
+        private static COVER_dictSelection setDictSelection(byte* buf, nuint s, nuint csz)
         {
-            free(candidateDictBuffer);
-            return SetDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
+            COVER_dictSelection ds;
+            ds.dictContent = buf;
+            ds.dictSize = s;
+            ds.totalCompressedSize = csz;
+            return ds;
         }
 
-        var largestDict = dictContentSize;
-        var largestCompressed = totalCompressedSize;
-        dictContentSize = 256;
-        while (dictContentSize < largestDict)
+        /**
+         * Error function for COVER_selectDict function. Returns a struct where
+         * return.totalCompressedSize is a ZSTD error.
+         */
+        private static COVER_dictSelection COVER_dictSelectionError(nuint error)
         {
-            memcpy(candidateDictBuffer, largestDictbuffer, (uint)largestDict);
-            dictContentSize = ZDICT_finalizeDictionary(candidateDictBuffer, dictBufferCapacity, customDictContentEnd - dictContentSize, dictContentSize, samplesBuffer, samplesSizes, nbFinalizeSamples, @params.zParams);
+            return setDictSelection(null, 0, error);
+        }
+
+        /**
+         * Error function for COVER_selectDict function. Checks if the return
+         * value is an error.
+         */
+        private static uint COVER_dictSelectionIsError(COVER_dictSelection selection)
+        {
+            return ERR_isError(selection.totalCompressedSize) || selection.dictContent == null ? 1U : 0U;
+        }
+
+        /**
+         * Always call after selectDict is called to free up used memory from
+         * newly created dictionary.
+         */
+        private static void COVER_dictSelectionFree(COVER_dictSelection selection)
+        {
+            free(selection.dictContent);
+        }
+
+        /**
+         * Called to finalize the dictionary and select one based on whether or not
+         * the shrink-dict flag was enabled. If enabled the dictionary used is the
+         * smallest dictionary within a specified regression of the compressed size
+         * from the largest dictionary.
+         */
+        private static COVER_dictSelection COVER_selectDict(byte* customDictContent, nuint dictBufferCapacity, nuint dictContentSize, byte* samplesBuffer, nuint* samplesSizes, uint nbFinalizeSamples, nuint nbCheckSamples, nuint nbSamples, ZDICT_cover_params_t @params, nuint* offsets, nuint totalCompressedSize)
+        {
+            nuint largestDict = 0;
+            nuint largestCompressed = 0;
+            byte* customDictContentEnd = customDictContent + dictContentSize;
+            byte* largestDictbuffer = (byte*)malloc(dictBufferCapacity);
+            byte* candidateDictBuffer = (byte*)malloc(dictBufferCapacity);
+            double regressionTolerance = (double)@params.shrinkDictMaxRegression / 100 + 1;
+            if (largestDictbuffer == null || candidateDictBuffer == null)
+            {
+                free(largestDictbuffer);
+                free(candidateDictBuffer);
+                return COVER_dictSelectionError(dictContentSize);
+            }
+
+            memcpy(largestDictbuffer, customDictContent, (uint)dictContentSize);
+            dictContentSize = ZDICT_finalizeDictionary(largestDictbuffer, dictBufferCapacity, customDictContent, dictContentSize, samplesBuffer, samplesSizes, nbFinalizeSamples, @params.zParams);
             if (ZDICT_isError(dictContentSize))
             {
                 free(largestDictbuffer);
@@ -340,7 +313,7 @@ public static unsafe partial class Methods
                 return COVER_dictSelectionError(dictContentSize);
             }
 
-            totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, candidateDictBuffer, dictContentSize);
+            totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, largestDictbuffer, dictContentSize);
             if (ERR_isError(totalCompressedSize))
             {
                 free(largestDictbuffer);
@@ -348,18 +321,47 @@ public static unsafe partial class Methods
                 return COVER_dictSelectionError(totalCompressedSize);
             }
 
-            if (totalCompressedSize <= largestCompressed * regressionTolerance)
+            if (@params.shrinkDict == 0)
             {
-                free(largestDictbuffer);
-                return SetDictSelection(candidateDictBuffer, dictContentSize, totalCompressedSize);
+                free(candidateDictBuffer);
+                return setDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
             }
 
-            dictContentSize *= 2;
-        }
+            largestDict = dictContentSize;
+            largestCompressed = totalCompressedSize;
+            dictContentSize = 256;
+            while (dictContentSize < largestDict)
+            {
+                memcpy(candidateDictBuffer, largestDictbuffer, (uint)largestDict);
+                dictContentSize = ZDICT_finalizeDictionary(candidateDictBuffer, dictBufferCapacity, customDictContentEnd - dictContentSize, dictContentSize, samplesBuffer, samplesSizes, nbFinalizeSamples, @params.zParams);
+                if (ZDICT_isError(dictContentSize))
+                {
+                    free(largestDictbuffer);
+                    free(candidateDictBuffer);
+                    return COVER_dictSelectionError(dictContentSize);
+                }
 
-        dictContentSize = largestDict;
-        totalCompressedSize = largestCompressed;
-        free(candidateDictBuffer);
-        return SetDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
+                totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, candidateDictBuffer, dictContentSize);
+                if (ERR_isError(totalCompressedSize))
+                {
+                    free(largestDictbuffer);
+                    free(candidateDictBuffer);
+                    return COVER_dictSelectionError(totalCompressedSize);
+                }
+
+                if (totalCompressedSize <= largestCompressed * regressionTolerance)
+                {
+                    free(largestDictbuffer);
+                    return setDictSelection(candidateDictBuffer, dictContentSize, totalCompressedSize);
+                }
+
+                dictContentSize *= 2;
+            }
+
+            dictContentSize = largestDict;
+            totalCompressedSize = largestCompressed;
+            free(candidateDictBuffer);
+            return setDictSelection(largestDictbuffer, dictContentSize, totalCompressedSize);
+        }
     }
 }

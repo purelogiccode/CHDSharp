@@ -1,7 +1,8 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum ZstdDefaultPolicyE
+namespace VendoredZSTD.Unsafe
 {
-    ZstdDefaultDisallowed = 0,
-    ZstdDefaultAllowed = 1
+    public enum ZSTD_defaultPolicy_e
+    {
+        ZSTD_defaultDisallowed = 0,
+        ZSTD_defaultAllowed = 1
+    }
 }

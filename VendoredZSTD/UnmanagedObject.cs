@@ -1,29 +1,19 @@
+using System;
 using System.Runtime.InteropServices;
 
-namespace VendoredZSTD;
-
-/*
- * Wrap object to void* to make it unmanaged
- */
-internal static unsafe class UnmanagedObject
+namespace VendoredZSTD
 {
-    public static void* Wrap(object obj)
+    /*
+     * Wrap object to void* to make it unmanaged
+     */
+    internal static unsafe class UnmanagedObject
     {
-        return (void*)GCHandle.ToIntPtr(GCHandle.Alloc(obj));
-    }
+        public static void* Wrap(object obj) => (void*)GCHandle.ToIntPtr(GCHandle.Alloc(obj));
 
-    private static GCHandle UnwrapGcHandle(void* value)
-    {
-        return GCHandle.FromIntPtr((IntPtr)value);
-    }
+        private static GCHandle UnwrapGcHandle(void* value) => GCHandle.FromIntPtr((IntPtr)value);
 
-    public static T Unwrap<T>(void* value)
-    {
-        return (T)UnwrapGcHandle(value).Target!;
-    }
+        public static T Unwrap<T>(void* value) => (T)UnwrapGcHandle(value).Target!;
 
-    public static void Free(void* value)
-    {
-        UnwrapGcHandle(value).Free();
+        public static void Free(void* value) => UnwrapGcHandle(value).Free();
     }
 }

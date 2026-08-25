@@ -1,11 +1,9 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct FseDecodeT
+namespace VendoredZSTD.Unsafe
 {
-    public ushort newState;
-    public byte symbol;
-    public byte nbBits;
+    public struct FSE_decode_t
+    {
+        public ushort newState;
+        public byte symbol;
+        public byte nbBits;
+    }
 }

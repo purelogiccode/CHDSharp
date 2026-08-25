@@ -1,10 +1,8 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct ZstdEntropyCTablesMetadataT
+namespace VendoredZSTD.Unsafe
 {
-    public ZstdHufCTablesMetadataT hufMetadata;
-    public ZstdFseCTablesMetadataT fseMetadata;
+    public struct ZSTD_entropyCTablesMetadata_t
+    {
+        public ZSTD_hufCTablesMetadata_t hufMetadata;
+        public ZSTD_fseCTablesMetadata_t fseMetadata;
+    }
 }

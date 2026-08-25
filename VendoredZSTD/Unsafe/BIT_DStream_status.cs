@@ -1,16 +1,11 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum BitDStreamStatus
+namespace VendoredZSTD.Unsafe
 {
-    /* fully refilled */
-    BitDStreamUnfinished = 0,
-
-    /* still some bits left in bitstream */
-    BitDStreamEndOfBuffer = 1,
-
-    /* bitstream entirely consumed, bit-exact */
-    BitDStreamCompleted = 2,
-
-    /* user requested more bits than present in bitstream */
-    BitDStreamOverflow = 3
+    public enum BIT_DStream_status
+    {
+        BIT_DStream_unfinished = 0,
+        BIT_DStream_endOfBuffer = 1,
+        BIT_DStream_completed = 2,
+        /* result of BIT_reloadDStream() */
+        BIT_DStream_overflow = 3
+    }
 }

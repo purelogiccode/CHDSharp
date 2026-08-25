@@ -1,15 +1,13 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-/*-***************************/
-/*  generic DTableDesc       */
-/*-***************************/
-[StructLayout(LayoutKind.Sequential)]
-public struct DTableDesc
+namespace VendoredZSTD.Unsafe
 {
-    public byte maxTableLog;
-    public byte tableType;
-    public byte tableLog;
-    public byte reserved;
+    /*-***************************/
+    /*  generic DTableDesc       */
+    /*-***************************/
+    public struct DTableDesc
+    {
+        public byte maxTableLog;
+        public byte tableType;
+        public byte tableLog;
+        public byte reserved;
+    }
 }

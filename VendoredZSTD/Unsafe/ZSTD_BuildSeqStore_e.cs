@@ -1,7 +1,8 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum ZstdBuildSeqStoreE
+namespace VendoredZSTD.Unsafe
 {
-    ZstDbssCompress,
-    ZstDbssNoCompress
+    public enum ZSTD_buildSeqStore_e
+    {
+        ZSTDbss_compress,
+        ZSTDbss_noCompress
+    }
 }

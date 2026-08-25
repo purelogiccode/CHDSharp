@@ -1,21 +1,17 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct SeqStateT
+namespace VendoredZSTD.Unsafe
 {
-    public BitDStreamT DStream;
-    public ZstdFseState stateLL;
-    public ZstdFseState stateOffb;
-    public ZstdFseState stateML;
-    public PrevOffsetEFixedBuffer prevOffset;
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct PrevOffsetEFixedBuffer
+    public unsafe struct seqState_t
     {
-        public nuint e0;
-        public nuint e1;
-        public nuint e2;
+        public BIT_DStream_t DStream;
+        public ZSTD_fseState stateLL;
+        public ZSTD_fseState stateOffb;
+        public ZSTD_fseState stateML;
+        public _prevOffset_e__FixedBuffer prevOffset;
+        public unsafe struct _prevOffset_e__FixedBuffer
+        {
+            public nuint e0;
+            public nuint e1;
+            public nuint e2;
+        }
     }
 }

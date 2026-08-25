@@ -1,15 +1,13 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-/* ------------------------------------------ */
-/* =====   Multi-threaded compression   ===== */
-/* ------------------------------------------ */
-[StructLayout(LayoutKind.Sequential)]
-public struct InBuffT
+namespace VendoredZSTD.Unsafe
 {
-    /* read-only non-owned prefix buffer */
-    public Range prefix;
-    public BufferS buffer;
-    public nuint filled;
+    /* ------------------------------------------ */
+    /* =====   Multi-threaded compression   ===== */
+    /* ------------------------------------------ */
+    public struct inBuff_t
+    {
+        /* read-only non-owned prefix buffer */
+        public range_t prefix;
+        public buffer_s buffer;
+        public nuint filled;
+    }
 }

@@ -1,7 +1,8 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum ZstdDictTableLoadMethodE
+namespace VendoredZSTD.Unsafe
 {
-    ZstdDtlmFast,
-    ZstdDtlmFull
+    public enum ZSTD_dictTableLoadMethod_e
+    {
+        ZSTD_dtlm_fast,
+        ZSTD_dtlm_full
+    }
 }

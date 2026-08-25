@@ -1,9 +1,7 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct SortedSymbolT
+namespace VendoredZSTD.Unsafe
 {
-    public byte symbol;
+    public struct sortedSymbol_t
+    {
+        public byte symbol;
+    }
 }

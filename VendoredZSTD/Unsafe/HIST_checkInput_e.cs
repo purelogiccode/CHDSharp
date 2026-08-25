@@ -1,7 +1,8 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum HistCheckInputE
+namespace VendoredZSTD.Unsafe
 {
-    TrustInput,
-    CheckMaxSymbolValue
+    public enum HIST_checkInput_e
+    {
+        trustInput,
+        checkMaxSymbolValue
+    }
 }

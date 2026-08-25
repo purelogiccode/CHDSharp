@@ -1,22 +1,18 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-/*-*************************************
- * Acceleration
- ***************************************/
-[StructLayout(LayoutKind.Sequential)]
-public struct FastcoverAccelT
+namespace VendoredZSTD.Unsafe
 {
-    /* Percentage of training samples used for ZDICT_finalizeDictionary */
-    public uint finalize;
-
-    /* Number of dmer skipped between each dmer counted in computeFrequency */
-    public uint skip;
-
-    public FastcoverAccelT(uint finalize, uint skip)
+    /*-*************************************
+     * Acceleration
+     ***************************************/
+    public struct FASTCOVER_accel_t
     {
-        this.finalize = finalize;
-        this.skip = skip;
+        /* Percentage of training samples used for ZDICT_finalizeDictionary */
+        public uint finalize;
+        /* Number of dmer skipped between each dmer counted in computeFrequency */
+        public uint skip;
+        public FASTCOVER_accel_t(uint finalize, uint skip)
+        {
+            this.finalize = finalize;
+            this.skip = skip;
+        }
     }
 }

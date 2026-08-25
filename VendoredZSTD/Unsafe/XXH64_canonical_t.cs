@@ -1,12 +1,8 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-/*!
- * @brief Canonical (big endian) representation of @ref XXH64_hash_t.
- */
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct Xxh64CanonicalT
+namespace VendoredZSTD.Unsafe
 {
-    public fixed byte digest[8];
+    /*******   Canonical representation   *******/
+    public unsafe struct XXH64_canonical_t
+    {
+        public fixed byte digest[8];
+    }
 }

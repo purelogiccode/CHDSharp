@@ -1,20 +1,16 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-/* Type returned by ZSTD_buildSequencesStatistics containing finalized symbol encoding types
- * and size of the sequences statistics
- */
-[StructLayout(LayoutKind.Sequential)]
-public struct ZstdSymbolEncodingTypeStatsT
+namespace VendoredZSTD.Unsafe
 {
-    public uint LLtype;
-    public uint Offtype;
-    public uint MLtype;
-
-    public nuint size;
-
-    /* Accounts for bug in 1.3.4. More detail in ZSTD_entropyCompressSeqStore_internal() */
-    public nuint lastCountSize;
-    public int longOffsets;
+    /* Type returned by ZSTD_buildSequencesStatistics containing finalized symbol encoding types
+     * and size of the sequences statistics
+     */
+    public struct ZSTD_symbolEncodingTypeStats_t
+    {
+        public uint LLtype;
+        public uint Offtype;
+        public uint MLtype;
+        public nuint size;
+        /* Accounts for bug in 1.3.4. More detail in ZSTD_entropyCompressSeqStore_internal() */
+        public nuint lastCountSize;
+        public int longOffsets;
+    }
 }

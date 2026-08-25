@@ -1,31 +1,25 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct LdmStateT
+namespace VendoredZSTD.Unsafe
 {
-    /* State for the window round buffer management */
-    public ZstdWindowT window;
-    public LdmEntryT* hashTable;
-
-    public uint loadedDictEnd;
-
-    /* Next position in bucket to insert entry */
-    public byte* bucketOffsets;
-    public SplitIndicesEFixedBuffer splitIndices;
-    public MatchCandidatesEFixedBuffer matchCandidates;
-#if NET8_0_OR_GREATER
-    [InlineArray(64)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct SplitIndicesEFixedBuffer
+    public unsafe struct ldmState_t
     {
-        public nuint e0;
-    }
+        /* State for the window round buffer management */
+        public ZSTD_window_t window;
+        public ldmEntry_t* hashTable;
+        public uint loadedDictEnd;
+        /* Next position in bucket to insert entry */
+        public byte* bucketOffsets;
+        public _splitIndices_e__FixedBuffer splitIndices;
+        public _matchCandidates_e__FixedBuffer matchCandidates;
+#if NET8_0_OR_GREATER
+        [InlineArray(64)]
+        public unsafe struct _splitIndices_e__FixedBuffer
+        {
+            public nuint e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _splitIndices_e__FixedBuffer
         {
             public nuint e0;
@@ -96,15 +90,13 @@ public unsafe struct LdmStateT
 #endif
 
 #if NET8_0_OR_GREATER
-    [InlineArray(64)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MatchCandidatesEFixedBuffer
-    {
-        public LdmMatchCandidateT e0;
-    }
+        [InlineArray(64)]
+        public unsafe struct _matchCandidates_e__FixedBuffer
+        {
+            public ldmMatchCandidate_t e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _matchCandidates_e__FixedBuffer
         {
             public ldmMatchCandidate_t e0;
@@ -173,4 +165,5 @@ public unsafe struct LdmStateT
             public ldmMatchCandidate_t e63;
         }
 #endif
+    }
 }

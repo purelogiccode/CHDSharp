@@ -1,7 +1,8 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum ZstdResetTargetE
+namespace VendoredZSTD.Unsafe
 {
-    ZstdResetTargetCDict,
-    ZstdResetTargetCCtx
+    public enum ZSTD_resetTarget_e
+    {
+        ZSTD_resetTarget_CDict,
+        ZSTD_resetTarget_CCtx
+    }
 }

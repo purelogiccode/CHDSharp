@@ -787,4 +787,4 @@ MIT License — see [LICENSE](LICENSE).
 - **[Gordon Jefferyes](https://github.com/gjefferyes)** — original C# CHDSharp implementation
 - **[MAME](https://www.mamedev.org/)** — CHD format specification and `chdman` reference
 - **[libchdr](https://github.com/rtissera/libchdr)** — C reference library by Romain Tisseraud
-- **[ZstdSharp](https://github.com/oleg-st/ZstdSharp)** — original pure C# Zstd port by Oleg Stepanischev, vendored in-repo as `VendoredZSTD`
+- **[ZstdSharp](https://github.com/oleg-st/ZstdSharp)** — original pure C# Zstd port by Oleg Stepanischev, vendored in-repo as `VendoredZSTD` (ZstdSharp **0.7.6** = libzstd **1.5.5** source)

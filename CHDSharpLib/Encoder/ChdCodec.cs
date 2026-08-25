@@ -98,12 +98,11 @@ public sealed class ZlibCodec : IChdCodec
 /// <c>chd_zstd_compressor</c> (<c>ZSTD_maxCLevel()</c>).
 /// </summary>
 /// <remarks>
-/// Backed by the managed <c>ZstdSharp.Port</c> package, keeping the encoder 100% pure C# and
-/// cross-platform. Caveat: ZstdSharp is a reimplementation of zstd whose frames differ from
-/// C zstd in the trailing-byte finalization on some buffer sizes. Raw 'zstd' hunks at common
-/// hunk sizes finalize identically to chdman, but CD compound ('cdzs') hunks can differ in the
-/// final frame byte — such output remains fully valid (chdman verifies it and both decoders
-/// read it) but is not bit-identical to chdman's own cdzs file.
+/// Backed by the managed <c>ZstdSharp.Port</c> 0.7.6 port of libzstd 1.5.5 - the exact version
+/// MAME 0.288 ships - keeping the encoder 100% pure C# and cross-platform. Compression is
+/// one-shot via <c>ZSTD_compress2</c>, which writes the single-segment frame header with the
+/// declared content size; the 1.5.5 encoder emits frames byte-identical to chdman for both raw
+/// and CD compound ('cdzs') hunks (verified per-hunk against chdman on the battle-test corpus).
 /// </remarks>
 public sealed class ZstdCodec : IChdCodec
 {
@@ -120,10 +119,9 @@ public sealed class ZstdCodec : IChdCodec
     /// <inheritdoc/>
     public byte[]? Compress(byte[] data)
     {
-        _compressor.ResetStream();
         var dest = new byte[Compressor.GetCompressBound(data.Length)];
-        _compressor.WrapStream(data, dest, out var consumed, out var written, isFinalBlock: true);
-        return consumed == data.Length && written < data.Length
+        var written = _compressor.Wrap(data, dest, 0);
+        return written >= 0 && written < data.Length
             ? dest.AsSpan(0, written).ToArray()
             : null;
     }

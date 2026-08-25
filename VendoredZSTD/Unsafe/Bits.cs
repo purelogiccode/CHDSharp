@@ -1,57 +1,59 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using static VendoredZSTD.UnsafeHelper;
+using System;
+using System.Numerics;
 
-namespace VendoredZSTD.Unsafe;
-
-public static partial class Methods
+namespace VendoredZSTD.Unsafe
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_countTrailingZeros32(uint val)
+    public static unsafe partial class Methods
     {
-        assert(val != 0);
-        return (uint)BitOperations.TrailingZeroCount(val);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_countLeadingZeros32(uint val)
-    {
-        assert(val != 0);
-        return (uint)BitOperations.LeadingZeroCount(val);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_countTrailingZeros64(ulong val)
-    {
-        assert(val != 0);
-        return (uint)BitOperations.TrailingZeroCount(val);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ZSTD_countLeadingZeros64(ulong val)
-    {
-        assert(val != 0);
-        return (uint)BitOperations.LeadingZeroCount(val);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [InlineMethod.Inline]
-    private static uint ZSTD_NbCommonBytes(nuint val)
-    {
-        assert(val != 0);
-        if (BitConverter.IsLittleEndian)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint ZSTD_countTrailingZeros32(uint val)
         {
-            return MEM_64bits ? (uint)BitOperations.TrailingZeroCount(val) >> 3 : (uint)BitOperations.TrailingZeroCount((uint)val) >> 3;
+            assert(val != 0);
+            return (uint)BitOperations.TrailingZeroCount(val);
         }
 
-        return MEM_64bits ? (uint)BitOperations.LeadingZeroCount(val) >> 3 : (uint)BitOperations.LeadingZeroCount((uint)val) >> 3;
-    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint ZSTD_countLeadingZeros32(uint val)
+        {
+            assert(val != 0);
+            return (uint)BitOperations.LeadingZeroCount(val);
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [InlineMethod.Inline]
-    private static uint ZSTD_highbit32(uint val)
-    {
-        assert(val != 0);
-        return (uint)BitOperations.Log2(val);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint ZSTD_countTrailingZeros64(ulong val)
+        {
+            assert(val != 0);
+            return (uint)BitOperations.TrailingZeroCount(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint ZSTD_countLeadingZeros64(ulong val)
+        {
+            assert(val != 0);
+            return (uint)BitOperations.LeadingZeroCount(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [InlineMethod.Inline]
+        private static uint ZSTD_NbCommonBytes(nuint val)
+        {
+            assert(val != 0);
+            if (BitConverter.IsLittleEndian)
+            {
+                return MEM_64bits ? (uint)BitOperations.TrailingZeroCount(val) >> 3 : (uint)BitOperations.TrailingZeroCount((uint)val) >> 3;
+            }
+
+            return MEM_64bits ? (uint)BitOperations.LeadingZeroCount(val) >> 3 : (uint)BitOperations.LeadingZeroCount((uint)val) >> 3;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [InlineMethod.Inline]
+        private static uint ZSTD_highbit32(uint val)
+        {
+            assert(val != 0);
+            return (uint)BitOperations.Log2(val);
+        }
     }
 }

@@ -1,8 +1,10 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum SearchMethodE
+namespace VendoredZSTD.Unsafe
 {
-    SearchHashChain = 0,
-    SearchBinaryTree = 1,
-    SearchRowHash = 2
+    /* Generate hash chain search fns for each combination of (dictMode, mls) */
+    public enum searchMethod_e
+    {
+        search_hashChain = 0,
+        search_binaryTree = 1,
+        search_rowHash = 2
+    }
 }

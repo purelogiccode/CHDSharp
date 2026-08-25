@@ -1,5 +1,26 @@
 # CHDSharp Release Notes
 
+## Unreleased
+
+### VendoredZSTD now tracks libzstd 1.5.5 exactly (ZstdSharp 0.7.6 source)
+
+The in-repo `VendoredZSTD` project now carries the **ZstdSharp 0.7.6** source tree - a
+C-to-C# port of **libzstd 1.5.5**, the exact version MAME 0.288 bundles. The previous
+vendored copy was ZstdSharp 0.8.8 (libzstd 1.5.7), whose encoder emitted a slightly
+different block layout for single-symbol literal streams (the CD subcode), so `cdzs`
+hunks were valid and verifiable but not byte-identical to `chdman`.
+
+With the 1.5.5 tree the encoder matches `chdman` **byte-for-byte on every hunk**:
+
+- the single-segment frame header (SS=1, declared content size) is emitted via the
+  one-shot `ZSTD_compress2` path used by `ZstdCodec`,
+- the block content (literals + sequences) is identical for both the raw `zstd` and
+  CD `cdzs` paths - including the all-identical subcode buffers.
+
+Verified per-hunk against `chdman` for all three previously-failing `cdzs` encode cases
+(cd-mixed, cd-audio, disc-iso) and across the full battle harness: the synthetic corpus
+now passes **2611/2611 checks**.
+
 ## CHDSharp v1.4.0
 
 ### Full chdman CLI argument parity
@@ -17,13 +38,13 @@ Common options mirror `chdman` (`--input/-i`, `--output/-o`, `--inputparent/-ip`
 convenience commands from earlier versions (directory scan, `--list`, `--random`, `--parent`,
 `--toc`, `--cue`, `--classify`, `--detect`, `--hash`, `--batch`) are all still available.
 
-### Full chdman battle-test parity (587/587)
+### Full chdman battle-test parity (2611/2611)
 
 The new `CHDSharpBattleTest` harness exhaustively cross-checks the CHDSharpLib **decoder**
 and the CHDSharp.Encoder **encoder** against MAME's `chdman.exe` on a deterministic corpus
 of raw and CD images — `chdman create*`, `verify`, `info`, extract parity, and **byte-identical
 encode** checks for every writable codec, plus delta/parent, CD, and A/V laserdisc scenarios.
-The full suite passes **587/587 checks**. It can also scan real-world `*.chd` folders
+The full suite passes **2611/2611 checks**. It can also scan real-world `*.chd` folders
 (`--real <dir>`) to battle-test any collection. See [Testing](testing.md).
 
 ### Byte-for-byte parity with chdman for all codecs
@@ -36,7 +57,7 @@ previously non-exact paths:
   compresses zero-padded single-frame hunks; and the mono-FLAC encoder now evaluates
   every fixed-predictor order per frame (matching libFLAC 1.4.3's behaviour for the
   mono/48 kHz avhu path).
-- **`cdzs` (CD Zstandard)** — the in-repo `VendoredZSTD` port (a C-to-C# port of the
+- **`cdzs` (CD Zstandard)** — the in-repo `VendoredZSTD` port (ZstdSharp 0.7.6 source, a C-to-C# port of the
   zstd 1.5.5 tree that MAME bundles) now emits frames byte-identical to C zstd for the
   same hunk buffers, replacing the previous NuGet `ZstdSharp.Port` dependency.
 - **`zstd` (raw Zstandard)** — same fix as `cdzs`; the encoder's `zstd` output is now

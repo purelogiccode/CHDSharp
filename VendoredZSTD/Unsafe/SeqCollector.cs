@@ -1,12 +1,10 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct SeqCollector
+namespace VendoredZSTD.Unsafe
 {
-    public int collectSequences;
-    public ZstdSequence* seqStart;
-    public nuint seqIndex;
-    public nuint maxSequences;
+    public unsafe struct SeqCollector
+    {
+        public int collectSequences;
+        public ZSTD_Sequence* seqStart;
+        public nuint seqIndex;
+        public nuint maxSequences;
+    }
 }

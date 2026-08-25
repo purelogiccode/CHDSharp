@@ -1,157 +1,146 @@
 using System.Runtime.CompilerServices;
 using static VendoredZSTD.UnsafeHelper;
 
-namespace VendoredZSTD.Unsafe;
-
-public static unsafe partial class Methods
+namespace VendoredZSTD.Unsafe
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_initCState(FseCStateT* statePtr, uint* ct)
+    public static unsafe partial class Methods
     {
-        void* ptr = ct;
-        var u16Ptr = (ushort*)ptr;
-        uint tableLog = MEM_read16(ptr);
-        statePtr->value = (nint)1 << (int)tableLog;
-        statePtr->stateTable = u16Ptr + 2;
-        statePtr->symbolTT = ct + 1 + (tableLog != 0 ? 1 << (int)(tableLog - 1) : 1);
-        statePtr->stateLog = tableLog;
-    }
-
-    /*! FSE_initCState2() :
-     *   Same as FSE_initCState(), but the first symbol to include (which will be the last to be read)
-     *   uses the smallest state value possible, saving the cost of this symbol */
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_initCState2(ref FseCStateT statePtr, uint* ct, uint symbol)
-    {
-        FSE_initCState(ref statePtr, ct);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FSE_initCState(FSE_CState_t* statePtr, uint* ct)
         {
-            var symbolTt = ((FseSymbolCompressionTransform*)statePtr.symbolTT)[symbol];
-            var stateTable = (ushort*)statePtr.stateTable;
-            var nbBitsOut = (symbolTt.deltaNbBits + (1 << 15)) >> 16;
-            statePtr.value = (nint)((nbBitsOut << 16) - symbolTt.deltaNbBits);
-            statePtr.value = stateTable[(statePtr.value >> (int)nbBitsOut) + symbolTt.deltaFindState];
+            void* ptr = ct;
+            ushort* u16ptr = (ushort*)ptr;
+            uint tableLog = MEM_read16(ptr);
+            statePtr->value = (nint)1 << (int)tableLog;
+            statePtr->stateTable = u16ptr + 2;
+            statePtr->symbolTT = ct + 1 + (tableLog != 0 ? 1 << (int)(tableLog - 1) : 1);
+            statePtr->stateLog = tableLog;
         }
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_encodeSymbol(ref nuint bitCBitContainer, ref uint bitCBitPos, ref FseCStateT statePtr, uint symbol)
-    {
-        var symbolTt = ((FseSymbolCompressionTransform*)statePtr.symbolTT)[symbol];
-        var stateTable = (ushort*)statePtr.stateTable;
-        var nbBitsOut = ((uint)statePtr.value + symbolTt.deltaNbBits) >> 16;
-        BIT_addBits(ref bitCBitContainer, ref bitCBitPos, (nuint)statePtr.value, nbBitsOut);
-        statePtr.value = stateTable[(statePtr.value >> (int)nbBitsOut) + symbolTt.deltaFindState];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_flushCState(ref nuint bitCBitContainer, ref uint bitCBitPos, ref sbyte* bitCPtr, sbyte* bitCEndPtr, ref FseCStateT statePtr)
-    {
-        BIT_addBits(ref bitCBitContainer, ref bitCBitPos, (nuint)statePtr.value, statePtr.stateLog);
-        BIT_flushBits(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-    }
-
-    /* FSE_getMaxNbBits() :
-     * Approximate maximum cost of a symbol, in bits.
-     * Fractional get rounded up (i.e. a symbol with a normalized frequency of 3 gives the same result as a frequency of 2)
-     * note 1 : assume symbolValue is valid (<= maxSymbolValue)
-     * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint FSE_getMaxNbBits(void* symbolTtPtr, uint symbolValue)
-    {
-        var symbolTt = (FseSymbolCompressionTransform*)symbolTtPtr;
-        return (symbolTt[symbolValue].deltaNbBits + ((1 << 16) - 1)) >> 16;
-    }
-
-    /* FSE_bitCost() :
-     * Approximate symbol cost, as fractional value, using fixed-point format (accuracyLog fractional bits)
-     * note 1 : assume symbolValue is valid (<= maxSymbolValue)
-     * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint FSE_bitCost(void* symbolTtPtr, uint tableLog, uint symbolValue, uint accuracyLog)
-    {
-        var symbolTt = (FseSymbolCompressionTransform*)symbolTtPtr;
-        var minNbBits = symbolTt[symbolValue].deltaNbBits >> 16;
-        var threshold = (minNbBits + 1) << 16;
-        assert(tableLog < 16);
-        assert(accuracyLog < 31 - tableLog);
+        /*! FSE_initCState2() :
+         *   Same as FSE_initCState(), but the first symbol to include (which will be the last to be read)
+         *   uses the smallest state value possible, saving the cost of this symbol */
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FSE_initCState2(FSE_CState_t* statePtr, uint* ct, uint symbol)
         {
-            var tableSize = (uint)(1 << (int)tableLog);
-            var deltaFromThreshold = threshold - (symbolTt[symbolValue].deltaNbBits + tableSize);
-            /* linear interpolation (very approximate) */
-            var normalizedDeltaFromThreshold = (deltaFromThreshold << (int)accuracyLog) >> (int)tableLog;
-            var bitMultiplier = (uint)(1 << (int)accuracyLog);
-            assert(symbolTt[symbolValue].deltaNbBits + tableSize <= threshold);
-            assert(normalizedDeltaFromThreshold <= bitMultiplier);
-            return (minNbBits + 1) * bitMultiplier - normalizedDeltaFromThreshold;
+            FSE_initCState(statePtr, ct);
+            {
+                FSE_symbolCompressionTransform symbolTT = ((FSE_symbolCompressionTransform*)statePtr->symbolTT)[symbol];
+                ushort* stateTable = (ushort*)statePtr->stateTable;
+                uint nbBitsOut = symbolTT.deltaNbBits + (1 << 15) >> 16;
+                statePtr->value = (nint)((nbBitsOut << 16) - symbolTT.deltaNbBits);
+                statePtr->value = stateTable[(statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState];
+            }
         }
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_initDState(ref FseDStateT dStatePtr, ref BitDStreamT bitD, uint* dt)
-    {
-        void* ptr = dt;
-        var dTableH = (FseDTableHeader*)ptr;
-        dStatePtr.state = BIT_readBits(bitD.bitContainer, ref bitD.bitsConsumed, dTableH->tableLog);
-        BIT_reloadDStream(ref bitD.bitContainer, ref bitD.bitsConsumed, ref bitD.ptr, bitD.start, bitD.limitPtr);
-        dStatePtr.table = dt + 1;
-    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FSE_encodeSymbol(BIT_CStream_t* bitC, FSE_CState_t* statePtr, uint symbol)
+        {
+            FSE_symbolCompressionTransform symbolTT = ((FSE_symbolCompressionTransform*)statePtr->symbolTT)[symbol];
+            ushort* stateTable = (ushort*)statePtr->stateTable;
+            uint nbBitsOut = (uint)statePtr->value + symbolTT.deltaNbBits >> 16;
+            BIT_addBits(bitC, (nuint)statePtr->value, nbBitsOut);
+            statePtr->value = stateTable[(statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState];
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte FSE_peekSymbol(FseDStateT* dStatePtr)
-    {
-        var dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
-        return dInfo.symbol;
-    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FSE_flushCState(BIT_CStream_t* bitC, FSE_CState_t* statePtr)
+        {
+            BIT_addBits(bitC, (nuint)statePtr->value, statePtr->stateLog);
+            BIT_flushBits(bitC);
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_updateState(FseDStateT* dStatePtr, BitDStreamT* bitD)
-    {
-        var dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
-        uint nbBits = dInfo.nbBits;
-        var lowBits = BIT_readBits(bitD, nbBits);
-        dStatePtr->state = dInfo.newState + lowBits;
-    }
+        /* FSE_getMaxNbBits() :
+         * Approximate maximum cost of a symbol, in bits.
+         * Fractional get rounded up (i.e. a symbol with a normalized frequency of 3 gives the same result as a frequency of 2)
+         * note 1 : assume symbolValue is valid (<= maxSymbolValue)
+         * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint FSE_getMaxNbBits(void* symbolTTPtr, uint symbolValue)
+        {
+            FSE_symbolCompressionTransform* symbolTT = (FSE_symbolCompressionTransform*)symbolTTPtr;
+            return symbolTT[symbolValue].deltaNbBits + ((1 << 16) - 1) >> 16;
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [InlineMethod.Inline]
-    private static byte FSE_decodeSymbol(ref FseDStateT dStatePtr, nuint bitDBitContainer, ref uint bitDBitsConsumed)
-    {
-        var dInfo = ((FseDecodeT*)dStatePtr.table)[dStatePtr.state];
-        uint nbBits = dInfo.nbBits;
-        var symbol = dInfo.symbol;
-        var lowBits = BIT_readBits(bitDBitContainer, ref bitDBitsConsumed, nbBits);
-        dStatePtr.state = dInfo.newState + lowBits;
-        return symbol;
-    }
+        /* FSE_bitCost() :
+         * Approximate symbol cost, as fractional value, using fixed-point format (accuracyLog fractional bits)
+         * note 1 : assume symbolValue is valid (<= maxSymbolValue)
+         * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint FSE_bitCost(void* symbolTTPtr, uint tableLog, uint symbolValue, uint accuracyLog)
+        {
+            FSE_symbolCompressionTransform* symbolTT = (FSE_symbolCompressionTransform*)symbolTTPtr;
+            uint minNbBits = symbolTT[symbolValue].deltaNbBits >> 16;
+            uint threshold = minNbBits + 1 << 16;
+            assert(tableLog < 16);
+            assert(accuracyLog < 31 - tableLog);
+            {
+                uint tableSize = (uint)(1 << (int)tableLog);
+                uint deltaFromThreshold = threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
+                /* linear interpolation (very approximate) */
+                uint normalizedDeltaFromThreshold = deltaFromThreshold << (int)accuracyLog >> (int)tableLog;
+                uint bitMultiplier = (uint)(1 << (int)accuracyLog);
+                assert(symbolTT[symbolValue].deltaNbBits + tableSize <= threshold);
+                assert(normalizedDeltaFromThreshold <= bitMultiplier);
+                return (minNbBits + 1) * bitMultiplier - normalizedDeltaFromThreshold;
+            }
+        }
 
-    /*! FSE_decodeSymbolFast() :
-    unsafe, only works if no symbol has a probability > 50% */
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte FSE_decodeSymbolFast(ref FseDStateT dStatePtr, nuint bitDBitContainer, ref uint bitDBitsConsumed)
-    {
-        var dInfo = ((FseDecodeT*)dStatePtr.table)[dStatePtr.state];
-        uint nbBits = dInfo.nbBits;
-        var symbol = dInfo.symbol;
-        var lowBits = BIT_readBitsFast(bitDBitContainer, ref bitDBitsConsumed, nbBits);
-        dStatePtr.state = dInfo.newState + lowBits;
-        return symbol;
-    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FSE_initDState(FSE_DState_t* DStatePtr, BIT_DStream_t* bitD, uint* dt)
+        {
+            void* ptr = dt;
+            FSE_DTableHeader* DTableH = (FSE_DTableHeader*)ptr;
+            DStatePtr->state = BIT_readBits(bitD, DTableH->tableLog);
+            BIT_reloadDStream(bitD);
+            DStatePtr->table = dt + 1;
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint FSE_endOfDState(FseDStateT* dStatePtr)
-    {
-        return dStatePtr->state == 0 ? 1U : 0U;
-    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte FSE_peekSymbol(FSE_DState_t* DStatePtr)
+        {
+            FSE_decode_t DInfo = ((FSE_decode_t*)DStatePtr->table)[DStatePtr->state];
+            return DInfo.symbol;
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_initCState(ref FseCStateT statePtr, uint* ct)
-    {
-        void* ptr = ct;
-        var u16Ptr = (ushort*)ptr;
-        uint tableLog = MEM_read16(ptr);
-        statePtr.value = (nint)1 << (int)tableLog;
-        statePtr.stateTable = u16Ptr + 2;
-        statePtr.symbolTT = ct + 1 + (tableLog != 0 ? 1 << (int)(tableLog - 1) : 1);
-        statePtr.stateLog = tableLog;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FSE_updateState(FSE_DState_t* DStatePtr, BIT_DStream_t* bitD)
+        {
+            FSE_decode_t DInfo = ((FSE_decode_t*)DStatePtr->table)[DStatePtr->state];
+            uint nbBits = DInfo.nbBits;
+            nuint lowBits = BIT_readBits(bitD, nbBits);
+            DStatePtr->state = DInfo.newState + lowBits;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [InlineMethod.Inline]
+        private static byte FSE_decodeSymbol(FSE_DState_t* DStatePtr, BIT_DStream_t* bitD)
+        {
+            FSE_decode_t DInfo = ((FSE_decode_t*)DStatePtr->table)[DStatePtr->state];
+            uint nbBits = DInfo.nbBits;
+            byte symbol = DInfo.symbol;
+            nuint lowBits = BIT_readBits(bitD, nbBits);
+            DStatePtr->state = DInfo.newState + lowBits;
+            return symbol;
+        }
+
+        /*! FSE_decodeSymbolFast() :
+        unsafe, only works if no symbol has a probability > 50% */
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte FSE_decodeSymbolFast(FSE_DState_t* DStatePtr, BIT_DStream_t* bitD)
+        {
+            FSE_decode_t DInfo = ((FSE_decode_t*)DStatePtr->table)[DStatePtr->state];
+            uint nbBits = DInfo.nbBits;
+            byte symbol = DInfo.symbol;
+            nuint lowBits = BIT_readBitsFast(bitD, nbBits);
+            DStatePtr->state = DInfo.newState + lowBits;
+            return symbol;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint FSE_endOfDState(FSE_DState_t* DStatePtr)
+        {
+            return DStatePtr->state == 0 ? 1U : 0U;
+        }
     }
 }

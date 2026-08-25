@@ -1,14 +1,14 @@
-namespace VendoredZSTD.Unsafe;
-
-/*!
- * @internal
- * @brief Enum to indicate whether a pointer is aligned.
- */
-public enum XxhAlignment
+namespace VendoredZSTD.Unsafe
 {
-    /*!< Aligned */
-    XxhAligned,
-
-    /*!< Possibly unaligned */
-    XxhUnaligned
+    /*!
+     * @internal
+     * @brief Enum to indicate whether a pointer is aligned.
+     */
+    public enum XXH_alignment
+    {
+        /*!< Aligned */
+        XXH_aligned,
+        /*!< Possibly unaligned */
+        XXH_unaligned
+    }
 }

@@ -1,236 +1,263 @@
-using System.Runtime.InteropServices;
 using static VendoredZSTD.UnsafeHelper;
+using System;
+using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe;
-
-public static unsafe partial class Methods
+namespace VendoredZSTD.Unsafe
 {
-    /* FSE_buildCTable_wksp() :
-     * Same as FSE_buildCTable(), but using an externally allocated scratch buffer (`workSpace`).
-     * wkspSize should be sized to handle worst case situation, which is `1<<max_tableLog * sizeof(FSE_FUNCTION_TYPE)`
-     * workSpace must also be properly aligned with FSE_FUNCTION_TYPE requirements
-     */
-    private static nuint FSE_buildCTable_wksp(uint* ct, short* normalizedCounter, uint maxSymbolValue, uint tableLog, void* workSpace, nuint wkspSize)
+    public static unsafe partial class Methods
     {
-        var tableSize = (uint)(1 << (int)tableLog);
-        var tableMask = tableSize - 1;
-        void* ptr = ct;
-        var tableU16 = (ushort*)ptr + 2;
-        /* header */
-        void* fsct = (uint*)ptr + 1 + (tableLog != 0 ? tableSize >> 1 : 1);
-        var symbolTt = (FseSymbolCompressionTransform*)fsct;
-        var step = (tableSize >> 1) + (tableSize >> 3) + 3;
-        var maxSv1 = maxSymbolValue + 1;
-        /* size = maxSV1 */
-        var cumul = (ushort*)workSpace;
-        /* size = tableSize */
-        var tableSymbol = (byte*)(cumul + (maxSv1 + 1));
-        var highThreshold = tableSize - 1;
-        assert(((nuint)workSpace & 1) == 0);
-        if (sizeof(uint) * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint)) > wkspSize)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
-
-        tableU16[-2] = (ushort)tableLog;
-        tableU16[-1] = (ushort)maxSymbolValue;
-        assert(tableLog < 16);
+        /* FSE_buildCTable_wksp() :
+         * Same as FSE_buildCTable(), but using an externally allocated scratch buffer (`workSpace`).
+         * wkspSize should be sized to handle worst case situation, which is `1<<max_tableLog * sizeof(FSE_FUNCTION_TYPE)`
+         * workSpace must also be properly aligned with FSE_FUNCTION_TYPE requirements
+         */
+        private static nuint FSE_buildCTable_wksp(uint* ct, short* normalizedCounter, uint maxSymbolValue, uint tableLog, void* workSpace, nuint wkspSize)
         {
-            uint u;
-            cumul[0] = 0;
-            for (u = 1; u <= maxSv1; u++)
+            uint tableSize = (uint)(1 << (int)tableLog);
+            uint tableMask = tableSize - 1;
+            void* ptr = ct;
+            ushort* tableU16 = (ushort*)ptr + 2;
+            /* header */
+            void* FSCT = (uint*)ptr + 1 + (tableLog != 0 ? tableSize >> 1 : 1);
+            FSE_symbolCompressionTransform* symbolTT = (FSE_symbolCompressionTransform*)FSCT;
+            uint step = (tableSize >> 1) + (tableSize >> 3) + 3;
+            uint maxSV1 = maxSymbolValue + 1;
+            /* size = maxSV1 */
+            ushort* cumul = (ushort*)workSpace;
+            /* size = tableSize */
+            byte* tableSymbol = (byte*)(cumul + (maxSV1 + 1));
+            uint highThreshold = tableSize - 1;
+            assert(((nuint)workSpace & 1) == 0);
+            if (sizeof(uint) * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint)) > wkspSize)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            tableU16[-2] = (ushort)tableLog;
+            tableU16[-1] = (ushort)maxSymbolValue;
+            assert(tableLog < 16);
             {
-                if (normalizedCounter[u - 1] == -1)
+                uint u;
+                cumul[0] = 0;
+                for (u = 1; u <= maxSV1; u++)
                 {
-                    cumul[u] = (ushort)(cumul[u - 1] + 1);
-                    tableSymbol[highThreshold--] = (byte)(u - 1);
+                    if (normalizedCounter[u - 1] == -1)
+                    {
+                        cumul[u] = (ushort)(cumul[u - 1] + 1);
+                        tableSymbol[highThreshold--] = (byte)(u - 1);
+                    }
+                    else
+                    {
+                        assert(normalizedCounter[u - 1] >= 0);
+                        cumul[u] = (ushort)(cumul[u - 1] + (ushort)normalizedCounter[u - 1]);
+                        assert(cumul[u] >= cumul[u - 1]);
+                    }
                 }
-                else
-                {
-                    assert(normalizedCounter[u - 1] >= 0);
-                    cumul[u] = (ushort)(cumul[u - 1] + (ushort)normalizedCounter[u - 1]);
-                    assert(cumul[u] >= cumul[u - 1]);
-                }
+
+                cumul[maxSV1] = (ushort)(tableSize + 1);
             }
 
-            cumul[maxSv1] = (ushort)(tableSize + 1);
-        }
-
-        if (highThreshold == tableSize - 1)
-        {
-            /* size = tableSize + 8 (may write beyond tableSize) */
-            var spread = tableSymbol + tableSize;
+            if (highThreshold == tableSize - 1)
             {
-                const ulong add = 0x0101010101010101UL;
-                nuint pos = 0;
-                ulong sv = 0;
-                uint s;
-                for (s = 0; s < maxSv1; ++s, sv += add)
+                /* size = tableSize + 8 (may write beyond tableSize) */
+                byte* spread = tableSymbol + tableSize;
                 {
-                    int i;
-                    int n = normalizedCounter[s];
-                    MEM_write64(spread + pos, sv);
-                    for (i = 8; i < n; i += 8)
+                    const ulong add = 0x0101010101010101UL;
+                    nuint pos = 0;
+                    ulong sv = 0;
+                    uint s;
+                    for (s = 0; s < maxSV1; ++s, sv += add)
                     {
-                        MEM_write64(spread + pos + i, sv);
+                        int i;
+                        int n = normalizedCounter[s];
+                        MEM_write64(spread + pos, sv);
+                        for (i = 8; i < n; i += 8)
+                        {
+                            MEM_write64(spread + pos + i, sv);
+                        }
+
+                        assert(n >= 0);
+                        pos += (nuint)n;
+                    }
+                }
+
+                {
+                    nuint position = 0;
+                    nuint s;
+                    /* Experimentally determined optimal unroll */
+                    const nuint unroll = 2;
+                    assert(tableSize % unroll == 0);
+                    for (s = 0; s < tableSize; s += unroll)
+                    {
+                        nuint u;
+                        for (u = 0; u < unroll; ++u)
+                        {
+                            nuint uPosition = position + u * step & tableMask;
+                            tableSymbol[uPosition] = spread[s + u];
+                        }
+
+                        position = position + unroll * step & tableMask;
                     }
 
-                    assert(n >= 0);
-                    pos += (nuint)n;
+                    assert(position == 0);
                 }
             }
-
+            else
             {
-                nuint position = 0;
-                nuint s;
-                /* Experimentally determined optimal unroll */
-                const nuint unroll = 2;
-                assert(tableSize % unroll == 0);
-                for (s = 0; s < tableSize; s += unroll)
+                uint position = 0;
+                uint symbol;
+                for (symbol = 0; symbol < maxSV1; symbol++)
                 {
-                    nuint u;
-                    for (u = 0; u < unroll; ++u)
+                    int nbOccurrences;
+                    int freq = normalizedCounter[symbol];
+                    for (nbOccurrences = 0; nbOccurrences < freq; nbOccurrences++)
                     {
-                        var uPosition = (position + u * step) & tableMask;
-                        tableSymbol[uPosition] = spread[s + u];
+                        tableSymbol[position] = (byte)symbol;
+                        position = position + step & tableMask;
+                        while (position > highThreshold)
+                            position = position + step & tableMask;
                     }
-
-                    position = (position + unroll * step) & tableMask;
                 }
 
                 assert(position == 0);
             }
-        }
-        else
-        {
-            uint position = 0;
-            uint symbol;
-            for (symbol = 0; symbol < maxSv1; symbol++)
+
             {
-                int nbOccurrences;
-                int freq = normalizedCounter[symbol];
-                for (nbOccurrences = 0; nbOccurrences < freq; nbOccurrences++)
+                uint u;
+                for (u = 0; u < tableSize; u++)
                 {
-                    tableSymbol[position] = (byte)symbol;
-                    position = (position + step) & tableMask;
-                    while (position > highThreshold)
+                    /* note : static analyzer may not understand tableSymbol is properly initialized */
+                    byte s = tableSymbol[u];
+                    tableU16[cumul[s]++] = (ushort)(tableSize + u);
+                }
+            }
+
+            {
+                uint total = 0;
+                uint s;
+                for (s = 0; s <= maxSymbolValue; s++)
+                {
+                    switch (normalizedCounter[s])
                     {
-                        position = (position + step) & tableMask;
+                        case 0:
+                            symbolTT[s].deltaNbBits = (tableLog + 1 << 16) - (uint)(1 << (int)tableLog);
+                            break;
+                        case -1:
+                        case 1:
+                            symbolTT[s].deltaNbBits = (tableLog << 16) - (uint)(1 << (int)tableLog);
+                            assert(total <= 2147483647);
+                            symbolTT[s].deltaFindState = (int)(total - 1);
+                            total++;
+                            break;
+                        default:
+                            assert(normalizedCounter[s] > 1);
+                            {
+                                uint maxBitsOut = tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
+                                uint minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
+                                symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
+                                symbolTT[s].deltaFindState = (int)(total - (uint)normalizedCounter[s]);
+                                total += (uint)normalizedCounter[s];
+                            }
+
+                            break;
                     }
                 }
             }
 
-            assert(position == 0);
+            return 0;
         }
 
+        /*-**************************************************************
+         *  FSE NCount encoding
+         ****************************************************************/
+        private static nuint FSE_NCountWriteBound(uint maxSymbolValue, uint tableLog)
         {
-            uint u;
-            for (u = 0; u < tableSize; u++)
-            {
-                /* note : static analyzer may not understand tableSymbol is properly initialized */
-                var s = tableSymbol[u];
-                tableU16[cumul[s]++] = (ushort)(tableSize + u);
-            }
+            nuint maxHeaderSize = ((maxSymbolValue + 1) * tableLog + 4 + 2) / 8 + 1 + 2;
+            return maxSymbolValue != 0 ? maxHeaderSize : 512;
         }
 
+        private static nuint FSE_writeNCount_generic(void* header, nuint headerBufferSize, short* normalizedCounter, uint maxSymbolValue, uint tableLog, uint writeIsSafe)
         {
-            uint total = 0;
-            uint s;
-            for (s = 0; s <= maxSymbolValue; s++)
+            byte* ostart = (byte*)header;
+            byte* @out = ostart;
+            byte* oend = ostart + headerBufferSize;
+            int nbBits;
+            int tableSize = 1 << (int)tableLog;
+            int remaining;
+            int threshold;
+            uint bitStream = 0;
+            int bitCount = 0;
+            uint symbol = 0;
+            uint alphabetSize = maxSymbolValue + 1;
+            int previousIs0 = 0;
+            bitStream += tableLog - 5 << bitCount;
+            bitCount += 4;
+            remaining = tableSize + 1;
+            threshold = tableSize;
+            nbBits = (int)(tableLog + 1);
+            while (symbol < alphabetSize && remaining > 1)
             {
-                switch (normalizedCounter[s])
+                if (previousIs0 != 0)
                 {
-                    case 0:
-                        symbolTt[s].deltaNbBits = ((tableLog + 1) << 16) - (uint)(1 << (int)tableLog);
+                    uint start = symbol;
+                    while (symbol < alphabetSize && normalizedCounter[symbol] == 0)
+                        symbol++;
+                    if (symbol == alphabetSize)
                         break;
-                    case -1:
-                    case 1:
-                        symbolTt[s].deltaNbBits = (tableLog << 16) - (uint)(1 << (int)tableLog);
-                        assert(total <= 2147483647);
-                        symbolTt[s].deltaFindState = (int)(total - 1);
-                        total++;
-                        break;
-                    default:
-                        assert(normalizedCounter[s] > 1);
+                    while (symbol >= start + 24)
                     {
-                        var maxBitsOut = tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
-                        var minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
-                        symbolTt[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
-                        symbolTt[s].deltaFindState = (int)(total - (uint)normalizedCounter[s]);
-                        total += (uint)normalizedCounter[s];
+                        start += 24;
+                        bitStream += 0xFFFFU << bitCount;
+                        if (writeIsSafe == 0 && @out > oend - 2)
+                            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        @out[0] = (byte)bitStream;
+                        @out[1] = (byte)(bitStream >> 8);
+                        @out += 2;
+                        bitStream >>= 16;
                     }
 
-                        break;
-                }
-            }
-        }
+                    while (symbol >= start + 3)
+                    {
+                        start += 3;
+                        bitStream += (uint)(3 << bitCount);
+                        bitCount += 2;
+                    }
 
-        return 0;
-    }
-
-    /*-**************************************************************
-     *  FSE NCount encoding
-     ****************************************************************/
-    private static nuint FSE_NCountWriteBound(uint maxSymbolValue, uint tableLog)
-    {
-        nuint maxHeaderSize = ((maxSymbolValue + 1) * tableLog + 4 + 2) / 8 + 1 + 2;
-        return maxSymbolValue != 0 ? maxHeaderSize : 512;
-    }
-
-    private static nuint FSE_writeNCount_generic(void* header, nuint headerBufferSize, short* normalizedCounter, uint maxSymbolValue, uint tableLog, uint writeIsSafe)
-    {
-        var ostart = (byte*)header;
-        var @out = ostart;
-        var oend = ostart + headerBufferSize;
-        var tableSize = 1 << (int)tableLog;
-        uint bitStream = 0;
-        var bitCount = 0;
-        uint symbol = 0;
-        var alphabetSize = maxSymbolValue + 1;
-        var previousIs0 = 0;
-        bitStream += (tableLog - 5) << bitCount;
-        bitCount += 4;
-        var remaining = tableSize + 1;
-        var threshold = tableSize;
-        var nbBits = (int)tableLog + 1;
-        while (symbol < alphabetSize && remaining > 1)
-        {
-            if (previousIs0 != 0)
-            {
-                var start = symbol;
-                while (symbol < alphabetSize && normalizedCounter[symbol] == 0)
-                {
-                    symbol++;
-                }
-
-                if (symbol == alphabetSize)
-                    break;
-
-                while (symbol >= start + 24)
-                {
-                    start += 24;
-                    bitStream += 0xFFFFU << bitCount;
-                    if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
-
-                    @out[0] = (byte)bitStream;
-                    @out[1] = (byte)(bitStream >> 8);
-                    @out += 2;
-                    bitStream >>= 16;
-                }
-
-                while (symbol >= start + 3)
-                {
-                    start += 3;
-                    bitStream += 3U << bitCount;
+                    bitStream += symbol - start << bitCount;
                     bitCount += 2;
+                    if (bitCount > 16)
+                    {
+                        if (writeIsSafe == 0 && @out > oend - 2)
+                            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                        @out[0] = (byte)bitStream;
+                        @out[1] = (byte)(bitStream >> 8);
+                        @out += 2;
+                        bitStream >>= 16;
+                        bitCount -= 16;
+                    }
                 }
 
-                bitStream += (symbol - start) << bitCount;
-                bitCount += 2;
+                {
+                    int count = normalizedCounter[symbol++];
+                    int max = 2 * threshold - 1 - remaining;
+                    remaining -= count < 0 ? -count : count;
+                    count++;
+                    if (count >= threshold)
+                        count += max;
+                    bitStream += (uint)(count << bitCount);
+                    bitCount += nbBits;
+                    bitCount -= count < max ? 1 : 0;
+                    previousIs0 = count == 1 ? 1 : 0;
+                    if (remaining < 1)
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    while (remaining < threshold)
+                    {
+                        nbBits--;
+                        threshold >>= 1;
+                    }
+                }
+
                 if (bitCount > 16)
                 {
                     if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
-
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
                     @out += 2;
@@ -239,464 +266,387 @@ public static unsafe partial class Methods
                 }
             }
 
-            {
-                int count = normalizedCounter[symbol++];
-                var max = 2 * threshold - 1 - remaining;
-                remaining -= count < 0 ? -count : count;
-                count++;
-                if (count >= threshold)
-                {
-                    count += max;
-                }
-
-                bitStream += (uint)count << bitCount;
-                bitCount += nbBits;
-                bitCount -= count < max ? 1 : 0;
-                previousIs0 = count == 1 ? 1 : 0;
-                if (remaining < 1)
-                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-
-                while (remaining < threshold)
-                {
-                    nbBits--;
-                    threshold >>= 1;
-                }
-            }
-
-            if (bitCount > 16)
-            {
-                if (writeIsSafe == 0 && @out > oend - 2)
-                    return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
-
-                @out[0] = (byte)bitStream;
-                @out[1] = (byte)(bitStream >> 8);
-                @out += 2;
-                bitStream >>= 16;
-                bitCount -= 16;
-            }
+            if (remaining != 1)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            assert(symbol <= alphabetSize);
+            if (writeIsSafe == 0 && @out > oend - 2)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+            @out[0] = (byte)bitStream;
+            @out[1] = (byte)(bitStream >> 8);
+            @out += (bitCount + 7) / 8;
+            return (nuint)(@out - ostart);
         }
 
-        if (remaining != 1)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-
-        assert(symbol <= alphabetSize);
-        if (writeIsSafe == 0 && @out > oend - 2)
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
-
-        @out[0] = (byte)bitStream;
-        @out[1] = (byte)(bitStream >> 8);
-        @out += (bitCount + 7) / 8;
-        assert(@out >= ostart);
-        return (nuint)(@out - ostart);
-    }
-
-    /*! FSE_writeNCount():
-    Compactly save 'normalizedCounter' into 'buffer'.
-    @return : size of the compressed table,
-    or an errorCode, which can be tested using FSE_isError(). */
-    private static nuint FSE_writeNCount(void* buffer, nuint bufferSize, short* normalizedCounter, uint maxSymbolValue, uint tableLog)
-    {
-        switch (tableLog)
+        /*! FSE_writeNCount():
+        Compactly save 'normalizedCounter' into 'buffer'.
+        @return : size of the compressed table,
+        or an errorCode, which can be tested using FSE_isError(). */
+        private static nuint FSE_writeNCount(void* buffer, nuint bufferSize, short* normalizedCounter, uint maxSymbolValue, uint tableLog)
         {
-            case > 14 - 2:
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
-            case < 5:
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
+            if (tableLog > 14 - 2)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            if (tableLog < 5)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            if (bufferSize < FSE_NCountWriteBound(maxSymbolValue, tableLog))
+                return FSE_writeNCount_generic(buffer, bufferSize, normalizedCounter, maxSymbolValue, tableLog, 0);
+            return FSE_writeNCount_generic(buffer, bufferSize, normalizedCounter, maxSymbolValue, tableLog, 1);
         }
 
-        if (bufferSize < FSE_NCountWriteBound(maxSymbolValue, tableLog))
-            return FSE_writeNCount_generic(buffer, bufferSize, normalizedCounter, maxSymbolValue, tableLog, 0);
-
-        return FSE_writeNCount_generic(buffer, bufferSize, normalizedCounter, maxSymbolValue, tableLog, 1);
-    }
-
-    /* provides the minimum logSize to safely represent a distribution */
-    private static uint FSE_minTableLog(nuint srcSize, uint maxSymbolValue)
-    {
-        var minBitsSrc = ZSTD_highbit32((uint)srcSize) + 1;
-        var minBitsSymbols = ZSTD_highbit32(maxSymbolValue) + 2;
-        var minBits = minBitsSrc < minBitsSymbols ? minBitsSrc : minBitsSymbols;
-        assert(srcSize > 1);
-        return minBits;
-    }
-
-    /* *****************************************
-     *  FSE advanced API
-     ***************************************** */
-    private static uint FSE_optimalTableLog_internal(uint maxTableLog, nuint srcSize, uint maxSymbolValue, uint minus)
-    {
-        var maxBitsSrc = ZSTD_highbit32((uint)(srcSize - 1)) - minus;
-        var tableLog = maxTableLog;
-        var minBits = FSE_minTableLog(srcSize, maxSymbolValue);
-        assert(srcSize > 1);
-        if (tableLog == 0)
+        /* provides the minimum logSize to safely represent a distribution */
+        private static uint FSE_minTableLog(nuint srcSize, uint maxSymbolValue)
         {
-            tableLog = 13 - 2;
+            uint minBitsSrc = ZSTD_highbit32((uint)srcSize) + 1;
+            uint minBitsSymbols = ZSTD_highbit32(maxSymbolValue) + 2;
+            uint minBits = minBitsSrc < minBitsSymbols ? minBitsSrc : minBitsSymbols;
+            assert(srcSize > 1);
+            return minBits;
         }
 
-        if (maxBitsSrc < tableLog)
+        /* *****************************************
+         *  FSE advanced API
+         ***************************************** */
+        private static uint FSE_optimalTableLog_internal(uint maxTableLog, nuint srcSize, uint maxSymbolValue, uint minus)
         {
-            tableLog = maxBitsSrc;
+            uint maxBitsSrc = ZSTD_highbit32((uint)(srcSize - 1)) - minus;
+            uint tableLog = maxTableLog;
+            uint minBits = FSE_minTableLog(srcSize, maxSymbolValue);
+            assert(srcSize > 1);
+            if (tableLog == 0)
+                tableLog = 13 - 2;
+            if (maxBitsSrc < tableLog)
+                tableLog = maxBitsSrc;
+            if (minBits > tableLog)
+                tableLog = minBits;
+            if (tableLog < 5)
+                tableLog = 5;
+            if (tableLog > 14 - 2)
+                tableLog = 14 - 2;
+            return tableLog;
         }
 
-        if (minBits > tableLog)
+        /*! FSE_optimalTableLog():
+        dynamically downsize 'tableLog' when conditions are met.
+        It saves CPU time, by using smaller tables, while preserving or even improving compression ratio.
+        @return : recommended tableLog (necessarily <= 'maxTableLog') */
+        private static uint FSE_optimalTableLog(uint maxTableLog, nuint srcSize, uint maxSymbolValue)
         {
-            tableLog = minBits;
+            return FSE_optimalTableLog_internal(maxTableLog, srcSize, maxSymbolValue, 2);
         }
 
-        if (tableLog < 5)
+        /* Secondary normalization method.
+        To be used when primary method fails. */
+        private static nuint FSE_normalizeM2(short* norm, uint tableLog, uint* count, nuint total, uint maxSymbolValue, short lowProbCount)
         {
-            tableLog = 5;
-        }
-
-        if (tableLog > 14 - 2)
-        {
-            tableLog = 14 - 2;
-        }
-
-        return tableLog;
-    }
-
-    /*! FSE_optimalTableLog():
-    dynamically downsize 'tableLog' when conditions are met.
-    It saves CPU time, by using smaller tables, while preserving or even improving compression ratio.
-    @return : recommended tableLog (necessarily <= 'maxTableLog') */
-    private static uint FSE_optimalTableLog(uint maxTableLog, nuint srcSize, uint maxSymbolValue)
-    {
-        return FSE_optimalTableLog_internal(maxTableLog, srcSize, maxSymbolValue, 2);
-    }
-
-    /* Secondary normalization method.
-    To be used when primary method fails. */
-    private static nuint FSE_normalizeM2(short* norm, uint tableLog, uint* count, nuint total, uint maxSymbolValue, short lowProbCount)
-    {
-        const short notYetAssigned = -2;
-        uint s;
-        uint distributed = 0;
-        /* Init */
-        var lowThreshold = (uint)(total >> (int)tableLog);
-        var lowOne = (uint)((total * 3) >> (int)(tableLog + 1));
-        for (s = 0; s <= maxSymbolValue; s++)
-        {
-            if (count[s] == 0)
-            {
-                norm[s] = 0;
-                continue;
-            }
-
-            if (count[s] <= lowThreshold)
-            {
-                norm[s] = lowProbCount;
-                distributed++;
-                total -= count[s];
-                continue;
-            }
-
-            if (count[s] <= lowOne)
-            {
-                norm[s] = 1;
-                distributed++;
-                total -= count[s];
-                continue;
-            }
-
-            norm[s] = notYetAssigned;
-        }
-
-        var toDistribute = (uint)(1 << (int)tableLog) - distributed;
-        if (toDistribute == 0)
-            return 0;
-
-        if (total / toDistribute > lowOne)
-        {
-            lowOne = (uint)(total * 3 / (toDistribute * 2));
-            for (s = 0; s <= maxSymbolValue; s++)
-            {
-                if (norm[s] == notYetAssigned && count[s] <= lowOne)
-                {
-                    norm[s] = 1;
-                    distributed++;
-                    total -= count[s];
-                }
-            }
-
-            toDistribute = (uint)(1 << (int)tableLog) - distributed;
-        }
-
-        if (distributed == maxSymbolValue + 1)
-        {
-            /* all values are pretty poor;
-            probably incompressible data (should have already been detected);
-            find max, then give all remaining points to max */
-            uint maxV = 0, maxC = 0;
-            for (s = 0; s <= maxSymbolValue; s++)
-                if (count[s] > maxC)
-                {
-                    maxV = s;
-                    maxC = count[s];
-                }
-
-            norm[maxV] += (short)toDistribute;
-            return 0;
-        }
-
-        if (total == 0)
-        {
-            for (s = 0; toDistribute > 0; s = (s + 1) % (maxSymbolValue + 1))
-                if (norm[s] > 0)
-                {
-                    toDistribute--;
-                    norm[s]++;
-                }
-
-            return 0;
-        }
-
-        {
-            ulong vStepLog = 62 - tableLog;
-            var mid = (1UL << (int)(vStepLog - 1)) - 1;
-            /* scale on remaining */
-            var rStep = (((ulong)1 << (int)vStepLog) * toDistribute + mid) / (uint)total;
-            var tmpTotal = mid;
-            for (s = 0; s <= maxSymbolValue; s++)
-            {
-                if (norm[s] == notYetAssigned)
-                {
-                    var end = tmpTotal + count[s] * rStep;
-                    var sStart = (uint)(tmpTotal >> (int)vStepLog);
-                    var sEnd = (uint)(end >> (int)vStepLog);
-                    var weight = sEnd - sStart;
-                    if (weight < 1)
-                        return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-
-                    norm[s] = (short)weight;
-                    tmpTotal = end;
-                }
-            }
-        }
-
-        return 0;
-    }
-
-#if NET7_0_OR_GREATER
-    private static ReadOnlySpan<uint> SpanRtbTable => new uint[]
-    {
-        0,
-        473195,
-        504333,
-        520860,
-        550000,
-        700000,
-        750000,
-        830000
-    };
-
-    private static uint* RtbTable => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(SpanRtbTable));
-#else
-
-        private static readonly uint* rtbTable = GetArrayPointer(new uint[8] { 0, 473195, 504333, 520860, 550000, 700000, 750000, 830000 });
-#endif
-    /*! FSE_normalizeCount():
-    normalize counts so that sum(count[]) == Power_of_2 (2^tableLog)
-    'normalizedCounter' is a table of short, of minimum size (maxSymbolValue+1).
-    useLowProbCount is a boolean parameter which trades off compressed size for
-    faster header decoding. When it is set to 1, the compressed data will be slightly
-    smaller. And when it is set to 0, FSE_readNCount() and FSE_buildDTable() will be
-    faster. If you are compressing a small amount of data (< 2 KB) then useLowProbCount=0
-    is a good default, since header deserialization makes a big speed difference.
-    Otherwise, useLowProbCount=1 is a good default, since the speed difference is small.
-    @return : tableLog,
-    or an errorCode, which can be tested using FSE_isError() */
-    private static nuint FSE_normalizeCount(short* normalizedCounter, uint tableLog, uint* count, nuint total, uint maxSymbolValue, uint useLowProbCount)
-    {
-        if (tableLog == 0)
-        {
-            tableLog = 13 - 2;
-        }
-
-        switch (tableLog)
-        {
-            case < 5:
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-            case > 14 - 2:
-                return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
-        }
-
-        if (tableLog < FSE_minTableLog(total, maxSymbolValue))
-            return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorGeneric));
-
-        {
-            var lowProbCount = (short)(useLowProbCount != 0 ? -1 : 1);
-            ulong scale = 62 - tableLog;
-            /* <== here, one division ! */
-            var step = ((ulong)1 << 62) / (uint)total;
-            var vStep = 1UL << (int)(scale - 20);
-            var stillToDistribute = 1 << (int)tableLog;
+            const short NOT_YET_ASSIGNED = -2;
             uint s;
-            uint largest = 0;
-            short largestP = 0;
-            var lowThreshold = (uint)(total >> (int)tableLog);
+            uint distributed = 0;
+            uint ToDistribute;
+            /* Init */
+            uint lowThreshold = (uint)(total >> (int)tableLog);
+            uint lowOne = (uint)(total * 3 >> (int)(tableLog + 1));
             for (s = 0; s <= maxSymbolValue; s++)
             {
-                if (count[s] == total)
-                    return 0;
-
                 if (count[s] == 0)
                 {
-                    normalizedCounter[s] = 0;
+                    norm[s] = 0;
                     continue;
                 }
 
                 if (count[s] <= lowThreshold)
                 {
-                    normalizedCounter[s] = lowProbCount;
-                    stillToDistribute--;
+                    norm[s] = lowProbCount;
+                    distributed++;
+                    total -= count[s];
+                    continue;
                 }
-                else
+
+                if (count[s] <= lowOne)
                 {
-                    var proba = (short)((count[s] * step) >> (int)scale);
-                    if (proba < 8)
+                    norm[s] = 1;
+                    distributed++;
+                    total -= count[s];
+                    continue;
+                }
+
+                norm[s] = NOT_YET_ASSIGNED;
+            }
+
+            ToDistribute = (uint)(1 << (int)tableLog) - distributed;
+            if (ToDistribute == 0)
+                return 0;
+            if (total / ToDistribute > lowOne)
+            {
+                lowOne = (uint)(total * 3 / (ToDistribute * 2));
+                for (s = 0; s <= maxSymbolValue; s++)
+                {
+                    if (norm[s] == NOT_YET_ASSIGNED && count[s] <= lowOne)
                     {
-                        var restToBeat = vStep * RtbTable[proba];
-                        proba += (short)(count[s] * step - ((ulong)proba << (int)scale) > restToBeat ? 1 : 0);
+                        norm[s] = 1;
+                        distributed++;
+                        total -= count[s];
+                        continue;
+                    }
+                }
+
+                ToDistribute = (uint)(1 << (int)tableLog) - distributed;
+            }
+
+            if (distributed == maxSymbolValue + 1)
+            {
+                /* all values are pretty poor;
+                probably incompressible data (should have already been detected);
+                find max, then give all remaining points to max */
+                uint maxV = 0, maxC = 0;
+                for (s = 0; s <= maxSymbolValue; s++)
+                    if (count[s] > maxC)
+                    {
+                        maxV = s;
+                        maxC = count[s];
                     }
 
-                    if (proba > largestP)
+                norm[maxV] += (short)ToDistribute;
+                return 0;
+            }
+
+            if (total == 0)
+            {
+                for (s = 0; ToDistribute > 0; s = (s + 1) % (maxSymbolValue + 1))
+                    if (norm[s] > 0)
                     {
-                        largestP = proba;
-                        largest = s;
+                        ToDistribute--;
+                        norm[s]++;
                     }
 
-                    normalizedCounter[s] = proba;
-                    stillToDistribute -= proba;
+                return 0;
+            }
+
+            {
+                ulong vStepLog = 62 - tableLog;
+                ulong mid = (1UL << (int)(vStepLog - 1)) - 1;
+                /* scale on remaining */
+                ulong rStep = (((ulong)1 << (int)vStepLog) * ToDistribute + mid) / (uint)total;
+                ulong tmpTotal = mid;
+                for (s = 0; s <= maxSymbolValue; s++)
+                {
+                    if (norm[s] == NOT_YET_ASSIGNED)
+                    {
+                        ulong end = tmpTotal + count[s] * rStep;
+                        uint sStart = (uint)(tmpTotal >> (int)vStepLog);
+                        uint sEnd = (uint)(end >> (int)vStepLog);
+                        uint weight = sEnd - sStart;
+                        if (weight < 1)
+                            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                        norm[s] = (short)weight;
+                        tmpTotal = end;
+                    }
                 }
             }
 
-            if (-stillToDistribute >= normalizedCounter[largest] >> 1)
-            {
-                /* corner case, need another normalization method */
-                var errorCode = FSE_normalizeM2(normalizedCounter, tableLog, count, total, maxSymbolValue, lowProbCount);
-                if (ERR_isError(errorCode))
-                    return errorCode;
-            }
-            else
-            {
-                normalizedCounter[largest] += (short)stillToDistribute;
-            }
-        }
-
-        return tableLog;
-    }
-
-    /* fake FSE_CTable, for rle input (always same symbol) */
-    private static nuint FSE_buildCTable_rle(uint* ct, byte symbolValue)
-    {
-        void* ptr = ct;
-        var tableU16 = (ushort*)ptr + 2;
-        void* fscTptr = (uint*)ptr + 2;
-        var symbolTt = (FseSymbolCompressionTransform*)fscTptr;
-        tableU16[-2] = 0;
-        tableU16[-1] = symbolValue;
-        tableU16[0] = 0;
-        tableU16[1] = 0;
-        symbolTt[symbolValue].deltaNbBits = 0;
-        symbolTt[symbolValue].deltaFindState = 0;
-        return 0;
-    }
-
-    private static nuint FSE_compress_usingCTable_generic(void* dst, nuint dstSize, void* src, nuint srcSize, uint* ct, uint fast)
-    {
-        var istart = (byte*)src;
-        var iend = istart + srcSize;
-        var ip = iend;
-        System.Runtime.CompilerServices.Unsafe.SkipInit(out BitCStreamT bitC);
-        System.Runtime.CompilerServices.Unsafe.SkipInit(out FseCStateT cState1);
-        System.Runtime.CompilerServices.Unsafe.SkipInit(out FseCStateT cState2);
-        if (srcSize <= 2)
             return 0;
-
-        {
-            var initError = BIT_initCStream(ref bitC, dst, dstSize);
-            if (ERR_isError(initError))
-                return 0;
         }
 
-        var bitCBitContainer = bitC.bitContainer;
-        var bitCBitPos = bitC.bitPos;
-        var bitCPtr = bitC.ptr;
-        var bitCEndPtr = bitC.endPtr;
-        if ((srcSize & 1) != 0)
+#if NET8_0_OR_GREATER
+        private static ReadOnlySpan<uint> Span_rtbTable => new uint[8]
         {
-            FSE_initCState2(ref cState1, ct, *--ip);
-            FSE_initCState2(ref cState2, ct, *--ip);
-            FSE_encodeSymbol(ref bitCBitContainer, ref bitCBitPos, ref cState1, *--ip);
-            if (fast != 0)
-                BIT_flushBitsFast(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-            else
-                BIT_flushBits(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-        }
-        else
-        {
-            FSE_initCState2(ref cState2, ct, *--ip);
-            FSE_initCState2(ref cState1, ct, *--ip);
-        }
+            0,
+            473195,
+            504333,
+            520860,
+            550000,
+            700000,
+            750000,
+            830000
+        };
+        private static uint* rtbTable => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_rtbTable));
+#else
 
-        srcSize -= 2;
-        if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7 && (srcSize & 2) != 0)
+        private static readonly uint* rtbTable = GetArrayPointer(new uint[8] { 0, 473195, 504333, 520860, 550000, 700000, 750000, 830000 });
+#endif
+        /*! FSE_normalizeCount():
+        normalize counts so that sum(count[]) == Power_of_2 (2^tableLog)
+        'normalizedCounter' is a table of short, of minimum size (maxSymbolValue+1).
+        useLowProbCount is a boolean parameter which trades off compressed size for
+        faster header decoding. When it is set to 1, the compressed data will be slightly
+        smaller. And when it is set to 0, FSE_readNCount() and FSE_buildDTable() will be
+        faster. If you are compressing a small amount of data (< 2 KB) then useLowProbCount=0
+        is a good default, since header deserialization makes a big speed difference.
+        Otherwise, useLowProbCount=1 is a good default, since the speed difference is small.
+        @return : tableLog,
+        or an errorCode, which can be tested using FSE_isError() */
+        private static nuint FSE_normalizeCount(short* normalizedCounter, uint tableLog, uint* count, nuint total, uint maxSymbolValue, uint useLowProbCount)
         {
-            FSE_encodeSymbol(ref bitCBitContainer, ref bitCBitPos, ref cState2, *--ip);
-            FSE_encodeSymbol(ref bitCBitContainer, ref bitCBitPos, ref cState1, *--ip);
-            if (fast != 0)
-                BIT_flushBitsFast(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-            else
-                BIT_flushBits(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-        }
-
-        while (ip > istart)
-        {
-            FSE_encodeSymbol(ref bitCBitContainer, ref bitCBitPos, ref cState2, *--ip);
-            if (sizeof(nuint) * 8 < (14 - 2) * 2 + 7)
-                if (fast != 0)
-                    BIT_flushBitsFast(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-                else
-                    BIT_flushBits(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-            FSE_encodeSymbol(ref bitCBitContainer, ref bitCBitPos, ref cState1, *--ip);
-            if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7)
+            if (tableLog == 0)
+                tableLog = 13 - 2;
+            if (tableLog < 5)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            if (tableLog > 14 - 2)
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            if (tableLog < FSE_minTableLog(total, maxSymbolValue))
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
             {
-                FSE_encodeSymbol(ref bitCBitContainer, ref bitCBitPos, ref cState2, *--ip);
-                FSE_encodeSymbol(ref bitCBitContainer, ref bitCBitPos, ref cState1, *--ip);
+                short lowProbCount = (short)(useLowProbCount != 0 ? -1 : 1);
+                ulong scale = 62 - tableLog;
+                /* <== here, one division ! */
+                ulong step = ((ulong)1 << 62) / (uint)total;
+                ulong vStep = 1UL << (int)(scale - 20);
+                int stillToDistribute = 1 << (int)tableLog;
+                uint s;
+                uint largest = 0;
+                short largestP = 0;
+                uint lowThreshold = (uint)(total >> (int)tableLog);
+                for (s = 0; s <= maxSymbolValue; s++)
+                {
+                    if (count[s] == total)
+                        return 0;
+                    if (count[s] == 0)
+                    {
+                        normalizedCounter[s] = 0;
+                        continue;
+                    }
+
+                    if (count[s] <= lowThreshold)
+                    {
+                        normalizedCounter[s] = lowProbCount;
+                        stillToDistribute--;
+                    }
+                    else
+                    {
+                        short proba = (short)(count[s] * step >> (int)scale);
+                        if (proba < 8)
+                        {
+                            ulong restToBeat = vStep * rtbTable[proba];
+                            proba += (short)(count[s] * step - ((ulong)proba << (int)scale) > restToBeat ? 1 : 0);
+                        }
+
+                        if (proba > largestP)
+                        {
+                            largestP = proba;
+                            largest = s;
+                        }
+
+                        normalizedCounter[s] = proba;
+                        stillToDistribute -= proba;
+                    }
+                }
+
+                if (-stillToDistribute >= normalizedCounter[largest] >> 1)
+                {
+                    /* corner case, need another normalization method */
+                    nuint errorCode = FSE_normalizeM2(normalizedCounter, tableLog, count, total, maxSymbolValue, lowProbCount);
+                    if (ERR_isError(errorCode))
+                        return errorCode;
+                }
+                else
+                    normalizedCounter[largest] += (short)stillToDistribute;
             }
 
-            if (fast != 0)
-                BIT_flushBitsFast(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
-            else
-                BIT_flushBits(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr);
+            return tableLog;
         }
 
-        FSE_flushCState(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr, ref cState2);
-        FSE_flushCState(ref bitCBitContainer, ref bitCBitPos, ref bitCPtr, bitCEndPtr, ref cState1);
-        return BIT_closeCStream(ref bitCBitContainer, ref bitCBitPos, bitCPtr, bitCEndPtr, bitC.startPtr);
-    }
+        /* fake FSE_CTable, for rle input (always same symbol) */
+        private static nuint FSE_buildCTable_rle(uint* ct, byte symbolValue)
+        {
+            void* ptr = ct;
+            ushort* tableU16 = (ushort*)ptr + 2;
+            void* FSCTptr = (uint*)ptr + 2;
+            FSE_symbolCompressionTransform* symbolTT = (FSE_symbolCompressionTransform*)FSCTptr;
+            tableU16[-2] = 0;
+            tableU16[-1] = symbolValue;
+            tableU16[0] = 0;
+            tableU16[1] = 0;
+            symbolTT[symbolValue].deltaNbBits = 0;
+            symbolTT[symbolValue].deltaFindState = 0;
+            return 0;
+        }
 
-    /*! FSE_compress_usingCTable():
-    Compress `src` using `ct` into `dst` which must be already allocated.
-    @return : size of compressed data (<= `dstCapacity`),
-    or 0 if compressed data could not fit into `dst`,
-    or an errorCode, which can be tested using FSE_isError() */
-    private static nuint FSE_compress_usingCTable(void* dst, nuint dstSize, void* src, nuint srcSize, uint* ct)
-    {
-        var fast = dstSize >= srcSize + (srcSize >> 7) + 4 + (nuint)sizeof(nuint) ? 1U : 0U;
-        if (fast != 0)
-            return FSE_compress_usingCTable_generic(dst, dstSize, src, srcSize, ct, 1);
-        else
-            return FSE_compress_usingCTable_generic(dst, dstSize, src, srcSize, ct, 0);
-    }
+        private static nuint FSE_compress_usingCTable_generic(void* dst, nuint dstSize, void* src, nuint srcSize, uint* ct, uint fast)
+        {
+            byte* istart = (byte*)src;
+            byte* iend = istart + srcSize;
+            byte* ip = iend;
+            BIT_CStream_t bitC;
+            FSE_CState_t CState1, CState2;
+            if (srcSize <= 2)
+                return 0;
+            {
+                nuint initError = BIT_initCStream(&bitC, dst, dstSize);
+                if (ERR_isError(initError))
+                    return 0;
+            }
 
-    /*-*****************************************
-     *  Tool functions
-     ******************************************/
-    private static nuint FSE_compressBound(nuint size)
-    {
-        return 512 + (size + (size >> 7) + 4 + (nuint)sizeof(nuint));
+            if ((srcSize & 1) != 0)
+            {
+                FSE_initCState2(&CState1, ct, *--ip);
+                FSE_initCState2(&CState2, ct, *--ip);
+                FSE_encodeSymbol(&bitC, &CState1, *--ip);
+                if (fast != 0)
+                    BIT_flushBitsFast(&bitC);
+                else
+                    BIT_flushBits(&bitC);
+            }
+            else
+            {
+                FSE_initCState2(&CState2, ct, *--ip);
+                FSE_initCState2(&CState1, ct, *--ip);
+            }
+
+            srcSize -= 2;
+            if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7 && (srcSize & 2) != 0)
+            {
+                FSE_encodeSymbol(&bitC, &CState2, *--ip);
+                FSE_encodeSymbol(&bitC, &CState1, *--ip);
+                if (fast != 0)
+                    BIT_flushBitsFast(&bitC);
+                else
+                    BIT_flushBits(&bitC);
+            }
+
+            while (ip > istart)
+            {
+                FSE_encodeSymbol(&bitC, &CState2, *--ip);
+                if (sizeof(nuint) * 8 < (14 - 2) * 2 + 7)
+                    if (fast != 0)
+                        BIT_flushBitsFast(&bitC);
+                    else
+                        BIT_flushBits(&bitC);
+                FSE_encodeSymbol(&bitC, &CState1, *--ip);
+                if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7)
+                {
+                    FSE_encodeSymbol(&bitC, &CState2, *--ip);
+                    FSE_encodeSymbol(&bitC, &CState1, *--ip);
+                }
+
+                if (fast != 0)
+                    BIT_flushBitsFast(&bitC);
+                else
+                    BIT_flushBits(&bitC);
+            }
+
+            FSE_flushCState(&bitC, &CState2);
+            FSE_flushCState(&bitC, &CState1);
+            return BIT_closeCStream(&bitC);
+        }
+
+        /*! FSE_compress_usingCTable():
+        Compress `src` using `ct` into `dst` which must be already allocated.
+        @return : size of compressed data (<= `dstCapacity`),
+        or 0 if compressed data could not fit into `dst`,
+        or an errorCode, which can be tested using FSE_isError() */
+        private static nuint FSE_compress_usingCTable(void* dst, nuint dstSize, void* src, nuint srcSize, uint* ct)
+        {
+            uint fast = dstSize >= srcSize + (srcSize >> 7) + 4 + (nuint)sizeof(nuint) ? 1U : 0U;
+            if (fast != 0)
+                return FSE_compress_usingCTable_generic(dst, dstSize, src, srcSize, ct, 1);
+            else
+                return FSE_compress_usingCTable_generic(dst, dstSize, src, srcSize, ct, 0);
+        }
+
+        /*-*****************************************
+         *  Tool functions
+         ******************************************/
+        private static nuint FSE_compressBound(nuint size)
+        {
+            return 512 + (size + (size >> 7) + 4 + (nuint)sizeof(nuint));
+        }
     }
 }

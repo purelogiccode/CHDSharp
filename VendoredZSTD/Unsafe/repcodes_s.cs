@@ -1,9 +1,7 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct RepcodesS
+namespace VendoredZSTD.Unsafe
 {
-    public fixed uint rep[3];
+    public unsafe struct repcodes_s
+    {
+        public fixed uint rep[3];
+    }
 }

@@ -1,44 +1,44 @@
 using System.Runtime.CompilerServices;
 using static VendoredZSTD.UnsafeHelper;
 
-namespace VendoredZSTD.Unsafe;
-
-public static unsafe partial class Methods
+namespace VendoredZSTD.Unsafe
 {
-    /* custom memory allocation functions */
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void* ZSTD_customMalloc(nuint size, ZstdCustomMem customMem)
+    public static unsafe partial class Methods
     {
-        if (customMem.customAlloc != null)
-            return ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(customMem.opaque, size);
-
-        return malloc(size);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void* ZSTD_customCalloc(nuint size, ZstdCustomMem customMem)
-    {
-        if (customMem.customAlloc != null)
+        /* custom memory allocation functions */
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void* ZSTD_customMalloc(nuint size, ZSTD_customMem customMem)
         {
-            /* calloc implemented as malloc+memset;
-             * not as efficient as calloc, but next best guess for custom malloc */
-            var ptr = ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(customMem.opaque, size);
-            memset(ptr, 0, (uint)size);
-            return ptr;
+            if (customMem.customAlloc != null)
+                return ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(customMem.opaque, size);
+            return malloc(size);
         }
 
-        return calloc(1, size);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_customFree(void* ptr, ZstdCustomMem customMem)
-    {
-        if (ptr != null)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void* ZSTD_customCalloc(nuint size, ZSTD_customMem customMem)
         {
-            if (customMem.customFree != null)
-                ((delegate* managed<void*, void*, void>)customMem.customFree)(customMem.opaque, ptr);
-            else
-                free(ptr);
+            if (customMem.customAlloc != null)
+            {
+                /* calloc implemented as malloc+memset;
+                 * not as efficient as calloc, but next best guess for custom malloc */
+                void* ptr = ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(customMem.opaque, size);
+                memset(ptr, 0, (uint)size);
+                return ptr;
+            }
+
+            return calloc(1, size);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ZSTD_customFree(void* ptr, ZSTD_customMem customMem)
+        {
+            if (ptr != null)
+            {
+                if (customMem.customFree != null)
+                    ((delegate* managed<void*, void*, void>)customMem.customFree)(customMem.opaque, ptr);
+                else
+                    free(ptr);
+            }
         }
     }
 }

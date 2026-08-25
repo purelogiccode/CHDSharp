@@ -1,24 +1,20 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct HufCompressTablesT
+namespace VendoredZSTD.Unsafe
 {
-    public fixed uint count[256];
-    public CTableEFixedBuffer CTable;
-    public WkspsEUnion wksps;
-#if NET8_0_OR_GREATER
-    [InlineArray(257)]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct CTableEFixedBuffer
+    public unsafe struct HUF_compress_tables_t
     {
-        public nuint e0;
-    }
+        public fixed uint count[256];
+        public _CTable_e__FixedBuffer CTable;
+        public _wksps_e__Union wksps;
+#if NET8_0_OR_GREATER
+        [InlineArray(257)]
+        public unsafe struct _CTable_e__FixedBuffer
+        {
+            public nuint e0;
+        }
 
 #else
-        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _CTable_e__FixedBuffer
         {
             public nuint e0;
@@ -280,4 +276,5 @@ public unsafe struct HufCompressTablesT
             public nuint e256;
         }
 #endif
+    }
 }

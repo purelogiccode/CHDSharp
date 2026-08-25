@@ -1,7 +1,8 @@
-namespace VendoredZSTD.Unsafe;
-
-public enum ZstdFrameTypeE
+namespace VendoredZSTD.Unsafe
 {
-    ZstdFrame,
-    ZstdSkippableFrame
+    public enum ZSTD_frameType_e
+    {
+        ZSTD_frame,
+        ZSTD_skippableFrame
+    }
 }

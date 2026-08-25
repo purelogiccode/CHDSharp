@@ -1,11 +1,9 @@
-using System.Runtime.InteropServices;
-
-namespace VendoredZSTD.Unsafe;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct RSyncStateT
+namespace VendoredZSTD.Unsafe
 {
-    public ulong hash;
-    public ulong hitMask;
-    public ulong primePower;
+    public struct rsyncState_t
+    {
+        public ulong hash;
+        public ulong hitMask;
+        public ulong primePower;
+    }
 }
