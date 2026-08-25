@@ -263,14 +263,14 @@ public static unsafe partial class Methods
             0xeb8d0e25a65e3e58,
             0xbbcbd3df14e08580,
             0xcf751f27ecdab2b,
-            0x2b4da14f2613d8f4,
+            0x2b4da14f2613d8f4
         };
 
     private static ulong* ZSTD_ldm_gearTab =>
         (ulong*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_ZSTD_ldm_gearTab)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_ZSTD_ldm_gearTab)
+        );
 #else
     private static readonly ulong* ZSTD_ldm_gearTab = GetArrayPointer(
         new ulong[256]

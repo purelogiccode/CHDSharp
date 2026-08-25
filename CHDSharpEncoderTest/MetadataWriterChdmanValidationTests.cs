@@ -43,21 +43,21 @@ public class MetadataWriterChdmanValidationTests : IDisposable
 
         // Saturn-style: MODE1/2352 data track + AUDIO tracks with pregaps, single BIN
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 03:00:00
-                INDEX 01 03:02:00
-              TRACK 03 AUDIO
-                INDEX 00 06:00:00
-                INDEX 01 06:02:00
-              TRACK 04 AUDIO
-                INDEX 00 09:00:00
-                INDEX 01 09:02:00
-              TRACK 05 AUDIO
-                INDEX 01 12:02:00
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 03:00:00
+                               INDEX 01 03:02:00
+                             TRACK 03 AUDIO
+                               INDEX 00 06:00:00
+                               INDEX 01 06:02:00
+                             TRACK 04 AUDIO
+                               INDEX 00 09:00:00
+                               INDEX 01 09:02:00
+                             TRACK 05 AUDIO
+                               INDEX 01 12:02:00
+                           """;
         var cuePath = Path.Combine(_testDataDir, "saturn.cue");
         var binPath = Path.Combine(_testDataDir, "game.bin");
         var chdPath = Path.Combine(_testDataDir, "saturn.chd");
@@ -116,15 +116,15 @@ public class MetadataWriterChdmanValidationTests : IDisposable
             return;
 
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 01:00:00
-                INDEX 01 01:02:00
-              TRACK 03 AUDIO
-                INDEX 01 02:00:00
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 01:00:00
+                               INDEX 01 01:02:00
+                             TRACK 03 AUDIO
+                               INDEX 01 02:00:00
+                           """;
         var cuePath = Path.Combine(_testDataDir, "saturn.cue");
         var binPath = Path.Combine(_testDataDir, "game.bin");
         var chdPath = Path.Combine(_testDataDir, "saturn.chd");
@@ -170,7 +170,7 @@ public class MetadataWriterChdmanValidationTests : IDisposable
                     payload
                 )
                 {
-                    Flags = header[4],
+                    Flags = header[4]
                 }
             );
         }
@@ -219,7 +219,7 @@ public class MetadataWriterChdmanValidationTests : IDisposable
                     Flags = flags,
                     Length = length,
                     Next = next,
-                    Payload = payload,
+                    Payload = payload
                 }
             );
 
@@ -235,9 +235,9 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     private static uint ReadU32Be(byte[] data, int offset)
     {
         return ((uint)data[offset] << 24)
-            | ((uint)data[offset + 1] << 16)
-            | ((uint)data[offset + 2] << 8)
-            | data[offset + 3];
+               | ((uint)data[offset + 1] << 16)
+               | ((uint)data[offset + 2] << 8)
+               | data[offset + 3];
     }
 
     private static uint ReadU24Be(byte[] data, int offset)

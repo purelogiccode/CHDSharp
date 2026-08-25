@@ -59,7 +59,7 @@ public static unsafe partial class Methods
         assert(litSize > 0);
         assert(
             hufMetadata->hType == symbolEncodingType_e.set_compressed
-                || hufMetadata->hType == symbolEncodingType_e.set_repeat
+            || hufMetadata->hType == symbolEncodingType_e.set_repeat
         );
         if (writeEntropy != 0 && hufMetadata->hType == symbolEncodingType_e.set_compressed)
         {

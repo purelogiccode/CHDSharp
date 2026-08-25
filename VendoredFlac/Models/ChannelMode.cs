@@ -18,5 +18,5 @@ internal enum ChannelMode
     RightSide = 9,
 
     /// <summary>Mid and side channels.</summary>
-    MidSide = 10,
+    MidSide = 10
 }

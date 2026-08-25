@@ -40,5 +40,5 @@ internal enum InflateMode : ushort
     Done, // finished check, done -- remain here until reset
     Bad, // got a data error -- remain here until reset
     Mem, // got an inflate() memory error -- remain here until reset
-    Sync, // looking for synchronization bytes to restart inflate()
+    Sync // looking for synchronization bytes to restart inflate()
 }

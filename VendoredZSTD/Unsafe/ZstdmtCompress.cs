@@ -425,9 +425,9 @@ public static unsafe partial class Methods
                 nuint error;
                 assert(
                     seqStore.seq != null
-                        && seqStore.pos == 0
-                        && seqStore.size == 0
-                        && seqStore.capacity > 0
+                    && seqStore.pos == 0
+                    && seqStore.size == 0
+                    && seqStore.capacity > 0
                 );
                 assert(src.size <= serialState->@params.jobSize);
                 ZSTD_window_update(&serialState->ldmState.window, src.start, src.size, 0);
@@ -925,13 +925,13 @@ public static unsafe partial class Methods
         if (mtctx == null)
             return 0;
         return (nuint)sizeof(ZSTDMT_CCtx_s)
-            + POOL_sizeof(mtctx->factory)
-            + ZSTDMT_sizeof_bufferPool(mtctx->bufPool)
-            + (mtctx->jobIDMask + 1) * (uint)sizeof(ZSTDMT_jobDescription)
-            + ZSTDMT_sizeof_CCtxPool(mtctx->cctxPool)
-            + ZSTDMT_sizeof_seqPool(mtctx->seqPool)
-            + ZSTD_sizeof_CDict(mtctx->cdictLocal)
-            + mtctx->roundBuff.capacity;
+               + POOL_sizeof(mtctx->factory)
+               + ZSTDMT_sizeof_bufferPool(mtctx->bufPool)
+               + (mtctx->jobIDMask + 1) * (uint)sizeof(ZSTDMT_jobDescription)
+               + ZSTDMT_sizeof_CCtxPool(mtctx->cctxPool)
+               + ZSTDMT_sizeof_seqPool(mtctx->seqPool)
+               + ZSTD_sizeof_CDict(mtctx->cdictLocal)
+               + mtctx->roundBuff.capacity;
     }
 
     /* ZSTDMT_resize() :
@@ -1747,8 +1747,8 @@ public static unsafe partial class Methods
         {
             assert(
                 mtctx->inBuff.filled == 0
-                    || mtctx->inBuff.filled == mtctx->targetSectionSize
-                    || mtctx->@params.rsyncable != 0
+                || mtctx->inBuff.filled == mtctx->targetSectionSize
+                || mtctx->@params.rsyncable != 0
             );
             endOp = ZSTD_EndDirective.ZSTD_e_flush;
         }

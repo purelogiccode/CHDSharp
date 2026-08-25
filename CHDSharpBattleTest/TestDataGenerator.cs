@@ -70,7 +70,7 @@ internal static class TestDataGenerator
                 < 0.45 => (byte)common[rng.Next(common.Length)],
                 < 0.90 => (byte)all[rng.Next(all.Length)],
                 < 0.94 => (byte)' ',
-                _ => (byte)'\n',
+                _ => (byte)'\n'
             };
         }
 
@@ -192,15 +192,15 @@ internal static class TestDataGenerator
         File.WriteAllText(
             cuePath,
             $"""
-            FILE "cd-mixed.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                PREGAP 00:02:00
-                INDEX 01 {track2Index}
-              TRACK 03 MODE2/2352
-                INDEX 01 {track3Index}
-            """
+             FILE "cd-mixed.bin" BINARY
+               TRACK 01 MODE1/2352
+                 INDEX 01 00:00:00
+               TRACK 02 AUDIO
+                 PREGAP 00:02:00
+                 INDEX 01 {track2Index}
+               TRACK 03 MODE2/2352
+                 INDEX 01 {track3Index}
+             """
         );
     }
 

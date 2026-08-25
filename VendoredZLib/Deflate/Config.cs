@@ -34,6 +34,6 @@ internal readonly struct Config
     {
         Stored,
         Fast,
-        Slow,
+        Slow
     }
 }

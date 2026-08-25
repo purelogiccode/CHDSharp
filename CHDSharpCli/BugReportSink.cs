@@ -113,7 +113,7 @@ internal sealed class BugReportSink : ILogEventSink
                 version = _env.ApplicationVersion,
                 userInfo = (string?)null,
                 environment = _environmentLabel,
-                stackTrace = logEvent.Exception?.StackTrace,
+                stackTrace = logEvent.Exception?.StackTrace
             };
 
             var json = JsonSerializer.Serialize(payload);

@@ -15,5 +15,5 @@ public enum FSE_repeat
     /**
      * < Can use the previous table and it is assumed to be valid
      */
-    FSE_repeat_valid,
+    FSE_repeat_valid
 }

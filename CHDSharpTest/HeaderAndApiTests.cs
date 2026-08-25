@@ -99,7 +99,7 @@ public class HeaderAndApiTests
             Rawsha1 = new byte[20],
             Sha1 = new byte[20],
             Parentmd5 = new byte[16],
-            Parentsha1 = new byte[20],
+            Parentsha1 = new byte[20]
         };
     }
 
@@ -298,7 +298,7 @@ public class HeaderAndApiTests
             Totalbytes = 0,
             Blocksize = 1024,
             Totalblocks = 0,
-            UncompressedMap = false,
+            UncompressedMap = false
         };
 
         var err = ChdMetaData.ReadMetaDataEntries(ms, chd, out var entries);
@@ -330,7 +330,7 @@ public class HeaderAndApiTests
             Totalbytes = 0,
             Blocksize = 1024,
             Totalblocks = 0,
-            UncompressedMap = false,
+            UncompressedMap = false
         };
 
         var err = ChdMetaData.ReadMetaDataEntries(ms, chd, out var entries);

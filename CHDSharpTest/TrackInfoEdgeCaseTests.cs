@@ -93,7 +93,7 @@ public sealed class TrackInfoEdgeCaseTests
                 Assert.Equal(
                     tracks[i].StartFrame,
                     tracks[i - 1].StartFrame
-                        + (ulong)(tracks[i - 1].Frames + tracks[i - 1].ExtraFrames)
+                    + (ulong)(tracks[i - 1].Frames + tracks[i - 1].ExtraFrames)
                 );
             }
         }
@@ -169,7 +169,7 @@ public sealed class TrackInfoEdgeCaseTests
             "v5_cd_cdzl.chd",
             "v5_cd_cdlz.chd",
             "v5_cd_cdfl.chd",
-            "v5_cd_cdzs.chd",
+            "v5_cd_cdzs.chd"
         };
         foreach (var file in cdFiles)
         {
@@ -197,7 +197,7 @@ public sealed class TrackInfoEdgeCaseTests
             "v5_zstd.chd",
             "v5_multi.chd",
             "v5_none.chd",
-            "v5_odd.chd",
+            "v5_odd.chd"
         };
         foreach (var file in rawFiles)
         {
@@ -221,7 +221,7 @@ public sealed class TrackInfoEdgeCaseTests
             "v5_cd_cdzl.chd",
             "v5_cd_cdlz.chd",
             "v5_cd_cdfl.chd",
-            "v5_cd_cdzs.chd",
+            "v5_cd_cdzs.chd"
         };
         List<ChdTrackInfo>? first = null;
         foreach (var file in cdFiles)

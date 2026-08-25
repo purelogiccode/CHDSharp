@@ -29,7 +29,7 @@ public sealed record ChdHashResult(
                 : Convert.ToHexString(Sha256).ToLowerInvariant(),
             ChdHashType.Crc32 => Crc32?.ToString("X8").ToLowerInvariant(),
             ChdHashType.Xxh3 => Xxh3?.ToString("X16").ToLowerInvariant(),
-            _ => null,
+            _ => null
         };
     }
 }

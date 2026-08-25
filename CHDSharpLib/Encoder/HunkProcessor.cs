@@ -45,7 +45,9 @@ internal class HunkProcessor
     /// <summary>Initializes a new <see cref="HunkProcessor" /> for the specified hunk size.</summary>
     /// <param name="hunkBytes">The expected size of each hunk in bytes.</param>
     public HunkProcessor(uint hunkBytes)
-        : this(hunkBytes, [new ZlibCodec()]) { }
+        : this(hunkBytes, [new ZlibCodec()])
+    {
+    }
 
     /// <summary>Initializes a new <see cref="HunkProcessor" /> with the given codecs.</summary>
     /// <param name="hunkBytes">The expected size of each hunk in bytes.</param>
@@ -128,7 +130,7 @@ internal class HunkProcessor
                     Compression = (byte)bestCodec,
                     CompLength = (uint)bestData!.Length,
                     Offset = (ulong)fileOffset,
-                    Crc16 = crc16,
+                    Crc16 = crc16
                 },
                 bestData
             );
@@ -139,7 +141,7 @@ internal class HunkProcessor
                 Compression = MapEntry.CompressionNone,
                 CompLength = _hunkBytes,
                 Offset = (ulong)fileOffset,
-                Crc16 = crc16,
+                Crc16 = crc16
             },
             (byte[])rawHunk.Clone()
         );
@@ -381,7 +383,9 @@ internal class HunkProcessor
                 for (var i = 0; i < _taskCount; i++)
                     _toCompress.Add(-1, _ts.Token);
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+            }
             catch (Exception ex)
             {
                 RecordError(ex);
@@ -444,7 +448,9 @@ internal class HunkProcessor
                     _toWrite.Add(h, _ts.Token);
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+            }
             catch (Exception ex)
             {
                 RecordError(ex);

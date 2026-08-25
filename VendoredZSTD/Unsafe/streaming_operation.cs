@@ -4,5 +4,5 @@ namespace VendoredZSTD.Unsafe;
 public enum streaming_operation
 {
     not_streaming = 0,
-    is_streaming = 1,
+    is_streaming = 1
 }

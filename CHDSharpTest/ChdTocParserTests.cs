@@ -149,7 +149,7 @@ public class ChdTocParserTests
         var entries = new List<ChdMetadataEntry>
         {
             new("CHT2", Encoding.ASCII.GetBytes(text1)),
-            new("CHT2", Encoding.ASCII.GetBytes(text2)),
+            new("CHT2", Encoding.ASCII.GetBytes(text2))
         };
 
         var result = ChdTocParser.ParseTracks(entries, out _);

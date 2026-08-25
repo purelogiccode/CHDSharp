@@ -454,7 +454,7 @@ public static unsafe partial class Methods
     private static nuint ZSTD_cwksp_used(ZSTD_cwksp* ws)
     {
         return (nuint)((byte*)ws->tableEnd - (byte*)ws->workspace)
-            + (nuint)((byte*)ws->workspaceEnd - (byte*)ws->allocStart);
+               + (nuint)((byte*)ws->workspaceEnd - (byte*)ws->allocStart);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -476,8 +476,8 @@ public static unsafe partial class Methods
         return
             estimatedSpace - ZSTD_cwksp_slack_space_required() <= ZSTD_cwksp_used(ws)
             && ZSTD_cwksp_used(ws) <= estimatedSpace
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     /*-*************************************
@@ -507,8 +507,8 @@ public static unsafe partial class Methods
         return
             ZSTD_cwksp_check_too_large(ws, additionalNeededSpace) != 0
             && ws->workspaceOversizedDuration > 128
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

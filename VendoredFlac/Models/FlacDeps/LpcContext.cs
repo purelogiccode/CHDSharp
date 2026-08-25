@@ -65,7 +65,7 @@ internal unsafe struct LpcWindowSection
         OneGlue,
 
         /// <summary>Glue section between windowed regions.</summary>
-        Glue,
+        Glue
     }
 
     /// <summary>
@@ -324,17 +324,17 @@ internal unsafe struct LpcWindowSection
                     // section_id for glue? nontrivial, must be sure next sections are the same size
                     case > 0
                         when (
-                            windowSections[sec].MType == SectionType.One
-                            || windowSections[sec].MType == SectionType.OneLarge
-                        )
-                            && windowSections[sec].MEnd - windowSections[sec].MStart
-                                >= Lpc.Maxlpcorder
-                            && (
-                                windowSections[sec - 1].MType == SectionType.One
-                                || windowSections[sec - 1].MType == SectionType.OneLarge
-                            )
-                            && windowSections[sec - 1].MEnd - windowSections[sec - 1].MStart
-                                >= Lpc.Maxlpcorder:
+                                 windowSections[sec].MType == SectionType.One
+                                 || windowSections[sec].MType == SectionType.OneLarge
+                             )
+                             && windowSections[sec].MEnd - windowSections[sec].MStart
+                             >= Lpc.Maxlpcorder
+                             && (
+                                 windowSections[sec - 1].MType == SectionType.One
+                                 || windowSections[sec - 1].MType == SectionType.OneLarge
+                             )
+                             && windowSections[sec - 1].MEnd - windowSections[sec - 1].MStart
+                             >= Lpc.Maxlpcorder:
                         windowSections[sec + 1] = windowSections[sec];
                         windowSections[sec].MEnd = windowSections[sec].MStart;
                         windowSections[sec].MType = SectionType.OneGlue;
@@ -343,7 +343,7 @@ internal unsafe struct LpcWindowSection
                         continue;
                     case > 0
                         when windowSections[sec].MType != SectionType.Zero
-                            && windowSections[sec - 1].MType != SectionType.Zero:
+                             && windowSections[sec - 1].MType != SectionType.Zero:
                         windowSections[sec + 1] = windowSections[sec];
                         windowSections[sec].MEnd = windowSections[sec].MStart;
                         windowSections[sec].MType = SectionType.Glue;
@@ -465,8 +465,8 @@ internal unsafe class LpcContext
 
         fixed (
             double* reff = Reflection,
-                autoc = AutocorrValues,
-                err = PredictionError
+            autoc = AutocorrValues,
+            err = PredictionError
         )
         {
             for (var i = _autocorrOrder; i <= order; i++)
@@ -532,7 +532,7 @@ internal unsafe class LpcContext
     public double Akaike(int blocksize, int order, double alpha, double beta)
     {
         return blocksize * Math.Log(PredictionError[order - 1])
-            + Math.Log(blocksize) * order * (alpha + beta * order);
+               + Math.Log(blocksize) * order * (alpha + beta * order);
     }
 
     /// <summary>

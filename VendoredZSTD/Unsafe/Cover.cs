@@ -25,7 +25,9 @@ public static unsafe partial class Methods
     private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers, int displayLevel)
     {
         var ratio = nbDmers / (double)maxDictSize;
-        if (ratio >= 10) { }
+        if (ratio >= 10)
+        {
+        }
     }
 
     /**

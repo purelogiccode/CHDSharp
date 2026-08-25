@@ -236,10 +236,10 @@ public class CueParserTests : IDisposable
     {
         WriteCue(
             $"""
-            FILE "game.bin" BINARY
-              TRACK 01 {typeString}
-                INDEX 01 00:00:00
-            """
+             FILE "game.bin" BINARY
+               TRACK 01 {typeString}
+                 INDEX 01 00:00:00
+             """
         );
         WriteBin(2352 * 8);
 

@@ -17,5 +17,5 @@ public enum ChdHashType
     Crc32 = 0x0004,
 
     /// <summary>XXH3-64 (8 bytes), the fast non-cryptographic hash used by Redump/CHDlite.</summary>
-    Xxh3 = 0x0008,
+    Xxh3 = 0x0008
 }

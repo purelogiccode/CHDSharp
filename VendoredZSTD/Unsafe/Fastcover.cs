@@ -17,7 +17,7 @@ public static unsafe partial class Methods
             new(14, 6),
             new(13, 7),
             new(11, 8),
-            new(10, 9),
+            new(10, 9)
         }
     );
 
@@ -68,7 +68,7 @@ public static unsafe partial class Methods
         {
             begin = 0,
             end = 0,
-            score = 0,
+            score = 0
         };
         COVER_segment_t activeSegment;
         activeSegment.begin = begin;
@@ -509,7 +509,9 @@ public static unsafe partial class Methods
                 nbFinalizeSamples,
                 coverParams.zParams
             );
-            if (!ERR_isError(dictionarySize)) { }
+            if (!ERR_isError(dictionarySize))
+            {
+            }
 
             FASTCOVER_ctx_destroy(&ctx);
             free(segmentFreqs);

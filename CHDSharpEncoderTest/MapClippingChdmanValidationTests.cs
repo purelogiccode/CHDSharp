@@ -64,8 +64,8 @@ public class MapClippingChdmanValidationTests : IDisposable
                 Compression = MapEntry.CompressionNone,
                 CompLength = 8192,
                 Offset = 124,
-                Crc16 = 0x0000,
-            },
+                Crc16 = 0x0000
+            }
         };
 
         var map = MapCompressor.Compress(entries, 1, 8192, 512);
@@ -89,8 +89,8 @@ public class MapClippingChdmanValidationTests : IDisposable
                 Compression = MapEntry.CompressionNone,
                 CompLength = 8192,
                 Offset = 124,
-                Crc16 = 0x0001,
-            },
+                Crc16 = 0x0001
+            }
         };
 
         var map = MapCompressor.Compress(entries, 1, 8192, 512);
@@ -118,7 +118,7 @@ public class MapClippingChdmanValidationTests : IDisposable
             (37632u, false) => 2,
             (37632u, true) => 1,
             (65536u, false) => 1,
-            _ => 2,
+            _ => 2
         };
     }
 
@@ -217,7 +217,7 @@ public class MapClippingChdmanValidationTests : IDisposable
         Assert.True(
             refInfoExit != 0,
             "chdman can now read its own single-hunk output - the upstream clipping bug appears to be fixed; "
-                + "this divergence should be revisited and byte parity restored"
+            + "this divergence should be revisited and byte parity restored"
         );
 
         // and our bytes deliberately differ from chdman's broken ones
@@ -329,8 +329,8 @@ public class MapClippingChdmanValidationTests : IDisposable
     private static uint ReadU32Be(byte[] data, int offset)
     {
         return ((uint)data[offset] << 24)
-            | ((uint)data[offset + 1] << 16)
-            | ((uint)data[offset + 2] << 8)
-            | data[offset + 3];
+               | ((uint)data[offset + 1] << 16)
+               | ((uint)data[offset + 2] << 8)
+               | data[offset + 3];
     }
 }

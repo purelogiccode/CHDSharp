@@ -18,9 +18,9 @@ public static unsafe partial class Methods
     private static ReadOnlySpan<uint> Span_repStartValue => new uint[3] { 1, 4, 8 };
     private static uint* repStartValue =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_repStartValue)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_repStartValue)
+        );
 #else
     private static readonly uint* repStartValue = GetArrayPointer(new uint[3] { 1, 4, 8 });
 #endif
@@ -72,14 +72,14 @@ public static unsafe partial class Methods
             13,
             14,
             15,
-            16,
+            16
         };
 
     private static byte* LL_bits =>
         (byte*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_LL_bits)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_LL_bits)
+        );
 #else
     private static readonly byte* LL_bits = GetArrayPointer(
         new byte[36]
@@ -162,14 +162,14 @@ public static unsafe partial class Methods
             -1,
             -1,
             -1,
-            -1,
+            -1
         };
 
     private static short* LL_defaultNorm =>
         (short*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_LL_defaultNorm)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_LL_defaultNorm)
+        );
 #else
     private static readonly short* LL_defaultNorm = GetArrayPointer(
         new short[36]
@@ -270,14 +270,14 @@ public static unsafe partial class Methods
             13,
             14,
             15,
-            16,
+            16
         };
 
     private static byte* ML_bits =>
         (byte*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_ML_bits)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_ML_bits)
+        );
 #else
     private static readonly byte* ML_bits = GetArrayPointer(
         new byte[53]
@@ -394,14 +394,14 @@ public static unsafe partial class Methods
             -1,
             -1,
             -1,
-            -1,
+            -1
         };
 
     private static short* ML_defaultNorm =>
         (short*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_ML_defaultNorm)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_ML_defaultNorm)
+        );
 #else
     private static readonly short* ML_defaultNorm = GetArrayPointer(
         new short[53]
@@ -495,14 +495,14 @@ public static unsafe partial class Methods
             -1,
             -1,
             -1,
-            -1,
+            -1
         };
 
     private static short* OF_defaultNorm =>
         (short*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_OF_defaultNorm)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_OF_defaultNorm)
+        );
 #else
     private static readonly short* OF_defaultNorm = GetArrayPointer(
         new short[29]

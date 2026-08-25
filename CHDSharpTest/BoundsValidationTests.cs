@@ -173,7 +173,7 @@ public class BoundsValidationTests
             Rawsha1 = new byte[20],
             Sha1 = new byte[20],
             Parentmd5 = new byte[16],
-            Parentsha1 = new byte[20],
+            Parentsha1 = new byte[20]
         };
 
         Assert.Throws<NotSupportedException>(() => ChdBlockRead.FindBlockReaders(chd));

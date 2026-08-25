@@ -49,7 +49,7 @@ internal static class Tree
         new(11, 5),
         new(27, 5),
         new(7, 5),
-        new(23, 5),
+        new(23, 5)
     };
 
     internal static readonly TreeNode[] SLtree = new TreeNode[]
@@ -341,7 +341,7 @@ internal static class Tree
         new(35, 8),
         new(163, 8),
         new(99, 8),
-        new(227, 8),
+        new(227, 8)
     };
 
     /// <summary>
@@ -651,7 +651,7 @@ internal static class Tree
     private static void SendBits(DeflateState s, uint value, int length, ref byte pendingBuf)
     {
 #if DEBUG
-        Trace.Tracevv($" l {length, 2} v {value, 4:x} ");
+        Trace.Tracevv($" l {length,2} v {value,4:x} ");
         Debug.Assert(length is > 0 and <= 15, "invalid length");
         s.BitsSent += (uint)length;
 
@@ -896,7 +896,7 @@ internal static class Tree
         ref var tn = ref Unsafe.Add(ref tree, n);
         ref var tm = ref Unsafe.Add(ref tree, m);
         return tn.fc < tm.fc
-            || (tn.fc == tm.fc && Unsafe.Add(ref depth, n) <= Unsafe.Add(ref depth, m));
+               || (tn.fc == tm.fc && Unsafe.Add(ref depth, n) <= Unsafe.Add(ref depth, m));
     }
 
     /// <summary>
@@ -1055,7 +1055,7 @@ internal static class Tree
 #if DEBUG
             Trace.Tracecv(
                 !netUnsafe.AreSame(ref tree, ref MemoryMarshal.GetReference(SLtree)),
-                $"\nn {n, 3} {(IsGraph(n) ? Convert.ToChar(n) : ' ')} l {len, 2} c {Unsafe.Add(ref tree, n).dl, 4:x} ({Unsafe.Add(ref nextCode, len) - 1:x)}) "
+                $"\nn {n,3} {(IsGraph(n) ? Convert.ToChar(n) : ' ')} l {len,2} c {Unsafe.Add(ref tree, n).dl,4:x} ({Unsafe.Add(ref nextCode, len) - 1:x)}) "
             );
 #endif
         }
@@ -1222,8 +1222,8 @@ internal static class Tree
             dist--; // dist = match distance - 1
             Debug.Assert(
                 dist < Deflater.MaxDist(s)
-                    && lc <= MaxMatch - MinMatch
-                    && DCode(dist, ref distCode) < DCodes,
+                && lc <= MaxMatch - MinMatch
+                && DCode(dist, ref distCode) < DCodes,
                 "_tr_tally: bad match"
             );
 
@@ -1257,7 +1257,8 @@ internal static class Tree
             {
                 var dist = Unsafe.Add(ref pendingBuf, s.LitBufsize + sx++) & 0xffU; // distance of matched string
                 dist += (Unsafe.Add(ref pendingBuf, s.LitBufsize + sx++) & 0xffU) << 8;
-                uint lc = Unsafe.Add(ref pendingBuf, s.LitBufsize + sx++); // match length or unmatched char (if dist == 0)
+                uint lc = Unsafe.Add(ref pendingBuf,
+                    s.LitBufsize + sx++); // match length or unmatched char (if dist == 0)
                 if (dist == 0)
                 {
                     SendCode(s, ref Unsafe.Add(ref ltree, lc), ref pendingBuf); // send a literal byte
@@ -1331,7 +1332,7 @@ internal static class Tree
         for (uint rank = 0; rank < blcodes; rank++)
         {
             uint code = Unsafe.Add(ref blOrder, rank);
-            Trace.Tracev($"\nbl code {code, 2} ");
+            Trace.Tracev($"\nbl code {code,2} ");
             SendBits(s, Unsafe.Add(ref blTree, code).dl, 3, ref pendingBuf);
         }
 #if DEBUG

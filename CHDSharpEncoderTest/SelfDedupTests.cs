@@ -121,7 +121,7 @@ public class SelfDedupTests : IDisposable
             Compression = MapEntry.CompressionNone,
             CompLength = 4096,
             Offset = 124,
-            Crc16 = 0xFFFF,
+            Crc16 = 0xFFFF
         };
         for (var i = 1; i < 10; i++)
             entries[i] = new MapEntry
@@ -129,7 +129,7 @@ public class SelfDedupTests : IDisposable
                 Compression = MapEntry.CompressionSelf,
                 CompLength = 0,
                 Offset = 7,
-                Crc16 = 0,
+                Crc16 = 0
             };
 
         var compressed = MapCompressor.Compress(entries, 10, 4096, 512);
@@ -149,7 +149,7 @@ public class SelfDedupTests : IDisposable
             Compression = MapEntry.CompressionType0,
             CompLength = 100,
             Offset = 124,
-            Crc16 = 1,
+            Crc16 = 1
         };
         for (var i = 1; i < 4; i++)
             entries[i] = new MapEntry
@@ -157,7 +157,7 @@ public class SelfDedupTests : IDisposable
                 Compression = MapEntry.CompressionSelf,
                 CompLength = 0,
                 Offset = 0,
-                Crc16 = 0,
+                Crc16 = 0
             };
 
         var compressed = MapCompressor.Compress(entries, 4, 4096, 512);
@@ -175,21 +175,21 @@ public class SelfDedupTests : IDisposable
             Compression = MapEntry.CompressionNone,
             CompLength = 4096,
             Offset = 124,
-            Crc16 = 0x1234,
+            Crc16 = 0x1234
         };
         entries[1] = new MapEntry
         {
             Compression = MapEntry.CompressionSelf,
             CompLength = 0,
             Offset = 0,
-            Crc16 = 0,
+            Crc16 = 0
         };
         entries[2] = new MapEntry
         {
             Compression = MapEntry.CompressionSelf,
             CompLength = 0,
             Offset = 0,
-            Crc16 = 0,
+            Crc16 = 0
         };
 
         var compressed = MapCompressor.Compress(entries, 3, 4096, 512);
@@ -208,13 +208,13 @@ public class SelfDedupTests : IDisposable
     {
         // two audio tracks of silence (all-zero sectors) → every hunk identical
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 AUDIO
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 00:01:00
-                INDEX 01 00:01:02
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 AUDIO
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 00:01:00
+                               INDEX 01 00:01:02
+                           """;
         var cuePath = Path.Combine(_dir, "silent.cue");
         File.WriteAllText(cuePath, cue);
         using (var fs = File.Create(Path.Combine(_dir, "game.bin")))

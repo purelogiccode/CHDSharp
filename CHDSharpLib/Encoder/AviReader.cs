@@ -521,7 +521,7 @@ public sealed class AviReader : IDisposable
             (byte)(fourcc & 0xFF),
             (byte)((fourcc >> 8) & 0xFF),
             (byte)((fourcc >> 16) & 0xFF),
-            (byte)((fourcc >> 24) & 0xFF),
+            (byte)((fourcc >> 24) & 0xFF)
         ];
         return Encoding.ASCII.GetString(bytes);
     }

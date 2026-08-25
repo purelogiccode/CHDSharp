@@ -22,8 +22,7 @@ public class ReadBenchmarks
     // addresses every op (RNG state would otherwise make results order-dependent).
     private ulong _xor;
 
-    [ParamsSource(nameof(CacheSizes))]
-    public int CacheSize { get; set; }
+    [ParamsSource(nameof(CacheSizes))] public int CacheSize { get; set; }
 
     public static IEnumerable<int> CacheSizes()
     {

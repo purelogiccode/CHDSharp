@@ -67,7 +67,7 @@ public sealed class CliWiringTests : IDisposable
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true,
+            CreateNoWindow = true
         };
 
         using var proc = Process.Start(psi);
@@ -263,10 +263,10 @@ public sealed class CliWiringTests : IDisposable
         File.WriteAllBytes(binPath, frameData);
 
         const string cueContent = """
-            FILE "test.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-            """;
+                                  FILE "test.bin" BINARY
+                                    TRACK 01 MODE1/2352
+                                      INDEX 01 00:00:00
+                                  """;
         File.WriteAllText(cuePath, cueContent);
 
         // Create CD CHD

@@ -28,7 +28,7 @@ public static unsafe class DictBuilder
             {
                 d = 8,
                 steps = 4,
-                zParams = new ZDICT_params_t { compressionLevel = level },
+                zParams = new ZDICT_params_t { compressionLevel = level }
             },
             dictCapacity
         );

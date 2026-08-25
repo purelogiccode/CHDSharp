@@ -34,7 +34,7 @@ public class IsoParser
             SubType = CdSubType.None,
             SubSize = 0,
             PgSub = CdSubType.None,
-            Swap = false,
+            Swap = false
         };
 
         if (size % 2048 == 0)

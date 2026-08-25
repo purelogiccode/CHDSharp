@@ -40,5 +40,5 @@ public enum HUF_flags_e
      * If set: Don't use the fast decoding loop, always use the fallback decoding loop.
      * If unset: Use the fast decoding loop when possible.
      */
-    HUF_flags_disableFast = 1 << 5,
+    HUF_flags_disableFast = 1 << 5
 }

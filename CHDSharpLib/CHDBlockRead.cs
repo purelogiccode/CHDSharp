@@ -220,7 +220,7 @@ internal static class ChdBlockRead
                     ChdCodec.Flac => 2,
                     ChdCodec.Lzma => 18,
                     ChdCodec.Zlib => 3,
-                    _ => 1,
+                    _ => 1
                 };
             default:
                 switch (chd.Compression[(int)me.Comptype])

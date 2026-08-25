@@ -57,16 +57,16 @@ public class AvHuffDebugTests
                 Assert.True(
                     readErr == ChdError.Chderrnone,
                     $"ReadHunk(0) returned {readErr}; rawBytes={rawBytes} compLen={compLen}\n"
-                        + $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n"
-                        + $"samples={(compressed[2] << 8) | compressed[3]} "
-                        + $"width={(compressed[4] << 8) | compressed[5]} "
-                        + $"height={(compressed[6] << 8) | compressed[7]}\n"
-                        + $"treesize=0x{(compressed[8] << 8) | compressed[9]:X4} "
-                        + $"ch0size={(compressed[10] << 8) | compressed[11]} "
-                        + $"ch1size={(compressed[12] << 8) | compressed[13]}\n"
-                        + $"video starts at {14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])}: "
-                        + $"0x{compressed[14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])]:X2} "
-                        + $"(expect 0x80)"
+                    + $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n"
+                    + $"samples={(compressed[2] << 8) | compressed[3]} "
+                    + $"width={(compressed[4] << 8) | compressed[5]} "
+                    + $"height={(compressed[6] << 8) | compressed[7]}\n"
+                    + $"treesize=0x{(compressed[8] << 8) | compressed[9]:X4} "
+                    + $"ch0size={(compressed[10] << 8) | compressed[11]} "
+                    + $"ch1size={(compressed[12] << 8) | compressed[13]}\n"
+                    + $"video starts at {14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])}: "
+                    + $"0x{compressed[14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])]:X2} "
+                    + $"(expect 0x80)"
                 );
                 Assert.Equal(raw, buf);
             }
@@ -119,8 +119,8 @@ public class AvHuffDebugTests
                     const int videoStart = 10;
                     Assert.Fail(
                         $"ReadHunk(0) returned {readErr}; rawBytes={rawBytes} compLen={compLen}\n"
-                            + $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n"
-                            + $"video0x80={compressed[videoStart]:X2}"
+                        + $"compressed header: {string.Join(" ", compressed.Take(14).Select(b => b.ToString("X2")))}\n"
+                        + $"video0x80={compressed[videoStart]:X2}"
                     );
                 }
 

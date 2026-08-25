@@ -16,7 +16,7 @@ internal static class ToolRunner
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true,
+            CreateNoWindow = true
         };
         using var p =
             Process.Start(psi) ?? throw new InvalidOperationException($"failed to start {exe}");

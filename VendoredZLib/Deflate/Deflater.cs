@@ -20,7 +20,8 @@ internal static partial class Deflater
     private const int PresetDict = 0x20; // preset dictionary flag in zlib header
     private const int MaxStored = 65535; // maximum stored block length in deflate format (not including header)
 
-    private const uint MinLookAhead = MaxMatch + MinMatch + 1; // Minimum amount of lookahead, except at the end of the input file.
+    private const uint
+        MinLookAhead = MaxMatch + MinMatch + 1; // Minimum amount of lookahead, except at the end of the input file.
 #if DEBUG
     private const ushort Literals = 256; // number of literal bytes 0..255
 #endif
@@ -43,7 +44,7 @@ internal static partial class Deflater
         "insufficient memory", /* Z_MEM_ERROR     (-4) */
         "buffer error", /* Z_BUF_ERROR     (-5) */
         "incompatible version", /* Z_VERSION_ERROR (-6) */
-        "",
+        ""
     };
 
     internal static readonly Config[] SConfigurationTable = new Config[]
@@ -57,7 +58,7 @@ internal static partial class Deflater
         new(8, 16, 128, 128, Config.DeflateType.Slow), // 6
         new(8, 32, 128, 256, Config.DeflateType.Slow), // 7
         new(32, 128, 258, 1024, Config.DeflateType.Slow), // 8
-        new(32, 258, 258, 4096, Config.DeflateType.Slow), // 9: max compression
+        new(32, 258, 258, 4096, Config.DeflateType.Slow) // 9: max compression
     };
 
     private static readonly int[] SBaseDist = new[]
@@ -91,7 +92,7 @@ internal static partial class Deflater
         8192,
         12288,
         16384,
-        24576,
+        24576
     };
 
     private static readonly byte[] SDistCode = new byte[]
@@ -607,7 +608,7 @@ internal static partial class Deflater
         29,
         29,
         29,
-        29,
+        29
     };
 
     private static readonly byte[] SLengthCode = new byte[]
@@ -867,7 +868,7 @@ internal static partial class Deflater
         27,
         27,
         27,
-        28,
+        28
     };
 
     private static readonly int[] SBaseLength = new[]
@@ -900,83 +901,84 @@ internal static partial class Deflater
         160,
         192,
         224,
-        0,
+        0
     };
 
-    private static readonly ushort[] SBlOrder = // The lengths of the bit length codes are sent in order of decreasing probability, to avoid transmitting the lengths for unused bit length codes.
-    new ushort[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+    private static readonly ushort[]
+        SBlOrder = // The lengths of the bit length codes are sent in order of decreasing probability, to avoid transmitting the lengths for unused bit length codes.
+            new ushort[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
     private static readonly int[] SExtraDbits = // extra bits for each distance code
-    new[]
-    {
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        2,
-        2,
-        3,
-        3,
-        4,
-        4,
-        5,
-        5,
-        6,
-        6,
-        7,
-        7,
-        8,
-        8,
-        9,
-        9,
-        10,
-        10,
-        11,
-        11,
-        12,
-        12,
-        13,
-        13,
-    };
+        new[]
+        {
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            3,
+            3,
+            4,
+            4,
+            5,
+            5,
+            6,
+            6,
+            7,
+            7,
+            8,
+            8,
+            9,
+            9,
+            10,
+            10,
+            11,
+            11,
+            12,
+            12,
+            13,
+            13
+        };
 
     private static readonly int[] SExtraLbits = // extra bits for each length code
-    new[]
-    {
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
-        2,
-        3,
-        3,
-        3,
-        3,
-        4,
-        4,
-        4,
-        4,
-        5,
-        5,
-        5,
-        5,
-        0,
-    };
+        new[]
+        {
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            0
+        };
 
     private static readonly int[] SExtraBlbits = // extra bits for each bit length code
-    new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7 };
+        new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7 };
 
     internal static void Init()
     {
@@ -1009,13 +1011,13 @@ internal static partial class Deflater
 #endif
         ref var pendingBuf = ref
 #if NET7_0_OR_GREATER
-        refs.PendingBuf;
+            refs.PendingBuf;
 #else
         MemoryMarshal.GetReference<byte>(s.pending_buf);
 #endif
         ref var pendingOut = ref
 #if NET7_0_OR_GREATER
-        refs.PendingOut;
+            refs.PendingOut;
 #else
         MemoryMarshal.GetReference<byte>(s.pending_out);
 #endif
@@ -1124,7 +1126,7 @@ internal static partial class Deflater
                     default:
                         ref var configurationTable = ref
 #if NET7_0_OR_GREATER
-                        refs.ConfigurationTable;
+                            refs.ConfigurationTable;
 #else
                         MemoryMarshal.GetReference<Config>(s_configuration_table);
 #endif
@@ -1143,7 +1145,7 @@ internal static partial class Deflater
                                 ref pendingBuf,
                                 ref pendingOut
                             ),
-                            _ => DeflateSlow(ref strm, flush, ref pendingBuf, ref pendingOut),
+                            _ => DeflateSlow(ref strm, flush, ref pendingBuf, ref pendingOut)
                         };
                         break;
                 }
@@ -1235,15 +1237,15 @@ internal static partial class Deflater
     {
         var s = strm.DeflateState;
         return s == null
-            || (
-                s.Status != InitState
-                && s.Status != ExtraState
-                && s.Status != NameState
-                && s.Status != CommentState
-                && s.Status != HcrcState
-                && s.Status != BusyState
-                && s.Status != FinishState
-            );
+               || (
+                   s.Status != InitState
+                   && s.Status != ExtraState
+                   && s.Status != NameState
+                   && s.Status != CommentState
+                   && s.Status != HcrcState
+                   && s.Status != BusyState
+                   && s.Status != FinishState
+               );
     }
 
     private static void LongestMatchInit(ref ZStream strm)
@@ -1258,7 +1260,7 @@ internal static partial class Deflater
         // set the default configuration parameters
         ref var configurationTable = ref
 #if NET7_0_OR_GREATER
-        strm.DeflateRefs.ConfigurationTable;
+            strm.DeflateRefs.ConfigurationTable;
 #else
         MemoryMarshal.GetReference<Config>(s_configuration_table);
 #endif
@@ -1363,13 +1365,13 @@ internal static partial class Deflater
 #endif
         ref var window = ref
 #if NET7_0_OR_GREATER
-        refs.Window;
+            refs.Window;
 #else
         MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var nextOut = ref
 #if NET7_0_OR_GREATER
-        strm.OutputPtr;
+            strm.OutputPtr;
 #else
         MemoryMarshal.GetReference(strm.Output2);
 #endif
@@ -1465,7 +1467,7 @@ internal static partial class Deflater
         {
             ref var nextIn = ref
 #if NET7_0_OR_GREATER
-            Unsafe.Add(ref strm.InputPtr, strm.NextInput);
+                Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
             MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
@@ -1645,121 +1647,121 @@ internal static partial class Deflater
 #endif
         ref var window = ref
 #if NET7_0_OR_GREATER
-        refs.Window;
+            refs.Window;
 #else
         MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var prev = ref
 #if NET7_0_OR_GREATER
-        refs.Prev;
+            refs.Prev;
 #else
         MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
-        refs.Head;
+            refs.Head;
 #else
         MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
-        refs.BlCount;
+            refs.BlCount;
 #else
         MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
-        refs.Heap;
+            refs.Heap;
 #else
         MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
-        refs.Depth;
+            refs.Depth;
 #else
         MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaLtree;
+            refs.StaLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaDtree;
+            refs.StaDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynLtree;
+            refs.DynLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynDtree;
+            refs.DynDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
-        refs.BlTree;
+            refs.BlTree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
-        refs.BlOrder;
+            refs.BlOrder;
 #else
         MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
-        refs.DistCode;
+            refs.DistCode;
 #else
         MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
-        refs.LengthCode;
+            refs.LengthCode;
 #else
         MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
-        refs.BaseDist;
+            refs.BaseDist;
 #else
         MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
-        refs.BaseLength;
+            refs.BaseLength;
 #else
         MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraDbits;
+            refs.ExtraDbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraLbits;
+            refs.ExtraLbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraBlbits;
+            refs.ExtraBlbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
-        for (; ; )
+        for (;;)
         {
             // Make sure that we have a literal to write.
             if (s.Lookahead == 0)
@@ -2223,121 +2225,121 @@ internal static partial class Deflater
 #endif
         ref var window = ref
 #if NET7_0_OR_GREATER
-        refs.Window;
+            refs.Window;
 #else
         MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var sprev = ref
 #if NET7_0_OR_GREATER
-        refs.Prev;
+            refs.Prev;
 #else
         MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
-        refs.Head;
+            refs.Head;
 #else
         MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
-        refs.BlCount;
+            refs.BlCount;
 #else
         MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
-        refs.Heap;
+            refs.Heap;
 #else
         MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
-        refs.Depth;
+            refs.Depth;
 #else
         MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaLtree;
+            refs.StaLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaDtree;
+            refs.StaDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynLtree;
+            refs.DynLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynDtree;
+            refs.DynDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
-        refs.BlTree;
+            refs.BlTree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
-        refs.BlOrder;
+            refs.BlOrder;
 #else
         MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
-        refs.DistCode;
+            refs.DistCode;
 #else
         MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
-        refs.LengthCode;
+            refs.LengthCode;
 #else
         MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
-        refs.BaseDist;
+            refs.BaseDist;
 #else
         MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
-        refs.BaseLength;
+            refs.BaseLength;
 #else
         MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraDbits;
+            refs.ExtraDbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraLbits;
+            refs.ExtraLbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraBlbits;
+            refs.ExtraBlbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
-        for (; ; )
+        for (;;)
         {
             /* Make sure that we always have enough lookahead, except
              * at the end of the input file. We need MaxMatch bytes
@@ -2366,7 +2368,9 @@ internal static partial class Deflater
                 )
                 {
                     ref var strend = ref Unsafe.Add(ref window, s.Strstart + MaxMatch);
-                    do { } while (
+                    do
+                    {
+                    } while (
                         prev == (scan = ref Unsafe.Add(ref scan, 1U))
                         && prev == (scan = ref Unsafe.Add(ref scan, 1U))
                         && prev == (scan = ref Unsafe.Add(ref scan, 1U))
@@ -2579,121 +2583,121 @@ internal static partial class Deflater
 #endif
         ref var window = ref
 #if NET7_0_OR_GREATER
-        refs.Window;
+            refs.Window;
 #else
         MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var prev = ref
 #if NET7_0_OR_GREATER
-        refs.Prev;
+            refs.Prev;
 #else
         MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
-        refs.Head;
+            refs.Head;
 #else
         MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
-        refs.BlCount;
+            refs.BlCount;
 #else
         MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
-        refs.Heap;
+            refs.Heap;
 #else
         MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
-        refs.Depth;
+            refs.Depth;
 #else
         MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaLtree;
+            refs.StaLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaDtree;
+            refs.StaDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynLtree;
+            refs.DynLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynDtree;
+            refs.DynDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
-        refs.BlTree;
+            refs.BlTree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
-        refs.BlOrder;
+            refs.BlOrder;
 #else
         MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
-        refs.DistCode;
+            refs.DistCode;
 #else
         MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
-        refs.LengthCode;
+            refs.LengthCode;
 #else
         MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
-        refs.BaseDist;
+            refs.BaseDist;
 #else
         MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
-        refs.BaseLength;
+            refs.BaseLength;
 #else
         MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraDbits;
+            refs.ExtraDbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraLbits;
+            refs.ExtraLbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraBlbits;
+            refs.ExtraBlbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
-        for (; ; )
+        for (;;)
         {
             /* Make sure that we always have enough lookahead, except
              * at the end of the input file. We need MaxMatch bytes
@@ -2981,7 +2985,9 @@ internal static partial class Deflater
             /* We check for insufficient lookahead only every 8th comparison;
              * the 256th check will be made at strstart + 258.
              */
-            do { } while (
+            do
+            {
+            } while (
                 (scan = ref Unsafe.Add(ref scan, 1U)) == (match = ref Unsafe.Add(ref match, 1U))
                 && (scan = ref Unsafe.Add(ref scan, 1U)) == (match = ref Unsafe.Add(ref match, 1U))
                 && (scan = ref Unsafe.Add(ref scan, 1U)) == (match = ref Unsafe.Add(ref match, 1U))
@@ -3030,122 +3036,122 @@ internal static partial class Deflater
 #endif
         ref var window = ref
 #if NET7_0_OR_GREATER
-        refs.Window;
+            refs.Window;
 #else
         MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var prev = ref
 #if NET7_0_OR_GREATER
-        refs.Prev;
+            refs.Prev;
 #else
         MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
-        refs.Head;
+            refs.Head;
 #else
         MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
-        refs.BlCount;
+            refs.BlCount;
 #else
         MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
-        refs.Heap;
+            refs.Heap;
 #else
         MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
-        refs.Depth;
+            refs.Depth;
 #else
         MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaLtree;
+            refs.StaLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
-        refs.StaDtree;
+            refs.StaDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynLtree;
+            refs.DynLtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
-        refs.DynDtree;
+            refs.DynDtree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
-        refs.BlTree;
+            refs.BlTree;
 #else
         MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
-        refs.BlOrder;
+            refs.BlOrder;
 #else
         MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
-        refs.DistCode;
+            refs.DistCode;
 #else
         MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
-        refs.LengthCode;
+            refs.LengthCode;
 #else
         MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
-        refs.BaseDist;
+            refs.BaseDist;
 #else
         MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
-        refs.BaseLength;
+            refs.BaseLength;
 #else
         MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraDbits;
+            refs.ExtraDbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraLbits;
+            refs.ExtraLbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
-        refs.ExtraBlbits;
+            refs.ExtraBlbits;
 #else
         MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
         // Process the input block.
-        for (; ; )
+        for (;;)
         {
             /* Make sure that we always have enough lookahead, except
              * at the end of the input file. We need MaxMatch bytes
@@ -3188,12 +3194,12 @@ internal static partial class Deflater
                 // LongestMatch() sets match_start
 
                 if (
-                    s.MatchLength <= 5
-                    && (
-                        s.Strategy == ZFiltered
-                        || (s.MatchLength == MinMatch && s.Strstart - s.MatchStart > TooFar)
+                        s.MatchLength <= 5
+                        && (
+                            s.Strategy == ZFiltered
+                            || (s.MatchLength == MinMatch && s.Strstart - s.MatchStart > TooFar)
+                        )
                     )
-                )
                     /* If prev_match is also MinMatch, match_start is garbage
                      * but we will ignore the current match anyway.
                      */

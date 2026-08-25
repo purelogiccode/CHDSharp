@@ -25,8 +25,8 @@ public static unsafe partial class Methods
             srcSize >= (sizeof(nuint) == 8 ? 0xFF00FF00FF00FF00UL : 0xFF00FF00U)
                 ? 0
                 : srcSize
-                    + (srcSize >> 8)
-                    + (srcSize < 128 << 10 ? ((128 << 10) - srcSize) >> 11 : 0);
+                  + (srcSize >> 8)
+                  + (srcSize < 128 << 10 ? ((128 << 10) - srcSize) >> 11 : 0);
         if (r == 0)
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
         return r;
@@ -190,9 +190,9 @@ public static unsafe partial class Methods
         if (cctx == null)
             return 0;
         return (nuint)(cctx->workspace.workspace == cctx ? 0 : sizeof(ZSTD_CCtx_s))
-            + ZSTD_cwksp_sizeof(&cctx->workspace)
-            + ZSTD_sizeof_localDict(cctx->localDict)
-            + ZSTD_sizeof_mtctx(cctx);
+               + ZSTD_cwksp_sizeof(&cctx->workspace)
+               + ZSTD_sizeof_localDict(cctx->localDict)
+               + ZSTD_sizeof_mtctx(cctx);
     }
 
     public static nuint ZSTD_sizeof_CStream(ZSTD_CCtx_s* zcs)
@@ -222,8 +222,8 @@ public static unsafe partial class Methods
         assert(mode != ZSTD_paramSwitch_e.ZSTD_ps_auto);
         return
             ZSTD_rowMatchFinderSupported(strategy) != 0 && mode == ZSTD_paramSwitch_e.ZSTD_ps_enable
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     /* Returns row matchfinder usage given an initial mode and cParams */
@@ -272,8 +272,8 @@ public static unsafe partial class Methods
                 strategy != ZSTD_strategy.ZSTD_fast
                 && ZSTD_rowMatchFinderUsed(strategy, useRowMatchFinder) == 0
             )
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     /* Returns ZSTD_ps_enable if compression parameters are such that we should
@@ -326,8 +326,8 @@ public static unsafe partial class Methods
         return
             cParams->strategy == ZSTD_strategy.ZSTD_fast
             || cParams->strategy == ZSTD_strategy.ZSTD_dfast
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     private static ZSTD_CCtx_params_s ZSTD_makeCCtxParamsFromCParams(
@@ -527,7 +527,7 @@ public static unsafe partial class Methods
         {
             error = 0,
             lowerBound = 0,
-            upperBound = 0,
+            upperBound = 0
         };
         switch (param)
         {
@@ -855,15 +855,15 @@ public static unsafe partial class Methods
         switch (param)
         {
             case ZSTD_cParameter.ZSTD_c_experimentalParam2:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam2, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam2, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->format = (ZSTD_format_e)value;
                 return (nuint)CCtxParams->format;
@@ -930,12 +930,12 @@ public static unsafe partial class Methods
                 CCtxParams->cParams.minMatch = (uint)value;
                 return CCtxParams->cParams.minMatch;
             case ZSTD_cParameter.ZSTD_c_targetLength:
-                {
-                    if (ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_targetLength, value) == 0)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_targetLength, value) == 0)
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->cParams.targetLength = (uint)value;
                 return CCtxParams->cParams.targetLength;
@@ -999,11 +999,11 @@ public static unsafe partial class Methods
             }
 
             case ZSTD_cParameter.ZSTD_c_nbWorkers:
-                {
-                    var err_code = ZSTD_cParam_clampBounds(param, &value);
-                    if (ERR_isError(err_code))
-                        return err_code;
-                }
+            {
+                var err_code = ZSTD_cParam_clampBounds(param, &value);
+                if (ERR_isError(err_code))
+                    return err_code;
+            }
 
                 CCtxParams->nbWorkers = value;
                 return (nuint)CCtxParams->nbWorkers;
@@ -1011,36 +1011,36 @@ public static unsafe partial class Methods
                 if (value != 0 && value < 512 * (1 << 10))
                     value = 512 * (1 << 10);
 
-                {
-                    var err_code = ZSTD_cParam_clampBounds(param, &value);
-                    if (ERR_isError(err_code))
-                        return err_code;
-                }
+            {
+                var err_code = ZSTD_cParam_clampBounds(param, &value);
+                if (ERR_isError(err_code))
+                    return err_code;
+            }
 
                 assert(value >= 0);
                 CCtxParams->jobSize = (nuint)value;
                 return CCtxParams->jobSize;
             case ZSTD_cParameter.ZSTD_c_overlapLog:
-                {
-                    var err_code = ZSTD_cParam_clampBounds(
-                        ZSTD_cParameter.ZSTD_c_overlapLog,
-                        &value
-                    );
-                    if (ERR_isError(err_code))
-                        return err_code;
-                }
+            {
+                var err_code = ZSTD_cParam_clampBounds(
+                    ZSTD_cParameter.ZSTD_c_overlapLog,
+                    &value
+                );
+                if (ERR_isError(err_code))
+                    return err_code;
+            }
 
                 CCtxParams->overlapLog = value;
                 return (nuint)CCtxParams->overlapLog;
             case ZSTD_cParameter.ZSTD_c_experimentalParam1:
-                {
-                    var err_code = ZSTD_cParam_clampBounds(
-                        ZSTD_cParameter.ZSTD_c_overlapLog,
-                        &value
-                    );
-                    if (ERR_isError(err_code))
-                        return err_code;
-                }
+            {
+                var err_code = ZSTD_cParam_clampBounds(
+                    ZSTD_cParameter.ZSTD_c_overlapLog,
+                    &value
+                );
+                if (ERR_isError(err_code))
+                    return err_code;
+            }
 
                 CCtxParams->rsyncable = value;
                 return (nuint)CCtxParams->rsyncable;
@@ -1048,17 +1048,17 @@ public static unsafe partial class Methods
                 CCtxParams->enableDedicatedDictSearch = value != 0 ? 1 : 0;
                 return (nuint)CCtxParams->enableDedicatedDictSearch;
             case ZSTD_cParameter.ZSTD_c_enableLongDistanceMatching:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(
-                            ZSTD_cParameter.ZSTD_c_enableLongDistanceMatching,
-                            value
-                        ) == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(
+                        ZSTD_cParameter.ZSTD_c_enableLongDistanceMatching,
+                        value
+                    ) == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->ldmParams.enableLdm = (ZSTD_paramSwitch_e)value;
                 return (nuint)CCtxParams->ldmParams.enableLdm;
@@ -1126,119 +1126,119 @@ public static unsafe partial class Methods
                 CCtxParams->srcSizeHint = value;
                 return (nuint)CCtxParams->srcSizeHint;
             case ZSTD_cParameter.ZSTD_c_experimentalParam9:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam9, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam9, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->inBufferMode = (ZSTD_bufferMode_e)value;
                 return (nuint)CCtxParams->inBufferMode;
             case ZSTD_cParameter.ZSTD_c_experimentalParam10:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam10, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam10, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->outBufferMode = (ZSTD_bufferMode_e)value;
                 return (nuint)CCtxParams->outBufferMode;
             case ZSTD_cParameter.ZSTD_c_experimentalParam11:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam11, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam11, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->blockDelimiters = (ZSTD_sequenceFormat_e)value;
                 return (nuint)CCtxParams->blockDelimiters;
             case ZSTD_cParameter.ZSTD_c_experimentalParam12:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam12, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam12, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->validateSequences = value;
                 return (nuint)CCtxParams->validateSequences;
             case ZSTD_cParameter.ZSTD_c_experimentalParam13:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam13, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam13, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->useBlockSplitter = (ZSTD_paramSwitch_e)value;
                 return (nuint)CCtxParams->useBlockSplitter;
             case ZSTD_cParameter.ZSTD_c_experimentalParam14:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam14, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam14, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->useRowMatchFinder = (ZSTD_paramSwitch_e)value;
                 return (nuint)CCtxParams->useRowMatchFinder;
             case ZSTD_cParameter.ZSTD_c_experimentalParam15:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam15, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam15, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->deterministicRefPrefix = !(value == 0) ? 1 : 0;
                 return (nuint)CCtxParams->deterministicRefPrefix;
             case ZSTD_cParameter.ZSTD_c_experimentalParam16:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam16, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam16, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->prefetchCDictTables = (ZSTD_paramSwitch_e)value;
                 return (nuint)CCtxParams->prefetchCDictTables;
             case ZSTD_cParameter.ZSTD_c_experimentalParam17:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam17, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam17, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->enableMatchFinderFallback = value;
                 return (nuint)CCtxParams->enableMatchFinderFallback;
@@ -1255,15 +1255,15 @@ public static unsafe partial class Methods
                 CCtxParams->maxBlockSize = (nuint)value;
                 return CCtxParams->maxBlockSize;
             case ZSTD_cParameter.ZSTD_c_experimentalParam19:
-                {
-                    if (
-                        ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam19, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_experimentalParam19, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 CCtxParams->searchForExternalRepcodes = (ZSTD_paramSwitch_e)value;
                 return (nuint)CCtxParams->searchForExternalRepcodes;
@@ -2373,9 +2373,9 @@ public static unsafe partial class Methods
 
     private static ulong* srcSizeTiers =>
         (ulong*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_srcSizeTiers)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_srcSizeTiers)
+        );
 #else
     private static readonly ulong* srcSizeTiers = GetArrayPointer(
         new ulong[4]
@@ -2765,8 +2765,8 @@ public static unsafe partial class Methods
         return
             (nuint)(w.nextSrc - w.@base)
             > (3U << 29) + (1U << (sizeof(nuint) == 4 ? 30 : 31)) - 16 * (1 << 20)
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     /** ZSTD_dictTooBig():
@@ -2779,8 +2779,8 @@ public static unsafe partial class Methods
         return
             loadedDictSize
             > unchecked((uint)-1) - ((3U << 29) + (1U << (sizeof(nuint) == 4 ? 30 : 31)))
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     /*! ZSTD_resetCCtx_internal() :
@@ -3040,7 +3040,7 @@ public static unsafe partial class Methods
             32 * (1 << 10),
             32 * (1 << 10),
             8 * (1 << 10),
-            8 * (1 << 10),
+            8 * (1 << 10)
         }
     );
 
@@ -3063,8 +3063,8 @@ public static unsafe partial class Methods
                 && @params->attachDictPref != ZSTD_dictAttachPref_e.ZSTD_dictForceCopy
                 && @params->forceWindow == 0
             )
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     private static nuint ZSTD_resetCCtx_byAttachingCDict(
@@ -3402,7 +3402,7 @@ public static unsafe partial class Methods
         {
             contentSizeFlag = 1,
             checksumFlag = 0,
-            noDictIDFlag = 0,
+            noDictIDFlag = 0
         };
         var zbuff = srcCCtx->bufferedPolicy;
         if (pledgedSrcSize == 0)
@@ -3609,7 +3609,7 @@ public static unsafe partial class Methods
             );
             assert(
                 symbolEncodingType_e.set_basic < symbolEncodingType_e.set_compressed
-                    && symbolEncodingType_e.set_rle < symbolEncodingType_e.set_compressed
+                && symbolEncodingType_e.set_rle < symbolEncodingType_e.set_compressed
             );
             assert(
                 !(
@@ -4014,7 +4014,7 @@ public static unsafe partial class Methods
             ),
             (delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)(
                 &ZSTD_compressBlock_btultra2
-            ),
+            )
         },
         new void*[10]
         {
@@ -4047,7 +4047,7 @@ public static unsafe partial class Methods
             ),
             (delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)(
                 &ZSTD_compressBlock_btultra_extDict
-            ),
+            )
         },
         new void*[10]
         {
@@ -4080,7 +4080,7 @@ public static unsafe partial class Methods
             ),
             (delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)(
                 &ZSTD_compressBlock_btultra_dictMatchState
-            ),
+            )
         },
         new void*[10]
         {
@@ -4099,8 +4099,8 @@ public static unsafe partial class Methods
             null,
             null,
             null,
-            null,
-        },
+            null
+        }
     };
 
     private static readonly void*[][] rowBasedBlockCompressors = new void*[4][]
@@ -4115,7 +4115,7 @@ public static unsafe partial class Methods
             ),
             (delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)(
                 &ZSTD_compressBlock_lazy2_row
-            ),
+            )
         },
         new void*[3]
         {
@@ -4127,7 +4127,7 @@ public static unsafe partial class Methods
             ),
             (delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)(
                 &ZSTD_compressBlock_lazy2_extDict_row
-            ),
+            )
         },
         new void*[3]
         {
@@ -4139,7 +4139,7 @@ public static unsafe partial class Methods
             ),
             (delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)(
                 &ZSTD_compressBlock_lazy2_dictMatchState_row
-            ),
+            )
         },
         new void*[3]
         {
@@ -4151,8 +4151,8 @@ public static unsafe partial class Methods
             ),
             (delegate* managed<ZSTD_matchState_t*, seqStore_t*, uint*, void*, nuint, nuint>)(
                 &ZSTD_compressBlock_lazy2_dedicatedDictSearch_row
-            ),
-        },
+            )
+        }
     };
 
     /* ZSTD_selectBlockCompressor() :
@@ -4375,7 +4375,7 @@ public static unsafe partial class Methods
                             int,
                             nuint,
                             nuint>)
-                            zc->externalMatchCtx.mFinder
+                        zc->externalMatchCtx.mFinder
                     )(
                         zc->externalMatchCtx.mState,
                         zc->externalMatchCtx.seqBuffer,
@@ -4399,7 +4399,7 @@ public static unsafe partial class Methods
                         {
                             idx = 0,
                             posInSequence = 0,
-                            posInSrc = 0,
+                            posInSrc = 0
                         };
                         var seqLenSum = ZSTD_fastSequenceLengthSum(
                             zc->externalMatchCtx.seqBuffer,
@@ -4842,7 +4842,7 @@ public static unsafe partial class Methods
             MLtype = (uint)symbolEncodingType_e.set_basic,
             size = 0,
             lastCountSize = 0,
-            longOffsets = 0,
+            longOffsets = 0
         };
         nextEntropy->litlength_repeatMode = FSE_repeat.FSE_repeat_none;
         nextEntropy->offcode_repeatMode = FSE_repeat.FSE_repeat_none;
@@ -6047,11 +6047,11 @@ public static unsafe partial class Methods
                         var cBlockHeader =
                             cSize == 1
                                 ? lastBlock
-                                    + ((uint)blockType_e.bt_rle << 1)
-                                    + (uint)(blockSize << 3)
+                                  + ((uint)blockType_e.bt_rle << 1)
+                                  + (uint)(blockSize << 3)
                                 : lastBlock
-                                    + ((uint)blockType_e.bt_compressed << 1)
-                                    + (uint)(cSize << 3);
+                                  + ((uint)blockType_e.bt_compressed << 1)
+                                  + (uint)(cSize << 3);
                         MEM_writeLE24(op, cBlockHeader);
                         cSize += ZSTD_blockHeaderSize;
                     }
@@ -6095,8 +6095,8 @@ public static unsafe partial class Methods
         var fcsCode = (uint)(
             @params->fParams.contentSizeFlag != 0
                 ? (pledgedSrcSize >= 256 ? 1 : 0)
-                    + (pledgedSrcSize >= 65536 + 256 ? 1 : 0)
-                    + (pledgedSrcSize >= 0xFFFFFFFFU ? 1 : 0)
+                  + (pledgedSrcSize >= 65536 + 256 ? 1 : 0)
+                  + (pledgedSrcSize >= 0xFFFFFFFFU ? 1 : 0)
                 : 0
         );
         var frameHeaderDescriptionByte = (byte)(
@@ -7096,7 +7096,9 @@ public static unsafe partial class Methods
      * ZSTD_CCtx_trace() :
      * Trace the end of a compression call.
      */
-    private static void ZSTD_CCtx_trace(ZSTD_CCtx_s* cctx, nuint extraCSize) { }
+    private static void ZSTD_CCtx_trace(ZSTD_CCtx_s* cctx, nuint extraCSize)
+    {
+    }
 
     private static nuint ZSTD_compressEnd_public(
         ZSTD_CCtx_s* cctx,
@@ -7321,18 +7323,18 @@ public static unsafe partial class Methods
     )
     {
         return ZSTD_cwksp_alloc_size((nuint)sizeof(ZSTD_CDict_s))
-            + ZSTD_cwksp_alloc_size((8 << 10) + 512)
-            + ZSTD_sizeof_matchState(
-                &cParams,
-                ZSTD_resolveRowMatchFinderMode(ZSTD_paramSwitch_e.ZSTD_ps_auto, &cParams),
-                1,
-                0
-            )
-            + (
-                dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef
-                    ? 0
-                    : ZSTD_cwksp_alloc_size(ZSTD_cwksp_align(dictSize, (nuint)sizeof(void*)))
-            );
+               + ZSTD_cwksp_alloc_size((8 << 10) + 512)
+               + ZSTD_sizeof_matchState(
+                   &cParams,
+                   ZSTD_resolveRowMatchFinderMode(ZSTD_paramSwitch_e.ZSTD_ps_auto, &cParams),
+                   1,
+                   0
+               )
+               + (
+                   dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef
+                       ? 0
+                       : ZSTD_cwksp_alloc_size(ZSTD_cwksp_align(dictSize, (nuint)sizeof(void*)))
+               );
     }
 
     /*! ZSTD_estimate?DictSize() :
@@ -7360,7 +7362,7 @@ public static unsafe partial class Methods
         if (cdict == null)
             return 0;
         return (nuint)(cdict->workspace.workspace == cdict ? 0 : sizeof(ZSTD_CDict_s))
-            + ZSTD_cwksp_sizeof(&cdict->workspace);
+               + ZSTD_cwksp_sizeof(&cdict->workspace);
     }
 
     private static nuint ZSTD_initCDict_internal(
@@ -7853,7 +7855,7 @@ public static unsafe partial class Methods
         {
             contentSizeFlag = 0,
             checksumFlag = 0,
-            noDictIDFlag = 0,
+            noDictIDFlag = 0
         };
         return ZSTD_compressBegin_usingCDict_internal(cctx, cdict, fParams, unchecked(0UL - 1));
     }
@@ -7928,7 +7930,7 @@ public static unsafe partial class Methods
         {
             contentSizeFlag = 1,
             checksumFlag = 0,
-            noDictIDFlag = 0,
+            noDictIDFlag = 0
         };
         return ZSTD_compress_usingCDict_internal(
             cctx,
@@ -8443,146 +8445,146 @@ public static unsafe partial class Methods
                         }
                     }
 
+                {
+                    var inputBuffered =
+                        zcs->appliedParams.inBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered
+                            ? 1
+                            : 0;
+                    void* cDst;
+                    nuint cSize;
+                    var oSize = (nuint)(oend - op);
+                    var iSize =
+                        inputBuffered != 0 ? zcs->inBuffPos - zcs->inToCompress
+                        : (nuint)(iend - ip) < zcs->blockSize ? (nuint)(iend - ip)
+                        : zcs->blockSize;
+                    if (
+                        oSize >= ZSTD_compressBound(iSize)
+                        || zcs->appliedParams.outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_stable
+                    )
                     {
-                        var inputBuffered =
-                            zcs->appliedParams.inBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered
-                                ? 1
-                                : 0;
-                        void* cDst;
-                        nuint cSize;
-                        var oSize = (nuint)(oend - op);
-                        var iSize =
-                            inputBuffered != 0 ? zcs->inBuffPos - zcs->inToCompress
-                            : (nuint)(iend - ip) < zcs->blockSize ? (nuint)(iend - ip)
-                            : zcs->blockSize;
-                        if (
-                            oSize >= ZSTD_compressBound(iSize)
-                            || zcs->appliedParams.outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_stable
-                        )
-                        {
-                            cDst = op;
-                        }
-                        else
-                        {
-                            cDst = zcs->outBuff;
-                            oSize = zcs->outBuffSize;
-                        }
-
-                        if (inputBuffered != 0)
-                        {
-                            var lastBlock =
-                                flushMode == ZSTD_EndDirective.ZSTD_e_end && ip == iend ? 1U : 0U;
-                            cSize =
-                                lastBlock != 0
-                                    ? ZSTD_compressEnd_public(
-                                        zcs,
-                                        cDst,
-                                        oSize,
-                                        zcs->inBuff + zcs->inToCompress,
-                                        iSize
-                                    )
-                                    : ZSTD_compressContinue_public(
-                                        zcs,
-                                        cDst,
-                                        oSize,
-                                        zcs->inBuff + zcs->inToCompress,
-                                        iSize
-                                    );
-                            {
-                                var err_code = cSize;
-                                if (ERR_isError(err_code))
-                                    return err_code;
-                            }
-
-                            zcs->frameEnded = lastBlock;
-                            zcs->inBuffTarget = zcs->inBuffPos + zcs->blockSize;
-                            if (zcs->inBuffTarget > zcs->inBuffSize)
-                            {
-                                zcs->inBuffPos = 0;
-                                zcs->inBuffTarget = zcs->blockSize;
-                            }
-
-#if DEBUG
-                            if (lastBlock == 0)
-                                assert(zcs->inBuffTarget <= zcs->inBuffSize);
-#endif
-                            zcs->inToCompress = zcs->inBuffPos;
-                        }
-                        else
-                        {
-                            var lastBlock =
-                                flushMode == ZSTD_EndDirective.ZSTD_e_end && ip + iSize == iend
-                                    ? 1U
-                                    : 0U;
-                            cSize =
-                                lastBlock != 0
-                                    ? ZSTD_compressEnd_public(zcs, cDst, oSize, ip, iSize)
-                                    : ZSTD_compressContinue_public(zcs, cDst, oSize, ip, iSize);
-                            if (ip != null)
-                                ip += iSize;
-                            {
-                                var err_code = cSize;
-                                if (ERR_isError(err_code))
-                                    return err_code;
-                            }
-
-                            zcs->frameEnded = lastBlock;
-#if DEBUG
-                            if (lastBlock != 0)
-                                assert(ip == iend);
-#endif
-                        }
-
-                        if (cDst == op)
-                        {
-                            op += cSize;
-                            if (zcs->frameEnded != 0)
-                            {
-                                someMoreWork = 0;
-                                ZSTD_CCtx_reset(zcs, ZSTD_ResetDirective.ZSTD_reset_session_only);
-                            }
-
-                            break;
-                        }
-
-                        zcs->outBuffContentSize = cSize;
-                        zcs->outBuffFlushedSize = 0;
-                        zcs->streamStage = ZSTD_cStreamStage.zcss_flush;
+                        cDst = op;
                     }
+                    else
+                    {
+                        cDst = zcs->outBuff;
+                        oSize = zcs->outBuffSize;
+                    }
+
+                    if (inputBuffered != 0)
+                    {
+                        var lastBlock =
+                            flushMode == ZSTD_EndDirective.ZSTD_e_end && ip == iend ? 1U : 0U;
+                        cSize =
+                            lastBlock != 0
+                                ? ZSTD_compressEnd_public(
+                                    zcs,
+                                    cDst,
+                                    oSize,
+                                    zcs->inBuff + zcs->inToCompress,
+                                    iSize
+                                )
+                                : ZSTD_compressContinue_public(
+                                    zcs,
+                                    cDst,
+                                    oSize,
+                                    zcs->inBuff + zcs->inToCompress,
+                                    iSize
+                                );
+                        {
+                            var err_code = cSize;
+                            if (ERR_isError(err_code))
+                                return err_code;
+                        }
+
+                        zcs->frameEnded = lastBlock;
+                        zcs->inBuffTarget = zcs->inBuffPos + zcs->blockSize;
+                        if (zcs->inBuffTarget > zcs->inBuffSize)
+                        {
+                            zcs->inBuffPos = 0;
+                            zcs->inBuffTarget = zcs->blockSize;
+                        }
+
+#if DEBUG
+                        if (lastBlock == 0)
+                            assert(zcs->inBuffTarget <= zcs->inBuffSize);
+#endif
+                        zcs->inToCompress = zcs->inBuffPos;
+                    }
+                    else
+                    {
+                        var lastBlock =
+                            flushMode == ZSTD_EndDirective.ZSTD_e_end && ip + iSize == iend
+                                ? 1U
+                                : 0U;
+                        cSize =
+                            lastBlock != 0
+                                ? ZSTD_compressEnd_public(zcs, cDst, oSize, ip, iSize)
+                                : ZSTD_compressContinue_public(zcs, cDst, oSize, ip, iSize);
+                        if (ip != null)
+                            ip += iSize;
+                        {
+                            var err_code = cSize;
+                            if (ERR_isError(err_code))
+                                return err_code;
+                        }
+
+                        zcs->frameEnded = lastBlock;
+#if DEBUG
+                        if (lastBlock != 0)
+                            assert(ip == iend);
+#endif
+                    }
+
+                    if (cDst == op)
+                    {
+                        op += cSize;
+                        if (zcs->frameEnded != 0)
+                        {
+                            someMoreWork = 0;
+                            ZSTD_CCtx_reset(zcs, ZSTD_ResetDirective.ZSTD_reset_session_only);
+                        }
+
+                        break;
+                    }
+
+                    zcs->outBuffContentSize = cSize;
+                    zcs->outBuffFlushedSize = 0;
+                    zcs->streamStage = ZSTD_cStreamStage.zcss_flush;
+                }
 
                     goto case ZSTD_cStreamStage.zcss_flush;
                 case ZSTD_cStreamStage.zcss_flush:
                     assert(zcs->appliedParams.outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered);
 
+                {
+                    var toFlush = zcs->outBuffContentSize - zcs->outBuffFlushedSize;
+                    var flushed = ZSTD_limitCopy(
+                        op,
+                        (nuint)(oend - op),
+                        zcs->outBuff + zcs->outBuffFlushedSize,
+                        toFlush
+                    );
+                    if (flushed != 0)
+                        op += flushed;
+                    zcs->outBuffFlushedSize += flushed;
+                    if (toFlush != flushed)
                     {
-                        var toFlush = zcs->outBuffContentSize - zcs->outBuffFlushedSize;
-                        var flushed = ZSTD_limitCopy(
-                            op,
-                            (nuint)(oend - op),
-                            zcs->outBuff + zcs->outBuffFlushedSize,
-                            toFlush
-                        );
-                        if (flushed != 0)
-                            op += flushed;
-                        zcs->outBuffFlushedSize += flushed;
-                        if (toFlush != flushed)
-                        {
-                            assert(op == oend);
-                            someMoreWork = 0;
-                            break;
-                        }
-
-                        zcs->outBuffContentSize = zcs->outBuffFlushedSize = 0;
-                        if (zcs->frameEnded != 0)
-                        {
-                            someMoreWork = 0;
-                            ZSTD_CCtx_reset(zcs, ZSTD_ResetDirective.ZSTD_reset_session_only);
-                            break;
-                        }
-
-                        zcs->streamStage = ZSTD_cStreamStage.zcss_load;
+                        assert(op == oend);
+                        someMoreWork = 0;
                         break;
                     }
+
+                    zcs->outBuffContentSize = zcs->outBuffFlushedSize = 0;
+                    if (zcs->frameEnded != 0)
+                    {
+                        someMoreWork = 0;
+                        ZSTD_CCtx_reset(zcs, ZSTD_ResetDirective.ZSTD_reset_session_only);
+                        break;
+                    }
+
+                    zcs->streamStage = ZSTD_cStreamStage.zcss_load;
+                    break;
+                }
 
                 default:
                     assert(0 != 0);
@@ -8896,7 +8898,7 @@ public static unsafe partial class Methods
                 cctx->stableIn_notConsumed = 0;
             }
 
-            for (; ; )
+            for (;;)
             {
                 var ipos = input->pos;
                 var opos = output->pos;
@@ -8933,7 +8935,7 @@ public static unsafe partial class Methods
                 {
                     assert(
                         endOp == ZSTD_EndDirective.ZSTD_e_flush
-                            || endOp == ZSTD_EndDirective.ZSTD_e_end
+                        || endOp == ZSTD_EndDirective.ZSTD_e_end
                     );
                     if (flushMin == 0 || output->pos == output->size)
                         break;
@@ -8942,8 +8944,8 @@ public static unsafe partial class Methods
 
             assert(
                 endOp == ZSTD_EndDirective.ZSTD_e_continue
-                    || flushMin == 0
-                    || output->pos == output->size
+                || flushMin == 0
+                || output->pos == output->size
             );
             ZSTD_setBufferExpectations(cctx, output, input);
             return flushMin;
@@ -9518,7 +9520,7 @@ public static unsafe partial class Methods
         {
             idx = 0,
             posInSequence = 0,
-            posInSrc = 0,
+            posInSrc = 0
         };
         var ip = (byte*)src;
         var op = (byte*)dst;
@@ -9784,7 +9786,7 @@ public static unsafe partial class Methods
         {
             src = null,
             size = 0,
-            pos = 0,
+            pos = 0
         };
         var stableInput =
             zcs->appliedParams.inBufferMode == ZSTD_bufferMode_e.ZSTD_bm_stable ? 1 : 0;
@@ -9881,8 +9883,8 @@ public static unsafe partial class Methods
             && cParams->strategy <= ZSTD_strategy.ZSTD_lazy2
             && cParams->hashLog > cParams->chainLog
             && cParams->chainLog <= 24
-            ? 1
-            : 0;
+                ? 1
+                : 0;
     }
 
     /**

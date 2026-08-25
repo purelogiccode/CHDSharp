@@ -57,5 +57,5 @@ public enum TestStatus
     Failed,
 
     /// <summary>The test was not executed (e.g., a required tool or condition was unavailable).</summary>
-    Skipped,
+    Skipped
 }

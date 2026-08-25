@@ -42,15 +42,15 @@ public class EncodeCdChdmanValidationTests : IDisposable
 
         // data track + 2 audio tracks with pregaps, single BIN (10 + 12 + 8 = 30 sectors)
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 00:00:10
-                INDEX 01 00:00:12
-              TRACK 03 AUDIO
-                INDEX 01 00:00:22
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 00:00:10
+                               INDEX 01 00:00:12
+                             TRACK 03 AUDIO
+                               INDEX 01 00:00:22
+                           """;
         var bin = BuildBin(30);
         var cuePath = WriteCue("game.cue", cue);
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), bin);
@@ -106,15 +106,15 @@ public class EncodeCdChdmanValidationTests : IDisposable
             return;
 
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 00:00:08
-                INDEX 01 00:00:10
-              TRACK 03 AUDIO
-                INDEX 01 00:00:20
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 00:00:08
+                               INDEX 01 00:00:10
+                             TRACK 03 AUDIO
+                               INDEX 01 00:00:20
+                           """;
         var cuePath = WriteCue("verify.cue", cue);
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), BuildBin(30));
         var chdPath = Path.Combine(_testDataDir, "verify.chd");
@@ -135,12 +135,12 @@ public class EncodeCdChdmanValidationTests : IDisposable
             return;
 
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 01:00:00
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 01 01:00:00
+                           """;
         var cuePath = WriteCue("info.cue", cue);
         File.WriteAllBytes(Path.Combine(_testDataDir, "game.bin"), BuildBin(60 * 75 + 100));
         var chdPath = Path.Combine(_testDataDir, "info.chd");
@@ -228,7 +228,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
                     var frame = i / CdConstants.FrameSize;
                     throw new XunitException(
                         $"first difference at byte {i} (frame {frame}, offset {i % CdConstants.FrameSize}): "
-                            + $"expected {expected[i]:X2}, actual {actual[i]:X2}"
+                        + $"expected {expected[i]:X2}, actual {actual[i]:X2}"
                     );
                 }
 

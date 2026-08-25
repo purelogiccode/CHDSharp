@@ -36,7 +36,7 @@ public static unsafe partial class Methods
         assert(((nuint)workSpace & 1) == 0);
         if (
             sizeof(uint)
-                * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint))
+            * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint))
             > wkspSize
         )
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
@@ -155,14 +155,14 @@ public static unsafe partial class Methods
                     default:
                         assert(normalizedCounter[s] > 1);
 
-                        {
-                            var maxBitsOut =
-                                tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
-                            var minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
-                            symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
-                            symbolTT[s].deltaFindState = (int)(total - (uint)normalizedCounter[s]);
-                            total += (uint)normalizedCounter[s];
-                        }
+                    {
+                        var maxBitsOut =
+                            tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
+                        var minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
+                        symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
+                        symbolTT[s].deltaFindState = (int)(total - (uint)normalizedCounter[s]);
+                        total += (uint)normalizedCounter[s];
+                    }
 
                         break;
                 }
@@ -493,9 +493,9 @@ public static unsafe partial class Methods
 
     private static uint* rtbTable =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_rtbTable)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_rtbTable)
+        );
 #else
     private static readonly uint* rtbTable = GetArrayPointer(
         new uint[8] { 0, 473195, 504333, 520860, 550000, 700000, 750000, 830000 }

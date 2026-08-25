@@ -18,7 +18,9 @@ public class CompressionStream : Stream
         int bufferSize = 0,
         bool leaveOpen = true
     )
-        : this(stream, new Compressor(level), bufferSize, false, leaveOpen) { }
+        : this(stream, new Compressor(level), bufferSize, false, leaveOpen)
+    {
+    }
 
     public CompressionStream(
         Stream stream,
@@ -189,7 +191,7 @@ public class CompressionStream : Stream
         var input = new ZSTD_inBuffer_s
         {
             pos = 0,
-            size = buffer.HasValue ? (nuint)buffer.Value.Length : 0,
+            size = buffer.HasValue ? (nuint)buffer.Value.Length : 0
         };
         nuint remaining;
         do

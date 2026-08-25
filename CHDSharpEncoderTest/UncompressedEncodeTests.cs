@@ -182,7 +182,7 @@ public class UncompressedEncodeTests : IDisposable
         {
             Tag = MetadataWriter.TagFromString("GAME"),
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "Uncompressed"u8.ToArray().Append((byte)0).ToArray(),
+            Payload = "Uncompressed"u8.ToArray().Append((byte)0).ToArray()
         };
 
         var chdPath = Path.Combine(_dir, "meta_none.chd");

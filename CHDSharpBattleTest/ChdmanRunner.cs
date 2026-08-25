@@ -29,7 +29,7 @@ internal sealed class ChdmanRunner
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true,
+            CreateNoWindow = true
         };
         psi.ArgumentList.Add(command);
         foreach (var a in args)

@@ -8,5 +8,5 @@ public enum ZSTD_format_e
     /* Variant of zstd frame format, without initial 4-bytes magic number.
      * Useful to save 4 bytes per generated frame.
      * Decoder cannot recognise automatically this format, requiring this instruction. */
-    ZSTD_f_zstd1_magicless = 1,
+    ZSTD_f_zstd1_magicless = 1
 }

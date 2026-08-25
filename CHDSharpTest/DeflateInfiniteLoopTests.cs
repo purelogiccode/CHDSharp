@@ -198,7 +198,7 @@ public class DeflateInfiniteLoopTests
             0x05, // BFINAL=1, BTYPE=10 (dynamic)
             0x00, // HLIT=0 (actually +257 = 257), HDIST high bits
             0x00, // HDIST low bits (actually +1 = 1), HCLEN high bits
-            0x00, // HCLEN low bits (actually +4 = 4)
+            0x00 // HCLEN low bits (actually +4 = 4)
         };
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
@@ -237,7 +237,7 @@ public class DeflateInfiniteLoopTests
             0x00,
             0x00,
             // One symbol with code length 1 → end-of-block code
-            0x00, // literal 0 (code length for symbol 0)
+            0x00 // literal 0 (code length for symbol 0)
         };
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);
@@ -305,7 +305,7 @@ public class DeflateInfiniteLoopTests
             0x00,
             0x00,
             // End-of-block code (symbol 256)
-            0x00,
+            0x00
         };
         var zlib = WrapInZlib(deflate);
         var chd = MakeV3WithCompressedHunk(zlib);

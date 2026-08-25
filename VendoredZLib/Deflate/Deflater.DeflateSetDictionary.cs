@@ -69,19 +69,19 @@ internal static partial class Deflater
 
         ref var window = ref
 #if NET7_0_OR_GREATER
-        refs.Window;
+            refs.Window;
 #else
         MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var prev = ref
 #if NET7_0_OR_GREATER
-        refs.Prev;
+            refs.Prev;
 #else
         MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
-        refs.Head;
+            refs.Head;
 #else
         MemoryMarshal.GetReference<ushort>(s.head);
 #endif

@@ -507,7 +507,7 @@ public static unsafe partial class Methods
                 }
 
                 if (count == cacheSize)
-                    for (count = 0; count < chainLimit; )
+                    for (count = 0; count < chainLimit;)
                     {
                         if (i < minChain)
                             if (i == 0 || ++countBeyondMinChain > cacheSize)
@@ -532,7 +532,7 @@ public static unsafe partial class Methods
             assert(chainPos <= chainSize);
         }
 
-        for (hashIdx = (uint)(1 << (int)hashLog); hashIdx != 0; )
+        for (hashIdx = (uint)(1 << (int)hashLog); hashIdx != 0;)
         {
             var bucketIdx = --hashIdx << 2;
             var chainPackedPointer = tmpHashTable[hashIdx];
@@ -1109,9 +1109,9 @@ public static unsafe partial class Methods
         assert(nbChunks == 4);
         return BitOperations.RotateRight(
             ((ulong)(uint)matches[3] << 48)
-                | ((ulong)(uint)matches[2] << 32)
-                | ((ulong)(uint)matches[1] << 16)
-                | (uint)matches[0],
+            | ((ulong)(uint)matches[2] << 32)
+            | ((ulong)(uint)matches[1] << 16)
+            | (uint)matches[0],
             (int)head
         );
     }
@@ -2989,11 +2989,11 @@ public static unsafe partial class Methods
      * here instead of using an indirect function call through a function
      * pointer because after Spectre and Meltdown mitigations, indirect
      * function calls can be very costly, especially in the kernel.
-     *
+     * 
      * NOTE: dictMode and searchMethod should be templated, so those switch
      * statements should be optimized out. Only the mls & rowLog switches
      * should be left.
-     *
+     * 
      * @param ms The match state.
      * @param ip The position to search at.
      * @param iend The end of the input data.
@@ -3002,7 +3002,7 @@ public static unsafe partial class Methods
      * @param rowLog The row log (if applicable), in the range [4, 6].
      * @param searchMethod The search method to use (templated).
      * @param dictMode The dictMode (templated).
-     *
+     * 
      * @returns The length of the longest match found, or
      * < mls if no match is found.
      *     If a match is found its offset is stored in @ p offsetPtr.

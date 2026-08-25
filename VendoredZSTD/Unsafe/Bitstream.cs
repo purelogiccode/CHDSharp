@@ -45,14 +45,14 @@ public static unsafe partial class Methods
             0xFFFFFFF,
             0x1FFFFFFF,
             0x3FFFFFFF,
-            0x7FFFFFFF,
+            0x7FFFFFFF
         };
 
     private static uint* BIT_mask =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_BIT_mask)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_BIT_mask)
+        );
 #else
     private static readonly uint* BIT_mask = GetArrayPointer(
         new uint[32]
@@ -317,7 +317,7 @@ public static unsafe partial class Methods
         var regMask = (uint)(sizeof(nuint) * 8 - 1);
         assert(nbBits >= 1);
         return (bitD->bitContainer << (int)(bitD->bitsConsumed & regMask))
-            >> (int)((regMask + 1 - nbBits) & regMask);
+               >> (int)((regMask + 1 - nbBits) & regMask);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -514,7 +514,7 @@ public static unsafe partial class Methods
         var regMask = (uint)(sizeof(nuint) * 8 - 1);
         assert(nbBits >= 1);
         return (bitD.bitContainer << (int)(bitD.bitsConsumed & regMask))
-            >> (int)((regMask + 1 - nbBits) & regMask);
+               >> (int)((regMask + 1 - nbBits) & regMask);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -331,7 +331,7 @@ internal static class ChdHeaders
                 Crc = br.ReadUInt32Be(),
                 Length = (uint)(
                     (br.ReadByte() << 8) | (br.ReadByte() << 0) | (br.ReadByte() << 16)
-                ),
+                )
             };
             var mapflag = (MapEntryFlag)br.ReadByte();
             chd.Map[i].Comptype = ChdCommon.ConvMapEntryFlagtoCompressionType(mapflag);
@@ -385,7 +385,7 @@ internal static class ChdHeaders
             {
                 Offset = br.ReadUInt64Be(),
                 Crc = br.ReadUInt32Be(),
-                Length = (uint)(br.ReadUInt16Be() | (br.ReadByte() << 16)),
+                Length = (uint)(br.ReadUInt16Be() | (br.ReadByte() << 16))
             };
             var mapflag = (MapEntryFlag)br.ReadByte();
             chd.Map[i].Comptype = ChdCommon.ConvMapEntryFlagtoCompressionType(mapflag);

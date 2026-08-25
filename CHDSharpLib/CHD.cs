@@ -1203,7 +1203,7 @@ public static partial class Chd
             ObsoleteCylinders = chd.ObsoleteCylinders,
             ObsoleteHeads = chd.ObsoleteHeads,
             ObsoleteSectors = chd.ObsoleteSectors,
-            ObsoleteHunksize = chd.ObsoleteHunksize,
+            ObsoleteHunksize = chd.ObsoleteHunksize
         };
     }
 
@@ -1368,7 +1368,9 @@ public static partial class Chd
                         for (var i = 0; i < taskCount; i++)
                             blocksToDecompress.Add(-1, ct);
                     }
-                    catch (OperationCanceledException) { }
+                    catch (OperationCanceledException)
+                    {
+                    }
                     catch (Exception)
                     {
                         Interlocked.CompareExchange(
@@ -1433,7 +1435,9 @@ public static partial class Chd
                                 }
                             }
                         }
-                        catch (OperationCanceledException) { }
+                        catch (OperationCanceledException)
+                        {
+                        }
                         catch (Exception)
                         {
                             Interlocked.CompareExchange(
@@ -1498,7 +1502,9 @@ public static partial class Chd
                             }
                         }
                     }
-                    catch (OperationCanceledException) { }
+                    catch (OperationCanceledException)
+                    {
+                    }
                     catch (Exception)
                     {
                         Interlocked.CompareExchange(

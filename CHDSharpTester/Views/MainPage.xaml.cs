@@ -39,7 +39,7 @@ public class StatusIconConverter : IValueConverter
                 TestStatus.Passed => "✓",
                 TestStatus.Failed => "✗",
                 TestStatus.Skipped => "○",
-                _ => "?",
+                _ => "?"
             }
             : "?";
     }

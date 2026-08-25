@@ -11,14 +11,18 @@ namespace CHDSharpBattleTest;
 internal sealed class CheckFailedException : Exception
 {
     public CheckFailedException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 }
 
 /// <summary>Thrown to skip a check (e.g. chdman rejects a configuration).</summary>
 internal sealed class CheckSkippedException : Exception
 {
     public CheckSkippedException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 }
 
 /// <summary>
@@ -34,8 +38,9 @@ internal sealed class BattleHarness
         "cdzs",
         "cdfl",
         "zlib",
-        "none",
+        "none"
     ];
+
     private readonly List<Asset> _assets = [];
     private readonly ChdmanRunner _chdman;
 
@@ -118,7 +123,7 @@ internal sealed class BattleHarness
             skipped ? "SKIP"
             : passed ? "PASS"
             : "FAIL";
-        Console.WriteLine($"[{status}] {suite, -24} {name, -58} {detail}  ({seconds, 6:N1}s)");
+        Console.WriteLine($"[{status}] {suite,-24} {name,-58} {detail}  ({seconds,6:N1}s)");
     }
 
     private static void Assert([DoesNotReturnIf(false)] bool condition, string message)
@@ -214,7 +219,7 @@ internal sealed class BattleHarness
             var fail = group.Count(c => c is { Passed: false, Skipped: false });
             var skip = group.Count(c => c.Skipped);
             sb.AppendLine(
-                $"{group.Key, -28} {pass, 4} passed  {fail, 4} failed  {skip, 4} skipped"
+                $"{group.Key,-28} {pass,4} passed  {fail,4} failed  {skip,4} skipped"
             );
         }
 
@@ -223,8 +228,8 @@ internal sealed class BattleHarness
             sb.AppendLine("No checks recorded.");
         else
             sb.AppendLine(
-                $"TOTAL {(string.IsNullOrEmpty(_checks[0].Suite) ? 0 : _checks.Count), 4} checks: "
-                    + $"{_checks.Count(c => c.Passed)} passed, {_checks.Count(c => c is { Passed: false, Skipped: false })} failed, {_checks.Count(c => c.Skipped)} skipped"
+                $"TOTAL {(string.IsNullOrEmpty(_checks[0].Suite) ? 0 : _checks.Count),4} checks: "
+                + $"{_checks.Count(c => c.Passed)} passed, {_checks.Count(c => c is { Passed: false, Skipped: false })} failed, {_checks.Count(c => c.Skipped)} skipped"
             );
 
         return sb.ToString();
@@ -257,7 +262,7 @@ internal sealed class BattleHarness
             new RawConfig("zlib,zstd,lzma", 4096, 512),
             new RawConfig("none", 4096, 512),
             new RawConfig("zlib", 65536, 512),
-            new RawConfig("zlib", 4096, 4096),
+            new RawConfig("zlib", 4096, 4096)
         };
         var core = new[]
         {
@@ -266,19 +271,19 @@ internal sealed class BattleHarness
             new RawConfig("lzma", 4096, 512),
             new RawConfig("zlib,zstd,lzma", 4096, 512),
             new RawConfig("none", 4096, 512),
-            new RawConfig("zlib", 65536, 512),
+            new RawConfig("zlib", 65536, 512)
         };
         var aligned512 = new[]
         {
             new RawConfig("zlib", 4096, 512),
             new RawConfig("none", 4096, 512),
-            new RawConfig("zlib", 65536, 512),
+            new RawConfig("zlib", 65536, 512)
         };
         var oursOnly = new[]
         {
             new RawConfig("zlib", 4096, 512),
             new RawConfig("none", 4096, 512),
-            new RawConfig("zlib", 4096, 4096),
+            new RawConfig("zlib", 4096, 4096)
         };
 
         List<(string Name, byte[] Data, RawConfig[] Configs)> inputs;
@@ -296,7 +301,7 @@ internal sealed class BattleHarness
                     [
                         new RawConfig("zlib", 4096, 512),
                         new RawConfig("zstd", 4096, 512),
-                        new RawConfig("zlib", 65536, 512),
+                        new RawConfig("zlib", 65536, 512)
                     ]
                 ),
                 (
@@ -306,7 +311,7 @@ internal sealed class BattleHarness
                         new RawConfig("zlib", 4096, 512),
                         new RawConfig("zstd", 4096, 512),
                         new RawConfig("lzma", 4096, 512),
-                        new RawConfig("none", 4096, 512),
+                        new RawConfig("none", 4096, 512)
                     ]
                 ),
                 (
@@ -318,7 +323,7 @@ internal sealed class BattleHarness
                     "tiny100",
                     TestDataGenerator.Random(100, _seed),
                     [new RawConfig("zlib", 4096, 512)]
-                ),
+                )
             ];
         else
             inputs =
@@ -332,7 +337,7 @@ internal sealed class BattleHarness
                 ("pcm16", TestDataGenerator.Pcm16(512 * 1024, _seed), full),
                 ("unaligned", TestDataGenerator.Random(1_000_448, _seed), aligned512),
                 ("tiny1", TestDataGenerator.Random(1, _seed), oursOnly),
-                ("tiny100", TestDataGenerator.Random(100, _seed), oursOnly),
+                ("tiny100", TestDataGenerator.Random(100, _seed), oursOnly)
             ];
 
         foreach (var (name, data, configs) in inputs)
@@ -483,7 +488,7 @@ internal sealed class BattleHarness
                 ChdPath = ourChd,
                 Expected = data,
                 IsCd = false,
-                CodecLabel = cfg.Codecs,
+                CodecLabel = cfg.Codecs
             }
         );
         if (refCreated)
@@ -495,7 +500,7 @@ internal sealed class BattleHarness
                     ChdPath = refChd,
                     Expected = data,
                     IsCd = false,
-                    CodecLabel = cfg.Codecs,
+                    CodecLabel = cfg.Codecs
                 }
             );
     }
@@ -516,7 +521,7 @@ internal sealed class BattleHarness
             {
                 new RawConfig("cdzl", 19584, 2448),
                 new RawConfig("cdfl", 19584, 2448),
-                new RawConfig("none", 19584, 2448),
+                new RawConfig("none", 19584, 2448)
             }
             : CdCodecMatrix
                 .Select(c => new RawConfig(c, 19584, 2448))
@@ -528,7 +533,7 @@ internal sealed class BattleHarness
             {
                 ("cd-mixed", mixedCue),
                 ("cd-audio", audioCue),
-                ("disc-iso", isoPath),
+                ("disc-iso", isoPath)
             }
         )
         foreach (var cfg in configs)
@@ -667,7 +672,7 @@ internal sealed class BattleHarness
                     ChdPath = ourChd,
                     Expected = refExtract!,
                     IsCd = true,
-                    CodecLabel = cfg.Codecs,
+                    CodecLabel = cfg.Codecs
                 }
             );
             AddAsset(
@@ -678,7 +683,7 @@ internal sealed class BattleHarness
                     ChdPath = refChd,
                     Expected = refExtract!,
                     IsCd = true,
-                    CodecLabel = cfg.Codecs,
+                    CodecLabel = cfg.Codecs
                 }
             );
         }
@@ -990,7 +995,7 @@ internal sealed class BattleHarness
                 ParentPath = parentRef.ChdPath,
                 Expected = mixedSrc,
                 IsCd = false,
-                CodecLabel = "zlib",
+                CodecLabel = "zlib"
             }
         );
         if (refCreated)
@@ -1003,7 +1008,7 @@ internal sealed class BattleHarness
                     ParentPath = parentRef.ChdPath,
                     Expected = mixedSrc,
                     IsCd = false,
-                    CodecLabel = "zlib",
+                    CodecLabel = "zlib"
                 }
             );
 
@@ -1016,7 +1021,7 @@ internal sealed class BattleHarness
                 ParentPath = parentOurs.ChdPath,
                 Expected = mixedSrc,
                 IsCd = false,
-                CodecLabel = "zlib",
+                CodecLabel = "zlib"
             }
         );
         if (refCreated2)
@@ -1029,7 +1034,7 @@ internal sealed class BattleHarness
                     ParentPath = parentOurs.ChdPath,
                     Expected = mixedSrc,
                     IsCd = false,
-                    CodecLabel = "zlib",
+                    CodecLabel = "zlib"
                 }
             );
     }
@@ -1140,7 +1145,7 @@ internal sealed class BattleHarness
                     ChdPath = ourCopy,
                     Expected = srcAsset.Expected,
                     IsCd = false,
-                    CodecLabel = target,
+                    CodecLabel = target
                 }
             );
             if (refCreated)
@@ -1152,7 +1157,7 @@ internal sealed class BattleHarness
                         ChdPath = refCopy,
                         Expected = srcAsset.Expected,
                         IsCd = false,
-                        CodecLabel = target,
+                        CodecLabel = target
                     }
                 );
         }
@@ -1170,10 +1175,7 @@ internal sealed class BattleHarness
             Check(
                 suite2,
                 "copy (ours)",
-                () =>
-                {
-                    ChdEncoder.Copy(cdSrc.ChdPath, ourCdCopy, [CodecTags.Cdfl]);
-                }
+                () => { ChdEncoder.Copy(cdSrc.ChdPath, ourCdCopy, [CodecTags.Cdfl]); }
             );
             Check(suite2, "chdman verify (ours)", () => VerifyChdman(ourCdCopy));
             Check(
@@ -1230,7 +1232,7 @@ internal sealed class BattleHarness
                     ChdPath = ourCdCopy,
                     Expected = cdSrc.Expected,
                     IsCd = true,
-                    CodecLabel = "cdfl",
+                    CodecLabel = "cdfl"
                 }
             );
         }
@@ -1275,7 +1277,7 @@ internal sealed class BattleHarness
                     ChdPath = childCopy,
                     Expected = child.Expected,
                     IsCd = false,
-                    CodecLabel = "zlib",
+                    CodecLabel = "zlib"
                 }
             );
         }
@@ -1351,7 +1353,7 @@ internal sealed class BattleHarness
                         hunk * 2 + 137,
                         len / 2,
                         len - 100,
-                        len - 1,
+                        len - 1
                     };
                     foreach (var o in offsets.Where(o => o < len).Distinct())
                     {
@@ -1568,13 +1570,13 @@ internal sealed class BattleHarness
             ? new[]
             {
                 ("zeros", TestDataGenerator.Zeros(64 * 1024)),
-                ("random", TestDataGenerator.Random(128 * 1024, _seed)),
+                ("random", TestDataGenerator.Random(128 * 1024, _seed))
             }
             : new[]
             {
                 ("zeros", TestDataGenerator.Zeros(256 * 1024)),
                 ("random", TestDataGenerator.Random(512 * 1024, _seed)),
-                ("mixed", TestDataGenerator.Mixed(512 * 1024, _seed)),
+                ("mixed", TestDataGenerator.Mixed(512 * 1024, _seed))
             };
 
         var configs = _quick
@@ -1583,7 +1585,7 @@ internal sealed class BattleHarness
             {
                 new RawConfig("zlib", 4096, 512),
                 new RawConfig("lzma", 4096, 512),
-                new RawConfig("none", 4096, 512),
+                new RawConfig("none", 4096, 512)
             };
 
         foreach (var (name, data) in inputs)
@@ -2240,7 +2242,7 @@ internal sealed class BattleHarness
                     {
                         IgnoreInaccessible = true,
                         RecurseSubdirectories = false,
-                        AttributesToSkip = FileAttributes.ReparsePoint,
+                        AttributesToSkip = FileAttributes.ReparsePoint
                     }
                 )
             )
@@ -2543,7 +2545,7 @@ internal sealed class BattleHarness
                     : null;
             Assert(
                 parentSha1 != null
-                    && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal),
+                && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal),
                 $"parent SHA1 {parentSha1 ?? "(none)"} != chdman {info.ParentSha1}"
             );
         }
@@ -2666,7 +2668,7 @@ internal sealed class BattleHarness
                     : null;
             Assert(
                 parentSha1 != null
-                    && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal),
+                && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal),
                 $"parent SHA1 {parentSha1 ?? "(none)"} != chdman {info.ParentSha1}"
             );
         }

@@ -10,5 +10,5 @@ public enum ZSTD_longLengthType_e
     ZSTD_llt_literalLength = 1,
 
     /* represents a long match */
-    ZSTD_llt_matchLength = 2,
+    ZSTD_llt_matchLength = 2
 }

@@ -22,5 +22,5 @@ internal enum HuffmanError
     HufferrInternalInconsistency,
 
     /// <summary>Too many Huffman contexts were requested.</summary>
-    HufferrTooManyContexts,
+    HufferrTooManyContexts
 }

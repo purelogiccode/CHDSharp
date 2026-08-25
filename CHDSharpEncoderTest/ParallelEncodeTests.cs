@@ -228,7 +228,7 @@ public class ParallelEncodeTests : IDisposable
         Assert.True(
             parallelTime * 2.0 < singleTime,
             $"expected parallel to be >= 2x faster than single-threaded: "
-                + $"single {singleTime.TotalSeconds:F2}s, parallel {parallelTime.TotalSeconds:F2}s"
+            + $"single {singleTime.TotalSeconds:F2}s, parallel {parallelTime.TotalSeconds:F2}s"
         );
 
         // identical output despite the speedup
@@ -387,7 +387,7 @@ public class ParallelEncodeTests : IDisposable
                     {
                         if (Interlocked.Increment(ref seen) == 16)
                             cts.Cancel();
-                    },
+                    }
                 },
                 cancellationToken: cts.Token
             )

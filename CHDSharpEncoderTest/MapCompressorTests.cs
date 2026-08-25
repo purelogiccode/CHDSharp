@@ -16,8 +16,8 @@ public class MapCompressorTests
                 Compression = MapEntry.CompressionNone,
                 CompLength = 4096,
                 Offset = 124,
-                Crc16 = 0xB76F,
-            },
+                Crc16 = 0xB76F
+            }
         };
 
         var compressed = MapCompressor.Compress(entries, 1, 4096, 512);
@@ -36,14 +36,14 @@ public class MapCompressorTests
             Compression = MapEntry.CompressionNone,
             CompLength = 4096,
             Offset = 124,
-            Crc16 = 0xFFFF,
+            Crc16 = 0xFFFF
         };
         entries[1] = new MapEntry
         {
             Compression = MapEntry.CompressionNone,
             CompLength = 4096,
             Offset = 124 + 4096,
-            Crc16 = 0x1234,
+            Crc16 = 0x1234
         };
 
         var compressed = MapCompressor.Compress(entries, 2, 4096, 512);
@@ -63,8 +63,8 @@ public class MapCompressorTests
                 Compression = MapEntry.CompressionType0,
                 CompLength = 100,
                 Offset = 200,
-                Crc16 = 0xABCD,
-            },
+                Crc16 = 0xABCD
+            }
         };
 
         var compressed = MapCompressor.Compress(entries, 1, 4096, 512);
@@ -92,35 +92,35 @@ public class MapCompressorTests
             Compression = MapEntry.CompressionType0,
             CompLength = 80,
             Offset = 100,
-            Crc16 = 0xA001,
+            Crc16 = 0xA001
         };
         entries[1] = new MapEntry
         {
             Compression = MapEntry.CompressionType0,
             CompLength = 90,
             Offset = 180,
-            Crc16 = 0xA002,
+            Crc16 = 0xA002
         };
         entries[2] = new MapEntry
         {
             Compression = MapEntry.CompressionNone,
             CompLength = 4096,
             Offset = 270,
-            Crc16 = 0xA003,
+            Crc16 = 0xA003
         };
         entries[3] = new MapEntry
         {
             Compression = MapEntry.CompressionNone,
             CompLength = 4096,
             Offset = 4366,
-            Crc16 = 0xA004,
+            Crc16 = 0xA004
         };
         entries[4] = new MapEntry
         {
             Compression = MapEntry.CompressionType0,
             CompLength = 70,
             Offset = 8462,
-            Crc16 = 0xA005,
+            Crc16 = 0xA005
         };
 
         var compressed = MapCompressor.Compress(entries, 5, 4096, 512);
@@ -137,7 +137,7 @@ public class MapCompressorTests
                 Compression = MapEntry.CompressionType0,
                 CompLength = (uint)(100 + i * 10),
                 Offset = (ulong)(124 + i * 120),
-                Crc16 = (ushort)(0x1000 + i),
+                Crc16 = (ushort)(0x1000 + i)
             };
 
         var compressed = MapCompressor.Compress(entries, 3, 4096, 512);
@@ -157,7 +157,7 @@ public class MapCompressorTests
                 Compression = MapEntry.CompressionType0,
                 CompLength = 50,
                 Offset = (ulong)(124 + i * 60),
-                Crc16 = 0,
+                Crc16 = 0
             };
 
         var compressed = MapCompressor.Compress(entries, count, 4096, 512);
@@ -176,8 +176,8 @@ public class MapCompressorTests
                 Compression = MapEntry.CompressionType0,
                 CompLength = 4000,
                 Offset = 124,
-                Crc16 = 0,
-            },
+                Crc16 = 0
+            }
         };
 
         var compressed = MapCompressor.Compress(entries, 1, 4096, 512);
@@ -197,8 +197,8 @@ public class MapCompressorTests
                 Compression = MapEntry.CompressionType0,
                 CompLength = 100,
                 Offset = 124,
-                Crc16 = 0,
-            },
+                Crc16 = 0
+            }
         };
 
         var compressed = MapCompressor.Compress(entries, 1, 4096, 512);
@@ -218,7 +218,7 @@ public class MapCompressorTests
                 Compression = i < 2 ? MapEntry.CompressionType0 : MapEntry.CompressionNone,
                 CompLength = (uint)(100 + i * 25),
                 Offset = (ulong)(124 + i * 150),
-                Crc16 = (ushort)(0xE000 + i),
+                Crc16 = (ushort)(0xE000 + i)
             };
 
         var rawMap = new byte[4 * 12];
@@ -236,9 +236,9 @@ public class MapCompressorTests
     private static uint ReadU32Be(byte[] data, int offset)
     {
         return ((uint)data[offset] << 24)
-            | ((uint)data[offset + 1] << 16)
-            | ((uint)data[offset + 2] << 8)
-            | data[offset + 3];
+               | ((uint)data[offset + 1] << 16)
+               | ((uint)data[offset + 2] << 8)
+               | data[offset + 3];
     }
 
     private static ushort ReadU16Be(byte[] data, int offset)
@@ -249,10 +249,10 @@ public class MapCompressorTests
     private static ulong ReadU48Be(byte[] data, int offset)
     {
         return ((ulong)data[offset] << 40)
-            | ((ulong)data[offset + 1] << 32)
-            | ((ulong)data[offset + 2] << 24)
-            | ((ulong)data[offset + 3] << 16)
-            | ((ulong)data[offset + 4] << 8)
-            | data[offset + 5];
+               | ((ulong)data[offset + 1] << 32)
+               | ((ulong)data[offset + 2] << 24)
+               | ((ulong)data[offset + 3] << 16)
+               | ((ulong)data[offset + 4] << 8)
+               | data[offset + 5];
     }
 }

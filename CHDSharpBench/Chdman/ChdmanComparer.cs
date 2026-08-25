@@ -31,7 +31,7 @@ public static class ChdmanComparer
         "cdzl",
         "cdlz",
         "cdzs",
-        "cdfl",
+        "cdfl"
     ];
 
     public static void Run(string chdmanExe, string corpusDir, IReadOnlyList<string> args)
@@ -110,7 +110,9 @@ public static class ChdmanComparer
             {
                 Directory.Delete(outDir, true);
             }
-            catch (IOException) { }
+            catch (IOException)
+            {
+            }
         }
     }
 
@@ -194,7 +196,7 @@ public static class ChdmanComparer
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true,
+            CreateNoWindow = true
         };
 
         using var proc =

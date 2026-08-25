@@ -20,7 +20,8 @@ namespace VendoredZLib;
 /// </summary>
 public partial class ZLib : IZLib
 {
-    internal const int MaxWindowBits = 15; // Maximum value for windowBits in deflateInit2 and inflateInit2. 32K LZ77 window.
+    internal const int
+        MaxWindowBits = 15; // Maximum value for windowBits in deflateInit2 and inflateInit2. 32K LZ77 window.
 
     internal const int DefaultWindowBits = MaxWindowBits; // default windowBits for decompression
 

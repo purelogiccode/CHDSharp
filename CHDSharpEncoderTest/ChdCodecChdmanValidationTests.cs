@@ -125,7 +125,7 @@ public class ChdCodecChdmanValidationTests : IDisposable
                 < 0.45 => (byte)common[rng.Next(common.Length)],
                 < 0.90 => (byte)all[rng.Next(all.Length)],
                 < 0.94 => (byte)' ',
-                _ => (byte)'\n',
+                _ => (byte)'\n'
             };
         }
 
@@ -167,12 +167,12 @@ public class ChdCodecChdmanValidationTests : IDisposable
         // verifiable but not bit-identical to chdman's own file — asserted via verify + deep
         // CheckFile + extractcd parity instead of whole-file byte equality.
         const string cue = """
-            FILE "cdzs.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 00:04:00
-            """;
+                           FILE "cdzs.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 01 00:04:00
+                           """;
         var cuePath = Path.Combine(_testDataDir, "cdzs.cue");
         var binPath = Path.Combine(_testDataDir, "cdzs.bin");
         var oursPath = Path.Combine(_testDataDir, "cdzs.ours.chd");
@@ -292,12 +292,12 @@ public class ChdCodecChdmanValidationTests : IDisposable
         // Random CD data forces VERBATIM subframes in the FLAC encoding; the encoder must
         // store the actual samples (a stale zeroed sample buffer corrupts every hunk).
         const string cue = """
-            FILE "cdfl.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 00:00:10
-            """;
+                           FILE "cdfl.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 01 00:00:10
+                           """;
         var cuePath = Path.Combine(_testDataDir, "cdfl.cue");
         var binPath = Path.Combine(_testDataDir, "cdfl.bin");
         var chdPath = Path.Combine(_testDataDir, "cdfl.chd");
@@ -376,13 +376,13 @@ public class ChdCodecChdmanValidationTests : IDisposable
             return;
 
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 00:00:40
-                INDEX 01 00:00:42
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 00:00:40
+                               INDEX 01 00:00:42
+                           """;
         var cuePath = Path.Combine(_testDataDir, "cd.cue");
         var binPath = Path.Combine(_testDataDir, "game.bin");
         var chdPath = Path.Combine(_testDataDir, "cd.chd");

@@ -18,5 +18,5 @@ public enum ZSTD_literalCompressionMode_e
     /**
      * < Always emit uncompressed literals.
      */
-    ZSTD_lcm_uncompressed = 2,
+    ZSTD_lcm_uncompressed = 2
 }

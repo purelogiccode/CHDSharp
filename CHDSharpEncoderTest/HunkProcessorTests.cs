@@ -121,7 +121,7 @@ public class HunkProcessorTests
             Compression = MapEntry.CompressionType0,
             CompLength = 12345,
             Offset = 0xABCDEF012345,
-            Crc16 = 0x9876,
+            Crc16 = 0x9876
         };
 
         var rawMap = new byte[12];

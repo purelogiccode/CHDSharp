@@ -31,7 +31,7 @@ public class VerifyBenchmarks
                 .Where(f =>
                     !Path.GetFileName(f).Contains("_child", StringComparison.Ordinal)
                     || Corpus.ParentFor(f) != null
-                ),
+                )
         ];
 
         _parents.Clear();

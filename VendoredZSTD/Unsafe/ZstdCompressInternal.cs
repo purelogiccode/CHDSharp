@@ -75,14 +75,14 @@ public static unsafe partial class Methods
             24,
             24,
             24,
-            24,
+            24
         };
 
     private static byte* LL_Code =>
         (byte*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_LL_Code)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_LL_Code)
+        );
 #else
     private static readonly byte* LL_Code = GetArrayPointer(
         new byte[64]
@@ -293,14 +293,14 @@ public static unsafe partial class Methods
             42,
             42,
             42,
-            42,
+            42
         };
 
     private static byte* ML_Code =>
         (byte*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_ML_Code)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_ML_Code)
+        );
 #else
     private static readonly byte* ML_Code = GetArrayPointer(
         new byte[128]
@@ -530,8 +530,8 @@ public static unsafe partial class Methods
                 return
                     cctxParams->cParams.strategy == ZSTD_strategy.ZSTD_fast
                     && cctxParams->cParams.targetLength > 0
-                    ? 1
-                    : 0;
+                        ? 1
+                        : 0;
         }
     }
 
@@ -998,12 +998,13 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ZSTD_dictMode_e ZSTD_matchState_dictMode(ZSTD_matchState_t* ms)
     {
-        return ZSTD_window_hasExtDict(ms->window) != 0 ? ZSTD_dictMode_e.ZSTD_extDict
+        return ZSTD_window_hasExtDict(ms->window) != 0
+            ? ZSTD_dictMode_e.ZSTD_extDict
             : ms->dictMatchState != null
                 ? ms->dictMatchState->dedicatedDictSearch != 0
-                        ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+                    ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
                     : ZSTD_dictMode_e.ZSTD_dictMatchState
-            : ZSTD_dictMode_e.ZSTD_noDict;
+                : ZSTD_dictMode_e.ZSTD_noDict;
     }
 
     /**
@@ -1219,9 +1220,9 @@ public static unsafe partial class Methods
     private static ReadOnlySpan<byte> Span_stringToByte_20_00 => new byte[] { 32, 0 };
     private static byte* stringToByte_20_00 =>
         (byte*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_stringToByte_20_00)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_stringToByte_20_00)
+        );
 #else
     private static readonly byte* stringToByte_20_00 = GetArrayPointer(new byte[] { 32, 0 });
 #endif

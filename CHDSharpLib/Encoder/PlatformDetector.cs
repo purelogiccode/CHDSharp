@@ -208,7 +208,7 @@ public static class PlatformDetector
             2048 => raw,
             2352 => raw.AsSpan(raw[15] == 0x01 ? 16 : 24, 2048).ToArray(),
             2336 => raw.AsSpan(8, 2048).ToArray(),
-            _ => raw.Length >= 2048 ? raw.AsSpan(0, 2048).ToArray() : null,
+            _ => raw.Length >= 2048 ? raw.AsSpan(0, 2048).ToArray() : null
         };
     }
 }

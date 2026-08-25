@@ -63,7 +63,7 @@ internal class FlakeConstants
         2048,
         4096,
         8192,
-        16384,
+        16384
     ];
 
     //0110 : get 8 bit (blocksize-1) from end of header

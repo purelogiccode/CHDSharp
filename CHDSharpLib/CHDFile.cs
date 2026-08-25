@@ -58,7 +58,7 @@ public delegate ChdFile? ParentResolver(byte[]? parentSha1, byte[]? parentMd5);
 /// {
 ///     var hunk = new byte[chd.HunkBytes];
 ///     chd.ReadHunk(0, hunk);          // first decompressed hunk
-///
+/// 
 ///     var buf = new byte[1024];
 ///     chd.Read(0x10000, buf, 0, buf.Length); // arbitrary byte range
 /// }
@@ -878,7 +878,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             2 => 80,
             3 => 120,
             4 => 108,
-            _ => 124,
+            _ => 124
         };
     }
 
@@ -1893,11 +1893,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
         catch (Exception ex)
             when (ex
-                    is IOException
-                        or UnauthorizedAccessException
-                        or NotSupportedException
-                        or ArgumentException
-            )
+                      is IOException
+                      or UnauthorizedAccessException
+                      or NotSupportedException
+                      or ArgumentException
+                 )
         {
             Log.LogDebug("Memory-mapped open unavailable for this file: {Message}", ex.Message);
             _mmfView?.Dispose();
@@ -2856,9 +2856,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         if (
             dataEntry.Comptype
             is CompressionType.Compressionparent
-                or CompressionType.Compressionmini
-                or CompressionType.Compressionzero
-                or CompressionType.Compressionerror
+            or CompressionType.Compressionmini
+            or CompressionType.Compressionzero
+            or CompressionType.Compressionerror
         )
             return null;
 
@@ -2902,9 +2902,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         if (
             dataEntry.Comptype
             is CompressionType.Compressionparent
-                or CompressionType.Compressionmini
-                or CompressionType.Compressionzero
-                or CompressionType.Compressionerror
+            or CompressionType.Compressionmini
+            or CompressionType.Compressionzero
+            or CompressionType.Compressionerror
         )
             return null;
 
@@ -3343,7 +3343,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 ChdTrackType.Mode2FormMix => $"MODE2/{track.DataSize:D4}",
                 ChdTrackType.Mode2Raw => $"MODE2/{track.DataSize:D4}",
                 ChdTrackType.Audio => "AUDIO",
-                _ => $"MODE1/{track.DataSize:D4}",
+                _ => $"MODE1/{track.DataSize:D4}"
             };
 
             sb.AppendLine(
@@ -3464,7 +3464,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             sb.AppendLine(
                 CultureInfo.InvariantCulture,
-                $"{t.TrackNumber, 3:D2}    {t.GetTypeString(), -16}  {t.Frames, 9:N0}  {t.StartFrame, 9}  {t.DataSize, 11}"
+                $"{t.TrackNumber,3:D2}    {t.GetTypeString(),-16}  {t.Frames,9:N0}  {t.StartFrame,9}  {t.DataSize,11}"
             );
             if (t.PreGap > 0)
                 sb.AppendLine(

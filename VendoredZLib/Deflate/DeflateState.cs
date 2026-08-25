@@ -19,13 +19,15 @@ internal sealed class DeflateState
 
     private static readonly StaticTree SBlDesc = new(null, 0, BlCodes, MaxBlBits);
 
-    internal readonly ushort[] BlCount = new ushort[MaxBits + 1]; // number of codes at each bit length for an optimal tree
+    internal readonly ushort[]
+        BlCount = new ushort[MaxBits + 1]; // number of codes at each bit length for an optimal tree
 
     internal readonly TreeDescriptor BlDesc; // desc. for bit length tree
     internal readonly TreeNode[] BlTree = new TreeNode[2 * BlCodes + 1]; // Huffman tree for bit lengths
     internal readonly TreeDescriptor DDesc; // desc. for distance tree
 
-    internal readonly byte[] Depth = new byte[2 * LCodes + 1]; // Depth of each subtree used as tie breaker for trees of equal frequency
+    internal readonly byte[]
+        Depth = new byte[2 * LCodes + 1]; // Depth of each subtree used as tie breaker for trees of equal frequency
 
     internal readonly TreeNode[] DynDtree = new TreeNode[2 * DCodes + 1]; // distance tree
 
@@ -45,7 +47,8 @@ internal sealed class DeflateState
      *   hash_shift * MIN_MATCH >= hash_bits
      */
 
-    internal int BlockStart; // Window position at the beginning of the current output block. Gets negative when the window is moved backwards.
+    internal int
+        BlockStart; // Window position at the beginning of the current output block. Gets negative when the window is moved backwards.
 
     internal uint GoodMatch; // Use a faster search when the previous match is longer than this
     internal uint HashBits; // log2(hash_size)
@@ -163,7 +166,8 @@ internal sealed class DeflateState
      * To do: use the user input buffer as sliding window.
      */
 
-    internal uint WindowSize; // Actual size of window: 2*wSize, except when the user input buffer is directly used as sliding window.
+    internal uint
+        WindowSize; // Actual size of window: 2*wSize, except when the user input buffer is directly used as sliding window.
 
     internal int Wrap; // bit 0 true for zlib, bit 1 true for gzip
 

@@ -206,7 +206,7 @@ internal static partial class ChdTocParser
                 PreGapDataSize = pgDataSize,
                 PreGapSubSize = pgSubSize,
                 PadFrames = padFrames,
-                StartFrame = currentFrame,
+                StartFrame = currentFrame
             };
 
             tracks.Add(track);
@@ -282,7 +282,7 @@ internal static partial class ChdTocParser
                 SubSize = (int)subSizeVal,
                 Frames = (int)framesVal,
                 ExtraFrames = (int)extraFramesVal,
-                StartFrame = currentFrame,
+                StartFrame = currentFrame
             };
 
             tracks.Add(track);
@@ -294,9 +294,9 @@ internal static partial class ChdTocParser
         static uint SwapEndian(uint v)
         {
             return ((v & 0xFF) << 24)
-                | ((v & 0xFF00) << 8)
-                | ((v & 0xFF0000) >> 8)
-                | ((v & 0xFF000000) >> 24);
+                   | ((v & 0xFF00) << 8)
+                   | ((v & 0xFF0000) >> 8)
+                   | ((v & 0xFF000000) >> 24);
         }
 
         uint ReadBeUInt32()
@@ -320,7 +320,7 @@ internal static partial class ChdTocParser
             "MODE2_FORM_MIX" => (ChdTrackType.Mode2FormMix, 2336),
             "MODE2_RAW" or "MODE2/2352" or "CDI/2352" => (ChdTrackType.Mode2Raw, 2352),
             "AUDIO" => (ChdTrackType.Audio, 2352),
-            _ => (ChdTrackType.Mode1, 2048),
+            _ => (ChdTrackType.Mode1, 2048)
         };
     }
 
@@ -330,7 +330,7 @@ internal static partial class ChdTocParser
         {
             "RW" => (ChdSubType.Normal, 96),
             "RW_RAW" => (ChdSubType.Raw, 96),
-            _ => (ChdSubType.None, 0),
+            _ => (ChdSubType.None, 0)
         };
     }
 

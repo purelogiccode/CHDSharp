@@ -205,7 +205,7 @@ public static class DiscDetector
             2048 => frame,
             2352 => frame.AsSpan(frame[15] == 0x01 ? 16 : 24, 2048).ToArray(),
             2336 => frame.AsSpan(8, 2048).ToArray(),
-            _ => frame.Length >= 2048 ? frame.AsSpan(0, 2048).ToArray() : null,
+            _ => frame.Length >= 2048 ? frame.AsSpan(0, 2048).ToArray() : null
         };
     }
 
@@ -233,9 +233,9 @@ public static class DiscDetector
     private static bool CheckMegaCd(byte[] sector0)
     {
         return StartsWith(sector0, "SEGADISCSYSTEM"u8)
-            || StartsWith(sector0, "SEGABOOTDISC"u8)
-            || StartsWith(sector0, "SEGADISC"u8)
-            || StartsWith(sector0, "SEGADATADISC"u8);
+               || StartsWith(sector0, "SEGABOOTDISC"u8)
+               || StartsWith(sector0, "SEGADISC"u8)
+               || StartsWith(sector0, "SEGADATADISC"u8);
     }
 
     private static bool CheckSaturn(byte[] sector0)

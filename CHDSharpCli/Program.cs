@@ -653,7 +653,7 @@ internal static class Program
                     {
                         IgnoreInaccessible = true,
                         RecurseSubdirectories = false,
-                        AttributesToSkip = FileAttributes.ReparsePoint,
+                        AttributesToSkip = FileAttributes.ReparsePoint
                     }
                 )
                 .Where(f => f.Extension.Equals(".chd", StringComparison.OrdinalIgnoreCase))
@@ -980,7 +980,7 @@ internal static class Program
                             tpl.Heads,
                             tpl.Sectors,
                             tpl.SectorSize
-                        ),
+                        )
                     ];
                 }
             }
@@ -1437,7 +1437,7 @@ internal static class Program
 
             logger?.LogSummary();
             log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
-            VerifyResultChd(outputPath, null);
+            VerifyResultChd(outputPath);
         }
         catch (Exception ex)
             when (ex is ArgumentException or IOException or UnauthorizedAccessException)
@@ -1561,12 +1561,12 @@ internal static class Program
         }
         catch (Exception ex)
             when (ex
-                    is ArgumentException
-                        or InvalidDataException
-                        or IOException
-                        or UnauthorizedAccessException
-                        or FileNotFoundException
-            )
+                      is ArgumentException
+                      or InvalidDataException
+                      or IOException
+                      or UnauthorizedAccessException
+                      or FileNotFoundException
+                 )
         {
             log.Warning("--createcd failed: {Message}", ex.Message);
         }
@@ -1733,12 +1733,12 @@ internal static class Program
         }
         catch (Exception ex)
             when (ex
-                    is ArgumentException
-                        or NotSupportedException
-                        or InvalidDataException
-                        or IOException
-                        or UnauthorizedAccessException
-            )
+                      is ArgumentException
+                      or NotSupportedException
+                      or InvalidDataException
+                      or IOException
+                      or UnauthorizedAccessException
+                 )
         {
             log.Warning("--createld failed: {Message}", ex.Message);
         }
@@ -1823,12 +1823,12 @@ internal static class Program
         }
         catch (Exception ex)
             when (ex
-                    is ArgumentException
-                        or NotSupportedException
-                        or InvalidDataException
-                        or IOException
-                        or UnauthorizedAccessException
-            )
+                      is ArgumentException
+                      or NotSupportedException
+                      or InvalidDataException
+                      or IOException
+                      or UnauthorizedAccessException
+                 )
         {
             log.Warning("--extractld failed: {Message}", ex.Message);
         }
@@ -2158,7 +2158,7 @@ internal static class Program
                 SourceParentPath = sourceParentPath,
                 ParentPath = outputParentPath,
                 TaskCount = taskCount,
-                NoMetadataUpgrade = noUpgrade,
+                NoMetadataUpgrade = noUpgrade
             };
 
             if (inputStartBytes.HasValue)
@@ -2181,12 +2181,12 @@ internal static class Program
         }
         catch (Exception ex)
             when (ex
-                    is ArgumentException
-                        or IOException
-                        or InvalidDataException
-                        or UnauthorizedAccessException
-                        or FileNotFoundException
-            )
+                      is ArgumentException
+                      or IOException
+                      or InvalidDataException
+                      or UnauthorizedAccessException
+                      or FileNotFoundException
+                 )
         {
             log.Warning("--copy failed: {Message}", ex.Message);
         }
@@ -2445,7 +2445,7 @@ internal static class Program
                 foreach (var kv in compressionTypes.OrderByDescending(k => k.Value))
                 {
                     var pct = 100.0 * kv.Value / hunkCount;
-                    Console.WriteLine($"{kv.Value, 10}   {pct, 5:F1}%  {kv.Key}");
+                    Console.WriteLine($"{kv.Value,10}   {pct,5:F1}%  {kv.Key}");
                 }
             }
         }
@@ -2509,7 +2509,7 @@ internal static class Program
             ChdCodec.Cdlzma => "CD LZMA",
             ChdCodec.Cdzstd => "CD Zstandard",
             ChdCodec.Cdflac => "CD FLAC",
-            _ => CodecTagName(codec),
+            _ => CodecTagName(codec)
         };
     }
 
@@ -2662,7 +2662,7 @@ internal static class Program
                             .Split(
                                 ',',
                                 StringSplitOptions.RemoveEmptyEntries
-                                    | StringSplitOptions.TrimEntries
+                                | StringSplitOptions.TrimEntries
                             )
                     )
                         switch (name.ToLowerInvariant())
@@ -2742,7 +2742,7 @@ internal static class Program
                     {
                         ["track"] = r.TrackNumber,
                         ["offset"] = r.StartOffset,
-                        ["length"] = r.Length,
+                        ["length"] = r.Length
                     };
                     if (r.Sha1 != null)
                         obj["sha1"] = r.ToHex(ChdHashType.Sha1);
@@ -2918,11 +2918,11 @@ internal static class Program
                     }
                     catch (Exception ex)
                         when (ex
-                                is InvalidDataException
-                                    or IOException
-                                    or ArgumentException
-                                    or UnauthorizedAccessException
-                        )
+                                  is InvalidDataException
+                                  or IOException
+                                  or ArgumentException
+                                  or UnauthorizedAccessException
+                             )
                     {
                         failures.Enqueue($"{Path.GetFileName(input)}: {ex.Message}");
                         log.Warning(
@@ -3204,7 +3204,7 @@ internal static class Program
         return cmd switch
         {
             "h" or "?" or "help" => "help",
-            _ => cmd,
+            _ => cmd
         };
     }
 
@@ -4084,7 +4084,7 @@ internal static class Program
                             _ => string.Create(
                                 CultureInfo.InvariantCulture,
                                 $"MODE1/{track.DataSize:D4}"
-                            ),
+                            )
                         };
                         cueSb.AppendLine($"  TRACK {track.TrackNumber:D2} {modeStr}");
                         cueSb.AppendLine("    INDEX 01 00:00:00");

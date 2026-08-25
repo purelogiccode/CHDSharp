@@ -12,5 +12,5 @@ public enum ZSTD_dictAttachPref_e
     ZSTD_dictForceCopy = 2,
 
     /* Always reload the dictionary */
-    ZSTD_dictForceLoad = 3,
+    ZSTD_dictForceLoad = 3
 }

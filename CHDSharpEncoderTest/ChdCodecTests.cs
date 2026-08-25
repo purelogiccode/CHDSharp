@@ -372,9 +372,9 @@ public class ChdCodecTests : IDisposable
     private static uint ReadU32Be(byte[] data, int offset)
     {
         return ((uint)data[offset] << 24)
-            | ((uint)data[offset + 1] << 16)
-            | ((uint)data[offset + 2] << 8)
-            | data[offset + 3];
+               | ((uint)data[offset + 1] << 16)
+               | ((uint)data[offset + 2] << 8)
+               | data[offset + 3];
     }
 
     /// <summary>A codec that never compresses (used to test fallback).</summary>

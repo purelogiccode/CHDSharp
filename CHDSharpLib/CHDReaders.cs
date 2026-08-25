@@ -50,7 +50,7 @@ internal static partial class ChdReaders
         0xff,
         0xff,
         0xff,
-        0x00,
+        0x00
     ];
 
     /// <summary>Dummy reader for unused / error codec slots; always returns <see cref="ChdError.Chderrdecompressionerror" />.</summary>

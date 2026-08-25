@@ -166,7 +166,9 @@ internal class BinTree : InWindow, IMatchFinder
                 distances[offset++] = 2;
                 distances[offset++] = d2 - 1;
                 var update = true;
-                if (BufferBase[cur - (int)d2 + 2] == BufferBase[cur + 2]) { }
+                if (BufferBase[cur - (int)d2 + 2] == BufferBase[cur + 2])
+                {
+                }
                 else if (d3 < mmm && BufferBase[cur - (int)d3] == BufferBase[cur])
                 {
                     d2 = d3;
@@ -258,11 +260,11 @@ internal class BinTree : InWindow, IMatchFinder
 
             var delta = Pos - curMatch;
             var cyclicPos =
-                (
-                    delta <= _cyclicBufferPos
-                        ? _cyclicBufferPos - delta
-                        : _cyclicBufferPos - delta + _cyclicBufferSize
-                ) << 1;
+            (
+                delta <= _cyclicBufferPos
+                    ? _cyclicBufferPos - delta
+                    : _cyclicBufferPos - delta + _cyclicBufferSize
+            ) << 1;
 
             var pby1 = BufferOffset + curMatch;
             var len = Math.Min(len0, len1);
@@ -364,11 +366,11 @@ internal class BinTree : InWindow, IMatchFinder
 
                 var delta = Pos - curMatch;
                 var cyclicPos =
-                    (
-                        delta <= _cyclicBufferPos
-                            ? _cyclicBufferPos - delta
-                            : _cyclicBufferPos - delta + _cyclicBufferSize
-                    ) << 1;
+                (
+                    delta <= _cyclicBufferPos
+                        ? _cyclicBufferPos - delta
+                        : _cyclicBufferPos - delta + _cyclicBufferSize
+                ) << 1;
 
                 var pby1 = BufferOffset + curMatch;
                 var len = Math.Min(len0, len1);

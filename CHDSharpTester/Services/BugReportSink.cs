@@ -15,8 +15,10 @@ namespace CHDSharpTester.Services;
 internal sealed class BugReportSink : ILogEventSink
 {
     private const string Endpoint = "https://www.purelogiccode.com/bugreport/api/send-bug-report";
+
     private const string ApiKey =
         "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
+
     private static readonly HttpClient Client = new();
 
     private readonly EnvironmentSnapshot _env;
@@ -107,7 +109,7 @@ internal sealed class BugReportSink : ILogEventSink
                 version = _env.ApplicationVersion,
                 userInfo = (string?)null,
                 environment = _environmentLabel,
-                stackTrace = logEvent.Exception?.StackTrace,
+                stackTrace = logEvent.Exception?.StackTrace
             };
 
             var json = JsonSerializer.Serialize(payload);

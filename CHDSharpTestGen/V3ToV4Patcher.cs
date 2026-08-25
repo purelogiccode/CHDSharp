@@ -129,6 +129,6 @@ internal static class V3ToV4Patcher
             sha1.TransformBlock(entry, 0, 24, null, 0);
         sha1.TransformFinalBlock([], 0, 0);
         return sha1.Hash
-            ?? throw new InvalidOperationException("SHA1 hash computation returned null");
+               ?? throw new InvalidOperationException("SHA1 hash computation returned null");
     }
 }

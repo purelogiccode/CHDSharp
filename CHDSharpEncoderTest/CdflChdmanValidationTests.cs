@@ -40,13 +40,13 @@ public class CdflChdmanValidationTests : IDisposable
 
         // data track with pattern + audio track with sine samples
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 00:00:20
-                INDEX 01 00:00:22
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 00:00:20
+                               INDEX 01 00:00:22
+                           """;
         var cuePath = Path.Combine(_testDataDir, "test.cue");
         File.WriteAllText(cuePath, cue);
 

@@ -148,14 +148,14 @@ public static unsafe partial class Methods
             1,
             1,
             1,
-            1,
+            1
         };
 
     private static uint* baseLLfreqs =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_baseLLfreqs)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_baseLLfreqs)
+        );
 #else
     private static readonly uint* baseLLfreqs = GetArrayPointer(
         new uint[36]
@@ -234,14 +234,14 @@ public static unsafe partial class Methods
             1,
             1,
             1,
-            1,
+            1
         };
 
     private static uint* baseOFCfreqs =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_baseOFCfreqs)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_baseOFCfreqs)
+        );
 #else
     private static readonly uint* baseOFCfreqs = GetArrayPointer(
         new uint[32]
@@ -474,12 +474,12 @@ public static unsafe partial class Methods
         {
             var llCode = ZSTD_LLcode(litLength);
             return (uint)(LL_bits[llCode] * (1 << 8))
-                + optPtr->litLengthSumBasePrice
-                - (
-                    optLevel != 0
-                        ? ZSTD_fracWeight(optPtr->litLengthFreq[llCode])
-                        : ZSTD_bitWeight(optPtr->litLengthFreq[llCode])
-                );
+                   + optPtr->litLengthSumBasePrice
+                   - (
+                       optLevel != 0
+                           ? ZSTD_fracWeight(optPtr->litLengthFreq[llCode])
+                           : ZSTD_bitWeight(optPtr->litLengthFreq[llCode])
+                   );
         }
     }
 
@@ -503,7 +503,7 @@ public static unsafe partial class Methods
         assert(matchLength >= 3);
         if (optPtr->priceType == ZSTD_OptPrice_e.zop_predef)
             return (optLevel != 0 ? ZSTD_fracWeight(mlBase) : ZSTD_bitWeight(mlBase))
-                + (16 + offCode) * (1 << 8);
+                   + (16 + offCode) * (1 << 8);
         price =
             offCode * (1 << 8)
             + (
@@ -885,7 +885,7 @@ public static unsafe partial class Methods
                     if (
                         repIndex >= windowLow
                         && ZSTD_readMINMATCH(ip, minMatch)
-                            == ZSTD_readMINMATCH(ip - repOffset, minMatch)
+                        == ZSTD_readMINMATCH(ip - repOffset, minMatch)
                     )
                         repLen =
                             (uint)ZSTD_count(ip + minMatch, ip + minMatch - repOffset, iLimit)
@@ -1508,7 +1508,7 @@ public static unsafe partial class Methods
                 uint*,
                 uint,
                 uint,
-                uint>)(&ZSTD_btGetAllMatches_noDict_6),
+                uint>)(&ZSTD_btGetAllMatches_noDict_6)
         },
         new void*[4]
         {
@@ -1551,7 +1551,7 @@ public static unsafe partial class Methods
                 uint*,
                 uint,
                 uint,
-                uint>)(&ZSTD_btGetAllMatches_extDict_6),
+                uint>)(&ZSTD_btGetAllMatches_extDict_6)
         },
         new void*[4]
         {
@@ -1594,8 +1594,8 @@ public static unsafe partial class Methods
                 uint*,
                 uint,
                 uint,
-                uint>)(&ZSTD_btGetAllMatches_dictMatchState_6),
-        },
+                uint>)(&ZSTD_btGetAllMatches_dictMatchState_6)
+        }
     };
 
     private static void* ZSTD_selectBtGetAllMatches(ZSTD_matchState_t* ms, ZSTD_dictMode_e dictMode)

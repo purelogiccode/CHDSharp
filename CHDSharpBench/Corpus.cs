@@ -80,7 +80,7 @@ public static class Corpus
         [
             .. Directory
                 .EnumerateFiles(Dir, "*.chd", SearchOption.TopDirectoryOnly)
-                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase),
+                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
         ];
     }
 

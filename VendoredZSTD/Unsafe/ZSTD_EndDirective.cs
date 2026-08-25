@@ -17,5 +17,5 @@ public enum ZSTD_EndDirective
      * After that point, any additional data starts a new frame.
      * note : each frame is independent (does not reference any content from previous frame).
     : note : multithreaded compression will block to flush as much output as possible. */
-    ZSTD_e_end = 2,
+    ZSTD_e_end = 2
 }

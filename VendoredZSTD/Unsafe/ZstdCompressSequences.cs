@@ -264,14 +264,14 @@ public static unsafe partial class Methods
             5,
             4,
             2,
-            1,
+            1
         };
 
     private static uint* kInverseProbabilityLog256 =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_kInverseProbabilityLog256)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_kInverseProbabilityLog256)
+        );
 #else
     private static readonly uint* kInverseProbabilityLog256 = GetArrayPointer(
         new uint[256]
@@ -766,11 +766,11 @@ public static unsafe partial class Methods
         switch (type)
         {
             case symbolEncodingType_e.set_rle:
-                {
-                    var err_code = FSE_buildCTable_rle(nextCTable, (byte)max);
-                    if (ERR_isError(err_code))
-                        return err_code;
-                }
+            {
+                var err_code = FSE_buildCTable_rle(nextCTable, (byte)max);
+                if (ERR_isError(err_code))
+                    return err_code;
+            }
 
                 if (dstCapacity == 0)
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
@@ -781,18 +781,18 @@ public static unsafe partial class Methods
                 memcpy(nextCTable, prevCTable, (uint)prevCTableSize);
                 return 0;
             case symbolEncodingType_e.set_basic:
-                {
-                    var err_code = FSE_buildCTable_wksp(
-                        nextCTable,
-                        defaultNorm,
-                        defaultMax,
-                        defaultNormLog,
-                        entropyWorkspace,
-                        entropyWorkspaceSize
-                    );
-                    if (ERR_isError(err_code))
-                        return err_code;
-                }
+            {
+                var err_code = FSE_buildCTable_wksp(
+                    nextCTable,
+                    defaultNorm,
+                    defaultMax,
+                    defaultNormLog,
+                    entropyWorkspace,
+                    entropyWorkspaceSize
+                );
+                if (ERR_isError(err_code))
+                    return err_code;
+            }
 
                 return 0;
             case symbolEncodingType_e.set_compressed:
@@ -857,9 +857,9 @@ public static unsafe partial class Methods
             default:
                 assert(0 != 0);
 
-                {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-                }
+            {
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            }
         }
     }
 

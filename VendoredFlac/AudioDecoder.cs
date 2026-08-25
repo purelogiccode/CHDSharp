@@ -284,7 +284,7 @@ internal class AudioDecoder : IAudioSource
             for (var ch = 0; ch < Pcm.ChannelCount; ch++)
                 fixed (
                     int* res = &buff.Samples[offset, ch],
-                        src = &Samples[_samplesBufferOffset + ch * FlakeConstants.Maxblocksize]
+                    src = &Samples[_samplesBufferOffset + ch * FlakeConstants.Maxblocksize]
                 )
                 {
                     var psrc = src;
@@ -502,7 +502,7 @@ internal class AudioDecoder : IAudioSource
     {
         fixed (
             int* r = _residualBuffer,
-                s = Samples
+            s = Samples
         )
         {
             for (var ch = 0; ch < Pcm.ChannelCount; ch++)
@@ -776,7 +776,7 @@ internal class AudioDecoder : IAudioSource
         var flacStreamSyncString = "fLaC"u8.ToArray();
         var id3V2Tag = "ID3"u8.ToArray();
 
-        for (i = id = 0; i < 4; )
+        for (i = id = 0; i < 4;)
         {
             if (_io.Read(_framesBuffer, 0, 1) == 0)
                 throw new InvalidDataException("FLAC stream not found");

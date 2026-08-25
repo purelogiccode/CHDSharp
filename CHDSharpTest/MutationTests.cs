@@ -34,7 +34,7 @@ public class MutationTests
                 "v5_zlib.chd",
                 "v5_cd_default.chd",
                 "v5_none.chd",
-                "v5_child.chd",
+                "v5_child.chd"
             }
         )
         {
@@ -124,10 +124,10 @@ public class MutationTests
                     Assert.True(
                         hunkErr
                             is ChdError.Chderrnone
-                                or ChdError.Chderrdecompressionerror
-                                or ChdError.Chderrinvaliddata
-                                or ChdError.Chderrrequiresparent
-                                or ChdError.Chderrinvalidparent,
+                            or ChdError.Chderrdecompressionerror
+                            or ChdError.Chderrinvaliddata
+                            or ChdError.Chderrrequiresparent
+                            or ChdError.Chderrinvalidparent,
                         $"Unexpected hunk error {hunkErr} on seed {seed} at hunk {h}"
                     );
                 }
@@ -163,9 +163,9 @@ public class MutationTests
                                     if (
                                         e
                                         is not (
-                                            ChdError.Chderrnone
-                                            or ChdError.Chderrdecompressionerror
-                                            or ChdError.Chderrinvaliddata
+                                        ChdError.Chderrnone
+                                        or ChdError.Chderrdecompressionerror
+                                        or ChdError.Chderrinvaliddata
                                         )
                                     )
                                         return e;
@@ -199,12 +199,12 @@ public class MutationTests
         }
         catch (Exception ex)
             when (ex
-                    is ArgumentException
-                        or InvalidDataException
-                        or IOException
-                        or IndexOutOfRangeException
-                        or EndOfStreamException
-            )
+                      is ArgumentException
+                      or InvalidDataException
+                      or IOException
+                      or IndexOutOfRangeException
+                      or EndOfStreamException
+                 )
         {
             Assert.Fail(
                 $"Unhandled {ex.GetType().Name} on seed {seed} (mutation {mutation}): {ex.Message}"

@@ -46,7 +46,7 @@ public sealed class ParentMap : IDisposable
             if (parent.HunkBytes != hunkBytes || parent.UnitBytes != unitBytes)
                 throw new ArgumentException(
                     $"Parent CHD hunk/unit size mismatch: parent is {parent.HunkBytes}/{parent.UnitBytes} bytes, "
-                        + $"requested {hunkBytes}/{unitBytes} bytes. The parent's hunk and unit sizes must match the child's."
+                    + $"requested {hunkBytes}/{unitBytes} bytes. The parent's hunk and unit sizes must match the child's."
                 );
 
             _parent = parent;

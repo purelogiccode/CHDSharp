@@ -41,7 +41,7 @@ public sealed class CliIntegrationTests
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true,
+            CreateNoWindow = true
         };
 
         using var proc = Process.Start(psi);

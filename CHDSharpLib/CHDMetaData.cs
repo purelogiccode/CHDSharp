@@ -183,7 +183,7 @@ internal static class ChdMetaData
                     Tag = tag,
                     Data = metaData,
                     Hash = hash,
-                    Flags = (byte)metaFlags,
+                    Flags = (byte)metaFlags
                 }
             );
 

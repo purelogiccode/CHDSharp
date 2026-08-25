@@ -413,7 +413,7 @@ public static class ChdEncoder
                     interlaced,
                     channels,
                     rate
-                ),
+                )
             };
             if (options?.Metadata is { Count: > 0 } userMetadata)
                 metadataEntries.AddRange(userMetadata);
@@ -1241,7 +1241,7 @@ public static class ChdEncoder
                     {
                         Tag = tag,
                         Flags = m.Flags,
-                        Payload = m.Data,
+                        Payload = m.Data
                     }
                 );
             }
@@ -1314,7 +1314,7 @@ public static class ChdEncoder
                 PgDataSize = src.PreGapDataSize,
                 PadFrames = src.PadFrames,
                 LogicalFrameStart = (long)src.StartFrame,
-                PaddedFrames = src.Frames + src.ExtraFrames,
+                PaddedFrames = src.Frames + src.ExtraFrames
             };
             toc.Tracks.Add(track);
         }
@@ -1511,7 +1511,7 @@ public static class ChdEncoder
                 parent.Dispose();
                 throw new ArgumentException(
                     $"Parent CHD hunk/unit size mismatch: parent is {parent.HunkBytes}/{parent.UnitBytes} bytes, "
-                        + $"requested {hunkBytes}/{unitBytes} bytes."
+                    + $"requested {hunkBytes}/{unitBytes} bytes."
                 );
             }
         }
@@ -1802,7 +1802,7 @@ public static class ChdEncoder
                 Compression = MapEntry.CompressionSelf,
                 CompLength = 0,
                 Offset = sourceHunk,
-                Crc16 = 0,
+                Crc16 = 0
             };
             data = null;
         }
@@ -1818,7 +1818,7 @@ public static class ChdEncoder
                 Compression = MapEntry.CompressionParent,
                 CompLength = 0,
                 Offset = parentUnit,
-                Crc16 = 0,
+                Crc16 = 0
             };
             data = null;
         }
@@ -1829,7 +1829,7 @@ public static class ChdEncoder
                 Compression = result.Compression,
                 CompLength = result.CompLength,
                 Offset = (ulong)currentOffset,
-                Crc16 = result.Crc16,
+                Crc16 = result.Crc16
             };
             selfMap[sha1Hex] = result.HunkIndex;
         }

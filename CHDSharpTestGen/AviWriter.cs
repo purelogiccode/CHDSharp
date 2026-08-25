@@ -243,7 +243,7 @@ internal static class AviWriter
     {
         PatchSize(
             w.BaseStream as MemoryStream
-                ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
+            ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
             sizePos
         );
     }
@@ -256,7 +256,7 @@ internal static class AviWriter
         body(w);
         PatchSize(
             w.BaseStream as MemoryStream
-                ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
+            ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
             sizePos
         );
         if ((w.BaseStream.Position & 1) == 1)

@@ -87,7 +87,7 @@ public static unsafe partial class Methods
     {
         var idx = ZSTD_DDictHashSet_getIndex(hashSet, dictID);
         var idxRangeMask = hashSet->ddictPtrTableSize - 1;
-        for (; ; )
+        for (;;)
         {
             nuint currDictID = ZSTD_getDictID_fromDDict(hashSet->ddictPtrTable[idx]);
             if (currDictID == dictID || currDictID == 0)
@@ -172,9 +172,9 @@ public static unsafe partial class Methods
         if (dctx == null)
             return 0;
         return (nuint)sizeof(ZSTD_DCtx_s)
-            + ZSTD_sizeof_DDict(dctx->ddictLocal)
-            + dctx->inBuffSize
-            + dctx->outBuffSize;
+               + ZSTD_sizeof_DDict(dctx->ddictLocal)
+               + dctx->inBuffSize
+               + dctx->outBuffSize;
     }
 
     public static nuint ZSTD_estimateDCtxSize()
@@ -379,10 +379,10 @@ public static unsafe partial class Methods
             var singleSegment = (uint)((fhd >> 5) & 1);
             var fcsId = (uint)(fhd >> 6);
             return minInputSize
-                + (nuint)(singleSegment == 0 ? 1 : 0)
-                + ZSTD_did_fieldSize[dictID]
-                + ZSTD_fcs_fieldSize[fcsId]
-                + (nuint)(singleSegment != 0 && fcsId == 0 ? 1 : 0);
+                   + (nuint)(singleSegment == 0 ? 1 : 0)
+                   + ZSTD_did_fieldSize[dictID]
+                   + ZSTD_fcs_fieldSize[fcsId]
+                   + (nuint)(singleSegment != 0 && fcsId == 0 ? 1 : 0);
         }
     }
 
@@ -970,7 +970,9 @@ public static unsafe partial class Methods
         ulong uncompressedSize,
         ulong compressedSize,
         uint streaming
-    ) { }
+    )
+    {
+    }
 
     /*! ZSTD_decompressFrame() :
      * @dctx must be properly initialized
@@ -1403,15 +1405,15 @@ public static unsafe partial class Methods
                 assert(src != null);
                 memcpy(dctx->headerBuffer + (dctx->headerSize - srcSize), src, (uint)srcSize);
 
-                {
-                    var err_code = ZSTD_decodeFrameHeader(
-                        dctx,
-                        dctx->headerBuffer,
-                        dctx->headerSize
-                    );
-                    if (ERR_isError(err_code))
-                        return err_code;
-                }
+            {
+                var err_code = ZSTD_decodeFrameHeader(
+                    dctx,
+                    dctx->headerBuffer,
+                    dctx->headerSize
+                );
+                if (ERR_isError(err_code))
+                    return err_code;
+            }
 
                 dctx->expected = ZSTD_blockHeaderSize;
                 dctx->stage = ZSTD_dStage.ZSTDds_decodeBlockHeader;
@@ -1481,11 +1483,11 @@ public static unsafe partial class Methods
                         assert(srcSize <= dctx->expected);
                         rSize = ZSTD_copyRawBlock(dst, dstCapacity, src, srcSize);
 
-                        {
-                            var err_code = rSize;
-                            if (ERR_isError(err_code))
-                                return err_code;
-                        }
+                    {
+                        var err_code = rSize;
+                        if (ERR_isError(err_code))
+                            return err_code;
+                    }
 
                         assert(rSize == srcSize);
                         dctx->expected -= rSize;
@@ -1553,22 +1555,22 @@ public static unsafe partial class Methods
             case ZSTD_dStage.ZSTDds_checkChecksum:
                 assert(srcSize == 4);
 
+            {
+                if (dctx->validateChecksum != 0)
                 {
-                    if (dctx->validateChecksum != 0)
-                    {
-                        var h32 = (uint)ZSTD_XXH64_digest(&dctx->xxhState);
-                        var check32 = MEM_readLE32(src);
-                        if (check32 != h32)
-                            return unchecked(
-                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_checksum_wrong)
-                            );
-                    }
-
-                    ZSTD_DCtx_trace_end(dctx, dctx->decodedSize, dctx->processedCSize, 1);
-                    dctx->expected = 0;
-                    dctx->stage = ZSTD_dStage.ZSTDds_getFrameHeaderSize;
-                    return 0;
+                    var h32 = (uint)ZSTD_XXH64_digest(&dctx->xxhState);
+                    var check32 = MEM_readLE32(src);
+                    if (check32 != h32)
+                        return unchecked(
+                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_checksum_wrong)
+                        );
                 }
+
+                ZSTD_DCtx_trace_end(dctx, dctx->decodedSize, dctx->processedCSize, 1);
+                dctx->expected = 0;
+                dctx->stage = ZSTD_dStage.ZSTDds_getFrameHeaderSize;
+                return 0;
+            }
 
             case ZSTD_dStage.ZSTDds_decodeSkippableHeader:
                 assert(src != null);
@@ -1584,9 +1586,9 @@ public static unsafe partial class Methods
             default:
                 assert(0 != 0);
 
-                {
-                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-                }
+            {
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+            }
         }
     }
 
@@ -1892,7 +1894,7 @@ public static unsafe partial class Methods
             dictID = 0,
             checksumFlag = 0,
             _reserved1 = 0,
-            _reserved2 = 0,
+            _reserved2 = 0
         };
         var hError = ZSTD_getFrameHeader(&zfp, src, srcSize);
         if (ERR_isError(hError))
@@ -2254,7 +2256,7 @@ public static unsafe partial class Methods
         {
             error = 0,
             lowerBound = 0,
-            upperBound = 0,
+            upperBound = 0
         };
         switch (dParam)
         {
@@ -2355,64 +2357,64 @@ public static unsafe partial class Methods
                 if (value == 0)
                     value = 27;
 
-                {
-                    if (ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_windowLogMax, value) == 0)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_windowLogMax, value) == 0)
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 dctx->maxWindowSize = (nuint)1 << value;
                 return 0;
             case ZSTD_dParameter.ZSTD_d_experimentalParam1:
-                {
-                    if (
-                        ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam1, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam1, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 dctx->format = (ZSTD_format_e)value;
                 return 0;
             case ZSTD_dParameter.ZSTD_d_experimentalParam2:
-                {
-                    if (
-                        ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam2, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam2, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 dctx->outBufferMode = (ZSTD_bufferMode_e)value;
                 return 0;
             case ZSTD_dParameter.ZSTD_d_experimentalParam3:
-                {
-                    if (
-                        ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam3, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam3, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 dctx->forceIgnoreChecksum = (ZSTD_forceIgnoreChecksum_e)value;
                 return 0;
             case ZSTD_dParameter.ZSTD_d_experimentalParam4:
-                {
-                    if (
-                        ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam4, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam4, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 if (dctx->staticSize != 0)
                     return unchecked(
@@ -2422,15 +2424,15 @@ public static unsafe partial class Methods
                 dctx->refMultipleDDicts = (ZSTD_refMultipleDDicts_e)value;
                 return 0;
             case ZSTD_dParameter.ZSTD_d_experimentalParam5:
-                {
-                    if (
-                        ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam5, value)
-                        == 0
-                    )
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
-                        );
-                }
+            {
+                if (
+                    ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_experimentalParam5, value)
+                    == 0
+                )
+                    return unchecked(
+                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_parameter_outOfBound)
+                    );
+            }
 
                 dctx->disableHufAsm = value != 0 ? 1 : 0;
                 return 0;
@@ -2678,68 +2680,68 @@ public static unsafe partial class Methods
                     zds->expectedOutBuffer = *output;
                     goto case ZSTD_dStreamStage.zdss_loadHeader;
                 case ZSTD_dStreamStage.zdss_loadHeader:
+                {
+                    var hSize = ZSTD_getFrameHeader_advanced(
+                        &zds->fParams,
+                        zds->headerBuffer,
+                        zds->lhSize,
+                        zds->format
+                    );
+                    if (zds->refMultipleDDicts != default && zds->ddictSet != null)
+                        ZSTD_DCtx_selectFrameDDict(zds);
+
+                    if (ERR_isError(hSize))
+                        return hSize;
+
+                    if (hSize != 0)
                     {
-                        var hSize = ZSTD_getFrameHeader_advanced(
-                            &zds->fParams,
-                            zds->headerBuffer,
-                            zds->lhSize,
-                            zds->format
-                        );
-                        if (zds->refMultipleDDicts != default && zds->ddictSet != null)
-                            ZSTD_DCtx_selectFrameDDict(zds);
-
-                        if (ERR_isError(hSize))
-                            return hSize;
-
-                        if (hSize != 0)
+                        /* if hSize!=0, hSize > zds->lhSize */
+                        var toLoad = hSize - zds->lhSize;
+                        var remainingInput = (nuint)(iend - ip);
+                        assert(iend >= ip);
+                        if (toLoad > remainingInput)
                         {
-                            /* if hSize!=0, hSize > zds->lhSize */
-                            var toLoad = hSize - zds->lhSize;
-                            var remainingInput = (nuint)(iend - ip);
-                            assert(iend >= ip);
-                            if (toLoad > remainingInput)
+                            if (remainingInput > 0)
                             {
-                                if (remainingInput > 0)
-                                {
-                                    memcpy(
-                                        zds->headerBuffer + zds->lhSize,
-                                        ip,
-                                        (uint)remainingInput
-                                    );
-                                    zds->lhSize += remainingInput;
-                                }
-
-                                input->pos = input->size;
-                                {
-                                    var err_code = ZSTD_getFrameHeader_advanced(
-                                        &zds->fParams,
-                                        zds->headerBuffer,
-                                        zds->lhSize,
-                                        zds->format
-                                    );
-                                    if (ERR_isError(err_code))
-                                        return err_code;
-                                }
-
-                                return (
-                                        (nuint)(zds->format == ZSTD_format_e.ZSTD_f_zstd1 ? 6 : 2)
-                                        > hSize
-                                            ? (nuint)(
-                                                zds->format == ZSTD_format_e.ZSTD_f_zstd1 ? 6 : 2
-                                            )
-                                            : hSize
-                                    )
-                                    - zds->lhSize
-                                    + ZSTD_blockHeaderSize;
+                                memcpy(
+                                    zds->headerBuffer + zds->lhSize,
+                                    ip,
+                                    (uint)remainingInput
+                                );
+                                zds->lhSize += remainingInput;
                             }
 
-                            assert(ip != null);
-                            memcpy(zds->headerBuffer + zds->lhSize, ip, (uint)toLoad);
-                            zds->lhSize = hSize;
-                            ip += toLoad;
-                            break;
+                            input->pos = input->size;
+                            {
+                                var err_code = ZSTD_getFrameHeader_advanced(
+                                    &zds->fParams,
+                                    zds->headerBuffer,
+                                    zds->lhSize,
+                                    zds->format
+                                );
+                                if (ERR_isError(err_code))
+                                    return err_code;
+                            }
+
+                            return (
+                                       (nuint)(zds->format == ZSTD_format_e.ZSTD_f_zstd1 ? 6 : 2)
+                                       > hSize
+                                           ? (nuint)(
+                                               zds->format == ZSTD_format_e.ZSTD_f_zstd1 ? 6 : 2
+                                           )
+                                           : hSize
+                                   )
+                                   - zds->lhSize
+                                   + ZSTD_blockHeaderSize;
                         }
+
+                        assert(ip != null);
+                        memcpy(zds->headerBuffer + zds->lhSize, ip, (uint)toLoad);
+                        zds->lhSize = hSize;
+                        ip += toLoad;
+                        break;
                     }
+                }
 
                     if (
                         zds->fParams.frameContentSize != unchecked(0UL - 1)
@@ -2779,11 +2781,11 @@ public static unsafe partial class Methods
                     )
                         return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
 
-                    {
-                        var err_code = ZSTD_decompressBegin_usingDDict(zds, ZSTD_getDDict(zds));
-                        if (ERR_isError(err_code))
-                            return err_code;
-                    }
+                {
+                    var err_code = ZSTD_decompressBegin_usingDDict(zds, ZSTD_getDDict(zds));
+                    if (ERR_isError(err_code))
+                        return err_code;
+                }
 
                     if ((MEM_readLE32(zds->headerBuffer) & 0xFFFFFFF0) == 0x184D2A50)
                     {
@@ -2813,96 +2815,96 @@ public static unsafe partial class Methods
                             (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge)
                         );
 
+                {
+                    /* frame checksum */
+                    nuint neededInBuffSize =
+                        zds->fParams.blockSizeMax > 4 ? zds->fParams.blockSizeMax : 4;
+                    var neededOutBuffSize =
+                        zds->outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered
+                            ? ZSTD_decodingBufferSize_min(
+                                zds->fParams.windowSize,
+                                zds->fParams.frameContentSize
+                            )
+                            : 0;
+                    ZSTD_DCtx_updateOversizedDuration(zds, neededInBuffSize, neededOutBuffSize);
                     {
-                        /* frame checksum */
-                        nuint neededInBuffSize =
-                            zds->fParams.blockSizeMax > 4 ? zds->fParams.blockSizeMax : 4;
-                        var neededOutBuffSize =
-                            zds->outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered
-                                ? ZSTD_decodingBufferSize_min(
-                                    zds->fParams.windowSize,
-                                    zds->fParams.frameContentSize
-                                )
+                        var tooSmall =
+                            zds->inBuffSize < neededInBuffSize
+                            || zds->outBuffSize < neededOutBuffSize
+                                ? 1
                                 : 0;
-                        ZSTD_DCtx_updateOversizedDuration(zds, neededInBuffSize, neededOutBuffSize);
+                        var tooLarge = ZSTD_DCtx_isOversizedTooLong(zds);
+                        if (tooSmall != 0 || tooLarge != 0)
                         {
-                            var tooSmall =
-                                zds->inBuffSize < neededInBuffSize
-                                || zds->outBuffSize < neededOutBuffSize
-                                    ? 1
-                                    : 0;
-                            var tooLarge = ZSTD_DCtx_isOversizedTooLong(zds);
-                            if (tooSmall != 0 || tooLarge != 0)
+                            var bufferSize = neededInBuffSize + neededOutBuffSize;
+                            if (zds->staticSize != 0)
                             {
-                                var bufferSize = neededInBuffSize + neededOutBuffSize;
-                                if (zds->staticSize != 0)
-                                {
-                                    assert(zds->staticSize >= (nuint)sizeof(ZSTD_DCtx_s));
-                                    if (bufferSize > zds->staticSize - (nuint)sizeof(ZSTD_DCtx_s))
-                                        return unchecked(
-                                            (nuint)(
-                                                -(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation
-                                            )
-                                        );
-                                }
-                                else
-                                {
-                                    ZSTD_customFree(zds->inBuff, zds->customMem);
-                                    zds->inBuffSize = 0;
-                                    zds->outBuffSize = 0;
-                                    zds->inBuff = (sbyte*)ZSTD_customMalloc(
-                                        bufferSize,
-                                        zds->customMem
+                                assert(zds->staticSize >= (nuint)sizeof(ZSTD_DCtx_s));
+                                if (bufferSize > zds->staticSize - (nuint)sizeof(ZSTD_DCtx_s))
+                                    return unchecked(
+                                        (nuint)(
+                                            -(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation
+                                        )
                                     );
-                                    if (zds->inBuff == null)
-                                        return unchecked(
-                                            (nuint)(
-                                                -(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation
-                                            )
-                                        );
-                                }
-
-                                zds->inBuffSize = neededInBuffSize;
-                                zds->outBuff = zds->inBuff + zds->inBuffSize;
-                                zds->outBuffSize = neededOutBuffSize;
                             }
+                            else
+                            {
+                                ZSTD_customFree(zds->inBuff, zds->customMem);
+                                zds->inBuffSize = 0;
+                                zds->outBuffSize = 0;
+                                zds->inBuff = (sbyte*)ZSTD_customMalloc(
+                                    bufferSize,
+                                    zds->customMem
+                                );
+                                if (zds->inBuff == null)
+                                    return unchecked(
+                                        (nuint)(
+                                            -(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation
+                                        )
+                                    );
+                            }
+
+                            zds->inBuffSize = neededInBuffSize;
+                            zds->outBuff = zds->inBuff + zds->inBuffSize;
+                            zds->outBuffSize = neededOutBuffSize;
                         }
                     }
+                }
 
                     zds->streamStage = ZSTD_dStreamStage.zdss_read;
                     goto case ZSTD_dStreamStage.zdss_read;
                 case ZSTD_dStreamStage.zdss_read:
+                {
+                    var neededInSize = ZSTD_nextSrcSizeToDecompressWithInputSize(
+                        zds,
+                        (nuint)(iend - ip)
+                    );
+                    if (neededInSize == 0)
                     {
-                        var neededInSize = ZSTD_nextSrcSizeToDecompressWithInputSize(
-                            zds,
-                            (nuint)(iend - ip)
-                        );
-                        if (neededInSize == 0)
-                        {
-                            zds->streamStage = ZSTD_dStreamStage.zdss_init;
-                            someMoreWork = 0;
-                            break;
-                        }
-
-                        if ((nuint)(iend - ip) >= neededInSize)
-                        {
-                            {
-                                var err_code = ZSTD_decompressContinueStream(
-                                    zds,
-                                    &op,
-                                    oend,
-                                    ip,
-                                    neededInSize
-                                );
-                                if (ERR_isError(err_code))
-                                    return err_code;
-                            }
-
-                            assert(ip != null);
-                            ip += neededInSize;
-                            break;
-                        }
+                        zds->streamStage = ZSTD_dStreamStage.zdss_init;
+                        someMoreWork = 0;
+                        break;
                     }
+
+                    if ((nuint)(iend - ip) >= neededInSize)
+                    {
+                        {
+                            var err_code = ZSTD_decompressContinueStream(
+                                zds,
+                                &op,
+                                oend,
+                                ip,
+                                neededInSize
+                            );
+                            if (ERR_isError(err_code))
+                                return err_code;
+                        }
+
+                        assert(ip != null);
+                        ip += neededInSize;
+                        break;
+                    }
+                }
 
                     if (ip == iend)
                     {
@@ -2920,7 +2922,7 @@ public static unsafe partial class Methods
                     nuint loadedSize;
                     assert(
                         neededInSize
-                            == ZSTD_nextSrcSizeToDecompressWithInputSize(zds, (nuint)(iend - ip))
+                        == ZSTD_nextSrcSizeToDecompressWithInputSize(zds, (nuint)(iend - ip))
                     );
                     if (isSkipFrame != 0)
                     {
@@ -2970,37 +2972,37 @@ public static unsafe partial class Methods
                 }
 
                 case ZSTD_dStreamStage.zdss_flush:
+                {
+                    var toFlushSize = zds->outEnd - zds->outStart;
+                    var flushedSize = ZSTD_limitCopy(
+                        op,
+                        (nuint)(oend - op),
+                        zds->outBuff + zds->outStart,
+                        toFlushSize
+                    );
+                    op = op != null ? op + flushedSize : op;
+                    zds->outStart += flushedSize;
+                    if (flushedSize == toFlushSize)
                     {
-                        var toFlushSize = zds->outEnd - zds->outStart;
-                        var flushedSize = ZSTD_limitCopy(
-                            op,
-                            (nuint)(oend - op),
-                            zds->outBuff + zds->outStart,
-                            toFlushSize
-                        );
-                        op = op != null ? op + flushedSize : op;
-                        zds->outStart += flushedSize;
-                        if (flushedSize == toFlushSize)
-                        {
-                            zds->streamStage = ZSTD_dStreamStage.zdss_read;
-                            if (
-                                zds->outBuffSize < zds->fParams.frameContentSize
-                                && zds->outStart + zds->fParams.blockSizeMax > zds->outBuffSize
-                            )
-                                zds->outStart = zds->outEnd = 0;
+                        zds->streamStage = ZSTD_dStreamStage.zdss_read;
+                        if (
+                            zds->outBuffSize < zds->fParams.frameContentSize
+                            && zds->outStart + zds->fParams.blockSizeMax > zds->outBuffSize
+                        )
+                            zds->outStart = zds->outEnd = 0;
 
-                            break;
-                        }
+                        break;
                     }
+                }
 
                     someMoreWork = 0;
                     break;
                 default:
                     assert(0 != 0);
 
-                    {
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
-                    }
+                {
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                }
             }
 
         input->pos = (nuint)(ip - (sbyte*)input->src);

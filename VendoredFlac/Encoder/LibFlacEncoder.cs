@@ -15,10 +15,12 @@ internal sealed class LibFlacEncoder
     private const uint MaxLpcOrd = 12;
     private const uint MaxPartOrder = 6;
     private readonly ulong[] _absSum;
+
     private readonly double[] _autoc,
         _autocRoot,
         _lpCoeff,
         _lpcError;
+
     private readonly int _blockSize;
     private readonly LibFlacBitWriter _bw;
     private readonly int _channels;
@@ -26,11 +28,14 @@ internal sealed class LibFlacEncoder
     // qlp_coeff_precision is 0 (auto) at libFLAC level 8; the encoder derives the real
     // precision from bits-per-sample and blocksize (see stream_encoder.c around line 764).
     private readonly uint _qlpCoeffPrec;
+
     private readonly PartitionedRiceContents[] _rice0,
         _rice1,
         _riceM0,
         _rice1B;
+
     private readonly int _sampleRate;
+
     private readonly Subframe[] _sfW0,
         _sfW1,
         _sfMs0,
@@ -40,6 +45,7 @@ internal sealed class LibFlacEncoder
         _signal1,
         _mid,
         _side;
+
     private readonly float[] _window,
         _windowed;
 
@@ -635,7 +641,7 @@ internal sealed class LibFlacEncoder
             sf.EntropyCodingMethod
         );
         return (uint)(8 + wasted + 4 + 5 + order * (_qlpCoeffPrec + (uint)bps))
-            + sf.EntropyCodingMethod.Bits;
+               + sf.EntropyCodingMethod.Bits;
     }
 
     private void FindBestPartitionOrder(
@@ -886,7 +892,7 @@ internal sealed class LibFlacEncoder
             8192 => 13,
             16384 => 14,
             32768 => 15,
-            _ => _blockSize <= 256 ? 6 : 7,
+            _ => _blockSize <= 256 ? 6 : 7
         };
         _bw.WriteRawUInt32((uint)bsCode, 4);
         var rateCode = SampleRateCode(_sampleRate, out var rateExtraBits, out var rateExtraValue);
@@ -898,7 +904,7 @@ internal sealed class LibFlacEncoder
                 0 => 1u,
                 1 => 8u,
                 2 => 9u,
-                _ => 10u,
+                _ => 10u
             },
             4
         );
@@ -996,7 +1002,7 @@ internal enum SubframeType
     Constant,
     Fixed,
     Lpc,
-    Verbatim,
+    Verbatim
 }
 
 internal sealed class Subframe
@@ -1007,6 +1013,7 @@ internal sealed class Subframe
     public readonly int[] Samples = new int[1 << 14];
     public readonly int[] Warmup = new int[32];
     public SubframeType Type;
+
     public int WastedBits,
         ConstantValue,
         Order,
@@ -1017,6 +1024,7 @@ internal sealed class Subframe
 internal sealed class EntropyCodingMethod
 {
     public readonly uint[] RiceParams = new uint[1 << 15];
+
     public uint Type,
         PartitionOrder,
         Bits;

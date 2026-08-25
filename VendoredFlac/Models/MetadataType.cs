@@ -43,5 +43,5 @@ internal enum MetadataType
     /// <summary>
     ///     marker to denote beginning of undefined type range; this number will increase as new metadata types are added
     /// </summary>
-    Undefined = 7,
+    Undefined = 7
 }

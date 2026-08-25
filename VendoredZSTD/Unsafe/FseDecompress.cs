@@ -292,7 +292,7 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
         assert(
             (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
-                <= wkspSize
+            <= wkspSize
         );
         workSpace =
             (byte*)workSpace

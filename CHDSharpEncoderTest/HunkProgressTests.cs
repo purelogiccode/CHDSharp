@@ -77,7 +77,8 @@ public class HunkProgressTests : IDisposable
             reports,
             r =>
                 r
-                    is {
+                    is
+                    {
                         CodecName: "self",
                         CompressionType: MapEntry.CompressionSelf,
                         StoredBytes: 0,

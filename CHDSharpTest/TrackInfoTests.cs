@@ -286,7 +286,7 @@ public sealed class TrackInfoTests
             "v5_cd_cdzl.chd",
             "v5_cd_cdlz.chd",
             "v5_cd_cdfl.chd",
-            "v5_cd_cdzs.chd",
+            "v5_cd_cdzs.chd"
         };
         foreach (var file in cdFiles)
         {

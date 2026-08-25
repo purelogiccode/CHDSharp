@@ -197,8 +197,7 @@ internal class Huffman168
         // descending by weight, ascending by symbol index — the same tie-break MAME uses in
         // huffman_context_base::tree_node_compare (its secondary key is the symbol code), so
         // equal-weight symbols build an identical tree
-        indices.Sort(
-            (a, b) =>
+        indices.Sort((a, b) =>
             {
                 var byWeight = nodes[b].Weight.CompareTo(nodes[a].Weight);
                 return byWeight != 0 ? byWeight : a.CompareTo(b);

@@ -29,7 +29,8 @@ public ref struct ZStream
     internal InflateState InflateState;
     internal DeflateState DeflateState;
 
-    internal int DataType2; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
+    internal int
+        DataType2; // best guess about the data type: binary or text for deflate, or the decoding state for inflate
 
     internal ReadOnlySpan<byte> Input2;
     internal Span<byte> Output2;

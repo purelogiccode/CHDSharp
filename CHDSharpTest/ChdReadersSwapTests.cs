@@ -52,7 +52,7 @@ public class ChdReadersSwapTests
             0xB1,
             0xB2,
             0xB3,
-            0xB4, // frame 1
+            0xB4 // frame 1
         };
 
         ChdReaders.SwapCdda16(buf, buf.Length, sectorBytes, frameBytes);

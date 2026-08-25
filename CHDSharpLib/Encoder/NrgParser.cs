@@ -104,7 +104,7 @@ public sealed class NrgParser
                         FileOffset = (long)(offset + (index1 - index0)),
                         // MAME reports the pregap (INDEX 00 → INDEX 01) without physical data.
                         Pregap = (int)((index1 - index0) / size),
-                        Frames = (int)((index1 - index0) / size + (trackEnd - index1) / size),
+                        Frames = (int)((index1 - index0) / size + (trackEnd - index1) / size)
                     };
 
                     switch (mode)

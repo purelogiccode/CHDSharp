@@ -106,7 +106,7 @@ public static class MetadataWriter
             heads = 0,
             sectorsPerTrack = 0;
         if (bytesPerSector > 0)
-            for (var totalSectors = totalBytes / bytesPerSector; ; totalSectors++)
+            for (var totalSectors = totalBytes / bytesPerSector;; totalSectors++)
             {
                 var found = false;
                 for (uint curSectors = 63; curSectors > 1 && !found; curSectors--)
@@ -160,7 +160,7 @@ public static class MetadataWriter
         {
             Tag = HardDiskMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = Encoding.ASCII.GetBytes(text + '\0'),
+            Payload = Encoding.ASCII.GetBytes(text + '\0')
         };
     }
 
@@ -185,7 +185,7 @@ public static class MetadataWriter
         {
             Tag = IdentMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = identData,
+            Payload = identData
         };
     }
 
@@ -199,7 +199,7 @@ public static class MetadataWriter
         {
             Tag = DvdMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = [0x00],
+            Payload = [0x00]
         };
     }
 
@@ -232,7 +232,7 @@ public static class MetadataWriter
         {
             Tag = AvMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = Encoding.ASCII.GetBytes(text + '\0'),
+            Payload = Encoding.ASCII.GetBytes(text + '\0')
         };
     }
 
@@ -255,7 +255,7 @@ public static class MetadataWriter
         {
             Tag = AvLdMetadataTag,
             Flags = 0,
-            Payload = packedFrames,
+            Payload = packedFrames
         };
     }
 
@@ -334,7 +334,7 @@ public static class MetadataWriter
                 {
                     Tag = tag,
                     Flags = ChdMdflagsChecksum,
-                    Payload = Encoding.ASCII.GetBytes(text + '\0'),
+                    Payload = Encoding.ASCII.GetBytes(text + '\0')
                 }
             );
         }
@@ -350,8 +350,8 @@ public static class MetadataWriter
     public static string BuildGdRomString(CdTrack track)
     {
         return $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} "
-            + $"FRAMES:{track.Frames} PAD:{track.PadFrames} PREGAP:{track.Pregap} PGTYPE:{GetTypeString(track.PgType)} "
-            + $"PGSUB:{GetSubtypeString(track.PgSub)} POSTGAP:{track.Postgap}";
+               + $"FRAMES:{track.Frames} PAD:{track.PadFrames} PREGAP:{track.Pregap} PGTYPE:{GetTypeString(track.PgType)} "
+               + $"PGSUB:{GetSubtypeString(track.PgSub)} POSTGAP:{track.Postgap}";
     }
 
     /// <summary>
@@ -415,8 +415,8 @@ public static class MetadataWriter
             track.PgDataSize > 0 ? "V" + GetTypeString(track.PgType) : GetTypeString(track.PgType);
 
         return $"TRACK:{track.Number} TYPE:{GetTypeString(track.TrackType)} SUBTYPE:{GetSubtypeString(track.SubType)} "
-            + $"FRAMES:{track.Frames} PREGAP:{track.Pregap} PGTYPE:{pgType} PGSUB:{GetSubtypeString(track.PgSub)} "
-            + $"POSTGAP:{track.Postgap}";
+               + $"FRAMES:{track.Frames} PREGAP:{track.Pregap} PGTYPE:{pgType} PGSUB:{GetSubtypeString(track.PgSub)} "
+               + $"POSTGAP:{track.Postgap}";
     }
 
     /// <summary>Returns the metadata string for a track type (MAME's <c>get_type_string</c>).</summary>
@@ -432,7 +432,7 @@ public static class MetadataWriter
             CdTrackType.Mode2FormMix => "MODE2_FORM_MIX",
             CdTrackType.Mode2Raw => "MODE2_RAW",
             CdTrackType.Audio => "AUDIO",
-            _ => "UNKNOWN",
+            _ => "UNKNOWN"
         };
     }
 
@@ -443,7 +443,7 @@ public static class MetadataWriter
         {
             CdSubType.Normal => "RW",
             CdSubType.Raw => "RW_RAW",
-            _ => "NONE",
+            _ => "NONE"
         };
     }
 }

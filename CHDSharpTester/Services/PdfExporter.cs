@@ -64,17 +64,17 @@ internal static class PdfExporter
                                                 c.Item()
                                                     .Text(
                                                         $"Files: {session.TotalFiles}  |  "
-                                                            + $"Passed: {session.PassedFiles}  |  "
-                                                            + $"Failed: {session.FailedFiles}  |  "
-                                                            + $"Skipped: {session.SkippedFiles}"
+                                                        + $"Passed: {session.PassedFiles}  |  "
+                                                        + $"Failed: {session.FailedFiles}  |  "
+                                                        + $"Skipped: {session.SkippedFiles}"
                                                     )
                                                     .Bold();
                                                 c.Item()
                                                     .Text(
                                                         $"SubTests: {session.TotalSubTests} total, "
-                                                            + $"{session.PassedSubTests} passed, "
-                                                            + $"{session.FailedSubTests} failed, "
-                                                            + $"{session.SkippedSubTests} skipped"
+                                                        + $"{session.PassedSubTests} passed, "
+                                                        + $"{session.FailedSubTests} failed, "
+                                                        + $"{session.SkippedSubTests} skipped"
                                                     )
                                                     .FontSize(8);
                                             });

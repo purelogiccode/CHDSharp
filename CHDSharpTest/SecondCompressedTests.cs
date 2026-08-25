@@ -82,9 +82,9 @@ public class SecondCompressedTests
                 {
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 100,
-                    Offset = 0,
-                },
-            ],
+                    Offset = 0
+                }
+            ]
         };
         ChdBlockRead.FindBlockReaders(chd);
 
@@ -105,9 +105,9 @@ public class SecondCompressedTests
                 {
                     Comptype = CompressionType.Compressiontype0,
                     Length = 100,
-                    Offset = 0,
-                },
-            ],
+                    Offset = 0
+                }
+            ]
         };
         ChdBlockRead.FindBlockReaders(chd);
 
@@ -127,15 +127,15 @@ public class SecondCompressedTests
                 {
                     Comptype = CompressionType.Compressiontype0,
                     Length = 100,
-                    Offset = 0,
+                    Offset = 0
                 },
                 new MapEntry
                 {
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 100,
-                    Offset = 100,
-                },
-            ],
+                    Offset = 100
+                }
+            ]
         };
         ChdBlockRead.FindBlockReaders(chd);
 
@@ -154,7 +154,7 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = null,
+            SecondaryReader = null
         };
 
         var arrPool = new ArrayPool(1024);
@@ -177,7 +177,7 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = SecondaryReader,
+            SecondaryReader = SecondaryReader
         };
 
         var arrPool = new ArrayPool(1024);
@@ -213,7 +213,7 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = FailingReader,
+            SecondaryReader = FailingReader
         };
 
         var arrPool = new ArrayPool(1024);
@@ -249,7 +249,7 @@ public class SecondCompressedTests
             Offset = 0,
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
-            UseCount = 2,
+            UseCount = 2
         };
 
         var arrPool = new ArrayPool(1024);
@@ -300,7 +300,7 @@ public class SecondCompressedTests
             Offset = 0,
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
-            Crc = correctCrc,
+            Crc = correctCrc
         };
 
         var arrPool = new ArrayPool(1024);
@@ -337,7 +337,7 @@ public class SecondCompressedTests
             Offset = 0,
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
-            Crc = 0x12345678,
+            Crc = 0x12345678
         };
 
         var arrPool = new ArrayPool(1024);
@@ -377,14 +377,14 @@ public class SecondCompressedTests
             Length = 10,
             Offset = 0,
             BuffIn = new byte[10],
-            SecondaryReader = SecondaryReader,
+            SecondaryReader = SecondaryReader
         };
 
         var selfEntry = new MapEntry
         {
             Comptype = CompressionType.Compressionself,
             Offset = 0,
-            SelfMapEntry = sourceEntry,
+            SelfMapEntry = sourceEntry
         };
 
         var arrPool = new ArrayPool(1024);
@@ -430,10 +430,10 @@ public class SecondCompressedTests
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 100,
                     Offset = 0,
-                    SecondaryReader = Reader,
+                    SecondaryReader = Reader
                 },
-                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 0 },
-            ],
+                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 0 }
+            ]
         };
 
         ChdBlockRead.FindBlockReaders(chd);
@@ -467,14 +467,14 @@ public class SecondCompressedTests
             Crc = 12345,
             SecondaryReader = Reader,
             UseCount = 1,
-            KeepBufferCopy = false,
+            KeepBufferCopy = false
         };
 
         var selfEntry = new MapEntry
         {
             Comptype = CompressionType.Compressionself,
             Offset = 0,
-            SelfMapEntry = sourceEntry,
+            SelfMapEntry = sourceEntry
         };
 
         var chd = new ChdHeader
@@ -482,7 +482,7 @@ public class SecondCompressedTests
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.Flac,
             Blocksize = 1024,
-            Map = [sourceEntry, selfEntry],
+            Map = [sourceEntry, selfEntry]
         };
 
         ChdBlockRead.KeepMostRepeatedBlocks(chd, 0);
@@ -644,7 +644,7 @@ public class SecondCompressedTests
             0x00,
             0x10,
             0x00,
-            0x01,
+            0x01
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -788,7 +788,7 @@ public class SecondCompressedTests
             0x00,
             0x10,
             0x00,
-            0x01,
+            0x01
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -934,7 +934,7 @@ public class SecondCompressedTests
             0x08,
             0x00,
             0x00,
-            0x06,
+            0x06
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -1066,7 +1066,7 @@ public class SecondCompressedTests
             0x00,
             0x10,
             0x00,
-            0x06,
+            0x06
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -1230,7 +1230,7 @@ public class SecondCompressedTests
             0x00,
             0x08,
             0x00,
-            0x06,
+            0x06
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -1251,7 +1251,7 @@ public class SecondCompressedTests
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.Flac,
             Blocksize = 1024,
-            Map = [new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 100 }],
+            Map = [new MapEntry { Comptype = CompressionType.Compressiontype2Nd, Length = 100 }]
         };
         ChdBlockRead.FindBlockReaders(chd);
         ChdBlockRead.FindRepeatedBlocks(chd);
@@ -1445,7 +1445,7 @@ public class SecondCompressedTests
             0x08,
             0x00,
             0x00,
-            0x06,
+            0x06
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -1474,22 +1474,22 @@ public class SecondCompressedTests
                 {
                     Comptype = CompressionType.Compressiontype0,
                     Length = 500,
-                    Offset = 0,
+                    Offset = 0
                 },
                 new MapEntry
                 {
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 600,
-                    Offset = 500,
+                    Offset = 500
                 },
                 new MapEntry
                 {
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 700,
-                    Offset = 1100,
+                    Offset = 1100
                 },
-                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 1 },
-            ],
+                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 1 }
+            ]
         };
 
         ChdBlockRead.FindRepeatedBlocks(chd);
@@ -1515,10 +1515,10 @@ public class SecondCompressedTests
                     Comptype = CompressionType.Compressiontype2Nd,
                     Length = 500,
                     Offset = 0,
-                    SecondaryReader = Reader,
+                    SecondaryReader = Reader
                 },
-                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 0 },
-            ],
+                new MapEntry { Comptype = CompressionType.Compressionself, Offset = 0 }
+            ]
         };
 
         ChdBlockRead.FindBlockReaders(chd);
@@ -1696,7 +1696,7 @@ public class SecondCompressedTests
             0x00,
             0x08,
             0x00,
-            0x06,
+            0x06
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -1734,7 +1734,7 @@ public class SecondCompressedTests
             Crc = 11111,
             SecondaryReader = reader,
             UseCount = 2,
-            KeepBufferCopy = false,
+            KeepBufferCopy = false
         };
 
         var sourceEntry2 = new MapEntry
@@ -1745,14 +1745,14 @@ public class SecondCompressedTests
             Crc = 22222,
             SecondaryReader = reader,
             UseCount = 1,
-            KeepBufferCopy = false,
+            KeepBufferCopy = false
         };
 
         var selfEntry = new MapEntry
         {
             Comptype = CompressionType.Compressionself,
             Offset = 0,
-            SelfMapEntry = sourceEntry1,
+            SelfMapEntry = sourceEntry1
         };
 
         var chd = new ChdHeader
@@ -1760,7 +1760,7 @@ public class SecondCompressedTests
             Compression = [ChdCodec.Zlib],
             SecondaryCodec = ChdCodec.Flac,
             Blocksize = 1024,
-            Map = [sourceEntry1, sourceEntry2, selfEntry],
+            Map = [sourceEntry1, sourceEntry2, selfEntry]
         };
 
         ChdBlockRead.KeepMostRepeatedBlocks(chd, 0);
@@ -1910,7 +1910,7 @@ public class SecondCompressedTests
             0x08,
             0x00,
             0x00,
-            0x16,
+            0x16
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -2174,7 +2174,7 @@ public class SecondCompressedTests
             0x08,
             0x00,
             0x00,
-            0x06,
+            0x06
         };
 
         using var ms = new MemoryStream(headerBytes);
@@ -2206,7 +2206,7 @@ public class SecondCompressedTests
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
             Crc = null,
-            Crc16 = correctCrc16,
+            Crc16 = correctCrc16
         };
 
         var arrPool = new ArrayPool(1024);
@@ -2244,7 +2244,7 @@ public class SecondCompressedTests
             BuffIn = new byte[10],
             SecondaryReader = SecondaryReader,
             Crc = null,
-            Crc16 = 0x1234,
+            Crc16 = 0x1234
         };
 
         var arrPool = new ArrayPool(1024);

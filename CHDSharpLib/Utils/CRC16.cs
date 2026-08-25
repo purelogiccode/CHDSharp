@@ -260,7 +260,7 @@ public static class Crc16
         0x2e93,
         0x3eb2,
         0x0ed1,
-        0x1ef0,
+        0x1ef0
     ];
 
     /// <summary>Calculates a CCITT CRC-16 checksum over the specified data.</summary>

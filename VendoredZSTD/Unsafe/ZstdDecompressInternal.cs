@@ -44,14 +44,14 @@ public static unsafe partial class Methods
             0x2000,
             0x4000,
             0x8000,
-            0x10000,
+            0x10000
         };
 
     private static uint* LL_base =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_LL_base)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_LL_base)
+        );
 #else
     private static readonly uint* LL_base = GetArrayPointer(
         new uint[36]
@@ -130,14 +130,14 @@ public static unsafe partial class Methods
             0xFFFFFFD,
             0x1FFFFFFD,
             0x3FFFFFFD,
-            0x7FFFFFFD,
+            0x7FFFFFFD
         };
 
     private static uint* OF_base =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_OF_base)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_OF_base)
+        );
 #else
     private static readonly uint* OF_base = GetArrayPointer(
         new uint[32]
@@ -212,14 +212,14 @@ public static unsafe partial class Methods
             28,
             29,
             30,
-            31,
+            31
         };
 
     private static byte* OF_bits =>
         (byte*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_OF_bits)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_OF_bits)
+        );
 #else
     private static readonly byte* OF_bits = GetArrayPointer(
         new byte[32]
@@ -315,14 +315,14 @@ public static unsafe partial class Methods
             0x2003,
             0x4003,
             0x8003,
-            0x10003,
+            0x10003
         };
 
     private static uint* ML_base =>
         (uint*)
-            System.Runtime.CompilerServices.Unsafe.AsPointer(
-                ref MemoryMarshal.GetReference(Span_ML_base)
-            );
+        System.Runtime.CompilerServices.Unsafe.AsPointer(
+            ref MemoryMarshal.GetReference(Span_ML_base)
+        );
 #else
     private static readonly uint* ML_base = GetArrayPointer(
         new uint[53]

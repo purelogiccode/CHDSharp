@@ -299,8 +299,7 @@ internal sealed class HuffmanEncoder
             }
 
         // sort by weight descending, then by code index ascending (MAME's tree_node_compare)
-        list.Sort(
-            (a, b) =>
+        list.Sort((a, b) =>
             {
                 var weightCompare = _nodes[b].Weight.CompareTo(_nodes[a].Weight);
                 return weightCompare != 0 ? weightCompare : a.CompareTo(b);

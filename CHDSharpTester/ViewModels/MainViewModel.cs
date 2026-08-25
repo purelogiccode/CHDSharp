@@ -61,10 +61,7 @@ internal class MainViewModel : INotifyPropertyChanged
         AddFolderCommand = new RelayCommand(_ => AddFolder());
         RemoveFileCommand = new RelayCommand(RemoveFile);
         RunTestsCommand = new RelayCommand(
-            _ =>
-            {
-                _runTask = RunTestsAsync();
-            },
+            _ => { _runTask = RunTestsAsync(); },
             _ => CanRunTests
         );
         CancelTestsCommand = new RelayCommand(_ => CancelTests(), _ => IsRunning);
@@ -268,8 +265,8 @@ internal class MainViewModel : INotifyPropertyChanged
     public string SummaryText =>
         SessionResult != null
             ? $"{SessionResult.TotalFiles} files tested | "
-                + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, {SessionResult.SkippedSubTests} skipped | "
-                + $"{SessionResult.TotalElapsedSeconds:N1}s total"
+              + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, {SessionResult.SkippedSubTests} skipped | "
+              + $"{SessionResult.TotalElapsedSeconds:N1}s total"
             : string.Empty;
 
     /// <summary>Gets or sets the sub-summary text shown below the main summary.</summary>
@@ -314,7 +311,7 @@ internal class MainViewModel : INotifyPropertyChanged
         {
             Title = "Select chdman.exe",
             Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
-            FileName = "chdman.exe",
+            FileName = "chdman.exe"
         };
         if (dlg.ShowDialog() == true)
         {
@@ -329,7 +326,7 @@ internal class MainViewModel : INotifyPropertyChanged
         {
             Title = "Select CHD files",
             Filter = "CHD files (*.chd)|*.chd|All files (*.*)|*.*",
-            Multiselect = true,
+            Multiselect = true
         };
         if (dlg.ShowDialog() == true)
         {
@@ -402,7 +399,7 @@ internal class MainViewModel : INotifyPropertyChanged
             < 1024 => $"{totalSize} B",
             < 1024 * 1024 => $"{totalSize / 1024.0:F1} KB",
             < 1024L * 1024 * 1024 => $"{totalSize / (1024.0 * 1024):F1} MB",
-            _ => $"{totalSize / (1024.0 * 1024 * 1024):F2} GB",
+            _ => $"{totalSize / (1024.0 * 1024 * 1024):F2} GB"
         };
         FilesSummary = $"{Files.Count} file(s) — {sizeStr} total";
         OnPropertyChanged(nameof(CanRunTests));
@@ -530,7 +527,7 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 Title = "Export Results to PDF",
                 Filter = "PDF files (*.pdf)|*.pdf",
-                FileName = $"CHDSharpTester_Results_{DateTime.Now:yyyyMMdd_HHmmss}.pdf",
+                FileName = $"CHDSharpTester_Results_{DateTime.Now:yyyyMMdd_HHmmss}.pdf"
             };
             if (dlg.ShowDialog() == true)
             {
@@ -587,8 +584,8 @@ internal class MainViewModel : INotifyPropertyChanged
         sb.AppendLine(
             CultureInfo.InvariantCulture,
             $"Summary: {SessionResult.TotalFiles} files | "
-                + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, "
-                + $"{SessionResult.SkippedSubTests} skipped | {SessionResult.TotalElapsedSeconds:N1}s"
+            + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, "
+            + $"{SessionResult.SkippedSubTests} skipped | {SessionResult.TotalElapsedSeconds:N1}s"
         );
         sb.AppendLine();
 
@@ -608,11 +605,11 @@ internal class MainViewModel : INotifyPropertyChanged
                 {
                     TestStatus.Passed => "[PASS]",
                     TestStatus.Failed => "[FAIL]",
-                    _ => "[SKIP]",
+                    _ => "[SKIP]"
                 };
                 sb.AppendLine(
                     CultureInfo.InvariantCulture,
-                    $"  {icon} {t.TestName, -22} {t.ElapsedSeconds, 6:N2}s  {t.Detail}"
+                    $"  {icon} {t.TestName,-22} {t.ElapsedSeconds,6:N2}s  {t.Detail}"
                 );
             }
 

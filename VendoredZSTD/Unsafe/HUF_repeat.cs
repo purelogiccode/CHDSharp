@@ -16,5 +16,5 @@ public enum HUF_repeat
     /**
      * < Can use the previous table and it is assumed to be valid
      */
-    HUF_repeat_valid,
+    HUF_repeat_valid
 }

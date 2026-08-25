@@ -13,9 +13,11 @@ internal class Decoder
     private readonly BitDecoder[] _mIsMatchDecoders = new BitDecoder[
         Base.KNumStates << Base.KNumPosStatesBitsMax
     ];
+
     private readonly BitDecoder[] _mIsRep0LongDecoders = new BitDecoder[
         Base.KNumStates << Base.KNumPosStatesBitsMax
     ];
+
     private readonly BitDecoder[] _mIsRepDecoders = new BitDecoder[Base.KNumStates];
     private readonly BitDecoder[] _mIsRepG0Decoders = new BitDecoder[Base.KNumStates];
     private readonly BitDecoder[] _mIsRepG1Decoders = new BitDecoder[Base.KNumStates];
@@ -26,6 +28,7 @@ internal class Decoder
     private readonly LiteralDecoder _mLiteralDecoder = new();
 
     private readonly BitTreeDecoder _mPosAlignDecoder = new(Base.KNumAlignBits);
+
     private readonly BitDecoder[] _mPosDecoders = new BitDecoder[
         Base.KNumFullDistances - Base.KEndPosModelIndex
     ];
@@ -33,11 +36,13 @@ internal class Decoder
     private readonly BitTreeDecoder[] _mPosSlotDecoder = new BitTreeDecoder[
         Base.KNumLenToPosStates
     ];
+
     private readonly LenDecoder _mRepLenDecoder = new();
 
     private int _mDictionarySize;
 
     private uint _mPosStateMask;
+
     private uint _rep0,
         _rep1,
         _rep2,
@@ -150,8 +155,8 @@ internal class Decoder
                     {
                         if (
                             _mIsRep0LongDecoders[
-                                (_state.Index << Base.KNumPosStatesBitsMax) + posState
-                            ]
+                                    (_state.Index << Base.KNumPosStatesBitsMax) + posState
+                                ]
                                 .Decode(rangeDecoder) == 0
                         )
                         {

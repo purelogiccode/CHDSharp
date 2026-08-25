@@ -26,8 +26,8 @@ public record ChdMetadataEntry(string Tag, byte[] Data)
     public virtual bool Equals(ChdMetadataEntry? other)
     {
         return other is not null
-            && string.Equals(Tag, other.Tag, StringComparison.Ordinal)
-            && Data.AsSpan().SequenceEqual(other.Data);
+               && string.Equals(Tag, other.Tag, StringComparison.Ordinal)
+               && Data.AsSpan().SequenceEqual(other.Data);
     }
 
     /// <inheritdoc cref="Equals(ChdMetadataEntry?)" />

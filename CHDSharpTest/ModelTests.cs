@@ -52,7 +52,7 @@ public class ModelTests
             0xAB,
             0xCD,
             0xEF,
-            0x01,
+            0x01
         };
         var result = new ChdResult(ChdError.Chderrnone, 5, sha1, null);
         Assert.Equal("abcdef0123456789abcdef0123456789abcdef01", result.Sha1Hex);
@@ -78,7 +78,7 @@ public class ModelTests
             0xCA,
             0xFE,
             0xBA,
-            0xBE,
+            0xBE
         };
         var result = new ChdResult(ChdError.Chderrnone, 3, null, md5);
         Assert.Equal("deadbeefcafebabe deadbeefcafebabe".Replace(" ", ""), result.Md5Hex);
@@ -200,7 +200,7 @@ public class ModelTests
             ["track01.bin", "track02.bin"],
             [
                 new TrackExtractResult(1, "track01.bin", ChdError.Chderrnone),
-                new TrackExtractResult(2, "track02.bin", ChdError.Chderrnone),
+                new TrackExtractResult(2, "track02.bin", ChdError.Chderrnone)
             ],
             ChdError.Chderrnone
         );
@@ -244,7 +244,7 @@ public class ModelTests
             (ChdTrackType.Mode2Form2, "MODE2/2324"),
             (ChdTrackType.Mode2FormMix, "MODE2/2336"),
             (ChdTrackType.Mode2Raw, "MODE2/2352"),
-            (ChdTrackType.Audio, "AUDIO"),
+            (ChdTrackType.Audio, "AUDIO")
         };
 
         foreach (var (type, expected) in cases)
@@ -282,7 +282,7 @@ public class ModelTests
             Frames = 150,
             PreGap = 150,
             PostGap = 0,
-            StartFrame = 0,
+            StartFrame = 0
         };
 
         Assert.Equal(2, track.TrackNumber);

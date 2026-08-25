@@ -164,7 +164,7 @@ public static unsafe partial class Methods
         {
             dict = null,
             zc = null,
-            workPlace = null,
+            workPlace = null
         };
         ZSTD_parameters @params;
         uint u,
@@ -234,7 +234,9 @@ public static unsafe partial class Methods
         }
 
         if (notificationLevel >= 4)
-            for (u = 0; u <= offcodeMax; u++) { }
+            for (u = 0; u <= offcodeMax; u++)
+            {
+            }
 
         {
             var maxNbBits = HUF_buildCTable_wksp(

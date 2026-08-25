@@ -64,5 +64,5 @@ public enum ZSTD_ErrorCode
     ZSTD_error_externalSequences_invalid = 107,
 
     /* never EVER use this value directly, it can change in future versions! Use ZSTD_isError() instead */
-    ZSTD_error_maxCode = 120,
+    ZSTD_error_maxCode = 120
 }

@@ -33,13 +33,13 @@ internal static partial class Inflater
 
         ref var @in = ref
 #if NET7_0_OR_GREATER
-        Unsafe.Add(ref strm.InputPtr, strm.NextInput);
+            Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
         MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
         ref var @out = ref
 #if NET7_0_OR_GREATER
-        Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
+            Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
 #else
         MemoryMarshal.GetReference(strm.Output2.Slice((int)strm.NextOutput));
 #endif

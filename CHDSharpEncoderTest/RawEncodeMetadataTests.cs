@@ -41,7 +41,7 @@ public class RawEncodeMetadataTests : IDisposable
         {
             Tag = 0x54455354, // 'TEST'
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "hello\0"u8.ToArray(),
+            Payload = "hello\0"u8.ToArray()
         };
 
         var chdPath = Path.Combine(_dir, "user.chd");
@@ -75,7 +75,7 @@ public class RawEncodeMetadataTests : IDisposable
             chdPath,
             options: new ChdEncodeOptions
             {
-                Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)],
+                Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)]
             }
         );
 
@@ -213,7 +213,7 @@ public class RawEncodeMetadataTests : IDisposable
             options: new ChdEncodeOptions
             {
                 AutoClassify = true,
-                Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)],
+                Metadata = [MetadataWriter.BuildHardDiskMetadata((ulong)source.Length, 512)]
             }
         );
 
@@ -235,7 +235,7 @@ public class RawEncodeMetadataTests : IDisposable
         {
             Tag = 0x54455354, // 'TEST'
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "extra\0"u8.ToArray(),
+            Payload = "extra\0"u8.ToArray()
         };
 
         var chdPath = Path.Combine(_dir, "cd_meta.chd");

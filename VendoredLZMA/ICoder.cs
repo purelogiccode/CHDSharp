@@ -7,7 +7,9 @@ internal class DataErrorException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="DataErrorException" /> class with a default message.</summary>
     internal DataErrorException()
-        : base("Data Error") { }
+        : base("Data Error")
+    {
+    }
 }
 
 /// <summary>
@@ -17,7 +19,9 @@ internal class InvalidParamException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="InvalidParamException" /> class.</summary>
     internal InvalidParamException()
-        : base("Invalid Parameter") { }
+        : base("Invalid Parameter")
+    {
+    }
 }
 
 /// <summary>Progress callback interface, ported from the LZMA SDK (public domain).</summary>
@@ -88,7 +92,7 @@ internal enum CoderPropId
     NumThreads,
 
     /// <summary>Specifies mode with end marker.</summary>
-    EndMarker,
+    EndMarker
 }
 
 /// <summary>Coder property configuration interface, ported from the LZMA SDK (public domain).</summary>

@@ -218,7 +218,9 @@ internal static partial class ChdReaders
                 var curdest = audioChannelDestStart[channelNumber];
                 if (curdest != null)
                 {
-                    var audioBuffer = new AudioBuffer(codec.AvhuffSettings, blockSize); //audio buffer to take decoded samples and read them to bytes.
+                    var audioBuffer =
+                        new AudioBuffer(codec.AvhuffSettings,
+                            blockSize); //audio buffer to take decoded samples and read them to bytes.
                     var inPos = (int)buffInOffset;
                     var channelEnd = (int)(buffInOffset + sourceSize);
                     var outPos = (int)audioChannelDestStart[channelNumber]!.Value;

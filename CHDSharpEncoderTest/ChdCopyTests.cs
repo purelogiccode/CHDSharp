@@ -71,7 +71,7 @@ public class ChdCopyTests : IDisposable
         {
             Tag = MetadataWriter.TagFromString("GAME"),
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray(),
+            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray()
         };
         using (var ms = new MemoryStream(source))
         {
@@ -194,7 +194,7 @@ public class ChdCopyTests : IDisposable
         {
             Tag = MetadataWriter.TagFromString("GAME"),
             Flags = MetadataWriter.ChdMdflagsChecksum,
-            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray(),
+            Payload = "Test Game"u8.ToArray().Append((byte)0).ToArray()
         };
 
         ChdEncoder.EncodeCd(

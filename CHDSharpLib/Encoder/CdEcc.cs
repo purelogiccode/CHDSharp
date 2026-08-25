@@ -43,7 +43,7 @@ internal static class CdEcc
         0xFF,
         0xFF,
         0xFF,
-        0x00,
+        0x00
     ];
 
     private static readonly byte[] Ecclow =
@@ -303,7 +303,7 @@ internal static class CdEcc
         0xe5,
         0xe7,
         0xe1,
-        0xe3,
+        0xe3
     ];
 
     private static readonly byte[] Ecchigh =
@@ -563,7 +563,7 @@ internal static class CdEcc
         0x54,
         0xa0,
         0xa1,
-        0x55,
+        0x55
     ];
 
     private static readonly ushort[][] Poffsets =
@@ -592,7 +592,7 @@ internal static class CdEcc
             0x6b8,
             0x70e,
             0x764,
-            0x7ba,
+            0x7ba
         ],
         [
             0x001,
@@ -618,7 +618,7 @@ internal static class CdEcc
             0x6b9,
             0x70f,
             0x765,
-            0x7bb,
+            0x7bb
         ],
         [
             0x002,
@@ -644,7 +644,7 @@ internal static class CdEcc
             0x6ba,
             0x710,
             0x766,
-            0x7bc,
+            0x7bc
         ],
         [
             0x003,
@@ -670,7 +670,7 @@ internal static class CdEcc
             0x6bb,
             0x711,
             0x767,
-            0x7bd,
+            0x7bd
         ],
         [
             0x004,
@@ -696,7 +696,7 @@ internal static class CdEcc
             0x6bc,
             0x712,
             0x768,
-            0x7be,
+            0x7be
         ],
         [
             0x005,
@@ -722,7 +722,7 @@ internal static class CdEcc
             0x6bd,
             0x713,
             0x769,
-            0x7bf,
+            0x7bf
         ],
         [
             0x006,
@@ -748,7 +748,7 @@ internal static class CdEcc
             0x6be,
             0x714,
             0x76a,
-            0x7c0,
+            0x7c0
         ],
         [
             0x007,
@@ -774,7 +774,7 @@ internal static class CdEcc
             0x6bf,
             0x715,
             0x76b,
-            0x7c1,
+            0x7c1
         ],
         [
             0x008,
@@ -800,7 +800,7 @@ internal static class CdEcc
             0x6c0,
             0x716,
             0x76c,
-            0x7c2,
+            0x7c2
         ],
         [
             0x009,
@@ -826,7 +826,7 @@ internal static class CdEcc
             0x6c1,
             0x717,
             0x76d,
-            0x7c3,
+            0x7c3
         ],
         [
             0x00a,
@@ -852,7 +852,7 @@ internal static class CdEcc
             0x6c2,
             0x718,
             0x76e,
-            0x7c4,
+            0x7c4
         ],
         [
             0x00b,
@@ -878,7 +878,7 @@ internal static class CdEcc
             0x6c3,
             0x719,
             0x76f,
-            0x7c5,
+            0x7c5
         ],
         [
             0x00c,
@@ -904,7 +904,7 @@ internal static class CdEcc
             0x6c4,
             0x71a,
             0x770,
-            0x7c6,
+            0x7c6
         ],
         [
             0x00d,
@@ -930,7 +930,7 @@ internal static class CdEcc
             0x6c5,
             0x71b,
             0x771,
-            0x7c7,
+            0x7c7
         ],
         [
             0x00e,
@@ -956,7 +956,7 @@ internal static class CdEcc
             0x6c6,
             0x71c,
             0x772,
-            0x7c8,
+            0x7c8
         ],
         [
             0x00f,
@@ -982,7 +982,7 @@ internal static class CdEcc
             0x6c7,
             0x71d,
             0x773,
-            0x7c9,
+            0x7c9
         ],
         [
             0x010,
@@ -1008,7 +1008,7 @@ internal static class CdEcc
             0x6c8,
             0x71e,
             0x774,
-            0x7ca,
+            0x7ca
         ],
         [
             0x011,
@@ -1034,7 +1034,7 @@ internal static class CdEcc
             0x6c9,
             0x71f,
             0x775,
-            0x7cb,
+            0x7cb
         ],
         [
             0x012,
@@ -1060,7 +1060,7 @@ internal static class CdEcc
             0x6ca,
             0x720,
             0x776,
-            0x7cc,
+            0x7cc
         ],
         [
             0x013,
@@ -1086,7 +1086,7 @@ internal static class CdEcc
             0x6cb,
             0x721,
             0x777,
-            0x7cd,
+            0x7cd
         ],
         [
             0x014,
@@ -1112,7 +1112,7 @@ internal static class CdEcc
             0x6cc,
             0x722,
             0x778,
-            0x7ce,
+            0x7ce
         ],
         [
             0x015,
@@ -1138,7 +1138,7 @@ internal static class CdEcc
             0x6cd,
             0x723,
             0x779,
-            0x7cf,
+            0x7cf
         ],
         [
             0x016,
@@ -1164,7 +1164,7 @@ internal static class CdEcc
             0x6ce,
             0x724,
             0x77a,
-            0x7d0,
+            0x7d0
         ],
         [
             0x017,
@@ -1190,7 +1190,7 @@ internal static class CdEcc
             0x6cf,
             0x725,
             0x77b,
-            0x7d1,
+            0x7d1
         ],
         [
             0x018,
@@ -1216,7 +1216,7 @@ internal static class CdEcc
             0x6d0,
             0x726,
             0x77c,
-            0x7d2,
+            0x7d2
         ],
         [
             0x019,
@@ -1242,7 +1242,7 @@ internal static class CdEcc
             0x6d1,
             0x727,
             0x77d,
-            0x7d3,
+            0x7d3
         ],
         [
             0x01a,
@@ -1268,7 +1268,7 @@ internal static class CdEcc
             0x6d2,
             0x728,
             0x77e,
-            0x7d4,
+            0x7d4
         ],
         [
             0x01b,
@@ -1294,7 +1294,7 @@ internal static class CdEcc
             0x6d3,
             0x729,
             0x77f,
-            0x7d5,
+            0x7d5
         ],
         [
             0x01c,
@@ -1320,7 +1320,7 @@ internal static class CdEcc
             0x6d4,
             0x72a,
             0x780,
-            0x7d6,
+            0x7d6
         ],
         [
             0x01d,
@@ -1346,7 +1346,7 @@ internal static class CdEcc
             0x6d5,
             0x72b,
             0x781,
-            0x7d7,
+            0x7d7
         ],
         [
             0x01e,
@@ -1372,7 +1372,7 @@ internal static class CdEcc
             0x6d6,
             0x72c,
             0x782,
-            0x7d8,
+            0x7d8
         ],
         [
             0x01f,
@@ -1398,7 +1398,7 @@ internal static class CdEcc
             0x6d7,
             0x72d,
             0x783,
-            0x7d9,
+            0x7d9
         ],
         [
             0x020,
@@ -1424,7 +1424,7 @@ internal static class CdEcc
             0x6d8,
             0x72e,
             0x784,
-            0x7da,
+            0x7da
         ],
         [
             0x021,
@@ -1450,7 +1450,7 @@ internal static class CdEcc
             0x6d9,
             0x72f,
             0x785,
-            0x7db,
+            0x7db
         ],
         [
             0x022,
@@ -1476,7 +1476,7 @@ internal static class CdEcc
             0x6da,
             0x730,
             0x786,
-            0x7dc,
+            0x7dc
         ],
         [
             0x023,
@@ -1502,7 +1502,7 @@ internal static class CdEcc
             0x6db,
             0x731,
             0x787,
-            0x7dd,
+            0x7dd
         ],
         [
             0x024,
@@ -1528,7 +1528,7 @@ internal static class CdEcc
             0x6dc,
             0x732,
             0x788,
-            0x7de,
+            0x7de
         ],
         [
             0x025,
@@ -1554,7 +1554,7 @@ internal static class CdEcc
             0x6dd,
             0x733,
             0x789,
-            0x7df,
+            0x7df
         ],
         [
             0x026,
@@ -1580,7 +1580,7 @@ internal static class CdEcc
             0x6de,
             0x734,
             0x78a,
-            0x7e0,
+            0x7e0
         ],
         [
             0x027,
@@ -1606,7 +1606,7 @@ internal static class CdEcc
             0x6df,
             0x735,
             0x78b,
-            0x7e1,
+            0x7e1
         ],
         [
             0x028,
@@ -1632,7 +1632,7 @@ internal static class CdEcc
             0x6e0,
             0x736,
             0x78c,
-            0x7e2,
+            0x7e2
         ],
         [
             0x029,
@@ -1658,7 +1658,7 @@ internal static class CdEcc
             0x6e1,
             0x737,
             0x78d,
-            0x7e3,
+            0x7e3
         ],
         [
             0x02a,
@@ -1684,7 +1684,7 @@ internal static class CdEcc
             0x6e2,
             0x738,
             0x78e,
-            0x7e4,
+            0x7e4
         ],
         [
             0x02b,
@@ -1710,7 +1710,7 @@ internal static class CdEcc
             0x6e3,
             0x739,
             0x78f,
-            0x7e5,
+            0x7e5
         ],
         [
             0x02c,
@@ -1736,7 +1736,7 @@ internal static class CdEcc
             0x6e4,
             0x73a,
             0x790,
-            0x7e6,
+            0x7e6
         ],
         [
             0x02d,
@@ -1762,7 +1762,7 @@ internal static class CdEcc
             0x6e5,
             0x73b,
             0x791,
-            0x7e7,
+            0x7e7
         ],
         [
             0x02e,
@@ -1788,7 +1788,7 @@ internal static class CdEcc
             0x6e6,
             0x73c,
             0x792,
-            0x7e8,
+            0x7e8
         ],
         [
             0x02f,
@@ -1814,7 +1814,7 @@ internal static class CdEcc
             0x6e7,
             0x73d,
             0x793,
-            0x7e9,
+            0x7e9
         ],
         [
             0x030,
@@ -1840,7 +1840,7 @@ internal static class CdEcc
             0x6e8,
             0x73e,
             0x794,
-            0x7ea,
+            0x7ea
         ],
         [
             0x031,
@@ -1866,7 +1866,7 @@ internal static class CdEcc
             0x6e9,
             0x73f,
             0x795,
-            0x7eb,
+            0x7eb
         ],
         [
             0x032,
@@ -1892,7 +1892,7 @@ internal static class CdEcc
             0x6ea,
             0x740,
             0x796,
-            0x7ec,
+            0x7ec
         ],
         [
             0x033,
@@ -1918,7 +1918,7 @@ internal static class CdEcc
             0x6eb,
             0x741,
             0x797,
-            0x7ed,
+            0x7ed
         ],
         [
             0x034,
@@ -1944,7 +1944,7 @@ internal static class CdEcc
             0x6ec,
             0x742,
             0x798,
-            0x7ee,
+            0x7ee
         ],
         [
             0x035,
@@ -1970,7 +1970,7 @@ internal static class CdEcc
             0x6ed,
             0x743,
             0x799,
-            0x7ef,
+            0x7ef
         ],
         [
             0x036,
@@ -1996,7 +1996,7 @@ internal static class CdEcc
             0x6ee,
             0x744,
             0x79a,
-            0x7f0,
+            0x7f0
         ],
         [
             0x037,
@@ -2022,7 +2022,7 @@ internal static class CdEcc
             0x6ef,
             0x745,
             0x79b,
-            0x7f1,
+            0x7f1
         ],
         [
             0x038,
@@ -2048,7 +2048,7 @@ internal static class CdEcc
             0x6f0,
             0x746,
             0x79c,
-            0x7f2,
+            0x7f2
         ],
         [
             0x039,
@@ -2074,7 +2074,7 @@ internal static class CdEcc
             0x6f1,
             0x747,
             0x79d,
-            0x7f3,
+            0x7f3
         ],
         [
             0x03a,
@@ -2100,7 +2100,7 @@ internal static class CdEcc
             0x6f2,
             0x748,
             0x79e,
-            0x7f4,
+            0x7f4
         ],
         [
             0x03b,
@@ -2126,7 +2126,7 @@ internal static class CdEcc
             0x6f3,
             0x749,
             0x79f,
-            0x7f5,
+            0x7f5
         ],
         [
             0x03c,
@@ -2152,7 +2152,7 @@ internal static class CdEcc
             0x6f4,
             0x74a,
             0x7a0,
-            0x7f6,
+            0x7f6
         ],
         [
             0x03d,
@@ -2178,7 +2178,7 @@ internal static class CdEcc
             0x6f5,
             0x74b,
             0x7a1,
-            0x7f7,
+            0x7f7
         ],
         [
             0x03e,
@@ -2204,7 +2204,7 @@ internal static class CdEcc
             0x6f6,
             0x74c,
             0x7a2,
-            0x7f8,
+            0x7f8
         ],
         [
             0x03f,
@@ -2230,7 +2230,7 @@ internal static class CdEcc
             0x6f7,
             0x74d,
             0x7a3,
-            0x7f9,
+            0x7f9
         ],
         [
             0x040,
@@ -2256,7 +2256,7 @@ internal static class CdEcc
             0x6f8,
             0x74e,
             0x7a4,
-            0x7fa,
+            0x7fa
         ],
         [
             0x041,
@@ -2282,7 +2282,7 @@ internal static class CdEcc
             0x6f9,
             0x74f,
             0x7a5,
-            0x7fb,
+            0x7fb
         ],
         [
             0x042,
@@ -2308,7 +2308,7 @@ internal static class CdEcc
             0x6fa,
             0x750,
             0x7a6,
-            0x7fc,
+            0x7fc
         ],
         [
             0x043,
@@ -2334,7 +2334,7 @@ internal static class CdEcc
             0x6fb,
             0x751,
             0x7a7,
-            0x7fd,
+            0x7fd
         ],
         [
             0x044,
@@ -2360,7 +2360,7 @@ internal static class CdEcc
             0x6fc,
             0x752,
             0x7a8,
-            0x7fe,
+            0x7fe
         ],
         [
             0x045,
@@ -2386,7 +2386,7 @@ internal static class CdEcc
             0x6fd,
             0x753,
             0x7a9,
-            0x7ff,
+            0x7ff
         ],
         [
             0x046,
@@ -2412,7 +2412,7 @@ internal static class CdEcc
             0x6fe,
             0x754,
             0x7aa,
-            0x800,
+            0x800
         ],
         [
             0x047,
@@ -2438,7 +2438,7 @@ internal static class CdEcc
             0x6ff,
             0x755,
             0x7ab,
-            0x801,
+            0x801
         ],
         [
             0x048,
@@ -2464,7 +2464,7 @@ internal static class CdEcc
             0x700,
             0x756,
             0x7ac,
-            0x802,
+            0x802
         ],
         [
             0x049,
@@ -2490,7 +2490,7 @@ internal static class CdEcc
             0x701,
             0x757,
             0x7ad,
-            0x803,
+            0x803
         ],
         [
             0x04a,
@@ -2516,7 +2516,7 @@ internal static class CdEcc
             0x702,
             0x758,
             0x7ae,
-            0x804,
+            0x804
         ],
         [
             0x04b,
@@ -2542,7 +2542,7 @@ internal static class CdEcc
             0x703,
             0x759,
             0x7af,
-            0x805,
+            0x805
         ],
         [
             0x04c,
@@ -2568,7 +2568,7 @@ internal static class CdEcc
             0x704,
             0x75a,
             0x7b0,
-            0x806,
+            0x806
         ],
         [
             0x04d,
@@ -2594,7 +2594,7 @@ internal static class CdEcc
             0x705,
             0x75b,
             0x7b1,
-            0x807,
+            0x807
         ],
         [
             0x04e,
@@ -2620,7 +2620,7 @@ internal static class CdEcc
             0x706,
             0x75c,
             0x7b2,
-            0x808,
+            0x808
         ],
         [
             0x04f,
@@ -2646,7 +2646,7 @@ internal static class CdEcc
             0x707,
             0x75d,
             0x7b3,
-            0x809,
+            0x809
         ],
         [
             0x050,
@@ -2672,7 +2672,7 @@ internal static class CdEcc
             0x708,
             0x75e,
             0x7b4,
-            0x80a,
+            0x80a
         ],
         [
             0x051,
@@ -2698,7 +2698,7 @@ internal static class CdEcc
             0x709,
             0x75f,
             0x7b5,
-            0x80b,
+            0x80b
         ],
         [
             0x052,
@@ -2724,7 +2724,7 @@ internal static class CdEcc
             0x70a,
             0x760,
             0x7b6,
-            0x80c,
+            0x80c
         ],
         [
             0x053,
@@ -2750,7 +2750,7 @@ internal static class CdEcc
             0x70b,
             0x761,
             0x7b7,
-            0x80d,
+            0x80d
         ],
         [
             0x054,
@@ -2776,7 +2776,7 @@ internal static class CdEcc
             0x70c,
             0x762,
             0x7b8,
-            0x80e,
+            0x80e
         ],
         [
             0x055,
@@ -2802,8 +2802,8 @@ internal static class CdEcc
             0x70d,
             0x763,
             0x7b9,
-            0x80f,
-        ],
+            0x80f
+        ]
     ];
 
     private static readonly ushort[][] Qoffsets =
@@ -2851,7 +2851,7 @@ internal static class CdEcc
             0x4ac,
             0x504,
             0x55c,
-            0x5b4,
+            0x5b4
         ],
         [
             0x001,
@@ -2896,7 +2896,7 @@ internal static class CdEcc
             0x4ad,
             0x505,
             0x55d,
-            0x5b5,
+            0x5b5
         ],
         [
             0x056,
@@ -2941,7 +2941,7 @@ internal static class CdEcc
             0x502,
             0x55a,
             0x5b2,
-            0x60a,
+            0x60a
         ],
         [
             0x057,
@@ -2986,7 +2986,7 @@ internal static class CdEcc
             0x503,
             0x55b,
             0x5b3,
-            0x60b,
+            0x60b
         ],
         [
             0x0ac,
@@ -3031,7 +3031,7 @@ internal static class CdEcc
             0x558,
             0x5b0,
             0x608,
-            0x660,
+            0x660
         ],
         [
             0x0ad,
@@ -3076,7 +3076,7 @@ internal static class CdEcc
             0x559,
             0x5b1,
             0x609,
-            0x661,
+            0x661
         ],
         [
             0x102,
@@ -3121,7 +3121,7 @@ internal static class CdEcc
             0x5ae,
             0x606,
             0x65e,
-            0x6b6,
+            0x6b6
         ],
         [
             0x103,
@@ -3166,7 +3166,7 @@ internal static class CdEcc
             0x5af,
             0x607,
             0x65f,
-            0x6b7,
+            0x6b7
         ],
         [
             0x158,
@@ -3211,7 +3211,7 @@ internal static class CdEcc
             0x604,
             0x65c,
             0x6b4,
-            0x70c,
+            0x70c
         ],
         [
             0x159,
@@ -3256,7 +3256,7 @@ internal static class CdEcc
             0x605,
             0x65d,
             0x6b5,
-            0x70d,
+            0x70d
         ],
         [
             0x1ae,
@@ -3301,7 +3301,7 @@ internal static class CdEcc
             0x65a,
             0x6b2,
             0x70a,
-            0x762,
+            0x762
         ],
         [
             0x1af,
@@ -3346,7 +3346,7 @@ internal static class CdEcc
             0x65b,
             0x6b3,
             0x70b,
-            0x763,
+            0x763
         ],
         [
             0x204,
@@ -3391,7 +3391,7 @@ internal static class CdEcc
             0x6b0,
             0x708,
             0x760,
-            0x7b8,
+            0x7b8
         ],
         [
             0x205,
@@ -3436,7 +3436,7 @@ internal static class CdEcc
             0x6b1,
             0x709,
             0x761,
-            0x7b9,
+            0x7b9
         ],
         [
             0x25a,
@@ -3481,7 +3481,7 @@ internal static class CdEcc
             0x706,
             0x75e,
             0x7b6,
-            0x80e,
+            0x80e
         ],
         [
             0x25b,
@@ -3526,7 +3526,7 @@ internal static class CdEcc
             0x707,
             0x75f,
             0x7b7,
-            0x80f,
+            0x80f
         ],
         [
             0x2b0,
@@ -3571,7 +3571,7 @@ internal static class CdEcc
             0x75c,
             0x7b4,
             0x80c,
-            0x864,
+            0x864
         ],
         [
             0x2b1,
@@ -3616,7 +3616,7 @@ internal static class CdEcc
             0x75d,
             0x7b5,
             0x80d,
-            0x865,
+            0x865
         ],
         [
             0x306,
@@ -3661,7 +3661,7 @@ internal static class CdEcc
             0x7b2,
             0x80a,
             0x862,
-            0x8ba,
+            0x8ba
         ],
         [
             0x307,
@@ -3706,7 +3706,7 @@ internal static class CdEcc
             0x7b3,
             0x80b,
             0x863,
-            0x8bb,
+            0x8bb
         ],
         [
             0x35c,
@@ -3751,7 +3751,7 @@ internal static class CdEcc
             0x808,
             0x860,
             0x8b8,
-            0x054,
+            0x054
         ],
         [
             0x35d,
@@ -3796,7 +3796,7 @@ internal static class CdEcc
             0x809,
             0x861,
             0x8b9,
-            0x055,
+            0x055
         ],
         [
             0x3b2,
@@ -3841,7 +3841,7 @@ internal static class CdEcc
             0x85e,
             0x8b6,
             0x052,
-            0x0aa,
+            0x0aa
         ],
         [
             0x3b3,
@@ -3886,7 +3886,7 @@ internal static class CdEcc
             0x85f,
             0x8b7,
             0x053,
-            0x0ab,
+            0x0ab
         ],
         [
             0x408,
@@ -3931,7 +3931,7 @@ internal static class CdEcc
             0x8b4,
             0x050,
             0x0a8,
-            0x100,
+            0x100
         ],
         [
             0x409,
@@ -3976,7 +3976,7 @@ internal static class CdEcc
             0x8b5,
             0x051,
             0x0a9,
-            0x101,
+            0x101
         ],
         [
             0x45e,
@@ -4021,7 +4021,7 @@ internal static class CdEcc
             0x04e,
             0x0a6,
             0x0fe,
-            0x156,
+            0x156
         ],
         [
             0x45f,
@@ -4066,7 +4066,7 @@ internal static class CdEcc
             0x04f,
             0x0a7,
             0x0ff,
-            0x157,
+            0x157
         ],
         [
             0x4b4,
@@ -4111,7 +4111,7 @@ internal static class CdEcc
             0x0a4,
             0x0fc,
             0x154,
-            0x1ac,
+            0x1ac
         ],
         [
             0x4b5,
@@ -4156,7 +4156,7 @@ internal static class CdEcc
             0x0a5,
             0x0fd,
             0x155,
-            0x1ad,
+            0x1ad
         ],
         [
             0x50a,
@@ -4201,7 +4201,7 @@ internal static class CdEcc
             0x0fa,
             0x152,
             0x1aa,
-            0x202,
+            0x202
         ],
         [
             0x50b,
@@ -4246,7 +4246,7 @@ internal static class CdEcc
             0x0fb,
             0x153,
             0x1ab,
-            0x203,
+            0x203
         ],
         [
             0x560,
@@ -4291,7 +4291,7 @@ internal static class CdEcc
             0x150,
             0x1a8,
             0x200,
-            0x258,
+            0x258
         ],
         [
             0x561,
@@ -4336,7 +4336,7 @@ internal static class CdEcc
             0x151,
             0x1a9,
             0x201,
-            0x259,
+            0x259
         ],
         [
             0x5b6,
@@ -4381,7 +4381,7 @@ internal static class CdEcc
             0x1a6,
             0x1fe,
             0x256,
-            0x2ae,
+            0x2ae
         ],
         [
             0x5b7,
@@ -4426,7 +4426,7 @@ internal static class CdEcc
             0x1a7,
             0x1ff,
             0x257,
-            0x2af,
+            0x2af
         ],
         [
             0x60c,
@@ -4471,7 +4471,7 @@ internal static class CdEcc
             0x1fc,
             0x254,
             0x2ac,
-            0x304,
+            0x304
         ],
         [
             0x60d,
@@ -4516,7 +4516,7 @@ internal static class CdEcc
             0x1fd,
             0x255,
             0x2ad,
-            0x305,
+            0x305
         ],
         [
             0x662,
@@ -4561,7 +4561,7 @@ internal static class CdEcc
             0x252,
             0x2aa,
             0x302,
-            0x35a,
+            0x35a
         ],
         [
             0x663,
@@ -4606,7 +4606,7 @@ internal static class CdEcc
             0x253,
             0x2ab,
             0x303,
-            0x35b,
+            0x35b
         ],
         [
             0x6b8,
@@ -4651,7 +4651,7 @@ internal static class CdEcc
             0x2a8,
             0x300,
             0x358,
-            0x3b0,
+            0x3b0
         ],
         [
             0x6b9,
@@ -4696,7 +4696,7 @@ internal static class CdEcc
             0x2a9,
             0x301,
             0x359,
-            0x3b1,
+            0x3b1
         ],
         [
             0x70e,
@@ -4741,7 +4741,7 @@ internal static class CdEcc
             0x2fe,
             0x356,
             0x3ae,
-            0x406,
+            0x406
         ],
         [
             0x70f,
@@ -4786,7 +4786,7 @@ internal static class CdEcc
             0x2ff,
             0x357,
             0x3af,
-            0x407,
+            0x407
         ],
         [
             0x764,
@@ -4831,7 +4831,7 @@ internal static class CdEcc
             0x354,
             0x3ac,
             0x404,
-            0x45c,
+            0x45c
         ],
         [
             0x765,
@@ -4876,7 +4876,7 @@ internal static class CdEcc
             0x355,
             0x3ad,
             0x405,
-            0x45d,
+            0x45d
         ],
         [
             0x7ba,
@@ -4921,7 +4921,7 @@ internal static class CdEcc
             0x3aa,
             0x402,
             0x45a,
-            0x4b2,
+            0x4b2
         ],
         [
             0x7bb,
@@ -4966,7 +4966,7 @@ internal static class CdEcc
             0x3ab,
             0x403,
             0x45b,
-            0x4b3,
+            0x4b3
         ],
         [
             0x810,
@@ -5011,7 +5011,7 @@ internal static class CdEcc
             0x400,
             0x458,
             0x4b0,
-            0x508,
+            0x508
         ],
         [
             0x811,
@@ -5056,7 +5056,7 @@ internal static class CdEcc
             0x401,
             0x459,
             0x4b1,
-            0x509,
+            0x509
         ],
         [
             0x866,
@@ -5101,7 +5101,7 @@ internal static class CdEcc
             0x456,
             0x4ae,
             0x506,
-            0x55e,
+            0x55e
         ],
         [
             0x867,
@@ -5146,8 +5146,8 @@ internal static class CdEcc
             0x457,
             0x4af,
             0x507,
-            0x55f,
-        ],
+            0x55f
+        ]
     ];
 
     /// <summary>Returns data from the sector at the given offset, masking anything particular to a mode.</summary>

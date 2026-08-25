@@ -180,7 +180,7 @@ public sealed class ExtractTests
         var trackResults = new List<TrackExtractResult>
         {
             new(1, "track01.bin", ChdError.Chderrnone),
-            new(2, null, ChdError.Chderrdecompressionerror),
+            new(2, null, ChdError.Chderrdecompressionerror)
         };
         var result = new ExtractResult(["track01.bin"], trackResults, ChdError.Chderrnone);
         Assert.False(result.IsCompleteSuccess);

@@ -43,21 +43,21 @@ public class CueParserChdmanValidationTests : IDisposable
         // Saturn-style layout: MODE1/2352 data track + AUDIO tracks with 2s pregaps,
         // single BIN file (INDEX lengths for the first 4 tracks, file-size for the last)
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 03:00:00
-                INDEX 01 03:02:00
-              TRACK 03 AUDIO
-                INDEX 00 06:00:00
-                INDEX 01 06:02:00
-              TRACK 04 AUDIO
-                INDEX 00 09:00:00
-                INDEX 01 09:02:00
-              TRACK 05 AUDIO
-                INDEX 01 12:02:00
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 03:00:00
+                               INDEX 01 03:02:00
+                             TRACK 03 AUDIO
+                               INDEX 00 06:00:00
+                               INDEX 01 06:02:00
+                             TRACK 04 AUDIO
+                               INDEX 00 09:00:00
+                               INDEX 01 09:02:00
+                             TRACK 05 AUDIO
+                               INDEX 01 12:02:00
+                           """;
         var cuePath = Path.Combine(_testDataDir, "saturn.cue");
         var binPath = Path.Combine(_testDataDir, "game.bin");
         var chdPath = Path.Combine(_testDataDir, "saturn.chd");
@@ -109,14 +109,14 @@ public class CueParserChdmanValidationTests : IDisposable
             return;
 
         const string cue = """
-            FILE "data.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-            FILE "audio.bin" BINARY
-              TRACK 02 AUDIO
-                INDEX 00 00:02:00
-                INDEX 01 00:04:00
-            """;
+                           FILE "data.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                           FILE "audio.bin" BINARY
+                             TRACK 02 AUDIO
+                               INDEX 00 00:02:00
+                               INDEX 01 00:04:00
+                           """;
         var cuePath = Path.Combine(_testDataDir, "twofile.cue");
         var chdPath = Path.Combine(_testDataDir, "twofile.chd");
         File.WriteAllText(cuePath, cue);

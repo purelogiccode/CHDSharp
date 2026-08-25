@@ -132,7 +132,9 @@ public sealed class CdzlCodec : CdCompoundCodec
     /// <summary>Creates a CD zlib codec for CD-sized hunks.</summary>
     /// <param name="hunkBytes">Hunk size in bytes; must be a multiple of the CD frame size.</param>
     public CdzlCodec(uint hunkBytes)
-        : base(hunkBytes, new ZlibCodec(), new ZlibCodec()) { }
+        : base(hunkBytes, new ZlibCodec(), new ZlibCodec())
+    {
+    }
 
     /// <inheritdoc />
     public override uint Tag => CodecTags.Cdzl;
@@ -148,7 +150,9 @@ public sealed class CdlzCodec : CdCompoundCodec
             hunkBytes,
             new LzmaCodec(hunkBytes / CdConstants.FrameSize * CdConstants.MaxSectorData),
             new ZlibCodec()
-        ) { }
+        )
+    {
+    }
 
     /// <inheritdoc />
     public override uint Tag => CodecTags.Cdlz;
@@ -160,7 +164,9 @@ public sealed class CdzsCodec : CdCompoundCodec
     /// <summary>Creates a CD Zstandard codec for CD-sized hunks.</summary>
     /// <param name="hunkBytes">Hunk size in bytes; must be a multiple of the CD frame size.</param>
     public CdzsCodec(uint hunkBytes)
-        : base(hunkBytes, new ZstdCodec(), new ZstdCodec()) { }
+        : base(hunkBytes, new ZstdCodec(), new ZstdCodec())
+    {
+    }
 
     /// <inheritdoc />
     public override uint Tag => CodecTags.Cdzs;

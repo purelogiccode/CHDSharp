@@ -22,7 +22,7 @@ namespace CHDSharp.Models;
 ///     <code>
 /// var progress = new Progress&lt;ChdProgress&gt;(p =>
 ///     Console.WriteLine($"{p.Percent:F0}% — {p.BytesProcessed:N0}/{p.TotalBytes:N0} bytes, {p.Elapsed.TotalSeconds:F1}s"));
-///
+/// 
 /// var result = Chd.CheckFile(File.OpenRead("game.chd"), "game.chd", deepCheck: true, progress);
 /// </code>
 /// </example>

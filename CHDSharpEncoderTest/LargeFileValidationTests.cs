@@ -97,12 +97,12 @@ public class LargeFileValidationTests : IDisposable
         File.WriteAllText(
             cuePath,
             $"""
-            FILE "large.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 01 {dataFrames / (60 * 75):D2}:{dataFrames / 75 % 60:D2}:{dataFrames % 75:D2}
-            """
+             FILE "large.bin" BINARY
+               TRACK 01 MODE1/2352
+                 INDEX 01 00:00:00
+               TRACK 02 AUDIO
+                 INDEX 01 {dataFrames / (60 * 75):D2}:{dataFrames / 75 % 60:D2}:{dataFrames % 75:D2}
+             """
         );
 
         ChdEncoder.EncodeCd(cuePath, chdPath);

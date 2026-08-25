@@ -126,7 +126,9 @@ internal class InWindow
         var pby = BufferOffset + Pos + (uint)index;
 
         uint i;
-        for (i = 0; i < limit && BufferBase[pby + i] == BufferBase[pby + i - distance]; i++) { }
+        for (i = 0; i < limit && BufferBase[pby + i] == BufferBase[pby + i - distance]; i++)
+        {
+        }
 
         return i;
     }

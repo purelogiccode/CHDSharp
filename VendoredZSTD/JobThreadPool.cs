@@ -35,8 +35,12 @@ internal unsafe class JobThreadPool : IDisposable
                 if (queue.TryTake(out var job, -1, cancellationToken))
                     ((delegate* managed<void*, void>)job.function)(job.opaque);
             }
-            catch (InvalidOperationException) { }
-            catch (OperationCanceledException) { }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (OperationCanceledException)
+            {
+            }
     }
 
     private void CreateThread()

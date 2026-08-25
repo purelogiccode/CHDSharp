@@ -29,7 +29,7 @@ public static partial class Methods
                 new(23, 24, 22, 7, 3, 256, ZSTD_strategy.ZSTD_btultra2),
                 new(25, 25, 23, 7, 3, 256, ZSTD_strategy.ZSTD_btultra2),
                 new(26, 26, 24, 7, 3, 512, ZSTD_strategy.ZSTD_btultra2),
-                new(27, 27, 25, 9, 3, 999, ZSTD_strategy.ZSTD_btultra2),
+                new(27, 27, 25, 9, 3, 999, ZSTD_strategy.ZSTD_btultra2)
             },
             new ZSTD_compressionParameters[23]
             {
@@ -55,7 +55,7 @@ public static partial class Methods
                 new(18, 19, 19, 8, 3, 256, ZSTD_strategy.ZSTD_btultra2),
                 new(18, 19, 19, 10, 3, 512, ZSTD_strategy.ZSTD_btultra2),
                 new(18, 19, 19, 12, 3, 512, ZSTD_strategy.ZSTD_btultra2),
-                new(18, 19, 19, 13, 3, 999, ZSTD_strategy.ZSTD_btultra2),
+                new(18, 19, 19, 13, 3, 999, ZSTD_strategy.ZSTD_btultra2)
             },
             new ZSTD_compressionParameters[23]
             {
@@ -81,7 +81,7 @@ public static partial class Methods
                 new(17, 18, 17, 5, 3, 256, ZSTD_strategy.ZSTD_btultra2),
                 new(17, 18, 17, 7, 3, 512, ZSTD_strategy.ZSTD_btultra2),
                 new(17, 18, 17, 9, 3, 512, ZSTD_strategy.ZSTD_btultra2),
-                new(17, 18, 17, 11, 3, 999, ZSTD_strategy.ZSTD_btultra2),
+                new(17, 18, 17, 11, 3, 999, ZSTD_strategy.ZSTD_btultra2)
             },
             new ZSTD_compressionParameters[23]
             {
@@ -107,7 +107,7 @@ public static partial class Methods
                 new(14, 15, 15, 8, 3, 256, ZSTD_strategy.ZSTD_btultra2),
                 new(14, 15, 15, 8, 3, 512, ZSTD_strategy.ZSTD_btultra2),
                 new(14, 15, 15, 9, 3, 512, ZSTD_strategy.ZSTD_btultra2),
-                new(14, 15, 15, 10, 3, 999, ZSTD_strategy.ZSTD_btultra2),
-            },
+                new(14, 15, 15, 10, 3, 999, ZSTD_strategy.ZSTD_btultra2)
+            }
         };
 }

@@ -98,7 +98,7 @@ public static class CueParser
                         PgType = 0,
                         PgDataSize = 0,
                         Index00 = -1,
-                        Index01 = -1,
+                        Index01 = -1
                     };
 
                     ParseTrackType(tokens[2], ref track);
@@ -238,23 +238,23 @@ public static class CueParser
             }
             case 3
                 when int.TryParse(
-                    parts[0],
-                    NumberStyles.None,
-                    CultureInfo.InvariantCulture,
-                    out var minutes
-                )
-                    && int.TryParse(
-                        parts[1],
-                        NumberStyles.None,
-                        CultureInfo.InvariantCulture,
-                        out var seconds
-                    )
-                    && int.TryParse(
-                        parts[2],
-                        NumberStyles.None,
-                        CultureInfo.InvariantCulture,
-                        out var frame
-                    ):
+                         parts[0],
+                         NumberStyles.None,
+                         CultureInfo.InvariantCulture,
+                         out var minutes
+                     )
+                     && int.TryParse(
+                         parts[1],
+                         NumberStyles.None,
+                         CultureInfo.InvariantCulture,
+                         out var seconds
+                     )
+                     && int.TryParse(
+                         parts[2],
+                         NumberStyles.None,
+                         CultureInfo.InvariantCulture,
+                         out var frame
+                     ):
                 return minutes * 60 * 75 + seconds * 75 + frame;
             default:
                 throw new InvalidDataException($"Invalid MSF time format [{token}]");
@@ -515,9 +515,9 @@ public static class CueParser
 
         offset += 4;
         return buffer[0]
-            | ((uint)buffer[1] << 8)
-            | ((uint)buffer[2] << 16)
-            | ((uint)buffer[3] << 24);
+               | ((uint)buffer[1] << 8)
+               | ((uint)buffer[2] << 16)
+               | ((uint)buffer[3] << 24);
     }
 
     private static ushort ReadU16Le(Stream stream, ref long offset)

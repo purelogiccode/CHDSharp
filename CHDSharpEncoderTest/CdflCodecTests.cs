@@ -32,7 +32,7 @@ public class CdflCodecTests : IDisposable
         // 8-frame CD hunk: audio samples (sine) + subcode
         var hunk = new byte[8 * CdConstants.FrameSize];
         for (var f = 0; f < 8; f++)
-        // big-endian 16-bit stereo samples
+            // big-endian 16-bit stereo samples
         for (var s = 0; s < 588; s++)
         {
             var sample = (int)(Math.Sin(s * 0.1 + f) * 8000);
@@ -78,13 +78,13 @@ public class CdflCodecTests : IDisposable
     {
         // data track with pattern + audio track with sine samples
         const string cue = """
-            FILE "game.bin" BINARY
-              TRACK 01 MODE1/2352
-                INDEX 01 00:00:00
-              TRACK 02 AUDIO
-                INDEX 00 00:00:12
-                INDEX 01 00:00:14
-            """;
+                           FILE "game.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 00 00:00:12
+                               INDEX 01 00:00:14
+                           """;
         var cuePath = Path.Combine(_dir, "test.cue");
         File.WriteAllText(cuePath, cue);
 
@@ -166,8 +166,8 @@ public class CdflCodecTests : IDisposable
     private static uint ReadU32Be(byte[] data, int offset)
     {
         return ((uint)data[offset] << 24)
-            | ((uint)data[offset + 1] << 16)
-            | ((uint)data[offset + 2] << 8)
-            | data[offset + 3];
+               | ((uint)data[offset + 1] << 16)
+               | ((uint)data[offset + 2] << 8)
+               | data[offset + 3];
     }
 }

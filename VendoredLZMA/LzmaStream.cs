@@ -36,7 +36,9 @@ internal class LzmaStream : Stream
     /// <param name="properties">LZMA properties header (5 bytes).</param>
     /// <param name="inputStream">The compressed source stream.</param>
     public LzmaStream(byte[] properties, Stream inputStream)
-        : this(properties, inputStream, -1, -1, null, properties.Length < 5) { }
+        : this(properties, inputStream, -1, -1, null, properties.Length < 5)
+    {
+    }
 
     /// <summary>
     ///     Initializes a new LZMA decompression stream with a known input size.
@@ -45,7 +47,9 @@ internal class LzmaStream : Stream
     /// <param name="inputStream">The compressed source stream.</param>
     /// <param name="inputSize">Exact size in bytes of the compressed data, or -1 if unknown.</param>
     public LzmaStream(byte[] properties, Stream inputStream, long inputSize)
-        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5) { }
+        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5)
+    {
+    }
 
     /// <summary>
     ///     Initializes a new LZMA decompression stream with known input and output sizes.
@@ -55,7 +59,9 @@ internal class LzmaStream : Stream
     /// <param name="inputSize">Exact size in bytes of the compressed data, or -1 if unknown.</param>
     /// <param name="outputSize">Exact size in bytes of the decompressed data, or -1 if unknown.</param>
     public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize)
-        : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5) { }
+        : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5)
+    {
+    }
 
     /// <summary>
     ///     Initializes a new LZMA or LZMA2 decompression stream with full configuration.
@@ -154,7 +160,9 @@ internal class LzmaStream : Stream
     /// <summary>
     ///     Does nothing. The stream has no buffers to flush.
     /// </summary>
-    public override void Flush() { }
+    public override void Flush()
+    {
+    }
 
     /// <summary>
     ///     Reads a sequence of decompressed bytes from the stream and advances the position.

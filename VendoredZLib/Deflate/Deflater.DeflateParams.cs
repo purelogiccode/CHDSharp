@@ -23,7 +23,7 @@ internal static partial class Deflater
 
         ref var configurationTable = ref
 #if NET7_0_OR_GREATER
-        strm.DeflateRefs.ConfigurationTable;
+            strm.DeflateRefs.ConfigurationTable;
 #else
         MemoryMarshal.GetReference<Config>(s_configuration_table);
 #endif
@@ -52,7 +52,7 @@ internal static partial class Deflater
 #endif
                     ref var prev = ref
 #if NET7_0_OR_GREATER
-                    refs.Prev;
+                        refs.Prev;
 #else
                     MemoryMarshal.GetReference<ushort>(s.prev);
 #endif

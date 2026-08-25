@@ -351,12 +351,12 @@ internal class AudioPcmConfig
                 return SpeakerConfig.Ksaudiospeakerquad;
             case 5:
                 return SpeakerConfig.Ksaudiospeaker5Point1Surround
-                    & ~SpeakerConfig.Speakerlowfrequency;
+                       & ~SpeakerConfig.Speakerlowfrequency;
             case 6:
                 return SpeakerConfig.Ksaudiospeaker5Point1Surround;
             case 7:
                 return SpeakerConfig.Ksaudiospeaker5Point1Surround
-                    | SpeakerConfig.Speakerbackcenter;
+                       | SpeakerConfig.Speakerbackcenter;
             case 8:
                 return SpeakerConfig.Ksaudiospeaker7Point1Surround;
         }

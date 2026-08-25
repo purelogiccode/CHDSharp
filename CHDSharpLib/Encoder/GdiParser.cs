@@ -87,7 +87,7 @@ public class GdiParser
                 FileOffset = 0,
                 SubType = CdSubType.None,
                 SubSize = 0,
-                PgSub = CdSubType.None,
+                PgSub = CdSubType.None
             };
 
             switch (trktype)

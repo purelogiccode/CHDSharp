@@ -17,7 +17,7 @@ internal static class Program
 
     private static readonly JsonSerializerOptions ManifestJsonOptions = new()
     {
-        WriteIndented = true,
+        WriteIndented = true
     };
 
     // ----- source images ------------------------------------------------
@@ -98,7 +98,7 @@ internal static class Program
             ChdCodec.Huffman => ChdReaders.Huffman,
             ChdCodec.Flac => ChdReaders.Flac,
             ChdCodec.Zstd => ChdReaders.Zstd,
-            _ => throw new NotSupportedException($"Unsupported codec for hunk debug: {codec}"),
+            _ => throw new NotSupportedException($"Unsupported codec for hunk debug: {codec}")
         };
     }
 
@@ -188,7 +188,7 @@ internal static class Program
             (320, 240, 60),
             (320, 480, 30),
             (640, 480, 30),
-            (720, 524, 30),
+            (720, 524, 30)
         ];
         foreach (var (vw, vh, fps) in variants)
         {
@@ -220,7 +220,7 @@ internal static class Program
             dir = dir.Parent;
 
         return dir?.FullName
-            ?? throw new InvalidOperationException("repo root not found; pass it as arg[0]");
+               ?? throw new InvalidOperationException("repo root not found; pass it as arg[0]");
     }
 
     private static void BuildSources()
@@ -241,20 +241,20 @@ internal static class Program
         File.WriteAllText(
             Cue,
             "FILE \"cd_data.bin\" BINARY\n"
-                + "  TRACK 01 MODE1/2048\n"
-                + "    INDEX 01 00:00:00\n"
-                + "FILE \"cd_audio.bin\" BINARY\n"
-                + "  TRACK 02 AUDIO\n"
-                + "    INDEX 01 00:00:00\n"
+            + "  TRACK 01 MODE1/2048\n"
+            + "    INDEX 01 00:00:00\n"
+            + "FILE \"cd_audio.bin\" BINARY\n"
+            + "  TRACK 02 AUDIO\n"
+            + "    INDEX 01 00:00:00\n"
         );
 
         File.WriteAllText(
             Toc,
             "CD_ROM\n\n"
-                + "TRACK MODE1\n"
-                + "DATAFILE \"cd_data.bin\"\n\n"
-                + "TRACK AUDIO\n"
-                + "AUDIOFILE \"cd_audio.bin\" 0\n"
+            + "TRACK MODE1\n"
+            + "DATAFILE \"cd_data.bin\"\n\n"
+            + "TRACK AUDIO\n"
+            + "AUDIOFILE \"cd_audio.bin\" 0\n"
         );
 
         AviWriter.Write(Avi, 64, 48, 60, 32, 44100);
@@ -282,7 +282,7 @@ internal static class Program
                 Version = version,
                 Parent = parent,
                 Expect = expect,
-                Note = note,
+                Note = note
             }
         );
     }

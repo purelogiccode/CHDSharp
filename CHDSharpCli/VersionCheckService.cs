@@ -13,6 +13,7 @@ internal static class VersionCheckService
 {
     private const string RepoApiUrl =
         "https://api.github.com/repos/purelogiccode/CHDSharp/releases/latest";
+
     private const string RepoReleasesUrl = "https://github.com/purelogiccode/CHDSharp/releases";
 
     private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
@@ -91,7 +92,7 @@ internal static class VersionCheckService
             Architecture.Arm64 => "win-arm64",
             Architecture.X64 => "win-x64",
             Architecture.X86 => "win-x86",
-            _ => "win-x64",
+            _ => "win-x64"
         };
 
         return $"CHDSharp_{arch}_v{Assembly.GetEntryAssembly()?.GetName().Version}.zip";

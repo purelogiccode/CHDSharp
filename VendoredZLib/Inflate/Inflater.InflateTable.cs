@@ -45,7 +45,7 @@ internal static partial class Inflater
         227,
         258,
         0,
-        0,
+        0
     };
 
     internal static readonly ushort[] SLext = new ushort[]
@@ -81,7 +81,7 @@ internal static partial class Inflater
         21,
         16,
         203,
-        77,
+        77
     };
 
     internal static readonly ushort[] SDbase = new ushort[]
@@ -118,7 +118,7 @@ internal static partial class Inflater
         16385,
         24577,
         0,
-        0,
+        0
     };
 
     internal static readonly ushort[] SDext = new ushort[]
@@ -155,7 +155,7 @@ internal static partial class Inflater
         29,
         29,
         64,
-        64,
+        64
     };
 
     internal static int InflateTable(
@@ -291,7 +291,7 @@ internal static partial class Inflater
             return 1;
 
         // process all codes and make table entries
-        for (; ; )
+        for (;;)
         {
             // create table entry
             var temp = (byte)(len - drop);

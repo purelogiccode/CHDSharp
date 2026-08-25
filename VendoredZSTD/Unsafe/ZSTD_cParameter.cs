@@ -648,5 +648,5 @@ public enum ZSTD_cParameter
      * note : never ever use experimentalParam? names directly;
      *        also, the enums values themselves are unstable and can still change.
      */
-    ZSTD_c_experimentalParam19 = 1016,
+    ZSTD_c_experimentalParam19 = 1016
 }

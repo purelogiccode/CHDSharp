@@ -127,10 +127,10 @@ internal static class FlacLpcMath
                 2 => data[idx] - 2 * data[idx - 1] + data[idx - 2],
                 3 => data[idx] - 3 * data[idx - 1] + 3 * data[idx - 2] - data[idx - 3],
                 _ => data[idx]
-                    - 4 * data[idx - 1]
-                    + 6 * data[idx - 2]
-                    - 4 * data[idx - 3]
-                    + data[idx - 4],
+                     - 4 * data[idx - 1]
+                     + 6 * data[idx - 2]
+                     - 4 * data[idx - 3]
+                     + data[idx - 4]
             };
         }
     }

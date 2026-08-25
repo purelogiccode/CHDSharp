@@ -33,7 +33,7 @@ internal static class SourceData
         "lzma",
         "huffman",
         "flac",
-        "zstd",
+        "zstd"
     ];
 
     /// <summary>Builds the primary 512 KiB raw image.</summary>

@@ -210,7 +210,7 @@ public class LaserDiscEncodeTests : IDisposable
     {
         // same content generator, different storage order; decoded video bytes must match
         var yuy2Path = AviTestWriter
-            .WriteAvi(Path.Combine(_testDataDir, "yuy2.avi"), 32, 32, 4, 30, 1, 48000, 2, "YUY2")
+            .WriteAvi(Path.Combine(_testDataDir, "yuy2.avi"), 32, 32, 4, 30, 1, 48000, 2)
             .Path;
         var uyvyPath = AviTestWriter
             .WriteAvi(Path.Combine(_testDataDir, "uyvy.avi"), 32, 32, 4, 30, 1, 48000, 2, "UYVY")

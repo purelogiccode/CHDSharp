@@ -249,36 +249,36 @@ public static unsafe partial class Methods
                     assert(srcSize >= 6);
 
 #endif
-                {
-                    var lhc =
-                        (uint)hType
-                        + ((singleStream == 0 ? 1U : 0U) << 2)
-                        + ((uint)srcSize << 4)
-                        + ((uint)cLitSize << 14);
-                    MEM_writeLE24(ostart, lhc);
-                    break;
-                }
+            {
+                var lhc =
+                    (uint)hType
+                    + ((singleStream == 0 ? 1U : 0U) << 2)
+                    + ((uint)srcSize << 4)
+                    + ((uint)cLitSize << 14);
+                MEM_writeLE24(ostart, lhc);
+                break;
+            }
 
             case 4:
                 assert(srcSize >= 6);
 
-                {
-                    var lhc =
-                        (uint)(hType + (2 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 18);
-                    MEM_writeLE32(ostart, lhc);
-                    break;
-                }
+            {
+                var lhc =
+                    (uint)(hType + (2 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 18);
+                MEM_writeLE32(ostart, lhc);
+                break;
+            }
 
             case 5:
                 assert(srcSize >= 6);
 
-                {
-                    var lhc =
-                        (uint)(hType + (3 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 22);
-                    MEM_writeLE32(ostart, lhc);
-                    ostart[4] = (byte)(cLitSize >> 10);
-                    break;
-                }
+            {
+                var lhc =
+                    (uint)(hType + (3 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 22);
+                MEM_writeLE32(ostart, lhc);
+                ostart[4] = (byte)(cLitSize >> 10);
+                break;
+            }
 
             default:
                 assert(0 != 0);

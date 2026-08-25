@@ -25,7 +25,7 @@ public static class HardDiskTemplates
         new("Maxtor", "LXT-213S", 1314, 7, 53, 512),
         new("Maxtor", "LXT-340S", 1574, 7, 70, 512),
         new("Maxtor", "MXT-540SL", 2466, 7, 87, 512),
-        new("Micropolis", "1528", 2094, 15, 83, 512),
+        new("Micropolis", "1528", 2094, 15, 83, 512)
     ];
 
     /// <summary>

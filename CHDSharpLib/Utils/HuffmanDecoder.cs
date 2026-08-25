@@ -112,11 +112,11 @@ internal class HuffmanDecoder
             /* bits per entry depends on the maxbits */
             >= 16 => 5,
             >= 8 => 4,
-            _ => 3,
+            _ => 3
         };
 
         /* loop until we read all the nodes */
-        for (curnode = 0; curnode < _numcodes; )
+        for (curnode = 0; curnode < _numcodes;)
         {
             /* a non-one value is just raw */
             var nodebits = (int)_bitbuf.Read(numbits);
@@ -211,7 +211,7 @@ internal class HuffmanDecoder
         }
 
         /* now process the rest of the data */
-        for (curcode = 0; curcode < _numcodes; )
+        for (curcode = 0; curcode < _numcodes;)
         {
             var value = (int)smallhuff.DecodeOne();
             if (value != 0)

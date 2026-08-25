@@ -24,8 +24,7 @@ public class EncodeBenchmarks
     private readonly Dictionary<uint, byte[]> _images = new();
     private readonly Dictionary<uint, string> _tempDirs = new();
 
-    [ParamsSource(nameof(WorkerCounts))]
-    public int TaskCount { get; set; }
+    [ParamsSource(nameof(WorkerCounts))] public int TaskCount { get; set; }
 
     [GlobalSetup]
     public void Setup()

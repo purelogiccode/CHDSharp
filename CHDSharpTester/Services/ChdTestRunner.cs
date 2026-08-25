@@ -124,7 +124,7 @@ internal class ChdTestRunner
         {
             FileName = entry.FileName,
             FilePath = entry.FilePath,
-            FileSize = entry.FileSize,
+            FileSize = entry.FileSize
         };
 
         var path = entry.FilePath;
@@ -136,7 +136,7 @@ internal class ChdTestRunner
                 {
                     TestName = "All Tests",
                     Status = TestStatus.Skipped,
-                    Detail = "File not found on disk.",
+                    Detail = "File not found on disk."
                 }
             );
             result.ElapsedSeconds = sw.Elapsed.TotalSeconds;
@@ -165,7 +165,7 @@ internal class ChdTestRunner
                     Detail = headerOk
                         ? $"Valid V{headerVer} header, {headerLen} bytes"
                         : "Invalid CHD header (bad magic or version)",
-                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -264,7 +264,7 @@ internal class ChdTestRunner
                     TestName = "Header Read (standalone)",
                     Status = allMatch ? TestStatus.Passed : TestStatus.Failed,
                     Detail = string.Join("\n", details),
-                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -276,7 +276,7 @@ internal class ChdTestRunner
                     TestName = "Header Read (standalone)",
                     Status = TestStatus.Failed,
                     Detail = $"Chd.ReadHeader failed: {rhErr}",
-                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -393,7 +393,7 @@ internal class ChdTestRunner
                                 TestName = "Header vs chdman",
                                 Status = allMatch ? TestStatus.Passed : TestStatus.Failed,
                                 Detail = string.Join("\n", details),
-                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                             }
                         );
                     }
@@ -404,7 +404,7 @@ internal class ChdTestRunner
                             TestName = "Header vs chdman",
                             Status = TestStatus.Failed,
                             Detail = $"Failed to open with CHDSharp: {openErr}",
-                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         }
                     );
             }
@@ -416,7 +416,7 @@ internal class ChdTestRunner
                         TestName = "Header vs chdman",
                         Status = TestStatus.Failed,
                         Detail = "chdman info command failed.",
-                        ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                        ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                     }
                 );
             }
@@ -428,7 +428,7 @@ internal class ChdTestRunner
                 {
                     TestName = "Header vs chdman",
                     Status = TestStatus.Skipped,
-                    Detail = "chdman.exe not available.",
+                    Detail = "chdman.exe not available."
                 }
             );
         }
@@ -463,7 +463,7 @@ internal class ChdTestRunner
                         cfErr == ChdError.Chderrnone
                             ? $"V{ver}, SHA1={HashUtil.ToHex(sha1)}"
                             : $"Error: {cfErr}",
-                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -476,7 +476,7 @@ internal class ChdTestRunner
                     TestName = "Deep Verification",
                     Status = TestStatus.Failed,
                     Detail = $"Exception: {ex.Message}",
-                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -501,7 +501,7 @@ internal class ChdTestRunner
                     TestName = "chdman Verify",
                     Status = chdmanOk ? TestStatus.Passed : TestStatus.Failed,
                     Detail = chdmanOk ? "chdman verify passed." : "chdman verify failed.",
-                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -512,7 +512,7 @@ internal class ChdTestRunner
                 {
                     TestName = "chdman Verify",
                     Status = TestStatus.Skipped,
-                    Detail = "chdman.exe not available.",
+                    Detail = "chdman.exe not available."
                 }
             );
         }
@@ -541,7 +541,7 @@ internal class ChdTestRunner
                             TestName = "Full SHA1",
                             Status = TestStatus.Skipped,
                             Detail = "No raw SHA1 in header (V1/V2).",
-                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         }
                     );
                 }
@@ -559,7 +559,7 @@ internal class ChdTestRunner
                             Detail = match
                                 ? $"{hexExpected} ✓ ({chd2.TotalBytes / (1024.0 * 1024):F1} MB)"
                                 : $"Expected={hexExpected} Computed={computed} ✗",
-                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         }
                     );
                 }
@@ -574,7 +574,7 @@ internal class ChdTestRunner
                     TestName = "Full SHA1",
                     Status = TestStatus.Failed,
                     Detail = $"Failed to open file: {openErr2}",
-                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -588,7 +588,7 @@ internal class ChdTestRunner
                 {
                     TestName = "Random Access",
                     Status = TestStatus.Skipped,
-                    Detail = "chdman.exe not available.",
+                    Detail = "chdman.exe not available."
                 }
             );
 
@@ -624,7 +624,7 @@ internal class ChdTestRunner
                 {
                     TestName = "ReadHunk API Tests",
                     Status = TestStatus.Failed,
-                    Detail = $"Failed to open: {openErr}",
+                    Detail = $"Failed to open: {openErr}"
                 }
             );
             result.SubTests.Add(
@@ -632,7 +632,7 @@ internal class ChdTestRunner
                 {
                     TestName = "Track Info Tests",
                     Status = TestStatus.Failed,
-                    Detail = $"Failed to open: {openErr}",
+                    Detail = $"Failed to open: {openErr}"
                 }
             );
             return;
@@ -684,8 +684,8 @@ internal class ChdTestRunner
             foreach (var t in tracks)
                 detail.Add(
                     $"  Track {t.TrackNumber}: {t.GetTypeString()} "
-                        + $"{t.Frames:N0} frames @ offset {t.StartFrame} "
-                        + $"(pregap={t.PreGap}, postgap={t.PostGap}, extra={t.ExtraFrames})"
+                    + $"{t.Frames:N0} frames @ offset {t.StartFrame} "
+                    + $"(pregap={t.PreGap}, postgap={t.PostGap}, extra={t.ExtraFrames})"
                 );
 
             // Validate track ordering
@@ -777,7 +777,7 @@ internal class ChdTestRunner
                 TestName = "Track Info Tests",
                 Status = failures == 0 ? TestStatus.Passed : TestStatus.Failed,
                 Detail = string.Join("\n", detail),
-                ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                ElapsedSeconds = tSw.Elapsed.TotalSeconds
             }
         );
     }
@@ -810,7 +810,7 @@ internal class ChdTestRunner
                     TestName = "Random Access",
                     Status = TestStatus.Failed,
                     Detail = $"Failed to open: {openErr}",
-                    ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = tSw.Elapsed.TotalSeconds
                 }
             );
             return;
@@ -830,7 +830,7 @@ internal class ChdTestRunner
                         TestName = "Random Access",
                         Status = TestStatus.Skipped,
                         Detail = "Need at least 2 hunks.",
-                        ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                        ElapsedSeconds = tSw.Elapsed.TotalSeconds
                     }
                 );
                 return;
@@ -844,7 +844,7 @@ internal class ChdTestRunner
                 (total - Math.Min(hb, total), (int)Math.Min(hb, total), "last hunk"),
                 (17, 97, "small unaligned"),
                 (hb / 3, 7, "tiny unaligned"),
-                (total > 50 ? total - 50 : 0, 37, "near end"),
+                (total > 50 ? total - 50 : 0, 37, "near end")
             ];
 
             var details = new List<string>();
@@ -898,7 +898,7 @@ internal class ChdTestRunner
                     TestName = "Random Access",
                     Status = mismatchCount == 0 ? TestStatus.Passed : TestStatus.Failed,
                     Detail = string.Join("\n", details),
-                    ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = tSw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -1156,7 +1156,7 @@ internal class ChdTestRunner
                 TestName = "ReadHunk API Tests",
                 Status = failures == 0 ? TestStatus.Passed : TestStatus.Failed,
                 Detail = string.Join("\n", detail),
-                ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                ElapsedSeconds = tSw.Elapsed.TotalSeconds
             }
         );
     }
@@ -1202,9 +1202,9 @@ internal class ChdTestRunner
                         {
                             TestName = "Zstd Codec Tests",
                             Status = TestStatus.Skipped,
-                            Detail = "No CD-type source CHD available for recompression.",
-                        },
-                    ],
+                            Detail = "No CD-type source CHD available for recompression."
+                        }
+                    ]
                 }
             );
             return;
@@ -1258,7 +1258,7 @@ internal class ChdTestRunner
                                 )
                                     ? $"SHA1={computed} ✓"
                                     : $"Expected={srcRawSha1} Computed={computed} ✗",
-                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                             }
                         );
                     }
@@ -1269,7 +1269,7 @@ internal class ChdTestRunner
                             TestName = "cdzs decode",
                             Status = TestStatus.Failed,
                             Detail = $"Failed to open cdzs CHD: {openErr}",
-                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         }
                     );
 
@@ -1297,7 +1297,7 @@ internal class ChdTestRunner
                                 cfErr == ChdError.Chderrnone
                                     ? $"V{ver}, SHA1={HashUtil.ToHex(sha1)}"
                                     : $"Error: {cfErr}",
-                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                            ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                         }
                     );
                 }
@@ -1309,7 +1309,7 @@ internal class ChdTestRunner
                     FilePath = cdzsPath,
                     FileSize = FormatFileSize(new FileInfo(cdzsPath).Length),
                     SubTests = subTests,
-                    ElapsedSeconds = sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = sw.Elapsed.TotalSeconds
                 };
             }
             else
@@ -1325,9 +1325,9 @@ internal class ChdTestRunner
                         {
                             TestName = "cdzs Codec Tests",
                             Status = TestStatus.Skipped,
-                            Detail = "chdman copy to cdzs failed.",
-                        },
-                    ],
+                            Detail = "chdman copy to cdzs failed."
+                        }
+                    ]
                 };
             }
 
@@ -1370,7 +1370,7 @@ internal class ChdTestRunner
                                     )
                                         ? $"SHA1={computed} ✓"
                                         : $"Expected={zstdRawSha1} Computed={computed} ✗",
-                                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                                    ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                                 }
                             );
                         }
@@ -1381,7 +1381,7 @@ internal class ChdTestRunner
                                 TestName = "zstd decode",
                                 Status = TestStatus.Failed,
                                 Detail = $"Failed to open zstd CHD: {openErr}",
-                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                             }
                         );
 
@@ -1409,7 +1409,7 @@ internal class ChdTestRunner
                                     cfErr == ChdError.Chderrnone
                                         ? $"V{ver}, SHA1={HashUtil.ToHex(sha1)}"
                                         : $"Error: {cfErr}",
-                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds,
+                                ElapsedSeconds = t1Sw.Elapsed.TotalSeconds
                             }
                         );
                     }
@@ -1421,7 +1421,7 @@ internal class ChdTestRunner
                         FilePath = zstdPath,
                         FileSize = FormatFileSize(new FileInfo(zstdPath).Length),
                         SubTests = subTests,
-                        ElapsedSeconds = sw.Elapsed.TotalSeconds,
+                        ElapsedSeconds = sw.Elapsed.TotalSeconds
                     };
                 }
                 else
@@ -1437,9 +1437,9 @@ internal class ChdTestRunner
                             {
                                 TestName = "zstd Codec Tests",
                                 Status = TestStatus.Skipped,
-                                Detail = "chdman copy to zstd failed.",
-                            },
-                        ],
+                                Detail = "chdman copy to zstd failed."
+                            }
+                        ]
                     };
                 }
 
@@ -1500,9 +1500,9 @@ internal class ChdTestRunner
                         {
                             TestName = "Parent Chain Tests",
                             Status = TestStatus.Skipped,
-                            Detail = "No CD-type source CHD available.",
-                        },
-                    ],
+                            Detail = "No CD-type source CHD available."
+                        }
+                    ]
                 }
             );
             return;
@@ -1544,9 +1544,9 @@ internal class ChdTestRunner
                                 Status = TestStatus.Skipped,
                                 Detail =
                                     $"chdman failed to build parent/child set. "
-                                    + $"parent(exit={rParent.ExitCode}) child(exit={rChild.ExitCode})",
-                            },
-                        ],
+                                    + $"parent(exit={rParent.ExitCode}) child(exit={rChild.ExitCode})"
+                            }
+                        ]
                     }
                 );
                 return;
@@ -1582,7 +1582,7 @@ internal class ChdTestRunner
                         openErr == ChdError.Chderrrequiresparent
                             ? "ChderrRequiresParent ✓"
                             : $"Expected ChderrRequiresParent, got {openErr}",
-                    ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = tSw.Elapsed.TotalSeconds
                 }
             );
 
@@ -1600,7 +1600,7 @@ internal class ChdTestRunner
                             TestName = "Child with correct parent",
                             Status = TestStatus.Passed,
                             Detail = "Opened successfully ✓",
-                            ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                            ElapsedSeconds = tSw.Elapsed.TotalSeconds
                         }
                     );
                 }
@@ -1614,7 +1614,7 @@ internal class ChdTestRunner
                         TestName = "Child with correct parent",
                         Status = TestStatus.Failed,
                         Detail = $"Failed: {openErr}",
-                        ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                        ElapsedSeconds = tSw.Elapsed.TotalSeconds
                     }
                 );
             }
@@ -1638,7 +1638,7 @@ internal class ChdTestRunner
                             openErr == ChdError.Chderrinvalidparent
                                 ? "ChderrInvalidParent ✓"
                                 : $"Expected ChderrInvalidParent, got {openErr}",
-                        ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                        ElapsedSeconds = tSw.Elapsed.TotalSeconds
                     }
                 );
             }
@@ -1649,7 +1649,7 @@ internal class ChdTestRunner
                     {
                         TestName = "Child with wrong parent",
                         Status = TestStatus.Skipped,
-                        Detail = "No alternate CHD available as wrong parent.",
+                        Detail = "No alternate CHD available as wrong parent."
                     }
                 );
             }
@@ -1673,7 +1673,7 @@ internal class ChdTestRunner
                             Detail = string.Equals(computed, srcRawSha1, StringComparison.Ordinal)
                                 ? $"SHA1={computed} ✓"
                                 : $"Expected={srcRawSha1} Computed={computed} ✗",
-                            ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                            ElapsedSeconds = tSw.Elapsed.TotalSeconds
                         }
                     );
                 }
@@ -1688,7 +1688,7 @@ internal class ChdTestRunner
                         TestName = "Child full read matches source",
                         Status = TestStatus.Failed,
                         Detail = $"Failed to open child with parent: {openErr}",
-                        ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                        ElapsedSeconds = tSw.Elapsed.TotalSeconds
                     }
                 );
             }
@@ -1712,7 +1712,7 @@ internal class ChdTestRunner
                         cfErr == ChdError.Chderrnone
                             ? $"V{cfVer}, SHA1={HashUtil.ToHex(cfSha1)} ✓"
                             : $"Error: {cfErr}",
-                    ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = tSw.Elapsed.TotalSeconds
                 }
             );
 
@@ -1726,7 +1726,7 @@ internal class ChdTestRunner
                     TestName = "chdman verify with parent",
                     Status = chdmanOk ? TestStatus.Passed : TestStatus.Failed,
                     Detail = chdmanOk ? "chdman verify passed ✓" : "chdman verify failed",
-                    ElapsedSeconds = tSw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = tSw.Elapsed.TotalSeconds
                 }
             );
 
@@ -1739,7 +1739,7 @@ internal class ChdTestRunner
                     FileSize =
                         $"{FormatFileSize(new FileInfo(parentPath).Length)} + {FormatFileSize(new FileInfo(childPath).Length)}",
                     SubTests = subTests,
-                    ElapsedSeconds = sw.Elapsed.TotalSeconds,
+                    ElapsedSeconds = sw.Elapsed.TotalSeconds
                 }
             );
         }
@@ -1776,7 +1776,7 @@ internal class ChdTestRunner
             < 1024 => $"{length} B",
             < 1024 * 1024 => $"{length / 1024.0:F1} KB",
             < 1024L * 1024 * 1024 => $"{length / (1024.0 * 1024):F1} MB",
-            _ => $"{length / (1024.0 * 1024 * 1024):F2} GB",
+            _ => $"{length / (1024.0 * 1024 * 1024):F2} GB"
         };
     }
 

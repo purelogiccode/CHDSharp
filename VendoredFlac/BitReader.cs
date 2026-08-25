@@ -445,7 +445,7 @@ internal unsafe class BitReader
         26,
         5,
         4,
-        31,
+        31
     ];
 
     /// <summary>
@@ -741,7 +741,7 @@ internal unsafe class BitReader
         0,
         0,
         0,
-        0,
+        0
     ];
 
     #endregion

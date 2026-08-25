@@ -40,7 +40,7 @@ internal class ChdmanWrapper
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
             };
             foreach (var a in args)
                 psi.ArgumentList.Add(a);
@@ -56,7 +56,7 @@ internal class ChdmanWrapper
             {
                 ExitCode = p.ExitCode,
                 StdOut = tOut.Result,
-                StdErr = tErr.Result,
+                StdErr = tErr.Result
             };
         }
         catch (Exception ex)
@@ -84,7 +84,7 @@ internal class ChdmanWrapper
             TotalHunks = (uint)ParseULongField(text, @"Total Hunks:\s*([\d,]+)"),
             Compression = ParseStringField(text, @"Compression:\s*(.+)") ?? "",
             Sha1 = ParseHexField(text, @"(?<!Data )SHA1:\s*([0-9a-fA-F]{40})"),
-            DataSha1 = ParseHexField(text, @"Data SHA1:\s*([0-9a-fA-F]{40})"),
+            DataSha1 = ParseHexField(text, @"Data SHA1:\s*([0-9a-fA-F]{40})")
         };
     }
 
@@ -100,7 +100,7 @@ internal class ChdmanWrapper
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true,
+            CreateNoWindow = true
         };
         psi.ArgumentList.Add("verify");
         psi.ArgumentList.Add("-i");
@@ -137,7 +137,7 @@ internal class ChdmanWrapper
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                CreateNoWindow = true,
+                CreateNoWindow = true
             };
             psi.ArgumentList.Add("extractraw");
             psi.ArgumentList.Add("-i");

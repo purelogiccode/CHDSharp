@@ -40,7 +40,7 @@ public enum DiscPlatform
     PcEngine = 10,
 
     /// <summary>DVD-Video (VIDEO_TS/VIDEO_TS.IFO) or a generic DVD.</summary>
-    Dvd = 11,
+    Dvd = 11
 }
 
 /// <summary>
@@ -82,7 +82,7 @@ public sealed record DiscPlatformInfo(
             DiscPlatform.NeoGeoCd => "neogeocd",
             DiscPlatform.PcEngine => "pcengine",
             DiscPlatform.Dvd => "dvd",
-            _ => "unknown",
+            _ => "unknown"
         };
 
     /// <inheritdoc />

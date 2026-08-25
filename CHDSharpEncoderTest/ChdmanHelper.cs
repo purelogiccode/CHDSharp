@@ -17,7 +17,7 @@ internal static class ChdmanHelper
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true,
+            CreateNoWindow = true
         };
         foreach (var a in args)
             psi.ArgumentList.Add(a);

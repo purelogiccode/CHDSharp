@@ -18,7 +18,7 @@ internal static class EndianHelpers
             (byte)(v >> 24),
             (byte)(v >> 16),
             (byte)(v >> 8),
-            (byte)v,
+            (byte)v
         ];
     }
 }

@@ -168,7 +168,7 @@ public static unsafe partial class Methods
         {
             customAlloc = null,
             customFree = null,
-            opaque = null,
+            opaque = null
         };
         return ZSTD_createDDict_advanced(
             dict,
@@ -189,7 +189,7 @@ public static unsafe partial class Methods
         {
             customAlloc = null,
             customFree = null,
-            opaque = null,
+            opaque = null
         };
         return ZSTD_createDDict_advanced(
             dictBuffer,
@@ -261,7 +261,7 @@ public static unsafe partial class Methods
     public static nuint ZSTD_estimateDDictSize(nuint dictSize, ZSTD_dictLoadMethod_e dictLoadMethod)
     {
         return (nuint)sizeof(ZSTD_DDict_s)
-            + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
+               + (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef ? 0 : dictSize);
     }
 
     public static nuint ZSTD_sizeof_DDict(ZSTD_DDict_s* ddict)

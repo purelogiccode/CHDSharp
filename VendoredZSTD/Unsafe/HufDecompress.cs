@@ -23,7 +23,7 @@ public static unsafe partial class Methods
         new algo_time_t[2] { new(976, 185), new(2131, 150) },
         new algo_time_t[2] { new(1180, 186), new(2070, 175) },
         new algo_time_t[2] { new(1377, 185), new(1731, 202) },
-        new algo_time_t[2] { new(1412, 185), new(1695, 202) },
+        new algo_time_t[2] { new(1412, 185), new(1695, 202) }
     };
 
     private static DTableDesc HUF_getDTableDesc(uint* table)
@@ -489,7 +489,7 @@ public static unsafe partial class Methods
             }
 
             if ((nuint)(oend - op4) >= (nuint)sizeof(nuint))
-                for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0; )
+                for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0;)
                 {
                     if (MEM_64bits)
                         *op1++ = HUF_decodeSymbolX1(&bitD1, dt, dtLog);
@@ -605,7 +605,7 @@ public static unsafe partial class Methods
         op3 = args->op.e3;
         assert(BitConverter.IsLittleEndian);
         assert(!MEM_32bits);
-        for (; ; )
+        for (;;)
         {
             byte* olimit;
             {
@@ -1183,16 +1183,16 @@ public static unsafe partial class Methods
                     memcpy(DTable + 2, &DEltX2, sizeof(ulong));
                     break;
                 default:
+                {
+                    int i;
+                    for (i = 0; i < skipSize; i += 8)
                     {
-                        int i;
-                        for (i = 0; i < skipSize; i += 8)
-                        {
-                            memcpy(DTable + i + 0, &DEltX2, sizeof(ulong));
-                            memcpy(DTable + i + 2, &DEltX2, sizeof(ulong));
-                            memcpy(DTable + i + 4, &DEltX2, sizeof(ulong));
-                            memcpy(DTable + i + 6, &DEltX2, sizeof(ulong));
-                        }
+                        memcpy(DTable + i + 0, &DEltX2, sizeof(ulong));
+                        memcpy(DTable + i + 2, &DEltX2, sizeof(ulong));
+                        memcpy(DTable + i + 4, &DEltX2, sizeof(ulong));
+                        memcpy(DTable + i + 6, &DEltX2, sizeof(ulong));
                     }
+                }
 
                     break;
             }
@@ -1327,7 +1327,9 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
         if (tableLog <= 11 && maxTableLog > 11)
             maxTableLog = 11;
-        for (maxW = tableLog; wksp->rankStats[maxW] == 0; maxW--) { }
+        for (maxW = tableLog; wksp->rankStats[maxW] == 0; maxW--)
+        {
+        }
 
         {
             uint w,
@@ -1611,7 +1613,7 @@ public static unsafe partial class Methods
             }
 
             if ((nuint)(oend - op4) >= (nuint)sizeof(nuint))
-                for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0; )
+                for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0;)
                 {
                     if (MEM_64bits)
                         op1 += HUF_decodeSymbolX2(op1, &bitD1, dt, dtLog);
@@ -1734,7 +1736,7 @@ public static unsafe partial class Methods
         oend3 = args->oend;
         assert(BitConverter.IsLittleEndian);
         assert(!MEM_32bits);
-        for (; ; )
+        for (;;)
         {
             byte* olimit;
             {

@@ -22,7 +22,9 @@ public class DecompressionStream : Stream
         bool checkEndOfStream = true,
         bool leaveOpen = true
     )
-        : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen) { }
+        : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen)
+    {
+    }
 
     public DecompressionStream(
         Stream stream,
