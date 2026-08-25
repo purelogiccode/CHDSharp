@@ -3,7 +3,7 @@
 namespace VendoredZSTD.Unsafe;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct CoverMapPairTS
+public struct CoverMapPairTs
 {
     public uint key;
     public uint value;

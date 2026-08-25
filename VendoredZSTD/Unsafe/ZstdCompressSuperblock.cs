@@ -4,7 +4,7 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    /**
+    /*
      * ZSTD_compressSubBlock_literal() :
      * Compresses literals section for a sub-block.
      * When we have to write the Huffman table we will sometimes choose a header
@@ -174,7 +174,7 @@ public static unsafe partial class Methods
         return matchLengthSum + litSize;
     }
 
-    /**
+    /*
      * ZSTD_compressSubBlock_sequences() :
      * Compresses sequences section for a sub-block.
      * fseMetadata->llType, fseMetadata->ofType, and fseMetadata->mlType have
@@ -287,7 +287,7 @@ public static unsafe partial class Methods
         return (nuint)(op - ostart);
     }
 
-    /**
+    /*
      * ZSTD_compressSubBlock() :
      * Compresses a single sub-block.
      * @return : compressed size of the sub-block
@@ -601,7 +601,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * ZSTD_compressSubBlock_multi() :
      * Breaks super-block into multiple sub-blocks and compresses them.
      * Entropy will be written to the first block.

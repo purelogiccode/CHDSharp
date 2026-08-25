@@ -6,7 +6,7 @@ public static unsafe partial class Methods
 {
     private static int _gDisplayLevel;
 
-    /**
+    /*
      * Returns the sum of the sample sizes.
      */
     private static nuint COVER_sum(nuint* samplesSizes, uint nbSamples)
@@ -19,9 +19,10 @@ public static unsafe partial class Methods
         return sum;
     }
 
-    /**
+    /*
      * Warns the user when their corpus is too small.
      */
+    // ReSharper disable once UnusedParameter.Local
     private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers, int displayLevel)
     {
         var ratio = nbDmers / (double)maxDictSize;
@@ -30,7 +31,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * Computes the number of epochs and the size of each epoch.
      * We will make sure that each epoch gets at least 10 * k bytes.
      *
@@ -66,7 +67,7 @@ public static unsafe partial class Methods
         return epochs;
     }
 
-    /**
+    /*
      * Checks total compressed size of a dictionary
      */
     private static nuint COVER_checkTotalCompressedSize(
@@ -133,7 +134,7 @@ public static unsafe partial class Methods
         return totalCompressedSize;
     }
 
-    /**
+    /*
      * Initialize the `COVER_best_t`.
      */
     private static void COVER_best_init(CoverBestS* best)
@@ -148,7 +149,7 @@ public static unsafe partial class Methods
         memset(&best->parameters, 0, (uint)sizeof(ZdictCoverParamsT));
     }
 
-    /**
+    /*
      * Wait until liveJobs == 0.
      */
     private static void COVER_best_wait(CoverBestS* best)
@@ -163,7 +164,7 @@ public static unsafe partial class Methods
         SynchronizationWrapper.Exit(&best->mutex);
     }
 
-    /**
+    /*
      * Call COVER_best_wait() and then destroy the COVER_best_t.
      */
     private static void COVER_best_destroy(CoverBestS* best)
@@ -178,7 +179,7 @@ public static unsafe partial class Methods
         SynchronizationWrapper.Free(&best->mutex);
     }
 
-    /**
+    /*
      * Called when a thread is about to be launched.
      * Increments liveJobs.
      */
@@ -192,7 +193,7 @@ public static unsafe partial class Methods
         SynchronizationWrapper.Exit(&best->mutex);
     }
 
-    /**
+    /*
      * Called when a thread finishes executing, both on error or success.
      * Decrements liveJobs and signals any waiting threads if liveJobs == 0.
      * If this dictionary is the best so far save it and its parameters.
@@ -259,7 +260,7 @@ public static unsafe partial class Methods
         return ds;
     }
 
-    /**
+    /*
      * Error function for COVER_selectDict function. Returns a struct where
      * return.totalCompressedSize is a ZSTD error.
      */
@@ -268,7 +269,7 @@ public static unsafe partial class Methods
         return SetDictSelection(null, 0, error);
     }
 
-    /**
+    /*
      * Error function for COVER_selectDict function. Checks if the return
      * value is an error.
      */
@@ -279,7 +280,7 @@ public static unsafe partial class Methods
             : 0U;
     }
 
-    /**
+    /*
      * Always call after selectDict is called to free up used memory from
      * newly created dictionary.
      */
@@ -288,7 +289,7 @@ public static unsafe partial class Methods
         free(selection.dictContent);
     }
 
-    /**
+    /*
      * Called to finalize the dictionary and select one based on whether or not
      * the shrink-dict flag was enabled. If enabled the dictionary used is the
      * smallest dictionary within a specified regression of the compressed size

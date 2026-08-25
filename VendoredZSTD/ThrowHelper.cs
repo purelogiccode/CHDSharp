@@ -4,8 +4,8 @@ namespace VendoredZSTD;
 
 public static class ThrowHelper
 {
-    private const ulong ZSTD_CONTENTSIZE_UNKNOWN = unchecked(0UL - 1);
-    private const ulong ZSTD_CONTENTSIZE_ERROR = unchecked(0UL - 2);
+    private const ulong ZstdContentsizeUnknown = unchecked(0UL - 1);
+    private const ulong ZstdContentsizeError = unchecked(0UL - 2);
 
     public static nuint EnsureZstdSuccess(this nuint returnValue)
     {
@@ -25,13 +25,13 @@ public static class ThrowHelper
 
     public static ulong EnsureContentSizeOk(this ulong returnValue)
     {
-        if (returnValue == ZSTD_CONTENTSIZE_UNKNOWN)
+        if (returnValue == ZstdContentsizeUnknown)
             throw new ZstdException(
                 ZstdErrorCode.ZstdErrorGeneric,
                 "Decompressed content size is not specified"
             );
 
-        if (returnValue == ZSTD_CONTENTSIZE_ERROR)
+        if (returnValue == ZstdContentsizeError)
             throw new ZstdException(
                 ZstdErrorCode.ZstdErrorGeneric,
                 "Decompressed content size cannot be determined (e.g. invalid magic number, srcSize too small)"

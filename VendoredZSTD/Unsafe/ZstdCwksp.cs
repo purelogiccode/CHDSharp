@@ -20,7 +20,7 @@ public static unsafe partial class Methods
         assert(ws->workspace <= ws->initOnceStart);
     }
 
-    /**
+    /*
      * Align must be a power of 2.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -31,7 +31,7 @@ public static unsafe partial class Methods
         return (size + mask) & ~mask;
     }
 
-    /**
+    /*
      * Use this to determine how much space in the workspace we will consume to
      * allocate this object. (Normally it should be exactly the size of the object,
      * but under special conditions, like ASAN, where we pad each object, it might
@@ -51,7 +51,7 @@ public static unsafe partial class Methods
         return size;
     }
 
-    /**
+    /*
      * Returns an adjusted alloc size that is the nearest larger multiple of 64 bytes.
      * Used to determine the number of bytes required for a given "aligned".
      */
@@ -61,7 +61,7 @@ public static unsafe partial class Methods
         return ZSTD_cwksp_alloc_size(ZSTD_cwksp_align(size, 64));
     }
 
-    /**
+    /*
      * Returns the amount of additional space the cwksp must allocate
      * for internal purposes (currently only alignment).
      */
@@ -75,7 +75,7 @@ public static unsafe partial class Methods
         return slackSpace;
     }
 
-    /**
+    /*
      * Return the number of additional bytes required to align a pointer to the given number of bytes.
      * alignBytes must be a power of two.
      */
@@ -89,7 +89,7 @@ public static unsafe partial class Methods
         return bytes;
     }
 
-    /**
+    /*
      * Returns the initial value for allocStart which is used to determine the position from
      * which we can allocate from the end of the workspace.
      */
@@ -99,7 +99,7 @@ public static unsafe partial class Methods
         return (void*)((nuint)ws->workspaceEnd & unchecked((nuint)~(64 - 1)));
     }
 
-    /**
+    /*
      * Internal function. Do not use directly.
      * Reserves the given number of bytes within the aligned/buffer segment of the wksp,
      * which counts from the end of the wksp (as opposed to the object/table segment).
@@ -126,7 +126,7 @@ public static unsafe partial class Methods
         return alloc;
     }
 
-    /**
+    /*
      * Moves the cwksp to the next phase, and does any necessary allocations.
      * cwksp initialization must necessarily go through each phase in order.
      * Returns a 0 on success, or zstd error
@@ -170,7 +170,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * Returns whether this object/buffer/etc was allocated in this workspace.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -179,7 +179,7 @@ public static unsafe partial class Methods
         return ptr != null && ws->workspace <= ptr && ptr < ws->workspaceEnd ? 1 : 0;
     }
 
-    /**
+    /*
      * Internal function. Do not use directly.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,7 +197,7 @@ public static unsafe partial class Methods
         return alloc;
     }
 
-    /**
+    /*
      * Reserves and returns unaligned memory.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -210,7 +210,7 @@ public static unsafe partial class Methods
         );
     }
 
-    /**
+    /*
      * Reserves and returns memory sized on and aligned on ZSTD_CWKSP_ALIGNMENT_BYTES (64 bytes).
      * This memory has been initialized at least once in the past.
      * This doesn't mean it has been initialized this time, and it might contain data from previous
@@ -246,7 +246,7 @@ public static unsafe partial class Methods
         return ptr;
     }
 
-    /**
+    /*
      * Reserves and returns memory sized on and aligned on ZSTD_CWKSP_ALIGNMENT_BYTES (64 bytes).
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -261,7 +261,7 @@ public static unsafe partial class Methods
         return ptr;
     }
 
-    /**
+    /*
      * Aligned on 64 bytes. These buffers have the special property that
      * their values remain constrained, allowing us to re-use them without
      * memset()-ing them.
@@ -295,7 +295,7 @@ public static unsafe partial class Methods
         return alloc;
     }
 
-    /**
+    /*
      * Aligned on sizeof(void*).
      * Note : should happen only once, at workspace first initialization
      */
@@ -343,7 +343,7 @@ public static unsafe partial class Methods
         ZSTD_cwksp_assert_internal_consistency(ws);
     }
 
-    /**
+    /*
      * Zero the part of the allocated tables not already marked clean.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -361,7 +361,7 @@ public static unsafe partial class Methods
         ZSTD_cwksp_mark_tables_clean(ws);
     }
 
-    /**
+    /*
      * Invalidates table allocations.
      * All other allocations remain valid.
      */
@@ -372,7 +372,7 @@ public static unsafe partial class Methods
         ZSTD_cwksp_assert_internal_consistency(ws);
     }
 
-    /**
+    /*
      * Invalidates all buffer, aligned, and table allocations.
      * Object allocations remain valid.
      */
@@ -388,7 +388,7 @@ public static unsafe partial class Methods
         ZSTD_cwksp_assert_internal_consistency(ws);
     }
 
-    /**
+    /*
      * The provided workspace takes ownership of the buffer [start, start+size).
      * Any existing values in the workspace are ignored (the previously managed
      * buffer, if present, must be separately freed).
@@ -433,7 +433,7 @@ public static unsafe partial class Methods
         ZSTD_customFree(ptr, customMem);
     }
 
-    /**
+    /*
      * Moves the management of a workspace from one cwksp to another. The src cwksp
      * is left in an invalid state (src must be re-init()'ed before it's used again).
      */

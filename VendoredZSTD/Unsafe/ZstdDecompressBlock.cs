@@ -2715,7 +2715,7 @@ public static unsafe partial class Methods
         );
     }
 
-    /**
+    /*
      * @returns The total size of the history referenceable by zstd, including
      * both the prefix and the extDict. At @p op any offset larger than this
      * is invalid.
@@ -2759,7 +2759,7 @@ public static unsafe partial class Methods
         return info;
     }
 
-    /**
+    /*
      * @returns The maximum offset we can decode in one read of our bitstream, without
      * reloading more bits in the middle of the offset bits read. Any offsets larger
      * than this must use the long offset decoder.

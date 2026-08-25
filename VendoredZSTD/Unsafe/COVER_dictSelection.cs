@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/**
+/*
  * Struct used for the dictionary selection function.
  */
 [StructLayout(LayoutKind.Sequential)]

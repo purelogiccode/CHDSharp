@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/**
+/*
  * Parameters for COVER_tryParameters().
  */
 [StructLayout(LayoutKind.Sequential)]

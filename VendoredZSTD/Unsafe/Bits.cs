@@ -15,6 +15,7 @@ public static partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static uint ZSTD_countLeadingZeros32(uint val)
     {
         assert(val != 0);
@@ -29,6 +30,7 @@ public static partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static uint ZSTD_countLeadingZeros64(ulong val)
     {
         assert(val != 0);

@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/**
+/*
  * COVER_best_t is used for two purposes:
  * 1. Synchronizing threads.
  * 2. Saving the best parameters and dictionary.

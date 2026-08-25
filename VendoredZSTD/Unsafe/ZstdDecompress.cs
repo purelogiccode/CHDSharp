@@ -356,7 +356,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * ZSTD_frameHeaderSize_internal() :
      * srcSize must be large enough to reach header size fields.
      * note : only works for formats ZSTD_f_zstd1 and ZSTD_f_zstd1_magicless.
@@ -386,7 +386,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTD_frameHeaderSize() :
      * srcSize must be >= ZSTD_frameHeaderSize_prefix.
      * @return : size of the Frame Header,
@@ -397,7 +397,7 @@ public static unsafe partial class Methods
         return ZSTD_frameHeaderSize_internal(src, srcSize, ZstdFormatE.ZstdFZstd1);
     }
 
-    /**
+    /*
      * ZSTD_getFrameHeader_advanced() :
      * decode Frame Header, or require larger `srcSize`.
      * note : only works for formats ZSTD_f_zstd1 and ZSTD_f_zstd1_magicless
@@ -550,7 +550,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * ZSTD_getFrameHeader() :
      * decode Frame Header, or require larger `srcSize`.
      * note : this function does not consume input, it only reads it.
@@ -563,7 +563,7 @@ public static unsafe partial class Methods
         return ZSTD_getFrameHeader_advanced(zfhPtr, src, srcSize, ZstdFormatE.ZstdFZstd1);
     }
 
-    /**
+    /*
      * ZSTD_getFrameContentSize() :
      * compatible with legacy mode
      * @return : decompressed size of the single frame pointed to be `src` if known, otherwise
@@ -646,7 +646,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTD_findDecompressedSize() :
      * `srcSize` must be the exact length of some number of ZSTD compressed and/or
      * skippable frames
@@ -694,7 +694,7 @@ public static unsafe partial class Methods
         return totalDstSize;
     }
 
-    /**
+    /*
      * ZSTD_getDecompressedSize() :
      * *  compatible with legacy mode
      * * @return : decompressed size if known, 0 otherwise
@@ -710,7 +710,7 @@ public static unsafe partial class Methods
         return ret >= unchecked(0UL - 2) ? 0 : ret;
     }
 
-    /**
+    /*
      * ZSTD_decodeFrameHeader() :
      * `headerSize` must be the size provided by ZSTD_frameHeaderSize().
      * If multiple DDict references are enabled, also will choose the correct DDict to use.
@@ -816,7 +816,7 @@ public static unsafe partial class Methods
         return frameSizeInfo;
     }
 
-    /**
+    /*
      * ZSTD_findFrameCompressedSize() :
      * compatible with legacy mode
      * `src` must point to the start of a ZSTD frame, ZSTD legacy frame, or skippable frame
@@ -829,7 +829,7 @@ public static unsafe partial class Methods
         return frameSizeInfo.compressedSize;
     }
 
-    /**
+    /*
      * ZSTD_decompressBound() :
      * compatible with legacy mode
      * `src` must point to the start of a ZSTD frame or a skippeable frame
@@ -918,7 +918,7 @@ public static unsafe partial class Methods
         return margin;
     }
 
-    /**
+    /*
      * ZSTD_insertBlock() :
      * insert `src` block into `dctx` history. Useful to track uncompressed blocks.
      */
@@ -1284,7 +1284,7 @@ public static unsafe partial class Methods
         return dctx->expected;
     }
 
-    /**
+    /*
      * Similar to ZSTD_nextSrcSizeToDecompress(), but when a block input can be streamed, we
      * allow taking a partial block as the input. Currently only raw uncompressed blocks can
      * be streamed.
@@ -1342,7 +1342,7 @@ public static unsafe partial class Methods
         return dctx->stage == ZstdDStage.ZstDdsSkipFrame ? 1 : 0;
     }
 
-    /**
+    /*
      * ZSTD_decompressContinue() :
      * srcSize : must be the exact nb of bytes expected (see ZSTD_nextSrcSizeToDecompress())
      * @return : nb of bytes generated into `dst` (necessarily

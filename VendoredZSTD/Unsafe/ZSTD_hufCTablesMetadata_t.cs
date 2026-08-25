@@ -1,11 +1,11 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/***********************************************
+/**********************************************
  *  Entropy buffer statistics structs and funcs *
  ***********************************************/
-/**
+/*
  * ZSTD_hufCTablesMetadata_t :
  * Stores Literals Block Type for a super-block in hType, and
  * huffman tree description in hufDesBuffer.

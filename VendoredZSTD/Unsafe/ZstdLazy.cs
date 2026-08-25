@@ -46,7 +46,7 @@ public static unsafe partial class Methods
         ms->nextToUpdate = target;
     }
 
-    /**
+    /*
      * ZSTD_insertDUBT1() :
      * sort one already inserted but unsorted position
      * assumption : curr >= btlow == (curr - btmask)
@@ -429,7 +429,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTD_BtFindBestMatch() : Tree updater, providing best match
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -448,7 +448,7 @@ public static unsafe partial class Methods
         return ZSTD_DUBT_findBestMatch(ms, ip, iLimit, offBasePtr, mls, dictMode);
     }
 
-    /***********************************
+    /**********************************
      * Dedicated dict search
      ***********************************/
     private static void ZSTD_dedicatedDictSearch_lazy_loadDictionary(
@@ -2982,7 +2982,7 @@ public static unsafe partial class Methods
         );
     }
 
-    /**
+    /*
      * Searches for the longest match at @p ip.
      * Dispatches to the correct implementation function based on the
      * (searchMethod, dictMode, mls, rowLog). We use switch statements

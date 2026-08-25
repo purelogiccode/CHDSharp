@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/**
+/*
  * ZSTD_fseCTablesMetadata_t :
  * Stores symbol compression modes for a super-block in {ll, ol, ml}Type, and
  * fse tables in fseTablesBuffer.

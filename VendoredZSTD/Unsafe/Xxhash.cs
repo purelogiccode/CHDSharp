@@ -190,7 +190,7 @@ public static unsafe partial class Methods
         return XXH32_endian_align((byte*)input, len, seed, XxhAlignment.XxhUnaligned);
     }
 
-    /*******   Hash streaming   *******/
+    /******   Hash streaming   *******/
     /*!
      * @ingroup xxh32_family
      */

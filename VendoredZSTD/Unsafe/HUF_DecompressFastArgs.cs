@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/**
+/*
  * The input/output arguments to the Huffman fast decoding loop:
  *
  * ip [in/out] - The input pointers, must be updated to reflect what is consumed.

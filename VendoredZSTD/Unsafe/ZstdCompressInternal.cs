@@ -712,7 +712,7 @@ public static unsafe partial class Methods
         return (nuint)(pIn - pStart);
     }
 
-    /**
+    /*
      * ZSTD_count_2segments() :
      * can count match length with `ip` & `match` in 2 different segments.
      * convention : on reaching mEnd, match count continue starting from iStart
@@ -890,7 +890,7 @@ public static unsafe partial class Methods
         return ZSTD_hash4PtrS(p, hBits, (uint)hashSalt);
     }
 
-    /** ZSTD_ipow() :
+    /* ZSTD_ipow() :
      * Return base^exponent.
      */
     private static ulong ZSTD_ipow(ulong @base, ulong exponent)
@@ -907,7 +907,7 @@ public static unsafe partial class Methods
         return power;
     }
 
-    /** ZSTD_rollingHash_append() :
+    /* ZSTD_rollingHash_append() :
      * Add the buffer to the hash value.
      */
     private static ulong ZSTD_rollingHash_append(ulong hash, void* buf, nuint size)
@@ -923,7 +923,7 @@ public static unsafe partial class Methods
         return hash;
     }
 
-    /** ZSTD_rollingHash_compute() :
+    /* ZSTD_rollingHash_compute() :
      * Compute the rolling hash value of the buffer.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -932,7 +932,7 @@ public static unsafe partial class Methods
         return ZSTD_rollingHash_append(0, buf, size);
     }
 
-    /** ZSTD_rollingHash_primePower() :
+    /* ZSTD_rollingHash_primePower() :
      * Compute the primePower to be passed to ZSTD_rollingHash_rotate() for a hash
      * over a window of length bytes.
      */
@@ -942,7 +942,7 @@ public static unsafe partial class Methods
         return ZSTD_ipow(Prime8Bytes, length - 1);
     }
 
-    /** ZSTD_rollingHash_rotate() :
+    /* ZSTD_rollingHash_rotate() :
      * Rotate the rolling hash by one byte.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -959,7 +959,7 @@ public static unsafe partial class Methods
         return hash;
     }
 
-    /**
+    /*
      * ZSTD_window_clear():
      * Clears the window containing the history by simply setting it to empty.
      */
@@ -980,7 +980,7 @@ public static unsafe partial class Methods
             : 0U;
     }
 
-    /**
+    /*
      * ZSTD_window_hasExtDict():
      * Returns non-zero if the window has a non-empty extDict.
      */
@@ -990,7 +990,7 @@ public static unsafe partial class Methods
         return window.lowLimit < window.dictLimit ? 1U : 0U;
     }
 
-    /**
+    /*
      * ZSTD_matchState_dictMode():
      * Inspects the provided matchState and figures out what dictMode should be
      * passed to the compressor.
@@ -1007,7 +1007,7 @@ public static unsafe partial class Methods
                 : ZstdDictModeE.ZstdNoDict;
     }
 
-    /**
+    /*
      * ZSTD_window_canOverflowCorrect():
      * Returns non-zero if the indices are large enough for overflow correction
      * to work correctly without impacting compression ratio.
@@ -1042,7 +1042,7 @@ public static unsafe partial class Methods
         return indexLargeEnough != 0 && dictionaryInvalidated != 0 ? 1U : 0U;
     }
 
-    /**
+    /*
      * ZSTD_window_needOverflowCorrection():
      * Returns non-zero if the indices are getting too large and need overflow
      * protection.
@@ -1061,7 +1061,7 @@ public static unsafe partial class Methods
         return curr > (3U << 29) + (1U << (sizeof(nuint) == 4 ? 30 : 31)) ? 1U : 0U;
     }
 
-    /**
+    /*
      * ZSTD_window_correctOverflow():
      * Reduces the indices to protect from index overflow.
      * Returns the correction made to the indices, which must be applied to every
@@ -1138,7 +1138,7 @@ public static unsafe partial class Methods
         return correction;
     }
 
-    /**
+    /*
      * ZSTD_window_enforceMaxDist():
      * Updates lowLimit so that:
      * (srcEnd - base) - lowLimit == maxDist + loadedDictEnd
@@ -1239,7 +1239,7 @@ public static unsafe partial class Methods
         window->nbOverflowCorrections = 0;
     }
 
-    /**
+    /*
      * ZSTD_window_update():
      * Updates the window by appending [src, src + srcSize) to the window.
      * If it is not contiguous, the current prefix becomes the extDict, and we
@@ -1289,7 +1289,7 @@ public static unsafe partial class Methods
         return contiguous;
     }
 
-    /**
+    /*
      * Returns the lowest allowed match index. It may either be in the ext-dict or the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1307,7 +1307,7 @@ public static unsafe partial class Methods
         return matchLowest;
     }
 
-    /**
+    /*
      * Returns the lowest allowed match index in the prefix.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

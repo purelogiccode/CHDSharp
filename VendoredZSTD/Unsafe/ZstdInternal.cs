@@ -636,7 +636,7 @@ public static unsafe partial class Methods
         return length;
     }
 
-    /**
+    /*
      * Returns the ZSTD_sequenceLength for the given sequences. It handles the decoding of long sequences
      * indicated by longLengthPos and longLengthType, and adds MINMATCH back to matchLength.
      */

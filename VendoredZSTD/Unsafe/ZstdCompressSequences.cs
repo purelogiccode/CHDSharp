@@ -544,7 +544,7 @@ public static unsafe partial class Methods
         return maxSymbolValue;
     }
 
-    /**
+    /*
      * Returns true if we should use ncount=-1 else we should
      * use ncount=1 for low probability symbols instead.
      */
@@ -553,7 +553,7 @@ public static unsafe partial class Methods
         return nbSeq >= 2048 ? 1U : 0U;
     }
 
-    /**
+    /*
      * Returns the cost in bytes of encoding the normalized count header.
      * Returns an error if any of the helper functions return an error.
      */
@@ -578,7 +578,7 @@ public static unsafe partial class Methods
         return FSE_writeNCount(wksp, sizeof(byte) * 512, norm, max, tableLog);
     }
 
-    /**
+    /*
      * Returns the cost in bits of encoding the distribution described by count
      * using the entropy bound.
      */
@@ -599,7 +599,7 @@ public static unsafe partial class Methods
         return cost >> 8;
     }
 
-    /**
+    /*
      * Returns the cost in bits of encoding the distribution in count using ctable.
      * Returns an error if ctable cannot represent all the symbols in count.
      */
@@ -629,7 +629,7 @@ public static unsafe partial class Methods
         return cost >> (int)kAccuracyLog;
     }
 
-    /**
+    /*
      * Returns the cost in bits of encoding the distribution in count using the
      * table described by norm. The max symbol support by norm is assumed >= max.
      * norm must be valid for every symbol with non-zero probability in count.

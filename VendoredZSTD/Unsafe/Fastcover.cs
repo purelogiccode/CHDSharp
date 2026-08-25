@@ -24,7 +24,7 @@ public static unsafe partial class Methods
     /*-*************************************
      * Hash Functions
      ***************************************/
-    /**
+    /*
      * Hash the d-byte value pointed to by p and mod 2^f into the frequency vector
      */
     private static nuint FASTCOVER_hashPtrToIndex(void* p, uint f, uint d)
@@ -38,7 +38,7 @@ public static unsafe partial class Methods
     /*-*************************************
      *  Helper functions
      ***************************************/
-    /**
+    /*
      * Selects the best segment in an epoch.
      * Segments of are scored according to the function:
      *
@@ -149,7 +149,7 @@ public static unsafe partial class Methods
         return 1;
     }
 
-    /**
+    /*
      * Clean up a context initialized with `FASTCOVER_ctx_init()`.
      */
     private static void FASTCOVER_ctx_destroy(FastcoverCtxT* ctx)
@@ -162,7 +162,7 @@ public static unsafe partial class Methods
         ctx->offsets = null;
     }
 
-    /**
+    /*
      * Calculate for frequency of hash value of each dmer in ctx->samples
      */
     private static void FASTCOVER_computeFrequency(uint* freqs, FastcoverCtxT* ctx)
@@ -188,7 +188,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * Prepare a context for dictionary building.
      * The context is only dependent on the parameter `d` and can be used multiple
      * times.
@@ -265,7 +265,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * Given the prepared context build the dictionary.
      */
     private static nuint FASTCOVER_buildDictionary(
@@ -326,7 +326,7 @@ public static unsafe partial class Methods
         return tail;
     }
 
-    /**
+    /*
      * Tries a set of parameters and updates the COVER_best_t with the results.
      * This function is thread safe if zstd is compiled with multithreaded support.
      * It takes its parameters as an *OWNING* opaque pointer to support threading.

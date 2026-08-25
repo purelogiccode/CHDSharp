@@ -216,7 +216,7 @@ public static unsafe partial class Methods
         return (maxSymbolValue + 1) / 2 + 1;
     }
 
-    /**
+    /*
      * HUF_readCTable() :
      * Loading a CTable saved with HUF_writeCTable()
      */
@@ -308,7 +308,7 @@ public static unsafe partial class Methods
         return readSize;
     }
 
-    /**
+    /*
      * HUF_getNbBitsFromCTable() :
      * Read nbBits from CTable symbolTable, for symbol `symbolValue` presumed
      * <
@@ -334,7 +334,7 @@ public static unsafe partial class Methods
         return (uint)HUF_getNbBits(ct[symbolValue]);
     }
 
-    /**
+    /*
      * HUF_setMaxHeight():
      * Try to enforce @targetNbBits on the Huffman tree described in @huffNode.
      *
@@ -577,7 +577,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * HUF_sort():
      * Sorts the symbols [0, maxSymbolValue] by count[symbol] in decreasing order.
      * This is a typical bucket sorting strategy that uses either quicksort or insertion sort to sort each bucket.
@@ -682,7 +682,7 @@ public static unsafe partial class Methods
         return nonNullRank;
     }
 
-    /**
+    /*
      * HUF_buildCTableFromTree():
      * Build the CTable given the Huffman tree in huffNode.
      *
@@ -787,7 +787,7 @@ public static unsafe partial class Methods
         return 129 + size + (size >> 8) + 8;
     }
 
-    /**
+    /*
      * ! HUF_initCStream():
      * Initializes the bitstream.
      * @returns 0 or an error code.
@@ -970,7 +970,7 @@ public static unsafe partial class Methods
         assert(n == 0);
     }
 
-    /**
+    /*
      * Returns a tight upper bound on the output space needed by Huffman
      * with 8 bytes buffer to handle over-writes. If the output is at least
      * this large we don't need to do bounds checks during Huffman encoding.
@@ -1637,7 +1637,7 @@ public static unsafe partial class Methods
         );
     }
 
-    /**
+    /*
      * HUF_compress1X_repeat() :
      * Same as HUF_compress1X_wksp(), but considers using hufTable if *repeat != HUF_repeat_none.
      * If it uses hufTable it does not modify hufTable or repeat.

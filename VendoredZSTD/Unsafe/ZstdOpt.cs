@@ -619,7 +619,7 @@ public static unsafe partial class Methods
     /*-*************************************
      *  Binary Tree search
      ***************************************/
-    /**
+    /*
      * ZSTD_insertBt1() : add one or multiple positions to tree.
      * @param ip assumed
      * <

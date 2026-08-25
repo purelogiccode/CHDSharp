@@ -131,7 +131,7 @@ public static unsafe partial class Methods
         return cctx;
     }
 
-    /**
+    /*
      * Clears and frees all of the dictionaries in the CCtx.
      */
     private static void ZSTD_clearAllDicts(ZstdCCtxS* cctx)
@@ -439,7 +439,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * Initializes `cctxParams` from `params` and `compressionLevel`.
      * @param compressionLevel If params are derived from a compression level then that compression level, otherwise
      * ZSTD_NO_CLEVEL.
@@ -499,7 +499,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * Sets cctxParams' cParams and fParams from params, but otherwise leaves them alone.
      * @param params Validated zstd parameters.
      */
@@ -1421,7 +1421,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * ZSTD_CCtx_setParametersUsingCCtxParams() :
      * just applies `params` into `cctx`
      * no action is performed, parameters are merely stored.
@@ -1622,7 +1622,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * Initializes the local dictionary using requested parameters.
      * NOTE: Initialization does not employ the pledged src size,
      * because the dictionary may be used for multiple compressions.
@@ -1869,7 +1869,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * ZSTD_checkCParams() :
      * control CParam values remain within authorized range.
      * @return : 0, or an error code if one value is beyond authorized range
@@ -1934,7 +1934,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * ZSTD_clampCParams() :
      * make CParam values within valid range.
      * @return : valid CParams
@@ -2000,7 +2000,7 @@ public static unsafe partial class Methods
         return cParams;
     }
 
-    /**
+    /*
      * ZSTD_cycleLog() :
      * condition for correct operation : hashLog > 1
      */
@@ -2010,7 +2010,7 @@ public static unsafe partial class Methods
         return hashLog - btScale;
     }
 
-    /** ZSTD_dictAndWindowLog() :
+    /* ZSTD_dictAndWindowLog() :
      * Returns an adjusted window log that is large enough to fit the source and the dictionary.
      * The zstd format says that the entire dictionary is valid if one byte of the dictionary
      * is within the window. So the hashLog and chainLog should be large enough to reference both
@@ -2039,7 +2039,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTD_adjustCParams_internal() :
      * optimize `cPar` for a specified input (`srcSize` and `dictSize`).
      * mostly downsize to reduce memory consumption and initialization latency.
@@ -2769,7 +2769,7 @@ public static unsafe partial class Methods
                 : 0;
     }
 
-    /** ZSTD_dictTooBig():
+    /* ZSTD_dictTooBig():
      * When dictionaries are larger than ZSTD_CHUNKSIZE_MAX they can't be loaded in
      * one go generically. So we ensure that in that case we reset the tables to zero,
      * so that we can load as much of the dictionary as possible.
@@ -4674,7 +4674,7 @@ public static unsafe partial class Methods
         MEM_writeLE24(op, cBlockHeader);
     }
 
-    /**
+    /*
      * ZSTD_buildBlockEntropyStats_literals() :
      * Builds entropy for the literals.
      * Stores literals block type (raw, rle, compressed, repeat) and
@@ -4850,7 +4850,7 @@ public static unsafe partial class Methods
         return stats;
     }
 
-    /**
+    /*
      * ZSTD_buildBlockEntropyStats_sequences() :
      * Builds entropy for the sequences.
      * Stores symbol compression modes and fse table to fseMetadata.
@@ -4904,7 +4904,7 @@ public static unsafe partial class Methods
         return stats.size;
     }
 
-    /**
+    /*
      * ZSTD_buildBlockEntropyStats() :
      * Builds entropy for the block.
      * Requires workspace size ENTROPY_WORKSPACE_SIZE
@@ -5298,7 +5298,7 @@ public static unsafe partial class Methods
         resultSeqStore->ofCode += startIdx;
     }
 
-    /**
+    /*
      * Returns the raw offset represented by the combination of offBase, ll0, and repcode history.
      * offBase must represent a repcode in the numeric representation of ZSTD_storeSeq().
      */
@@ -5317,7 +5317,7 @@ public static unsafe partial class Methods
         return rep[adjustedRepCode];
     }
 
-    /**
+    /*
      * ZSTD_seqStore_resolveOffCodes() reconciles any possible divergences in offset history that may arise
      * due to emission of RLE/raw blocks that disturb the offset history,
      * and replaces any repcodes within the seqStore that may be invalid.
@@ -6804,7 +6804,7 @@ public static unsafe partial class Methods
         return dictId;
     }
 
-    /**
+    /*
      * ZSTD_compress_insertDictionary() :
      * @return : dictID, or an error code
      */
@@ -7092,7 +7092,7 @@ public static unsafe partial class Methods
         return (nuint)(op - ostart);
     }
 
-    /**
+    /*
      * ZSTD_CCtx_trace() :
      * Trace the end of a compression call.
      */
@@ -7211,7 +7211,7 @@ public static unsafe partial class Methods
         return ZSTD_compressEnd_public(cctx, dst, dstCapacity, src, srcSize);
     }
 
-    /**************************
+    /*************************
      *  Simple dictionary API
      ***************************/
     /*! ZSTD_compress_usingDict() :
@@ -7289,7 +7289,7 @@ public static unsafe partial class Methods
         );
     }
 
-    /***************************************
+    /**************************************
      *  Simple API
      ***************************************/
     /*! ZSTD_compress() :
@@ -8297,7 +8297,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTD_compressStream_generic():
      * internal function for all *compressStream*() variants
      * @return : hint size for next input to complete ongoing block
@@ -9887,7 +9887,7 @@ public static unsafe partial class Methods
                 : 0;
     }
 
-    /**
+    /*
      * Reverses the adjustment applied to cparams when enabling dedicated dict
      * search. This is used to recover the params set to be used in the working
      * context. (Otherwise, those tables would also grow.)

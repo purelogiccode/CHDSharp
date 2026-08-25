@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/**
+/*
  *Number of epochs and size of each epoch.
  */
 [StructLayout(LayoutKind.Sequential)]

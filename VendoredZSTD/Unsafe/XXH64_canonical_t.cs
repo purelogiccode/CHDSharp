@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe;
 
-/*******   Canonical representation   *******/
+/******   Canonical representation   *******/
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct Xxh64CanonicalT
 {

@@ -91,7 +91,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTDMT_getBuffer() :
      * assumption : bufPool must be valid
      * @return : a buffer, with start pointer and size
@@ -1476,7 +1476,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * Returns the range of data used by the earliest job that is not yet complete.
      * If the data of the first job is broken up into two segments, we cover both
      * sections.
@@ -1507,7 +1507,7 @@ public static unsafe partial class Methods
         return KNullRange;
     }
 
-    /**
+    /*
      * Returns non-zero iff buffer and range overlap.
      */
     private static int ZSTDMT_isOverlapped(BufferS buffer, RangeT range)
@@ -1551,7 +1551,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * Attempts to set the inBuff to the next section to fill.
      * If any part of the new section is still in use we give up.
      * Returns non-zero if the buffer is filled.
@@ -1595,7 +1595,7 @@ public static unsafe partial class Methods
         return 1;
     }
 
-    /**
+    /*
      * Searches through the input for a synchronization point. If one is found, we
      * will instruct the caller to flush, and return the number of bytes to load.
      * Otherwise, we will load as many bytes as possible and instruct the caller
@@ -1680,7 +1680,7 @@ public static unsafe partial class Methods
         return hintInSize;
     }
 
-    /**
+    /*
      * ZSTDMT_compressStream_generic() :
      * internal use only - exposed to be invoked from zstd_compress.c
      * assumption : output and input are valid (pos

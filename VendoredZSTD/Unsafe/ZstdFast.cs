@@ -91,7 +91,7 @@ public static unsafe partial class Methods
             ZSTD_fillHashTableForCCtx(ms, end, dtlm);
     }
 
-    /**
+    /*
      * If you squint hard enough (and ignore repcodes), the search operation at any
      * given position is broken into 4 stages:
      *

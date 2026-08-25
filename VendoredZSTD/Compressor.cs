@@ -12,14 +12,14 @@ public unsafe class Compressor : IDisposable
      * For this purpose we use GC.KeepAlive(this)
      * For reference: https://devblogs.microsoft.com/oldnewthing/20100813-00/?p=13153
      */
-    private ZstdCCtxS* cctx;
+    private ZstdCCtxS* _cctx;
 
-    private int level = DefaultCompressionLevel;
+    private int _level = DefaultCompressionLevel;
 
     public Compressor(int level = DefaultCompressionLevel)
     {
-        cctx = Methods.ZSTD_createCCtx();
-        if (cctx == null)
+        _cctx = Methods.ZSTD_createCCtx();
+        if (_cctx == null)
             throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Failed to create cctx");
 
         Level = level;
@@ -30,12 +30,12 @@ public unsafe class Compressor : IDisposable
 
     public int Level
     {
-        get => level;
+        get => _level;
         set
         {
-            if (level != value)
+            if (_level != value)
             {
-                level = value;
+                _level = value;
                 SetParameter(ZstdCParameter.ZstdCCompressionLevel, value);
             }
         }
@@ -50,7 +50,7 @@ public unsafe class Compressor : IDisposable
     public void SetParameter(ZstdCParameter parameter, int value)
     {
         EnsureNotDisposed();
-        Methods.ZSTD_CCtx_setParameter(cctx, parameter, value).EnsureZstdSuccess();
+        Methods.ZSTD_CCtx_setParameter(_cctx, parameter, value).EnsureZstdSuccess();
         GC.KeepAlive(this);
     }
 
@@ -58,7 +58,7 @@ public unsafe class Compressor : IDisposable
     {
         EnsureNotDisposed();
         int value;
-        Methods.ZSTD_CCtx_getParameter(cctx, parameter, &value).EnsureZstdSuccess();
+        Methods.ZSTD_CCtx_getParameter(_cctx, parameter, &value).EnsureZstdSuccess();
         GC.KeepAlive(this);
         return value;
     }
@@ -73,12 +73,12 @@ public unsafe class Compressor : IDisposable
     {
         EnsureNotDisposed();
         if (dict.IsEmpty)
-            Methods.ZSTD_CCtx_loadDictionary(cctx, null, 0).EnsureZstdSuccess();
+            Methods.ZSTD_CCtx_loadDictionary(_cctx, null, 0).EnsureZstdSuccess();
         else
             fixed (byte* dictPtr = dict)
             {
                 Methods
-                    .ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
+                    .ZSTD_CCtx_loadDictionary(_cctx, dictPtr, (nuint)dict.Length)
                     .EnsureZstdSuccess();
             }
 
@@ -120,7 +120,7 @@ public unsafe class Compressor : IDisposable
         {
             var returnValue = (int)
                 Methods
-                    .ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
+                    .ZSTD_compress2(_cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
                     .EnsureZstdSuccess();
             GC.KeepAlive(this);
             return returnValue;
@@ -159,7 +159,7 @@ public unsafe class Compressor : IDisposable
         fixed (byte* destPtr = dest)
         {
             var returnValue = Methods.ZSTD_compress2(
-                cctx,
+                _cctx,
                 destPtr,
                 (nuint)dest.Length,
                 srcPtr,
@@ -203,16 +203,16 @@ public unsafe class Compressor : IDisposable
 
     private void ReleaseUnmanagedResources()
     {
-        if (cctx != null)
+        if (_cctx != null)
         {
-            Methods.ZSTD_freeCCtx(cctx);
-            cctx = null;
+            Methods.ZSTD_freeCCtx(_cctx);
+            _cctx = null;
         }
     }
 
     private void EnsureNotDisposed()
     {
-        if (cctx == null)
+        if (_cctx == null)
             throw new ObjectDisposedException(nameof(Compressor));
     }
 
@@ -226,7 +226,7 @@ public unsafe class Compressor : IDisposable
         fixed (ZstdOutBufferS* outputPtr = &output)
         {
             var returnValue = Methods
-                .ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)
+                .ZSTD_compressStream2(_cctx, outputPtr, inputPtr, directive)
                 .EnsureZstdSuccess();
             GC.KeepAlive(this);
             return returnValue;

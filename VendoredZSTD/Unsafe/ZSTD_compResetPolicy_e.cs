@@ -1,6 +1,6 @@
 namespace VendoredZSTD.Unsafe;
 
-/**
+/*
  * Controls, for this matchState reset, whether the tables need to be cleared /
  * prepared for the coming compression (ZSTDcrp_makeClean), or whether the
  * tables can be left unclean (ZSTDcrp_leaveDirty), because we know that a

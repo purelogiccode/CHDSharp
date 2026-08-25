@@ -43,7 +43,7 @@ public static unsafe partial class Methods
         return value << (int)bitsConsumed;
     }
 
-    /**
+    /*
      * Initializes args for the fast decoding loop.
      * @returns 1 on success
      * 0 if the fallback implementation should be used.
@@ -124,7 +124,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * Packs 4 HUF_DEltX1 structs into a U64. This is used to lay down 4 entries at
      * a time.
      */
@@ -142,7 +142,7 @@ public static unsafe partial class Methods
         return d4;
     }
 
-    /**
+    /*
      * Increase the tableLog to targetTableLog and rescales the stats.
      * If tableLog > targetTableLog this is a no-op.
      * @returns New tableLog
@@ -878,7 +878,7 @@ public static unsafe partial class Methods
         args->op.e3 = op3;
     }
 
-    /**
+    /*
      * @returns @p dstSize on success (>= 6)
      * 0 if the fallback implementation should be used
      * An error if an error occurred
@@ -1020,7 +1020,7 @@ public static unsafe partial class Methods
         return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
     }
 
-    /**
+    /*
      * Constructs a HUF_DEltX2 in a U32.
      */
     [Inline]
@@ -1037,7 +1037,7 @@ public static unsafe partial class Methods
         return (seq << 16) + (nbBits << 8) + (uint)level;
     }
 
-    /**
+    /*
      * Constructs a HUF_DEltX2.
      */
     [Inline]
@@ -1049,7 +1049,7 @@ public static unsafe partial class Methods
         return dElt;
     }
 
-    /**
+    /*
      * Constructs 2 HUF_DEltX2s and packs them into a U64.
      */
     [Inline]
@@ -1059,7 +1059,7 @@ public static unsafe partial class Methods
         return dElt + ((ulong)dElt << 32);
     }
 
-    /**
+    /*
      * Fills the DTable rank with all the symbols from [begin, end) that are each
      * nbBits long.
      *
@@ -2211,7 +2211,7 @@ public static unsafe partial class Methods
         return HUF_decompress4X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
     }
 
-    /**
+    /*
      * HUF_selectDecoder() :
      * Tells which decoder is likely to decode faster,
      * based on a set of pre-computed metrics.

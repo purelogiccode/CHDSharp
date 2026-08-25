@@ -5,16 +5,16 @@ namespace VendoredZSTD;
 
 public class DecompressionStream : Stream
 {
-    private readonly Stream innerStream;
-    private readonly byte[] inputBuffer;
-    private readonly int inputBufferSize;
-    private readonly bool preserveDecompressor;
-    private readonly bool leaveOpen;
-    private readonly bool checkEndOfStream;
-    private Decompressor? decompressor;
-    private ZstdInBufferS input;
-    private nuint lastDecompressResult;
-    private bool contextDrained = true;
+    private readonly Stream _innerStream;
+    private readonly byte[] _inputBuffer;
+    private readonly int _inputBufferSize;
+    private readonly bool _preserveDecompressor;
+    private readonly bool _leaveOpen;
+    private readonly bool _checkEndOfStream;
+    private Decompressor? _decompressor;
+    private ZstdInBufferS _input;
+    private nuint _lastDecompressResult;
+    private bool _contextDrained = true;
 
     public DecompressionStream(
         Stream stream,
@@ -44,34 +44,34 @@ public class DecompressionStream : Stream
         if (bufferSize < 0)
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
 
-        innerStream = stream;
-        this.decompressor = decompressor;
-        this.preserveDecompressor = preserveDecompressor;
-        this.leaveOpen = leaveOpen;
-        this.checkEndOfStream = checkEndOfStream;
+        _innerStream = stream;
+        this._decompressor = decompressor;
+        this._preserveDecompressor = preserveDecompressor;
+        this._leaveOpen = leaveOpen;
+        this._checkEndOfStream = checkEndOfStream;
 
-        inputBufferSize =
+        _inputBufferSize =
             bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
-        inputBuffer = ArrayPool<byte>.Shared.Rent(inputBufferSize);
-        input = new ZstdInBufferS { pos = (nuint)inputBufferSize, size = (nuint)inputBufferSize };
+        _inputBuffer = ArrayPool<byte>.Shared.Rent(_inputBufferSize);
+        _input = new ZstdInBufferS { pos = (nuint)_inputBufferSize, size = (nuint)_inputBufferSize };
     }
 
     public void SetParameter(ZstdDParameter parameter, int value)
     {
         EnsureNotDisposed();
-        decompressor!.SetParameter(parameter, value);
+        _decompressor!.SetParameter(parameter, value);
     }
 
     public int GetParameter(ZstdDParameter parameter)
     {
         EnsureNotDisposed();
-        return decompressor!.GetParameter(parameter);
+        return _decompressor!.GetParameter(parameter);
     }
 
     public void LoadDictionary(byte[] dict)
     {
         EnsureNotDisposed();
-        decompressor!.LoadDictionary(dict);
+        _decompressor!.LoadDictionary(dict);
     }
 
     ~DecompressionStream()
@@ -81,18 +81,18 @@ public class DecompressionStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (decompressor == null)
+        if (_decompressor == null)
             return;
 
-        if (!preserveDecompressor)
-            decompressor.Dispose();
+        if (!_preserveDecompressor)
+            _decompressor.Dispose();
 
-        decompressor = null;
+        _decompressor = null;
 
-        ArrayPool<byte>.Shared.Return(inputBuffer);
+        ArrayPool<byte>.Shared.Return(_inputBuffer);
 
-        if (!leaveOpen)
-            innerStream.Dispose();
+        if (!_leaveOpen)
+            _innerStream.Dispose();
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -116,16 +116,16 @@ public class DecompressionStream : Stream
         while (true)
         {
             // If there is still input available, or there might be data buffered in the decompressor context, flush that out
-            while (input.pos < input.size || !contextDrained)
+            while (_input.pos < _input.size || !_contextDrained)
             {
-                var oldInputPos = input.pos;
+                var oldInputPos = _input.pos;
                 var result = DecompressStream(ref output, buffer);
-                if (output.pos > 0 || oldInputPos != input.pos)
+                if (output.pos > 0 || oldInputPos != _input.pos)
                     // Keep result from last decompress call that made some progress, so we known if we're at end of frame
-                    lastDecompressResult = result;
+                    _lastDecompressResult = result;
 
                 // If decompression filled the output buffer, there might still be data buffered in the decompressor context
-                contextDrained = output.pos < output.size;
+                _contextDrained = output.pos < output.size;
                 // If we have data to return, return it immediately, so we won't stall on Read
                 if (output.pos > 0)
                     return (int)output.pos;
@@ -133,16 +133,16 @@ public class DecompressionStream : Stream
 
             // Otherwise, read some more input
             int bytesRead;
-            if ((bytesRead = innerStream.Read(inputBuffer, 0, inputBufferSize)) == 0)
+            if ((bytesRead = _innerStream.Read(_inputBuffer, 0, _inputBufferSize)) == 0)
             {
-                if (checkEndOfStream && lastDecompressResult != 0)
+                if (_checkEndOfStream && _lastDecompressResult != 0)
                     throw new EndOfStreamException("Premature end of stream");
 
                 return 0;
             }
 
-            input.size = (nuint)bytesRead;
-            input.pos = 0;
+            _input.size = (nuint)bytesRead;
+            _input.pos = 0;
         }
     }
 
@@ -178,16 +178,16 @@ public class DecompressionStream : Stream
         while (true)
         {
             // If there is still input available, or there might be data buffered in the decompressor context, flush that out
-            while (input.pos < input.size || !contextDrained)
+            while (_input.pos < _input.size || !_contextDrained)
             {
-                var oldInputPos = input.pos;
+                var oldInputPos = _input.pos;
                 var result = DecompressStream(ref output, buffer.Span);
-                if (output.pos > 0 || oldInputPos != input.pos)
+                if (output.pos > 0 || oldInputPos != _input.pos)
                     // Keep result from last decompress call that made some progress, so we known if we're at end of frame
-                    lastDecompressResult = result;
+                    _lastDecompressResult = result;
 
                 // If decompression filled the output buffer, there might still be data buffered in the decompressor context
-                contextDrained = output.pos < output.size;
+                _contextDrained = output.pos < output.size;
                 // If we have data to return, return it immediately, so we won't stall on Read
                 if (output.pos > 0)
                     return (int)output.pos;
@@ -197,31 +197,31 @@ public class DecompressionStream : Stream
             int bytesRead;
             if (
                 (
-                    bytesRead = await innerStream
-                        .ReadAsync(inputBuffer, 0, inputBufferSize, cancellationToken)
+                    bytesRead = await _innerStream
+                        .ReadAsync(_inputBuffer, 0, _inputBufferSize, cancellationToken)
                         .ConfigureAwait(false)
                 ) == 0
             )
             {
-                if (checkEndOfStream && lastDecompressResult != 0)
+                if (_checkEndOfStream && _lastDecompressResult != 0)
                     throw new EndOfStreamException("Premature end of stream");
 
                 return 0;
             }
 
-            input.size = (nuint)bytesRead;
-            input.pos = 0;
+            _input.size = (nuint)bytesRead;
+            _input.pos = 0;
         }
     }
 
     private unsafe nuint DecompressStream(ref ZstdOutBufferS output, Span<byte> outputBuffer)
     {
-        fixed (byte* inputBufferPtr = inputBuffer)
+        fixed (byte* inputBufferPtr = _inputBuffer)
         fixed (byte* outputBufferPtr = outputBuffer)
         {
-            input.src = inputBufferPtr;
+            _input.src = inputBufferPtr;
             output.dst = outputBufferPtr;
-            return decompressor!.DecompressStream(ref input, ref output);
+            return _decompressor!.DecompressStream(ref _input, ref output);
         }
     }
 
@@ -259,7 +259,7 @@ public class DecompressionStream : Stream
 
     private void EnsureNotDisposed()
     {
-        if (decompressor == null)
+        if (_decompressor == null)
             throw new ObjectDisposedException(nameof(DecompressionStream));
     }
 

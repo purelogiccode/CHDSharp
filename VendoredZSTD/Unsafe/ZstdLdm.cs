@@ -5,7 +5,7 @@ namespace VendoredZSTD.Unsafe;
 
 public static unsafe partial class Methods
 {
-    /**
+    /*
      * ZSTD_ldm_gear_init():
      *
      * Initializes the rolling hash state such that it will honor the
@@ -23,7 +23,7 @@ public static unsafe partial class Methods
             state->stopMask = ((ulong)1 << (int)hashRateLog) - 1;
     }
 
-    /** ZSTD_ldm_gear_reset()
+    /* ZSTD_ldm_gear_reset()
      * Feeds [data, data + minMatchLength) into the hash without registering any
      * splits. This effectively resets the hash state. This is used when skipping
      * over data, either at the beginning of a block, or skipping sections.
@@ -66,7 +66,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTD_ldm_gear_feed():
      *
      * Registers in the splits array all the split points found in the first
@@ -160,7 +160,7 @@ public static unsafe partial class Methods
         return n;
     }
 
-    /**
+    /*
      * ZSTD_ldm_adjustParameters() :
      * If the params->hashRateLog is not set, set it to its default value based on
      * windowLog and params->hashLog.
@@ -208,7 +208,7 @@ public static unsafe partial class Methods
             @params->bucketSizeLog < @params->hashLog ? @params->bucketSizeLog : @params->hashLog;
     }
 
-    /**
+    /*
      * ZSTD_ldm_getTableSize() :
      * Estimate the space needed for long distance matching tables or 0 if LDM is
      * disabled.
@@ -225,7 +225,7 @@ public static unsafe partial class Methods
         return @params.enableLdm == ZstdParamSwitchE.ZstdPsEnable ? totalSize : 0;
     }
 
-    /**
+    /*
      * ZSTD_ldm_getSeqSpace() :
      * Return an upper bound on the number of sequences that can be produced by
      * the long distance matcher, or 0 if LDM is disabled.
@@ -237,7 +237,7 @@ public static unsafe partial class Methods
             : 0;
     }
 
-    /**
+    /*
      * ZSTD_ldm_getBucket() :
      * Returns a pointer to the start of the bucket associated with hash.
      */
@@ -250,7 +250,7 @@ public static unsafe partial class Methods
         return ldmState->hashTable + (hash << (int)ldmParams.bucketSizeLog);
     }
 
-    /**
+    /*
      * ZSTD_ldm_insertEntry() :
      * Insert the entry with corresponding hash into the hash table
      */
@@ -267,7 +267,7 @@ public static unsafe partial class Methods
         *pOffset = (byte)((offset + 1) & ((1U << (int)ldmParams.bucketSizeLog) - 1));
     }
 
-    /**
+    /*
      * ZSTD_ldm_countBackwardsMatch() :
      * Returns the number of bytes that match backwards before pIn and pMatch.
      *
@@ -291,7 +291,7 @@ public static unsafe partial class Methods
         return matchLength;
     }
 
-    /**
+    /*
      * ZSTD_ldm_countBackwardsMatch_2segments() :
      * Returns the number of bytes that match backwards from pMatch,
      * even with the backwards match spanning 2 different segments.
@@ -320,7 +320,7 @@ public static unsafe partial class Methods
         return matchLength;
     }
 
-    /**
+    /*
      * ZSTD_ldm_fillFastTables() :
      *
      * Fills the relevant tables for the ZSTD_fast and ZSTD_dfast strategies.
@@ -403,7 +403,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * ZSTD_ldm_limitTableUpdate() :
      *
      * Sets cctx->nextToUpdate to a position corresponding closer to anchor
@@ -605,7 +605,7 @@ public static unsafe partial class Methods
                 table[u].offset -= reducerValue;
     }
 
-    /**
+    /*
      * ZSTD_ldm_generateSequences():
      *
      * Generates the sequences using the long distance match finder.
@@ -703,7 +703,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    /**
+    /*
      * ZSTD_ldm_skipSequences():
      *
      * Skip past `srcSize` bytes worth of sequences in `rawSeqStore`.
@@ -747,7 +747,7 @@ public static unsafe partial class Methods
         }
     }
 
-    /**
+    /*
      * If the sequence length is longer than remaining then the sequence is split
      * between this block and the next.
      *
@@ -810,7 +810,7 @@ public static unsafe partial class Methods
             rawSeqStore->posInSequence = 0;
     }
 
-    /**
+    /*
      * ZSTD_ldm_blockCompress():
      *
      * Compresses a block using the predefined sequences, along with a secondary

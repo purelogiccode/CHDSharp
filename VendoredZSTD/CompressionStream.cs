@@ -5,12 +5,12 @@ namespace VendoredZSTD;
 
 public class CompressionStream : Stream
 {
-    private readonly Stream innerStream;
-    private readonly byte[] outputBuffer;
-    private readonly bool preserveCompressor;
-    private readonly bool leaveOpen;
-    private Compressor? compressor;
-    private ZstdOutBufferS output;
+    private readonly Stream _innerStream;
+    private readonly byte[] _outputBuffer;
+    private readonly bool _preserveCompressor;
+    private readonly bool _leaveOpen;
+    private Compressor? _compressor;
+    private ZstdOutBufferS _output;
 
     public CompressionStream(
         Stream stream,
@@ -39,33 +39,33 @@ public class CompressionStream : Stream
         if (bufferSize < 0)
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
 
-        innerStream = stream;
-        this.compressor = compressor;
-        this.preserveCompressor = preserveCompressor;
-        this.leaveOpen = leaveOpen;
+        _innerStream = stream;
+        this._compressor = compressor;
+        this._preserveCompressor = preserveCompressor;
+        this._leaveOpen = leaveOpen;
 
         var outputBufferSize =
             bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_CStreamOutSize().EnsureZstdSuccess();
-        outputBuffer = ArrayPool<byte>.Shared.Rent(outputBufferSize);
-        output = new ZstdOutBufferS { pos = 0, size = (nuint)outputBufferSize };
+        _outputBuffer = ArrayPool<byte>.Shared.Rent(outputBufferSize);
+        _output = new ZstdOutBufferS { pos = 0, size = (nuint)outputBufferSize };
     }
 
     public void SetParameter(ZstdCParameter parameter, int value)
     {
         EnsureNotDisposed();
-        compressor!.SetParameter(parameter, value);
+        _compressor!.SetParameter(parameter, value);
     }
 
     public int GetParameter(ZstdCParameter parameter)
     {
         EnsureNotDisposed();
-        return compressor!.GetParameter(parameter);
+        return _compressor!.GetParameter(parameter);
     }
 
     public void LoadDictionary(byte[] dict)
     {
         EnsureNotDisposed();
-        compressor!.LoadDictionary(dict);
+        _compressor!.LoadDictionary(dict);
     }
 
     ~CompressionStream()
@@ -79,7 +79,7 @@ public class CompressionStream : Stream
     public async ValueTask DisposeAsync()
 #endif
     {
-        if (compressor == null)
+        if (_compressor == null)
             return;
 
         try
@@ -95,7 +95,7 @@ public class CompressionStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (compressor == null)
+        if (_compressor == null)
             return;
 
         try
@@ -111,15 +111,15 @@ public class CompressionStream : Stream
 
     private void ReleaseUnmanagedResources()
     {
-        if (!preserveCompressor)
-            compressor?.Dispose();
+        if (!_preserveCompressor)
+            _compressor?.Dispose();
 
-        compressor = null;
+        _compressor = null;
 
-        ArrayPool<byte>.Shared.Return(outputBuffer);
+        ArrayPool<byte>.Shared.Return(_outputBuffer);
 
-        if (!leaveOpen)
-            innerStream.Dispose();
+        if (!_leaveOpen)
+            _innerStream.Dispose();
     }
 
     public override void Flush()
@@ -169,12 +169,12 @@ public class CompressionStream : Stream
         nuint remaining;
         do
         {
-            output.pos = 0;
+            _output.pos = 0;
             remaining = CompressStream(ref input, buffer, directive);
 
-            var written = (int)output.pos;
+            var written = (int)_output.pos;
             if (written > 0)
-                innerStream.Write(outputBuffer, 0, written);
+                _innerStream.Write(_outputBuffer, 0, written);
         } while (
             directive == ZstdEndDirective.ZstdEContinue ? input.pos < input.size : remaining > 0
         );
@@ -196,17 +196,17 @@ public class CompressionStream : Stream
         nuint remaining;
         do
         {
-            output.pos = 0;
+            _output.pos = 0;
             remaining = CompressStream(
                 ref input,
                 buffer.HasValue ? buffer.Value.Span : null,
                 directive
             );
 
-            var written = (int)output.pos;
+            var written = (int)_output.pos;
             if (written > 0)
-                await innerStream
-                    .WriteAsync(outputBuffer, 0, written, cancellationToken)
+                await _innerStream
+                    .WriteAsync(_outputBuffer, 0, written, cancellationToken)
                     .ConfigureAwait(false);
         } while (
             directive == ZstdEndDirective.ZstdEContinue ? input.pos < input.size : remaining > 0
@@ -249,11 +249,11 @@ public class CompressionStream : Stream
     )
     {
         fixed (byte* inputBufferPtr = inputBuffer)
-        fixed (byte* outputBufferPtr = outputBuffer)
+        fixed (byte* outputBufferPtr = _outputBuffer)
         {
             input.src = inputBufferPtr;
-            output.dst = outputBufferPtr;
-            return compressor!.CompressStream(ref input, ref output, directive).EnsureZstdSuccess();
+            _output.dst = outputBufferPtr;
+            return _compressor!.CompressStream(ref input, ref _output, directive).EnsureZstdSuccess();
         }
     }
 
@@ -286,7 +286,7 @@ public class CompressionStream : Stream
 
     private void EnsureNotDisposed()
     {
-        if (compressor == null)
+        if (_compressor == null)
             throw new ObjectDisposedException(nameof(CompressionStream));
     }
 }

@@ -386,7 +386,7 @@ public static unsafe partial class Methods
         return eSize;
     }
 
-    /**
+    /*
      * @returns the maximum repcode value
      */
     private static uint ZDICT_maxRep(uint* reps)

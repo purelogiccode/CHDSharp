@@ -10,12 +10,12 @@ public unsafe class Decompressor : IDisposable
      * For this purpose we use GC.KeepAlive(this)
      * For reference: https://devblogs.microsoft.com/oldnewthing/20100813-00/?p=13153
      */
-    private ZstdDCtxS* dctx;
+    private ZstdDCtxS* _dctx;
 
     public Decompressor()
     {
-        dctx = Methods.ZSTD_createDCtx();
-        if (dctx == null)
+        _dctx = Methods.ZSTD_createDCtx();
+        if (_dctx == null)
             throw new ZstdException(ZstdErrorCode.ZstdErrorGeneric, "Failed to create dctx");
     }
 
@@ -33,7 +33,7 @@ public unsafe class Decompressor : IDisposable
     public void SetParameter(ZstdDParameter parameter, int value)
     {
         EnsureNotDisposed();
-        Methods.ZSTD_DCtx_setParameter(dctx, parameter, value).EnsureZstdSuccess();
+        Methods.ZSTD_DCtx_setParameter(_dctx, parameter, value).EnsureZstdSuccess();
         GC.KeepAlive(this);
     }
 
@@ -41,7 +41,7 @@ public unsafe class Decompressor : IDisposable
     {
         EnsureNotDisposed();
         int value;
-        Methods.ZSTD_DCtx_getParameter(dctx, parameter, &value).EnsureZstdSuccess();
+        Methods.ZSTD_DCtx_getParameter(_dctx, parameter, &value).EnsureZstdSuccess();
         GC.KeepAlive(this);
         return value;
     }
@@ -56,12 +56,12 @@ public unsafe class Decompressor : IDisposable
     {
         EnsureNotDisposed();
         if (dict.IsEmpty)
-            Methods.ZSTD_DCtx_loadDictionary(dctx, null, 0).EnsureZstdSuccess();
+            Methods.ZSTD_DCtx_loadDictionary(_dctx, null, 0).EnsureZstdSuccess();
         else
             fixed (byte* dictPtr = dict)
             {
                 Methods
-                    .ZSTD_DCtx_loadDictionary(dctx, dictPtr, (nuint)dict.Length)
+                    .ZSTD_DCtx_loadDictionary(_dctx, dictPtr, (nuint)dict.Length)
                     .EnsureZstdSuccess();
             }
 
@@ -119,7 +119,7 @@ public unsafe class Decompressor : IDisposable
             var returnValue = (int)
                 Methods
                     .ZSTD_decompressDCtx(
-                        dctx,
+                        _dctx,
                         destPtr,
                         (nuint)dest.Length,
                         srcPtr,
@@ -158,7 +158,7 @@ public unsafe class Decompressor : IDisposable
         fixed (byte* destPtr = dest)
         {
             var returnValue = Methods.ZSTD_decompressDCtx(
-                dctx,
+                _dctx,
                 destPtr,
                 (nuint)dest.Length,
                 srcPtr,
@@ -197,16 +197,16 @@ public unsafe class Decompressor : IDisposable
 
     private void ReleaseUnmanagedResources()
     {
-        if (dctx != null)
+        if (_dctx != null)
         {
-            Methods.ZSTD_freeDCtx(dctx);
-            dctx = null;
+            Methods.ZSTD_freeDCtx(_dctx);
+            _dctx = null;
         }
     }
 
     private void EnsureNotDisposed()
     {
-        if (dctx == null)
+        if (_dctx == null)
             throw new ObjectDisposedException(nameof(Decompressor));
     }
 
@@ -216,7 +216,7 @@ public unsafe class Decompressor : IDisposable
         fixed (ZstdOutBufferS* outputPtr = &output)
         {
             var returnValue = Methods
-                .ZSTD_decompressStream(dctx, outputPtr, inputPtr)
+                .ZSTD_decompressStream(_dctx, outputPtr, inputPtr)
                 .EnsureZstdSuccess();
             GC.KeepAlive(this);
             return returnValue;
