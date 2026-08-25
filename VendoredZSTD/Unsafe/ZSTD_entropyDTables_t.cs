@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe
 {
@@ -8,14 +8,18 @@ namespace VendoredZSTD.Unsafe
     {
         /* Note : Space reserved for FSE Tables */
         public _LLTable_e__FixedBuffer LLTable;
+
         /* is also used as temporary workspace while building hufTable during DDict creation */
         public _OFTable_e__FixedBuffer OFTable;
+
         /* and therefore must be at least HUF_DECOMPRESS_WORKSPACE_SIZE large */
         public _MLTable_e__FixedBuffer MLTable;
+
         /* can accommodate HUF_decompress4X */
         public fixed uint hufTable[4097];
         public fixed uint rep[3];
         public fixed uint workspace[157];
+
 #if NET8_0_OR_GREATER
         [InlineArray(513)]
         [StructLayout(LayoutKind.Sequential)]
@@ -25,7 +29,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _LLTable_e__FixedBuffer
         {
             public ZSTD_seqSymbol e0;
@@ -553,7 +557,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _OFTable_e__FixedBuffer
         {
             public ZSTD_seqSymbol e0;
@@ -825,7 +829,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _MLTable_e__FixedBuffer
         {
             public ZSTD_seqSymbol e0;

@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe
 {
@@ -8,6 +8,7 @@ namespace VendoredZSTD.Unsafe
     {
         public _huffNodeTbl_e__FixedBuffer huffNodeTbl;
         public _rankPosition_e__FixedBuffer rankPosition;
+
 #if NET8_0_OR_GREATER
         [InlineArray(512)]
         [StructLayout(LayoutKind.Sequential)]
@@ -17,7 +18,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _huffNodeTbl_e__FixedBuffer
         {
             public nodeElt_s e0;
@@ -544,7 +545,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _rankPosition_e__FixedBuffer
         {
             public rankPos e0;

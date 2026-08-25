@@ -16,6 +16,7 @@ namespace VendoredZSTD.Unsafe
          * By default, a decompression context accepts window sizes <= (1 << ZSTD_WINDOWLOG_LIMIT_DEFAULT).
          * Special: value 0 means "use default maximum windowLog". */
         ZSTD_d_windowLogMax = 100,
+
         /* note : additional experimental parameters are also available
          * within the experimental section of the API.
          * At the time of this writing, they include :
@@ -28,6 +29,7 @@ namespace VendoredZSTD.Unsafe
          * note : never ever use experimentalParam? names directly
          */
         ZSTD_d_experimentalParam1 = 1000,
+
         /* note : additional experimental parameters are also available
          * within the experimental section of the API.
          * At the time of this writing, they include :
@@ -40,6 +42,7 @@ namespace VendoredZSTD.Unsafe
          * note : never ever use experimentalParam? names directly
          */
         ZSTD_d_experimentalParam2 = 1001,
+
         /* note : additional experimental parameters are also available
          * within the experimental section of the API.
          * At the time of this writing, they include :
@@ -52,6 +55,7 @@ namespace VendoredZSTD.Unsafe
          * note : never ever use experimentalParam? names directly
          */
         ZSTD_d_experimentalParam3 = 1002,
+
         /* note : additional experimental parameters are also available
          * within the experimental section of the API.
          * At the time of this writing, they include :
@@ -64,6 +68,7 @@ namespace VendoredZSTD.Unsafe
          * note : never ever use experimentalParam? names directly
          */
         ZSTD_d_experimentalParam4 = 1003,
+
         /* note : additional experimental parameters are also available
          * within the experimental section of the API.
          * At the time of this writing, they include :
@@ -75,6 +80,6 @@ namespace VendoredZSTD.Unsafe
          * Because they are not stable, it's necessary to define ZSTD_STATIC_LINKING_ONLY to access them.
          * note : never ever use experimentalParam? names directly
          */
-        ZSTD_d_experimentalParam5 = 1004
+        ZSTD_d_experimentalParam5 = 1004,
     }
 }

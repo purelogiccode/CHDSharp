@@ -63,9 +63,10 @@ namespace VendoredZSTD
             }
             else
             {
-
                 fixed (byte* dictPtr = dict)
-                    Methods.ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length).EnsureZstdSuccess();
+                    Methods
+                        .ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
+                        .EnsureZstdSuccess();
             }
             GC.KeepAlive(this);
         }
@@ -84,11 +85,11 @@ namespace VendoredZSTD
             ReleaseUnmanagedResources();
         }
 
-        public static int GetCompressBound(int length)
-            => (int)Methods.ZSTD_compressBound((nuint)length);
+        public static int GetCompressBound(int length) =>
+            (int)Methods.ZSTD_compressBound((nuint)length);
 
-        public static ulong GetCompressBoundLong(ulong length)
-            => Methods.ZSTD_compressBound((nuint)length);
+        public static ulong GetCompressBoundLong(ulong length) =>
+            Methods.ZSTD_compressBound((nuint)length);
 
         public Span<byte> Wrap(ReadOnlySpan<byte> src)
         {
@@ -97,8 +98,8 @@ namespace VendoredZSTD
             return new Span<byte>(dest, 0, length);
         }
 
-        public int Wrap(byte[] src, byte[] dest, int offset)
-            => Wrap(src, new Span<byte>(dest, offset, dest.Length - offset));
+        public int Wrap(byte[] src, byte[] dest, int offset) =>
+            Wrap(src, new Span<byte>(dest, offset, dest.Length - offset));
 
         public int Wrap(ReadOnlySpan<byte> src, Span<byte> dest)
         {
@@ -106,22 +107,39 @@ namespace VendoredZSTD
             fixed (byte* srcPtr = src)
             fixed (byte* destPtr = dest)
             {
-                var returnValue = (int)Methods
-                    .ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
-                    .EnsureZstdSuccess();
+                var returnValue = (int)
+                    Methods
+                        .ZSTD_compress2(
+                            cctx,
+                            destPtr,
+                            (nuint)dest.Length,
+                            srcPtr,
+                            (nuint)src.Length
+                        )
+                        .EnsureZstdSuccess();
                 GC.KeepAlive(this);
                 return returnValue;
             }
         }
 
-        public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest)
-            => Wrap((ReadOnlySpan<byte>)src, dest);
+        public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest) =>
+            Wrap((ReadOnlySpan<byte>)src, dest);
 
-        public int Wrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength)
-            => Wrap(new ReadOnlySpan<byte>(src, srcOffset, srcLength), new Span<byte>(dst, dstOffset, dstLength));
+        public int Wrap(
+            byte[] src,
+            int srcOffset,
+            int srcLength,
+            byte[] dst,
+            int dstOffset,
+            int dstLength
+        ) =>
+            Wrap(
+                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+                new Span<byte>(dst, dstOffset, dstLength)
+            );
 
-        public bool TryWrap(byte[] src, byte[] dest, int offset, out int written)
-            => TryWrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
+        public bool TryWrap(byte[] src, byte[] dest, int offset, out int written) =>
+            TryWrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
 
         public bool TryWrap(ReadOnlySpan<byte> src, Span<byte> dest, out int written)
         {
@@ -129,8 +147,13 @@ namespace VendoredZSTD
             fixed (byte* srcPtr = src)
             fixed (byte* destPtr = dest)
             {
-                var returnValue =
-                    Methods.ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length);
+                var returnValue = Methods.ZSTD_compress2(
+                    cctx,
+                    destPtr,
+                    (nuint)dest.Length,
+                    srcPtr,
+                    (nuint)src.Length
+                );
                 GC.KeepAlive(this);
 
                 if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
@@ -145,11 +168,23 @@ namespace VendoredZSTD
             }
         }
 
-        public bool TryWrap(ArraySegment<byte> src, ArraySegment<byte> dest, out int written)
-            => TryWrap((ReadOnlySpan<byte>)src, dest, out written);
+        public bool TryWrap(ArraySegment<byte> src, ArraySegment<byte> dest, out int written) =>
+            TryWrap((ReadOnlySpan<byte>)src, dest, out written);
 
-        public bool TryWrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength, out int written)
-            => TryWrap(new ReadOnlySpan<byte>(src, srcOffset, srcLength), new Span<byte>(dst, dstOffset, dstLength), out written);
+        public bool TryWrap(
+            byte[] src,
+            int srcOffset,
+            int srcLength,
+            byte[] dst,
+            int dstOffset,
+            int dstLength,
+            out int written
+        ) =>
+            TryWrap(
+                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+                new Span<byte>(dst, dstOffset, dstLength),
+                out written
+            );
 
         private void ReleaseUnmanagedResources()
         {
@@ -172,12 +207,18 @@ namespace VendoredZSTD
                 throw new ObjectDisposedException(nameof(Compressor));
         }
 
-        internal nuint CompressStream(ref ZSTD_inBuffer_s input, ref ZSTD_outBuffer_s output, ZSTD_EndDirective directive)
+        internal nuint CompressStream(
+            ref ZSTD_inBuffer_s input,
+            ref ZSTD_outBuffer_s output,
+            ZSTD_EndDirective directive
+        )
         {
             fixed (ZSTD_inBuffer_s* inputPtr = &input)
             fixed (ZSTD_outBuffer_s* outputPtr = &output)
             {
-                var returnValue = Methods.ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive).EnsureZstdSuccess();
+                var returnValue = Methods
+                    .ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)
+                    .EnsureZstdSuccess();
                 GC.KeepAlive(this);
                 return returnValue;
             }

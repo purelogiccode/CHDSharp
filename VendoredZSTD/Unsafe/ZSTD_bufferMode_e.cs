@@ -5,7 +5,8 @@ namespace VendoredZSTD.Unsafe
     {
         /* Buffer the input/output */
         ZSTD_bm_buffered = 0,
+
         /* ZSTD_inBuffer/ZSTD_outBuffer is stable */
-        ZSTD_bm_stable = 1
+        ZSTD_bm_stable = 1,
     }
 }

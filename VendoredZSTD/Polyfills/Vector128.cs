@@ -39,8 +39,7 @@ namespace System.Runtime.Intrinsics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<U> As<T, U>(this Vector128<T> vector)
             where T : struct
-            where U : struct =>
-            Unsafe.As<Vector128<T>, Vector128<U>>(ref vector);
+            where U : struct => Unsafe.As<Vector128<T>, Vector128<U>>(ref vector);
 
         public static T GetElement<T>(this Vector128<T> vector, int index)
             where T : struct

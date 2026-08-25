@@ -1,7 +1,7 @@
-using static VendoredZSTD.UnsafeHelper;
 using System;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using static VendoredZSTD.UnsafeHelper;
 #if NETCOREAPP3_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
@@ -11,45 +11,86 @@ namespace VendoredZSTD.Unsafe
     public static unsafe partial class Methods
     {
 #if NET8_0_OR_GREATER
-        private static ReadOnlySpan<uint> Span_BIT_mask => new uint[32]
-        {
-            0,
-            1,
-            3,
-            7,
-            0xF,
-            0x1F,
-            0x3F,
-            0x7F,
-            0xFF,
-            0x1FF,
-            0x3FF,
-            0x7FF,
-            0xFFF,
-            0x1FFF,
-            0x3FFF,
-            0x7FFF,
-            0xFFFF,
-            0x1FFFF,
-            0x3FFFF,
-            0x7FFFF,
-            0xFFFFF,
-            0x1FFFFF,
-            0x3FFFFF,
-            0x7FFFFF,
-            0xFFFFFF,
-            0x1FFFFFF,
-            0x3FFFFFF,
-            0x7FFFFFF,
-            0xFFFFFFF,
-            0x1FFFFFFF,
-            0x3FFFFFFF,
-            0x7FFFFFFF
-        };
-        private static uint* BIT_mask => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_BIT_mask));
+        private static ReadOnlySpan<uint> Span_BIT_mask =>
+            new uint[32]
+            {
+                0,
+                1,
+                3,
+                7,
+                0xF,
+                0x1F,
+                0x3F,
+                0x7F,
+                0xFF,
+                0x1FF,
+                0x3FF,
+                0x7FF,
+                0xFFF,
+                0x1FFF,
+                0x3FFF,
+                0x7FFF,
+                0xFFFF,
+                0x1FFFF,
+                0x3FFFF,
+                0x7FFFF,
+                0xFFFFF,
+                0x1FFFFF,
+                0x3FFFFF,
+                0x7FFFFF,
+                0xFFFFFF,
+                0x1FFFFFF,
+                0x3FFFFFF,
+                0x7FFFFFF,
+                0xFFFFFFF,
+                0x1FFFFFFF,
+                0x3FFFFFFF,
+                0x7FFFFFFF,
+            };
+        private static uint* BIT_mask =>
+            (uint*)
+                System.Runtime.CompilerServices.Unsafe.AsPointer(
+                    ref MemoryMarshal.GetReference(Span_BIT_mask)
+                );
 #else
 
-        private static readonly uint* BIT_mask = GetArrayPointer(new uint[32] { 0, 1, 3, 7, 0xF, 0x1F, 0x3F, 0x7F, 0xFF, 0x1FF, 0x3FF, 0x7FF, 0xFFF, 0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF, 0x1FFFF, 0x3FFFF, 0x7FFFF, 0xFFFFF, 0x1FFFFF, 0x3FFFFF, 0x7FFFFF, 0xFFFFFF, 0x1FFFFFF, 0x3FFFFFF, 0x7FFFFFF, 0xFFFFFFF, 0x1FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF });
+        private static readonly uint* BIT_mask = GetArrayPointer(
+            new uint[32]
+            {
+                0,
+                1,
+                3,
+                7,
+                0xF,
+                0x1F,
+                0x3F,
+                0x7F,
+                0xFF,
+                0x1FF,
+                0x3FF,
+                0x7FF,
+                0xFFF,
+                0x1FFF,
+                0x3FFF,
+                0x7FFF,
+                0xFFFF,
+                0x1FFFF,
+                0x3FFFF,
+                0x7FFFF,
+                0xFFFFF,
+                0x1FFFFF,
+                0x3FFFFF,
+                0x7FFFFF,
+                0xFFFFFF,
+                0x1FFFFFF,
+                0x3FFFFFF,
+                0x7FFFFFF,
+                0xFFFFFFF,
+                0x1FFFFFFF,
+                0x3FFFFFFF,
+                0x7FFFFFFF,
+            }
+        );
 #endif
         /*-**************************************************************
          *  bitStream encoding
@@ -199,13 +240,16 @@ namespace VendoredZSTD.Unsafe
                 switch (srcSize)
                 {
                     case 7:
-                        bitD->bitContainer += (nuint)((byte*)srcBuffer)[6] << sizeof(nuint) * 8 - 16;
+                        bitD->bitContainer +=
+                            (nuint)((byte*)srcBuffer)[6] << sizeof(nuint) * 8 - 16;
                         goto case 6;
                     case 6:
-                        bitD->bitContainer += (nuint)((byte*)srcBuffer)[5] << sizeof(nuint) * 8 - 24;
+                        bitD->bitContainer +=
+                            (nuint)((byte*)srcBuffer)[5] << sizeof(nuint) * 8 - 24;
                         goto case 5;
                     case 5:
-                        bitD->bitContainer += (nuint)((byte*)srcBuffer)[4] << sizeof(nuint) * 8 - 32;
+                        bitD->bitContainer +=
+                            (nuint)((byte*)srcBuffer)[4] << sizeof(nuint) * 8 - 32;
                         goto case 4;
                     case 4:
                         bitD->bitContainer += (nuint)((byte*)srcBuffer)[3] << 24;
@@ -224,7 +268,9 @@ namespace VendoredZSTD.Unsafe
                     byte lastByte = ((byte*)srcBuffer)[srcSize - 1];
                     bitD->bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                     if (lastByte == 0)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                        return unchecked(
+                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                        );
                 }
 
                 bitD->bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;
@@ -268,7 +314,11 @@ namespace VendoredZSTD.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static nuint BIT_lookBits(BIT_DStream_t* bitD, uint nbBits)
         {
-            return BIT_getMiddleBits(bitD->bitContainer, (uint)(sizeof(nuint) * 8) - bitD->bitsConsumed - nbBits, nbBits);
+            return BIT_getMiddleBits(
+                bitD->bitContainer,
+                (uint)(sizeof(nuint) * 8) - bitD->bitsConsumed - nbBits,
+                nbBits
+            );
         }
 
         /*! BIT_lookBitsFast() :
@@ -279,7 +329,9 @@ namespace VendoredZSTD.Unsafe
         {
             uint regMask = (uint)(sizeof(nuint) * 8 - 1);
             assert(nbBits >= 1);
-            return bitD->bitContainer << (int)(bitD->bitsConsumed & regMask) >> (int)(regMask + 1 - nbBits & regMask);
+            return bitD->bitContainer
+                << (int)(bitD->bitsConsumed & regMask)
+                >> (int)(regMask + 1 - nbBits & regMask);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -376,7 +428,10 @@ namespace VendoredZSTD.Unsafe
         [InlineMethod.Inline]
         private static uint BIT_endOfDStream(BIT_DStream_t* DStream)
         {
-            return DStream->ptr == DStream->start && DStream->bitsConsumed == (uint)(sizeof(nuint) * 8) ? 1U : 0U;
+            return
+                DStream->ptr == DStream->start && DStream->bitsConsumed == (uint)(sizeof(nuint) * 8)
+                ? 1U
+                : 0U;
         }
 
         /*-********************************************************
@@ -442,7 +497,9 @@ namespace VendoredZSTD.Unsafe
                     byte lastByte = ((byte*)srcBuffer)[srcSize - 1];
                     bitD.bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                     if (lastByte == 0)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                        return unchecked(
+                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                        );
                 }
 
                 bitD.bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;
@@ -460,7 +517,11 @@ namespace VendoredZSTD.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static nuint BIT_lookBits(ref BIT_DStream_t bitD, uint nbBits)
         {
-            return BIT_getMiddleBits(bitD.bitContainer, (uint)(sizeof(nuint) * 8) - bitD.bitsConsumed - nbBits, nbBits);
+            return BIT_getMiddleBits(
+                bitD.bitContainer,
+                (uint)(sizeof(nuint) * 8) - bitD.bitsConsumed - nbBits,
+                nbBits
+            );
         }
 
         /*! BIT_lookBitsFast() :
@@ -471,7 +532,9 @@ namespace VendoredZSTD.Unsafe
         {
             uint regMask = (uint)(sizeof(nuint) * 8 - 1);
             assert(nbBits >= 1);
-            return bitD.bitContainer << (int)(bitD.bitsConsumed & regMask) >> (int)(regMask + 1 - nbBits & regMask);
+            return bitD.bitContainer
+                << (int)(bitD.bitsConsumed & regMask)
+                >> (int)(regMask + 1 - nbBits & regMask);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

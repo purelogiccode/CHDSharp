@@ -20,13 +20,22 @@ namespace VendoredZSTD
         private nuint lastDecompressResult = 0;
         private bool contextDrained = true;
 
-        public DecompressionStream(Stream stream, int bufferSize = 0, bool checkEndOfStream = true, bool leaveOpen = true)
-            : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen)
-        {
-        }
+        public DecompressionStream(
+            Stream stream,
+            int bufferSize = 0,
+            bool checkEndOfStream = true,
+            bool leaveOpen = true
+        )
+            : this(stream, new Decompressor(), bufferSize, checkEndOfStream, false, leaveOpen) { }
 
-        public DecompressionStream(Stream stream, Decompressor decompressor, int bufferSize = 0,
-            bool checkEndOfStream = true, bool preserveDecompressor = true, bool leaveOpen = true)
+        public DecompressionStream(
+            Stream stream,
+            Decompressor decompressor,
+            int bufferSize = 0,
+            bool checkEndOfStream = true,
+            bool preserveDecompressor = true,
+            bool leaveOpen = true
+        )
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
@@ -43,9 +52,14 @@ namespace VendoredZSTD
             this.leaveOpen = leaveOpen;
             this.checkEndOfStream = checkEndOfStream;
 
-            inputBufferSize = bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
+            inputBufferSize =
+                bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
             inputBuffer = ArrayPool<byte>.Shared.Rent(inputBufferSize);
-            input = new ZSTD_inBuffer_s { pos = (nuint)inputBufferSize, size = (nuint)inputBufferSize };
+            input = new ZSTD_inBuffer_s
+            {
+                pos = (nuint)inputBufferSize,
+                size = (nuint)inputBufferSize,
+            };
         }
 
         public void SetParameter(ZSTD_dParameter parameter, int value)
@@ -87,8 +101,8 @@ namespace VendoredZSTD
             }
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-            => Read(new Span<byte>(buffer, offset, count));
+        public override int Read(byte[] buffer, int offset, int count) =>
+            Read(new Span<byte>(buffer, offset, count));
 
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
         public override int Read(Span<byte> buffer)
@@ -143,15 +157,23 @@ namespace VendoredZSTD
             }
         }
 
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-            => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken).AsTask();
+        public override Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        ) => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken).AsTask();
 
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
-        public override async ValueTask<int> ReadAsync(Memory<byte> buffer,
-            CancellationToken cancellationToken = default)
+        public override async ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
 #else
-        public async ValueTask<int> ReadAsync(Memory<byte> buffer,
-            CancellationToken cancellationToken = default)
+        public async ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
 #endif
         {
             EnsureNotDisposed();
@@ -186,8 +208,13 @@ namespace VendoredZSTD
 
                 // Otherwise, read some more input
                 int bytesRead;
-                if ((bytesRead = await innerStream.ReadAsync(inputBuffer, 0, inputBufferSize, cancellationToken)
-                    .ConfigureAwait(false)) == 0)
+                if (
+                    (
+                        bytesRead = await innerStream
+                            .ReadAsync(inputBuffer, 0, inputBufferSize, cancellationToken)
+                            .ConfigureAwait(false)
+                    ) == 0
+                )
                 {
                     if (checkEndOfStream && lastDecompressResult != 0)
                     {
@@ -227,9 +254,13 @@ namespace VendoredZSTD
 
         public override void Flush() => throw new NotSupportedException();
 
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
+
         public override void SetLength(long value) => throw new NotSupportedException();
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
 
         private void EnsureNotDisposed()
         {

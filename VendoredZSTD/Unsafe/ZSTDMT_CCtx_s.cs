@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -12,6 +13,7 @@ namespace VendoredZSTD.Unsafe
         public ZSTD_CCtx_params_s @params;
         public nuint targetSectionSize;
         public nuint targetPrefixSize;
+
         /* 1 => one job is already prepared, but pool has shortage of workers. Don't create a new job. */
         public int jobReady;
         public inBuff_t inBuff;

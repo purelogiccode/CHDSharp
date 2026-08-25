@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /* Context for block-level external matchfinder API */

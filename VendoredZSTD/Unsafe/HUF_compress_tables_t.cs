@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe
 {
@@ -9,6 +9,7 @@ namespace VendoredZSTD.Unsafe
         public fixed uint count[256];
         public _CTable_e__FixedBuffer CTable;
         public _wksps_e__Union wksps;
+
 #if NET8_0_OR_GREATER
         [InlineArray(257)]
         [StructLayout(LayoutKind.Sequential)]
@@ -18,7 +19,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _CTable_e__FixedBuffer
         {
             public nuint e0;

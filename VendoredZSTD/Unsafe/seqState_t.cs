@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -9,6 +10,7 @@ namespace VendoredZSTD.Unsafe
         public ZSTD_fseState stateOffb;
         public ZSTD_fseState stateML;
         public _prevOffset_e__FixedBuffer prevOffset;
+
         [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _prevOffset_e__FixedBuffer
         {

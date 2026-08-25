@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -8,6 +9,7 @@ namespace VendoredZSTD.Unsafe
         public byte nbAdditionalBits;
         public byte nbBits;
         public uint baseValue;
+
         public ZSTD_seqSymbol(ushort nextState, byte nbAdditionalBits, byte nbBits, uint baseValue)
         {
             this.nextState = nextState;

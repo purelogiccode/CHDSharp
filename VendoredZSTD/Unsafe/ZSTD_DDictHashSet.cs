@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /* Hashset for storing references to multiple ZSTD_DDict within ZSTD_DCtx */

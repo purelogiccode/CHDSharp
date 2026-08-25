@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace VendoredZSTD.Unsafe
 {
@@ -12,6 +12,7 @@ namespace VendoredZSTD.Unsafe
         public _sortedSymbol_e__FixedBuffer sortedSymbol;
         public fixed byte weightList[256];
         public fixed uint calleeWksp[219];
+
 #if NET8_0_OR_GREATER
         [InlineArray(12)]
         [StructLayout(LayoutKind.Sequential)]
@@ -21,7 +22,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _rankVal_e__FixedBuffer
         {
             public rankValCol_t e0;
@@ -48,7 +49,7 @@ namespace VendoredZSTD.Unsafe
         }
 
 #else
-[StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _sortedSymbol_e__FixedBuffer
         {
             public sortedSymbol_t e0;

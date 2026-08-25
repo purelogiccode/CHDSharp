@@ -5,6 +5,6 @@ namespace VendoredZSTD.Unsafe
         bt_raw,
         bt_rle,
         bt_compressed,
-        bt_reserved
+        bt_reserved,
     }
 }

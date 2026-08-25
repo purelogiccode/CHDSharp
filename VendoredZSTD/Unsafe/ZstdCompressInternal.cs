@@ -1,86 +1,166 @@
-using System.Runtime.CompilerServices;
-using static VendoredZSTD.UnsafeHelper;
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using static VendoredZSTD.UnsafeHelper;
 
 namespace VendoredZSTD.Unsafe
 {
     public static unsafe partial class Methods
     {
-        private static readonly rawSeqStore_t kNullRawSeqStore = new rawSeqStore_t(seq: null, pos: 0, posInSequence: 0, size: 0, capacity: 0);
+        private static readonly rawSeqStore_t kNullRawSeqStore = new rawSeqStore_t(
+            seq: null,
+            pos: 0,
+            posInSequence: 0,
+            size: 0,
+            capacity: 0
+        );
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<byte> Span_LL_Code => new byte[64]
-        {
-            0,
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            16,
-            17,
-            17,
-            18,
-            18,
-            19,
-            19,
-            20,
-            20,
-            20,
-            20,
-            21,
-            21,
-            21,
-            21,
-            22,
-            22,
-            22,
-            22,
-            22,
-            22,
-            22,
-            22,
-            23,
-            23,
-            23,
-            23,
-            23,
-            23,
-            23,
-            23,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24
-        };
-        private static byte* LL_Code => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_LL_Code));
+        private static ReadOnlySpan<byte> Span_LL_Code =>
+            new byte[64]
+            {
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                16,
+                17,
+                17,
+                18,
+                18,
+                19,
+                19,
+                20,
+                20,
+                20,
+                20,
+                21,
+                21,
+                21,
+                21,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+            };
+        private static byte* LL_Code =>
+            (byte*)
+                System.Runtime.CompilerServices.Unsafe.AsPointer(
+                    ref MemoryMarshal.GetReference(Span_LL_Code)
+                );
 #else
 
-        private static readonly byte* LL_Code = GetArrayPointer(new byte[64] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24 });
+        private static readonly byte* LL_Code = GetArrayPointer(
+            new byte[64]
+            {
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                16,
+                17,
+                17,
+                18,
+                18,
+                19,
+                19,
+                20,
+                20,
+                20,
+                20,
+                21,
+                21,
+                21,
+                21,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+            }
+        );
 #endif
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint ZSTD_LLcode(uint litLength)
         {
@@ -89,141 +169,278 @@ namespace VendoredZSTD.Unsafe
         }
 
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<byte> Span_ML_Code => new byte[128]
-        {
-            0,
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            32,
-            33,
-            33,
-            34,
-            34,
-            35,
-            35,
-            36,
-            36,
-            36,
-            36,
-            37,
-            37,
-            37,
-            37,
-            38,
-            38,
-            38,
-            38,
-            38,
-            38,
-            38,
-            38,
-            39,
-            39,
-            39,
-            39,
-            39,
-            39,
-            39,
-            39,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            40,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            41,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42,
-            42
-        };
-        private static byte* ML_Code => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_ML_Code));
+        private static ReadOnlySpan<byte> Span_ML_Code =>
+            new byte[128]
+            {
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                32,
+                33,
+                33,
+                34,
+                34,
+                35,
+                35,
+                36,
+                36,
+                36,
+                36,
+                37,
+                37,
+                37,
+                37,
+                38,
+                38,
+                38,
+                38,
+                38,
+                38,
+                38,
+                38,
+                39,
+                39,
+                39,
+                39,
+                39,
+                39,
+                39,
+                39,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+            };
+        private static byte* ML_Code =>
+            (byte*)
+                System.Runtime.CompilerServices.Unsafe.AsPointer(
+                    ref MemoryMarshal.GetReference(Span_ML_Code)
+                );
 #else
 
-        private static readonly byte* ML_Code = GetArrayPointer(new byte[128] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 32, 33, 33, 34, 34, 35, 35, 36, 36, 36, 36, 37, 37, 37, 37, 38, 38, 38, 38, 38, 38, 38, 38, 39, 39, 39, 39, 39, 39, 39, 39, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42 });
+        private static readonly byte* ML_Code = GetArrayPointer(
+            new byte[128]
+            {
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                32,
+                33,
+                33,
+                34,
+                34,
+                35,
+                35,
+                36,
+                36,
+                36,
+                36,
+                37,
+                37,
+                37,
+                37,
+                38,
+                38,
+                38,
+                38,
+                38,
+                38,
+                38,
+                38,
+                39,
+                39,
+                39,
+                39,
+                39,
+                39,
+                39,
+                39,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                40,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                41,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+                42,
+            }
+        );
 #endif
         /* ZSTD_MLcode() :
          * note : mlBase = matchLength - MINMATCH;
@@ -255,9 +472,16 @@ namespace VendoredZSTD.Unsafe
          * Writes uncompressed block to dst buffer from given src.
          * Returns the size of the block */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_noCompressBlock(void* dst, nuint dstCapacity, void* src, nuint srcSize, uint lastBlock)
+        private static nuint ZSTD_noCompressBlock(
+            void* dst,
+            nuint dstCapacity,
+            void* src,
+            nuint srcSize,
+            uint lastBlock
+        )
         {
-            uint cBlockHeader24 = lastBlock + ((uint)blockType_e.bt_raw << 1) + (uint)(srcSize << 3);
+            uint cBlockHeader24 =
+                lastBlock + ((uint)blockType_e.bt_raw << 1) + (uint)(srcSize << 3);
             if (srcSize + ZSTD_blockHeaderSize > dstCapacity)
             {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
@@ -269,7 +493,13 @@ namespace VendoredZSTD.Unsafe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_rleCompressBlock(void* dst, nuint dstCapacity, byte src, nuint srcSize, uint lastBlock)
+        private static nuint ZSTD_rleCompressBlock(
+            void* dst,
+            nuint dstCapacity,
+            byte src,
+            nuint srcSize,
+            uint lastBlock
+        )
         {
             byte* op = (byte*)dst;
             uint cBlockHeader = lastBlock + ((uint)blockType_e.bt_rle << 1) + (uint)(srcSize << 3);
@@ -308,7 +538,11 @@ namespace VendoredZSTD.Unsafe
                     assert(0 != 0);
                     goto case ZSTD_paramSwitch_e.ZSTD_ps_auto;
                 case ZSTD_paramSwitch_e.ZSTD_ps_auto:
-                    return cctxParams->cParams.strategy == ZSTD_strategy.ZSTD_fast && cctxParams->cParams.targetLength > 0 ? 1 : 0;
+                    return
+                        cctxParams->cParams.strategy == ZSTD_strategy.ZSTD_fast
+                        && cctxParams->cParams.targetLength > 0
+                        ? 1
+                        : 0;
             }
         }
 
@@ -339,11 +573,21 @@ namespace VendoredZSTD.Unsafe
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [InlineMethod.Inline]
-        private static void ZSTD_storeSeq(seqStore_t* seqStorePtr, nuint litLength, byte* literals, byte* litLimit, uint offBase, nuint matchLength)
+        private static void ZSTD_storeSeq(
+            seqStore_t* seqStorePtr,
+            nuint litLength,
+            byte* literals,
+            byte* litLimit,
+            uint offBase,
+            nuint matchLength
+        )
         {
             byte* litLimit_w = litLimit - 32;
             byte* litEnd = literals + litLength;
-            assert((nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart) < seqStorePtr->maxNbSeq);
+            assert(
+                (nuint)(seqStorePtr->sequences - seqStorePtr->sequencesStart)
+                    < seqStorePtr->maxNbSeq
+            );
             assert(seqStorePtr->maxNbLit <= 128 * (1 << 10));
             assert(seqStorePtr->lit + litLength <= seqStorePtr->litStart + seqStorePtr->maxNbLit);
             assert(literals + litLength <= litLimit);
@@ -352,7 +596,12 @@ namespace VendoredZSTD.Unsafe
                 ZSTD_copy16(seqStorePtr->lit, literals);
                 if (litLength > 16)
                 {
-                    ZSTD_wildcopy(seqStorePtr->lit + 16, literals + 16, (nint)litLength - 16, ZSTD_overlap_e.ZSTD_no_overlap);
+                    ZSTD_wildcopy(
+                        seqStorePtr->lit + 16,
+                        literals + 16,
+                        (nint)litLength - 16,
+                        ZSTD_overlap_e.ZSTD_no_overlap
+                    );
                 }
             }
             else
@@ -365,7 +614,9 @@ namespace VendoredZSTD.Unsafe
             {
                 assert(seqStorePtr->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_none);
                 seqStorePtr->longLengthType = ZSTD_longLengthType_e.ZSTD_llt_literalLength;
-                seqStorePtr->longLengthPos = (uint)(seqStorePtr->sequences - seqStorePtr->sequencesStart);
+                seqStorePtr->longLengthPos = (uint)(
+                    seqStorePtr->sequences - seqStorePtr->sequencesStart
+                );
             }
 
             seqStorePtr->sequences[0].litLength = (ushort)litLength;
@@ -377,7 +628,9 @@ namespace VendoredZSTD.Unsafe
                 {
                     assert(seqStorePtr->longLengthType == ZSTD_longLengthType_e.ZSTD_llt_none);
                     seqStorePtr->longLengthType = ZSTD_longLengthType_e.ZSTD_llt_matchLength;
-                    seqStorePtr->longLengthPos = (uint)(seqStorePtr->sequences - seqStorePtr->sequencesStart);
+                    seqStorePtr->longLengthPos = (uint)(
+                        seqStorePtr->sequences - seqStorePtr->sequencesStart
+                    );
                 }
 
                 seqStorePtr->sequences[0].mlBase = (ushort)mlBase;
@@ -478,7 +731,13 @@ namespace VendoredZSTD.Unsafe
          *  convention : on reaching mEnd, match count continue starting from iStart
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_count_2segments(byte* ip, byte* match, byte* iEnd, byte* mEnd, byte* iStart)
+        private static nuint ZSTD_count_2segments(
+            byte* ip,
+            byte* match,
+            byte* iEnd,
+            byte* mEnd,
+            byte* iStart
+        )
         {
             byte* vEnd = ip + (mEnd - match) < iEnd ? ip + (mEnd - match) : iEnd;
             nuint matchLength = ZSTD_count(ip, match, vEnd);
@@ -488,6 +747,7 @@ namespace VendoredZSTD.Unsafe
         }
 
         private const uint prime3bytes = 506832829U;
+
         [InlineMethod.Inline]
         private static uint ZSTD_hash3(uint u, uint h, uint s)
         {
@@ -509,6 +769,7 @@ namespace VendoredZSTD.Unsafe
         }
 
         private const uint prime4bytes = 2654435761U;
+
         [InlineMethod.Inline]
         private static uint ZSTD_hash4(uint u, uint h, uint s)
         {
@@ -529,6 +790,7 @@ namespace VendoredZSTD.Unsafe
         }
 
         private const ulong prime5bytes = 889523592379UL;
+
         [InlineMethod.Inline]
         private static nuint ZSTD_hash5(ulong u, uint h, ulong s)
         {
@@ -549,6 +811,7 @@ namespace VendoredZSTD.Unsafe
         }
 
         private const ulong prime6bytes = 227718039650203UL;
+
         [InlineMethod.Inline]
         private static nuint ZSTD_hash6(ulong u, uint h, ulong s)
         {
@@ -569,6 +832,7 @@ namespace VendoredZSTD.Unsafe
         }
 
         private const ulong prime7bytes = 58295818150454627UL;
+
         [InlineMethod.Inline]
         private static nuint ZSTD_hash7(ulong u, uint h, ulong s)
         {
@@ -589,6 +853,7 @@ namespace VendoredZSTD.Unsafe
         }
 
         private const ulong prime8bytes = 0xCF1BBCDCB7A56463UL;
+
         [InlineMethod.Inline]
         private static nuint ZSTD_hash8(ulong u, uint h, ulong s)
         {
@@ -694,7 +959,12 @@ namespace VendoredZSTD.Unsafe
          * Rotate the rolling hash by one byte.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ulong ZSTD_rollingHash_rotate(ulong hash, byte toRemove, byte toAdd, ulong primePower)
+        private static ulong ZSTD_rollingHash_rotate(
+            ulong hash,
+            byte toRemove,
+            byte toAdd,
+            ulong primePower
+        )
         {
             hash -= (ulong)(toRemove + 10) * primePower;
             hash *= prime8bytes;
@@ -718,7 +988,10 @@ namespace VendoredZSTD.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint ZSTD_window_isEmpty(ZSTD_window_t window)
         {
-            return window.dictLimit == 2 && window.lowLimit == 2 && window.nextSrc - window.@base == 2 ? 1U : 0U;
+            return
+                window.dictLimit == 2 && window.lowLimit == 2 && window.nextSrc - window.@base == 2
+                ? 1U
+                : 0U;
         }
 
         /**
@@ -739,7 +1012,12 @@ namespace VendoredZSTD.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ZSTD_dictMode_e ZSTD_matchState_dictMode(ZSTD_matchState_t* ms)
         {
-            return ZSTD_window_hasExtDict(ms->window) != 0 ? ZSTD_dictMode_e.ZSTD_extDict : ms->dictMatchState != null ? ms->dictMatchState->dedicatedDictSearch != 0 ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch : ZSTD_dictMode_e.ZSTD_dictMatchState : ZSTD_dictMode_e.ZSTD_noDict;
+            return ZSTD_window_hasExtDict(ms->window) != 0 ? ZSTD_dictMode_e.ZSTD_extDict
+                : ms->dictMatchState != null
+                    ? ms->dictMatchState->dedicatedDictSearch != 0
+                            ? ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+                        : ZSTD_dictMode_e.ZSTD_dictMatchState
+                : ZSTD_dictMode_e.ZSTD_noDict;
         }
 
         /**
@@ -748,18 +1026,28 @@ namespace VendoredZSTD.Unsafe
          * to work correctly without impacting compression ratio.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_window_canOverflowCorrect(ZSTD_window_t window, uint cycleLog, uint maxDist, uint loadedDictEnd, void* src)
+        private static uint ZSTD_window_canOverflowCorrect(
+            ZSTD_window_t window,
+            uint cycleLog,
+            uint maxDist,
+            uint loadedDictEnd,
+            void* src
+        )
         {
             uint cycleSize = 1U << (int)cycleLog;
             uint curr = (uint)((byte*)src - window.@base);
-            uint minIndexToOverflowCorrect = cycleSize + (maxDist > cycleSize ? maxDist : cycleSize) + 2;
+            uint minIndexToOverflowCorrect =
+                cycleSize + (maxDist > cycleSize ? maxDist : cycleSize) + 2;
             /* Adjust the min index to backoff the overflow correction frequency,
              * so we don't waste too much CPU in overflow correction. If this
              * computation overflows we don't really care, we just need to make
              * sure it is at least minIndexToOverflowCorrect.
              */
             uint adjustment = window.nbOverflowCorrections + 1;
-            uint adjustedIndex = minIndexToOverflowCorrect * adjustment > minIndexToOverflowCorrect ? minIndexToOverflowCorrect * adjustment : minIndexToOverflowCorrect;
+            uint adjustedIndex =
+                minIndexToOverflowCorrect * adjustment > minIndexToOverflowCorrect
+                    ? minIndexToOverflowCorrect * adjustment
+                    : minIndexToOverflowCorrect;
             uint indexLargeEnough = curr > adjustedIndex ? 1U : 0U;
             /* Only overflow correct early if the dictionary is invalidated already,
              * so we don't hurt compression ratio.
@@ -774,7 +1062,14 @@ namespace VendoredZSTD.Unsafe
          * protection.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_window_needOverflowCorrection(ZSTD_window_t window, uint cycleLog, uint maxDist, uint loadedDictEnd, void* src, void* srcEnd)
+        private static uint ZSTD_window_needOverflowCorrection(
+            ZSTD_window_t window,
+            uint cycleLog,
+            uint maxDist,
+            uint loadedDictEnd,
+            void* src,
+            void* srcEnd
+        )
         {
             uint curr = (uint)((byte*)srcEnd - window.@base);
             return curr > (3U << 29) + (1U << (sizeof(nuint) == 4 ? 30 : 31)) ? 1U : 0U;
@@ -790,7 +1085,12 @@ namespace VendoredZSTD.Unsafe
          * which may be 0. Every index up to maxDist in the past must be valid.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_window_correctOverflow(ZSTD_window_t* window, uint cycleLog, uint maxDist, void* src)
+        private static uint ZSTD_window_correctOverflow(
+            ZSTD_window_t* window,
+            uint cycleLog,
+            uint maxDist,
+            void* src
+        )
         {
             /* preemptive overflow correction:
              * 1. correction is large enough:
@@ -816,8 +1116,14 @@ namespace VendoredZSTD.Unsafe
             uint curr = (uint)((byte*)src - window->@base);
             uint currentCycle = curr & cycleMask;
             /* Ensure newCurrent - maxDist >= ZSTD_WINDOW_START_INDEX. */
-            uint currentCycleCorrection = currentCycle < 2 ? cycleSize > 2 ? cycleSize : 2 : 0;
-            uint newCurrent = currentCycle + currentCycleCorrection + (maxDist > cycleSize ? maxDist : cycleSize);
+            uint currentCycleCorrection =
+                currentCycle < 2
+                    ? cycleSize > 2
+                        ? cycleSize
+                        : 2
+                    : 0;
+            uint newCurrent =
+                currentCycle + currentCycleCorrection + (maxDist > cycleSize ? maxDist : cycleSize);
             uint correction = curr - newCurrent;
             assert((maxDist & maxDist - 1) == 0);
             assert((curr & cycleMask) == (newCurrent & cycleMask));
@@ -878,7 +1184,13 @@ namespace VendoredZSTD.Unsafe
          * forceWindow and dictMatchState are therefore incompatible.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ZSTD_window_enforceMaxDist(ZSTD_window_t* window, void* blockEnd, uint maxDist, uint* loadedDictEndPtr, ZSTD_matchState_t** dictMatchStatePtr)
+        private static void ZSTD_window_enforceMaxDist(
+            ZSTD_window_t* window,
+            void* blockEnd,
+            uint maxDist,
+            uint* loadedDictEndPtr,
+            ZSTD_matchState_t** dictMatchStatePtr
+        )
         {
             uint blockEndIdx = (uint)((byte*)blockEnd - window->@base);
             uint loadedDictEnd = loadedDictEndPtr != null ? *loadedDictEndPtr : 0;
@@ -906,7 +1218,13 @@ namespace VendoredZSTD.Unsafe
          *              loadedDictEnd uses same referential as window->base
          *              maxDist is the window size */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ZSTD_checkDictValidity(ZSTD_window_t* window, void* blockEnd, uint maxDist, uint* loadedDictEndPtr, ZSTD_matchState_t** dictMatchStatePtr)
+        private static void ZSTD_checkDictValidity(
+            ZSTD_window_t* window,
+            void* blockEnd,
+            uint maxDist,
+            uint* loadedDictEndPtr,
+            ZSTD_matchState_t** dictMatchStatePtr
+        )
         {
             assert(loadedDictEndPtr != null);
             assert(dictMatchStatePtr != null);
@@ -923,16 +1241,17 @@ namespace VendoredZSTD.Unsafe
         }
 
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<byte> Span_stringToByte_20_00 => new byte[]
-        {
-            32,
-            0
-        };
-        private static byte* stringToByte_20_00 => (byte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_stringToByte_20_00));
+        private static ReadOnlySpan<byte> Span_stringToByte_20_00 => new byte[] { 32, 0 };
+        private static byte* stringToByte_20_00 =>
+            (byte*)
+                System.Runtime.CompilerServices.Unsafe.AsPointer(
+                    ref MemoryMarshal.GetReference(Span_stringToByte_20_00)
+                );
 #else
 
         private static readonly byte* stringToByte_20_00 = GetArrayPointer(new byte[] { 32, 0 });
 #endif
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ZSTD_window_init(ZSTD_window_t* window)
         {
@@ -953,7 +1272,12 @@ namespace VendoredZSTD.Unsafe
          * Returns non-zero if the segment is contiguous.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_window_update(ZSTD_window_t* window, void* src, nuint srcSize, int forceNonContiguous)
+        private static uint ZSTD_window_update(
+            ZSTD_window_t* window,
+            void* src,
+            nuint srcSize,
+            int forceNonContiguous
+        )
         {
             byte* ip = (byte*)src;
             uint contiguous = 1;
@@ -976,10 +1300,14 @@ namespace VendoredZSTD.Unsafe
             }
 
             window->nextSrc = ip + srcSize;
-            if (ip + srcSize > window->dictBase + window->lowLimit && ip < window->dictBase + window->dictLimit)
+            if (
+                ip + srcSize > window->dictBase + window->lowLimit
+                && ip < window->dictBase + window->dictLimit
+            )
             {
                 nint highInputIdx = (nint)(ip + srcSize - window->dictBase);
-                uint lowLimitMax = highInputIdx > (nint)window->dictLimit ? window->dictLimit : (uint)highInputIdx;
+                uint lowLimitMax =
+                    highInputIdx > (nint)window->dictLimit ? window->dictLimit : (uint)highInputIdx;
                 window->lowLimit = lowLimitMax;
             }
 
@@ -990,7 +1318,11 @@ namespace VendoredZSTD.Unsafe
          * Returns the lowest allowed match index. It may either be in the ext-dict or the prefix.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_getLowestMatchIndex(ZSTD_matchState_t* ms, uint curr, uint windowLog)
+        private static uint ZSTD_getLowestMatchIndex(
+            ZSTD_matchState_t* ms,
+            uint curr,
+            uint windowLog
+        )
         {
             uint maxDistance = 1U << (int)windowLog;
             uint lowestValid = ms->window.lowLimit;
@@ -1008,7 +1340,11 @@ namespace VendoredZSTD.Unsafe
          * Returns the lowest allowed match index in the prefix.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_getLowestPrefixIndex(ZSTD_matchState_t* ms, uint curr, uint windowLog)
+        private static uint ZSTD_getLowestPrefixIndex(
+            ZSTD_matchState_t* ms,
+            uint curr,
+            uint windowLog
+        )
         {
             uint maxDistance = 1U << (int)windowLog;
             uint lowestValid = ms->window.dictLimit;

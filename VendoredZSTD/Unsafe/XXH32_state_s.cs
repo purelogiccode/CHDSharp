@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /*!
@@ -18,14 +19,19 @@ namespace VendoredZSTD.Unsafe
     {
         /*!< Total length hashed, modulo 2^32 */
         public uint total_len_32;
+
         /*!< Whether the hash is >= 16 (handles @ref total_len_32 overflow) */
         public uint large_len;
+
         /*!< Accumulator lanes */
         public fixed uint v[4];
+
         /*!< Internal buffer for partial reads. Treated as unsigned char[16]. */
         public fixed uint mem32[4];
+
         /*!< Amount of data in @ref mem32 */
         public uint memsize;
+
         /*!< Reserved field. Do not read nor write to it. */
         public uint reserved;
     }

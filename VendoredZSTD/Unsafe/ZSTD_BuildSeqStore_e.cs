@@ -3,6 +3,6 @@ namespace VendoredZSTD.Unsafe
     public enum ZSTD_buildSeqStore_e
     {
         ZSTDbss_compress,
-        ZSTDbss_noCompress
+        ZSTDbss_noCompress,
     }
 }

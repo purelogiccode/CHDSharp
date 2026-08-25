@@ -25,22 +25,34 @@ namespace VendoredZSTD.Unsafe
         {
             FSE_initCState(statePtr, ct);
             {
-                FSE_symbolCompressionTransform symbolTT = ((FSE_symbolCompressionTransform*)statePtr->symbolTT)[symbol];
+                FSE_symbolCompressionTransform symbolTT = (
+                    (FSE_symbolCompressionTransform*)statePtr->symbolTT
+                )[symbol];
                 ushort* stateTable = (ushort*)statePtr->stateTable;
                 uint nbBitsOut = symbolTT.deltaNbBits + (1 << 15) >> 16;
                 statePtr->value = (nint)((nbBitsOut << 16) - symbolTT.deltaNbBits);
-                statePtr->value = stateTable[(statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState];
+                statePtr->value = stateTable[
+                    (statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState
+                ];
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FSE_encodeSymbol(BIT_CStream_t* bitC, FSE_CState_t* statePtr, uint symbol)
+        private static void FSE_encodeSymbol(
+            BIT_CStream_t* bitC,
+            FSE_CState_t* statePtr,
+            uint symbol
+        )
         {
-            FSE_symbolCompressionTransform symbolTT = ((FSE_symbolCompressionTransform*)statePtr->symbolTT)[symbol];
+            FSE_symbolCompressionTransform symbolTT = (
+                (FSE_symbolCompressionTransform*)statePtr->symbolTT
+            )[symbol];
             ushort* stateTable = (ushort*)statePtr->stateTable;
             uint nbBitsOut = (uint)statePtr->value + symbolTT.deltaNbBits >> 16;
             BIT_addBits(bitC, (nuint)statePtr->value, nbBitsOut);
-            statePtr->value = stateTable[(statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState];
+            statePtr->value = stateTable[
+                (statePtr->value >> (int)nbBitsOut) + symbolTT.deltaFindState
+            ];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,7 +79,12 @@ namespace VendoredZSTD.Unsafe
          * note 1 : assume symbolValue is valid (<= maxSymbolValue)
          * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint FSE_bitCost(void* symbolTTPtr, uint tableLog, uint symbolValue, uint accuracyLog)
+        private static uint FSE_bitCost(
+            void* symbolTTPtr,
+            uint tableLog,
+            uint symbolValue,
+            uint accuracyLog
+        )
         {
             FSE_symbolCompressionTransform* symbolTT = (FSE_symbolCompressionTransform*)symbolTTPtr;
             uint minNbBits = symbolTT[symbolValue].deltaNbBits >> 16;
@@ -76,9 +93,11 @@ namespace VendoredZSTD.Unsafe
             assert(accuracyLog < 31 - tableLog);
             {
                 uint tableSize = (uint)(1 << (int)tableLog);
-                uint deltaFromThreshold = threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
+                uint deltaFromThreshold =
+                    threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
                 /* linear interpolation (very approximate) */
-                uint normalizedDeltaFromThreshold = deltaFromThreshold << (int)accuracyLog >> (int)tableLog;
+                uint normalizedDeltaFromThreshold =
+                    deltaFromThreshold << (int)accuracyLog >> (int)tableLog;
                 uint bitMultiplier = (uint)(1 << (int)accuracyLog);
                 assert(symbolTT[symbolValue].deltaNbBits + tableSize <= threshold);
                 assert(normalizedDeltaFromThreshold <= bitMultiplier);

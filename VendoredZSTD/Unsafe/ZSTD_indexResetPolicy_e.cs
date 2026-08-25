@@ -8,6 +8,6 @@ namespace VendoredZSTD.Unsafe
     public enum ZSTD_indexResetPolicy_e
     {
         ZSTDirp_continue,
-        ZSTDirp_reset
+        ZSTDirp_reset,
     }
 }

@@ -26,10 +26,16 @@ namespace VendoredZSTD
         public static ulong EnsureContentSizeOk(this ulong returnValue)
         {
             if (returnValue == ZSTD_CONTENTSIZE_UNKNOWN)
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Decompressed content size is not specified");
+                throw new ZstdException(
+                    ZSTD_ErrorCode.ZSTD_error_GENERIC,
+                    "Decompressed content size is not specified"
+                );
 
             if (returnValue == ZSTD_CONTENTSIZE_ERROR)
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Decompressed content size cannot be determined (e.g. invalid magic number, srcSize too small)");
+                throw new ZstdException(
+                    ZSTD_ErrorCode.ZSTD_error_GENERIC,
+                    "Decompressed content size cannot be determined (e.g. invalid magic number, srcSize too small)"
+                );
 
             return returnValue;
         }

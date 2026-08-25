@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -9,6 +10,7 @@ namespace VendoredZSTD.Unsafe
         public byte* startPtr;
         public byte* ptr;
         public byte* endPtr;
+
         [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _bitContainer_e__FixedBuffer
         {

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /*-***************************/
@@ -9,6 +10,7 @@ namespace VendoredZSTD.Unsafe
     {
         /* single-symbol decoding */
         public byte nbBits;
+
         /* single-symbol decoding */
         public byte @byte;
     }

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -6,9 +7,11 @@ namespace VendoredZSTD.Unsafe
     {
         /* if == ZSTD_CONTENTSIZE_UNKNOWN, it means this field is not available. 0 means "empty" */
         public ulong frameContentSize;
+
         /* can be very large, up to <= frameContentSize */
         public ulong windowSize;
         public uint blockSizeMax;
+
         /* if == ZSTD_skippableFrame, frameContentSize is the size of skippable content */
         public ZSTD_frameType_e frameType;
         public uint headerSize;

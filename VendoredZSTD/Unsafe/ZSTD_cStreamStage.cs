@@ -4,6 +4,6 @@ namespace VendoredZSTD.Unsafe
     {
         zcss_init = 0,
         zcss_load,
-        zcss_flush
+        zcss_flush,
     }
 }

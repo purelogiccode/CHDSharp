@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /*********************************
@@ -9,6 +10,7 @@ namespace VendoredZSTD.Unsafe
     {
         /* Offset sumtype code for the match, using ZSTD_storeSeq() format */
         public uint off;
+
         /* Raw length of match */
         public uint len;
     }

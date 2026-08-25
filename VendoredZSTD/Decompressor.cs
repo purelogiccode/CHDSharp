@@ -57,7 +57,9 @@ namespace VendoredZSTD
             else
             {
                 fixed (byte* dictPtr = dict)
-                    Methods.ZSTD_DCtx_loadDictionary(dctx, dictPtr, (nuint)dict.Length).EnsureZstdSuccess();
+                    Methods
+                        .ZSTD_DCtx_loadDictionary(dctx, dictPtr, (nuint)dict.Length)
+                        .EnsureZstdSuccess();
             }
             GC.KeepAlive(this);
         }
@@ -65,32 +67,38 @@ namespace VendoredZSTD
         public static ulong GetDecompressedSize(ReadOnlySpan<byte> src)
         {
             fixed (byte* srcPtr = src)
-                return Methods.ZSTD_decompressBound(srcPtr, (nuint)src.Length).EnsureContentSizeOk();
+                return Methods
+                    .ZSTD_decompressBound(srcPtr, (nuint)src.Length)
+                    .EnsureContentSizeOk();
         }
 
-        public static ulong GetDecompressedSize(ArraySegment<byte> src)
-            => GetDecompressedSize((ReadOnlySpan<byte>)src);
+        public static ulong GetDecompressedSize(ArraySegment<byte> src) =>
+            GetDecompressedSize((ReadOnlySpan<byte>)src);
 
-        public static ulong GetDecompressedSize(byte[] src, int srcOffset, int srcLength)
-            => GetDecompressedSize(new ReadOnlySpan<byte>(src, srcOffset, srcLength));
+        public static ulong GetDecompressedSize(byte[] src, int srcOffset, int srcLength) =>
+            GetDecompressedSize(new ReadOnlySpan<byte>(src, srcOffset, srcLength));
 
         public Span<byte> Unwrap(ReadOnlySpan<byte> src, int maxDecompressedSize = int.MaxValue)
         {
             var expectedDstSize = GetDecompressedSize(src);
             if (expectedDstSize > (ulong)maxDecompressedSize)
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
-                    $"Decompressed content size {expectedDstSize} is greater than {nameof(maxDecompressedSize)} {maxDecompressedSize}");
+                throw new ZstdException(
+                    ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
+                    $"Decompressed content size {expectedDstSize} is greater than {nameof(maxDecompressedSize)} {maxDecompressedSize}"
+                );
             if (expectedDstSize > Constants.MaxByteArrayLength)
-                throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
-                    $"Decompressed content size {expectedDstSize} is greater than max possible byte array size {Constants.MaxByteArrayLength}");
+                throw new ZstdException(
+                    ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
+                    $"Decompressed content size {expectedDstSize} is greater than max possible byte array size {Constants.MaxByteArrayLength}"
+                );
 
             var dest = new byte[expectedDstSize];
             var length = Unwrap(src, dest);
             return new Span<byte>(dest, 0, length);
         }
 
-        public int Unwrap(byte[] src, byte[] dest, int offset)
-            => Unwrap(src, new Span<byte>(dest, offset, dest.Length - offset));
+        public int Unwrap(byte[] src, byte[] dest, int offset) =>
+            Unwrap(src, new Span<byte>(dest, offset, dest.Length - offset));
 
         public int Unwrap(ReadOnlySpan<byte> src, Span<byte> dest)
         {
@@ -98,19 +106,36 @@ namespace VendoredZSTD
             fixed (byte* srcPtr = src)
             fixed (byte* destPtr = dest)
             {
-                var returnValue = (int)Methods
-                    .ZSTD_decompressDCtx(dctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
-                    .EnsureZstdSuccess();
+                var returnValue = (int)
+                    Methods
+                        .ZSTD_decompressDCtx(
+                            dctx,
+                            destPtr,
+                            (nuint)dest.Length,
+                            srcPtr,
+                            (nuint)src.Length
+                        )
+                        .EnsureZstdSuccess();
                 GC.KeepAlive(this);
                 return returnValue;
             }
         }
 
-        public int Unwrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength)
-            => Unwrap(new ReadOnlySpan<byte>(src, srcOffset, srcLength), new Span<byte>(dst, dstOffset, dstLength));
+        public int Unwrap(
+            byte[] src,
+            int srcOffset,
+            int srcLength,
+            byte[] dst,
+            int dstOffset,
+            int dstLength
+        ) =>
+            Unwrap(
+                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+                new Span<byte>(dst, dstOffset, dstLength)
+            );
 
-        public bool TryUnwrap(byte[] src, byte[] dest, int offset, out int written)
-            => TryUnwrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
+        public bool TryUnwrap(byte[] src, byte[] dest, int offset, out int written) =>
+            TryUnwrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
 
         public bool TryUnwrap(ReadOnlySpan<byte> src, Span<byte> dest, out int written)
         {
@@ -118,8 +143,13 @@ namespace VendoredZSTD
             fixed (byte* srcPtr = src)
             fixed (byte* destPtr = dest)
             {
-                var returnValue =
-                    Methods.ZSTD_decompressDCtx(dctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length);
+                var returnValue = Methods.ZSTD_decompressDCtx(
+                    dctx,
+                    destPtr,
+                    (nuint)dest.Length,
+                    srcPtr,
+                    (nuint)src.Length
+                );
                 GC.KeepAlive(this);
 
                 if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
@@ -134,8 +164,20 @@ namespace VendoredZSTD
             }
         }
 
-        public bool TryUnwrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength, out int written)
-            => TryUnwrap(new ReadOnlySpan<byte>(src, srcOffset, srcLength), new Span<byte>(dst, dstOffset, dstLength), out written);
+        public bool TryUnwrap(
+            byte[] src,
+            int srcOffset,
+            int srcLength,
+            byte[] dst,
+            int dstOffset,
+            int dstLength,
+            out int written
+        ) =>
+            TryUnwrap(
+                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+                new Span<byte>(dst, dstOffset, dstLength),
+                out written
+            );
 
         private void ReleaseUnmanagedResources()
         {
@@ -151,6 +193,7 @@ namespace VendoredZSTD
             ReleaseUnmanagedResources();
             GC.SuppressFinalize(this);
         }
+
         private void EnsureNotDisposed()
         {
             if (dctx == null)
@@ -162,7 +205,9 @@ namespace VendoredZSTD
             fixed (ZSTD_inBuffer_s* inputPtr = &input)
             fixed (ZSTD_outBuffer_s* outputPtr = &output)
             {
-                var returnValue = Methods.ZSTD_decompressStream(dctx, outputPtr, inputPtr).EnsureZstdSuccess();
+                var returnValue = Methods
+                    .ZSTD_decompressStream(dctx, outputPtr, inputPtr)
+                    .EnsureZstdSuccess();
                 GC.KeepAlive(this);
                 return returnValue;
             }

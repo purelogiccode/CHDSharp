@@ -1,11 +1,18 @@
-using static VendoredZSTD.UnsafeHelper;
 using System.Runtime.CompilerServices;
+using static VendoredZSTD.UnsafeHelper;
 
 namespace VendoredZSTD.Unsafe
 {
     public static unsafe partial class Methods
     {
-        private static nuint FSE_buildDTable_internal(uint* dt, short* normalizedCounter, uint maxSymbolValue, uint tableLog, void* workSpace, nuint wkspSize)
+        private static nuint FSE_buildDTable_internal(
+            uint* dt,
+            short* normalizedCounter,
+            uint maxSymbolValue,
+            uint tableLog,
+            void* workSpace,
+            nuint wkspSize
+        )
         {
             /* because *dt is unsigned, 32-bits aligned on 32-bits */
             void* tdPtr = dt + 1;
@@ -94,7 +101,8 @@ namespace VendoredZSTD.Unsafe
             {
                 uint tableMask = tableSize - 1;
                 uint step = (tableSize >> 1) + (tableSize >> 3) + 3;
-                uint s, position = 0;
+                uint s,
+                    position = 0;
                 for (s = 0; s < maxSV1; s++)
                 {
                     int i;
@@ -118,23 +126,46 @@ namespace VendoredZSTD.Unsafe
                     byte symbol = tableDecode[u].symbol;
                     uint nextState = symbolNext[symbol]++;
                     tableDecode[u].nbBits = (byte)(tableLog - ZSTD_highbit32(nextState));
-                    tableDecode[u].newState = (ushort)((nextState << tableDecode[u].nbBits) - tableSize);
+                    tableDecode[u].newState = (ushort)(
+                        (nextState << tableDecode[u].nbBits) - tableSize
+                    );
                 }
             }
 
             return 0;
         }
 
-        private static nuint FSE_buildDTable_wksp(uint* dt, short* normalizedCounter, uint maxSymbolValue, uint tableLog, void* workSpace, nuint wkspSize)
+        private static nuint FSE_buildDTable_wksp(
+            uint* dt,
+            short* normalizedCounter,
+            uint maxSymbolValue,
+            uint tableLog,
+            void* workSpace,
+            nuint wkspSize
+        )
         {
-            return FSE_buildDTable_internal(dt, normalizedCounter, maxSymbolValue, tableLog, workSpace, wkspSize);
+            return FSE_buildDTable_internal(
+                dt,
+                normalizedCounter,
+                maxSymbolValue,
+                tableLog,
+                workSpace,
+                wkspSize
+            );
         }
 
         /*-*******************************************************
          *  Decompression (Byte symbols)
          *********************************************************/
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint FSE_decompress_usingDTable_generic(void* dst, nuint maxDstSize, void* cSrc, nuint cSrcSize, uint* dt, uint fast)
+        private static nuint FSE_decompress_usingDTable_generic(
+            void* dst,
+            nuint maxDstSize,
+            void* cSrc,
+            nuint cSrcSize,
+            uint* dt,
+            uint fast
+        )
         {
             byte* ostart = (byte*)dst;
             byte* op = ostart;
@@ -151,12 +182,23 @@ namespace VendoredZSTD.Unsafe
 
             FSE_initDState(&state1, &bitD, dt);
             FSE_initDState(&state2, &bitD, dt);
-            for (; BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_unfinished && op < olimit; op += 4)
+            for (
+                ;
+                BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_unfinished
+                    && op < olimit;
+                op += 4
+            )
             {
-                op[0] = fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
+                op[0] =
+                    fast != 0
+                        ? FSE_decodeSymbolFast(&state1, &bitD)
+                        : FSE_decodeSymbol(&state1, &bitD);
                 if ((14 - 2) * 2 + 7 > sizeof(nuint) * 8)
                     BIT_reloadDStream(&bitD);
-                op[1] = fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
+                op[1] =
+                    fast != 0
+                        ? FSE_decodeSymbolFast(&state2, &bitD)
+                        : FSE_decodeSymbol(&state2, &bitD);
                 if ((14 - 2) * 4 + 7 > sizeof(nuint) * 8)
                 {
                     if (BIT_reloadDStream(&bitD) > BIT_DStream_status.BIT_DStream_unfinished)
@@ -166,29 +208,47 @@ namespace VendoredZSTD.Unsafe
                     }
                 }
 
-                op[2] = fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
+                op[2] =
+                    fast != 0
+                        ? FSE_decodeSymbolFast(&state1, &bitD)
+                        : FSE_decodeSymbol(&state1, &bitD);
                 if ((14 - 2) * 2 + 7 > sizeof(nuint) * 8)
                     BIT_reloadDStream(&bitD);
-                op[3] = fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
+                op[3] =
+                    fast != 0
+                        ? FSE_decodeSymbolFast(&state2, &bitD)
+                        : FSE_decodeSymbol(&state2, &bitD);
             }
 
             while (true)
             {
                 if (op > omax - 2)
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
-                *op++ = fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
+                *op++ =
+                    fast != 0
+                        ? FSE_decodeSymbolFast(&state1, &bitD)
+                        : FSE_decodeSymbol(&state1, &bitD);
                 if (BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_overflow)
                 {
-                    *op++ = fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
+                    *op++ =
+                        fast != 0
+                            ? FSE_decodeSymbolFast(&state2, &bitD)
+                            : FSE_decodeSymbol(&state2, &bitD);
                     break;
                 }
 
                 if (op > omax - 2)
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
-                *op++ = fast != 0 ? FSE_decodeSymbolFast(&state2, &bitD) : FSE_decodeSymbol(&state2, &bitD);
+                *op++ =
+                    fast != 0
+                        ? FSE_decodeSymbolFast(&state2, &bitD)
+                        : FSE_decodeSymbol(&state2, &bitD);
                 if (BIT_reloadDStream(&bitD) == BIT_DStream_status.BIT_DStream_overflow)
                 {
-                    *op++ = fast != 0 ? FSE_decodeSymbolFast(&state1, &bitD) : FSE_decodeSymbol(&state1, &bitD);
+                    *op++ =
+                        fast != 0
+                            ? FSE_decodeSymbolFast(&state1, &bitD)
+                            : FSE_decodeSymbol(&state1, &bitD);
                     break;
                 }
             }
@@ -197,7 +257,16 @@ namespace VendoredZSTD.Unsafe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint FSE_decompress_wksp_body(void* dst, nuint dstCapacity, void* cSrc, nuint cSrcSize, uint maxLog, void* workSpace, nuint wkspSize, int bmi2)
+        private static nuint FSE_decompress_wksp_body(
+            void* dst,
+            nuint dstCapacity,
+            void* cSrc,
+            nuint cSrcSize,
+            uint maxLog,
+            void* workSpace,
+            nuint wkspSize,
+            int bmi2
+        )
         {
             byte* istart = (byte*)cSrc;
             byte* ip = istart;
@@ -207,7 +276,14 @@ namespace VendoredZSTD.Unsafe
             if (wkspSize < (nuint)sizeof(FSE_DecompressWksp))
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
             {
-                nuint NCountLength = FSE_readNCount_bmi2(wksp->ncount, &maxSymbolValue, &tableLog, istart, cSrcSize, bmi2);
+                nuint NCountLength = FSE_readNCount_bmi2(
+                    wksp->ncount,
+                    &maxSymbolValue,
+                    &tableLog,
+                    istart,
+                    cSrcSize,
+                    bmi2
+                );
                 if (ERR_isError(NCountLength))
                     return NCountLength;
                 if (tableLog > maxLog)
@@ -217,13 +293,42 @@ namespace VendoredZSTD.Unsafe
                 cSrcSize -= NCountLength;
             }
 
-            if (((ulong)(1 + (1 << (int)tableLog) + 1) + (sizeof(short) * (maxSymbolValue + 1) + (1UL << (int)tableLog) + 8 + sizeof(uint) - 1) / sizeof(uint) + (255 + 1) / 2 + 1) * sizeof(uint) > wkspSize)
+            if (
+                (
+                    (ulong)(1 + (1 << (int)tableLog) + 1)
+                    + (
+                        sizeof(short) * (maxSymbolValue + 1)
+                        + (1UL << (int)tableLog)
+                        + 8
+                        + sizeof(uint)
+                        - 1
+                    ) / sizeof(uint)
+                    + (255 + 1) / 2
+                    + 1
+                ) * sizeof(uint)
+                > wkspSize
+            )
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
-            assert((nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint)) <= wkspSize);
-            workSpace = (byte*)workSpace + sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint);
-            wkspSize -= (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint));
+            assert(
+                (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
+                    <= wkspSize
+            );
+            workSpace =
+                (byte*)workSpace
+                + sizeof(FSE_DecompressWksp)
+                + (1 + (1 << (int)tableLog)) * sizeof(uint);
+            wkspSize -= (nuint)(
+                sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint)
+            );
             {
-                nuint _var_err__ = FSE_buildDTable_internal(wksp->dtable, wksp->ncount, maxSymbolValue, tableLog, workSpace, wkspSize);
+                nuint _var_err__ = FSE_buildDTable_internal(
+                    wksp->dtable,
+                    wksp->ncount,
+                    maxSymbolValue,
+                    tableLog,
+                    workSpace,
+                    wkspSize
+                );
                 if (ERR_isError(_var_err__))
                     return _var_err__;
             }
@@ -233,20 +338,68 @@ namespace VendoredZSTD.Unsafe
                 FSE_DTableHeader* DTableH = (FSE_DTableHeader*)ptr;
                 uint fastMode = DTableH->fastMode;
                 if (fastMode != 0)
-                    return FSE_decompress_usingDTable_generic(dst, dstCapacity, ip, cSrcSize, wksp->dtable, 1);
-                return FSE_decompress_usingDTable_generic(dst, dstCapacity, ip, cSrcSize, wksp->dtable, 0);
+                    return FSE_decompress_usingDTable_generic(
+                        dst,
+                        dstCapacity,
+                        ip,
+                        cSrcSize,
+                        wksp->dtable,
+                        1
+                    );
+                return FSE_decompress_usingDTable_generic(
+                    dst,
+                    dstCapacity,
+                    ip,
+                    cSrcSize,
+                    wksp->dtable,
+                    0
+                );
             }
         }
 
         /* Avoids the FORCE_INLINE of the _body() function. */
-        private static nuint FSE_decompress_wksp_body_default(void* dst, nuint dstCapacity, void* cSrc, nuint cSrcSize, uint maxLog, void* workSpace, nuint wkspSize)
+        private static nuint FSE_decompress_wksp_body_default(
+            void* dst,
+            nuint dstCapacity,
+            void* cSrc,
+            nuint cSrcSize,
+            uint maxLog,
+            void* workSpace,
+            nuint wkspSize
+        )
         {
-            return FSE_decompress_wksp_body(dst, dstCapacity, cSrc, cSrcSize, maxLog, workSpace, wkspSize, 0);
+            return FSE_decompress_wksp_body(
+                dst,
+                dstCapacity,
+                cSrc,
+                cSrcSize,
+                maxLog,
+                workSpace,
+                wkspSize,
+                0
+            );
         }
 
-        private static nuint FSE_decompress_wksp_bmi2(void* dst, nuint dstCapacity, void* cSrc, nuint cSrcSize, uint maxLog, void* workSpace, nuint wkspSize, int bmi2)
+        private static nuint FSE_decompress_wksp_bmi2(
+            void* dst,
+            nuint dstCapacity,
+            void* cSrc,
+            nuint cSrcSize,
+            uint maxLog,
+            void* workSpace,
+            nuint wkspSize,
+            int bmi2
+        )
         {
-            return FSE_decompress_wksp_body_default(dst, dstCapacity, cSrc, cSrcSize, maxLog, workSpace, wkspSize);
+            return FSE_decompress_wksp_body_default(
+                dst,
+                dstCapacity,
+                cSrc,
+                cSrcSize,
+                maxLog,
+                workSpace,
+                wkspSize
+            );
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -6,6 +7,7 @@ namespace VendoredZSTD.Unsafe
     {
         public uint tableTime;
         public uint decode256Time;
+
         public algo_time_t(uint tableTime, uint decode256Time)
         {
             this.tableTime = tableTime;

@@ -1,7 +1,7 @@
-﻿using System.Runtime.InteropServices;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace VendoredZSTD
@@ -59,12 +59,8 @@ namespace VendoredZSTD
                     if (queue.TryTake(out var job, -1, cancellationToken))
                         ((delegate* managed<void*, void>)job.function)(job.opaque);
                 }
-                catch (InvalidOperationException)
-                {
-                }
-                catch (OperationCanceledException)
-                {
-                }
+                catch (InvalidOperationException) { }
+                catch (OperationCanceledException) { }
             }
         }
 

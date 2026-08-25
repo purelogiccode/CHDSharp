@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /* ====   Serial State   ==== */
@@ -7,6 +8,7 @@ namespace VendoredZSTD.Unsafe
     {
         public void* start;
         public nuint size;
+
         public range_t(void* start, nuint size)
         {
             this.start = start;

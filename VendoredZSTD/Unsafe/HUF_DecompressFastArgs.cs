@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /**
@@ -23,6 +24,7 @@ namespace VendoredZSTD.Unsafe
         public byte* ilimit;
         public byte* oend;
         public _iend_e__FixedBuffer iend;
+
         [StructLayout(LayoutKind.Sequential)]
         public unsafe struct _ip_e__FixedBuffer
         {

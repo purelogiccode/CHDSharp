@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /* Type returned by ZSTD_buildSequencesStatistics containing finalized symbol encoding types
@@ -11,6 +12,7 @@ namespace VendoredZSTD.Unsafe
         public uint Offtype;
         public uint MLtype;
         public nuint size;
+
         /* Accounts for bug in 1.3.4. More detail in ZSTD_entropyCompressSeqStore_internal() */
         public nuint lastCountSize;
         public int longOffsets;

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -7,6 +8,7 @@ namespace VendoredZSTD.Unsafe
         public void* customAlloc;
         public void* customFree;
         public void* opaque;
+
         public ZSTD_customMem(void* customAlloc, void* customFree, void* opaque)
         {
             this.customAlloc = customAlloc;

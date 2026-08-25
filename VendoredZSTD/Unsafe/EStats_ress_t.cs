@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -6,8 +7,10 @@ namespace VendoredZSTD.Unsafe
     {
         /* dictionary */
         public ZSTD_CDict_s* dict;
+
         /* working context */
         public ZSTD_CCtx_s* zc;
+
         /* must be ZSTD_BLOCKSIZE_MAX allocated */
         public void* workPlace;
     }

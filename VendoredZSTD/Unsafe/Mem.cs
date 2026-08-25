@@ -103,7 +103,13 @@ namespace VendoredZSTD.Unsafe
 
             if (!BitConverter.IsLittleEndian)
             {
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness), typeof(ushort)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(ushort)
+                    )
+                );
             }
 
             return IL.Return<ushort>();
@@ -118,8 +124,13 @@ namespace VendoredZSTD.Unsafe
 
             if (!BitConverter.IsLittleEndian)
             {
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness),
-                    typeof(ushort)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(ushort)
+                    )
+                );
             }
 
             Unaligned(1);
@@ -149,7 +160,13 @@ namespace VendoredZSTD.Unsafe
 
             if (!BitConverter.IsLittleEndian)
             {
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness), typeof(uint)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(uint)
+                    )
+                );
             }
 
             return IL.Return<uint>();
@@ -164,8 +181,13 @@ namespace VendoredZSTD.Unsafe
 
             if (!BitConverter.IsLittleEndian)
             {
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness),
-                    typeof(uint)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(uint)
+                    )
+                );
             }
 
             Unaligned(1);
@@ -182,7 +204,13 @@ namespace VendoredZSTD.Unsafe
 
             if (!BitConverter.IsLittleEndian)
             {
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness), typeof(ulong)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(ulong)
+                    )
+                );
             }
 
             return IL.Return<ulong>();
@@ -197,8 +225,13 @@ namespace VendoredZSTD.Unsafe
 
             if (!BitConverter.IsLittleEndian)
             {
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness),
-                    typeof(ulong)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(ulong)
+                    )
+                );
             }
 
             Unaligned(1);
@@ -216,8 +249,13 @@ namespace VendoredZSTD.Unsafe
             if (!BitConverter.IsLittleEndian)
             {
                 Conv_U8();
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness),
-                    typeof(ulong)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(ulong)
+                    )
+                );
                 Conv_U();
             }
 
@@ -234,8 +272,13 @@ namespace VendoredZSTD.Unsafe
             if (!BitConverter.IsLittleEndian)
             {
                 Conv_U8();
-                Call(new MethodRef(typeof(BinaryPrimitives), nameof(BinaryPrimitives.ReverseEndianness),
-                    typeof(ulong)));
+                Call(
+                    new MethodRef(
+                        typeof(BinaryPrimitives),
+                        nameof(BinaryPrimitives.ReverseEndianness),
+                        typeof(ulong)
+                    )
+                );
                 Conv_U();
             }
 

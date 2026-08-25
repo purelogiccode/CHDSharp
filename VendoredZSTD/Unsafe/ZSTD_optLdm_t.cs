@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /* Struct containing info needed to make decision about ldm inclusion */
@@ -7,10 +8,13 @@ namespace VendoredZSTD.Unsafe
     {
         /* External match candidates store for this block */
         public rawSeqStore_t seqStore;
+
         /* Start position of the current match candidate */
         public uint startPosInBlock;
+
         /* End position of the current match candidate */
         public uint endPosInBlock;
+
         /* Offset of the match candidate */
         public uint offset;
     }

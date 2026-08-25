@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 namespace VendoredZSTD.Unsafe
 {
     /* =====   Buffer Pool   ===== */
@@ -8,6 +9,7 @@ namespace VendoredZSTD.Unsafe
     {
         public void* start;
         public nuint capacity;
+
         public buffer_s(void* start, nuint capacity)
         {
             this.start = start;
