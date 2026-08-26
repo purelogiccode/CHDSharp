@@ -271,6 +271,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static nuint BIT_getUpperBits(nuint bitContainer, uint start)
     {
         return bitContainer >> (int)start;

@@ -714,6 +714,7 @@ public static unsafe partial class Methods
     /*-*****************************************
      *  Tool functions
      ******************************************/
+    // ReSharper disable once UnusedMember.Local
     private static nuint FSE_compressBound(nuint size)
     {
         return 512 + size + (size >> 7) + 4 + (nuint)sizeof(nuint);

@@ -29,6 +29,7 @@ public static unsafe partial class Methods
     private static void* POOL_create_advanced(
         nuint numThreads,
         nuint queueSize,
+        // ReSharper disable once UnusedParameter.Local
         ZstdCustomMem customMem
     )
     {
@@ -39,6 +40,7 @@ public static unsafe partial class Methods
     /*! POOL_join() :
     Shutdown the queue, wake any sleeping threads, and join all of the threads.
      */
+    // ReSharper disable once UnusedMember.Local
     private static void POOL_join(void* ctx)
     {
         GetThreadPool(ctx).Join();
@@ -61,6 +63,7 @@ public static unsafe partial class Methods
     /*! POOL_joinJobs() :
      *  Waits for all queued jobs to finish executing.
      */
+    // ReSharper disable once UnusedMember.Local
     private static void POOL_joinJobs(void* ctx)
     {
         var jobThreadPool = GetThreadPool(ctx);

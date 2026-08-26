@@ -6,6 +6,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
     /*===   Version   ===*/
+    // ReSharper disable once UnusedMember.Local
     private static uint FSE_versionNumber()
     {
         return 0 * 100 * 100 + 9 * 100 + 0;
@@ -17,17 +18,20 @@ public static unsafe partial class Methods
         return ERR_isError(code);
     }
 
+    // ReSharper disable once UnusedMember.Local
     private static string FSE_getErrorName(nuint code)
     {
         return ERR_getErrorName(code);
     }
 
     /* Error Management */
+    // ReSharper disable once UnusedMember.Local
     private static bool HUF_isError(nuint code)
     {
         return ERR_isError(code);
     }
 
+    // ReSharper disable once UnusedMember.Local
     private static string HUF_getErrorName(nuint code)
     {
         return ERR_getErrorName(code);
@@ -230,6 +234,7 @@ public static unsafe partial class Methods
         uint* tableLogPtr,
         void* headerBuffer,
         nuint hbSize,
+        // ReSharper disable once UnusedParameter.Local
         int bmi2
     )
     {
@@ -429,6 +434,7 @@ public static unsafe partial class Methods
         nuint srcSize,
         void* workSpace,
         nuint wkspSize,
+        // ReSharper disable once UnusedParameter.Local
         int flags
     )
     {

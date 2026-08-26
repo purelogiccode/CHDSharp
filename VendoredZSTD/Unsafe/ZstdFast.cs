@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using InlineMethod;
@@ -139,6 +140,7 @@ public static unsafe partial class Methods
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Inline]
+    [SuppressMessage("ReSharper", "TooWideLocalVariableScope")]
     private static nuint ZSTD_compressBlock_fast_noDict_generic(
         ZstdMatchStateT* ms,
         SeqStoreT* seqStore,
@@ -333,6 +335,7 @@ public static unsafe partial class Methods
                     var rLength = ZSTD_count(ip0 + 4, ip0 + 4 - repOffset2, iend) + 4;
                     {
                         /* swap rep_offset2 <=> rep_offset1 */
+                        // ReSharper disable once SwapViaDeconstruction
                         var tmpOff = repOffset2;
                         repOffset2 = repOffset1;
                         repOffset1 = tmpOff;
@@ -484,6 +487,7 @@ public static unsafe partial class Methods
         void* src,
         nuint srcSize,
         uint mls,
+        // ReSharper disable once UnusedParameter.Local
         uint hasStep
     )
     {
@@ -695,6 +699,7 @@ public static unsafe partial class Methods
                             ZSTD_count_2segments(ip0 + 4, repMatch2 + 4, iend, repEnd2, prefixStart)
                             + 4;
                         /* swap offset_2 <=> offset_1 */
+                        // ReSharper disable once SwapViaDeconstruction
                         var tmpOffset = offset2;
                         offset2 = offset1;
                         offset1 = tmpOffset;
@@ -828,6 +833,7 @@ public static unsafe partial class Methods
         void* src,
         nuint srcSize,
         uint mls,
+        // ReSharper disable once UnusedParameter.Local
         uint hasStep
     )
     {

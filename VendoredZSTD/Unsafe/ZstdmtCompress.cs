@@ -425,9 +425,7 @@ public static unsafe partial class Methods
                 nuint error;
                 assert(
                     seqStore.seq != null
-                    && seqStore.pos == 0
-                    && seqStore.size == 0
-                    && seqStore.capacity > 0
+                    && seqStore is { pos: 0, size: 0, capacity: > 0 }
                 );
                 assert(src.size <= serialState->@params.jobSize);
                 ZSTD_window_update(&serialState->ldmState.window, src.start, src.size, 0);
@@ -782,6 +780,7 @@ public static unsafe partial class Methods
 
     /* ZSTDMT_CCtxParam_setNbWorkers():
      * Internal use only */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static nuint ZSTDMT_CCtxParam_setNbWorkers(ZstdCCtxParamsS* @params, uint nbWorkers)
     {
         return ZSTD_CCtxParams_setParameter(
@@ -901,6 +900,7 @@ public static unsafe partial class Methods
         }
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static nuint ZSTDMT_freeCCtx(ZstdmtCCtxS* mtctx)
     {
         if (mtctx == null)
@@ -1101,7 +1101,7 @@ public static unsafe partial class Methods
 
     private static int ZSTDMT_overlapLog(int ovlog, ZstdStrategy strat)
     {
-        assert(0 <= ovlog && ovlog <= 9);
+        assert(ovlog is >= 0 and <= 9);
         if (ovlog == 0)
             return ZSTDMT_overlapLog_default(strat);
         return ovlog;
@@ -1111,7 +1111,7 @@ public static unsafe partial class Methods
     {
         var overlapRLog = 9 - ZSTDMT_overlapLog(@params->overlapLog, @params->cParams.strategy);
         var ovLog = (int)(overlapRLog >= 8 ? 0 : @params->cParams.windowLog - (uint)overlapRLog);
-        assert(0 <= overlapRLog && overlapRLog <= 8);
+        assert(overlapRLog is >= 0 and <= 8);
         if (@params->ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
             ovLog = (int)(
                 (

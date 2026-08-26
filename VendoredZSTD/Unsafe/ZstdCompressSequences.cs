@@ -685,8 +685,8 @@ public static unsafe partial class Methods
                 /* 28-36 for offset, 56-72 for lengths */
                 var dynamicFseNbSeqMin =
                     (((nuint)1 << (int)defaultNormLog) * mult) >> (int)baseLog;
-                assert(defaultNormLog >= 5 && defaultNormLog <= 6);
-                assert(mult <= 9 && mult >= 7);
+                assert(defaultNormLog is >= 5 and <= 6);
+                assert(mult is <= 9 and >= 7);
                 if (*repeatMode == FseRepeat.FseRepeatValid && nbSeq < staticFseNbSeqMax)
                     return SymbolEncodingTypeE.SetRepeat;
 
@@ -1027,6 +1027,7 @@ public static unsafe partial class Methods
         SeqDefS* sequences,
         nuint nbSeq,
         int longOffsets,
+        // ReSharper disable once UnusedParameter.Local
         int bmi2
     )
     {

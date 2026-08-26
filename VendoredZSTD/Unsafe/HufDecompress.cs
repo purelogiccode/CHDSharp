@@ -263,6 +263,7 @@ public static unsafe partial class Methods
                 var uStart = rankStart;
                 var nbBits = (byte)(tableLog + 1 - w);
                 int s;
+                // ReSharper disable once TooWideLocalVariableScope
                 int u;
                 switch (length)
                 {
@@ -954,6 +955,7 @@ public static unsafe partial class Methods
         void* cSrc,
         nuint cSrcSize,
         uint* dTable,
+        // ReSharper disable once UnusedParameter.Local
         int flags
     )
     {
@@ -1085,7 +1087,7 @@ public static unsafe partial class Methods
         /* quiet static-analyzer */
         var length = 1U << (int)((tableLog - nbBits) & 0x1F);
         SortedSymbolT* ptr;
-        assert(level >= 1 && level <= 2);
+        assert(level is >= 1 and <= 2);
         switch (length)
         {
             case 1:
@@ -2161,6 +2163,7 @@ public static unsafe partial class Methods
         void* cSrc,
         nuint cSrcSize,
         uint* dTable,
+        // ReSharper disable once UnusedParameter.Local
         int flags
     )
     {
@@ -2240,6 +2243,7 @@ public static unsafe partial class Methods
         }
     }
 
+    // ReSharper disable once UnusedMember.Local
     private static nuint HUF_decompress1X_DCtx_wksp(
         uint* dctx,
         void* dst,

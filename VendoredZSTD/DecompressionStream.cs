@@ -35,8 +35,7 @@ public class DecompressionStream : Stream
         bool leaveOpen = true
     )
     {
-        if (stream == null)
-            throw new ArgumentNullException(nameof(stream));
+        ArgumentNullException.ThrowIfNull(stream);
 
         if (!stream.CanRead)
             throw new ArgumentException("Stream is not readable", nameof(stream));
@@ -45,10 +44,10 @@ public class DecompressionStream : Stream
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
 
         _innerStream = stream;
-        this._decompressor = decompressor;
-        this._preserveDecompressor = preserveDecompressor;
-        this._leaveOpen = leaveOpen;
-        this._checkEndOfStream = checkEndOfStream;
+        _decompressor = decompressor;
+        _preserveDecompressor = preserveDecompressor;
+        _leaveOpen = leaveOpen;
+        _checkEndOfStream = checkEndOfStream;
 
         _inputBufferSize =
             bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();

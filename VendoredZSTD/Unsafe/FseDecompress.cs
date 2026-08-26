@@ -131,6 +131,7 @@ public static unsafe partial class Methods
         return 0;
     }
 
+    // ReSharper disable once UnusedMember.Local
     private static nuint FSE_buildDTable_wksp(
         uint* dt,
         short* normalizedCounter,
@@ -367,6 +368,7 @@ public static unsafe partial class Methods
         uint maxLog,
         void* workSpace,
         nuint wkspSize,
+        // ReSharper disable once UnusedParameter.Local
         int bmi2
     )
     {

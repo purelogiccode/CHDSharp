@@ -385,6 +385,7 @@ public static unsafe partial class Methods
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedParameter.Local
     private static int ZSTD_DCtx_get_bmi2(ZstdDCtxS* dctx)
     {
         return 0;

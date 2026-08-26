@@ -106,6 +106,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static byte FSE_peekSymbol(FseDStateT* dStatePtr)
     {
         var dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
@@ -113,6 +114,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static void FSE_updateState(FseDStateT* dStatePtr, BitDStreamT* bitD)
     {
         var dInfo = ((FseDecodeT*)dStatePtr->table)[dStatePtr->state];
@@ -147,6 +149,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static uint FSE_endOfDState(FseDStateT* dStatePtr)
     {
         return dStatePtr->state == 0 ? 1U : 0U;

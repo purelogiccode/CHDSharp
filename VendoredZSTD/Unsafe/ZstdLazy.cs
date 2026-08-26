@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
@@ -74,12 +75,14 @@ public static unsafe partial class Methods
         var iend = curr >= dictLimit ? inputEnd : dictBase + dictLimit;
         var dictEnd = dictBase + dictLimit;
         var prefixStart = @base + dictLimit;
+        // ReSharper disable once TooWideLocalVariableScope
         byte* match;
         var smallerPtr = bt + 2 * (curr & btMask);
         var largerPtr = smallerPtr + 1;
         /* this candidate is unsorted : next sorted candidate is reached through *smallerPtr, while *largerPtr contains previous unsorted candidate (which is already saved and can be overwritten) */
         var matchIndex = *smallerPtr;
         /* to be nullified at the end */
+        // ReSharper disable once TooWideLocalVariableScope
         uint dummy32;
         var windowValid = ms->window.lowLimit;
         var maxDistance = 1U << (int)cParams->windowLog;
@@ -245,12 +248,14 @@ public static unsafe partial class Methods
         if (bestLength >= 3)
         {
             assert(*offsetPtr > 3);
+            // ReSharper disable once UnusedVariable
             var mIndex = curr - (uint)(*offsetPtr - 3);
         }
 
         return bestLength;
     }
 
+    [SuppressMessage("ReSharper", "TooWideLocalVariableScope")]
     private static nuint ZSTD_DUBT_findBestMatch(
         ZstdMatchStateT* ms,
         byte* ip,
@@ -422,6 +427,7 @@ public static unsafe partial class Methods
             if (bestLength >= 3)
             {
                 assert(*offBasePtr > 3);
+                // ReSharper disable once UnusedVariable
                 var mIndex = curr - (uint)(*offBasePtr - 3);
             }
 
@@ -696,6 +702,7 @@ public static unsafe partial class Methods
         return hashTable[ZSTD_hashPtr(ip, hashLog, mls)];
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static uint ZSTD_insertAndFindFirstIndex(ZstdMatchStateT* ms, byte* ip)
     {
         var cParams = &ms->cParams;
@@ -1151,8 +1158,11 @@ public static unsafe partial class Methods
                 var t0 = AdvSimd.ShiftLeftLogical(equalMask, 7);
                 var t1 = AdvSimd.ShiftRightAndInsert(t0, t0, 14).As<ushort, uint>();
                 var t2 = AdvSimd.ShiftRightLogical(t1, 14).As<uint, ulong>();
+                // ReSharper disable once ConstantExpected
+#pragma warning disable CA1857
 #pragma warning disable CA1857
                 var t3 = AdvSimd.ShiftRightLogicalAdd(t2, t2, 28).As<ulong, byte>();
+#pragma warning restore CA1857
 #pragma warning restore CA1857
                 ushort hi = AdvSimd.Extract(t3, 8);
                 ushort lo = AdvSimd.Extract(t3, 0);
@@ -1437,17 +1447,21 @@ public static unsafe partial class Methods
                 {
                     var matchPos =
                         ((headGrouped + ZSTD_VecMask_next(matches)) / groupWidth) & rowMask;
-                    var matchIndex = dmsRow[matchPos];
-                    if (matchPos == 0)
-                        continue;
-                    if (matchIndex < dmsLowestIndex)
-                        break;
+                    if (dmsRow != null)
+                    {
+                        var matchIndex = dmsRow[matchPos];
+                        if (matchPos == 0)
+                            continue;
+                        if (matchIndex < dmsLowestIndex)
+                            break;
 #if NETCOREAPP3_0_OR_GREATER
-                    if (Sse.IsSupported)
-                        Sse.Prefetch0(dmsBase + matchIndex);
+                        if (Sse.IsSupported)
+                            Sse.Prefetch0(dmsBase + matchIndex);
 #endif
 
-                    matchBuffer[numMatches++] = matchIndex;
+                        matchBuffer[numMatches++] = matchIndex;
+                    }
+
                     --nbAttempts;
                 }
 
@@ -2989,11 +3003,11 @@ public static unsafe partial class Methods
      * here instead of using an indirect function call through a function
      * pointer because after Spectre and Meltdown mitigations, indirect
      * function calls can be very costly, especially in the kernel.
-     * 
+     *
      * NOTE: dictMode and searchMethod should be templated, so those switch
      * statements should be optimized out. Only the mls & rowLog switches
      * should be left.
-     * 
+     *
      * @param ms The match state.
      * @param ip The position to search at.
      * @param iend The end of the input data.
@@ -3002,7 +3016,7 @@ public static unsafe partial class Methods
      * @param rowLog The row log (if applicable), in the range [4, 6].
      * @param searchMethod The search method to use (templated).
      * @param dictMode The dictMode (templated).
-     * 
+     *
      * @returns The length of the longest match found, or
      * < mls if no match is found.
      *     If a match is found its offset is stored in @ p offsetPtr.

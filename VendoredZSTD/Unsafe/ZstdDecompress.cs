@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using static VendoredZSTD.UnsafeHelper;
 
 namespace VendoredZSTD.Unsafe;
@@ -744,6 +745,7 @@ public static unsafe partial class Methods
 
     private static ZstdFrameSizeInfo ZSTD_errorFrameSizeInfo(nuint ret)
     {
+        // ReSharper disable once InlineOutVariableDeclaration
         ZstdFrameSizeInfo frameSizeInfo;
         SkipInit(out frameSizeInfo);
         frameSizeInfo.compressedSize = ret;
@@ -965,6 +967,7 @@ public static unsafe partial class Methods
         return regenSize;
     }
 
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
     private static void ZSTD_DCtx_trace_end(
         ZstdDCtxS* dctx,
         ulong uncompressedSize,

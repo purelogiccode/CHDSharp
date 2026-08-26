@@ -329,6 +329,7 @@ public static unsafe partial class Methods
      * The tables for the other strategies are filled within their
      * block compressors.
      */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static nuint ZSTD_ldm_fillFastTables(ZstdMatchStateT* ms, void* end)
     {
         var iend = (byte*)end;

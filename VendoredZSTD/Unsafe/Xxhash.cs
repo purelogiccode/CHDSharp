@@ -53,6 +53,7 @@ public static unsafe partial class Methods
      *  Misc
      ***************************************/
     /*! @ingroup public */
+    // ReSharper disable once UnusedMember.Local
     private static uint ZSTD_XXH_versionNumber()
     {
         return 0 * 100 * 100 + 8 * 100 + 1;
@@ -185,6 +186,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh32_family */
+    // ReSharper disable once UnusedMember.Local
     private static uint ZSTD_XXH32(void* input, nuint len, uint seed)
     {
         return XXH32_endian_align((byte*)input, len, seed, XxhAlignment.XxhUnaligned);
@@ -194,12 +196,14 @@ public static unsafe partial class Methods
     /*!
      * @ingroup xxh32_family
      */
+    // ReSharper disable once UnusedMember.Local
     private static Xxh32StateS* ZSTD_XXH32_createState()
     {
         return (Xxh32StateS*)XXH_malloc((nuint)sizeof(Xxh32StateS));
     }
 
     /*! @ingroup xxh32_family */
+    // ReSharper disable once UnusedMember.Local
     private static XxhErrorcode ZSTD_XXH32_freeState(Xxh32StateS* statePtr)
     {
         XXH_free(statePtr);
@@ -207,12 +211,14 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh32_family */
+    // ReSharper disable once UnusedMember.Local
     private static void ZSTD_XXH32_copyState(Xxh32StateS* dstState, Xxh32StateS* srcState)
     {
         XXH_memcpy(dstState, srcState, (nuint)sizeof(Xxh32StateS));
     }
 
     /*! @ingroup xxh32_family */
+    // ReSharper disable once UnusedMember.Local
     private static XxhErrorcode ZSTD_XXH32_reset(Xxh32StateS* statePtr, uint seed)
     {
         memset(statePtr, 0, (uint)sizeof(Xxh32StateS));
@@ -224,6 +230,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh32_family */
+    // ReSharper disable once UnusedMember.Local
     private static XxhErrorcode ZSTD_XXH32_update(Xxh32StateS* state, void* input, nuint len)
     {
         if (input == null)
@@ -286,6 +293,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh32_family */
+    // ReSharper disable once UnusedMember.Local
     private static uint ZSTD_XXH32_digest(Xxh32StateS* state)
     {
         uint h32;
@@ -316,6 +324,7 @@ public static unsafe partial class Methods
      * The following functions allow transformation of hash values to and from their
      * canonical format.
      */
+    // ReSharper disable once UnusedMember.Local
     private static void ZSTD_XXH32_canonicalFromHash(Xxh32CanonicalT* dst, uint hash)
     {
         if (BitConverter.IsLittleEndian)
@@ -324,6 +333,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh32_family */
+    // ReSharper disable once UnusedMember.Local
     private static uint ZSTD_XXH32_hashFromCanonical(Xxh32CanonicalT* src)
     {
         return XXH_readBE32(src);
@@ -461,12 +471,14 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh64_family*/
+    // ReSharper disable once UnusedMember.Local
     private static Xxh64StateS* ZSTD_XXH64_createState()
     {
         return (Xxh64StateS*)XXH_malloc((nuint)sizeof(Xxh64StateS));
     }
 
     /*! @ingroup xxh64_family */
+    // ReSharper disable once UnusedMember.Local
     private static XxhErrorcode ZSTD_XXH64_freeState(Xxh64StateS* statePtr)
     {
         XXH_free(statePtr);
@@ -474,12 +486,14 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh64_family */
+    // ReSharper disable once UnusedMember.Local
     private static void ZSTD_XXH64_copyState(Xxh64StateS* dstState, Xxh64StateS* srcState)
     {
         XXH_memcpy(dstState, srcState, (nuint)sizeof(Xxh64StateS));
     }
 
     /*! @ingroup xxh64_family */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static XxhErrorcode ZSTD_XXH64_reset(Xxh64StateS* statePtr, ulong seed)
     {
         memset(statePtr, 0, (uint)sizeof(Xxh64StateS));
@@ -491,6 +505,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh64_family */
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static XxhErrorcode ZSTD_XXH64_update(Xxh64StateS* state, void* input, nuint len)
     {
         if (input == null)
@@ -575,6 +590,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh64_family */
+    // ReSharper disable once UnusedMember.Local
     private static void ZSTD_XXH64_canonicalFromHash(Xxh64CanonicalT* dst, ulong hash)
     {
         if (BitConverter.IsLittleEndian)
@@ -583,6 +599,7 @@ public static unsafe partial class Methods
     }
 
     /*! @ingroup xxh64_family */
+    // ReSharper disable once UnusedMember.Local
     private static ulong ZSTD_XXH64_hashFromCanonical(Xxh64CanonicalT* src)
     {
         return XXH_readBE64(src);

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using static VendoredZSTD.UnsafeHelper;
@@ -90,6 +91,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressMessage("ReSharper", "TooWideLocalVariableScope")]
     private static nuint ZSTD_compressBlock_doubleFast_noDict_generic(
         ZstdMatchStateT* ms,
         SeqStoreT* seqStore,

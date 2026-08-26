@@ -209,7 +209,7 @@ public static unsafe partial class Methods
     /* Returns true if the strategy supports using a row based matchfinder */
     private static int ZSTD_rowMatchFinderSupported(ZstdStrategy strategy)
     {
-        return strategy >= ZstdStrategy.ZstdGreedy && strategy <= ZstdStrategy.ZstdLazy2
+        return strategy is >= ZstdStrategy.ZstdGreedy and <= ZstdStrategy.ZstdLazy2
             ? 1
             : 0;
     }
@@ -4226,7 +4226,7 @@ public static unsafe partial class Methods
 
         {
             var lastSeq = outSeqs[nbExternalSeqs - 1];
-            if (lastSeq.offset == 0 && lastSeq.matchLength == 0)
+            if (lastSeq is { offset: 0, matchLength: 0 })
                 return nbExternalSeqs;
 
             if (nbExternalSeqs == outSeqsCapacity)
@@ -5304,10 +5304,10 @@ public static unsafe partial class Methods
      */
     private static uint ZSTD_resolveRepcodeToRawOffset(uint* rep, uint offBase, uint ll0)
     {
-        assert(1 <= offBase && offBase <= 3);
+        assert(offBase is >= 1 and <= 3);
         /* [ 0 - 3 ] */
         var adjustedRepCode = offBase - 1 + ll0;
-        assert(1 <= offBase && offBase <= 3);
+        assert(offBase is >= 1 and <= 3);
         if (adjustedRepCode == 3)
         {
             assert(ll0 != 0);
@@ -5348,7 +5348,7 @@ public static unsafe partial class Methods
             var ll0 = seq->litLength == 0 && idx != longLitLenIdx ? 1U : 0U;
             var offBase = seq->offBase;
             assert(offBase > 0);
-            if (1 <= offBase && offBase <= 3)
+            if (offBase is >= 1 and <= 3)
             {
                 var dRawOffset = ZSTD_resolveRepcodeToRawOffset(dRepcodes->rep, offBase, ll0);
                 var cRawOffset = ZSTD_resolveRepcodeToRawOffset(cRepcodes->rep, offBase, ll0);
@@ -8737,7 +8737,7 @@ public static unsafe partial class Methods
             @params.searchForExternalRepcodes,
             @params.compressionLevel
         );
-        if (@params.useSequenceProducer == 1 && @params.nbWorkers >= 1)
+        if (@params is { useSequenceProducer: 1, nbWorkers: >= 1 })
             return unchecked(
                 (nuint)(-(int)ZstdErrorCode.ZstdErrorParameterCombinationUnsupported)
             );

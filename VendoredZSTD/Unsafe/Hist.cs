@@ -5,6 +5,7 @@ namespace VendoredZSTD.Unsafe;
 public static unsafe partial class Methods
 {
     /* --- Error management --- */
+    // ReSharper disable once UnusedMember.Local
     private static bool HIST_isError(nuint code)
     {
         return ERR_isError(code);
@@ -214,6 +215,7 @@ public static unsafe partial class Methods
     }
 
     /* fast variant (unsafe : won't check if src contains values beyond count[] limit) */
+    // ReSharper disable once UnusedMember.Local
     private static nuint HIST_countFast(
         uint* count,
         uint* maxSymbolValuePtr,
@@ -240,6 +242,7 @@ public static unsafe partial class Methods
      *           or an error code, which can be tested using HIST_isError().
      *           note : if return == srcSize, there is only one symbol.
      */
+    // ReSharper disable once UnusedMember.Local
     private static nuint HIST_count(uint* count, uint* maxSymbolValuePtr, void* src, nuint srcSize)
     {
         var tmpCounters = stackalloc uint[1024];

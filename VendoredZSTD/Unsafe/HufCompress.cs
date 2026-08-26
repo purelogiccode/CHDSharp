@@ -782,6 +782,7 @@ public static unsafe partial class Methods
         return bad == 0 ? 1 : 0;
     }
 
+    // ReSharper disable once UnusedMember.Local
     private static nuint HUF_compressBound(nuint size)
     {
         return 129 + size + (size >> 8) + 8;
@@ -1141,6 +1142,7 @@ public static unsafe partial class Methods
         void* src,
         nuint srcSize,
         nuint* cTable,
+        // ReSharper disable once UnusedParameter.Local
         int flags
     )
     {

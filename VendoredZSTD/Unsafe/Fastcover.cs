@@ -213,6 +213,7 @@ public static unsafe partial class Methods
         var nbTestSamples = splitPoint < 1 ? nbSamples - nbTrainSamples : nbSamples;
         var trainingSamplesSize =
             splitPoint < 1 ? COVER_sum(samplesSizes, nbTrainSamples) : totalSamplesSize;
+        // ReSharper disable once UnusedVariable
         var testSamplesSize =
             splitPoint < 1
                 ? COVER_sum(samplesSizes + nbTrainSamples, nbTestSamples)
@@ -557,12 +558,14 @@ public static unsafe partial class Methods
         var kMaxK = parameters->k == 0 ? 2000 : parameters->k;
         var kSteps = parameters->steps == 0 ? 40 : parameters->steps;
         var kStepSize = (kMaxK - kMinK) / kSteps > 1 ? (kMaxK - kMinK) / kSteps : 1;
+        // ReSharper disable once UnusedVariable
         var kIterations = (1 + (kMaxD - kMinD) / 2) * (1 + (kMaxK - kMinK) / kStepSize);
         var f = parameters->f == 0 ? 20 : parameters->f;
         var accel = parameters->accel == 0 ? 1 : parameters->accel;
         const uint shrinkDict = 0;
         /* Local variables */
         var displayLevel = (int)parameters->zParams.notificationLevel;
+        // ReSharper disable once NotAccessedVariable
         uint iteration = 1;
         uint d;
         uint k;

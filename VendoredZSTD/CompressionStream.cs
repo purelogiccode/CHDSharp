@@ -30,8 +30,7 @@ public class CompressionStream : Stream
         bool leaveOpen = true
     )
     {
-        if (stream == null)
-            throw new ArgumentNullException(nameof(stream));
+        ArgumentNullException.ThrowIfNull(stream);
 
         if (!stream.CanWrite)
             throw new ArgumentException("Stream is not writable", nameof(stream));
@@ -40,9 +39,9 @@ public class CompressionStream : Stream
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
 
         _innerStream = stream;
-        this._compressor = compressor;
-        this._preserveCompressor = preserveCompressor;
-        this._leaveOpen = leaveOpen;
+        _compressor = compressor;
+        _preserveCompressor = preserveCompressor;
+        _leaveOpen = leaveOpen;
 
         var outputBufferSize =
             bufferSize > 0 ? bufferSize : (int)Methods.ZSTD_CStreamOutSize().EnsureZstdSuccess();

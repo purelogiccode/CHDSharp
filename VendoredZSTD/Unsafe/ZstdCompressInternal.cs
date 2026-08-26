@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using InlineMethod;
@@ -641,7 +642,7 @@ public static unsafe partial class Methods
         }
         else
         {
-            assert(1 <= offBase && offBase <= 3);
+            assert(offBase is >= 1 and <= 3);
             var repCode = offBase - 1 + ll0;
             if (repCode > 0)
             {
@@ -750,6 +751,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static nuint ZSTD_hash3PtrS(void* ptr, uint h, uint s)
     {
         return ZSTD_hash3(MEM_readLE32(ptr), h, s);
@@ -975,7 +977,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ZSTD_window_isEmpty(ZstdWindowT window)
     {
-        return window.dictLimit == 2 && window.lowLimit == 2 && window.nextSrc - window.@base == 2
+        return window is { dictLimit: 2, lowLimit: 2 } && window.nextSrc - window.@base == 2
             ? 1U
             : 0U;
     }
@@ -1013,6 +1015,7 @@ public static unsafe partial class Methods
      * to work correctly without impacting compression ratio.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // ReSharper disable once UnusedMember.Local
     private static uint ZSTD_window_canOverflowCorrect(
         ZstdWindowT window,
         uint cycleLog,
@@ -1048,6 +1051,7 @@ public static unsafe partial class Methods
      * protection.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
     private static uint ZSTD_window_needOverflowCorrection(
         ZstdWindowT window,
         uint cycleLog,
@@ -1217,7 +1221,7 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-    private static ReadOnlySpan<byte> SpanStringToByte2000 => new byte[] { 32, 0 };
+    private static ReadOnlySpan<byte> SpanStringToByte2000 => " \0"u8;
     private static byte* StringToByte2000 =>
         (byte*)
         System.Runtime.CompilerServices.Unsafe.AsPointer(

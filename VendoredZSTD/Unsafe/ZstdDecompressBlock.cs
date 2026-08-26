@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
@@ -892,6 +893,7 @@ public static unsafe partial class Methods
         uint tableLog,
         void* wksp,
         nuint wkspSize,
+        // ReSharper disable once UnusedParameter.Local
         int bmi2
     )
     {
@@ -1765,6 +1767,7 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressMessage("ReSharper", "HeuristicUnreachableCode")]
     private static nuint ZSTD_decompressSequences_bodySplitLitBuffer(
         ZstdDCtxS* dctx,
         void* dst,
@@ -1773,6 +1776,7 @@ public static unsafe partial class Methods
         nuint seqSize,
         int nbSeq,
         ZstdLongOffsetE isLongOffset,
+        // ReSharper disable once UnusedParameter.Local
         int frame
     )
     {
@@ -1954,6 +1958,7 @@ public static unsafe partial class Methods
         nuint seqSize,
         int nbSeq,
         ZstdLongOffsetE isLongOffset,
+        // ReSharper disable once UnusedParameter.Local
         int frame
     )
     {
@@ -1974,6 +1979,7 @@ public static unsafe partial class Methods
         var dictEnd = (byte*)dctx->dictEnd;
         if (nbSeq != 0)
         {
+            // ReSharper disable once InlineOutVariableDeclaration
             SeqStateT seqState;
             SkipInit(out seqState);
             dctx->fseEntropy = 1;
@@ -2353,6 +2359,7 @@ public static unsafe partial class Methods
         nuint seqSize,
         int nbSeq,
         ZstdLongOffsetE isLongOffset,
+        // ReSharper disable once UnusedParameter.Local
         int frame
     )
     {

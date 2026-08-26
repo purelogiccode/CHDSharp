@@ -27,6 +27,7 @@ public static unsafe partial class Methods
         uint* repOffsets,
         void* src,
         nuint srcSize,
+        // ReSharper disable once UnusedParameter.Local
         uint notificationLevel
     )
     {
