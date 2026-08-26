@@ -1,27 +1,5 @@
 # CHDSharp Release Notes
 
-## Unreleased
-
-### VendoredZSTD now tracks libzstd 1.5.5 exactly (ZstdSharp 0.7.6 source)
-
-The in-repo `VendoredZSTD` project now carries the **ZstdSharp 0.7.6** source tree - a
-C-to-C# port of **libzstd 1.5.5**, the exact version MAME 0.288 bundles. The previous
-vendored copy was ZstdSharp 0.8.8 (libzstd 1.5.7), whose encoder emitted a slightly
-different block layout for single-symbol literal streams (the CD subcode), so `cdzs`
-hunks were valid and verifiable but not byte-identical to `chdman`.
-
-With the 1.5.5 tree the encoder matches `chdman` **byte-for-byte on every hunk**:
-
-- the single-segment frame header (SS=1, declared content size) is emitted via the
-  one-shot `ZSTD_compress2` path used by `ZstdCodec`,
-- the block content (literals + sequences) is identical for both the raw `zstd` and
-  CD `cdzs` paths - including the all-identical subcode buffers.
-
-Verified per-hunk against `chdman` for all three previously-failing `cdzs` encode cases
-(cd-mixed, cd-audio, disc-iso) and across the full battle harness: the synthetic corpus
-now passes **2611/2611 checks**, and a real-world scan of 56 CHDs (`--real`) passes
-**3003/3003 checks** — the first fully clean real-corpus run.
-
 ## CHDSharp v1.4.0
 
 ### Full chdman CLI argument parity
@@ -69,8 +47,9 @@ previously non-exact paths:
 
 The `ZstdSharp.Port` NuGet package has been replaced by an in-repo `VendoredZSTD` project
 containing a full C-to-C# port of the zstd 1.5.5 source tree (the same version MAME
-bundles). Both the encoder and decoder are included. The library now has **zero external
-runtime NuGet dependencies** — every codec is vendored in-repo.
+bundles). Both the encoder and decoder are included. Every codec is vendored in-repo
+(no native dependencies); the only runtime NuGet dependencies are the optional
+`Microsoft.Extensions.Logging.Abstractions` logging abstraction and `System.IO.Hashing`.
 
 ### 38 bugs fixed from deep code review
 

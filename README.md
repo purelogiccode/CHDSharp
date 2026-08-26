@@ -1,6 +1,6 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT%20%2F%20LGPL-2.1-blue)](LICENSE.txt)
 [![Tests](https://img.shields.io/badge/tests-xUnit-brightgreen)](#tests)
 
 # CHDSharp
@@ -18,7 +18,7 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 - **Full `chdman` CLI argument parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand: `info`, `verify`, `createraw`, `createhd`, `createcd`, `createdvd`, `createld`, `extractraw`, `extracthd`, `extractcd`, `extractdvd`, `extractld`, `copy`, `addmeta`, `delmeta`, `dumpmeta`, `listtemplates`.
 - **Full `chdman` battle-test parity (2611/2611 + 3003/3003)** — the new `CHDSharpBattleTest` harness cross-checks the decoder and encoder against `chdman.exe` on deterministic and real-world CHD corpora.
 - **Byte-for-byte parity for *every* codec** — including `createld` (AVHuff), `cdzs`, and `zstd`.
-- **Zero external NuGet dependencies** — `VendoredZSTD` (a pure C# port of MAME's zstd 1.5.5) replaces the `ZstdSharp.Port` package.
+- **Zero native dependencies** — `VendoredZSTD` (a pure C# port of MAME's zstd 1.5.5) replaces the `ZstdSharp.Port` package, and every compression codec is vendored in pure C#. The only runtime NuGet dependency is the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction.
 - **38 bugs fixed** from a deep code review.
 
 See [docs/ReleaseNotes.md](docs/ReleaseNotes.md) for the full changelog.
@@ -603,7 +603,7 @@ CHDSharp/
 
 ## License
 
-MIT License — see [LICENSE](LICENSE.txt).
+This is a combined work: the project code is **MIT**; `VendoredFlac` is **LGPL-2.1**; `VendoredZLib` is **zlib-licensed**; `VendoredLZMA` is **public domain**; `VendoredZSTD` is **MIT** (based on Facebook zstd, BSD-3-Clause). See [LICENSE.txt](LICENSE.txt) for the full third-party notice and obligations.
 
 The `VendoredFlac` component (FLAC encoder/decoder) is based on [CUETools.Flake](https://github.com/gchudov/cuetools.net) and is licensed under the [GNU Lesser General Public License v2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). See [LICENSE.txt](LICENSE.txt) for full details.
 

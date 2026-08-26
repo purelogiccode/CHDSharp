@@ -204,8 +204,8 @@ dotnet build CHDSharpCli/CHDSharpCli.csproj -c Release
 # Run
 dotnet run --project CHDSharpCli -- info -i game.chd
 
-# Run the built executable
-CHDSharpCli/bin/Release/net9.0/CHDSharp.exe info -i game.chd
+# Run the built executable (the binary is named CHDSharp)
+CHDSharpCli/bin/Release/net8.0/CHDSharp.exe info -i game.chd
 ```
 
 ### Dependencies
@@ -215,4 +215,13 @@ CHDSharpCli/bin/Release/net9.0/CHDSharp.exe info -i game.chd
 | [Serilog](https://www.nuget.org/packages/Serilog/) | 4.4.0 | Structured logging |
 | [Serilog.Extensions.Logging](https://www.nuget.org/packages/Serilog.Extensions.Logging/) | 10.0.0 | Bridges Serilog to `ILoggerFactory` |
 | [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console/) | 6.1.1 | Console log output |
-| `CHDSharpLib` | (project reference) | Core CHD library |
+| `CHDSharpLib` | (project reference) | Core CHD library — see its LICENSE.txt |
+
+---
+
+## License
+
+This CLI builds on `CHDSharpLib`. It is a combined work: the project code is **MIT**;
+`VendoredFlac` (in `CHDSharpLib`) is **LGPL-2.1**; `VendoredZLib` is **zlib-licensed**;
+`VendoredLZMA` is **public domain**; `VendoredZSTD` is **MIT** (based on Facebook zstd,
+BSD-3-Clause). See [LICENSE.txt](LICENSE.txt) for the full third-party notice and obligations.

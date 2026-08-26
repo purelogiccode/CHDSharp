@@ -22,7 +22,7 @@ or via the Package Manager Console:
 Install-Package CHDSharp
 ```
 
-The package targets `net8.0`, `net9.0`, and `net10.0` and has **no native dependencies**. Every codec — including Zstd and AVHuff — is implemented in managed code, with the Zstd port vendored in-repo as a pure C# project.
+The package targets `net8.0`, `net9.0`, and `net10.0` and has **no native dependencies**. Every codec — including Zstd and AVHuff — is implemented in managed code and vendored in-repo as pure C# projects, so all codec assemblies ship inside the package. The only runtime NuGet dependency is the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction (and `System.IO.Hashing` for hashing helpers).
 
 ### From source
 

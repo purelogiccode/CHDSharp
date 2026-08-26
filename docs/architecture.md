@@ -155,7 +155,7 @@ The number of workers is `Chd.TaskCount` (default 8, range 1–64); it must be s
 
 ## Design notes
 
-- **Read-only by design** — the library never writes or repacks CHDs; the encoder subsystem (`CHDSharp.Encoder`) exists for the *writer* side of the ecosystem.
+- **Reads and writes in one library** — `ChdFile` is a read-only random-access reader, while the encoder subsystem (`CHDSharp.Encoder`, e.g. `ChdEncoder.EncodeRaw`/`EncodeCd`/`Copy`) creates and re-compresses CHDs; both live in the same `CHDSharp` package.
 - **Reusable scratch** — `ChdCodecState` keeps LZMA windows, zstd decompressors, FLAC decoders, and Huffman tables alive across hunks, which is the main reason sequential reads stay fast.
 - **Error contract** — public APIs return `ChdError` codes rather than throwing (exceptions are caught at the `ReadHunk` boundary, logged, and mapped). See [Error Codes](error-codes.md).
 - **Lazy loading** — metadata and tracks are parsed on first access and cached; `Open` stays cheap for header-only callers.

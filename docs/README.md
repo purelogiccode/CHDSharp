@@ -14,10 +14,10 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 |---|---|
 | Package | [`CHDSharp`](https://www.nuget.org/packages/CHDSharp/) |
 | Targets | `net8.0`, `net9.0`, `net10.0` |
-| Format versions | CHD V1 – V5 (read-only) |
+| Format versions | CHD V1 – V5 (read & write) |
 | Codecs | `zlib`, `lzma`, `huff`, `flac`, `zstd`, `avhu` + CD variants `cdzl`, `cdlz`, `cdfl`, `cdzs` |
 | Native dependencies | **none** |
-| License | MIT |
+| License | MIT (project code) / LGPL-2.1 (`VendoredFlac`) |
 | Repository | https://github.com/purelogiccode/CHDSharp |
 
 ---
@@ -138,7 +138,7 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 
 ## License
 
-MIT License — see [LICENSE](../LICENSE.txt).
+This is a combined work. The project code is **MIT**; `VendoredFlac` is **LGPL-2.1** (CUETools.Flake); `VendoredZLib` is **zlib-licensed**; `VendoredLZMA` is **public domain**; `VendoredZSTD` is **MIT** (based on Facebook zstd, BSD-3-Clause). See [LICENSE.txt](../LICENSE.txt) for the full third-party notice and obligations.
 
 ## Acknowledgments
 

@@ -16,7 +16,9 @@
     <PackageProjectUrl>https://github.com/purelogiccode/CHDSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/purelogiccode/CHDSharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>v1.3.0: Merged CHDSharpEncoder into CHDSharpLib. The library now includes full CHD creation/encoding capabilities (ChdEncoder) alongside the existing reader. Supports raw, CD, DVD, and laserdisc encoding with all 10 codecs, parallel compression, delta/parent CHDs, and chdman-compatible output. 100% pure C#.</PackageReleaseNotes>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageReleaseNotes>v1.4.0: Full chdman CLI argument parity, byte-for-byte encoder parity with MAME chdman for every codec (incl. createld/cdzs/zstd), and a battle-test harness (2611/2611 synthetic + 3003/3003 real-world). VendoredZSTD replaces the ZstdSharp.Port NuGet dependency — zero native dependencies, all codecs vendored in pure C#. 38 bugs fixed. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
   </PropertyGroup>
@@ -72,11 +74,27 @@
     <Page Remove="References\**" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VendoredZLib\VendoredZLib.csproj" />
-    <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" />
-    <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" />
-    <ProjectReference Include="..\VendoredZSTD\VendoredZSTD.csproj" />
+    <ProjectReference Include="..\VendoredZLib\VendoredZLib.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\VendoredZSTD\VendoredZSTD.csproj" PrivateAssets="all" />
   </ItemGroup>
+  <Target Name="IncludeVendoredAssembliesInPackage" BeforeTargets="_GetPackageFiles">
+    <ItemGroup>
+      <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net8.0\VendoredZLib.dll"><PackagePath>lib\net8.0\VendoredZLib.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net9.0\VendoredZLib.dll"><PackagePath>lib\net9.0\VendoredZLib.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net10.0\VendoredZLib.dll"><PackagePath>lib\net10.0\VendoredZLib.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net8.0\VendoredLZMA.dll"><PackagePath>lib\net8.0\VendoredLZMA.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net9.0\VendoredLZMA.dll"><PackagePath>lib\net9.0\VendoredLZMA.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net10.0\VendoredLZMA.dll"><PackagePath>lib\net10.0\VendoredLZMA.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net8.0\VendoredFlac.dll"><PackagePath>lib\net8.0\VendoredFlac.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net9.0\VendoredFlac.dll"><PackagePath>lib\net9.0\VendoredFlac.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net10.0\VendoredFlac.dll"><PackagePath>lib\net10.0\VendoredFlac.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net8.0\VendoredZSTD.dll"><PackagePath>lib\net8.0\VendoredZSTD.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net9.0\VendoredZSTD.dll"><PackagePath>lib\net9.0\VendoredZSTD.dll</PackagePath></_PackageFiles>
+      <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net10.0\VendoredZSTD.dll"><PackagePath>lib\net10.0\VendoredZSTD.dll</PackagePath></_PackageFiles>
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <Using Include="CHDSharp.Models" />
   </ItemGroup>

@@ -118,7 +118,7 @@ dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
 The package (`CHDSharp.<version>.nupkg`) is written to `CHDSharpLib/bin/Release/`. It includes:
 
 - The library DLL for `net8.0`, `net9.0`, and `net10.0`.
-- The README (this wiki's sibling pages are referenced from it), the MIT license, and the package icon.
+- The README (this wiki's sibling pages are referenced from it), the combined license file (`LICENSE.txt`), and the package icon.
 - Embedded PDBs (`DebugType=embedded`) and embedded SourceLink for debugging.
 - Deterministic, reproducible builds (`Deterministic=true`, `ContinuousIntegrationBuild` on GitHub Actions).
 
@@ -127,9 +127,10 @@ The package (`CHDSharp.<version>.nupkg`) is written to `CHDSharpLib/bin/Release/
 | Package | Version | Purpose |
 |---------|---------|---------|
 | [Microsoft.Extensions.Logging.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions/) | 10.0.11 (all TFMs) | Pluggable logging (optional) |
+| [System.IO.Hashing](https://www.nuget.org/packages/System.IO.Hashing/) | 10.0.11 (all TFMs) | SHA1/MD5 hashing helpers |
 | Microsoft.SourceLink.GitHub | 10.0.400 | SourceLink (build-time, `PrivateAssets=all`) |
 
-All codec dependencies are vendored in-repo as project references (no external runtime NuGet dependencies):
+All codec dependencies are vendored in-repo as project references and bundled inside the package (the only runtime NuGet dependency is the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction):
 
 | Project | Purpose |
 |---------|---------|

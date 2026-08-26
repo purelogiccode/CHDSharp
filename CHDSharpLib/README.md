@@ -1,6 +1,6 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT%20%2F%20LGPL-2.1-blue)](LICENSE.txt)
 
 # CHDSharpLib
 
@@ -16,8 +16,10 @@
   `cdzs` (CD Zstd), and `zstd`. The encoder's output is now byte-identical to MAME for all
   writable codecs.
 - **`VendoredZSTD` replaces `ZstdSharp.Port`** — the library now ships its own pure C# port
-  of the zstd 1.5.5 tree MAME bundles (encoder + decoder). **Zero external NuGet
-  dependencies.**
+  of the zstd   1.5.5 tree MAME bundles (encoder + decoder). **Zero native dependencies —
+  every compression codec is vendored in pure C#.** The only runtime NuGet
+  dependency is the optional `Microsoft.Extensions.Logging.Abstractions`
+  logging abstraction (used only when you enable logging).
 - **38 bugs fixed** from a deep code review — including thread-safe parallel verification,
   correct CLI exit codes, `ReadHunk(Span)` hunk caching, `MemoryMappedFile` disposal on view
   failure, and `LzmaStream.Seek` position fixes.
@@ -48,7 +50,7 @@
 dotnet add package CHDSharp
 ```
 
-Targets `net8.0`, `net9.0`, and `net10.0`. No native dependencies — all codecs (including Zstd via the in-repo pure-C# `VendoredZSTD` port) are implemented from scratch in C#.
+Targets `net8.0`, `net9.0`, and `net10.0`. No native dependencies — all codecs (including Zstd via the in-repo pure-C# `VendoredZSTD` port) are implemented from scratch in C#. The only runtime NuGet dependency is `Microsoft.Extensions.Logging.Abstractions` (optional logging).
 
 ---
 
@@ -778,7 +780,7 @@ All codec implementations are vendored in-repo as project references (no externa
 
 ## License
 
-MIT License — see [LICENSE](LICENSE).
+This is a combined work: the project code is **MIT**; `VendoredFlac` is **LGPL-2.1**; `VendoredZLib` is **zlib-licensed**; `VendoredLZMA` is **public domain**; `VendoredZSTD` is **MIT** (based on Facebook zstd, BSD-3-Clause). See [LICENSE.txt](LICENSE.txt) for the full third-party notice and obligations.
 
 ---
 

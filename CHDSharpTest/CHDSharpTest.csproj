@@ -26,6 +26,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+    <ProjectReference Include="..\VendoredZSTD\VendoredZSTD.csproj" />
+    <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" />
+    <ProjectReference Include="..\VendoredZLib\VendoredZLib.csproj" />
+    <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestData\*.chd">
