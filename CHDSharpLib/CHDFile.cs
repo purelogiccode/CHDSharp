@@ -220,6 +220,119 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// <summary>Number of hunks (blocks) in the image.</summary>
     public uint HunkCount => _chd.Totalblocks;
 
+    /// <summary>Compression codecs declared in the header (up to 4 for V5; 1 for V1-V4).</summary>
+    public IReadOnlyList<ChdCodec> Compression => _chd.Compression;
+
+    /// <summary>Secondary codec for V3/V4 <c>CHDCOMPRESSION_ZLIB_PLUS</c> files (type 6 map entries).</summary>
+    public ChdCodec SecondaryCodec => _chd.SecondaryCodec;
+
+    /// <summary>
+    ///     Returns the compression type for a single hunk without decompressing it (chdman <c>hunk_info</c> parity).
+    ///     For <c>SELF</c> entries the type is <see cref="CompressionType.Compressionself" />; for
+    ///     <c>PARENT</c> the type is <see cref="CompressionType.Compressionparent" />; for compressed
+    ///     hunks it is <c>Compressiontype0..3</c> or <c>Compressiontype2Nd</c>.
+    /// </summary>
+    public CompressionType GetHunkCompressionType(uint hunkIndex)
+    {
+        if (hunkIndex >= HunkCount)
+            throw new ArgumentOutOfRangeException(nameof(hunkIndex));
+        return _chd.Map[hunkIndex].Comptype;
+    }
+
+    /// <summary>Returns the on-disk compressed length for a hunk (0 for SELF/PARENT/MINI).</summary>
+    public uint GetHunkCompressedLength(uint hunkIndex)
+    {
+        if (hunkIndex >= HunkCount)
+            throw new ArgumentOutOfRangeException(nameof(hunkIndex));
+        return _chd.Map[hunkIndex].Length;
+    }
+
+    /// <summary>
+    ///     Returns the display name for a hunk's codec, matching <c>chdman info --verbose</c>
+    ///     (<c>chdman.cpp:1760</c>). For <c>Uncompressed</c>, <c>Copy from self</c>, etc. the
+    ///     pseudo-codec names are returned; for <c>Compressiontype0..3</c> the codec's
+    ///     registered name (<c>Deflate</c>, <c>LZMA</c>, …) is returned.
+    /// </summary>
+    public string GetHunkCodecName(uint hunkIndex)
+    {
+        if (hunkIndex >= HunkCount)
+            throw new ArgumentOutOfRangeException(nameof(hunkIndex));
+        var me = _chd.Map[hunkIndex];
+        return me.Comptype switch
+        {
+            CompressionType.Compressionnone => "Uncompressed",
+            CompressionType.Compressionself => "Copy from self",
+            CompressionType.Compressionparent => "Copy from parent",
+            CompressionType.Compressionmini => "Legacy 8-byte mini",
+            CompressionType.Compressionzero => "Unallocated",
+            CompressionType.Compressiontype0 => CodecDisplayName(_chd.Compression.ElementAtOrDefault(0)),
+            CompressionType.Compressiontype1 => CodecDisplayName(_chd.Compression.ElementAtOrDefault(1)),
+            CompressionType.Compressiontype2 => CodecDisplayName(_chd.Compression.ElementAtOrDefault(2)),
+            CompressionType.Compressiontype3 => CodecDisplayName(_chd.Compression.ElementAtOrDefault(3)),
+            CompressionType.Compressiontype2Nd => CodecDisplayName(_chd.SecondaryCodec),
+            // RLE pseudo-types are expanded during map decompression; treat as previous codec for safety.
+            CompressionType.Compressionrlesmall => "RLE small",
+            CompressionType.Compressionrlelarge => "RLE large",
+            _ => $"Unknown ({(int)me.Comptype})"
+        };
+    }
+
+    /// <summary>
+    ///     Returns the codec type and compressed length for a hunk, mirroring MAME's
+    ///     <c>chd_file::hunk_info</c> (chd.h:317). For <c>SELF</c>/<c>PARENT</c>/<c>MINI</c>
+    ///     the returned <paramref name="codec" /> is the pseudo-type (<c>CHD_CODEC_SELF</c> etc.);
+    ///     for compressed hunks it is the actual codec tag (e.g. <c>CHD_CODEC_ZLIB</c>).
+    /// </summary>
+    public ChdError GetHunkInfo(uint hunkIndex, out ChdCodec codec, out uint compressedBytes)
+    {
+        codec = ChdCodec.None;
+        compressedBytes = 0;
+        if (hunkIndex >= HunkCount)
+            return ChdError.Chderrhunkoutofrange;
+        var me = _chd.Map[hunkIndex];
+        compressedBytes = me.Length;
+        codec = me.Comptype switch
+        {
+            CompressionType.Compressionnone => ChdCodec.None,
+            CompressionType.Compressionself => (ChdCodec)1, // CHD_CODEC_SELF
+            CompressionType.Compressionparent => (ChdCodec)2, // CHD_CODEC_PARENT
+            CompressionType.Compressionmini => (ChdCodec)3, // CHD_CODEC_MINI
+            CompressionType.Compressionzero => ChdCodec.None,
+            CompressionType.Compressiontype0 => _chd.Compression.ElementAtOrDefault(0),
+            CompressionType.Compressiontype1 => _chd.Compression.ElementAtOrDefault(1),
+            CompressionType.Compressiontype2 => _chd.Compression.ElementAtOrDefault(2),
+            CompressionType.Compressiontype3 => _chd.Compression.ElementAtOrDefault(3),
+            CompressionType.Compressiontype2Nd => _chd.SecondaryCodec,
+            _ => ChdCodec.Error
+        };
+        return ChdError.Chderrnone;
+    }
+
+    private static string CodecDisplayName(ChdCodec codec)
+    {
+        return codec switch
+        {
+            ChdCodec.Zlib => "Deflate",
+            ChdCodec.Lzma => "LZMA",
+            ChdCodec.Zstd => "Zstandard",
+            ChdCodec.Huffman => "Huffman",
+            ChdCodec.Flac => "FLAC",
+            ChdCodec.Cdzlib => "CD Deflate",
+            ChdCodec.Cdlzma => "CD LZMA",
+            ChdCodec.Cdzstd => "CD Zstandard",
+            ChdCodec.Cdflac => "CD FLAC",
+            ChdCodec.Avhuff => "A/V Huffman",
+            ChdCodec.None => "Uncompressed",
+            _ => codec.ToString()
+        };
+    }
+
+    /// <summary>Returns the display name for a codec value (e.g. <c>Deflate</c> for <c>zlib</c>).</summary>
+    public string GetHunkCodecNameForCodec(ChdCodec codec)
+    {
+        return CodecDisplayName(codec);
+    }
+
     /// <summary>
     ///     SHA1 of the full image including metadata (V4/V5), or the raw SHA1 when that is
     ///     all the format provides (V3). All-zero or <c>null</c> for V1/V2, which predate SHA1 hashes.

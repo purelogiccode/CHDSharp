@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using CHDSharp.Encoder.Interfaces;
 using CHDSharp.Encoder.Models;
+using CHDSharp.Models;
 using MapEntry = CHDSharp.Encoder.Models.MapEntry;
 
 namespace CHDSharp.Encoder;
@@ -173,6 +174,9 @@ public static class ChdEncoder
             throw new ArgumentException("totalBytes must be greater than zero", nameof(totalBytes));
         if (unitBytes == 0)
             throw new ArgumentException("unitBytes must be greater than zero", nameof(unitBytes));
+        // chdman.cpp:2087 — blank hard disk Data size % sector_size must be 0
+        if (totalBytes % unitBytes != 0)
+            throw new ArgumentException($"Data size {totalBytes} is not divisible by sector size {unitBytes}", nameof(totalBytes));
         ValidateHunkSize(hunkBytes, unitBytes);
 
         codecTags ??= [CodecTags.Zlib];
@@ -388,13 +392,36 @@ public static class ChdEncoder
                 maxSamplesPerFrame
             );
 
-            // process hunk size (parse_hunk_size granularity: whole multiples of the frame size)
-            if (hunkBytes == 0)
+            // chdman.cpp:2357 parse_hunk_size for createld: required=bytesPerFrame default=bytesPerFrame, with parent inheritance
+            ChdHeaderInfo? parentHdrLd = null;
+            if (options?.ParentPath is { Length: > 0 } ppLd && File.Exists(ppLd))
+                if (Chd.ReadHeader(ppLd, out var phLd) == ChdError.Chderrnone)
+                    parentHdrLd = phLd;
+
+            var hunkExplicitLd = hunkBytes != 0;
+            if (hunkExplicitLd && parentHdrLd != null && parentHdrLd.HunkBytes != hunkBytes)
+                throw new ArgumentException(
+                    $"Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrLd.HunkBytes} bytes"
+                );
+
+            if (!hunkExplicitLd && parentHdrLd != null)
+                hunkBytes = parentHdrLd.HunkBytes;
+            else if (!hunkExplicitLd)
                 hunkBytes = bytesPerFrame;
+
+            if (hunkBytes < HunkSizeMin)
+                throw new ArgumentException($"Invalid hunk size {hunkBytes} (minimum {HunkSizeMin})", nameof(hunkBytes));
+            if (hunkBytes > HunkSizeMax)
+                throw new ArgumentException($"Invalid hunk size {hunkBytes} (maximum {HunkSizeMax})", nameof(hunkBytes));
+
+            if (parentHdrLd != null && parentHdrLd.UnitBytes != bytesPerFrame)
+                throw new ArgumentException(
+                    $"Output parent CHD unit size {parentHdrLd.UnitBytes} bytes does not match laserdisc frame size {bytesPerFrame} bytes"
+                );
 
             if (hunkBytes % bytesPerFrame != 0)
                 throw new ArgumentException(
-                    $"Hunk size ({hunkBytes}) must be a whole multiple of the frame size ({bytesPerFrame})",
+                    $"Hunk size {hunkBytes} bytes is not a whole multiple of {bytesPerFrame}",
                     nameof(hunkBytes)
                 );
 
@@ -1205,7 +1232,6 @@ public static class ChdEncoder
     )
     {
         ArgumentNullException.ThrowIfNull(sourcePath);
-        codecTags ??= [CodecTags.Zlib];
         options ??= new ChdEncodeOptions();
 
         var openErr = ChdFile.Open(sourcePath, options.SourceParentPath, out var source);
@@ -1220,25 +1246,50 @@ public static class ChdEncoder
             var unitBytes = source.UnitBytes;
             var sourceLogicalBytes = source.TotalBytes;
 
-            // chdman copy: -hs overrides hunk size (parse_hunk_size with source unit as granularity)
-            var hunkBytes = options.HunkBytes ?? sourceHunkBytes;
-            if (options.HunkBytes.HasValue)
+            // chdman.cpp:2426 get_compression_defaults — per-type defaults when -c omitted
+            codecTags ??= GetDefaultCopyCodecs(source);
+
+            // chdman.cpp:1331 parse_hunk_size for copy: required_granularity=input.unit, default=input.hunk
+            // plus chdman.cpp:2476 factor check
+            ChdHeaderInfo? parentHeader = null;
+            if (options.ParentPath is { Length: > 0 } outParentPath)
             {
-                ValidateHunkSize(hunkBytes, unitBytes);
-                // when output parent is used, hunkBytes must match parent (chdman.cpp:1342)
-                if (options.ParentPath is { Length: > 0 } outParent)
-                {
-                    var perr = Chd.ReadHeader(outParent, out var phdr);
-                    if (perr == ChdError.Chderrnone && phdr != null && phdr.HunkBytes != hunkBytes)
-                        throw new ArgumentException(
-                            $"Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {phdr.HunkBytes} bytes"
-                        );
-                    if (phdr != null && phdr.UnitBytes != unitBytes)
-                        throw new ArgumentException(
-                            $"Output parent CHD unit size {phdr.UnitBytes} bytes does not match source unit size {unitBytes} bytes"
-                        );
-                }
+                var perr = Chd.ReadHeader(outParentPath, out var phdr);
+                if (perr == ChdError.Chderrnone)
+                    parentHeader = phdr;
             }
+
+            uint hunkBytes;
+            var hunkExplicit = options.HunkBytes.HasValue;
+            if (hunkExplicit)
+            {
+                hunkBytes = options.HunkBytes!.Value;
+                if (parentHeader != null && parentHeader.HunkBytes != hunkBytes)
+                    throw new ArgumentException(
+                        $"Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHeader.HunkBytes} bytes"
+                    );
+            }
+            else if (parentHeader != null)
+            {
+                hunkBytes = parentHeader.HunkBytes;
+            }
+            else
+            {
+                hunkBytes = sourceHunkBytes;
+            }
+
+            ValidateHunkSize(hunkBytes, unitBytes);
+
+            if (parentHeader != null && parentHeader.UnitBytes != unitBytes)
+                throw new ArgumentException(
+                    $"Output parent CHD unit size {parentHeader.UnitBytes} bytes does not match source unit size {unitBytes} bytes"
+                );
+
+            // chdman.cpp:2476 factor check: hunk must be multiple or factor of input hunk
+            if ((hunkBytes % sourceHunkBytes != 0) && (sourceHunkBytes % hunkBytes != 0))
+                throw new ArgumentException(
+                    "Hunk size is not a whole multiple or factor of input hunk size"
+                );
 
             // parse_input_start_end parity for copy (chdman.cpp:2467): slice within logical_bytes
             var sliceStart = options.InputStartBytes;
@@ -1361,6 +1412,29 @@ public static class ChdEncoder
                 cancellationToken
             );
         }
+    }
+
+    /// <summary>
+    ///     Returns chdman's <c>get_compression_defaults</c> (<c>chdman.cpp:2426</c>) for <c>copy</c> when
+    ///     <c>-c</c> is omitted: HD/DVD → <c>lzma,zlib,huff,flac</c>, LD → <c>avhu</c>, CD/GD → <c>cdlz,cdzl,cdfl</c>,
+    ///     else RAW → <c>lzma,zlib,huff,flac</c>.
+    /// </summary>
+    private static IReadOnlyList<uint> GetDefaultCopyCodecs(ChdFile source)
+    {
+        // check_is_hd / check_is_dvd first (both → s_default_hd_compression)
+        if (source.IsHdd || source.IsDvd)
+            return [CodecTags.Lzma, CodecTags.Zlib, CodecTags.Huff, CodecTags.Flac];
+
+        // check_is_av (laserdisc) via AVAV metadata presence
+        foreach (var m in source.Metadata)
+            if (string.Equals(m.Tag, "AVAV", StringComparison.Ordinal))
+                return [CodecTags.Avhu];
+
+        // check_is_cd / check_is_gd
+        if (source.IsCd || source.IsGdRom)
+            return [CodecTags.Cdlz, CodecTags.Cdzl, CodecTags.Cdfl];
+
+        return [CodecTags.Lzma, CodecTags.Zlib, CodecTags.Huff, CodecTags.Flac];
     }
 
     /// <summary>

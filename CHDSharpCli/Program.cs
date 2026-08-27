@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using CHDSharp.Encoder;
+using CHDSharp.Models;
 using CHDSharp.Utils;
 using Serilog;
 using Serilog.Extensions.Logging;
@@ -917,39 +918,54 @@ internal static class Program
         if (dvd && unitBytes == 512u)
             unitBytes = 2048u;
 
+        // chdman.cpp:1888-1906 parse_hunk_size + chdman.cpp:1897 unit mismatch
+        ChdHeaderInfo? parentHdrRaw = null;
+        if (parentPath != null && File.Exists(parentPath))
+            if (Chd.ReadHeader(parentPath, out var ph) == ChdError.Chderrnone)
+                parentHdrRaw = ph;
+
+        if (parentHdrRaw != null && parentHdrRaw.UnitBytes != unitBytes)
+        {
+            Console.Error.WriteLine($"Error: Specified unit size {unitBytes} bytes does not match output parent CHD unit size {parentHdrRaw.UnitBytes} bytes");
+            log.Warning("Specified unit size {Unit} bytes does not match output parent CHD unit size {ParentUnit} bytes", unitBytes, parentHdrRaw.UnitBytes);
+            return;
+        }
+
         // chdman.cpp:1331 parse_hunk_size — default = max(4096/unit*unit, unit); parent inherits when omitted
+        if (hunkExplicit && parentHdrRaw != null && parentHdrRaw.HunkBytes != hunkBytes)
+        {
+            Console.Error.WriteLine($"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrRaw.HunkBytes} bytes");
+            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkBytes, parentHdrRaw.HunkBytes);
+            return;
+        }
+
         if (!hunkExplicit)
         {
-            if (parentPath != null && File.Exists(parentPath))
-            {
-                var perr = Chd.ReadHeader(parentPath, out var phdr);
-                if (perr == ChdError.Chderrnone && phdr != null && phdr.HunkBytes != 0)
-                    hunkBytes = phdr.HunkBytes;
-                else
-                    hunkBytes = Math.Max(4096u / unitBytes * unitBytes, unitBytes);
-            }
+            if (parentHdrRaw != null && parentHdrRaw.HunkBytes != 0)
+                hunkBytes = parentHdrRaw.HunkBytes;
             else
-            {
                 hunkBytes = Math.Max(4096u / unitBytes * unitBytes, unitBytes);
-            }
         }
 
         // chdman.cpp:61 HUNK_SIZE_MIN/MAX
         if (hunkBytes < 16)
         {
+            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
             log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkBytes);
             return;
         }
 
         if (hunkBytes > 1024 * 1024)
         {
+            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
             log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkBytes);
             return;
         }
 
-        // chdman.cpp:1354 granularity check is done by ChdEncoder.ValidateHunkSize; keep message parity here
+        // chdman.cpp:1354 granularity check
         if (hunkBytes % unitBytes != 0)
         {
+            Console.Error.WriteLine($"Error: Hunk size {hunkBytes} bytes is not a whole multiple of {unitBytes}");
             log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkBytes, unitBytes);
             return;
         }
@@ -1084,7 +1100,9 @@ internal static class Program
         uint? chsHeads = null;
         uint? chsSectors = null;
         uint hunkBytes = 4096;
+        var hunkExplicit = false;
         uint unitBytes = 512;
+        var sectorSizeExplicit = false;
         string? codecs = null;
         string? outputParentPath = null;
         var verbose = false;
@@ -1193,6 +1211,7 @@ internal static class Program
                         }
 
                         unitBytes = ss;
+                        sectorSizeExplicit = true;
                         break;
                     case "compression":
                         codecs = param;
@@ -1205,6 +1224,7 @@ internal static class Program
                         }
 
                         hunkBytes = hs;
+                        hunkExplicit = true;
                         break;
                     case "numprocessors":
                         if (!int.TryParse(param, out var t) || t < 1 || t > 64)
@@ -1288,6 +1308,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -1296,12 +1318,31 @@ internal static class Program
         }
 
         // Apply hard disk template: derive geometry/size and stamp GDDD metadata
+        // chdman.cpp:1976 only rejects tp+chs and tp+ss; size+chs/template is allowed (size ignored, chs wins)
         if (templateId.HasValue)
         {
             var tpl = HardDiskTemplates.GetTemplate(templateId.Value);
-            if (chsCylinders.HasValue || sizeBytes.HasValue)
+            if (chsCylinders.HasValue)
             {
-                log.Warning("createhd: --template cannot be combined with --size or -chs");
+                Console.Error.WriteLine("Error: CHS geometry cannot be specified separately when a template is specified");
+                log.Warning("CHS geometry cannot be specified separately when a template is specified");
+                PrintCommandHelp("createhd");
+                return;
+            }
+
+            if (sectorSizeExplicit)
+            {
+                Console.Error.WriteLine("Error: Sector size cannot be specified separately when a template is specified");
+                log.Warning("Sector size cannot be specified separately when a template is specified");
+                PrintCommandHelp("createhd");
+                return;
+            }
+
+            // chdman allows tp+size: size is validated for sector alignment but otherwise ignored (chs wins)
+            if (sizeBytes.HasValue && sizeBytes.Value % tpl.SectorSize != 0)
+            {
+                Console.Error.WriteLine($"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {tpl.SectorSize}");
+                log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value, tpl.SectorSize);
                 return;
             }
 
@@ -1321,8 +1362,82 @@ internal static class Program
             );
         }
 
-        // Validate required options
-        if (!sizeBytes.HasValue && !chsCylinders.HasValue && inputPath == null)
+        // chdman.cpp:1980/1998/2012/2016 parent + hunk handling (parse_hunk_size)
+        ChdHeaderInfo? parentHdrHd = null;
+        if (outputParentPath != null && File.Exists(outputParentPath))
+            if (Chd.ReadHeader(outputParentPath, out var phHd) == ChdError.Chderrnone)
+                parentHdrHd = phHd;
+
+        if (outputParentPath != null)
+        {
+            if (templateId.HasValue)
+            {
+                Console.Error.WriteLine("Error: Template cannot be used when a parent CHD is supplied");
+                log.Warning("Template cannot be used when a parent CHD is supplied");
+                PrintCommandHelp("createhd");
+                return;
+            }
+
+            if (chsCylinders.HasValue)
+            {
+                Console.Error.WriteLine("Error: CHS geometry cannot be specified when a parent CHD is supplied");
+                log.Warning("CHS geometry cannot be specified when a parent CHD is supplied");
+                PrintCommandHelp("createhd");
+                return;
+            }
+        }
+
+        if (parentHdrHd != null)
+        {
+            if (sectorSizeExplicit && unitBytes != parentHdrHd.UnitBytes)
+            {
+                Console.Error.WriteLine($"Error: Sector size {unitBytes} bytes does not match output parent CHD sector size {parentHdrHd.UnitBytes} bytes");
+                log.Warning("Sector size {Sector} bytes does not match output parent CHD sector size {ParentSector} bytes", unitBytes, parentHdrHd.UnitBytes);
+                return;
+            }
+
+            if (!sectorSizeExplicit)
+                unitBytes = parentHdrHd.UnitBytes;
+        }
+
+        if (hunkExplicit && parentHdrHd != null && parentHdrHd.HunkBytes != hunkBytes)
+        {
+            Console.Error.WriteLine($"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrHd.HunkBytes} bytes");
+            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkBytes, parentHdrHd.HunkBytes);
+            return;
+        }
+
+        if (!hunkExplicit)
+        {
+            if (parentHdrHd != null)
+                hunkBytes = parentHdrHd.HunkBytes;
+            else
+                hunkBytes = Math.Max(4096u / unitBytes * unitBytes, unitBytes);
+        }
+
+        if (hunkBytes < 16)
+        {
+            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+            log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkBytes);
+            return;
+        }
+
+        if (hunkBytes > 1024 * 1024)
+        {
+            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+            log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkBytes);
+            return;
+        }
+
+        if (hunkBytes % unitBytes != 0)
+        {
+            Console.Error.WriteLine($"Error: Hunk size {hunkBytes} bytes is not a whole multiple of {unitBytes}");
+            log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkBytes, unitBytes);
+            return;
+        }
+
+        // Validate required options — allow blank child with parent to inherit geometry (chdman defers check until after parent GDDD fallback)
+        if (!sizeBytes.HasValue && !chsCylinders.HasValue && inputPath == null && outputParentPath == null)
         {
             log.Warning("createhd: requires --size N, -chs C,H,S, -tp ID, or --input <file>");
             return;
@@ -1372,138 +1487,172 @@ internal static class Program
                 if (taskCount.HasValue)
                     encodeOptions.TaskCount = taskCount;
 
-                // --ident handling for createhd -i (chdman.cpp:2057): extract CHS and add IDENT metadata
+                // chdman.cpp:2052-2096 — IDENT prefill from parent + explicit file, parent GDDD fallback, filesize%sector, guess_chs
+                ulong inputFilesize;
+                {
+                    var fiLen = new FileInfo(inputPath).Length;
+                    long startBytes = 0;
+                    if (inputStartBytes.HasValue)
+                        startBytes = inputStartBytes.Value;
+                    else if (inputStartHunk.HasValue)
+                        startBytes = inputStartHunk.Value * (long)hunkBytes;
+                    var avail = fiLen > startBytes ? (ulong)(fiLen - startBytes) : 0UL;
+                    if (inputLengthBytes.HasValue)
+                        inputFilesize = Math.Min(avail, (ulong)inputLengthBytes.Value);
+                    else if (inputLengthHunks.HasValue)
+                        inputFilesize = Math.Min(avail, (ulong)inputLengthHunks.Value * hunkBytes);
+                    else
+                        inputFilesize = avail;
+                }
+
                 byte[]? inputIdentData = null;
                 uint? identCyl = null;
                 uint? identHeads = null;
                 uint? identSectors = null;
+                // 2054: identdata from parent if opened (no error if missing)
+                if (identPath == null && TryGetParentIdent(outputParentPath, out var parentIdentRawInput))
+                {
+                    inputIdentData = parentIdentRawInput;
+                    if (inputIdentData!.Length >= 14)
+                    {
+                        var pc = (uint)(inputIdentData[2] | (inputIdentData[3] << 8));
+                        var ph = (uint)(inputIdentData[6] | (inputIdentData[7] << 8));
+                        var ps = (uint)(inputIdentData[12] | (inputIdentData[13] << 8));
+                        if ((ulong)pc * ph * ps >= 16_514_064UL)
+                            pc = 0;
+                        if (pc != 0)
+                        {
+                            identCyl = pc;
+                            identHeads = ph;
+                            identSectors = ps;
+                        }
+                    }
+                }
                 if (identPath != null)
                 {
                     if (!File.Exists(identPath))
                     {
+                        Console.Error.WriteLine($"Error: Ident file '{identPath}' not found");
                         log.Warning("createhd: ident file not found: {Path}", identPath);
                         return;
                     }
 
                     try
                     {
-                        inputIdentData = File.ReadAllBytes(identPath);
-                        if (inputIdentData.Length < 14)
+                        var fileData = File.ReadAllBytes(identPath);
+                        if (fileData.Length < 14)
                         {
-                            log.Warning(
-                                "--createhd: ident file is invalid (too short, need >=14 bytes, got {Size})",
-                                inputIdentData.Length
-                            );
+                            Console.Error.WriteLine($"Error: Ident file '{identPath}' is invalid (too short)");
+                            log.Warning("Ident file '{Path}' is invalid (too short)", identPath);
                             return;
                         }
 
+                        inputIdentData = fileData;
                         var ic = (uint)(inputIdentData[2] | (inputIdentData[3] << 8));
                         var ih = (uint)(inputIdentData[6] | (inputIdentData[7] << 8));
                         var isect = (uint)(inputIdentData[12] | (inputIdentData[13] << 8));
                         if ((ulong)ic * ih * isect >= 16_514_064UL)
                             ic = 0;
-                        identCyl = ic != 0 ? ic : null;
-                        identHeads = ic != 0 ? ih : null;
-                        identSectors = ic != 0 ? isect : null;
+                        if (ic != 0)
+                        {
+                            identCyl = ic;
+                            identHeads = ih;
+                            identSectors = isect;
+                        }
+                        else
+                        {
+                            identCyl = null;
+                            identHeads = null;
+                            identSectors = null;
+                        }
                     }
                     catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                     {
+                        Console.Error.WriteLine($"Error reading ident file ({identPath}): {ex.Message}");
                         log.Warning("createhd: cannot read ident file: {Message}", ex.Message);
                         return;
                     }
                 }
 
-                // D2 fix: synthesize GDDD hard-disk geometry for createhd from raw .img
-                // (chdman createhd always writes GDDD, guessing CHS from file size)
-                // Use file length honoring input start/length when present, otherwise whole file
-                // When --ident provided, use its CHS (or guess if >8GB), and also store IDENT metadata
-                if (identPath != null)
+                // 2076: if cylinders==0 && parent opened, read GDDD from parent (overwrites CHS and sector_size)
+                uint? finalCyl = identCyl;
+                uint? finalHeads = identHeads;
+                uint? finalSectors = identSectors;
+                uint finalSectorSize = unitBytes;
+                if (!finalCyl.HasValue && parentHdrHd != null)
                 {
-                    encodeOptions.Metadata ??= new List<MetadataEntry>();
-                    var list = (List<MetadataEntry>)encodeOptions.Metadata;
-                    if (list.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
+                    if (!TryGetParentGddd(outputParentPath, out var pcyl, out var pheads, out var psecs, out var pbps, out var gErr))
                     {
-                        if (identCyl.HasValue && identHeads.HasValue && identSectors.HasValue)
-                        {
-                            list.Add(
-                                MetadataWriter.BuildHardDiskMetadata(
-                                    identCyl.Value,
-                                    identHeads.Value,
-                                    identSectors.Value,
-                                    unitBytes
-                                )
-                            );
-                        }
-                        else
-                        {
-                            // >8GB case: guess CHS from filesize (chdman sets cylinders=0 → guess_chs)
-                            ulong logicalForGddd;
-                            if (inputStartBytes.HasValue || inputStartHunk.HasValue || inputLengthBytes.HasValue || inputLengthHunks.HasValue)
-                            {
-                                var fiLen = new FileInfo(inputPath).Length;
-                                long startBytes = 0;
-                                if (inputStartBytes.HasValue)
-                                    startBytes = inputStartBytes.Value;
-                                else if (inputStartHunk.HasValue)
-                                    startBytes = inputStartHunk.Value * hunkBytes;
-                                ulong avail = fiLen > startBytes ? (ulong)(fiLen - startBytes) : 0;
-                                logicalForGddd = avail;
-                                if (inputLengthBytes.HasValue)
-                                    logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthBytes.Value);
-                                else if (inputLengthHunks.HasValue)
-                                    logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthHunks.Value * hunkBytes);
-                            }
-                            else
-                            {
-                                logicalForGddd = (ulong)new FileInfo(inputPath).Length;
-                            }
-
-                            list.Add(MetadataWriter.BuildHardDiskMetadata(logicalForGddd, unitBytes));
-                        }
+                        Console.Error.WriteLine($"Error: {gErr}");
+                        log.Warning("{Message}", gErr);
+                        return;
                     }
-
-                    // also store IDENT metadata (chdman writes it after GDDD)
-                    if (inputIdentData != null)
+                    finalCyl = pcyl;
+                    finalHeads = pheads;
+                    finalSectors = psecs;
+                    if (pbps != finalSectorSize)
                     {
-                        encodeOptions.Metadata ??= new List<MetadataEntry>();
-                        ((List<MetadataEntry>)encodeOptions.Metadata).Add(
-                            MetadataWriter.BuildIdentMetadata(inputIdentData)
-                        );
+                        finalSectorSize = pbps;
+                        unitBytes = pbps;
                     }
                 }
-                else if (
-                    outputParentPath == null
-                    && !chsCylinders.HasValue
-                    && !templateId.HasValue
-                )
+
+                // 2087: validate Data size % sector_size
+                if (inputFilesize % finalSectorSize != 0)
+                {
+                    Console.Error.WriteLine($"Error: Data size {BigintString(inputFilesize)} is not divisible by sector size {finalSectorSize}");
+                    log.Warning("Data size {Size} is not divisible by sector size {Sector}", inputFilesize, finalSectorSize);
+                    return;
+                }
+
+                // 2091: if cylinders==0 guess_chs (even for input file)
+                bool needGuess = !finalCyl.HasValue || finalCyl.Value == 0;
+                if (needGuess)
+                {
+                    if (inputFilesize == 0)
+                    {
+                        Console.Error.WriteLine("Error: Can't guess CHS values because there is no input file");
+                        log.Warning("Can't guess CHS values because there is no input file");
+                        return;
+                    }
+                    var guessedEntry = MetadataWriter.BuildHardDiskMetadata(inputFilesize, finalSectorSize);
+                    encodeOptions.Metadata ??= new List<MetadataEntry>();
+                    var glist = (List<MetadataEntry>)encodeOptions.Metadata;
+                    if (glist.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
+                        glist.Add(guessedEntry);
+                    // also need finalCyl for later? not needed since we already added GDDD
+                }
+                else
                 {
                     encodeOptions.Metadata ??= new List<MetadataEntry>();
-                    var list = (List<MetadataEntry>)encodeOptions.Metadata;
-                    if (list.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
+                    var glist = (List<MetadataEntry>)encodeOptions.Metadata;
+                    if (glist.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
                     {
-                        ulong logicalForGddd;
-                        if (inputStartBytes.HasValue || inputStartHunk.HasValue || inputLengthBytes.HasValue || inputLengthHunks.HasValue)
-                        {
-                            var fiLen = new FileInfo(inputPath).Length;
-                            long startBytes = 0;
-                            if (inputStartBytes.HasValue)
-                                startBytes = inputStartBytes.Value;
-                            else if (inputStartHunk.HasValue)
-                                startBytes = inputStartHunk.Value * hunkBytes;
-                            ulong avail = fiLen > startBytes ? (ulong)(fiLen - startBytes) : 0;
-                            logicalForGddd = avail;
-                            if (inputLengthBytes.HasValue)
-                                logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthBytes.Value);
-                            else if (inputLengthHunks.HasValue)
-                                logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthHunks.Value * hunkBytes);
-                        }
-                        else
-                        {
-                            logicalForGddd = (ulong)new FileInfo(inputPath).Length;
-                        }
-
-                        list.Add(MetadataWriter.BuildHardDiskMetadata(logicalForGddd, unitBytes));
+                        glist.Add(MetadataWriter.BuildHardDiskMetadata(finalCyl!.Value, finalHeads!.Value, finalSectors!.Value, finalSectorSize));
                     }
+                }
+
+                // Ensure GDDD exists (if guess added, already; if explicit CHS, added; otherwise fallback)
+                if (encodeOptions.Metadata == null || ((List<MetadataEntry>)encodeOptions.Metadata).All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
+                {
+                    encodeOptions.Metadata ??= new List<MetadataEntry>();
+                    ((List<MetadataEntry>)encodeOptions.Metadata).Add(MetadataWriter.BuildHardDiskMetadata(inputFilesize, finalSectorSize));
+                }
+
+                // chdman writes GDDD then IDNT (if identdata non-empty, after GDDD)
+                if (inputIdentData != null)
+                {
+                    MetadataEntry identEntry;
+                    if (inputIdentData.Length == 512)
+                        identEntry = MetadataWriter.BuildIdentMetadata(inputIdentData);
+                    else
+                    {
+                        var padded = new byte[512];
+                        Array.Copy(inputIdentData, padded, Math.Min(inputIdentData.Length, 512));
+                        identEntry = MetadataWriter.BuildIdentMetadata(padded);
+                    }
+                    encodeOptions.Metadata ??= new List<MetadataEntry>();
+                    ((List<MetadataEntry>)encodeOptions.Metadata).Add(identEntry);
                 }
 
                 ChdEncoder.EncodeRaw(
@@ -1526,7 +1675,8 @@ internal static class Program
             return;
         }
 
-        // Calculate size from CHS if provided
+        // Calculate size from CHS if provided — chdman.cpp:2087-2096
+        // chdman allows size+chs (size validated for alignment but otherwise ignored; chs wins)
         if (chsCylinders.HasValue && chsHeads.HasValue && chsSectors.HasValue)
         {
             ulong chsSize;
@@ -1550,17 +1700,28 @@ internal static class Program
                 return;
             }
 
-            if (sizeBytes.HasValue && sizeBytes.Value != chsSize)
+            if (sizeBytes.HasValue)
             {
-                log.Warning(
-                    "createhd: --size ({Size}) conflicts with -chs geometry ({ChsSize}); use one or the other",
-                    sizeBytes.Value,
-                    chsSize
-                );
-                return;
+                if (sizeBytes.Value % unitBytes != 0)
+                {
+                    Console.Error.WriteLine($"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {unitBytes}");
+                    log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value, unitBytes);
+                    return;
+                }
+
+                if (sizeBytes.Value != chsSize)
+                    log.Information("  Note: --size {Size} differs from CHS size {ChsSize}; using CHS geometry (chdman parity)", sizeBytes.Value, chsSize);
             }
 
             sizeBytes = chsSize;
+        }
+
+        // chdman.cpp:2087 — validate size alignment (blank case: filesize % sector_size)
+        if (sizeBytes.HasValue && sizeBytes.Value % unitBytes != 0)
+        {
+            Console.Error.WriteLine($"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {unitBytes}");
+            log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value, unitBytes);
+            return;
         }
 
         // chdman.cpp:2046 — blank hard disk images must be uncompressed
@@ -1572,37 +1733,58 @@ internal static class Program
 
         codecs ??= "none";
 
-        // Read ident file if provided — chdman.cpp:2057 extracts CHS from bytes 2/6/12
+        // chdman.cpp:2052-2091 — IDENT prefill from parent + explicit file, parent GDDD fallback, filesize%sector, guess_chs
         byte[]? identData = null;
+        // 2054: identdata from parent if opened
+        if (identPath == null && TryGetParentIdent(outputParentPath, out var parentIdentRawBlank))
+        {
+            identData = parentIdentRawBlank;
+            if (identData!.Length >= 14)
+            {
+                var pc = (uint)(identData[2] | (identData[3] << 8));
+                var ph = (uint)(identData[6] | (identData[7] << 8));
+                var ps = (uint)(identData[12] | (identData[13] << 8));
+                if ((ulong)pc * ph * ps >= 16_514_064UL)
+                    pc = 0;
+                if (pc != 0)
+                {
+                    chsCylinders = pc;
+                    chsHeads = ph;
+                    chsSectors = ps;
+                }
+                else
+                {
+                    chsCylinders = null;
+                    chsHeads = null;
+                    chsSectors = null;
+                }
+            }
+        }
         if (identPath != null)
         {
             if (!File.Exists(identPath))
             {
+                Console.Error.WriteLine($"Error: Ident file '{identPath}' not found");
                 log.Warning("--createhd: ident file not found: {Path}", identPath);
                 return;
             }
 
             try
             {
-                identData = File.ReadAllBytes(identPath);
-                if (identData.Length < 14)
+                var fileData = File.ReadAllBytes(identPath);
+                if (fileData.Length < 14)
                 {
-                    log.Warning(
-                        "--createhd: ident file is invalid (too short, need >=14 bytes, got {Size})",
-                        identData.Length
-                    );
+                    Console.Error.WriteLine($"Error: Ident file '{identPath}' is invalid (too short)");
+                    log.Warning("--createhd: ident file is invalid (too short, need >=14 bytes, got {Size})", fileData.Length);
                     return;
                 }
 
-                // chdman: cylinders = get_u16le(&data[2]), heads = get_u16le(&data[6]), sectors = get_u16le(&data[12])
+                identData = fileData;
                 var idCyl = (uint)(identData[2] | (identData[3] << 8));
                 var idHeads = (uint)(identData[6] | (identData[7] << 8));
                 var idSectors = (uint)(identData[12] | (identData[13] << 8));
-                // ignore CHS for >8GB drives (chdman.cpp:2073)
                 if ((ulong)idCyl * idHeads * idSectors >= 16_514_064UL)
                     idCyl = 0;
-
-                // ident CHS overrides prior -chs/-tp, matching chdman ordering
                 if (idCyl != 0)
                 {
                     chsCylinders = idCyl;
@@ -1611,7 +1793,6 @@ internal static class Program
                 }
                 else
                 {
-                    // chdman sets cylinders=0 to trigger guess_chs later
                     chsCylinders = null;
                     chsHeads = null;
                     chsSectors = null;
@@ -1619,7 +1800,63 @@ internal static class Program
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                Console.Error.WriteLine($"Error reading ident file ({identPath}): {ex.Message}");
                 log.Warning("--createhd: cannot read ident file: {Message}", ex.Message);
+                return;
+            }
+        }
+
+        // 2076: if cylinders==0 && parent opened, read GDDD from parent
+        if (!chsCylinders.HasValue && parentHdrHd != null)
+        {
+            if (!TryGetParentGddd(outputParentPath, out var pcyl, out var pheads, out var psecs, out var pbps, out var gErr))
+            {
+                Console.Error.WriteLine($"Error: {gErr}");
+                log.Warning("{Message}", gErr);
+                return;
+            }
+            chsCylinders = pcyl;
+            chsHeads = pheads;
+            chsSectors = psecs;
+            if (pbps != unitBytes)
+            {
+                unitBytes = pbps;
+                // re-validate hunk%unit after sector change (chdman doesn't re-validate but we ensure)
+                if (hunkBytes % unitBytes != 0)
+                {
+                    Console.Error.WriteLine($"Error: Hunk size {hunkBytes} bytes is not a whole multiple of {unitBytes}");
+                    log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkBytes, unitBytes);
+                    return;
+                }
+            }
+        }
+
+        // 2087: validate Data size % sector_size for blank (filesize = sizeBytes if provided else 0)
+        ulong blankFilesize = sizeBytes ?? 0UL;
+        // If CHS provided, filesize for validation is still sizeBytes (if any) per chdman; but if size not provided, filesize 0 passes
+        if (sizeBytes.HasValue && blankFilesize % unitBytes != 0)
+        {
+            Console.Error.WriteLine($"Error: Data size {BigintString(blankFilesize)} is not divisible by sector size {unitBytes}");
+            log.Warning("Data size {Size} is not divisible by sector size {Sector}", blankFilesize, unitBytes);
+            return;
+        }
+
+        // 2091-2094: if cylinders==0 handle blank guess/length check
+        if (!chsCylinders.HasValue)
+        {
+            if (!sizeBytes.HasValue)
+            {
+                Console.Error.WriteLine("Error: Length or CHS geometry must be specified when creating a blank hard disk image");
+                log.Warning("Length or CHS geometry must be specified when creating a blank hard disk image");
+                return;
+            }
+            // chdman would guess_chs here using filesize and sector_size; for blank with size but no CHS,
+            // we leave chsCylinders null and let CreateBlank guess via BuildHardDiskMetadata; no error needed.
+            // However if sizeBytes==0 (should not happen) then guess would fail
+            if (blankFilesize == 0)
+            {
+                Console.Error.WriteLine("Error: Can't guess CHS values because there is no input file");
+                log.Warning("Can't guess CHS values because there is no input file");
                 return;
             }
         }
@@ -1627,10 +1864,11 @@ internal static class Program
         try
         {
             var codecTags = ChdCodecs.ParseCodecTags(codecs);
+            ulong logSize = sizeBytes ?? (chsCylinders.HasValue ? (ulong)chsCylinders.Value * chsHeads!.Value * chsSectors!.Value * unitBytes : 0);
             log.Information(
                 "Creating blank HD CHD: {Output}  (size {Size:N0}B, hunk {Hunk}B, unit {Unit}B, codecs {Codecs}{Chs}{Tasks})",
                 outputPath,
-                sizeBytes!.Value,
+                logSize,
                 hunkBytes,
                 unitBytes,
                 string.Join(",", codecTags.Select(CodecTags.ToString)),
@@ -1774,6 +2012,51 @@ internal static class Program
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
             );
+            return;
+        }
+
+        // chdman.cpp:2184 parse_hunk_size for createcd: required=2448 default=19584
+        var hunkExplicitCd = options.Contains("--hunksize") || options.Contains("-hs") || options.Contains("--hunk-size");
+        ChdHeaderInfo? parentHdrCd = null;
+        if (parentPath != null && File.Exists(parentPath))
+            if (Chd.ReadHeader(parentPath, out var phCd) == ChdError.Chderrnone)
+                parentHdrCd = phCd;
+
+        if (parentHdrCd != null && parentHdrCd.UnitBytes != CdConstants.FrameSize)
+        {
+            Console.Error.WriteLine($"Error: Output parent CHD sector size {parentHdrCd.UnitBytes} bytes does not match CD-ROM frame size {CdConstants.FrameSize} bytes");
+            log.Warning("Output parent CHD sector size {ParentUnit} bytes does not match CD-ROM frame size {FrameSize} bytes", parentHdrCd.UnitBytes, CdConstants.FrameSize);
+            return;
+        }
+
+        if (hunkExplicitCd && parentHdrCd != null && parentHdrCd.HunkBytes != hunkSize)
+        {
+            Console.Error.WriteLine($"Error: Specified hunk size {hunkSize} bytes does not match output parent CHD hunk size {parentHdrCd.HunkBytes} bytes");
+            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkSize, parentHdrCd.HunkBytes);
+            return;
+        }
+
+        if (!hunkExplicitCd && parentHdrCd != null)
+            hunkSize = parentHdrCd.HunkBytes;
+
+        if (hunkSize < 16)
+        {
+            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+            log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkSize);
+            return;
+        }
+
+        if (hunkSize > 1024 * 1024)
+        {
+            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+            log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkSize);
+            return;
+        }
+
+        if (hunkSize % CdConstants.FrameSize != 0)
+        {
+            Console.Error.WriteLine($"Error: Hunk size {hunkSize} bytes is not a whole multiple of {CdConstants.FrameSize}");
+            log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkSize, CdConstants.FrameSize);
             return;
         }
 
@@ -2747,12 +3030,48 @@ internal static class Program
 
         try
         {
-            var codecTags = ChdCodecs.ParseCodecTags(codecs);
+            // chdman.cpp:2426 get_compression_defaults — when -c omitted, pick per-type defaults
+            IReadOnlyList<uint>? codecTags;
+            if (codecs != null)
+            {
+                codecTags = ChdCodecs.ParseCodecTags(codecs);
+            }
+            else
+            {
+                IReadOnlyList<uint>? defaults = null;
+                try
+                {
+                    var tmpErr = ChdFile.Open(inputPath, sourceParentPath, out var tmpChd);
+                    if (tmpErr == ChdError.Chderrnone && tmpChd != null)
+                    {
+                        using (tmpChd)
+                        {
+                            if (tmpChd.IsHdd || tmpChd.IsDvd)
+                                defaults = [CodecTags.Lzma, CodecTags.Zlib, CodecTags.Huff, CodecTags.Flac];
+                            else if (tmpChd.Metadata.Any(m => string.Equals(m.Tag, "AVAV", StringComparison.Ordinal)))
+                                defaults = [CodecTags.Avhu];
+                            else if (tmpChd.IsCd || tmpChd.IsGdRom)
+                                defaults = [CodecTags.Cdlz, CodecTags.Cdzl, CodecTags.Cdfl];
+                            else
+                                defaults = [CodecTags.Lzma, CodecTags.Zlib, CodecTags.Huff, CodecTags.Flac];
+                        }
+                    }
+                }
+                catch
+                {
+                    /* ignore — fall back to encoder default */
+                }
+
+                codecTags = defaults;
+            }
+
+            // For display, resolve null (open failed) to the encoder's fallback string
+            var displayTags = codecTags ?? [CodecTags.Zlib];
             log.Information(
                 "Copying CHD: {Input} -> {Output}  (codecs {Codecs}{SourceParent}{OutputParent}{Tasks}{Upgrade})",
                 Path.GetFileName(inputPath),
                 outputPath,
-                string.Join(",", codecTags.Select(CodecTags.ToString)),
+                string.Join(",", displayTags.Select(CodecTags.ToString)),
                 sourceParentPath != null
                     ? $", source parent {Path.GetFileName(sourceParentPath)}"
                     : "",
@@ -2765,15 +3084,82 @@ internal static class Program
 
             // chdman copy: -ish/-ih are in units of the *input* CHD's hunk size (parse_input_start_end:1203)
             uint sourceHunkBytes = 4096;
+            uint sourceUnitBytesForCopy = 0;
             try
             {
                 var herr = Chd.ReadHeader(inputPath, out var shdr);
                 if (herr == ChdError.Chderrnone && shdr != null && shdr.HunkBytes != 0)
+                {
                     sourceHunkBytes = shdr.HunkBytes;
+                    sourceUnitBytesForCopy = shdr.UnitBytes;
+                }
             }
             catch
             {
                 /* ignore */
+            }
+
+            // chdman.cpp:2474-2477 parse_hunk_size + factor check for copy (also validates parent inheritance)
+            {
+                ChdHeaderInfo? outParentHdr = null;
+                if (outputParentPath != null && File.Exists(outputParentPath))
+                    if (Chd.ReadHeader(outputParentPath, out var phCopy) == ChdError.Chderrnone)
+                        outParentHdr = phCopy;
+
+                uint effectiveHunk;
+                if (hunkSize.HasValue)
+                {
+                    effectiveHunk = hunkSize.Value;
+                    if (outParentHdr != null && outParentHdr.HunkBytes != effectiveHunk)
+                    {
+                        Console.Error.WriteLine($"Error: Specified hunk size {effectiveHunk} bytes does not match output parent CHD hunk size {outParentHdr.HunkBytes} bytes");
+                        log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", effectiveHunk, outParentHdr.HunkBytes);
+                        return;
+                    }
+                }
+                else if (outParentHdr != null)
+                {
+                    effectiveHunk = outParentHdr.HunkBytes;
+                }
+                else
+                {
+                    effectiveHunk = sourceHunkBytes;
+                }
+
+                if (effectiveHunk < 16)
+                {
+                    Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+                    log.Warning("Invalid hunk size {Hunk} (minimum 16)", effectiveHunk);
+                    return;
+                }
+
+                if (effectiveHunk > 1024 * 1024)
+                {
+                    Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+                    log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", effectiveHunk);
+                    return;
+                }
+
+                if (sourceUnitBytesForCopy != 0 && effectiveHunk % sourceUnitBytesForCopy != 0)
+                {
+                    Console.Error.WriteLine($"Error: Hunk size {effectiveHunk} bytes is not a whole multiple of {sourceUnitBytesForCopy}");
+                    log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", effectiveHunk, sourceUnitBytesForCopy);
+                    return;
+                }
+
+                if (outParentHdr != null && sourceUnitBytesForCopy != 0 && outParentHdr.UnitBytes != sourceUnitBytesForCopy)
+                {
+                    Console.Error.WriteLine($"Error: Output parent CHD unit size {outParentHdr.UnitBytes} bytes does not match source unit size {sourceUnitBytesForCopy} bytes");
+                    log.Warning("Output parent CHD unit size {ParentUnit} bytes does not match source unit size {Unit} bytes", outParentHdr.UnitBytes, sourceUnitBytesForCopy);
+                    return;
+                }
+
+                if ((effectiveHunk % sourceHunkBytes != 0) && (sourceHunkBytes % effectiveHunk != 0))
+                {
+                    Console.Error.WriteLine($"Error: Hunk size is not a whole multiple or factor of input hunk size");
+                    log.Warning("Hunk size is not a whole multiple or factor of input hunk size");
+                    return;
+                }
             }
 
             var encodeOptions = new ChdEncodeOptions
@@ -3054,24 +3440,168 @@ internal static class Program
 
             if (verbose)
             {
-                var compressionTypes = new Dictionary<string, int>(StringComparer.Ordinal);
+                // chdman.cpp:1721 — per-codec hunk stats via hunk_info, not decompression
                 var hunkCount = chd.HunkCount;
-                for (uint hunkNum = 0; hunkNum < hunkCount; hunkNum++)
+                var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+                for (uint h = 0; h < hunkCount; h++)
                 {
-                    var hunkErr = chd.ReadHunk(hunkNum, new byte[chd.HunkBytes]);
-                    var codecName = hunkErr == ChdError.Chderrnone ? "data" : "error";
-                    compressionTypes[codecName] = compressionTypes.GetValueOrDefault(codecName) + 1;
+                    string name;
+                    try
+                    {
+                        name = chd.GetHunkCodecName(h);
+                    }
+                    catch
+                    {
+                        name = "error";
+                    }
+
+                    counts[name] = counts.GetValueOrDefault(name) + 1;
                 }
+
+                // Preserve chdman order: Uncompressed, Copy from self, Copy from parent,
+                // Legacy mini, then codec slots in header order, then Unknown/error.
+                var order = new List<string>
+                {
+                    "Uncompressed",
+                    "Copy from self",
+                    "Copy from parent",
+                    "Legacy 8-byte mini",
+                    "Unallocated"
+                };
+                foreach (var c in chd.Compression)
+                {
+                    if (c == ChdCodec.None)
+                        continue;
+                    var n = chd.GetHunkCodecNameForCodec(c);
+                    if (!order.Contains(n, StringComparer.Ordinal))
+                        order.Add(n);
+                }
+
+                // Secondary codec (V3/V4) may be distinct
+                if (chd.SecondaryCodec != ChdCodec.None && chd.SecondaryCodec != ChdCodec.Error)
+                {
+                    var sn = chd.GetHunkCodecNameForCodec(chd.SecondaryCodec);
+                    if (!order.Contains(sn, StringComparer.Ordinal))
+                        order.Add(sn);
+                }
+
+                // Add any remaining names (Unknown, error, etc.) sorted
+                foreach (var k in counts.Keys.OrderBy(k => k, StringComparer.Ordinal))
+                    if (!order.Contains(k, StringComparer.Ordinal))
+                        order.Add(k);
 
                 Console.WriteLine();
                 Console.WriteLine("     Hunks  Percent  Name");
                 Console.WriteLine("----------  -------  ------------------------------------");
-                foreach (var kv in compressionTypes.OrderByDescending(k => k.Value))
+                foreach (var name in order)
                 {
+                    if (!counts.TryGetValue(name, out var cnt) || cnt == 0)
+                        continue;
+                    var pct = 100.0 * cnt / hunkCount;
+                    Console.WriteLine($"{BigintString((ulong)cnt),10}   {pct,5:F1}%  {name,-40}");
+                }
+
+                // Any leftover not in order (should be none)
+                foreach (var kv in counts.OrderByDescending(k => k.Value))
+                {
+                    if (order.Contains(kv.Key, StringComparer.Ordinal))
+                        continue;
                     var pct = 100.0 * kv.Value / hunkCount;
-                    Console.WriteLine($"{kv.Value,10}   {pct,5:F1}%  {kv.Key}");
+                    Console.WriteLine($"{BigintString((ulong)kv.Value),10}   {pct,5:F1}%  {kv.Key,-40}");
                 }
             }
+        }
+    }
+
+    /// <summary>chdman.cpp:2054 — reads IDNT metadata from parent CHD if present (no error if missing).</summary>
+    private static bool TryGetParentIdent(string? parentPath, out byte[]? identData)
+    {
+        identData = null;
+        if (string.IsNullOrEmpty(parentPath) || !File.Exists(parentPath))
+            return false;
+        try
+        {
+            var err = ChdFile.Open(parentPath, out var chd);
+            if (err != ChdError.Chderrnone || chd == null)
+                return false;
+            using (chd)
+            {
+                var gErr = chd.GetMetadata("IDNT", 0, out var entry);
+                if (gErr != ChdError.Chderrnone || entry == null)
+                    return false;
+                identData = entry.Data.ToArray();
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>chdman.cpp:2076-2083 — reads GDDD hard-disk metadata from parent CHD and parses CYLS:….</summary>
+    private static bool TryGetParentGddd(string? parentPath, out uint cyl, out uint heads, out uint secs, out uint bps, out string error)
+    {
+        cyl = heads = secs = bps = 0;
+        error = "";
+        if (string.IsNullOrEmpty(parentPath) || !File.Exists(parentPath))
+        {
+            error = "Unable to find hard disk metadata in parent CHD";
+            return false;
+        }
+        try
+        {
+            var err = ChdFile.Open(parentPath, out var chd);
+            if (err != ChdError.Chderrnone || chd == null)
+            {
+                error = "Unable to find hard disk metadata in parent CHD";
+                return false;
+            }
+            using (chd)
+            {
+                var gErr = chd.GetMetadata("GDDD", 0, out var entry);
+                if (gErr != ChdError.Chderrnone || entry == null)
+                {
+                    error = "Unable to find hard disk metadata in parent CHD";
+                    return false;
+                }
+                var text = entry.GetText().Trim();
+                // chdman HARD_DISK_METADATA_FORMAT = "CYLS:%d,HEADS:%d,SECS:%d,BPS:%d"
+                // Parse with sscanf parity: must have 4 values
+                var cylIdx = text.IndexOf("CYLS:", StringComparison.Ordinal);
+                var headsIdx = text.IndexOf("HEADS:", StringComparison.Ordinal);
+                var secsIdx = text.IndexOf("SECS:", StringComparison.Ordinal);
+                var bpsIdx = text.IndexOf("BPS:", StringComparison.Ordinal);
+                if (cylIdx < 0 || headsIdx < 0 || secsIdx < 0 || bpsIdx < 0)
+                {
+                    error = "Error parsing hard disk metadata in parent CHD";
+                    return false;
+                }
+                try
+                {
+                    // Extract numbers between labels: CYLS:xxx,HEADS:yyy,SECS:zzz,BPS:www
+                    var cylStr = text.Substring(cylIdx + 5, headsIdx - (cylIdx + 5)).Trim().TrimEnd(',');
+                    var headsStr = text.Substring(headsIdx + 6, secsIdx - (headsIdx + 6)).Trim().TrimEnd(',');
+                    var secsStr = text.Substring(secsIdx + 5, bpsIdx - (secsIdx + 5)).Trim().TrimEnd(',');
+                    var bpsStr = text.Substring(bpsIdx + 4).Trim();
+                    if (!uint.TryParse(cylStr, out cyl) || !uint.TryParse(headsStr, out heads) || !uint.TryParse(secsStr, out secs) || !uint.TryParse(bpsStr, out bps))
+                    {
+                        error = "Error parsing hard disk metadata in parent CHD";
+                        return false;
+                    }
+                    return true;
+                }
+                catch
+                {
+                    error = "Error parsing hard disk metadata in parent CHD";
+                    return false;
+                }
+            }
+        }
+        catch
+        {
+            error = "Unable to find hard disk metadata in parent CHD";
+            return false;
         }
     }
 
@@ -3783,7 +4313,7 @@ internal static class Program
 
         s = s.Trim();
         // scan forward over digits (chdman: while(isdigit(*string)))
-        int idx = 0;
+        var idx = 0;
         while (idx < s.Length && char.IsDigit(s[idx]))
             idx++;
 
@@ -4368,6 +4898,51 @@ internal static class Program
             return;
         }
 
+        // chdman.cpp:2256 parse_hunk_size for createdvd: required=2048 default=4096
+        var hunkExplicitDvd = options.Contains("--hunksize") || options.Contains("-hs") || options.Contains("--hunk-size");
+        ChdHeaderInfo? parentHdrDvd = null;
+        if (parentPath != null && File.Exists(parentPath))
+            if (Chd.ReadHeader(parentPath, out var phDvd) == ChdError.Chderrnone)
+                parentHdrDvd = phDvd;
+
+        if (parentHdrDvd != null && parentHdrDvd.UnitBytes != 2048)
+        {
+            Console.Error.WriteLine($"Error: Output parent CHD sector size {parentHdrDvd.UnitBytes} bytes does not match DVD-ROM sector size 2048 bytes");
+            log.Warning("Output parent CHD sector size {ParentUnit} bytes does not match DVD-ROM sector size 2048 bytes", parentHdrDvd.UnitBytes);
+            return;
+        }
+
+        if (hunkExplicitDvd && parentHdrDvd != null && parentHdrDvd.HunkBytes != hunkBytes)
+        {
+            Console.Error.WriteLine($"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrDvd.HunkBytes} bytes");
+            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkBytes, parentHdrDvd.HunkBytes);
+            return;
+        }
+
+        if (!hunkExplicitDvd && parentHdrDvd != null)
+            hunkBytes = parentHdrDvd.HunkBytes;
+
+        if (hunkBytes < 16)
+        {
+            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+            log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkBytes);
+            return;
+        }
+
+        if (hunkBytes > 1024 * 1024)
+        {
+            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+            log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkBytes);
+            return;
+        }
+
+        if (hunkBytes % 2048 != 0)
+        {
+            Console.Error.WriteLine($"Error: Hunk size {hunkBytes} bytes is not a whole multiple of 2048");
+            log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkBytes, 2048);
+            return;
+        }
+
         codecs ??= "lzma,zlib,huff,flac";
         unitBytes = 2048;
 
@@ -4683,7 +5258,7 @@ internal static class Program
             }
 
             // chdman.cpp:3502 duplicate check; cooked/raw are aliases for same underlying flag
-            var dupKey = canonical == "raw" ? "cooked" : canonical;
+            var dupKey = string.Equals(canonical, "raw", StringComparison.OrdinalIgnoreCase) ? "cooked" : canonical;
             if (extractCdSeen.Contains(dupKey))
             {
                 log.Warning("Error: Multiple parameters of the same type specified");
@@ -4719,7 +5294,7 @@ internal static class Program
             }
 
             extractCdSeen.Add(dupKey);
-            if (canonical != dupKey) extractCdSeen.Add(canonical);
+            if (!string.Equals(canonical, dupKey, StringComparison.OrdinalIgnoreCase)) extractCdSeen.Add(canonical);
         }
 
         if (File.Exists(outputPath) && !force)
@@ -5162,6 +5737,8 @@ internal static class Program
         private readonly Dictionary<string, int> _counts = new(StringComparer.Ordinal);
         private long _totalRaw;
         private long _totalStored;
+        private long _lastTicks;
+        private readonly long _intervalTicks = Stopwatch.Frequency / 2; // 0.5s like chdman.cpp:967
 
         public VerboseHunkLogger()
         {
@@ -5170,6 +5747,15 @@ internal static class Program
                 _totalRaw += p.RawBytes;
                 _totalStored += p.StoredBytes;
                 _counts[p.CodecName] = _counts.GetValueOrDefault(p.CodecName) + 1;
+                var now = Stopwatch.GetTimestamp();
+                var isLast = p.HunkIndex + 1 >= p.HunkCount;
+                if (!isLast && _lastTicks != 0 && now - _lastTicks < _intervalTicks)
+                    return;
+                _lastTicks = now;
+                // chdman progress goes to stderr; also log via Serilog for consistency
+                Console.Error.Write($"  hunk {p.HunkIndex,6}/{p.HunkCount,6}  {p.CodecName,-5} {p.RawBytes,10} -> {p.StoredBytes,10} B  ({p.Ratio,5:P1})\r");
+                if (isLast)
+                    Console.Error.WriteLine();
                 Log.Logger.Information(
                     "  hunk {Hunk,6}/{Count,6}  {Codec,-5} {Raw,10} -> {Stored,10} B  ({Ratio,5:P1})",
                     p.HunkIndex,
