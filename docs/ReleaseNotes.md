@@ -1,5 +1,32 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.4.1
+
+### Fixed `createhd -i` missing `GDDD` metadata (D2)
+
+`CHDSharp createhd -i image.img -o out.chd` now synthesizes the `GDDD` hard-disk geometry tag
+(`CYLS:…HEADS:…SECS:…BPS:…`) via `MetadataWriter.BuildHardDiskMetadata`, matching
+`chdman createhd -i` byte-for-byte. The 51-byte delta on all 3 HDD test images is gone and
+`chdman info` shows identical `GDDD` on both products.
+
+### Fixed `extractcd` cooked vs raw frame convention (D1)
+
+`CHDSharpLib.ChdFile.ExtractToDirectory(..., cooked: true)` now writes cooked sectors
+(`track.DataSize` per frame, 2048/2352/…, subcode omitted, audio byte-swapped) and
+`CHDSharp extractcd` defaults to cooked (with `--raw`/`--raw-frames` to keep 2448-byte frames).
+The 43 CD + 3 GD-ROM `extractcd` battleground cases flip from `0/43` to `43/43` parity
+and `disc.bin` sizes match `chdman` (e.g. Akai Shizuku `8,773,030 B`).
+
+### Documented `createcd -c cdzl` compressed-bytes divergence (D3)
+
+`cdzl`/`cdfl` on audio-bearing discs can pick different FLAC subframes than MAME's
+native `libFLAC`; the container bytes may differ while Data SHA-1/overall SHA-1 and
+`chdman verify` remain identical. `docs/encoder.md` now carries the caveat and the
+validation table notes that 25/43 `createcd:cdzl` products are byte-identical while the
+remaining 18 are logical-parity only.
+
+---
+
 ## CHDSharp v1.4.0
 
 ### Full chdman CLI argument parity

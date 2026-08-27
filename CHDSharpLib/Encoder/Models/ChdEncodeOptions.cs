@@ -138,4 +138,11 @@ public sealed class ChdEncodeOptions
     ///     matching MAME chdman's <c>copy</c> command behavior).
     /// </summary>
     public bool NoMetadataUpgrade { get; set; }
+
+    /// <summary>
+    ///     Overrides the hunk size for <see cref="ChdEncoder.Copy" /> (chdman <c>copy -hs</c> parity).
+    ///     When <c>null</c>, the source CHD's hunk size is used. When set, must be within
+    ///     16..1MiB and a multiple of the source's unit size. Default: <c>null</c>.
+    /// </summary>
+    public uint? HunkBytes { get; set; }
 }

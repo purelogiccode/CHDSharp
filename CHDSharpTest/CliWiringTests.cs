@@ -477,13 +477,15 @@ public sealed class CliWiringTests : IDisposable
         new Random(42).NextBytes(data);
         File.WriteAllBytes(srcPath, data);
 
-        // Encode only bytes 1024..3072 (2048 bytes)
+        // Encode only bytes 1024..3072 (2048 bytes) — chdman requires explicit unitsize when no parent
         var (exitCode, output) = RunCli(
             "createraw",
             "--output",
             chdPath,
             "--input",
             srcPath,
+            "--unitsize",
+            "512",
             "--inputstartbyte",
             "1024",
             "--inputbytes",

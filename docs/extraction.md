@@ -138,13 +138,29 @@ foreach (var t in result.TrackResults)
 
 | Image type | Files written |
 |------------|---------------|
-| CD | `<base>.bin` (whole disc, 2352-byte frames + subcode) + `<base>.cue` |
+| CD | `<base>.bin` (see cooked vs raw below) + `<base>.cue` |
 | GD-ROM | `track01.bin` … `trackNN.bin` (per track) + `<base>.gdi` |
 | DVD | `<base>.iso` |
 | HDD | `<base>.img` |
 | Other | `<base>.raw` (raw decompressed image; e.g. laserdisc `chav` frames) |
 
-Extraction is sequential and streams hunk-by-hunk (`WriteAllBytesSlow`), so it works for images of any size without loading them into memory. Laserdisc A/V CHDs are not CD images — `extractcd`-style tools cannot convert them; CHDSharp extracts the raw A/V frame data (`.raw`), which is what `chdman extractld` consumes.
+Extraction is sequential and streams hunk-by-hunk (`WriteAllBytesSlow` for raw, per-track frame loops for cooked), so it works for images of any size without loading them into memory. Laserdisc A/V CHDs are not CD images — `extractcd`-style tools cannot convert them; CHDSharp extracts the raw A/V frame data (`.raw`), which is what `chdman extractld` consumes.
+
+#### Cooked vs raw CD/GD-ROM extraction
+
+`ExtractToDirectory` / `ExtractToDirectoryWithReporting` take an optional `bool cooked = false`:
+
+```csharp
+// raw: full 2448-byte frames (data + subcode), 1:1 with the CHD payload
+chd.ExtractToDirectory("out", "disc");                 // cooked = false (default)
+// cooked: stripped to DataSize per frame (2352 for MODE1_RAW/AUDIO, 2048 for MODE1, …), subcode omitted
+chd.ExtractToDirectory("out", "disc", cooked: true);   // matches chdman extractcd
+```
+
+* **Raw** (`cooked: false`, the default for the library) writes every 2448-byte frame verbatim; the total size is `TotalBytes` (e.g. `3732 * 2448` for a 3730-frame CD). The bytes are identical to `chdman extractraw`.
+* **Cooked** (`cooked: true`) writes only the sector data (`track.DataSize` per frame, 2048/2352/… depending on track type) and skips the 96-byte subcode tail and the 4-frame-alignment padding, matching `chdman extractcd` (single `.bin` for CD, per-track `trackNN.bin` for GD-ROM, `GDDD`-aware). Audio sectors are byte-swapped from the CHD's big-endian storage to little-endian BIN order, exactly as chdman does for `MODE_CUEBIN`/`MODE_GDI`.
+
+The CLI `extractcd` defaults to **cooked** (with `--raw`/`--raw-frames` to keep the 2448-byte frames); the library default stays raw to avoid breaking existing callers. `chdman verify` passes on both outputs, but only cooked output is byte-identical to `chdman extractcd` for the 43 CD + 3 GD-ROM images in the battleground corpus.
 
 ---
 

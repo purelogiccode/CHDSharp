@@ -36,6 +36,21 @@ public static class ChdEncoder
     private const uint DefaultUnitBytes = 512;
     private const uint DvdSectorSize = 2048;
     private const ulong Iso9660PvdOffset = 16 * DvdSectorSize;
+    private const uint HunkSizeMin = 16;
+    private const uint HunkSizeMax = 1024 * 1024;
+
+    private static void ValidateHunkSize(uint hunkBytes, uint unitBytes)
+    {
+        if (hunkBytes < HunkSizeMin)
+            throw new ArgumentException($"Invalid hunk size {hunkBytes} (minimum {HunkSizeMin})", nameof(hunkBytes));
+        if (hunkBytes > HunkSizeMax)
+            throw new ArgumentException($"Invalid hunk size {hunkBytes} (maximum {HunkSizeMax})", nameof(hunkBytes));
+        if (hunkBytes % unitBytes != 0)
+            throw new ArgumentException(
+                $"Hunk size {hunkBytes} bytes is not a whole multiple of {unitBytes}",
+                nameof(hunkBytes)
+            );
+    }
 
     /// <summary>
     ///     Encodes a raw binary stream into a compressed CHD v5 file. The last hunk is
@@ -71,10 +86,9 @@ public static class ChdEncoder
     )
     {
         ArgumentNullException.ThrowIfNull(sourceStream);
-        if (hunkBytes == 0 || unitBytes == 0 || hunkBytes % unitBytes != 0)
-            throw new ArgumentException(
-                $"hunkBytes ({hunkBytes}) must be a multiple of unitBytes ({unitBytes})"
-            );
+        if (unitBytes == 0)
+            throw new ArgumentException("unitBytes must be greater than zero", nameof(unitBytes));
+        ValidateHunkSize(hunkBytes, unitBytes);
 
         codecTags ??= [CodecTags.Zlib];
 
@@ -157,10 +171,9 @@ public static class ChdEncoder
     {
         if (totalBytes == 0)
             throw new ArgumentException("totalBytes must be greater than zero", nameof(totalBytes));
-        if (hunkBytes == 0 || unitBytes == 0 || hunkBytes % unitBytes != 0)
-            throw new ArgumentException(
-                $"hunkBytes ({hunkBytes}) must be a multiple of unitBytes ({unitBytes})"
-            );
+        if (unitBytes == 0)
+            throw new ArgumentException("unitBytes must be greater than zero", nameof(unitBytes));
+        ValidateHunkSize(hunkBytes, unitBytes);
 
         codecTags ??= [CodecTags.Zlib];
 
@@ -220,10 +233,7 @@ public static class ChdEncoder
     {
         if (cylinders == 0 || heads == 0 || sectors == 0 || sectorSize == 0)
             throw new ArgumentException("CHS geometry values must be greater than zero");
-        if (hunkBytes == 0 || hunkBytes % sectorSize != 0)
-            throw new ArgumentException(
-                $"hunkBytes ({hunkBytes}) must be a multiple of sectorSize ({sectorSize})"
-            );
+        ValidateHunkSize(hunkBytes, sectorSize);
 
         var totalBytes = (ulong)cylinders * heads * sectors * sectorSize;
 
@@ -1095,10 +1105,7 @@ public static class ChdEncoder
             throw new ArgumentException(
                 $"unitBytes ({unitBytes}) must be the CD frame size ({CdConstants.FrameSize})"
             );
-        if (hunkBytes == 0 || hunkBytes % unitBytes != 0)
-            throw new ArgumentException(
-                $"hunkBytes ({hunkBytes}) must be a multiple of unitBytes ({unitBytes})"
-            );
+        ValidateHunkSize(hunkBytes, unitBytes);
 
         codecTags ??= [CodecTags.Zlib];
 
@@ -1209,9 +1216,54 @@ public static class ChdEncoder
 
         using (source)
         {
-            var hunkBytes = source.HunkBytes;
+            var sourceHunkBytes = source.HunkBytes;
             var unitBytes = source.UnitBytes;
-            var logicalBytes = source.TotalBytes;
+            var sourceLogicalBytes = source.TotalBytes;
+
+            // chdman copy: -hs overrides hunk size (parse_hunk_size with source unit as granularity)
+            var hunkBytes = options.HunkBytes ?? sourceHunkBytes;
+            if (options.HunkBytes.HasValue)
+            {
+                ValidateHunkSize(hunkBytes, unitBytes);
+                // when output parent is used, hunkBytes must match parent (chdman.cpp:1342)
+                if (options.ParentPath is { Length: > 0 } outParent)
+                {
+                    var perr = Chd.ReadHeader(outParent, out var phdr);
+                    if (perr == ChdError.Chderrnone && phdr != null && phdr.HunkBytes != hunkBytes)
+                        throw new ArgumentException(
+                            $"Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {phdr.HunkBytes} bytes"
+                        );
+                    if (phdr != null && phdr.UnitBytes != unitBytes)
+                        throw new ArgumentException(
+                            $"Output parent CHD unit size {phdr.UnitBytes} bytes does not match source unit size {unitBytes} bytes"
+                        );
+                }
+            }
+
+            // parse_input_start_end parity for copy (chdman.cpp:2467): slice within logical_bytes
+            var sliceStart = options.InputStartBytes;
+            var sliceLength = options.InputLengthBytes;
+            if (sliceStart < 0)
+                throw new ArgumentOutOfRangeException(nameof(options.InputStartBytes), "InputStartBytes must be >= 0");
+            if (sliceLength is < 0)
+                throw new ArgumentOutOfRangeException(nameof(options.InputLengthBytes), "InputLengthBytes must be >= 0");
+
+            var startBytes = (ulong)(sliceStart);
+            if (startBytes > sourceLogicalBytes)
+                throw new ArgumentException($"Input start offset {startBytes} is beyond end of input ({sourceLogicalBytes})");
+            ulong logicalBytes;
+            if (sliceLength.HasValue)
+            {
+                logicalBytes = (ulong)sliceLength.Value;
+                if (startBytes + logicalBytes > sourceLogicalBytes)
+                    throw new ArgumentException(
+                        $"Input length {logicalBytes} is larger than available input from start offset ({sourceLogicalBytes - startBytes} bytes)"
+                    );
+            }
+            else
+            {
+                logicalBytes = sourceLogicalBytes - startBytes;
+            }
 
             // Clone metadata from the source, upgrading legacy CD/GD-ROM tags unless opted out.
             // chdman's copy command skips legacy CHCD/CHTR/CHGT entries and re-writes the TOC
@@ -1257,21 +1309,45 @@ public static class ChdEncoder
             if (options.Metadata is { Count: > 0 } userMetadata)
                 metadataEntries.AddRange(userMetadata);
 
-            // For legacy GD-ROMs, create a reader that byte-swaps CDDA audio hunks
+            // Slice-aware reader (chdman copy supports -isb/-ish/-ib/-ih slicing and -hs override)
             Func<uint, byte[], int> readHunk;
             if (isLegacyGdRom)
                 readHunk = (hunkIndex, buffer) =>
                 {
-                    var valid = ReadSourceHunk(source, hunkIndex, buffer, logicalBytes, hunkBytes);
-                    if (valid > 0)
-                        // Byte-swap the 2352-byte sector-data portion of each 2448-byte frame
-                        // for CDDA audio tracks (matching MAME's cdrom.cpp:402 behavior)
-                        SwapCdda16(buffer, valid, CdConstants.MaxSectorData, CdConstants.FrameSize);
+                    var offset = startBytes + (ulong)hunkIndex * hunkBytes;
+                    if (offset >= startBytes + logicalBytes)
+                        return 0;
+                    var remaining = logicalBytes - (ulong)hunkIndex * hunkBytes;
+                    var toRead = (int)Math.Min(hunkBytes, remaining);
+                    Array.Clear(buffer, 0, buffer.Length);
+                    var err = source.Read(offset, buffer, 0, toRead);
+                    if (err != ChdError.Chderrnone)
+                        throw new InvalidDataException(
+                            $"Failed to read hunk {hunkIndex} from source CHD: {err.GetMessage()} ({err})"
+                        );
 
-                    return valid;
+                    if (toRead > 0)
+                        SwapCdda16(buffer, toRead, CdConstants.MaxSectorData, CdConstants.FrameSize);
+
+                    return toRead;
                 };
             else
-                readHunk = CreateSourceReader(source, logicalBytes, hunkBytes);
+                readHunk = (hunkIndex, buffer) =>
+                {
+                    var offset = startBytes + (ulong)hunkIndex * hunkBytes;
+                    if (offset >= startBytes + logicalBytes)
+                        return 0;
+                    var remaining = logicalBytes - (ulong)hunkIndex * hunkBytes;
+                    var toRead = (int)Math.Min(hunkBytes, remaining);
+                    Array.Clear(buffer, 0, buffer.Length);
+                    var err = source.Read(offset, buffer, 0, toRead);
+                    if (err != ChdError.Chderrnone)
+                        throw new InvalidDataException(
+                            $"Failed to read hunk {hunkIndex} from source CHD: {err.GetMessage()} ({err})"
+                        );
+
+                    return toRead;
+                };
 
             EncodeCore(
                 chdPath,
@@ -1320,22 +1396,6 @@ public static class ChdEncoder
         }
 
         return toc;
-    }
-
-    /// <summary>
-    ///     Wraps <see cref="ReadSourceHunk" /> for the compression pipeline. The delegate captures
-    ///     <paramref name="source" /> only as this method's parameter (never disposed here), so it
-    ///     stays valid for the synchronous pipeline run that the caller performs inside its
-    ///     <c>using (source)</c> block.
-    /// </summary>
-    private static Func<uint, byte[], int> CreateSourceReader(
-        ChdFile source,
-        ulong logicalBytes,
-        uint hunkBytes
-    )
-    {
-        return (hunkIndex, buffer) =>
-            ReadSourceHunk(source, hunkIndex, buffer, logicalBytes, hunkBytes);
     }
 
     /// <summary>
@@ -1635,29 +1695,6 @@ public static class ChdEncoder
 
         source.Position = streamOffset;
         return source.Read(buffer, 0, (int)hunkBytes);
-    }
-
-    /// <summary>
-    ///     Reads hunk <paramref name="hunkIndex" /> from a source CHD file; returns the number
-    ///     of valid bytes (the final partial hunk of the source is padded to a full hunk in the file,
-    ///     but only its real bytes are folded into the raw SHA-1).
-    /// </summary>
-    private static int ReadSourceHunk(
-        ChdFile source,
-        uint hunkIndex,
-        byte[] buffer,
-        ulong logicalBytes,
-        uint hunkBytes
-    )
-    {
-        var err = source.ReadHunk(hunkIndex, buffer);
-        if (err != ChdError.Chderrnone)
-            throw new InvalidDataException(
-                $"Failed to read hunk {hunkIndex} from source CHD: {err.GetMessage()} ({err})"
-            );
-
-        var valid = logicalBytes - (ulong)hunkIndex * hunkBytes;
-        return (int)Math.Min(hunkBytes, valid);
     }
 
     /// <summary>

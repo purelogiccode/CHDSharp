@@ -13,6 +13,13 @@ and `avhu` via `createld`), pass `chdman verify`, and extract back
 identically via `chdman extractraw`. The library is **100% pure C#** (no native DLLs)
 and runs identically on Windows and Linux.
 
+> **Note on `createcd -c cdzl`:** for audio-bearing CDs the FLAC encoder's exhaustive
+> subframe search can choose a different compressed representation than MAME's native
+> `libFLAC`, so the CHD container bytes may differ (CHDSharp is typically slightly
+> smaller) while the decompressed data, `chdman info` SHA-1/Data SHA-1 and `chdman verify`
+> remain identical. For data-only discs `cdzl` is still byte-identical; `cdzs` is
+> always byte-identical.
+
 Full API docs and project layout: see `CHDSharpLib/Encoder/`.
 
 
@@ -75,6 +82,9 @@ The encoder is validated against `chdman.exe` v0.288 and the CHDSharpLib reader
 - **`cdzs` is byte-identical to chdman**: the in-repo `VendoredZSTD` port (a C-to-C# port of
   the zstd 1.5.5 tree that MAME bundles) emits the same frame bytes as C zstd for the same
   hunk buffers, so the old "managed zstd trailing byte" caveat is gone.
+- **`cdzl` is byte-identical for data-only CDs; for audio-bearing CDs the FLAC subframe
+  choice may differ, so the container bytes can diverge while Data SHA-1/overall SHA-1 and
+  `chdman verify` remain identical (see note at top).**
 - **`createld` output is byte-identical to `chdman createld`**: the AVI reader, AVHuff
   encoder, and the mono-FLAC audio path (exhaustive per-frame subframe search) all match
   MAME byte-for-byte, so laserdisc CHDs round-trip exactly.

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using CHDSharp.Encoder;
 using CHDSharp.Utils;
 using Serilog;
@@ -899,6 +900,60 @@ internal static class Program
             );
         }
 
+        // chdman.cpp:1892 — createraw requires unitsize when no parent
+        var hunkExplicit = options.Contains("--hunksize") || options.Contains("-hs");
+        var unitExplicit = options.Contains("--unitsize") || options.Contains("-us");
+        // --dvd forces 2048-byte units (like createdvd), so unitsize is considered supplied when -d is set
+        if (dvd && !unitExplicit)
+            unitExplicit = true;
+
+        if (!unitExplicit && parentPath == null)
+        {
+            log.Warning("createraw: unit size must be specified if no output parent is supplied (--unitsize/-us)");
+            return;
+        }
+
+        // dvd overrides unit size before hunk default is computed (parse_hunk_size granularity)
+        if (dvd && unitBytes == 512u)
+            unitBytes = 2048u;
+
+        // chdman.cpp:1331 parse_hunk_size — default = max(4096/unit*unit, unit); parent inherits when omitted
+        if (!hunkExplicit)
+        {
+            if (parentPath != null && File.Exists(parentPath))
+            {
+                var perr = Chd.ReadHeader(parentPath, out var phdr);
+                if (perr == ChdError.Chderrnone && phdr != null && phdr.HunkBytes != 0)
+                    hunkBytes = phdr.HunkBytes;
+                else
+                    hunkBytes = Math.Max(4096u / unitBytes * unitBytes, unitBytes);
+            }
+            else
+            {
+                hunkBytes = Math.Max(4096u / unitBytes * unitBytes, unitBytes);
+            }
+        }
+
+        // chdman.cpp:61 HUNK_SIZE_MIN/MAX
+        if (hunkBytes < 16)
+        {
+            log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkBytes);
+            return;
+        }
+
+        if (hunkBytes > 1024 * 1024)
+        {
+            log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkBytes);
+            return;
+        }
+
+        // chdman.cpp:1354 granularity check is done by ChdEncoder.ValidateHunkSize; keep message parity here
+        if (hunkBytes % unitBytes != 0)
+        {
+            log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkBytes, unitBytes);
+            return;
+        }
+
         // -c auto: detect the platform and pick the smart codec preset (CHDlite parity).
         if (string.Equals(codecs, "auto", StringComparison.OrdinalIgnoreCase))
         {
@@ -916,6 +971,9 @@ internal static class Program
             codecs = preset != null ? string.Join(",", preset.Select(CodecTags.ToString)) : "zlib";
             log.Information("  Detected {Platform}; using codecs {Codecs}", detected, codecs);
         }
+
+        // chdman.cpp:665 s_default_raw_compression = lzma,zlib,huff,flac (also for createdvd with input)
+        codecs ??= "lzma,zlib,huff,flac";
 
         try
         {
@@ -1244,7 +1302,8 @@ internal static class Program
 
             try
             {
-                var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "zlib");
+                // chdman.cpp:2044 s_default_hd_compression = lzma,zlib,huff,flac for input, s_no_compression for blank
+                var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "lzma,zlib,huff,flac");
                 log.Information(
                     "Converting raw HD to CHD: {Input} -> {Output} (codecs {Codecs})",
                     inputPath,
@@ -1267,6 +1326,140 @@ internal static class Program
 
                 if (taskCount.HasValue)
                     encodeOptions.TaskCount = taskCount;
+
+                // --ident handling for createhd -i (chdman.cpp:2057): extract CHS and add IDENT metadata
+                byte[]? inputIdentData = null;
+                uint? identCyl = null;
+                uint? identHeads = null;
+                uint? identSectors = null;
+                if (identPath != null)
+                {
+                    if (!File.Exists(identPath))
+                    {
+                        log.Warning("createhd: ident file not found: {Path}", identPath);
+                        return;
+                    }
+
+                    try
+                    {
+                        inputIdentData = File.ReadAllBytes(identPath);
+                        if (inputIdentData.Length < 14)
+                        {
+                            log.Warning(
+                                "--createhd: ident file is invalid (too short, need >=14 bytes, got {Size})",
+                                inputIdentData.Length
+                            );
+                            return;
+                        }
+
+                        var ic = (uint)(inputIdentData[2] | (inputIdentData[3] << 8));
+                        var ih = (uint)(inputIdentData[6] | (inputIdentData[7] << 8));
+                        var isect = (uint)(inputIdentData[12] | (inputIdentData[13] << 8));
+                        if ((ulong)ic * ih * isect >= 16_514_064UL)
+                            ic = 0;
+                        identCyl = ic != 0 ? ic : null;
+                        identHeads = ic != 0 ? ih : null;
+                        identSectors = ic != 0 ? isect : null;
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        log.Warning("createhd: cannot read ident file: {Message}", ex.Message);
+                        return;
+                    }
+                }
+
+                // D2 fix: synthesize GDDD hard-disk geometry for createhd from raw .img
+                // (chdman createhd always writes GDDD, guessing CHS from file size)
+                // Use file length honoring input start/length when present, otherwise whole file
+                // When --ident provided, use its CHS (or guess if >8GB), and also store IDENT metadata
+                if (identPath != null)
+                {
+                    encodeOptions.Metadata ??= new List<MetadataEntry>();
+                    var list = (List<MetadataEntry>)encodeOptions.Metadata;
+                    if (list.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
+                    {
+                        if (identCyl.HasValue && identHeads.HasValue && identSectors.HasValue)
+                        {
+                            list.Add(
+                                MetadataWriter.BuildHardDiskMetadata(
+                                    identCyl.Value,
+                                    identHeads.Value,
+                                    identSectors.Value,
+                                    unitBytes
+                                )
+                            );
+                        }
+                        else
+                        {
+                            // >8GB case: guess CHS from filesize (chdman sets cylinders=0 → guess_chs)
+                            ulong logicalForGddd;
+                            if (inputStartBytes.HasValue || inputStartHunk.HasValue || inputLengthBytes.HasValue || inputLengthHunks.HasValue)
+                            {
+                                var fiLen = new FileInfo(inputPath).Length;
+                                long startBytes = 0;
+                                if (inputStartBytes.HasValue)
+                                    startBytes = inputStartBytes.Value;
+                                else if (inputStartHunk.HasValue)
+                                    startBytes = inputStartHunk.Value * hunkBytes;
+                                ulong avail = fiLen > startBytes ? (ulong)(fiLen - startBytes) : 0;
+                                logicalForGddd = avail;
+                                if (inputLengthBytes.HasValue)
+                                    logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthBytes.Value);
+                                else if (inputLengthHunks.HasValue)
+                                    logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthHunks.Value * hunkBytes);
+                            }
+                            else
+                            {
+                                logicalForGddd = (ulong)new FileInfo(inputPath).Length;
+                            }
+
+                            list.Add(MetadataWriter.BuildHardDiskMetadata(logicalForGddd, unitBytes));
+                        }
+                    }
+
+                    // also store IDENT metadata (chdman writes it after GDDD)
+                    if (inputIdentData != null)
+                    {
+                        encodeOptions.Metadata ??= new List<MetadataEntry>();
+                        ((List<MetadataEntry>)encodeOptions.Metadata).Add(
+                            MetadataWriter.BuildIdentMetadata(inputIdentData)
+                        );
+                    }
+                }
+                else if (
+                    outputParentPath == null
+                    && !chsCylinders.HasValue
+                    && !templateId.HasValue
+                )
+                {
+                    encodeOptions.Metadata ??= new List<MetadataEntry>();
+                    var list = (List<MetadataEntry>)encodeOptions.Metadata;
+                    if (list.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
+                    {
+                        ulong logicalForGddd;
+                        if (inputStartBytes.HasValue || inputStartHunk.HasValue || inputLengthBytes.HasValue || inputLengthHunks.HasValue)
+                        {
+                            var fiLen = new FileInfo(inputPath).Length;
+                            long startBytes = 0;
+                            if (inputStartBytes.HasValue)
+                                startBytes = inputStartBytes.Value;
+                            else if (inputStartHunk.HasValue)
+                                startBytes = inputStartHunk.Value * hunkBytes;
+                            ulong avail = fiLen > startBytes ? (ulong)(fiLen - startBytes) : 0;
+                            logicalForGddd = avail;
+                            if (inputLengthBytes.HasValue)
+                                logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthBytes.Value);
+                            else if (inputLengthHunks.HasValue)
+                                logicalForGddd = Math.Min(logicalForGddd, (ulong)inputLengthHunks.Value * hunkBytes);
+                        }
+                        else
+                        {
+                            logicalForGddd = (ulong)new FileInfo(inputPath).Length;
+                        }
+
+                        list.Add(MetadataWriter.BuildHardDiskMetadata(logicalForGddd, unitBytes));
+                    }
+                }
 
                 ChdEncoder.EncodeRaw(
                     inputPath,
@@ -1325,9 +1518,16 @@ internal static class Program
             sizeBytes = chsSize;
         }
 
+        // chdman.cpp:2046 — blank hard disk images must be uncompressed
+        if (codecs != null && !string.Equals(codecs, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            log.Warning("createhd: blank hard disk images must be uncompressed (use -c none)");
+            return;
+        }
+
         codecs ??= "none";
 
-        // Read ident file if provided
+        // Read ident file if provided — chdman.cpp:2057 extracts CHS from bytes 2/6/12
         byte[]? identData = null;
         if (identPath != null)
         {
@@ -1340,13 +1540,36 @@ internal static class Program
             try
             {
                 identData = File.ReadAllBytes(identPath);
-                if (identData.Length != 512)
+                if (identData.Length < 14)
                 {
                     log.Warning(
-                        "--createhd: ident file must be exactly 512 bytes, got {Size}",
+                        "--createhd: ident file is invalid (too short, need >=14 bytes, got {Size})",
                         identData.Length
                     );
                     return;
+                }
+
+                // chdman: cylinders = get_u16le(&data[2]), heads = get_u16le(&data[6]), sectors = get_u16le(&data[12])
+                var idCyl = (uint)(identData[2] | (identData[3] << 8));
+                var idHeads = (uint)(identData[6] | (identData[7] << 8));
+                var idSectors = (uint)(identData[12] | (identData[13] << 8));
+                // ignore CHS for >8GB drives (chdman.cpp:2073)
+                if ((ulong)idCyl * idHeads * idSectors >= 16_514_064UL)
+                    idCyl = 0;
+
+                // ident CHS overrides prior -chs/-tp, matching chdman ordering
+                if (idCyl != 0)
+                {
+                    chsCylinders = idCyl;
+                    chsHeads = idHeads;
+                    chsSectors = idSectors;
+                }
+                else
+                {
+                    // chdman sets cylinders=0 to trigger guess_chs later
+                    chsCylinders = null;
+                    chsHeads = null;
+                    chsSectors = null;
                 }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -2153,23 +2376,37 @@ internal static class Program
                 noUpgrade ? ", no metadata upgrade" : ""
             );
 
+            // chdman copy: -ish/-ih are in units of the *input* CHD's hunk size (parse_input_start_end:1203)
+            uint sourceHunkBytes = 4096;
+            try
+            {
+                var herr = Chd.ReadHeader(inputPath, out var shdr);
+                if (herr == ChdError.Chderrnone && shdr != null && shdr.HunkBytes != 0)
+                    sourceHunkBytes = shdr.HunkBytes;
+            }
+            catch
+            {
+                /* ignore */
+            }
+
             var encodeOptions = new ChdEncodeOptions
             {
                 SourceParentPath = sourceParentPath,
                 ParentPath = outputParentPath,
                 TaskCount = taskCount,
-                NoMetadataUpgrade = noUpgrade
+                NoMetadataUpgrade = noUpgrade,
+                HunkBytes = hunkSize
             };
 
             if (inputStartBytes.HasValue)
                 encodeOptions.InputStartBytes = inputStartBytes.Value;
             else if (inputStartHunk.HasValue)
-                encodeOptions.InputStartBytes = inputStartHunk.Value * (hunkSize ?? 4096);
+                encodeOptions.InputStartBytes = inputStartHunk.Value * sourceHunkBytes;
 
             if (inputLengthBytes.HasValue)
                 encodeOptions.InputLengthBytes = inputLengthBytes.Value;
             else if (inputLengthHunks.HasValue)
-                encodeOptions.InputLengthBytes = inputLengthHunks.Value * (hunkSize ?? 4096);
+                encodeOptions.InputLengthBytes = inputLengthHunks.Value * sourceHunkBytes;
 
             var logger = verbose ? new VerboseHunkLogger() : null;
             encodeOptions.HunkCompleted = logger?.Options.HunkCompleted;
@@ -3032,7 +3269,9 @@ internal static class Program
                 return;
             }
 
-            data = Encoding.ASCII.GetBytes(text + '\0');
+            // chdman addmeta --valuetext writes exactly text.size() bytes with no NUL
+            // (chdman.cpp:3266), not a C-string terminator
+            data = Encoding.ASCII.GetBytes(text);
         }
 
         var err = ChdFile.Open(file, out var chd);
@@ -3979,6 +4218,7 @@ internal static class Program
         string? binPath = null;
         var splitBin = false;
         var force = false;
+        var cooked = true;
         for (var i = 0; i < options.Length; i++)
             switch (options[i])
             {
@@ -3990,6 +4230,12 @@ internal static class Program
                     break;
                 case "--splitbin" or "-sb":
                     splitBin = true;
+                    break;
+                case "--cooked":
+                    cooked = true;
+                    break;
+                case "--raw" or "--raw-frames":
+                    cooked = false;
                     break;
                 case "--force" or "-f":
                     force = true;
@@ -4025,7 +4271,26 @@ internal static class Program
                 var outputDir = Path.GetDirectoryName(outputPath) ?? ".";
                 var baseName = Path.GetFileNameWithoutExtension(outputPath);
 
-                if (splitBin && chd is { IsCd: true, Tracks.Count: > 1 })
+                // chdman.cpp:2675 is_splitbin = mode==GDI || --splitbin || (is_gdrom && mode==CUEBIN)
+                var outputExt = Path.GetExtension(outputPath);
+                var isGdiMode = outputExt.Equals(".gdi", StringComparison.OrdinalIgnoreCase);
+                var isTocMode = !isGdiMode && !outputExt.Equals(".cue", StringComparison.OrdinalIgnoreCase);
+                var effectiveSplitBin = isGdiMode || splitBin || (chd.IsGdRom && !isGdiMode);
+                if (isTocMode)
+                    log.Information("  Note: .toc output not fully supported; generating CUE-compatible output (chdman MODE_NORMAL)");
+
+                // --outputbin %t handling (chdman.cpp:2748): require %t when splitbin
+                if (effectiveSplitBin && binPath != null)
+                {
+                    var tRegex = new Regex(@"(?<!%)%(?:%)*0*\d*t");
+                    if (!tRegex.IsMatch(binPath))
+                    {
+                        log.Warning("A track number variable (%t) must be specified in the output bin filename when --splitbin is enabled");
+                        return;
+                    }
+                }
+
+                if (effectiveSplitBin && chd is { IsCd: true, Tracks.Count: > 1 })
                 {
                     // --splitbin: extract each track to a separate file
                     log.Information(
@@ -4038,7 +4303,37 @@ internal static class Program
                     var trackNames = new List<string>();
                     foreach (var track in chd.Tracks)
                     {
-                        var trackFile = Path.Combine(outputDir, $"track{track.TrackNumber:D2}.bin");
+                        string trackFileName;
+                        string trackFile;
+                        if (binPath != null)
+                        {
+                            // expand %t template per chdman.cpp:2748 (%t, %02t etc.)
+                            var expanded = Regex.Replace(
+                                binPath,
+                                @"%0*(\d*)t",
+                                m =>
+                                {
+                                    var widthStr = m.Groups[1].Value;
+                                    if (int.TryParse(widthStr, out var w) && w > 0)
+                                        return track.TrackNumber.ToString($"D{w}");
+                                    return track.TrackNumber.ToString();
+                                }
+                            );
+                            // handle escaped %% -> %
+                            expanded = expanded.Replace("%%", "%");
+                            trackFile = Path.IsPathRooted(expanded)
+                                ? expanded
+                                : Path.Combine(outputDir, expanded);
+                            // ensure extension: chdman appends .raw for GD-ROM audio, else output_bin_ext
+                            if (Path.GetExtension(trackFile).Length == 0)
+                                trackFile += isGdiMode && track.TrackType == ChdTrackType.Audio ? ".raw" : ".bin";
+                            trackFileName = Path.GetFileName(trackFile);
+                        }
+                        else
+                        {
+                            trackFileName = $"track{track.TrackNumber:D2}.bin";
+                            trackFile = Path.Combine(outputDir, trackFileName);
+                        }
 
                         log.Information(
                             "  Track {Track}: {Frames} frames -> {File}",
@@ -4046,7 +4341,7 @@ internal static class Program
                             track.Frames,
                             Path.GetFileName(trackFile)
                         );
-                        var trackErr = chd.WriteTrackToFile(track, trackFile);
+                        var trackErr = chd.WriteTrackToFile(track, trackFile, cooked);
                         if (trackErr != ChdError.Chderrnone)
                         {
                             log.Warning(
@@ -4057,7 +4352,7 @@ internal static class Program
                             return;
                         }
 
-                        trackNames.Add($"track{track.TrackNumber:D2}.bin");
+                        trackNames.Add(trackFileName);
                     }
 
                     // Write CUE sheet referencing per-track files
@@ -4097,11 +4392,12 @@ internal static class Program
                 {
                     // Standard extraction
                     log.Information(
-                        "Extracting CD: {Input} -> {Dir}",
+                        "Extracting CD: {Input} -> {Dir}  ({Mode})",
                         Path.GetFileName(inputPath),
-                        outputDir
+                        outputDir,
+                        cooked ? "cooked" : "raw frames"
                     );
-                    var created = chd.ExtractToDirectory(outputDir, baseName);
+                    var created = chd.ExtractToDirectory(outputDir, baseName, cooked: cooked);
 
                     // If --outputbin is specified, rename the BIN file and update the CUE
                     if (binPath != null)

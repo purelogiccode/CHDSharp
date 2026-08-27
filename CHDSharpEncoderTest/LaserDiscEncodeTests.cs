@@ -399,7 +399,7 @@ public class LaserDiscEncodeTests : IDisposable
     [Fact]
     public void ListTemplates_HasCorrectCount()
     {
-        Assert.Equal(13, HardDiskTemplates.Templates.Length);
+        Assert.Equal(17, HardDiskTemplates.Templates.Length);
     }
 
     [Fact]
@@ -413,12 +413,20 @@ public class LaserDiscEncodeTests : IDisposable
         Assert.Equal(63u, first.Sectors);
         Assert.Equal(512u, first.SectorSize);
 
-        var last = HardDiskTemplates.Templates[12];
-        Assert.Equal("Micropolis", last.Manufacturer);
-        Assert.Equal("1528", last.Model);
-        Assert.Equal(2094u, last.Cylinders);
-        Assert.Equal(15u, last.Heads);
-        Assert.Equal(83u, last.Sectors);
+        var micropolis = HardDiskTemplates.Templates[12];
+        Assert.Equal("Micropolis", micropolis.Manufacturer);
+        Assert.Equal("1528", micropolis.Model);
+        Assert.Equal(2094u, micropolis.Cylinders);
+        Assert.Equal(15u, micropolis.Heads);
+        Assert.Equal(83u, micropolis.Sectors);
+        Assert.Equal(512u, micropolis.SectorSize);
+
+        var last = HardDiskTemplates.Templates[16];
+        Assert.Equal("Quantum", last.Manufacturer);
+        Assert.Equal("Fireball CR 13.0 AT", last.Model);
+        Assert.Equal(25228u, last.Cylinders);
+        Assert.Equal(16u, last.Heads);
+        Assert.Equal(63u, last.Sectors);
         Assert.Equal(512u, last.SectorSize);
     }
 
@@ -426,7 +434,7 @@ public class LaserDiscEncodeTests : IDisposable
     public void GetTemplate_InvalidId_Throws()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => HardDiskTemplates.GetTemplate(-1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => HardDiskTemplates.GetTemplate(13));
+        Assert.Throws<ArgumentOutOfRangeException>(() => HardDiskTemplates.GetTemplate(17));
     }
 
     [Fact]

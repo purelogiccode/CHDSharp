@@ -13,8 +13,7 @@ namespace CHDSharp.Models;
 ///         cref="CHDSharp.ChdFile.ReadAllBytes(out byte[],IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
 ///     ,
 ///     <see cref="CHDSharp.ChdFile.EnumerateHunks(IProgress{CHDSharp.Models.ChdProgress}?)" />, or
-///     <see
-///         cref="CHDSharp.ChdFile.ExtractToDirectory(string,string,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+///     <see cref="CHDSharp.ChdFile.ExtractToDirectory" />
 ///     to receive a report after every decompressed hunk. Callers commonly wrap this in
 ///     <c>new Progress&lt;ChdProgress&gt;(...)></c> for UI binding or logging.
 /// </summary>

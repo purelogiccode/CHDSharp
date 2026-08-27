@@ -8,8 +8,8 @@ namespace CHDSharp.Encoder.Models;
 public static class HardDiskTemplates
 {
     /// <summary>
-    ///     The built-in hard disk geometry templates (13 entries), matching MAME's
-    ///     <c>s_hd_templates</c> array in <c>chdman.cpp</c>.
+    ///     The built-in hard disk geometry templates (17 entries), matching MAME's
+    ///     <c>s_hd_templates</c> array in <c>chdman.cpp:918</c>.
     /// </summary>
     public static readonly HardDiskTemplate[] Templates =
     [
@@ -25,7 +25,11 @@ public static class HardDiskTemplates
         new("Maxtor", "LXT-213S", 1314, 7, 53, 512),
         new("Maxtor", "LXT-340S", 1574, 7, 70, 512),
         new("Maxtor", "MXT-540SL", 2466, 7, 87, 512),
-        new("Micropolis", "1528", 2094, 15, 83, 512)
+        new("Micropolis", "1528", 2094, 15, 83, 512),
+        new("Quantum", "Fireball CR 4.3 AT", 14848, 9, 63, 512),
+        new("Quantum", "Fireball CR 6.4 AT", 13328, 15, 63, 512),
+        new("Quantum", "Fireball CR 8.4 AT", 16383, 16, 63, 512),
+        new("Quantum", "Fireball CR 13.0 AT", 25228, 16, 63, 512)
     ];
 
     /// <summary>
