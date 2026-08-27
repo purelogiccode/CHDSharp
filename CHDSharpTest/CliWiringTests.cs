@@ -647,7 +647,7 @@ public sealed class CliWiringTests : IDisposable
     {
         var chdPath = Path.Combine(_tempDir, "opts.chd");
 
-        // Use chdman-style: --hunksize, --unitsize, --numprocessors, --compression
+        // Use chdman-style for createhd: --hunksize, --sectorsize (chdman: -ss, not -us), --numprocessors, --compression
         var (exitCode, output) = RunCli(
             "createhd",
             "--output",
@@ -656,7 +656,7 @@ public sealed class CliWiringTests : IDisposable
             "65536",
             "--hunksize",
             "4096",
-            "--unitsize",
+            "--sectorsize",
             "512",
             "--compression",
             "none",
@@ -672,7 +672,7 @@ public sealed class CliWiringTests : IDisposable
     {
         var chdPath = Path.Combine(_tempDir, "opts2.chd");
 
-        // Use short names: -o, -s, -hs, -us, -c, -np
+        // Use short names: -o, -s, -hs, -ss, -c, -np (createhd uses -ss for sector size per chdman, not -us)
         var (exitCode, output) = RunCli(
             "createhd",
             "-o",
@@ -681,7 +681,7 @@ public sealed class CliWiringTests : IDisposable
             "65536",
             "-hs",
             "4096",
-            "-us",
+            "-ss",
             "512",
             "-c",
             "none",
@@ -720,7 +720,7 @@ public sealed class CliWiringTests : IDisposable
         File.WriteAllBytes(chdPath, new byte[100]);
 
         var (_, output) = RunCli("createhd", "--output", chdPath, "--size", "4096", "--bogus");
-        Assert.Contains("unknown option", output, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not valid for this command", output, StringComparison.OrdinalIgnoreCase);
     }
 
     // ──────────────────────────────────────────────────────────────────────

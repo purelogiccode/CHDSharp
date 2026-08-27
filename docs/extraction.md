@@ -112,6 +112,22 @@ FILE "game.bin" BINARY
 
 ```csharp
 var gdi = chd.GenerateGdiDescriptor(["track01.bin", "track02.bin", "track03.bin"]);
+// cooked GDI (chdman GDI, pad-aware LBA):
+var gdiCooked = chd.GenerateGdiDescriptor(["track01.bin", "track02.bin", "track03.bin"], cooked: true);
+```
+
+For GD-ROM Redump CUE/BIN (the format `chdman extractcd` produces for `*.cue` when the source is a GD-ROM) use the split CUE generator which includes the `REM SINGLE-DENSITY AREA` / `REM HIGH-DENSITY AREA` density markers and the `has_physical_pregap` pad/split fixup (chdman.cpp:2854, 2945):
+
+```csharp
+// split CUE with per-track bins, matching chdman MODE_CUEBIN
+var cueFiles = new[] { "disc01.bin", "disc02.bin", "disc03.bin" };
+var cue = chd.GenerateGdRomCueSheet(cueFiles);
+File.WriteAllText("disc.cue", cue);
+
+// Inspect the Redump-adjusted TOC
+var cueTracks = chd.GetTracksForCue(); // mutated view with pad/split/pregap fixup
+foreach (var t in cueTracks)
+    Console.WriteLine($"track {t.TrackNumber} pregap {t.PreGap} pad {t.PadFrames} split {t.SplitFrames} phys {t.PhysFrameOfs}");
 ```
 
 ---
@@ -139,7 +155,8 @@ foreach (var t in result.TrackResults)
 | Image type | Files written |
 |------------|---------------|
 | CD | `<base>.bin` (see cooked vs raw below) + `<base>.cue` |
-| GD-ROM | `track01.bin` … `trackNN.bin` (per track) + `<base>.gdi` |
+| GD-ROM (GDI) | `track01.bin` … `trackNN.bin` (per track) + `<base>.gdi` (`cooked` LBA = cumulative `Frames`, matching chdman GDI) |
+| GD-ROM (CUE/BIN, Redump) | `disc01.bin` … + `<base>.cue` with `REM SINGLE-/HIGH-DENSITY AREA` (via `GenerateGdRomCueSheet` / `GetTracksForCue` fixup for 45000-frame HD boundary, matching chdman `MODE_CUEBIN`) |
 | DVD | `<base>.iso` |
 | HDD | `<base>.img` |
 | Other | `<base>.raw` (raw decompressed image; e.g. laserdisc `chav` frames) |

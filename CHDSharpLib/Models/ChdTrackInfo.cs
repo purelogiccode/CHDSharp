@@ -48,6 +48,18 @@ public sealed class ChdTrackInfo
     /// <summary>GD-ROM pad frames (GD-ROM only).</summary>
     public int PadFrames { get; init; }
 
+    /// <summary>
+    ///     GD-ROM split frames — number of frames from the next track to append to the end of
+    ///     the previous track after padding (Redump split-bin; <c>track_info::splitframes</c> in
+    ///     <c>cdrom.h:103</c>). Used only during GD-ROM CUE/BIN extraction fixup
+    ///     (<c>chdman.cpp:2886</c>). Zero for all tracks except the HD-area tracks that require
+    ///     Redump reinterpretation.
+    /// </summary>
+    public int SplitFrames { get; init; }
+
+    /// <summary>Physical frame offset where this track starts (cumulative <c>Frames</c> without <c>ExtraFrames</c>).</summary>
+    public ulong PhysFrameOfs { get; init; }
+
     /// <summary>CHD frame offset where this track starts.</summary>
     public ulong StartFrame { get; init; }
 

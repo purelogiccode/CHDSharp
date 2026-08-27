@@ -1097,149 +1097,194 @@ internal static class Program
         long? inputStartHunk = null;
         long? inputLengthHunks = null;
 
+        var createHdSeen = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < options.Length; i++)
-            switch (options[i])
+        {
+            var arg = options[i];
+            // chdman.cpp:3468 Expected option, not parameter
+            if (string.IsNullOrEmpty(arg) || arg[0] != '-')
             {
-                case "--size" or "-s" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out long sz) || sz <= 0)
-                    {
-                        log.Warning("--createhd: invalid size: {Value}", options[i]);
-                        return;
-                    }
+                log.Warning("Error: Expected option, not parameter");
+                PrintCommandHelp("createhd");
+                return;
+            }
 
-                    sizeBytes = (ulong)sz;
-                    break;
-                case "--chs" or "-chs" when i + 1 < options.Length:
-                    var chsParts = options[++i].Split(',');
-                    if (
-                        chsParts.Length != 3
-                        || !uint.TryParse(chsParts[0], out var c)
-                        || c == 0
-                        || !uint.TryParse(chsParts[1], out var h)
-                        || h == 0
-                        || !uint.TryParse(chsParts[2], out var s)
-                        || s == 0
-                    )
-                    {
-                        log.Warning(
-                            "createhd: invalid CHS geometry (expected C,H,S): {Value}",
-                            options[i]
-                        );
-                        return;
-                    }
-
-                    chsCylinders = c;
-                    chsHeads = h;
-                    chsSectors = s;
-                    break;
-                case "--template" or "-tp" when i + 1 < options.Length:
-                    if (
-                        !int.TryParse(options[++i], out var tp)
-                        || tp < 0
-                        || tp >= HardDiskTemplates.Templates.Length
-                    )
-                    {
-                        log.Warning(
-                            "createhd: invalid template ID (0-{Max}): {Value}",
-                            HardDiskTemplates.Templates.Length - 1,
-                            options[i]
-                        );
-                        return;
-                    }
-
-                    templateId = tp;
-                    break;
-                case "--sectorsize" or "-ss" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out uint ss) || ss == 0)
-                    {
-                        log.Warning("--createhd: invalid sector size: {Value}", options[i]);
-                        return;
-                    }
-
-                    unitBytes = ss;
-                    break;
-                case "--compression" or "-c" when i + 1 < options.Length:
-                    codecs = options[++i];
-                    break;
-                case "--hunksize" or "-hs" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
-                    {
-                        log.Warning("createhd: invalid hunk size: {Value}", options[i]);
-                        return;
-                    }
-
-                    hunkBytes = hs;
-                    break;
-                case "--unitsize" or "-us" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out uint us) || us == 0)
-                    {
-                        log.Warning("createhd: invalid unit size: {Value}", options[i]);
-                        return;
-                    }
-
-                    unitBytes = us;
-                    break;
-                case "--numprocessors" or "-np" when i + 1 < options.Length:
-                    if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
-                    {
-                        log.Warning("createhd: invalid task count (1-64): {Value}", options[i]);
-                        return;
-                    }
-
-                    taskCount = t;
-                    break;
-                case "--ident" or "-id" when i + 1 < options.Length:
-                    identPath = options[++i];
-                    break;
-                case "--outputparent" or "-op" when i + 1 < options.Length:
-                    outputParentPath = options[++i].Replace("\"", "");
-                    break;
-                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var isb) || isb < 0)
-                    {
-                        log.Warning("createhd: invalid input start byte: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputStartBytes = isb;
-                    break;
-                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ish) || ish < 0)
-                    {
-                        log.Warning("createhd: invalid input start hunk: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputStartHunk = ish;
-                    break;
-                case "--inputbytes" or "-ib" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
-                    {
-                        log.Warning("createhd: invalid input bytes: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputLengthBytes = ib;
-                    break;
-                case "--inputhunks" or "-ih" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
-                    {
-                        log.Warning("createhd: invalid input hunks: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputLengthHunks = ih;
-                    break;
-                case "--force" or "-f":
-                    force = true;
-                    break;
-                case "--verbose" or "-v":
-                    verbose = true;
-                    break;
+            string canonical;
+            bool hasParam;
+            switch (arg)
+            {
+                case "--size" or "-s": canonical = "size"; hasParam = true; break;
+                case "--chs" or "-chs": canonical = "chs"; hasParam = true; break;
+                case "--template" or "-tp": canonical = "template"; hasParam = true; break;
+                case "--sectorsize" or "-ss": canonical = "sectorsize"; hasParam = true; break;
+                case "--compression" or "-c": canonical = "compression"; hasParam = true; break;
+                case "--hunksize" or "-hs": canonical = "hunksize"; hasParam = true; break;
+                case "--numprocessors" or "-np": canonical = "numprocessors"; hasParam = true; break;
+                case "--ident" or "-id": canonical = "ident"; hasParam = true; break;
+                case "--outputparent" or "-op": canonical = "outputparent"; hasParam = true; break;
+                case "--inputstartbyte" or "-isb": canonical = "inputstartbyte"; hasParam = true; break;
+                case "--inputstarthunk" or "-ish": canonical = "inputstarthunk"; hasParam = true; break;
+                case "--inputbytes" or "-ib": canonical = "inputbytes"; hasParam = true; break;
+                case "--inputhunks" or "-ih": canonical = "inputhunks"; hasParam = true; break;
+                case "--force" or "-f": canonical = "force"; hasParam = false; break;
+                case "--verbose" or "-v": canonical = "verbose"; hasParam = false; break;
                 default:
-                    log.Warning("createhd: unknown option: {Option}", options[i]);
+                    // chdman.cpp:3509 Option not valid
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("createhd");
                     return;
             }
+
+            // chdman.cpp:3502 Multiple parameters of same type
+            if (createHdSeen.Contains(canonical))
+            {
+                log.Warning("Error: Multiple parameters of the same type specified");
+                PrintCommandHelp("createhd");
+                return;
+            }
+
+            if (hasParam)
+            {
+                if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                {
+                    log.Warning("Error: Option is missing parameter");
+                    PrintCommandHelp("createhd");
+                    return;
+                }
+
+                var param = options[++i];
+                switch (canonical)
+                {
+                    case "size":
+                        if (!TryParseSizeWithSuffix(param, out long sz) || sz <= 0)
+                        {
+                            log.Warning("--createhd: invalid size: {Value}", param);
+                            return;
+                        }
+
+                        sizeBytes = (ulong)sz;
+                        break;
+                    case "chs":
+                        var chsParts = param.Split(',');
+                        if (chsParts.Length != 3 || !uint.TryParse(chsParts[0], out var c) || c == 0 || !uint.TryParse(chsParts[1], out var h) || h == 0 || !uint.TryParse(chsParts[2], out var s) || s == 0)
+                        {
+                            log.Warning("createhd: invalid CHS geometry (expected C,H,S): {Value}", param);
+                            return;
+                        }
+
+                        chsCylinders = c;
+                        chsHeads = h;
+                        chsSectors = s;
+                        break;
+                    case "template":
+                        if (!int.TryParse(param, out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
+                        {
+                            log.Warning("createhd: invalid template ID (0-{Max}): {Value}", HardDiskTemplates.Templates.Length - 1, param);
+                            return;
+                        }
+
+                        templateId = tp;
+                        break;
+                    case "sectorsize":
+                        if (!TryParseSizeWithSuffix(param, out uint ss) || ss == 0)
+                        {
+                            log.Warning("--createhd: invalid sector size: {Value}", param);
+                            return;
+                        }
+
+                        unitBytes = ss;
+                        break;
+                    case "compression":
+                        codecs = param;
+                        break;
+                    case "hunksize":
+                        if (!TryParseSizeWithSuffix(param, out uint hs) || hs == 0)
+                        {
+                            log.Warning("createhd: invalid hunk size: {Value}", param);
+                            return;
+                        }
+
+                        hunkBytes = hs;
+                        break;
+                    case "numprocessors":
+                        if (!int.TryParse(param, out var t) || t < 1 || t > 64)
+                        {
+                            log.Warning("createhd: invalid task count (1-64): {Value}", param);
+                            return;
+                        }
+
+                        taskCount = t;
+                        break;
+                    case "ident":
+                        identPath = param;
+                        break;
+                    case "outputparent":
+                        outputParentPath = param.Replace("\"", "");
+                        break;
+                    case "inputstartbyte":
+                        if (!long.TryParse(param, out var isb) || isb < 0)
+                        {
+                            log.Warning("createhd: invalid input start byte: {Value}", param);
+                            return;
+                        }
+
+                        inputStartBytes = isb;
+                        break;
+                    case "inputstarthunk":
+                        if (!long.TryParse(param, out var ish) || ish < 0)
+                        {
+                            log.Warning("createhd: invalid input start hunk: {Value}", param);
+                            return;
+                        }
+
+                        inputStartHunk = ish;
+                        break;
+                    case "inputbytes":
+                        if (!long.TryParse(param, out var ib) || ib <= 0)
+                        {
+                            log.Warning("createhd: invalid input bytes: {Value}", param);
+                            return;
+                        }
+
+                        inputLengthBytes = ib;
+                        break;
+                    case "inputhunks":
+                        if (!long.TryParse(param, out var ih) || ih <= 0)
+                        {
+                            log.Warning("createhd: invalid input hunks: {Value}", param);
+                            return;
+                        }
+
+                        inputLengthHunks = ih;
+                        break;
+                }
+            }
+            else
+            {
+                switch (canonical)
+                {
+                    case "force": force = true; break;
+                    case "verbose": verbose = true; break;
+                }
+            }
+
+            createHdSeen.Add(canonical);
+        }
+
+        // chdman.cpp:1216 Start offset cannot be specified in both bytes and hunks, etc.
+        if (inputStartBytes.HasValue && inputStartHunk.HasValue)
+        {
+            log.Warning("Error: Start offset cannot be specified in both bytes and hunks");
+            PrintCommandHelp("createhd");
+            return;
+        }
+
+        if (inputLengthBytes.HasValue && inputLengthHunks.HasValue)
+        {
+            log.Warning("Error: Length cannot be specified in both bytes and hunks");
+            PrintCommandHelp("createhd");
+            return;
+        }
 
         if (File.Exists(outputPath) && !force)
         {
@@ -1702,6 +1747,7 @@ internal static class Program
         long? inputLengthFrames = null;
         if (
             !TryParseOptions(
+                "createcd",
                 options,
                 ref hunkSize,
                 ref unitBytes,
@@ -1822,62 +1868,89 @@ internal static class Program
         var verbose = false;
         var force = false;
         int? taskCount = null;
+        var createldSeen = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < options.Length; i++)
-            switch (options[i])
+        {
+            var arg = options[i];
+            if (string.IsNullOrEmpty(arg) || arg[0] != '-')
             {
-                case "--compression" or "-c" or "--codecs" when i + 1 < options.Length:
-                    codecs = options[++i];
-                    break;
-                case "--hunksize" or "-hs" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
-                    {
-                        log.Warning("Invalid hunk size: {Value}", options[i]);
-                        return;
-                    }
+                log.Warning("Error: Expected option, not parameter");
+                PrintCommandHelp("createld");
+                return;
+            }
 
-                    hunkBytes = hs;
-                    break;
-                case "--inputstartframe" or "-isf" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var isf) || isf < 0)
-                    {
-                        log.Warning("Invalid input start frame: {Value}", options[i]);
-                        return;
-                    }
-
-                    startFrame = isf;
-                    break;
-                case "--inputframes" or "-if" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ifr) || ifr < 1)
-                    {
-                        log.Warning("Invalid input frame count: {Value}", options[i]);
-                        return;
-                    }
-
-                    lengthFrames = ifr;
-                    break;
-                case "--outputparent" or "-op" when i + 1 < options.Length:
-                    outputParentPath = options[++i].Replace("\"", "");
-                    break;
-                case "--numprocessors" or "-np" when i + 1 < options.Length:
-                case "-t" or "--tasks" when i + 1 < options.Length:
-                    if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
-                    {
-                        log.Warning("Invalid task count (1-64): {Value}", options[i]);
-                        return;
-                    }
-
-                    taskCount = t;
-                    break;
-                case "--force" or "-f":
-                    force = true;
-                    break;
-                case "-v" or "--verbose":
-                    verbose = true;
-                    break;
+            string canonical;
+            bool hasParam;
+            switch (arg)
+            {
+                case "--compression" or "-c" or "--codecs": canonical = "compression"; hasParam = true; break;
+                case "--hunksize" or "-hs": canonical = "hunksize"; hasParam = true; break;
+                case "--inputstartframe" or "-isf": canonical = "inputstartframe"; hasParam = true; break;
+                case "--inputframes" or "-if": canonical = "inputframes"; hasParam = true; break;
+                case "--outputparent" or "-op": canonical = "outputparent"; hasParam = true; break;
+                case "--numprocessors" or "-np" or "-t" or "--tasks": canonical = "numprocessors"; hasParam = true; break;
+                case "--force" or "-f": canonical = "force"; hasParam = false; break;
+                case "-v" or "--verbose": canonical = "verbose"; hasParam = false; break;
                 default:
-                    log.Warning("Unknown option: {Option}", options[i]);
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("createld");
                     return;
             }
+
+            if (createldSeen.Contains(canonical))
+            {
+                log.Warning("Error: Multiple parameters of the same type specified");
+                PrintCommandHelp("createld");
+                return;
+            }
+
+            if (hasParam)
+            {
+                if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                {
+                    log.Warning("Error: Option is missing parameter");
+                    PrintCommandHelp("createld");
+                    return;
+                }
+
+                var param = options[++i];
+                switch (canonical)
+                {
+                    case "compression": codecs = param; break;
+                    case "hunksize":
+                        if (!TryParseSizeWithSuffix(param, out uint hs) || hs == 0) { log.Warning("Invalid hunk size: {Value}", param); return; }
+
+                        hunkBytes = hs;
+                        break;
+                    case "inputstartframe":
+                        if (!long.TryParse(param, out var isf) || isf < 0) { log.Warning("Invalid input start frame: {Value}", param); return; }
+
+                        startFrame = isf;
+                        break;
+                    case "inputframes":
+                        if (!long.TryParse(param, out var ifr) || ifr < 1) { log.Warning("Invalid input frame count: {Value}", param); return; }
+
+                        lengthFrames = ifr;
+                        break;
+                    case "outputparent": outputParentPath = param.Replace("\"", ""); break;
+                    case "numprocessors":
+                        if (!int.TryParse(param, out var t) || t < 1 || t > 64) { log.Warning("Invalid task count (1-64): {Value}", param); return; }
+
+                        taskCount = t;
+                        break;
+                }
+            }
+            else
+            {
+                switch (canonical)
+                {
+                    case "force": force = true; break;
+                    case "verbose": verbose = true; break;
+                }
+            }
+
+            createldSeen.Add(canonical);
+        }
 
         if (File.Exists(outputPath) && !force)
         {
@@ -1983,37 +2056,80 @@ internal static class Program
         long? lengthFrames = null;
         var force = false;
         string? parentPath = null;
+        var extractLdSeen = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < options.Length; i++)
-            switch (options[i])
+        {
+            var arg = options[i];
+            if (string.IsNullOrEmpty(arg) || arg[0] != '-')
             {
-                case "--inputstartframe" or "-isf" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var sf) || sf < 0)
-                    {
-                        log.Warning("Invalid input start frame: {Value}", options[i]);
-                        return;
-                    }
+                log.Warning("Error: Expected option, not parameter");
+                PrintCommandHelp("extractld");
+                return;
+            }
 
-                    startFrame = sf;
-                    break;
-                case "--inputframes" or "-if" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ifr) || ifr <= 0)
-                    {
-                        log.Warning("Invalid input frames: {Value}", options[i]);
-                        return;
-                    }
-
-                    lengthFrames = ifr;
-                    break;
-                case "--inputparent" or "-ip" when i + 1 < options.Length:
-                    parentPath = options[++i].Replace("\"", "");
-                    break;
-                case "--force" or "-f":
-                    force = true;
-                    break;
+            string canonical;
+            bool hasParam;
+            switch (arg)
+            {
+                case "--inputstartframe" or "-isf": canonical = "inputstartframe"; hasParam = true; break;
+                case "--inputframes" or "-if": canonical = "inputframes"; hasParam = true; break;
+                case "--inputparent" or "-ip": canonical = "inputparent"; hasParam = true; break;
+                case "--force" or "-f": canonical = "force"; hasParam = false; break;
                 default:
-                    log.Warning("Unknown option: {Option}", options[i]);
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("extractld");
                     return;
             }
+
+            if (extractLdSeen.Contains(canonical))
+            {
+                log.Warning("Error: Multiple parameters of the same type specified");
+                PrintCommandHelp("extractld");
+                return;
+            }
+
+            if (hasParam)
+            {
+                if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                {
+                    log.Warning("Error: Option is missing parameter");
+                    PrintCommandHelp("extractld");
+                    return;
+                }
+
+                var param = options[++i];
+                switch (canonical)
+                {
+                    case "inputstartframe":
+                        if (!long.TryParse(param, out var sf) || sf < 0)
+                        {
+                            log.Warning("Invalid input start frame: {Value}", param);
+                            return;
+                        }
+
+                        startFrame = sf;
+                        break;
+                    case "inputframes":
+                        if (!long.TryParse(param, out var ifr) || ifr <= 0)
+                        {
+                            log.Warning("Invalid input frames: {Value}", param);
+                            return;
+                        }
+
+                        lengthFrames = ifr;
+                        break;
+                    case "inputparent":
+                        parentPath = param.Replace("\"", "");
+                        break;
+                }
+            }
+            else
+            {
+                force = true;
+            }
+
+            extractLdSeen.Add(canonical);
+        }
 
         if (File.Exists(outputPath) && !force)
         {
@@ -2088,8 +2204,326 @@ internal static class Program
 
     /// <summary>
     ///     Parses optional codec/hunk/unit/parent/task/template/verbose arguments from the CLI.
+    ///     Matches chdman strictness: unknown option → error, duplicate → error, missing param → error,
+    ///     per-command valid-option check, and isb/ish/isf &amp; ib/ih/if mutual exclusion (chdman.cpp:1216).
     ///     Accepts both chdman-style (<c>--hunksize</c>, <c>--numprocessors</c>) and legacy-style (<c>--hunk-size</c>,
     ///     <c>--tasks</c>) names.
+    /// </summary>
+    private static bool TryParseOptions(
+        string command,
+        string[] options,
+        ref uint hunkSize,
+        ref uint unitSize,
+        ref string? codecs,
+        ref string? parentPath,
+        ref bool verbose,
+        ref int? taskCount,
+        ref bool dvd,
+        ref int? templateId,
+        ref long? inputStartBytes,
+        ref long? inputLengthBytes,
+        ref bool force,
+        ref long? inputStartHunk,
+        ref long? inputLengthHunks,
+        ref long? inputStartFrame,
+        ref long? inputLengthFrames
+    )
+    {
+        var optionDefs = new Dictionary<string, (string canonical, bool hasParam)>(StringComparer.Ordinal)
+        {
+            ["--compression"] = ("compression", true),
+            ["-c"] = ("compression", true),
+            ["--inputparent"] = ("inputparent", true),
+            ["-ip"] = ("inputparent", true),
+            ["--outputparent"] = ("outputparent", true),
+            ["-op"] = ("outputparent", true),
+            ["--hunksize"] = ("hunksize", true),
+            ["-hs"] = ("hunksize", true),
+            ["--hunk-size"] = ("hunksize", true),
+            ["--unitsize"] = ("unitsize", true),
+            ["-us"] = ("unitsize", true),
+            ["--unit-size"] = ("unitsize", true),
+            ["--numprocessors"] = ("numprocessors", true),
+            ["-np"] = ("numprocessors", true),
+            ["--tasks"] = ("numprocessors", true),
+            ["-t"] = ("numprocessors", true),
+            ["--template"] = ("template", true),
+            ["-tp"] = ("template", true),
+            ["--inputstartbyte"] = ("inputstartbyte", true),
+            ["-isb"] = ("inputstartbyte", true),
+            ["--inputstarthunk"] = ("inputstarthunk", true),
+            ["-ish"] = ("inputstarthunk", true),
+            ["--inputstartframe"] = ("inputstartframe", true),
+            ["-isf"] = ("inputstartframe", true),
+            ["--inputbytes"] = ("inputbytes", true),
+            ["-ib"] = ("inputbytes", true),
+            ["--inputhunks"] = ("inputhunks", true),
+            ["-ih"] = ("inputhunks", true),
+            ["--inputframes"] = ("inputframes", true),
+            ["-if"] = ("inputframes", true),
+            ["--dvd"] = ("dvd", false),
+            ["-d"] = ("dvd", false),
+            ["--force"] = ("force", false),
+            ["-f"] = ("force", false),
+            ["--verbose"] = ("verbose", false),
+            ["-v"] = ("verbose", false),
+        };
+
+        HashSet<string> valid;
+        switch (command)
+        {
+            case "createraw":
+                valid = new HashSet<string>(StringComparer.Ordinal)
+                {
+                    "compression", "hunksize", "unitsize", "inputstartbyte", "inputstarthunk", "inputbytes", "inputhunks", "outputparent", "numprocessors", "force", "verbose", "dvd"
+                };
+                break;
+            case "createcd":
+                valid = new HashSet<string>(StringComparer.Ordinal)
+                {
+                    "compression", "hunksize", "outputparent", "numprocessors", "force", "verbose"
+                };
+                break;
+            case "createdvd":
+                valid = new HashSet<string>(StringComparer.Ordinal)
+                {
+                    "compression", "hunksize", "inputstartbyte", "inputstarthunk", "inputbytes", "inputhunks", "outputparent", "numprocessors", "force", "verbose"
+                };
+                break;
+            case "createld":
+                valid = new HashSet<string>(StringComparer.Ordinal)
+                {
+                    "compression", "hunksize", "inputstartframe", "inputframes", "outputparent", "numprocessors", "force", "verbose"
+                };
+                break;
+            default:
+                valid = new HashSet<string>(StringComparer.Ordinal)
+                {
+                    "compression", "hunksize", "unitsize", "inputstartbyte", "inputstarthunk", "inputstartframe", "inputbytes", "inputhunks", "inputframes", "outputparent", "inputparent", "numprocessors", "force", "verbose", "dvd", "template"
+                };
+                break;
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        for (var i = 0; i < options.Length; i++)
+        {
+            var arg = options[i];
+            if (string.IsNullOrEmpty(arg) || arg[0] != '-')
+            {
+                Log.Logger.Warning("Error: Expected option, not parameter");
+                PrintCommandHelp(command);
+                return false;
+            }
+
+            if (!optionDefs.TryGetValue(arg, out var def))
+            {
+                Log.Logger.Warning("Error: Option '{Option}' not valid for this command", arg);
+                PrintCommandHelp(command);
+                return false;
+            }
+
+            var canonical = def.canonical;
+            if (!valid.Contains(canonical))
+            {
+                Log.Logger.Warning("Error: Option '{Option}' not valid for this command", arg);
+                PrintCommandHelp(command);
+                return false;
+            }
+
+            if (seen.Contains(canonical))
+            {
+                Log.Logger.Warning("Error: Multiple parameters of the same type specified");
+                PrintCommandHelp(command);
+                return false;
+            }
+
+            if (def.hasParam)
+            {
+                if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                {
+                    Log.Logger.Warning("Error: Option is missing parameter");
+                    PrintCommandHelp(command);
+                    return false;
+                }
+
+                var param = options[++i];
+                switch (canonical)
+                {
+                    case "compression":
+                        codecs = param;
+                        break;
+                    case "inputparent":
+                    case "outputparent":
+                        parentPath = param.Replace("\"", "");
+                        break;
+                    case "hunksize":
+                        if (!TryParseSizeWithSuffix(param, out uint hs) || hs == 0)
+                        {
+                            Log.Logger.Warning("Invalid hunk size: {Value}", param);
+                            return false;
+                        }
+
+                        hunkSize = hs;
+                        break;
+                    case "unitsize":
+                        if (!TryParseSizeWithSuffix(param, out uint us) || us == 0)
+                        {
+                            Log.Logger.Warning("Invalid unit size: {Value}", param);
+                            return false;
+                        }
+
+                        unitSize = us;
+                        break;
+                    case "numprocessors":
+                        if (!int.TryParse(param, out var t) || t < 1 || t > 64)
+                        {
+                            Log.Logger.Warning("Invalid task count (1-64): {Value}", param);
+                            return false;
+                        }
+
+                        taskCount = t;
+                        break;
+                    case "template":
+                        if (!int.TryParse(param, out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
+                        {
+                            Log.Logger.Warning("Invalid template ID (0-{Max}): {Value}", HardDiskTemplates.Templates.Length - 1, param);
+                            return false;
+                        }
+
+                        templateId = tp;
+                        break;
+                    case "inputstartbyte":
+                        if (!long.TryParse(param, out var isb) || isb < 0)
+                        {
+                            Log.Logger.Warning("Invalid input start byte: {Value}", param);
+                            return false;
+                        }
+
+                        inputStartBytes = isb;
+                        break;
+                    case "inputstarthunk":
+                        if (!long.TryParse(param, out var ish) || ish < 0)
+                        {
+                            Log.Logger.Warning("Invalid input start hunk: {Value}", param);
+                            return false;
+                        }
+
+                        inputStartHunk = ish;
+                        break;
+                    case "inputstartframe":
+                        if (!long.TryParse(param, out var isf) || isf < 0)
+                        {
+                            Log.Logger.Warning("Invalid input start frame: {Value}", param);
+                            return false;
+                        }
+
+                        inputStartFrame = isf;
+                        break;
+                    case "inputbytes":
+                        if (!long.TryParse(param, out var ib) || ib <= 0)
+                        {
+                            Log.Logger.Warning("Invalid input bytes: {Value}", param);
+                            return false;
+                        }
+
+                        inputLengthBytes = ib;
+                        break;
+                    case "inputhunks":
+                        if (!long.TryParse(param, out var ih) || ih <= 0)
+                        {
+                            Log.Logger.Warning("Invalid input hunks: {Value}", param);
+                            return false;
+                        }
+
+                        inputLengthHunks = ih;
+                        break;
+                    case "inputframes":
+                        if (!long.TryParse(param, out var ifr) || ifr <= 0)
+                        {
+                            Log.Logger.Warning("Invalid input frames: {Value}", param);
+                            return false;
+                        }
+
+                        inputLengthFrames = ifr;
+                        break;
+                    default:
+                        Log.Logger.Warning("Error: Option '{Option}' not valid for this command", arg);
+                        PrintCommandHelp(command);
+                        return false;
+                }
+
+                seen.Add(canonical);
+            }
+            else
+            {
+                switch (canonical)
+                {
+                    case "dvd":
+                        dvd = true;
+                        break;
+                    case "force":
+                        force = true;
+                        break;
+                    case "verbose":
+                        verbose = true;
+                        break;
+                    default:
+                        Log.Logger.Warning("Error: Option '{Option}' not valid for this command", arg);
+                        PrintCommandHelp(command);
+                        return false;
+                }
+
+                seen.Add(canonical);
+            }
+        }
+
+        if (inputStartBytes.HasValue && inputStartHunk.HasValue)
+        {
+            Log.Logger.Warning("Error: Start offset cannot be specified in both bytes and hunks");
+            PrintCommandHelp(command);
+            return false;
+        }
+
+        if (inputStartBytes.HasValue && inputStartFrame.HasValue)
+        {
+            Log.Logger.Warning("Error: Start offset cannot be specified in both bytes and frames");
+            PrintCommandHelp(command);
+            return false;
+        }
+
+        if (inputStartHunk.HasValue && inputStartFrame.HasValue)
+        {
+            Log.Logger.Warning("Error: Start offset cannot be specified in both hunks and frames");
+            PrintCommandHelp(command);
+            return false;
+        }
+
+        if (inputLengthBytes.HasValue && inputLengthHunks.HasValue)
+        {
+            Log.Logger.Warning("Error: Length cannot be specified in both bytes and hunks");
+            PrintCommandHelp(command);
+            return false;
+        }
+
+        if (inputLengthBytes.HasValue && inputLengthFrames.HasValue)
+        {
+            Log.Logger.Warning("Error: Length cannot be specified in both bytes and frames");
+            PrintCommandHelp(command);
+            return false;
+        }
+
+        if (inputLengthHunks.HasValue && inputLengthFrames.HasValue)
+        {
+            Log.Logger.Warning("Error: Length cannot be specified in both hunks and frames");
+            PrintCommandHelp(command);
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Legacy overload for callers that don't pass a command name — defaults to createraw validation.
     /// </summary>
     private static bool TryParseOptions(
         string[] options,
@@ -2110,129 +2544,25 @@ internal static class Program
         ref long? inputLengthFrames
     )
     {
-        for (var i = 0; i < options.Length; i++)
-            switch (options[i])
-            {
-                case "--compression" or "-c" when i + 1 < options.Length:
-                    codecs = options[++i];
-                    break;
-                case "--inputparent" or "-ip" when i + 1 < options.Length:
-                case "--outputparent" or "-op" when i + 1 < options.Length:
-                    parentPath = options[++i].Replace("\"", "");
-                    break;
-                case "--hunksize" or "-hs" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
-                    {
-                        Log.Logger.Warning("Invalid hunk size: {Value}", options[i]);
-                        return false;
-                    }
-
-                    hunkSize = hs;
-                    break;
-                case "--unitsize" or "-us" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out uint us) || us == 0)
-                    {
-                        Log.Logger.Warning("Invalid unit size: {Value}", options[i]);
-                        return false;
-                    }
-
-                    unitSize = us;
-                    break;
-                case "--numprocessors" or "-np" when i + 1 < options.Length:
-                    if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
-                    {
-                        Log.Logger.Warning("Invalid task count (1-64): {Value}", options[i]);
-                        return false;
-                    }
-
-                    taskCount = t;
-                    break;
-                case "--template" or "-tp" when i + 1 < options.Length:
-                    if (
-                        !int.TryParse(options[++i], out var tp)
-                        || tp < 0
-                        || tp >= HardDiskTemplates.Templates.Length
-                    )
-                    {
-                        Log.Logger.Warning(
-                            "Invalid template ID (0-{Max}): {Value}",
-                            HardDiskTemplates.Templates.Length - 1,
-                            options[i]
-                        );
-                        return false;
-                    }
-
-                    templateId = tp;
-                    break;
-                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var isb) || isb < 0)
-                    {
-                        Log.Logger.Warning("Invalid input start byte: {Value}", options[i]);
-                        return false;
-                    }
-
-                    inputStartBytes = isb;
-                    break;
-                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ish) || ish < 0)
-                    {
-                        Log.Logger.Warning("Invalid input start hunk: {Value}", options[i]);
-                        return false;
-                    }
-
-                    inputStartHunk = ish;
-                    break;
-                case "--inputstartframe" or "-isf" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var isf) || isf < 0)
-                    {
-                        Log.Logger.Warning("Invalid input start frame: {Value}", options[i]);
-                        return false;
-                    }
-
-                    inputStartFrame = isf;
-                    break;
-                case "--inputbytes" or "-ib" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
-                    {
-                        Log.Logger.Warning("Invalid input bytes: {Value}", options[i]);
-                        return false;
-                    }
-
-                    inputLengthBytes = ib;
-                    break;
-                case "--inputhunks" or "-ih" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
-                    {
-                        Log.Logger.Warning("Invalid input hunks: {Value}", options[i]);
-                        return false;
-                    }
-
-                    inputLengthHunks = ih;
-                    break;
-                case "--inputframes" or "-if" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ifr) || ifr <= 0)
-                    {
-                        Log.Logger.Warning("Invalid input frames: {Value}", options[i]);
-                        return false;
-                    }
-
-                    inputLengthFrames = ifr;
-                    break;
-                case "--dvd" or "-d":
-                    dvd = true;
-                    break;
-                case "--force" or "-f":
-                    force = true;
-                    break;
-                case "--verbose" or "-v":
-                    verbose = true;
-                    break;
-                default:
-                    Log.Logger.Warning("Unknown option: {Option}", options[i]);
-                    return false;
-            }
-
-        return true;
+        return TryParseOptions(
+            "createraw",
+            options,
+            ref hunkSize,
+            ref unitSize,
+            ref codecs,
+            ref parentPath,
+            ref verbose,
+            ref taskCount,
+            ref dvd,
+            ref templateId,
+            ref inputStartBytes,
+            ref inputLengthBytes,
+            ref force,
+            ref inputStartHunk,
+            ref inputLengthHunks,
+            ref inputStartFrame,
+            ref inputLengthFrames
+        );
     }
 
     /// <summary>
@@ -2268,86 +2598,143 @@ internal static class Program
         long? inputLengthBytes = null;
         long? inputStartHunk = null;
         long? inputLengthHunks = null;
+        var copySeen = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < options.Length; i++)
-            switch (options[i])
+        {
+            var arg = options[i];
+            if (string.IsNullOrEmpty(arg) || arg[0] != '-')
             {
-                case "--compression" or "-c" or "--codecs" when i + 1 < options.Length:
-                    codecs = options[++i];
-                    break;
-                case "-ip" or "--inputparent" when i + 1 < options.Length:
-                    sourceParentPath = options[++i].Replace("\"", "");
-                    break;
-                case "-op" or "--outputparent" when i + 1 < options.Length:
-                    outputParentPath = options[++i].Replace("\"", "");
-                    break;
-                case "--numprocessors" or "-np" when i + 1 < options.Length:
-                case "-t" or "--tasks" when i + 1 < options.Length:
-                    if (!int.TryParse(options[++i], out var t) || t < 1 || t > 64)
-                    {
-                        log.Warning("Invalid task count (1-64): {Value}", options[i]);
-                        return;
-                    }
+                log.Warning("Error: Expected option, not parameter");
+                PrintCommandHelp("copy");
+                return;
+            }
 
-                    taskCount = t;
-                    break;
-                case "--hunksize" or "-hs" when i + 1 < options.Length:
-                    if (!TryParseSizeWithSuffix(options[++i], out uint hs) || hs == 0)
-                    {
-                        log.Warning("Invalid hunk size: {Value}", options[i]);
-                        return;
-                    }
-
-                    hunkSize = hs;
-                    break;
-                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var isb) || isb < 0)
-                    {
-                        log.Warning("Invalid input start byte: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputStartBytes = isb;
-                    break;
-                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ish) || ish < 0)
-                    {
-                        log.Warning("Invalid input start hunk: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputStartHunk = ish;
-                    break;
-                case "--inputbytes" or "-ib" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
-                    {
-                        log.Warning("Invalid input bytes: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputLengthBytes = ib;
-                    break;
-                case "--inputhunks" or "-ih" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
-                    {
-                        log.Warning("Invalid input hunks: {Value}", options[i]);
-                        return;
-                    }
-
-                    inputLengthHunks = ih;
-                    break;
-                case "--no-upgrade":
-                    noUpgrade = true;
-                    break;
-                case "--force" or "-f":
-                    force = true;
-                    break;
-                case "-v" or "--verbose":
-                    verbose = true;
-                    break;
+            string canonical;
+            bool hasParam;
+            switch (arg)
+            {
+                case "--compression" or "-c" or "--codecs": canonical = "compression"; hasParam = true; break;
+                case "-ip" or "--inputparent": canonical = "inputparent"; hasParam = true; break;
+                case "-op" or "--outputparent": canonical = "outputparent"; hasParam = true; break;
+                case "--numprocessors" or "-np" or "-t" or "--tasks": canonical = "numprocessors"; hasParam = true; break;
+                case "--hunksize" or "-hs": canonical = "hunksize"; hasParam = true; break;
+                case "--inputstartbyte" or "-isb": canonical = "inputstartbyte"; hasParam = true; break;
+                case "--inputstarthunk" or "-ish": canonical = "inputstarthunk"; hasParam = true; break;
+                case "--inputbytes" or "-ib": canonical = "inputbytes"; hasParam = true; break;
+                case "--inputhunks" or "-ih": canonical = "inputhunks"; hasParam = true; break;
+                case "--no-upgrade": canonical = "no-upgrade"; hasParam = false; break;
+                case "--force" or "-f": canonical = "force"; hasParam = false; break;
+                case "-v" or "--verbose": canonical = "verbose"; hasParam = false; break;
                 default:
-                    log.Warning("Unknown option: {Option}", options[i]);
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("copy");
                     return;
             }
+
+            if (copySeen.Contains(canonical))
+            {
+                log.Warning("Error: Multiple parameters of the same type specified");
+                PrintCommandHelp("copy");
+                return;
+            }
+
+            if (hasParam)
+            {
+                if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                {
+                    log.Warning("Error: Option is missing parameter");
+                    PrintCommandHelp("copy");
+                    return;
+                }
+
+                var param = options[++i];
+                switch (canonical)
+                {
+                    case "compression": codecs = param; break;
+                    case "inputparent": sourceParentPath = param.Replace("\"", ""); break;
+                    case "outputparent": outputParentPath = param.Replace("\"", ""); break;
+                    case "numprocessors":
+                        if (!int.TryParse(param, out var t) || t < 1 || t > 64)
+                        {
+                            log.Warning("Invalid task count (1-64): {Value}", param);
+                            return;
+                        }
+
+                        taskCount = t;
+                        break;
+                    case "hunksize":
+                        if (!TryParseSizeWithSuffix(param, out uint hs) || hs == 0)
+                        {
+                            log.Warning("Invalid hunk size: {Value}", param);
+                            return;
+                        }
+
+                        hunkSize = hs;
+                        break;
+                    case "inputstartbyte":
+                        if (!long.TryParse(param, out var isb) || isb < 0)
+                        {
+                            log.Warning("Invalid input start byte: {Value}", param);
+                            return;
+                        }
+
+                        inputStartBytes = isb;
+                        break;
+                    case "inputstarthunk":
+                        if (!long.TryParse(param, out var ish) || ish < 0)
+                        {
+                            log.Warning("Invalid input start hunk: {Value}", param);
+                            return;
+                        }
+
+                        inputStartHunk = ish;
+                        break;
+                    case "inputbytes":
+                        if (!long.TryParse(param, out var ib) || ib <= 0)
+                        {
+                            log.Warning("Invalid input bytes: {Value}", param);
+                            return;
+                        }
+
+                        inputLengthBytes = ib;
+                        break;
+                    case "inputhunks":
+                        if (!long.TryParse(param, out var ih) || ih <= 0)
+                        {
+                            log.Warning("Invalid input hunks: {Value}", param);
+                            return;
+                        }
+
+                        inputLengthHunks = ih;
+                        break;
+                }
+            }
+            else
+            {
+                switch (canonical)
+                {
+                    case "no-upgrade": noUpgrade = true; break;
+                    case "force": force = true; break;
+                    case "verbose": verbose = true; break;
+                }
+            }
+
+            copySeen.Add(canonical);
+        }
+
+        if (inputStartBytes.HasValue && inputStartHunk.HasValue)
+        {
+            log.Warning("Error: Start offset cannot be specified in both bytes and hunks");
+            PrintCommandHelp("copy");
+            return;
+        }
+
+        if (inputLengthBytes.HasValue && inputLengthHunks.HasValue)
+        {
+            log.Warning("Error: Length cannot be specified in both bytes and hunks");
+            PrintCommandHelp("copy");
+            return;
+        }
 
         if (File.Exists(outputPath) && !force)
         {
@@ -3385,7 +3772,8 @@ internal static class Program
 
     /// <summary>
     ///     Parses a number string with an optional K/M/G suffix (e.g. "10M" = 10485760).
-    ///     Matches MAME chdman's <c>parse_number()</c> behaviour.
+    ///     Matches MAME chdman's <c>parse_number()</c> (chdman.cpp:1087): scan digits, then
+    ///     apply k/m/g multiplier, ignoring any trailing characters (so "10MB" = 10*MiB).
     /// </summary>
     private static bool TryParseSizeWithSuffix(string s, out long result)
     {
@@ -3394,31 +3782,37 @@ internal static class Program
             return false;
 
         s = s.Trim();
-        long multiplier = 1;
-        var digits = s;
+        // scan forward over digits (chdman: while(isdigit(*string)))
+        int idx = 0;
+        while (idx < s.Length && char.IsDigit(s[idx]))
+            idx++;
 
-        if (s.Length > 1)
+        if (idx == 0)
+            return false; // no leading digits
+
+        if (!long.TryParse(s.Substring(0, idx), out var num) || num < 0)
+            return false;
+
+        long multiplier = 1;
+        if (idx < s.Length)
         {
-            var last = s[^1];
-            switch (last)
+            var suffix = s[idx];
+            switch (suffix)
             {
                 case 'k' or 'K':
                     multiplier = 1024;
-                    digits = s[..^1];
                     break;
                 case 'm' or 'M':
                     multiplier = 1024 * 1024;
-                    digits = s[..^1];
                     break;
                 case 'g' or 'G':
                     multiplier = 1024L * 1024 * 1024;
-                    digits = s[..^1];
                     break;
+                default:
+                    multiplier = 1;
+                    break; // no multiplier, trailing chars ignored
             }
         }
-
-        if (!long.TryParse(digits, out var num) || num < 0)
-            return false;
 
         try
         {
@@ -3611,7 +4005,6 @@ internal static class Program
                 Log.Logger.Information("  --inputbytes, -ib    Effective length of input in bytes");
                 Log.Logger.Information("  --inputhunks, -ih    Effective length of input in hunks");
                 Log.Logger.Information("  --numprocessors, -np Parallel workers");
-                Log.Logger.Information("  --template, -tp      Hard disk template ID");
                 Log.Logger.Information("  --dvd, -d            Force DVD metadata");
                 Log.Logger.Information("  --force, -f          Overwrite existing output");
                 Log.Logger.Information("  --verbose, -v        Per-hunk compression logging");
@@ -3945,6 +4338,7 @@ internal static class Program
         long? inputLengthFrames = null;
         if (
             !TryParseOptions(
+                "createdvd",
                 options,
                 ref hunkBytes,
                 ref unitBytes,
@@ -4047,55 +4441,96 @@ internal static class Program
         long? lengthBytes = null;
         long? startHunk = null;
         long? lengthHunks = null;
+        var extractRawSeen = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < options.Length; i++)
-            switch (options[i])
+        {
+            var arg = options[i];
+            if (string.IsNullOrEmpty(arg) || arg[0] != '-')
             {
-                case "--inputparent" or "-ip" when i + 1 < options.Length:
-                    parentPath = options[++i].Replace("\"", "");
-                    break;
-                case "--inputstartbyte" or "-isb" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var sb) || sb < 0)
-                    {
-                        log.Warning("Invalid input start byte: {Value}", options[i]);
-                        return;
-                    }
+                log.Warning("Error: Expected option, not parameter");
+                PrintCommandHelp("extractraw");
+                return;
+            }
 
-                    startByte = sb;
-                    break;
-                case "--inputbytes" or "-ib" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ib) || ib <= 0)
-                    {
-                        log.Warning("Invalid input bytes: {Value}", options[i]);
-                        return;
-                    }
-
-                    lengthBytes = ib;
-                    break;
-                case "--inputstarthunk" or "-ish" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var sh) || sh < 0)
-                    {
-                        log.Warning("Invalid input start hunk: {Value}", options[i]);
-                        return;
-                    }
-
-                    startHunk = sh;
-                    break;
-                case "--inputhunks" or "-ih" when i + 1 < options.Length:
-                    if (!long.TryParse(options[++i], out var ih) || ih <= 0)
-                    {
-                        log.Warning("Invalid input hunks: {Value}", options[i]);
-                        return;
-                    }
-
-                    lengthHunks = ih;
-                    break;
-                case "--force" or "-f":
-                    force = true;
-                    break;
+            string canonical;
+            bool hasParam;
+            switch (arg)
+            {
+                case "--inputparent" or "-ip": canonical = "inputparent"; hasParam = true; break;
+                case "--inputstartbyte" or "-isb": canonical = "inputstartbyte"; hasParam = true; break;
+                case "--inputbytes" or "-ib": canonical = "inputbytes"; hasParam = true; break;
+                case "--inputstarthunk" or "-ish": canonical = "inputstarthunk"; hasParam = true; break;
+                case "--inputhunks" or "-ih": canonical = "inputhunks"; hasParam = true; break;
+                case "--force" or "-f": canonical = "force"; hasParam = false; break;
                 default:
-                    log.Warning("Unknown option: {Option}", options[i]);
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("extractraw");
                     return;
             }
+
+            if (extractRawSeen.Contains(canonical))
+            {
+                log.Warning("Error: Multiple parameters of the same type specified");
+                PrintCommandHelp("extractraw");
+                return;
+            }
+
+            if (hasParam)
+            {
+                if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                {
+                    log.Warning("Error: Option is missing parameter");
+                    PrintCommandHelp("extractraw");
+                    return;
+                }
+
+                var param = options[++i];
+                switch (canonical)
+                {
+                    case "inputparent": parentPath = param.Replace("\"", ""); break;
+                    case "inputstartbyte":
+                        if (!long.TryParse(param, out var sb) || sb < 0) { log.Warning("Invalid input start byte: {Value}", param); return; }
+
+                        startByte = sb;
+                        break;
+                    case "inputbytes":
+                        if (!long.TryParse(param, out var ib) || ib <= 0) { log.Warning("Invalid input bytes: {Value}", param); return; }
+
+                        lengthBytes = ib;
+                        break;
+                    case "inputstarthunk":
+                        if (!long.TryParse(param, out var sh) || sh < 0) { log.Warning("Invalid input start hunk: {Value}", param); return; }
+
+                        startHunk = sh;
+                        break;
+                    case "inputhunks":
+                        if (!long.TryParse(param, out var ih) || ih <= 0) { log.Warning("Invalid input hunks: {Value}", param); return; }
+
+                        lengthHunks = ih;
+                        break;
+                }
+            }
+            else
+            {
+                force = true;
+            }
+
+            extractRawSeen.Add(canonical);
+        }
+
+        if (startByte.HasValue && startHunk.HasValue)
+        {
+            log.Warning("Error: Start offset cannot be specified in both bytes and hunks");
+            PrintCommandHelp("extractraw");
+            return;
+        }
+
+        if (lengthBytes.HasValue && lengthHunks.HasValue)
+        {
+            log.Warning("Error: Length cannot be specified in both bytes and hunks");
+            PrintCommandHelp("extractraw");
+            return;
+        }
 
         if (File.Exists(outputPath) && !force)
         {
@@ -4120,7 +4555,8 @@ internal static class Program
 
             using (chd)
             {
-                // Convert hunk-based ranges to byte ranges; byte options take precedence.
+                // chdman extractraw prefers bytes if both set, but we have already rejected the both case above,
+                // so keep original precedence logic for single value.
                 var readStart = startHunk.HasValue ? (ulong)startHunk.Value * chd.HunkBytes : 0;
                 if (startByte.HasValue)
                     readStart = (ulong)startByte.Value;
@@ -4219,31 +4655,72 @@ internal static class Program
         var splitBin = false;
         var force = false;
         var cooked = true;
+        var extractCdSeen = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < options.Length; i++)
-            switch (options[i])
+        {
+            var arg = options[i];
+            if (string.IsNullOrEmpty(arg) || arg[0] != '-')
             {
-                case "--inputparent" or "-ip" when i + 1 < options.Length:
-                    parentPath = options[++i].Replace("\"", "");
-                    break;
-                case "--outputbin" or "-ob" when i + 1 < options.Length:
-                    binPath = options[++i].Replace("\"", "");
-                    break;
-                case "--splitbin" or "-sb":
-                    splitBin = true;
-                    break;
-                case "--cooked":
-                    cooked = true;
-                    break;
-                case "--raw" or "--raw-frames":
-                    cooked = false;
-                    break;
-                case "--force" or "-f":
-                    force = true;
-                    break;
+                log.Warning("Error: Expected option, not parameter");
+                PrintCommandHelp("extractcd");
+                return;
+            }
+
+            string canonical;
+            bool hasParam;
+            switch (arg)
+            {
+                case "--inputparent" or "-ip": canonical = "inputparent"; hasParam = true; break;
+                case "--outputbin" or "-ob": canonical = "outputbin"; hasParam = true; break;
+                case "--splitbin" or "-sb": canonical = "splitbin"; hasParam = false; break;
+                case "--cooked": canonical = "cooked"; hasParam = false; break;
+                case "--raw" or "--raw-frames": canonical = "raw"; hasParam = false; break;
+                case "--force" or "-f": canonical = "force"; hasParam = false; break;
                 default:
-                    log.Warning("Unknown option: {Option}", options[i]);
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("extractcd");
                     return;
             }
+
+            // chdman.cpp:3502 duplicate check; cooked/raw are aliases for same underlying flag
+            var dupKey = canonical == "raw" ? "cooked" : canonical;
+            if (extractCdSeen.Contains(dupKey))
+            {
+                log.Warning("Error: Multiple parameters of the same type specified");
+                PrintCommandHelp("extractcd");
+                return;
+            }
+
+            if (hasParam)
+            {
+                if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                {
+                    log.Warning("Error: Option is missing parameter");
+                    PrintCommandHelp("extractcd");
+                    return;
+                }
+
+                var param = options[++i];
+                switch (canonical)
+                {
+                    case "inputparent": parentPath = param.Replace("\"", ""); break;
+                    case "outputbin": binPath = param.Replace("\"", ""); break;
+                }
+            }
+            else
+            {
+                switch (canonical)
+                {
+                    case "splitbin": splitBin = true; break;
+                    case "cooked": cooked = true; break;
+                    case "raw": cooked = false; break;
+                    case "force": force = true; break;
+                }
+            }
+
+            extractCdSeen.Add(dupKey);
+            if (canonical != dupKey) extractCdSeen.Add(canonical);
+        }
 
         if (File.Exists(outputPath) && !force)
         {
@@ -4290,7 +4767,194 @@ internal static class Program
                     }
                 }
 
-                if (effectiveSplitBin && chd is { IsCd: true, Tracks.Count: > 1 })
+                if (chd.IsGdRom)
+                {
+                    // GD-ROM extraction: chdman distinguishes MODE_GDI (isGdiMode) vs
+                    // MODE_CUEBIN (Redump CUE/BIN with REMs and has_physical_pregap fixup) vs
+                    // MODE_NORMAL (.toc). For GDI we write per-track bins + .gdi (pad-aware, no fixup).
+                    // For CUE we write per-track bins with splitframes fixup + Redump CUE with REMs.
+                    Directory.CreateDirectory(outputDir);
+                    if (isTocMode)
+                    {
+                        log.Information("  Note: .toc output not fully supported; generating GDI-compatible output (chdman MODE_NORMAL)");
+                        log.Information(
+                            "Extracting GD-ROM (GDI): {Input} -> {Dir}  ({Mode})",
+                            Path.GetFileName(inputPath),
+                            outputDir,
+                            cooked ? "cooked" : "raw frames"
+                        );
+                        var created = chd.ExtractToDirectory(outputDir, baseName, cooked: cooked);
+                        foreach (var f in created)
+                            log.Information("  Created: {File}", f);
+                    }
+                    else if (isGdiMode)
+                    {
+                        // GDI mode: per-track bins + .gdi descriptor.
+                        // When --outputbin is supplied, honor %t templating (chdman.cpp:2748).
+                        if (binPath != null)
+                        {
+                            var gdiTrackFiles = new List<string>();
+                            var tracks = chd.Tracks!;
+                            // GDI always split: default pattern is baseName + "%02t"
+                            // but a custom --outputbin template overrides it.
+                            for (var ti = 0; ti < tracks.Count; ti++)
+                            {
+                                var track = tracks[ti];
+                                string trackFileName;
+                                string trackFile;
+                                // Expand %t template if binPath contains it; otherwise treat as single file (chdman would error, but we handle)
+                                if (binPath.Contains("%", StringComparison.Ordinal))
+                                {
+                                    var expanded = Regex.Replace(
+                                        binPath,
+                                        @"%0*(\d*)t",
+                                        m =>
+                                        {
+                                            var widthStr = m.Groups[1].Value;
+                                            if (int.TryParse(widthStr, out var w) && w > 0)
+                                                return track.TrackNumber.ToString($"D{w}");
+                                            return track.TrackNumber.ToString();
+                                        }
+                                    );
+                                    expanded = expanded.Replace("%%", "%");
+                                    trackFile = Path.IsPathRooted(expanded)
+                                        ? expanded
+                                        : Path.Combine(outputDir, expanded);
+                                    var ext = Path.GetExtension(trackFile);
+                                    if (ext.Length == 0)
+                                        trackFile += track.TrackType == ChdTrackType.Audio ? ".raw" : ".bin";
+                                    trackFileName = Path.GetFileName(trackFile);
+                                }
+                                else
+                                {
+                                    var ext = track.TrackType == ChdTrackType.Audio ? ".raw" : ".bin";
+                                    trackFileName = $"{baseName}{track.TrackNumber:D2}{ext}";
+                                    trackFile = Path.Combine(outputDir, trackFileName);
+                                }
+
+                                log.Information(
+                                    "  Track {Track}: {Frames} frames -> {File}",
+                                    track.TrackNumber,
+                                    track.Frames,
+                                    Path.GetFileName(trackFile)
+                                );
+                                var trackErr = chd.WriteTrackToFile(track, trackFile, cooked);
+                                if (trackErr != ChdError.Chderrnone)
+                                {
+                                    log.Warning(
+                                        "  Track {Track} extraction failed: {Error}",
+                                        track.TrackNumber,
+                                        trackErr
+                                    );
+                                    return;
+                                }
+
+                                gdiTrackFiles.Add(trackFileName);
+                            }
+
+                            var gdiFile = Path.Combine(outputDir, $"{baseName}.gdi");
+                            File.WriteAllText(
+                                gdiFile,
+                                chd.GenerateGdiDescriptor(gdiTrackFiles.ToArray(), cooked)
+                            );
+                            log.Information("  Created: {File}", gdiFile);
+                            foreach (var f in gdiTrackFiles)
+                                log.Information("  Created: {File}", Path.Combine(outputDir, f));
+                        }
+                        else
+                        {
+                            log.Information(
+                                "Extracting GD-ROM (GDI): {Input} -> {Dir}  ({Mode})",
+                                Path.GetFileName(inputPath),
+                                outputDir,
+                                cooked ? "cooked" : "raw frames"
+                            );
+                            var created = chd.ExtractToDirectory(outputDir, baseName, cooked: cooked);
+                            foreach (var f in created)
+                                log.Information("  Created: {File}", f);
+                        }
+                    }
+                    else
+                    {
+                        // GD-ROM CUE/BIN (Redump) mode: split per-track bins with has_physical_pregap fixup
+                        // and a .cue sheet containing REM SINGLE-DENSITY / HIGH-DENSITY AREA.
+                        log.Information(
+                            "Extracting GD-ROM (CUE split): {Input} -> {Dir}  ({Mode})",
+                            Path.GetFileName(inputPath),
+                            outputDir,
+                            cooked ? "cooked" : "raw frames"
+                        );
+
+                        var fixupTracks = chd.GetTracksForCue();
+                        var trackNames = new List<string>();
+                        for (var ti = 0; ti < fixupTracks.Count; ti++)
+                        {
+                            var track = fixupTracks[ti];
+                            string trackFileName;
+                            string trackFile;
+                            if (binPath != null)
+                            {
+                                var expanded = Regex.Replace(
+                                    binPath,
+                                    @"%0*(\d*)t",
+                                    m =>
+                                    {
+                                        var widthStr = m.Groups[1].Value;
+                                        if (int.TryParse(widthStr, out var w) && w > 0)
+                                            return track.TrackNumber.ToString($"D{w}");
+                                        return track.TrackNumber.ToString();
+                                    }
+                                );
+                                expanded = expanded.Replace("%%", "%");
+                                trackFile = Path.IsPathRooted(expanded)
+                                    ? expanded
+                                    : Path.Combine(outputDir, expanded);
+                                if (Path.GetExtension(trackFile).Length == 0)
+                                    trackFile += track.TrackType == ChdTrackType.Audio ? ".raw" : ".bin";
+                                trackFileName = Path.GetFileName(trackFile);
+                            }
+                            else
+                            {
+                                var ext = track.TrackType == ChdTrackType.Audio ? ".raw" : ".bin";
+                                trackFileName = $"{baseName}{track.TrackNumber:D2}{ext}";
+                                trackFile = Path.Combine(outputDir, trackFileName);
+                            }
+
+                            log.Information(
+                                "  Track {Track}: {Frames} frames (pad {Pad} split {Split}) -> {File}",
+                                track.TrackNumber,
+                                track.Frames,
+                                track.PadFrames,
+                                track.SplitFrames,
+                                Path.GetFileName(trackFile)
+                            );
+
+                            ChdError trackErr;
+                            if (cooked)
+                                trackErr = chd.WriteGdRomTrack(ti, trackFile, true);
+                            else
+                                trackErr = chd.WriteTrackToFile(chd.Tracks![ti], trackFile, false);
+
+                            if (trackErr != ChdError.Chderrnone)
+                            {
+                                log.Warning(
+                                    "  Track {Track} extraction failed: {Error}",
+                                    track.TrackNumber,
+                                    trackErr
+                                );
+                                return;
+                            }
+
+                            trackNames.Add(trackFileName);
+                        }
+
+                        var cueFile = Path.Combine(outputDir, $"{baseName}.cue");
+                        var cueContent = chd.GenerateGdRomCueSheet(trackNames.ToArray());
+                        File.WriteAllText(cueFile, cueContent);
+                        log.Information("  Created: {File}", cueFile);
+                    }
+                }
+                else if (effectiveSplitBin && chd is { IsCd: true, Tracks.Count: > 1 })
                 {
                     // --splitbin: extract each track to a separate file
                     log.Information(

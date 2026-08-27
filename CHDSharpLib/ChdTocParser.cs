@@ -108,6 +108,7 @@ internal static partial class ChdTocParser
     {
         var tracks = new List<ChdTrackInfo>();
         ulong currentFrame = 0;
+        ulong physFrame = 0;
 
         foreach (var entry in entries)
         {
@@ -206,11 +207,14 @@ internal static partial class ChdTocParser
                 PreGapDataSize = pgDataSize,
                 PreGapSubSize = pgSubSize,
                 PadFrames = padFrames,
+                SplitFrames = 0,
+                PhysFrameOfs = physFrame,
                 StartFrame = currentFrame
             };
 
             tracks.Add(track);
             currentFrame += (ulong)(frames + extraFrames);
+            physFrame += (ulong)frames;
         }
 
         return tracks;
@@ -253,6 +257,7 @@ internal static partial class ChdTocParser
 
         var tracks = new List<ChdTrackInfo>();
         ulong currentFrame = 0;
+        ulong physFrame = 0;
 
         for (var i = 0; i < trackCount; i++)
         {
@@ -282,11 +287,18 @@ internal static partial class ChdTocParser
                 SubSize = (int)subSizeVal,
                 Frames = (int)framesVal,
                 ExtraFrames = (int)extraFramesVal,
+                PreGap = 0,
+                PostGap = 0,
+                PreGapDataSize = 0,
+                PadFrames = 0,
+                SplitFrames = 0,
+                PhysFrameOfs = physFrame,
                 StartFrame = currentFrame
             };
 
             tracks.Add(track);
             currentFrame += (ulong)((int)framesVal + (int)extraFramesVal);
+            physFrame += framesVal;
         }
 
         return tracks;
