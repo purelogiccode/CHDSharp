@@ -1,6 +1,5 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![License](https://img.shields.io/badge/license-MIT%20%2F%20LGPL-2.1-blue)](LICENSE.txt)
 [![Tests](https://img.shields.io/badge/tests-xUnit-brightgreen)](#tests)
 
 # CHDSharp
