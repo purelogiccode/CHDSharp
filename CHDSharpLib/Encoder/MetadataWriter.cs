@@ -191,7 +191,7 @@ public static class MetadataWriter
 
     /// <summary>
     ///     Builds the 'DVD ' metadata entry for a DVD-ROM image, matching chdman <c>createdvd</c>
-    ///     (<c>write_metadata(DVD_METADATA_TAG, 0, "")</c>): the payload is a single null byte.
+    ///     (<c>write_metadata(DVD_METADATA_TAG, 0, "")</c>): the payload is empty (length 0).
     /// </summary>
     public static MetadataEntry BuildDvdMetadata()
     {
@@ -199,7 +199,7 @@ public static class MetadataWriter
         {
             Tag = DvdMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = [0x00]
+            Payload = []
         };
     }
 

@@ -9,4 +9,10 @@
     <InternalsVisibleTo Include="CHDSharpLib" />
   </ItemGroup>
   <ItemGroup></ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="Meziantou.Analyzer" Version="3.0.190">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

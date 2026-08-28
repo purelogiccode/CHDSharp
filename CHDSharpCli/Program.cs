@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using CHDSharp.Encoder;
-using CHDSharp.Models;
 using CHDSharp.Utils;
 using Serilog;
 using Serilog.Extensions.Logging;
@@ -120,9 +119,11 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning(
                             "createraw requires --input <file> --output <file> (or positional args)"
                         );
+                        PrintCommandHelp("createraw");
                         return 1;
                     }
 
@@ -135,9 +136,11 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning(
                             "createcd requires --input <file> --output <file> (or positional args)"
                         );
+                        PrintCommandHelp("createcd");
                         return 1;
                     }
 
@@ -150,7 +153,9 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning("createhd requires --output <file>");
+                        PrintCommandHelp("createhd");
                         return 1;
                     }
 
@@ -163,9 +168,11 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning(
                             "createdvd requires --input <file> --output <file> (or positional args)"
                         );
+                        PrintCommandHelp("createdvd");
                         return 1;
                     }
 
@@ -178,9 +185,11 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning(
                             "createld requires --input <file> --output <file> (or positional args)"
                         );
+                        PrintCommandHelp("createld");
                         return 1;
                     }
 
@@ -193,10 +202,12 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning(
                             "{Command} requires --input <file> --output <file>",
                             command
                         );
+                        PrintCommandHelp(command);
                         return 1;
                     }
 
@@ -209,7 +220,9 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning("extractcd requires --input <file> --output <file>");
+                        PrintCommandHelp("extractcd");
                         return 1;
                     }
 
@@ -222,7 +235,9 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning("extractld requires --input <file> --output <file>");
+                        PrintCommandHelp("extractld");
                         return 1;
                     }
 
@@ -238,9 +253,11 @@ internal static class Program
                     var (inp, outp, rest) = ParseCreateArgs(cmdArgs);
                     if (inp == null || outp == null)
                     {
+                        Console.Error.WriteLine("Error: Required parameters missing");
                         serilogLogger.Warning(
                             "copy requires --input <file> --output <file> (or positional args)"
                         );
+                        PrintCommandHelp("copy");
                         return 1;
                     }
 
@@ -249,14 +266,18 @@ internal static class Program
                     return 0;
                 }
                 case "verify" when cmdArgs.Length < 1:
+                    Console.Error.WriteLine("Error: Required parameters missing");
                     serilogLogger.Warning("verify requires a .chd file path");
+                    PrintCommandHelp("verify");
                     return 1;
                 case "verify":
                     var verified = VerifyTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
                     return verified ? 0 : 1;
                 case "info" when cmdArgs.Length < 1:
+                    Console.Error.WriteLine("Error: Required parameters missing");
                     serilogLogger.Warning("info requires a .chd file path");
+                    PrintCommandHelp("info");
                     return 1;
                 case "info":
                     InfoTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
@@ -857,6 +878,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -926,16 +949,22 @@ internal static class Program
 
         if (parentHdrRaw != null && parentHdrRaw.UnitBytes != unitBytes)
         {
-            Console.Error.WriteLine($"Error: Specified unit size {unitBytes} bytes does not match output parent CHD unit size {parentHdrRaw.UnitBytes} bytes");
-            log.Warning("Specified unit size {Unit} bytes does not match output parent CHD unit size {ParentUnit} bytes", unitBytes, parentHdrRaw.UnitBytes);
+            Console.Error.WriteLine(
+                $"Error: Specified unit size {unitBytes} bytes does not match output parent CHD unit size {parentHdrRaw.UnitBytes} bytes");
+            log.Warning(
+                "Specified unit size {Unit} bytes does not match output parent CHD unit size {ParentUnit} bytes",
+                unitBytes, parentHdrRaw.UnitBytes);
             return;
         }
 
         // chdman.cpp:1331 parse_hunk_size — default = max(4096/unit*unit, unit); parent inherits when omitted
         if (hunkExplicit && parentHdrRaw != null && parentHdrRaw.HunkBytes != hunkBytes)
         {
-            Console.Error.WriteLine($"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrRaw.HunkBytes} bytes");
-            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkBytes, parentHdrRaw.HunkBytes);
+            Console.Error.WriteLine(
+                $"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrRaw.HunkBytes} bytes");
+            log.Warning(
+                "Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes",
+                hunkBytes, parentHdrRaw.HunkBytes);
             return;
         }
 
@@ -950,14 +979,14 @@ internal static class Program
         // chdman.cpp:61 HUNK_SIZE_MIN/MAX
         if (hunkBytes < 16)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+            Console.Error.WriteLine("Error: Invalid hunk size (minimum 16)");
             log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkBytes);
             return;
         }
 
         if (hunkBytes > 1024 * 1024)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+            Console.Error.WriteLine("Error: Invalid hunk size (maximum 1048576)");
             log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkBytes);
             return;
         }
@@ -1131,21 +1160,66 @@ internal static class Program
             bool hasParam;
             switch (arg)
             {
-                case "--size" or "-s": canonical = "size"; hasParam = true; break;
-                case "--chs" or "-chs": canonical = "chs"; hasParam = true; break;
-                case "--template" or "-tp": canonical = "template"; hasParam = true; break;
-                case "--sectorsize" or "-ss": canonical = "sectorsize"; hasParam = true; break;
-                case "--compression" or "-c": canonical = "compression"; hasParam = true; break;
-                case "--hunksize" or "-hs": canonical = "hunksize"; hasParam = true; break;
-                case "--numprocessors" or "-np": canonical = "numprocessors"; hasParam = true; break;
-                case "--ident" or "-id": canonical = "ident"; hasParam = true; break;
-                case "--outputparent" or "-op": canonical = "outputparent"; hasParam = true; break;
-                case "--inputstartbyte" or "-isb": canonical = "inputstartbyte"; hasParam = true; break;
-                case "--inputstarthunk" or "-ish": canonical = "inputstarthunk"; hasParam = true; break;
-                case "--inputbytes" or "-ib": canonical = "inputbytes"; hasParam = true; break;
-                case "--inputhunks" or "-ih": canonical = "inputhunks"; hasParam = true; break;
-                case "--force" or "-f": canonical = "force"; hasParam = false; break;
-                case "--verbose" or "-v": canonical = "verbose"; hasParam = false; break;
+                case "--size" or "-s":
+                    canonical = "size";
+                    hasParam = true;
+                    break;
+                case "--chs" or "-chs":
+                    canonical = "chs";
+                    hasParam = true;
+                    break;
+                case "--template" or "-tp":
+                    canonical = "template";
+                    hasParam = true;
+                    break;
+                case "--sectorsize" or "-ss":
+                    canonical = "sectorsize";
+                    hasParam = true;
+                    break;
+                case "--compression" or "-c":
+                    canonical = "compression";
+                    hasParam = true;
+                    break;
+                case "--hunksize" or "-hs":
+                    canonical = "hunksize";
+                    hasParam = true;
+                    break;
+                case "--numprocessors" or "-np":
+                    canonical = "numprocessors";
+                    hasParam = true;
+                    break;
+                case "--ident" or "-id":
+                    canonical = "ident";
+                    hasParam = true;
+                    break;
+                case "--outputparent" or "-op":
+                    canonical = "outputparent";
+                    hasParam = true;
+                    break;
+                case "--inputstartbyte" or "-isb":
+                    canonical = "inputstartbyte";
+                    hasParam = true;
+                    break;
+                case "--inputstarthunk" or "-ish":
+                    canonical = "inputstarthunk";
+                    hasParam = true;
+                    break;
+                case "--inputbytes" or "-ib":
+                    canonical = "inputbytes";
+                    hasParam = true;
+                    break;
+                case "--inputhunks" or "-ih":
+                    canonical = "inputhunks";
+                    hasParam = true;
+                    break;
+                case "--force" or "-f":
+                    canonical = "force";
+                    hasParam = false;
+                    break;
+                case "--verbose" or "-v":
+                    canonical = "verbose";
+                    hasParam = false;
+                    break;
                 default:
                     // chdman.cpp:3509 Option not valid
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
@@ -1174,17 +1248,21 @@ internal static class Program
                 switch (canonical)
                 {
                     case "size":
-                        if (!TryParseSizeWithSuffix(param, out long sz) || sz <= 0)
+                        if (!TryParsePlainUlong(param, out var szPlain) || szPlain == 0)
                         {
+                            Console.Error.WriteLine("Error: Invalid size specified");
                             log.Warning("--createhd: invalid size: {Value}", param);
+                            PrintCommandHelp("createhd");
                             return;
                         }
 
-                        sizeBytes = (ulong)sz;
+                        sizeBytes = szPlain;
                         break;
                     case "chs":
                         var chsParts = param.Split(',');
-                        if (chsParts.Length != 3 || !uint.TryParse(chsParts[0], out var c) || c == 0 || !uint.TryParse(chsParts[1], out var h) || h == 0 || !uint.TryParse(chsParts[2], out var s) || s == 0)
+                        if (chsParts.Length != 3 || !uint.TryParse(chsParts[0], out var c) || c == 0 ||
+                            !uint.TryParse(chsParts[1], out var h) || h == 0 ||
+                            !uint.TryParse(chsParts[2], out var s) || s == 0)
                         {
                             log.Warning("createhd: invalid CHS geometry (expected C,H,S): {Value}", param);
                             return;
@@ -1197,7 +1275,8 @@ internal static class Program
                     case "template":
                         if (!int.TryParse(param, out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
                         {
-                            log.Warning("createhd: invalid template ID (0-{Max}): {Value}", HardDiskTemplates.Templates.Length - 1, param);
+                            log.Warning("createhd: invalid template ID (0-{Max}): {Value}",
+                                HardDiskTemplates.Templates.Length - 1, param);
                             return;
                         }
 
@@ -1242,7 +1321,7 @@ internal static class Program
                         outputParentPath = param.Replace("\"", "");
                         break;
                     case "inputstartbyte":
-                        if (!long.TryParse(param, out var isb) || isb < 0)
+                        if (!TryParseSizeWithSuffix(param, out long isb) || isb < 0)
                         {
                             log.Warning("createhd: invalid input start byte: {Value}", param);
                             return;
@@ -1251,7 +1330,7 @@ internal static class Program
                         inputStartBytes = isb;
                         break;
                     case "inputstarthunk":
-                        if (!long.TryParse(param, out var ish) || ish < 0)
+                        if (!TryParseSizeWithSuffix(param, out long ish) || ish < 0)
                         {
                             log.Warning("createhd: invalid input start hunk: {Value}", param);
                             return;
@@ -1260,7 +1339,7 @@ internal static class Program
                         inputStartHunk = ish;
                         break;
                     case "inputbytes":
-                        if (!long.TryParse(param, out var ib) || ib <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ib) || ib <= 0)
                         {
                             log.Warning("createhd: invalid input bytes: {Value}", param);
                             return;
@@ -1269,7 +1348,7 @@ internal static class Program
                         inputLengthBytes = ib;
                         break;
                     case "inputhunks":
-                        if (!long.TryParse(param, out var ih) || ih <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ih) || ih <= 0)
                         {
                             log.Warning("createhd: invalid input hunks: {Value}", param);
                             return;
@@ -1324,7 +1403,8 @@ internal static class Program
             var tpl = HardDiskTemplates.GetTemplate(templateId.Value);
             if (chsCylinders.HasValue)
             {
-                Console.Error.WriteLine("Error: CHS geometry cannot be specified separately when a template is specified");
+                Console.Error.WriteLine(
+                    "Error: CHS geometry cannot be specified separately when a template is specified");
                 log.Warning("CHS geometry cannot be specified separately when a template is specified");
                 PrintCommandHelp("createhd");
                 return;
@@ -1332,7 +1412,8 @@ internal static class Program
 
             if (sectorSizeExplicit)
             {
-                Console.Error.WriteLine("Error: Sector size cannot be specified separately when a template is specified");
+                Console.Error.WriteLine(
+                    "Error: Sector size cannot be specified separately when a template is specified");
                 log.Warning("Sector size cannot be specified separately when a template is specified");
                 PrintCommandHelp("createhd");
                 return;
@@ -1341,8 +1422,10 @@ internal static class Program
             // chdman allows tp+size: size is validated for sector alignment but otherwise ignored (chs wins)
             if (sizeBytes.HasValue && sizeBytes.Value % tpl.SectorSize != 0)
             {
-                Console.Error.WriteLine($"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {tpl.SectorSize}");
-                log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value, tpl.SectorSize);
+                Console.Error.WriteLine(
+                    $"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {tpl.SectorSize}");
+                log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value,
+                    tpl.SectorSize);
                 return;
             }
 
@@ -1391,8 +1474,11 @@ internal static class Program
         {
             if (sectorSizeExplicit && unitBytes != parentHdrHd.UnitBytes)
             {
-                Console.Error.WriteLine($"Error: Sector size {unitBytes} bytes does not match output parent CHD sector size {parentHdrHd.UnitBytes} bytes");
-                log.Warning("Sector size {Sector} bytes does not match output parent CHD sector size {ParentSector} bytes", unitBytes, parentHdrHd.UnitBytes);
+                Console.Error.WriteLine(
+                    $"Error: Sector size {unitBytes} bytes does not match output parent CHD sector size {parentHdrHd.UnitBytes} bytes");
+                log.Warning(
+                    "Sector size {Sector} bytes does not match output parent CHD sector size {ParentSector} bytes",
+                    unitBytes, parentHdrHd.UnitBytes);
                 return;
             }
 
@@ -1402,8 +1488,11 @@ internal static class Program
 
         if (hunkExplicit && parentHdrHd != null && parentHdrHd.HunkBytes != hunkBytes)
         {
-            Console.Error.WriteLine($"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrHd.HunkBytes} bytes");
-            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkBytes, parentHdrHd.HunkBytes);
+            Console.Error.WriteLine(
+                $"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrHd.HunkBytes} bytes");
+            log.Warning(
+                "Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes",
+                hunkBytes, parentHdrHd.HunkBytes);
             return;
         }
 
@@ -1417,14 +1506,14 @@ internal static class Program
 
         if (hunkBytes < 16)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+            Console.Error.WriteLine("Error: Invalid hunk size (minimum 16)");
             log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkBytes);
             return;
         }
 
         if (hunkBytes > 1024 * 1024)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+            Console.Error.WriteLine("Error: Invalid hunk size (maximum 1048576)");
             log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkBytes);
             return;
         }
@@ -1495,7 +1584,7 @@ internal static class Program
                     if (inputStartBytes.HasValue)
                         startBytes = inputStartBytes.Value;
                     else if (inputStartHunk.HasValue)
-                        startBytes = inputStartHunk.Value * (long)hunkBytes;
+                        startBytes = inputStartHunk.Value * hunkBytes;
                     var avail = fiLen > startBytes ? (ulong)(fiLen - startBytes) : 0UL;
                     if (inputLengthBytes.HasValue)
                         inputFilesize = Math.Min(avail, (ulong)inputLengthBytes.Value);
@@ -1528,6 +1617,7 @@ internal static class Program
                         }
                     }
                 }
+
                 if (identPath != null)
                 {
                     if (!File.Exists(identPath))
@@ -1581,12 +1671,14 @@ internal static class Program
                 uint finalSectorSize = unitBytes;
                 if (!finalCyl.HasValue && parentHdrHd != null)
                 {
-                    if (!TryGetParentGddd(outputParentPath, out var pcyl, out var pheads, out var psecs, out var pbps, out var gErr))
+                    if (!TryGetParentGddd(outputParentPath, out var pcyl, out var pheads, out var psecs, out var pbps,
+                            out var gErr))
                     {
                         Console.Error.WriteLine($"Error: {gErr}");
                         log.Warning("{Message}", gErr);
                         return;
                     }
+
                     finalCyl = pcyl;
                     finalHeads = pheads;
                     finalSectors = psecs;
@@ -1600,8 +1692,10 @@ internal static class Program
                 // 2087: validate Data size % sector_size
                 if (inputFilesize % finalSectorSize != 0)
                 {
-                    Console.Error.WriteLine($"Error: Data size {BigintString(inputFilesize)} is not divisible by sector size {finalSectorSize}");
-                    log.Warning("Data size {Size} is not divisible by sector size {Sector}", inputFilesize, finalSectorSize);
+                    Console.Error.WriteLine(
+                        $"Error: Data size {BigintString(inputFilesize)} is not divisible by sector size {finalSectorSize}");
+                    log.Warning("Data size {Size} is not divisible by sector size {Sector}", inputFilesize,
+                        finalSectorSize);
                     return;
                 }
 
@@ -1615,6 +1709,7 @@ internal static class Program
                         log.Warning("Can't guess CHS values because there is no input file");
                         return;
                     }
+
                     var guessedEntry = MetadataWriter.BuildHardDiskMetadata(inputFilesize, finalSectorSize);
                     encodeOptions.Metadata ??= new List<MetadataEntry>();
                     var glist = (List<MetadataEntry>)encodeOptions.Metadata;
@@ -1628,15 +1723,18 @@ internal static class Program
                     var glist = (List<MetadataEntry>)encodeOptions.Metadata;
                     if (glist.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
                     {
-                        glist.Add(MetadataWriter.BuildHardDiskMetadata(finalCyl!.Value, finalHeads!.Value, finalSectors!.Value, finalSectorSize));
+                        glist.Add(MetadataWriter.BuildHardDiskMetadata(finalCyl!.Value, finalHeads!.Value,
+                            finalSectors!.Value, finalSectorSize));
                     }
                 }
 
                 // Ensure GDDD exists (if guess added, already; if explicit CHS, added; otherwise fallback)
-                if (encodeOptions.Metadata == null || ((List<MetadataEntry>)encodeOptions.Metadata).All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
+                if (encodeOptions.Metadata == null ||
+                    ((List<MetadataEntry>)encodeOptions.Metadata).All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
                 {
                     encodeOptions.Metadata ??= new List<MetadataEntry>();
-                    ((List<MetadataEntry>)encodeOptions.Metadata).Add(MetadataWriter.BuildHardDiskMetadata(inputFilesize, finalSectorSize));
+                    ((List<MetadataEntry>)encodeOptions.Metadata).Add(
+                        MetadataWriter.BuildHardDiskMetadata(inputFilesize, finalSectorSize));
                 }
 
                 // chdman writes GDDD then IDNT (if identdata non-empty, after GDDD)
@@ -1644,13 +1742,16 @@ internal static class Program
                 {
                     MetadataEntry identEntry;
                     if (inputIdentData.Length == 512)
+                    {
                         identEntry = MetadataWriter.BuildIdentMetadata(inputIdentData);
+                    }
                     else
                     {
                         var padded = new byte[512];
                         Array.Copy(inputIdentData, padded, Math.Min(inputIdentData.Length, 512));
                         identEntry = MetadataWriter.BuildIdentMetadata(padded);
                     }
+
                     encodeOptions.Metadata ??= new List<MetadataEntry>();
                     ((List<MetadataEntry>)encodeOptions.Metadata).Add(identEntry);
                 }
@@ -1704,13 +1805,17 @@ internal static class Program
             {
                 if (sizeBytes.Value % unitBytes != 0)
                 {
-                    Console.Error.WriteLine($"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {unitBytes}");
-                    log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value, unitBytes);
+                    Console.Error.WriteLine(
+                        $"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {unitBytes}");
+                    log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value,
+                        unitBytes);
                     return;
                 }
 
                 if (sizeBytes.Value != chsSize)
-                    log.Information("  Note: --size {Size} differs from CHS size {ChsSize}; using CHS geometry (chdman parity)", sizeBytes.Value, chsSize);
+                    log.Information(
+                        "  Note: --size {Size} differs from CHS size {ChsSize}; using CHS geometry (chdman parity)",
+                        sizeBytes.Value, chsSize);
             }
 
             sizeBytes = chsSize;
@@ -1719,7 +1824,8 @@ internal static class Program
         // chdman.cpp:2087 — validate size alignment (blank case: filesize % sector_size)
         if (sizeBytes.HasValue && sizeBytes.Value % unitBytes != 0)
         {
-            Console.Error.WriteLine($"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {unitBytes}");
+            Console.Error.WriteLine(
+                $"Error: Data size {BigintString(sizeBytes.Value)} is not divisible by sector size {unitBytes}");
             log.Warning("Data size {Size} is not divisible by sector size {Sector}", sizeBytes.Value, unitBytes);
             return;
         }
@@ -1760,6 +1866,7 @@ internal static class Program
                 }
             }
         }
+
         if (identPath != null)
         {
             if (!File.Exists(identPath))
@@ -1775,7 +1882,8 @@ internal static class Program
                 if (fileData.Length < 14)
                 {
                     Console.Error.WriteLine($"Error: Ident file '{identPath}' is invalid (too short)");
-                    log.Warning("--createhd: ident file is invalid (too short, need >=14 bytes, got {Size})", fileData.Length);
+                    log.Warning("--createhd: ident file is invalid (too short, need >=14 bytes, got {Size})",
+                        fileData.Length);
                     return;
                 }
 
@@ -1809,12 +1917,14 @@ internal static class Program
         // 2076: if cylinders==0 && parent opened, read GDDD from parent
         if (!chsCylinders.HasValue && parentHdrHd != null)
         {
-            if (!TryGetParentGddd(outputParentPath, out var pcyl, out var pheads, out var psecs, out var pbps, out var gErr))
+            if (!TryGetParentGddd(outputParentPath, out var pcyl, out var pheads, out var psecs, out var pbps,
+                    out var gErr))
             {
                 Console.Error.WriteLine($"Error: {gErr}");
                 log.Warning("{Message}", gErr);
                 return;
             }
+
             chsCylinders = pcyl;
             chsHeads = pheads;
             chsSectors = psecs;
@@ -1824,7 +1934,8 @@ internal static class Program
                 // re-validate hunk%unit after sector change (chdman doesn't re-validate but we ensure)
                 if (hunkBytes % unitBytes != 0)
                 {
-                    Console.Error.WriteLine($"Error: Hunk size {hunkBytes} bytes is not a whole multiple of {unitBytes}");
+                    Console.Error.WriteLine(
+                        $"Error: Hunk size {hunkBytes} bytes is not a whole multiple of {unitBytes}");
                     log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkBytes, unitBytes);
                     return;
                 }
@@ -1836,7 +1947,8 @@ internal static class Program
         // If CHS provided, filesize for validation is still sizeBytes (if any) per chdman; but if size not provided, filesize 0 passes
         if (sizeBytes.HasValue && blankFilesize % unitBytes != 0)
         {
-            Console.Error.WriteLine($"Error: Data size {BigintString(blankFilesize)} is not divisible by sector size {unitBytes}");
+            Console.Error.WriteLine(
+                $"Error: Data size {BigintString(blankFilesize)} is not divisible by sector size {unitBytes}");
             log.Warning("Data size {Size} is not divisible by sector size {Sector}", blankFilesize, unitBytes);
             return;
         }
@@ -1846,10 +1958,12 @@ internal static class Program
         {
             if (!sizeBytes.HasValue)
             {
-                Console.Error.WriteLine("Error: Length or CHS geometry must be specified when creating a blank hard disk image");
+                Console.Error.WriteLine(
+                    "Error: Length or CHS geometry must be specified when creating a blank hard disk image");
                 log.Warning("Length or CHS geometry must be specified when creating a blank hard disk image");
                 return;
             }
+
             // chdman would guess_chs here using filesize and sector_size; for blank with size but no CHS,
             // we leave chsCylinders null and let CreateBlank guess via BuildHardDiskMetadata; no error needed.
             // However if sizeBytes==0 (should not happen) then guess would fail
@@ -1864,7 +1978,9 @@ internal static class Program
         try
         {
             var codecTags = ChdCodecs.ParseCodecTags(codecs);
-            ulong logSize = sizeBytes ?? (chsCylinders.HasValue ? (ulong)chsCylinders.Value * chsHeads!.Value * chsSectors!.Value * unitBytes : 0);
+            ulong logSize = sizeBytes ?? (chsCylinders.HasValue
+                ? (ulong)chsCylinders.Value * chsHeads!.Value * chsSectors!.Value * unitBytes
+                : 0);
             log.Information(
                 "Creating blank HD CHD: {Output}  (size {Size:N0}B, hunk {Hunk}B, unit {Unit}B, codecs {Codecs}{Chs}{Tasks})",
                 outputPath,
@@ -1931,7 +2047,7 @@ internal static class Program
                     codecTags,
                     encodeOptions
                 );
-            else
+            else if (sizeBytes != null)
                 ChdEncoder.CreateBlank(
                     outputPath,
                     sizeBytes.Value,
@@ -2008,6 +2124,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -2016,7 +2134,8 @@ internal static class Program
         }
 
         // chdman.cpp:2184 parse_hunk_size for createcd: required=2448 default=19584
-        var hunkExplicitCd = options.Contains("--hunksize") || options.Contains("-hs") || options.Contains("--hunk-size");
+        var hunkExplicitCd = options.Contains("--hunksize") || options.Contains("-hs") ||
+                             options.Contains("--hunk-size");
         ChdHeaderInfo? parentHdrCd = null;
         if (parentPath != null && File.Exists(parentPath))
             if (Chd.ReadHeader(parentPath, out var phCd) == ChdError.Chderrnone)
@@ -2024,15 +2143,21 @@ internal static class Program
 
         if (parentHdrCd != null && parentHdrCd.UnitBytes != CdConstants.FrameSize)
         {
-            Console.Error.WriteLine($"Error: Output parent CHD sector size {parentHdrCd.UnitBytes} bytes does not match CD-ROM frame size {CdConstants.FrameSize} bytes");
-            log.Warning("Output parent CHD sector size {ParentUnit} bytes does not match CD-ROM frame size {FrameSize} bytes", parentHdrCd.UnitBytes, CdConstants.FrameSize);
+            Console.Error.WriteLine(
+                $"Error: Output parent CHD sector size {parentHdrCd.UnitBytes} bytes does not match CD-ROM frame size {CdConstants.FrameSize} bytes");
+            log.Warning(
+                "Output parent CHD sector size {ParentUnit} bytes does not match CD-ROM frame size {FrameSize} bytes",
+                parentHdrCd.UnitBytes, CdConstants.FrameSize);
             return;
         }
 
         if (hunkExplicitCd && parentHdrCd != null && parentHdrCd.HunkBytes != hunkSize)
         {
-            Console.Error.WriteLine($"Error: Specified hunk size {hunkSize} bytes does not match output parent CHD hunk size {parentHdrCd.HunkBytes} bytes");
-            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkSize, parentHdrCd.HunkBytes);
+            Console.Error.WriteLine(
+                $"Error: Specified hunk size {hunkSize} bytes does not match output parent CHD hunk size {parentHdrCd.HunkBytes} bytes");
+            log.Warning(
+                "Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes",
+                hunkSize, parentHdrCd.HunkBytes);
             return;
         }
 
@@ -2041,21 +2166,22 @@ internal static class Program
 
         if (hunkSize < 16)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+            Console.Error.WriteLine("Error: Invalid hunk size (minimum 16)");
             log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkSize);
             return;
         }
 
         if (hunkSize > 1024 * 1024)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+            Console.Error.WriteLine("Error: Invalid hunk size (maximum 1048576)");
             log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkSize);
             return;
         }
 
         if (hunkSize % CdConstants.FrameSize != 0)
         {
-            Console.Error.WriteLine($"Error: Hunk size {hunkSize} bytes is not a whole multiple of {CdConstants.FrameSize}");
+            Console.Error.WriteLine(
+                $"Error: Hunk size {hunkSize} bytes is not a whole multiple of {CdConstants.FrameSize}");
             log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", hunkSize, CdConstants.FrameSize);
             return;
         }
@@ -2166,14 +2292,38 @@ internal static class Program
             bool hasParam;
             switch (arg)
             {
-                case "--compression" or "-c" or "--codecs": canonical = "compression"; hasParam = true; break;
-                case "--hunksize" or "-hs": canonical = "hunksize"; hasParam = true; break;
-                case "--inputstartframe" or "-isf": canonical = "inputstartframe"; hasParam = true; break;
-                case "--inputframes" or "-if": canonical = "inputframes"; hasParam = true; break;
-                case "--outputparent" or "-op": canonical = "outputparent"; hasParam = true; break;
-                case "--numprocessors" or "-np" or "-t" or "--tasks": canonical = "numprocessors"; hasParam = true; break;
-                case "--force" or "-f": canonical = "force"; hasParam = false; break;
-                case "-v" or "--verbose": canonical = "verbose"; hasParam = false; break;
+                case "--compression" or "-c" or "--codecs":
+                    canonical = "compression";
+                    hasParam = true;
+                    break;
+                case "--hunksize" or "-hs":
+                    canonical = "hunksize";
+                    hasParam = true;
+                    break;
+                case "--inputstartframe" or "-isf":
+                    canonical = "inputstartframe";
+                    hasParam = true;
+                    break;
+                case "--inputframes" or "-if":
+                    canonical = "inputframes";
+                    hasParam = true;
+                    break;
+                case "--outputparent" or "-op":
+                    canonical = "outputparent";
+                    hasParam = true;
+                    break;
+                case "--numprocessors" or "-np" or "-t" or "--tasks":
+                    canonical = "numprocessors";
+                    hasParam = true;
+                    break;
+                case "--force" or "-f":
+                    canonical = "force";
+                    hasParam = false;
+                    break;
+                case "-v" or "--verbose":
+                    canonical = "verbose";
+                    hasParam = false;
+                    break;
                 default:
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
                     PrintCommandHelp("createld");
@@ -2201,23 +2351,39 @@ internal static class Program
                 {
                     case "compression": codecs = param; break;
                     case "hunksize":
-                        if (!TryParseSizeWithSuffix(param, out uint hs) || hs == 0) { log.Warning("Invalid hunk size: {Value}", param); return; }
+                        if (!TryParseSizeWithSuffix(param, out uint hs) || hs == 0)
+                        {
+                            log.Warning("Invalid hunk size: {Value}", param);
+                            return;
+                        }
 
                         hunkBytes = hs;
                         break;
                     case "inputstartframe":
-                        if (!long.TryParse(param, out var isf) || isf < 0) { log.Warning("Invalid input start frame: {Value}", param); return; }
+                        if (!TryParseSizeWithSuffix(param, out long isf) || isf < 0)
+                        {
+                            log.Warning("Invalid input start frame: {Value}", param);
+                            return;
+                        }
 
                         startFrame = isf;
                         break;
                     case "inputframes":
-                        if (!long.TryParse(param, out var ifr) || ifr < 1) { log.Warning("Invalid input frame count: {Value}", param); return; }
+                        if (!TryParseSizeWithSuffix(param, out long ifr) || ifr < 1)
+                        {
+                            log.Warning("Invalid input frame count: {Value}", param);
+                            return;
+                        }
 
                         lengthFrames = ifr;
                         break;
                     case "outputparent": outputParentPath = param.Replace("\"", ""); break;
                     case "numprocessors":
-                        if (!int.TryParse(param, out var t) || t < 1 || t > 64) { log.Warning("Invalid task count (1-64): {Value}", param); return; }
+                        if (!int.TryParse(param, out var t) || t < 1 || t > 64)
+                        {
+                            log.Warning("Invalid task count (1-64): {Value}", param);
+                            return;
+                        }
 
                         taskCount = t;
                         break;
@@ -2237,6 +2403,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -2354,10 +2522,22 @@ internal static class Program
             bool hasParam;
             switch (arg)
             {
-                case "--inputstartframe" or "-isf": canonical = "inputstartframe"; hasParam = true; break;
-                case "--inputframes" or "-if": canonical = "inputframes"; hasParam = true; break;
-                case "--inputparent" or "-ip": canonical = "inputparent"; hasParam = true; break;
-                case "--force" or "-f": canonical = "force"; hasParam = false; break;
+                case "--inputstartframe" or "-isf":
+                    canonical = "inputstartframe";
+                    hasParam = true;
+                    break;
+                case "--inputframes" or "-if":
+                    canonical = "inputframes";
+                    hasParam = true;
+                    break;
+                case "--inputparent" or "-ip":
+                    canonical = "inputparent";
+                    hasParam = true;
+                    break;
+                case "--force" or "-f":
+                    canonical = "force";
+                    hasParam = false;
+                    break;
                 default:
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
                     PrintCommandHelp("extractld");
@@ -2384,7 +2564,7 @@ internal static class Program
                 switch (canonical)
                 {
                     case "inputstartframe":
-                        if (!long.TryParse(param, out var sf) || sf < 0)
+                        if (!TryParseSizeWithSuffix(param, out long sf) || sf < 0)
                         {
                             log.Warning("Invalid input start frame: {Value}", param);
                             return;
@@ -2393,7 +2573,7 @@ internal static class Program
                         startFrame = sf;
                         break;
                     case "inputframes":
-                        if (!long.TryParse(param, out var ifr) || ifr <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ifr) || ifr <= 0)
                         {
                             log.Warning("Invalid input frames: {Value}", param);
                             return;
@@ -2416,6 +2596,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -2558,7 +2740,8 @@ internal static class Program
             case "createraw":
                 valid = new HashSet<string>(StringComparer.Ordinal)
                 {
-                    "compression", "hunksize", "unitsize", "inputstartbyte", "inputstarthunk", "inputbytes", "inputhunks", "outputparent", "numprocessors", "force", "verbose", "dvd"
+                    "compression", "hunksize", "unitsize", "inputstartbyte", "inputstarthunk", "inputbytes",
+                    "inputhunks", "outputparent", "numprocessors", "force", "verbose", "dvd"
                 };
                 break;
             case "createcd":
@@ -2570,19 +2753,23 @@ internal static class Program
             case "createdvd":
                 valid = new HashSet<string>(StringComparer.Ordinal)
                 {
-                    "compression", "hunksize", "inputstartbyte", "inputstarthunk", "inputbytes", "inputhunks", "outputparent", "numprocessors", "force", "verbose"
+                    "compression", "hunksize", "inputstartbyte", "inputstarthunk", "inputbytes", "inputhunks",
+                    "outputparent", "numprocessors", "force", "verbose"
                 };
                 break;
             case "createld":
                 valid = new HashSet<string>(StringComparer.Ordinal)
                 {
-                    "compression", "hunksize", "inputstartframe", "inputframes", "outputparent", "numprocessors", "force", "verbose"
+                    "compression", "hunksize", "inputstartframe", "inputframes", "outputparent", "numprocessors",
+                    "force", "verbose"
                 };
                 break;
             default:
                 valid = new HashSet<string>(StringComparer.Ordinal)
                 {
-                    "compression", "hunksize", "unitsize", "inputstartbyte", "inputstarthunk", "inputstartframe", "inputbytes", "inputhunks", "inputframes", "outputparent", "inputparent", "numprocessors", "force", "verbose", "dvd", "template"
+                    "compression", "hunksize", "unitsize", "inputstartbyte", "inputstarthunk", "inputstartframe",
+                    "inputbytes", "inputhunks", "inputframes", "outputparent", "inputparent", "numprocessors", "force",
+                    "verbose", "dvd", "template"
                 };
                 break;
         }
@@ -2669,14 +2856,15 @@ internal static class Program
                     case "template":
                         if (!int.TryParse(param, out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
                         {
-                            Log.Logger.Warning("Invalid template ID (0-{Max}): {Value}", HardDiskTemplates.Templates.Length - 1, param);
+                            Log.Logger.Warning("Invalid template ID (0-{Max}): {Value}",
+                                HardDiskTemplates.Templates.Length - 1, param);
                             return false;
                         }
 
                         templateId = tp;
                         break;
                     case "inputstartbyte":
-                        if (!long.TryParse(param, out var isb) || isb < 0)
+                        if (!TryParseSizeWithSuffix(param, out long isb) || isb < 0)
                         {
                             Log.Logger.Warning("Invalid input start byte: {Value}", param);
                             return false;
@@ -2685,7 +2873,7 @@ internal static class Program
                         inputStartBytes = isb;
                         break;
                     case "inputstarthunk":
-                        if (!long.TryParse(param, out var ish) || ish < 0)
+                        if (!TryParseSizeWithSuffix(param, out long ish) || ish < 0)
                         {
                             Log.Logger.Warning("Invalid input start hunk: {Value}", param);
                             return false;
@@ -2694,7 +2882,7 @@ internal static class Program
                         inputStartHunk = ish;
                         break;
                     case "inputstartframe":
-                        if (!long.TryParse(param, out var isf) || isf < 0)
+                        if (!TryParseSizeWithSuffix(param, out long isf) || isf < 0)
                         {
                             Log.Logger.Warning("Invalid input start frame: {Value}", param);
                             return false;
@@ -2703,7 +2891,7 @@ internal static class Program
                         inputStartFrame = isf;
                         break;
                     case "inputbytes":
-                        if (!long.TryParse(param, out var ib) || ib <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ib) || ib <= 0)
                         {
                             Log.Logger.Warning("Invalid input bytes: {Value}", param);
                             return false;
@@ -2712,7 +2900,7 @@ internal static class Program
                         inputLengthBytes = ib;
                         break;
                     case "inputhunks":
-                        if (!long.TryParse(param, out var ih) || ih <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ih) || ih <= 0)
                         {
                             Log.Logger.Warning("Invalid input hunks: {Value}", param);
                             return false;
@@ -2721,7 +2909,7 @@ internal static class Program
                         inputLengthHunks = ih;
                         break;
                     case "inputframes":
-                        if (!long.TryParse(param, out var ifr) || ifr <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ifr) || ifr <= 0)
                         {
                             Log.Logger.Warning("Invalid input frames: {Value}", param);
                             return false;
@@ -2896,18 +3084,54 @@ internal static class Program
             bool hasParam;
             switch (arg)
             {
-                case "--compression" or "-c" or "--codecs": canonical = "compression"; hasParam = true; break;
-                case "-ip" or "--inputparent": canonical = "inputparent"; hasParam = true; break;
-                case "-op" or "--outputparent": canonical = "outputparent"; hasParam = true; break;
-                case "--numprocessors" or "-np" or "-t" or "--tasks": canonical = "numprocessors"; hasParam = true; break;
-                case "--hunksize" or "-hs": canonical = "hunksize"; hasParam = true; break;
-                case "--inputstartbyte" or "-isb": canonical = "inputstartbyte"; hasParam = true; break;
-                case "--inputstarthunk" or "-ish": canonical = "inputstarthunk"; hasParam = true; break;
-                case "--inputbytes" or "-ib": canonical = "inputbytes"; hasParam = true; break;
-                case "--inputhunks" or "-ih": canonical = "inputhunks"; hasParam = true; break;
-                case "--no-upgrade": canonical = "no-upgrade"; hasParam = false; break;
-                case "--force" or "-f": canonical = "force"; hasParam = false; break;
-                case "-v" or "--verbose": canonical = "verbose"; hasParam = false; break;
+                case "--compression" or "-c" or "--codecs":
+                    canonical = "compression";
+                    hasParam = true;
+                    break;
+                case "-ip" or "--inputparent":
+                    canonical = "inputparent";
+                    hasParam = true;
+                    break;
+                case "-op" or "--outputparent":
+                    canonical = "outputparent";
+                    hasParam = true;
+                    break;
+                case "--numprocessors" or "-np" or "-t" or "--tasks":
+                    canonical = "numprocessors";
+                    hasParam = true;
+                    break;
+                case "--hunksize" or "-hs":
+                    canonical = "hunksize";
+                    hasParam = true;
+                    break;
+                case "--inputstartbyte" or "-isb":
+                    canonical = "inputstartbyte";
+                    hasParam = true;
+                    break;
+                case "--inputstarthunk" or "-ish":
+                    canonical = "inputstarthunk";
+                    hasParam = true;
+                    break;
+                case "--inputbytes" or "-ib":
+                    canonical = "inputbytes";
+                    hasParam = true;
+                    break;
+                case "--inputhunks" or "-ih":
+                    canonical = "inputhunks";
+                    hasParam = true;
+                    break;
+                case "--no-upgrade":
+                    canonical = "no-upgrade";
+                    hasParam = false;
+                    break;
+                case "--force" or "-f":
+                    canonical = "force";
+                    hasParam = false;
+                    break;
+                case "-v" or "--verbose":
+                    canonical = "verbose";
+                    hasParam = false;
+                    break;
                 default:
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
                     PrintCommandHelp("copy");
@@ -2955,7 +3179,7 @@ internal static class Program
                         hunkSize = hs;
                         break;
                     case "inputstartbyte":
-                        if (!long.TryParse(param, out var isb) || isb < 0)
+                        if (!TryParseSizeWithSuffix(param, out long isb) || isb < 0)
                         {
                             log.Warning("Invalid input start byte: {Value}", param);
                             return;
@@ -2964,7 +3188,7 @@ internal static class Program
                         inputStartBytes = isb;
                         break;
                     case "inputstarthunk":
-                        if (!long.TryParse(param, out var ish) || ish < 0)
+                        if (!TryParseSizeWithSuffix(param, out long ish) || ish < 0)
                         {
                             log.Warning("Invalid input start hunk: {Value}", param);
                             return;
@@ -2973,7 +3197,7 @@ internal static class Program
                         inputStartHunk = ish;
                         break;
                     case "inputbytes":
-                        if (!long.TryParse(param, out var ib) || ib <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ib) || ib <= 0)
                         {
                             log.Warning("Invalid input bytes: {Value}", param);
                             return;
@@ -2982,7 +3206,7 @@ internal static class Program
                         inputLengthBytes = ib;
                         break;
                     case "inputhunks":
-                        if (!long.TryParse(param, out var ih) || ih <= 0)
+                        if (!TryParseSizeWithSuffix(param, out long ih) || ih <= 0)
                         {
                             log.Warning("Invalid input hunks: {Value}", param);
                             return;
@@ -3021,6 +3245,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -3112,8 +3338,11 @@ internal static class Program
                     effectiveHunk = hunkSize.Value;
                     if (outParentHdr != null && outParentHdr.HunkBytes != effectiveHunk)
                     {
-                        Console.Error.WriteLine($"Error: Specified hunk size {effectiveHunk} bytes does not match output parent CHD hunk size {outParentHdr.HunkBytes} bytes");
-                        log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", effectiveHunk, outParentHdr.HunkBytes);
+                        Console.Error.WriteLine(
+                            $"Error: Specified hunk size {effectiveHunk} bytes does not match output parent CHD hunk size {outParentHdr.HunkBytes} bytes");
+                        log.Warning(
+                            "Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes",
+                            effectiveHunk, outParentHdr.HunkBytes);
                         return;
                     }
                 }
@@ -3128,35 +3357,41 @@ internal static class Program
 
                 if (effectiveHunk < 16)
                 {
-                    Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+                    Console.Error.WriteLine("Error: Invalid hunk size (minimum 16)");
                     log.Warning("Invalid hunk size {Hunk} (minimum 16)", effectiveHunk);
                     return;
                 }
 
                 if (effectiveHunk > 1024 * 1024)
                 {
-                    Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+                    Console.Error.WriteLine("Error: Invalid hunk size (maximum 1048576)");
                     log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", effectiveHunk);
                     return;
                 }
 
                 if (sourceUnitBytesForCopy != 0 && effectiveHunk % sourceUnitBytesForCopy != 0)
                 {
-                    Console.Error.WriteLine($"Error: Hunk size {effectiveHunk} bytes is not a whole multiple of {sourceUnitBytesForCopy}");
-                    log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", effectiveHunk, sourceUnitBytesForCopy);
+                    Console.Error.WriteLine(
+                        $"Error: Hunk size {effectiveHunk} bytes is not a whole multiple of {sourceUnitBytesForCopy}");
+                    log.Warning("Hunk size {Hunk} bytes is not a whole multiple of {Unit}", effectiveHunk,
+                        sourceUnitBytesForCopy);
                     return;
                 }
 
-                if (outParentHdr != null && sourceUnitBytesForCopy != 0 && outParentHdr.UnitBytes != sourceUnitBytesForCopy)
+                if (outParentHdr != null && sourceUnitBytesForCopy != 0 &&
+                    outParentHdr.UnitBytes != sourceUnitBytesForCopy)
                 {
-                    Console.Error.WriteLine($"Error: Output parent CHD unit size {outParentHdr.UnitBytes} bytes does not match source unit size {sourceUnitBytesForCopy} bytes");
-                    log.Warning("Output parent CHD unit size {ParentUnit} bytes does not match source unit size {Unit} bytes", outParentHdr.UnitBytes, sourceUnitBytesForCopy);
+                    Console.Error.WriteLine(
+                        $"Error: Output parent CHD unit size {outParentHdr.UnitBytes} bytes does not match source unit size {sourceUnitBytesForCopy} bytes");
+                    log.Warning(
+                        "Output parent CHD unit size {ParentUnit} bytes does not match source unit size {Unit} bytes",
+                        outParentHdr.UnitBytes, sourceUnitBytesForCopy);
                     return;
                 }
 
                 if ((effectiveHunk % sourceHunkBytes != 0) && (sourceHunkBytes % effectiveHunk != 0))
                 {
-                    Console.Error.WriteLine($"Error: Hunk size is not a whole multiple or factor of input hunk size");
+                    Console.Error.WriteLine("Error: Hunk size is not a whole multiple or factor of input hunk size");
                     log.Warning("Hunk size is not a whole multiple or factor of input hunk size");
                     return;
                 }
@@ -3281,6 +3516,62 @@ internal static class Program
     private static bool VerifyTest(string file, string[] options)
     {
         var log = Log.Logger;
+        // chdman.cpp:3508 strict validation for verify: valid {input, inputparent, fix}
+        {
+            var verifyDefs = new Dictionary<string, (string canonical, bool hasParam)>(StringComparer.Ordinal)
+            {
+                ["--input"] = ("input", true), ["-i"] = ("input", true),
+                ["--inputparent"] = ("inputparent", true), ["-ip"] = ("inputparent", true),
+                ["--fix"] = ("fix", false), ["-f"] = ("fix", false),
+            };
+            var verifyValid = new HashSet<string>(StringComparer.Ordinal) { "input", "inputparent", "fix" };
+            var seenVerify = new HashSet<string>(StringComparer.Ordinal);
+            for (var i = 0; i < options.Length; i++)
+            {
+                var arg = options[i];
+                if (string.IsNullOrEmpty(arg) || arg[0] != '-')
+                    continue; // positional file path leftover from ParseInput; ignore
+                if (!verifyDefs.TryGetValue(arg, out var def))
+                {
+                    Console.Error.WriteLine($"Error: Option '{arg}' not valid for this command");
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("verify");
+                    return false;
+                }
+
+                if (!verifyValid.Contains(def.canonical))
+                {
+                    Console.Error.WriteLine($"Error: Option '{arg}' not valid for this command");
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("verify");
+                    return false;
+                }
+
+                if (seenVerify.Contains(def.canonical))
+                {
+                    Console.Error.WriteLine("Error: Multiple parameters of the same type specified");
+                    log.Warning("Error: Multiple parameters of the same type specified");
+                    PrintCommandHelp("verify");
+                    return false;
+                }
+
+                if (def.hasParam)
+                {
+                    if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                    {
+                        Console.Error.WriteLine("Error: Option is missing parameter");
+                        log.Warning("Error: Option is missing parameter");
+                        PrintCommandHelp("verify");
+                        return false;
+                    }
+
+                    i++; // skip param
+                }
+
+                seenVerify.Add(def.canonical);
+            }
+        }
+
         var fix =
             options.Contains("--fix", StringComparer.Ordinal)
             || options.Contains("-f", StringComparer.Ordinal);
@@ -3332,23 +3623,61 @@ internal static class Program
         var log = Log.Logger;
         var verbose = false;
         if (options != null)
+        {
+            var infoDefs = new Dictionary<string, (string canonical, bool hasParam)>(StringComparer.Ordinal)
+            {
+                ["--input"] = ("input", true), ["-i"] = ("input", true),
+                ["--verbose"] = ("verbose", false), ["-v"] = ("verbose", false),
+            };
+            var infoValid = new HashSet<string>(StringComparer.Ordinal) { "input", "verbose" };
+            var seenInfo = new HashSet<string>(StringComparer.Ordinal);
             for (var i = 0; i < options.Length; i++)
-                switch (options[i])
+            {
+                var arg = options[i];
+                if (!arg.StartsWith('-'))
+                    continue; // positional file path (already consumed by ParseInput); ignore
+                if (!infoDefs.TryGetValue(arg, out var def))
                 {
-                    case "--verbose" or "-v":
-                        verbose = true;
-                        break;
-                    case "--input" or "-i" when i + 1 < options.Length:
-                        // -i <file> is already consumed by ParseInput; skip both tokens
-                        i++;
-                        break;
-                    default:
-                        if (!options[i].StartsWith('-'))
-                            break; // positional file path (already consumed); ignore
-
-                        log.Warning("info: unknown option: {Option}", options[i]);
-                        return;
+                    Console.Error.WriteLine($"Error: Option '{arg}' not valid for this command");
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("info");
+                    return;
                 }
+
+                if (!infoValid.Contains(def.canonical))
+                {
+                    Console.Error.WriteLine($"Error: Option '{arg}' not valid for this command");
+                    log.Warning("Error: Option '{Option}' not valid for this command", arg);
+                    PrintCommandHelp("info");
+                    return;
+                }
+
+                if (seenInfo.Contains(def.canonical))
+                {
+                    Console.Error.WriteLine("Error: Multiple parameters of the same type specified");
+                    log.Warning("Error: Multiple parameters of the same type specified");
+                    PrintCommandHelp("info");
+                    return;
+                }
+
+                if (def.hasParam)
+                {
+                    if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                    {
+                        Console.Error.WriteLine("Error: Option is missing parameter");
+                        log.Warning("Error: Option is missing parameter");
+                        PrintCommandHelp("info");
+                        return;
+                    }
+
+                    i++;
+                }
+
+                seenInfo.Add(def.canonical);
+                if (string.Equals(def.canonical, "verbose", StringComparison.OrdinalIgnoreCase))
+                    verbose = true;
+            }
+        }
 
         var err = Chd.ReadHeader(file, out var header);
         if (err != ChdError.Chderrnone || header == null)
@@ -3381,6 +3710,8 @@ internal static class Program
         }
 
         Console.WriteLine($"CHD size:     {BigintString((ulong)chdSize)} bytes");
+        if (compression.Length > 0 && compression[0] != ChdCodec.None && header.TotalBytes != 0)
+            Console.WriteLine($"Ratio:        {100.0 * chdSize / header.TotalBytes:F1}%");
 
         // SHA-1 hashes
         var overall = header.Sha1;
@@ -3472,7 +3803,7 @@ internal static class Program
                 {
                     if (c == ChdCodec.None)
                         continue;
-                    var n = chd.GetHunkCodecNameForCodec(c);
+                    var n = ChdFile.GetHunkCodecNameForCodec(c);
                     if (!order.Contains(n, StringComparer.Ordinal))
                         order.Add(n);
                 }
@@ -3480,7 +3811,7 @@ internal static class Program
                 // Secondary codec (V3/V4) may be distinct
                 if (chd.SecondaryCodec != ChdCodec.None && chd.SecondaryCodec != ChdCodec.Error)
                 {
-                    var sn = chd.GetHunkCodecNameForCodec(chd.SecondaryCodec);
+                    var sn = ChdFile.GetHunkCodecNameForCodec(chd.SecondaryCodec);
                     if (!order.Contains(sn, StringComparer.Ordinal))
                         order.Add(sn);
                 }
@@ -3540,7 +3871,8 @@ internal static class Program
     }
 
     /// <summary>chdman.cpp:2076-2083 — reads GDDD hard-disk metadata from parent CHD and parses CYLS:….</summary>
-    private static bool TryGetParentGddd(string? parentPath, out uint cyl, out uint heads, out uint secs, out uint bps, out string error)
+    private static bool TryGetParentGddd(string? parentPath, out uint cyl, out uint heads, out uint secs, out uint bps,
+        out string error)
     {
         cyl = heads = secs = bps = 0;
         error = "";
@@ -3549,6 +3881,7 @@ internal static class Program
             error = "Unable to find hard disk metadata in parent CHD";
             return false;
         }
+
         try
         {
             var err = ChdFile.Open(parentPath, out var chd);
@@ -3557,6 +3890,7 @@ internal static class Program
                 error = "Unable to find hard disk metadata in parent CHD";
                 return false;
             }
+
             using (chd)
             {
                 var gErr = chd.GetMetadata("GDDD", 0, out var entry);
@@ -3565,6 +3899,7 @@ internal static class Program
                     error = "Unable to find hard disk metadata in parent CHD";
                     return false;
                 }
+
                 var text = entry.GetText().Trim();
                 // chdman HARD_DISK_METADATA_FORMAT = "CYLS:%d,HEADS:%d,SECS:%d,BPS:%d"
                 // Parse with sscanf parity: must have 4 values
@@ -3577,6 +3912,7 @@ internal static class Program
                     error = "Error parsing hard disk metadata in parent CHD";
                     return false;
                 }
+
                 try
                 {
                     // Extract numbers between labels: CYLS:xxx,HEADS:yyy,SECS:zzz,BPS:www
@@ -3584,11 +3920,13 @@ internal static class Program
                     var headsStr = text.Substring(headsIdx + 6, secsIdx - (headsIdx + 6)).Trim().TrimEnd(',');
                     var secsStr = text.Substring(secsIdx + 5, bpsIdx - (secsIdx + 5)).Trim().TrimEnd(',');
                     var bpsStr = text.Substring(bpsIdx + 4).Trim();
-                    if (!uint.TryParse(cylStr, out cyl) || !uint.TryParse(headsStr, out heads) || !uint.TryParse(secsStr, out secs) || !uint.TryParse(bpsStr, out bps))
+                    if (!uint.TryParse(cylStr, out cyl) || !uint.TryParse(headsStr, out heads) ||
+                        !uint.TryParse(secsStr, out secs) || !uint.TryParse(bpsStr, out bps))
                     {
                         error = "Error parsing hard disk metadata in parent CHD";
                         return false;
                     }
+
                     return true;
                 }
                 catch
@@ -4186,9 +4524,8 @@ internal static class Program
                 return;
             }
 
-            // chdman addmeta --valuetext writes exactly text.size() bytes with no NUL
-            // (chdman.cpp:3266), not a C-string terminator
-            data = Encoding.ASCII.GetBytes(text);
+            // chdman addmeta --valuetext writes text.size()+1 bytes with NUL (chd.h:351)
+            data = Encoding.ASCII.GetBytes(text + "\0");
         }
 
         var err = ChdFile.Open(file, out var chd);
@@ -4354,6 +4691,140 @@ internal static class Program
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     Parses a plain decimal number without K/M/G suffix, matching chdman's <c>sscanf I64FMT</c>
+    ///     for <c>--size</c> (chdman.cpp:2035). Strict: whole string must be digits (no suffix).
+    /// </summary>
+    private static bool TryParsePlainUlong(string s, out ulong result)
+    {
+        result = 0;
+        if (string.IsNullOrWhiteSpace(s))
+            return false;
+        s = s.Trim();
+        // strict: all chars must be digits
+        foreach (var ch in s)
+            if (!char.IsDigit(ch))
+                return false;
+        return ulong.TryParse(s, NumberStyles.None, CultureInfo.InvariantCulture, out result);
+    }
+
+    // chdman.cpp:2749 variable regex — (%*)(%([+-]?\d+)?([a-zA-Z]))
+    private static readonly Regex ChdmanVariablesRegex = new(
+        "(%*)(%([+-]?\\d+)?([a-zA-Z]))",
+        RegexOptions.Compiled
+| RegexOptions.ExplicitCapture
+    );
+
+    /// <summary>
+    ///     Formats a track number using chdman's printf-style <c>"%" + formatPart + "d"</c>
+    ///     (chdman.cpp:2774 <c>util::string_format("%" + format_part + "d", tracknum+1)</c>).
+    ///     Handles sign (+/-), zero-pad, width and left-align exactly as printf.
+    /// </summary>
+    private static string FormatTrackNumberWithPrintf(string formatPart, int trackNumber)
+    {
+        if (string.IsNullOrEmpty(formatPart))
+            return trackNumber.ToString(CultureInfo.InvariantCulture);
+        var plus = false;
+        var minus = false;
+        var rest = formatPart;
+        if (rest.Length > 0 && rest[0] == '+')
+        {
+            plus = true;
+            rest = rest.Substring(1);
+        }
+        else if (rest.Length > 0 && rest[0] == '-')
+        {
+            minus = true;
+            rest = rest.Substring(1);
+        }
+
+        var zeroPad = rest.Length > 0 && rest[0] == '0';
+        if (!int.TryParse(rest, NumberStyles.None, CultureInfo.InvariantCulture, out var width) || width < 0)
+            width = 0;
+        var raw = trackNumber.ToString(CultureInfo.InvariantCulture);
+        if (plus) raw = "+" + raw;
+        if (width <= 0 || raw.Length >= width)
+            return raw;
+        if (minus)
+            return raw.PadRight(width, ' ');
+        if (zeroPad)
+        {
+            if (plus)
+            {
+                // sign + zero-pad digits to width: e.g. +03 width3 track1 => +01
+                var digits = trackNumber.ToString(CultureInfo.InvariantCulture);
+                var paddedDigits = digits.PadLeft(width - 1, '0');
+                return "+" + paddedDigits;
+            }
+
+            return raw.PadLeft(width, '0');
+        }
+
+        return raw.PadLeft(width, ' ');
+    }
+
+    /// <summary>
+    ///     Expands a chdman output bin template per chdman.cpp:2748-2793.
+    ///     Mirrors leading_escape even/odd check, unknown-format warning, and
+    ///     full_match replace-all semantics. No <c>%%</c> collapsing — chdman leaves
+    ///     <c>%%</c> as-is (e.g. <c>%%%t</c> → <c>%%1</c> for track 1).
+    /// </summary>
+    private static string ExpandChdmanOutputBinTemplate(
+        string template,
+        int trackNumber,
+        bool isSplitBin)
+    {
+        var formatted = template;
+        // Iterate over matches in original template sequentially (regex_search loop)
+        foreach (Match m in ChdmanVariablesRegex.Matches(template))
+        {
+            var leading = m.Groups[1].Value;
+            var full = m.Groups[2].Value;
+            var part = m.Groups[3].Value;
+            var type = m.Groups[4].Value;
+            if (leading.Length % 2 != 0)
+                continue; // escaped — odd leading %
+            string replacement = "";
+            if (string.Equals(type, "t", StringComparison.Ordinal))
+            {
+                if (isSplitBin)
+                    replacement = FormatTrackNumberWithPrintf(part, trackNumber);
+            }
+            else
+            {
+                // chdman.cpp:2780 Warning: encountered unknown format value '%s', ignoring
+                Console.WriteLine($"Warning: encountered unknown format value '{type}', ignoring");
+            }
+
+            if (!string.IsNullOrEmpty(replacement))
+                formatted = formatted.Replace(full, replacement, StringComparison.Ordinal);
+        }
+
+        return formatted;
+    }
+
+    private static bool ChdmanTemplateContainsUnescapedTrackVariable(string template, bool isSplitBin)
+    {
+        var found = false;
+        foreach (Match m in ChdmanVariablesRegex.Matches(template))
+        {
+            var leading = m.Groups[1].Value;
+            var type = m.Groups[4].Value;
+            if (leading.Length % 2 != 0)
+                continue;
+            if (!string.Equals(type, "t", StringComparison.Ordinal))
+            {
+                Console.WriteLine($"Warning: encountered unknown format value '{type}', ignoring");
+                continue;
+            }
+
+            if (isSplitBin)
+                found = true;
+        }
+
+        return found;
     }
 
     /// <summary>Normalizes a command name: strips leading <c>--</c> and maps aliases.</summary>
@@ -4891,6 +5362,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -4899,7 +5372,8 @@ internal static class Program
         }
 
         // chdman.cpp:2256 parse_hunk_size for createdvd: required=2048 default=4096
-        var hunkExplicitDvd = options.Contains("--hunksize") || options.Contains("-hs") || options.Contains("--hunk-size");
+        var hunkExplicitDvd = options.Contains("--hunksize") || options.Contains("-hs") ||
+                              options.Contains("--hunk-size");
         ChdHeaderInfo? parentHdrDvd = null;
         if (parentPath != null && File.Exists(parentPath))
             if (Chd.ReadHeader(parentPath, out var phDvd) == ChdError.Chderrnone)
@@ -4907,15 +5381,21 @@ internal static class Program
 
         if (parentHdrDvd != null && parentHdrDvd.UnitBytes != 2048)
         {
-            Console.Error.WriteLine($"Error: Output parent CHD sector size {parentHdrDvd.UnitBytes} bytes does not match DVD-ROM sector size 2048 bytes");
-            log.Warning("Output parent CHD sector size {ParentUnit} bytes does not match DVD-ROM sector size 2048 bytes", parentHdrDvd.UnitBytes);
+            Console.Error.WriteLine(
+                $"Error: Output parent CHD sector size {parentHdrDvd.UnitBytes} bytes does not match DVD-ROM sector size 2048 bytes");
+            log.Warning(
+                "Output parent CHD sector size {ParentUnit} bytes does not match DVD-ROM sector size 2048 bytes",
+                parentHdrDvd.UnitBytes);
             return;
         }
 
         if (hunkExplicitDvd && parentHdrDvd != null && parentHdrDvd.HunkBytes != hunkBytes)
         {
-            Console.Error.WriteLine($"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrDvd.HunkBytes} bytes");
-            log.Warning("Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes", hunkBytes, parentHdrDvd.HunkBytes);
+            Console.Error.WriteLine(
+                $"Error: Specified hunk size {hunkBytes} bytes does not match output parent CHD hunk size {parentHdrDvd.HunkBytes} bytes");
+            log.Warning(
+                "Specified hunk size {Hunk} bytes does not match output parent CHD hunk size {ParentHunk} bytes",
+                hunkBytes, parentHdrDvd.HunkBytes);
             return;
         }
 
@@ -4924,14 +5404,14 @@ internal static class Program
 
         if (hunkBytes < 16)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (minimum 16)");
+            Console.Error.WriteLine("Error: Invalid hunk size (minimum 16)");
             log.Warning("Invalid hunk size {Hunk} (minimum 16)", hunkBytes);
             return;
         }
 
         if (hunkBytes > 1024 * 1024)
         {
-            Console.Error.WriteLine($"Error: Invalid hunk size (maximum 1048576)");
+            Console.Error.WriteLine("Error: Invalid hunk size (maximum 1048576)");
             log.Warning("Invalid hunk size {Hunk} (maximum 1048576)", hunkBytes);
             return;
         }
@@ -5031,12 +5511,30 @@ internal static class Program
             bool hasParam;
             switch (arg)
             {
-                case "--inputparent" or "-ip": canonical = "inputparent"; hasParam = true; break;
-                case "--inputstartbyte" or "-isb": canonical = "inputstartbyte"; hasParam = true; break;
-                case "--inputbytes" or "-ib": canonical = "inputbytes"; hasParam = true; break;
-                case "--inputstarthunk" or "-ish": canonical = "inputstarthunk"; hasParam = true; break;
-                case "--inputhunks" or "-ih": canonical = "inputhunks"; hasParam = true; break;
-                case "--force" or "-f": canonical = "force"; hasParam = false; break;
+                case "--inputparent" or "-ip":
+                    canonical = "inputparent";
+                    hasParam = true;
+                    break;
+                case "--inputstartbyte" or "-isb":
+                    canonical = "inputstartbyte";
+                    hasParam = true;
+                    break;
+                case "--inputbytes" or "-ib":
+                    canonical = "inputbytes";
+                    hasParam = true;
+                    break;
+                case "--inputstarthunk" or "-ish":
+                    canonical = "inputstarthunk";
+                    hasParam = true;
+                    break;
+                case "--inputhunks" or "-ih":
+                    canonical = "inputhunks";
+                    hasParam = true;
+                    break;
+                case "--force" or "-f":
+                    canonical = "force";
+                    hasParam = false;
+                    break;
                 default:
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
                     PrintCommandHelp("extractraw");
@@ -5064,22 +5562,38 @@ internal static class Program
                 {
                     case "inputparent": parentPath = param.Replace("\"", ""); break;
                     case "inputstartbyte":
-                        if (!long.TryParse(param, out var sb) || sb < 0) { log.Warning("Invalid input start byte: {Value}", param); return; }
+                        if (!TryParseSizeWithSuffix(param, out long sb) || sb < 0)
+                        {
+                            log.Warning("Invalid input start byte: {Value}", param);
+                            return;
+                        }
 
                         startByte = sb;
                         break;
                     case "inputbytes":
-                        if (!long.TryParse(param, out var ib) || ib <= 0) { log.Warning("Invalid input bytes: {Value}", param); return; }
+                        if (!TryParseSizeWithSuffix(param, out long ib) || ib <= 0)
+                        {
+                            log.Warning("Invalid input bytes: {Value}", param);
+                            return;
+                        }
 
                         lengthBytes = ib;
                         break;
                     case "inputstarthunk":
-                        if (!long.TryParse(param, out var sh) || sh < 0) { log.Warning("Invalid input start hunk: {Value}", param); return; }
+                        if (!TryParseSizeWithSuffix(param, out long sh) || sh < 0)
+                        {
+                            log.Warning("Invalid input start hunk: {Value}", param);
+                            return;
+                        }
 
                         startHunk = sh;
                         break;
                     case "inputhunks":
-                        if (!long.TryParse(param, out var ih) || ih <= 0) { log.Warning("Invalid input hunks: {Value}", param); return; }
+                        if (!TryParseSizeWithSuffix(param, out long ih) || ih <= 0)
+                        {
+                            log.Warning("Invalid input hunks: {Value}", param);
+                            return;
+                        }
 
                         lengthHunks = ih;
                         break;
@@ -5109,6 +5623,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -5144,15 +5660,17 @@ internal static class Program
 
                 if (readStart >= chd.TotalBytes)
                 {
-                    log.Warning(
-                        "Start offset {Start} exceeds image size {Size}",
-                        readStart,
-                        chd.TotalBytes
-                    );
+                    Console.Error.WriteLine("Error: Input start offset is beyond end of input");
+                    log.Warning("Input start offset is beyond end of input");
                     return;
                 }
 
-                readLength = Math.Min(readLength, chd.TotalBytes - readStart);
+                if (readStart + readLength > chd.TotalBytes)
+                {
+                    Console.Error.WriteLine("Error: Input length is larger than available input from start offset");
+                    log.Warning("Input length is larger than available input from start offset");
+                    return;
+                }
 
                 log.Information(
                     "Extracting: {Input} -> {Output}  ({Bytes:N0} bytes from offset {Start:N0})",
@@ -5245,12 +5763,30 @@ internal static class Program
             bool hasParam;
             switch (arg)
             {
-                case "--inputparent" or "-ip": canonical = "inputparent"; hasParam = true; break;
-                case "--outputbin" or "-ob": canonical = "outputbin"; hasParam = true; break;
-                case "--splitbin" or "-sb": canonical = "splitbin"; hasParam = false; break;
-                case "--cooked": canonical = "cooked"; hasParam = false; break;
-                case "--raw" or "--raw-frames": canonical = "raw"; hasParam = false; break;
-                case "--force" or "-f": canonical = "force"; hasParam = false; break;
+                case "--inputparent" or "-ip":
+                    canonical = "inputparent";
+                    hasParam = true;
+                    break;
+                case "--outputbin" or "-ob":
+                    canonical = "outputbin";
+                    hasParam = true;
+                    break;
+                case "--splitbin" or "-sb":
+                    canonical = "splitbin";
+                    hasParam = false;
+                    break;
+                case "--cooked":
+                    canonical = "cooked";
+                    hasParam = false;
+                    break;
+                case "--raw" or "--raw-frames":
+                    canonical = "raw";
+                    hasParam = false;
+                    break;
+                case "--force" or "-f":
+                    canonical = "force";
+                    hasParam = false;
+                    break;
                 default:
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
                     PrintCommandHelp("extractcd");
@@ -5278,8 +5814,19 @@ internal static class Program
                 var param = options[++i];
                 switch (canonical)
                 {
-                    case "inputparent": parentPath = param.Replace("\"", ""); break;
-                    case "outputbin": binPath = param.Replace("\"", ""); break;
+                    case "inputparent":
+                        parentPath = param.Replace("\"", "");
+                        break;
+                    case "outputbin":
+                        if (param.Contains('"'))
+                        {
+                            Console.Error.WriteLine($"Output bin filename ({param}) must not contain quotation marks");
+                            log.Warning("Output bin filename ({Param}) must not contain quotation marks", param);
+                            return;
+                        }
+
+                        binPath = param;
+                        break;
                 }
             }
             else
@@ -5299,6 +5846,8 @@ internal static class Program
 
         if (File.Exists(outputPath) && !force)
         {
+            Console.Error.WriteLine($"Error: file already exists ({outputPath})");
+            Console.Error.WriteLine("Use --force (or -f) to force overwriting");
             log.Warning(
                 "Output file already exists: {Path} (use --force to overwrite)",
                 outputPath
@@ -5323,21 +5872,29 @@ internal static class Program
                 var outputDir = Path.GetDirectoryName(outputPath) ?? ".";
                 var baseName = Path.GetFileNameWithoutExtension(outputPath);
 
-                // chdman.cpp:2675 is_splitbin = mode==GDI || --splitbin || (is_gdrom && mode==CUEBIN)
+                // chdman.cpp:2658 MODE_* = .cue->CUEBIN, .gdi->GDI, else NORMAL (.toc)
                 var outputExt = Path.GetExtension(outputPath);
                 var isGdiMode = outputExt.Equals(".gdi", StringComparison.OrdinalIgnoreCase);
                 var isTocMode = !isGdiMode && !outputExt.Equals(".cue", StringComparison.OrdinalIgnoreCase);
-                var effectiveSplitBin = isGdiMode || splitBin || (chd.IsGdRom && !isGdiMode);
-                if (isTocMode)
-                    log.Information("  Note: .toc output not fully supported; generating CUE-compatible output (chdman MODE_NORMAL)");
+                var effectiveSplitBin = isGdiMode || splitBin || (chd.IsGdRom && !isGdiMode && !isTocMode);
+                // MODE_NORMAL (.toc) is fully supported via GenerateTocFileContents / ExtractToc
 
-                // --outputbin %t handling (chdman.cpp:2748): require %t when splitbin
+                // --outputbin %t handling (chdman.cpp:2748-2797) + quotation check (chdman.cpp:2714)
+                if (binPath != null && binPath.Contains('"'))
+                {
+                    Console.Error.WriteLine($"Output bin filename ({binPath}) must not contain quotation marks");
+                    log.Warning("Output bin filename ({Bin}) must not contain quotation marks", binPath);
+                    return;
+                }
+
                 if (effectiveSplitBin && binPath != null)
                 {
-                    var tRegex = new Regex(@"(?<!%)%(?:%)*0*\d*t");
-                    if (!tRegex.IsMatch(binPath))
+                    if (!ChdmanTemplateContainsUnescapedTrackVariable(binPath, true))
                     {
-                        log.Warning("A track number variable (%t) must be specified in the output bin filename when --splitbin is enabled");
+                        Console.Error.WriteLine(
+                            "A track number variable (%t) must be specified in the output bin filename when --splitbin is enabled");
+                        log.Warning(
+                            "A track number variable (%t) must be specified in the output bin filename when --splitbin is enabled");
                         return;
                     }
                 }
@@ -5351,16 +5908,47 @@ internal static class Program
                     Directory.CreateDirectory(outputDir);
                     if (isTocMode)
                     {
-                        log.Information("  Note: .toc output not fully supported; generating GDI-compatible output (chdman MODE_NORMAL)");
-                        log.Information(
-                            "Extracting GD-ROM (GDI): {Input} -> {Dir}  ({Mode})",
-                            Path.GetFileName(inputPath),
-                            outputDir,
-                            cooked ? "cooked" : "raw frames"
-                        );
-                        var created = chd.ExtractToDirectory(outputDir, baseName, cooked: cooked);
-                        foreach (var f in created)
-                            log.Information("  Created: {File}", f);
+                        // MODE_NORMAL (.toc) for GD-ROM: generate TOC with DATAFILE entries + single bin
+                        var tocPath = outputPath;
+                        string binTarget;
+                        if (binPath != null)
+                        {
+                            // chdman variable replacement for %t not applicable to toc single bin, but honor literal
+                            // Single-bin toc: expand %t → 1 with printf semantics (CHDSharp convenience, chdman would leave literal)
+                            binTarget = binPath.Contains("%", StringComparison.Ordinal)
+                                ? ExpandChdmanOutputBinTemplate(binPath, 1, true)
+                                : binPath;
+                            if (!Path.IsPathRooted(binTarget)) binTarget = Path.Combine(outputDir, binTarget);
+                            if (Path.GetExtension(binTarget).Length == 0) binTarget += ".bin";
+                        }
+                        else
+                        {
+                            binTarget = Path.Combine(outputDir, baseName + ".bin");
+                        }
+
+                        if (File.Exists(tocPath) && !force)
+                        {
+                            Console.Error.WriteLine($"Error: file already exists ({tocPath})");
+                            return;
+                        }
+
+                        if (File.Exists(binTarget) && !force)
+                        {
+                            Console.Error.WriteLine($"Error: file already exists ({binTarget})");
+                            return;
+                        }
+
+                        log.Information("Extracting GD-ROM (TOC): {Input} -> {Toc} + {Bin}",
+                            Path.GetFileName(inputPath), tocPath, Path.GetFileName(binTarget));
+                        var errToc = chd.ExtractToc(tocPath, binTarget);
+                        if (errToc != ChdError.Chderrnone)
+                        {
+                            log.Warning("TOC extraction failed: {Error}", errToc);
+                            return;
+                        }
+
+                        log.Information("  Created: {File}", tocPath);
+                        log.Information("  Created: {File}", binTarget);
                     }
                     else if (isGdiMode)
                     {
@@ -5377,21 +5965,11 @@ internal static class Program
                                 var track = tracks[ti];
                                 string trackFileName;
                                 string trackFile;
-                                // Expand %t template if binPath contains it; otherwise treat as single file (chdman would error, but we handle)
+                                // Expand %t template per chdman.cpp:2749 (leading_escape + printf width/sign)
                                 if (binPath.Contains("%", StringComparison.Ordinal))
                                 {
-                                    var expanded = Regex.Replace(
-                                        binPath,
-                                        @"%0*(\d*)t",
-                                        m =>
-                                        {
-                                            var widthStr = m.Groups[1].Value;
-                                            if (int.TryParse(widthStr, out var w) && w > 0)
-                                                return track.TrackNumber.ToString($"D{w}");
-                                            return track.TrackNumber.ToString();
-                                        }
-                                    );
-                                    expanded = expanded.Replace("%%", "%");
+                                    var expanded =
+                                        ExpandChdmanOutputBinTemplate(binPath, track.TrackNumber, true);
                                     trackFile = Path.IsPathRooted(expanded)
                                         ? expanded
                                         : Path.Combine(outputDir, expanded);
@@ -5469,18 +6047,7 @@ internal static class Program
                             string trackFile;
                             if (binPath != null)
                             {
-                                var expanded = Regex.Replace(
-                                    binPath,
-                                    @"%0*(\d*)t",
-                                    m =>
-                                    {
-                                        var widthStr = m.Groups[1].Value;
-                                        if (int.TryParse(widthStr, out var w) && w > 0)
-                                            return track.TrackNumber.ToString($"D{w}");
-                                        return track.TrackNumber.ToString();
-                                    }
-                                );
-                                expanded = expanded.Replace("%%", "%");
+                                var expanded = ExpandChdmanOutputBinTemplate(binPath, track.TrackNumber, true);
                                 trackFile = Path.IsPathRooted(expanded)
                                     ? expanded
                                     : Path.Combine(outputDir, expanded);
@@ -5546,20 +6113,7 @@ internal static class Program
                         string trackFile;
                         if (binPath != null)
                         {
-                            // expand %t template per chdman.cpp:2748 (%t, %02t etc.)
-                            var expanded = Regex.Replace(
-                                binPath,
-                                @"%0*(\d*)t",
-                                m =>
-                                {
-                                    var widthStr = m.Groups[1].Value;
-                                    if (int.TryParse(widthStr, out var w) && w > 0)
-                                        return track.TrackNumber.ToString($"D{w}");
-                                    return track.TrackNumber.ToString();
-                                }
-                            );
-                            // handle escaped %% -> %
-                            expanded = expanded.Replace("%%", "%");
+                            var expanded = ExpandChdmanOutputBinTemplate(binPath, track.TrackNumber, true);
                             trackFile = Path.IsPathRooted(expanded)
                                 ? expanded
                                 : Path.Combine(outputDir, expanded);
@@ -5626,6 +6180,48 @@ internal static class Program
 
                     File.WriteAllText(cueFile, cueSb.ToString());
                     log.Information("  Created: {File}", cueFile);
+                }
+                else if (isTocMode)
+                {
+                    // MODE_NORMAL (.toc) for CD/non-GD: single bin + .toc descriptor (subcode preserved)
+                    var tocPath = outputPath;
+                    string binTarget;
+                    if (binPath != null)
+                    {
+                        binTarget = binPath.Contains("%", StringComparison.Ordinal)
+                            ? ExpandChdmanOutputBinTemplate(binPath, 1, true)
+                            : binPath;
+                        if (!Path.IsPathRooted(binTarget)) binTarget = Path.Combine(outputDir, binTarget);
+                        if (Path.GetExtension(binTarget).Length == 0) binTarget += ".bin";
+                    }
+                    else
+                    {
+                        binTarget = Path.Combine(outputDir, baseName + ".bin");
+                    }
+
+                    if (File.Exists(tocPath) && !force)
+                    {
+                        Console.Error.WriteLine($"Error: file already exists ({tocPath})");
+                        return;
+                    }
+
+                    if (File.Exists(binTarget) && !force)
+                    {
+                        Console.Error.WriteLine($"Error: file already exists ({binTarget})");
+                        return;
+                    }
+
+                    log.Information("Extracting CD (TOC): {Input} -> {Toc} + {Bin}", Path.GetFileName(inputPath),
+                        tocPath, Path.GetFileName(binTarget));
+                    var errToc = chd.ExtractToc(tocPath, binTarget);
+                    if (errToc != ChdError.Chderrnone)
+                    {
+                        log.Warning("TOC extraction failed: {Error}", errToc);
+                        return;
+                    }
+
+                    log.Information("  Created: {File}", tocPath);
+                    log.Information("  Created: {File}", binTarget);
                 }
                 else
                 {
@@ -5753,7 +6349,8 @@ internal static class Program
                     return;
                 _lastTicks = now;
                 // chdman progress goes to stderr; also log via Serilog for consistency
-                Console.Error.Write($"  hunk {p.HunkIndex,6}/{p.HunkCount,6}  {p.CodecName,-5} {p.RawBytes,10} -> {p.StoredBytes,10} B  ({p.Ratio,5:P1})\r");
+                Console.Error.Write(
+                    $"  hunk {p.HunkIndex,6}/{p.HunkCount,6}  {p.CodecName,-5} {p.RawBytes,10} -> {p.StoredBytes,10} B  ({p.Ratio,5:P1})\r");
                 if (isLast)
                     Console.Error.WriteLine();
                 Log.Logger.Information(

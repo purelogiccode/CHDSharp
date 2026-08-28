@@ -1,35 +1,39 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
-    <UseWPF>true</UseWPF>
-    <RootNamespace>CHDSharpTester</RootNamespace>
-    <ApplicationIcon>Icon\chd.ico</ApplicationIcon>
-    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Serilog" Version="4.4.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="WPF-UI" Version="4.3.0" />
-    <PackageReference Include="QuestPDF" Version="2026.8.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="chdman.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\about.png" />
-    <Resource Include="Images\exit.png" />
-    <Resource Include="Images\logo.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Using Include="CHDSharpTester.Models" />
-    <Using Include="CHDSharp.Models" />
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
+        <UseWPF>true</UseWPF>
+        <RootNamespace>CHDSharpTester</RootNamespace>
+        <ApplicationIcon>Icon\chd.ico</ApplicationIcon>
+        <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Serilog" Version="4.4.0" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageReference Include="WPF-UI" Version="4.3.0" />
+        <PackageReference Include="QuestPDF" Version="2026.8.0" />
+        <PackageReference Update="Meziantou.Analyzer" Version="3.0.190">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="chdman.exe">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Resource Include="Images\about.png" />
+        <Resource Include="Images\exit.png" />
+        <Resource Include="Images\logo.png" />
+    </ItemGroup>
+    <ItemGroup>
+        <Using Include="CHDSharpTester.Models" />
+        <Using Include="CHDSharp.Models" />
+    </ItemGroup>
 </Project>

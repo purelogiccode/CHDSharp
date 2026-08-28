@@ -1,101 +1,124 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <IsPackable>true</IsPackable>
-    <RootNamespace>CHDSharp</RootNamespace>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PackageId>CHDSharp</PackageId>
-    <Authors>Peterson Fernandes</Authors>
-    <Description>Pure C# CHD (Compressed Hunks of Data) reader and writer library. Supports MAME CHD formats V1-V5, all 10 compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants), and full CHD creation/encoding with chdman-compatible output.</Description>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>chd.png</PackageIcon>
-    <PackageTags>chd;mame;compression;emulation;disk-image;zstd;lzma;flac;huffman;avhuff</PackageTags>
-    <PackageProjectUrl>https://github.com/purelogiccode/CHDSharp</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/purelogiccode/CHDSharp</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageLicenseExpression></PackageLicenseExpression>
-    <PackageReleaseNotes>v1.4.0: Full chdman CLI argument parity, byte-for-byte encoder parity with MAME chdman for every codec (incl. createld/cdzs/zstd), and a battle-test harness (2611/2611 synthetic + 3003/3003 real-world). VendoredZSTD replaces the ZstdSharp.Port NuGet dependency — zero native dependencies, all codecs vendored in pure C#. 38 bugs fixed. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'"
-      >true</ContinuousIntegrationBuild>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference
-      Include="Microsoft.Extensions.Logging.Abstractions"
-      Version="10.0.11"
-      Condition="'$(TargetFramework)' == 'net8.0'"
-    />
-    <PackageReference
-      Include="Microsoft.Extensions.Logging.Abstractions"
-      Version="10.0.11"
-      Condition="'$(TargetFramework)' == 'net9.0'"
-    />
-    <PackageReference
-      Include="Microsoft.Extensions.Logging.Abstractions"
-      Version="10.0.11"
-      Condition="'$(TargetFramework)' == 'net10.0'"
-    />
-    <PackageReference
-      Include="Microsoft.SourceLink.GitHub"
-      Version="10.0.400"
-      PrivateAssets="All"
-    />
-    <PackageReference Include="System.IO.Hashing" Version="10.0.11" />
-  </ItemGroup>
-  <ItemGroup>
-    <InternalsVisibleTo Include="CHDSharpTest" />
-    <InternalsVisibleTo Include="CHDSharpTestGen" />
-    <InternalsVisibleTo Include="CHDSharpEncoderTest" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="LICENSE.txt" Pack="true" PackagePath="\" />
-    <None Include="Icon\chd.png" Pack="true" PackagePath="\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="References\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="References\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Remove="References\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\VendoredZLib\VendoredZLib.csproj" PrivateAssets="all" />
-    <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" PrivateAssets="all" />
-    <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" PrivateAssets="all" />
-    <ProjectReference Include="..\VendoredZSTD\VendoredZSTD.csproj" PrivateAssets="all" />
-  </ItemGroup>
-  <Target Name="IncludeVendoredAssembliesInPackage" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <IsPackable>true</IsPackable>
+        <RootNamespace>CHDSharp</RootNamespace>
+    </PropertyGroup>
+    <PropertyGroup>
+        <PackageId>CHDSharp</PackageId>
+        <Authors>Peterson Fernandes</Authors>
+        <Description>Pure C# CHD (Compressed Hunks of Data) reader and writer library. Supports MAME CHD formats V1-V5, all 10 compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants), and full CHD creation/encoding with chdman-compatible output.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>chd.png</PackageIcon>
+        <PackageTags>chd;mame;compression;emulation;disk-image;zstd;lzma;flac;huffman;avhuff</PackageTags>
+        <PackageProjectUrl>https://github.com/purelogiccode/CHDSharp</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/purelogiccode/CHDSharp</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <PackageLicenseExpression></PackageLicenseExpression>
+        <PackageReleaseNotes>v1.4.0: Full chdman CLI argument parity, byte-for-byte encoder parity with MAME chdman for every codec (incl. createld/cdzs/zstd), and a battle-test harness (2611/2611 synthetic + 3003/3003 real-world). VendoredZSTD replaces the ZstdSharp.Port NuGet dependency — zero native dependencies, all codecs vendored in pure C#. 38 bugs fixed. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
+    </PropertyGroup>
+    <PropertyGroup>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Deterministic>true</Deterministic>
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    </PropertyGroup>
     <ItemGroup>
-      <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net8.0\VendoredZLib.dll"><PackagePath>lib\net8.0\VendoredZLib.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net9.0\VendoredZLib.dll"><PackagePath>lib\net9.0\VendoredZLib.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net10.0\VendoredZLib.dll"><PackagePath>lib\net10.0\VendoredZLib.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net8.0\VendoredLZMA.dll"><PackagePath>lib\net8.0\VendoredLZMA.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net9.0\VendoredLZMA.dll"><PackagePath>lib\net9.0\VendoredLZMA.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net10.0\VendoredLZMA.dll"><PackagePath>lib\net10.0\VendoredLZMA.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net8.0\VendoredFlac.dll"><PackagePath>lib\net8.0\VendoredFlac.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net9.0\VendoredFlac.dll"><PackagePath>lib\net9.0\VendoredFlac.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net10.0\VendoredFlac.dll"><PackagePath>lib\net10.0\VendoredFlac.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net8.0\VendoredZSTD.dll"><PackagePath>lib\net8.0\VendoredZSTD.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net9.0\VendoredZSTD.dll"><PackagePath>lib\net9.0\VendoredZSTD.dll</PackagePath></_PackageFiles>
-      <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net10.0\VendoredZSTD.dll"><PackagePath>lib\net10.0\VendoredZSTD.dll</PackagePath></_PackageFiles>
+        <PackageReference
+            Include="Microsoft.Extensions.Logging.Abstractions"
+            Version="10.0.11"
+            Condition="'$(TargetFramework)' == 'net8.0'" />
+        <PackageReference
+            Include="Microsoft.Extensions.Logging.Abstractions"
+            Version="10.0.11"
+            Condition="'$(TargetFramework)' == 'net9.0'" />
+        <PackageReference
+            Include="Microsoft.Extensions.Logging.Abstractions"
+            Version="10.0.11"
+            Condition="'$(TargetFramework)' == 'net10.0'" />
+        <PackageReference
+            Include="Microsoft.SourceLink.GitHub"
+            Version="10.0.400"
+            PrivateAssets="All" />
+        <PackageReference Include="System.IO.Hashing" Version="10.0.11" />
+        <PackageReference Update="Meziantou.Analyzer" Version="3.0.190">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
-  </Target>
-  <ItemGroup>
-    <Using Include="CHDSharp.Models" />
-  </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="CHDSharpTest" />
+        <InternalsVisibleTo Include="CHDSharpTestGen" />
+        <InternalsVisibleTo Include="CHDSharpEncoderTest" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+        <None Include="LICENSE.txt" Pack="true" PackagePath="\" />
+        <None Include="Icon\chd.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="References\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="References\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <Page Remove="References\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\VendoredZLib\VendoredZLib.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\VendoredLZMA\VendoredLZMA.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\VendoredFlac\VendoredFlac.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\VendoredZSTD\VendoredZSTD.csproj" PrivateAssets="all" />
+    </ItemGroup>
+    <Target Name="IncludeVendoredAssembliesInPackage" BeforeTargets="_GetPackageFiles">
+        <ItemGroup>
+            <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net8.0\VendoredZLib.dll">
+                <PackagePath>lib\net8.0\VendoredZLib.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net9.0\VendoredZLib.dll">
+                <PackagePath>lib\net9.0\VendoredZLib.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net10.0\VendoredZLib.dll">
+                <PackagePath>lib\net10.0\VendoredZLib.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net8.0\VendoredLZMA.dll">
+                <PackagePath>lib\net8.0\VendoredLZMA.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net9.0\VendoredLZMA.dll">
+                <PackagePath>lib\net9.0\VendoredLZMA.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net10.0\VendoredLZMA.dll">
+                <PackagePath>lib\net10.0\VendoredLZMA.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net8.0\VendoredFlac.dll">
+                <PackagePath>lib\net8.0\VendoredFlac.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net9.0\VendoredFlac.dll">
+                <PackagePath>lib\net9.0\VendoredFlac.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net10.0\VendoredFlac.dll">
+                <PackagePath>lib\net10.0\VendoredFlac.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net8.0\VendoredZSTD.dll">
+                <PackagePath>lib\net8.0\VendoredZSTD.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net9.0\VendoredZSTD.dll">
+                <PackagePath>lib\net9.0\VendoredZSTD.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net10.0\VendoredZSTD.dll">
+                <PackagePath>lib\net10.0\VendoredZSTD.dll</PackagePath>
+            </_PackageFiles>
+        </ItemGroup>
+    </Target>
+    <ItemGroup>
+        <Using Include="CHDSharp.Models" />
+    </ItemGroup>
 </Project>

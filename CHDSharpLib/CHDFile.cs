@@ -221,7 +221,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     public uint HunkCount => _chd.Totalblocks;
 
     /// <summary>Compression codecs declared in the header (up to 4 for V5; 1 for V1-V4).</summary>
-    public IReadOnlyList<ChdCodec> Compression => _chd.Compression;
+    public IEnumerable<ChdCodec> Compression => _chd.Compression;
 
     /// <summary>Secondary codec for V3/V4 <c>CHDCOMPRESSION_ZLIB_PLUS</c> files (type 6 map entries).</summary>
     public ChdCodec SecondaryCodec => _chd.SecondaryCodec;
@@ -328,7 +328,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     }
 
     /// <summary>Returns the display name for a codec value (e.g. <c>Deflate</c> for <c>zlib</c>).</summary>
-    public string GetHunkCodecNameForCodec(ChdCodec codec)
+    public static string GetHunkCodecNameForCodec(ChdCodec codec)
     {
         return CodecDisplayName(codec);
     }
@@ -3772,6 +3772,186 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         return sb.ToString();
     }
 
+    /// <summary>
+    ///     Generates a TOC descriptor for this CD/GD-ROM CHD in <c>MODE_NORMAL</c> format
+    ///     (<c>chdman.cpp:1592</c> <c>output_track_metadata</c> for <c>MODE_NORMAL</c>).
+    ///     Matches <c>chdman extractcd</c> when the output file ends with <c>.toc</c>
+    ///     (no <c>.cue</c>/<c>.gdi</c>): header <c>CD_ROM</c>/<c>CD_ROM_XA</c>/<c>CD_DA</c>
+    ///     followed by per-track <c>// Track N</c>, <c>TRACK</c>, <c>NO COPY</c>,
+    ///     <c>ZERO</c>, <c>DATAFILE</c>, <c>START</c> blocks.
+    /// </summary>
+    /// <param name="binFileName">Binary data filename quoted in <c>DATAFILE</c> lines (e.g. <c>disc.bin</c>).</param>
+    /// <returns>A TOC descriptor string.</returns>
+    public string GenerateTocFileContents(string binFileName)
+    {
+        EnsureTracksLoaded();
+        if (_tracks == null || _tracks.Count == 0)
+            throw new InvalidOperationException("This CHD does not contain CD track metadata.");
+
+        var sb = new StringBuilder();
+
+        // Header: CD_ROM / CD_ROM_XA / CD_DA (chdman.cpp:2815-2850)
+        var mode1 = false;
+        var mode2 = false;
+        var cdda = false;
+        foreach (var t in _tracks)
+        {
+            switch (t.TrackType)
+            {
+                case ChdTrackType.Mode1:
+                case ChdTrackType.Mode1Raw:
+                    mode1 = true;
+                    break;
+                case ChdTrackType.Mode2:
+                case ChdTrackType.Mode2Form1:
+                case ChdTrackType.Mode2Form2:
+                case ChdTrackType.Mode2FormMix:
+                case ChdTrackType.Mode2Raw:
+                    mode2 = true;
+                    break;
+                case ChdTrackType.Audio:
+                    cdda = true;
+                    break;
+            }
+        }
+
+        if (mode2)
+            sb.AppendLine("CD_ROM_XA");
+        else if (cdda && !mode1)
+            sb.AppendLine("CD_DA");
+        else
+            sb.AppendLine("CD_ROM");
+
+        sb.AppendLine();
+        sb.AppendLine();
+
+        // Per-track blocks (chdman.cpp:1592 MODE_NORMAL)
+        ulong outputOffs = 0;
+        for (var i = 0; i < _tracks.Count; i++)
+        {
+            var t = _tracks[i];
+            sb.AppendLine($"// Track {i + 1}");
+
+            var typeStr = t.GetMameTypeString();
+            var subStr = t.GetMameSubTypeString();
+            var modeSubMode = t.SubType != ChdSubType.None ? $"{typeStr} {subStr}" : typeStr;
+            sb.AppendLine($"TRACK {modeSubMode}");
+            sb.AppendLine("NO COPY");
+            if (t.TrackType == ChdTrackType.Audio)
+            {
+                sb.AppendLine("NO PRE_EMPHASIS");
+                sb.AppendLine("TWO_CHANNEL_AUDIO");
+            }
+
+            if (t.PreGap > 0)
+                sb.AppendLine($"ZERO {modeSubMode} {FramesToMsf(t.PreGap)}");
+
+            var frameBytes = t.DataSize + t.SubSize;
+            if (outputOffs == 0)
+                sb.AppendLine(
+                    $"DATAFILE \"{binFileName}\" {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
+            else
+                sb.AppendLine(
+                    $"DATAFILE \"{binFileName}\" #{outputOffs} {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
+
+            if (t.PreGap > 0)
+                sb.AppendLine($"START {FramesToMsf(t.PreGap)}");
+
+            sb.AppendLine();
+            sb.AppendLine();
+
+            outputOffs += (ulong)t.Frames * (ulong)frameBytes;
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    ///     Extracts this CD CHD to bin+toc in <c>MODE_NORMAL</c> layout (single bin file
+    ///     containing <c>datasize+subsize</c> bytes per frame, plus a <c>.toc</c> descriptor).
+    ///     Mirrors <c>chdman.cpp:2918</c> extraction for <c>MODE_NORMAL</c> including
+    ///     <c>ZERO</c>/<c>DATAFILE</c>/<c>START</c> and subcode preservation.
+    /// </summary>
+    public ChdError ExtractToc(string tocPath, string binPath, IProgress<ChdProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureTracksLoaded();
+        if (_tracks == null || _tracks.Count == 0)
+            return ChdError.Chderrinvaliddata;
+
+        const int tempBufferSize = 32 * 1024 * 1024;
+        try
+        {
+            // Write binary: sequential frames, each datasize+subsize (subcode preserved for MODE_NORMAL)
+            using var fs = new FileStream(binPath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024);
+            var sw = progress != null ? Stopwatch.StartNew() : null;
+            // total bytes for progress
+            ulong totalBytes = 0;
+            foreach (var t in _tracks)
+                totalBytes += (ulong)t.Frames * (ulong)(t.DataSize + t.SubSize);
+            ulong written = 0;
+            var frameBuf = new byte[UnitBytes];
+            var binFileName = Path.GetFileName(binPath);
+            var tocContent = GenerateTocFileContents(binFileName);
+            // Write toc file first (atomic)
+            File.WriteAllText(tocPath, tocContent);
+
+            foreach (var track in _tracks)
+            {
+                // Determine output frame size: datasize + subsize for MODE_NORMAL (preserve subcode)
+                var outputFrameSize = track.DataSize + track.SubSize;
+                // Buffer aligned to outputFrameSize (chdman.cpp:2968)
+                var bufferSize = (tempBufferSize / outputFrameSize) * outputFrameSize;
+                if (bufferSize == 0) bufferSize = outputFrameSize;
+                var buffer = new byte[bufferSize];
+                var buffOffs = 0;
+                // Note: MODE_NORMAL does NOT swap audio (chdman.cpp:2995 condition false for MODE_NORMAL)
+                for (var f = 0; f < track.Frames; f++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var chdOffset = (track.StartFrame + (ulong)f) * UnitBytes;
+                    var err = Read(chdOffset, frameBuf, 0, (int)UnitBytes, cancellationToken);
+                    if (err != ChdError.Chderrnone)
+                        return err;
+                    // Copy sector data
+                    Array.Copy(frameBuf, 0, buffer, buffOffs, track.DataSize);
+                    buffOffs += track.DataSize;
+                    // Copy subcode if present
+                    if (track.SubType != ChdSubType.None)
+                    {
+                        Array.Copy(frameBuf, ChdReaders.CdMaxSectorData, buffer, buffOffs, track.SubSize);
+                        buffOffs += track.SubSize;
+                    }
+
+                    if (buffOffs == buffer.Length || f == track.Frames - 1)
+                    {
+                        fs.Write(buffer, 0, buffOffs);
+                        written += (ulong)buffOffs;
+                        if (progress != null)
+                        {
+                            var currentHunk = (long)(written / HunkBytes);
+                            if (written % HunkBytes != 0) currentHunk++;
+                            progress.Report(new ChdProgress(currentHunk, HunkCount, (long)Math.Min(written, totalBytes),
+                                (long)totalBytes, sw!.Elapsed));
+                        }
+
+                        buffOffs = 0;
+                    }
+                }
+            }
+
+            return ChdError.Chderrnone;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return ChdError.Chderrwriteerror;
+        }
+    }
+
     /// <summary>Returns a human-readable table-of-contents summary.</summary>
     public string ExportToc()
     {
@@ -3929,6 +4109,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 {
                     trackFileName = $"track{track.TrackNumber:D2}.bin";
                 }
+
                 var trackFile = Path.Combine(outputDir, trackFileName);
                 gdTrackFiles.Add(trackFileName);
                 var err = cooked
@@ -3971,6 +4152,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 {
                     WriteAllBytesSlow(imageFile, progress, cancellationToken);
                 }
+
                 created.Add(imageFile);
 
                 var descriptorFile = Path.Combine(outputDir, $"{baseFileName}.cue");
@@ -4062,6 +4244,19 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         if (_tracks == null || _tracks.Count == 0)
             return ChdError.Chderrinvaliddata;
 
+        // chdman.cpp:2960 warn subcode omitted for CUEBIN/GDI
+        foreach (var t in _tracks)
+            if (t.SubType != ChdSubType.None)
+            {
+                Log.LogWarning(
+                    "Warning: Track {Track} has subcode data.  bin/cue and gdi formats cannot contain subcode data and it will be omitted.",
+                    t.TrackNumber);
+                Log.LogWarning(
+                    "       : This may affect usage of the output image.  Use bin/toc output to keep all data.");
+                break;
+            }
+
+        const int tempBufferSize = 32 * 1024 * 1024;
         try
         {
             using var fs = new FileStream(
@@ -4081,6 +4276,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             {
                 var isAudio = track.TrackType == ChdTrackType.Audio;
                 var framesToWrite = track.Frames;
+                // chdman.cpp:2968 buffer aligned to output_frame_size (datasize for CUEBIN)
+                var outputFrameSize = track.DataSize;
+                var bufferSize = (tempBufferSize / outputFrameSize) * outputFrameSize;
+                if (bufferSize == 0) bufferSize = outputFrameSize;
+                var buffer = new byte[bufferSize];
+                var buffOffs = 0;
                 for (var f = 0; f < framesToWrite; f++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -4088,13 +4289,22 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                     var err = Read(chdOffset, frameBuf, 0, (int)UnitBytes, cancellationToken);
                     if (err != ChdError.Chderrnone)
                         return err;
+                    // CUEBIN always swaps audio (chdman.cpp:2995)
                     if (isAudio)
                     {
                         for (var i = 0; i < track.DataSize; i += 2)
                             (frameBuf[i], frameBuf[i + 1]) = (frameBuf[i + 1], frameBuf[i]);
                     }
-                    fs.Write(frameBuf, 0, track.DataSize);
+
+                    Array.Copy(frameBuf, 0, buffer, buffOffs, track.DataSize);
+                    buffOffs += track.DataSize;
                     written += (ulong)track.DataSize;
+                    if (buffOffs == buffer.Length || f == framesToWrite - 1)
+                    {
+                        fs.Write(buffer, 0, buffOffs);
+                        buffOffs = 0;
+                    }
+
                     if (progress != null)
                     {
                         var currentHunk = (long)(written / HunkBytes);
@@ -4153,7 +4363,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             // which is best-effort for single-track callers.
         }
 
+        // chdman.cpp:2960 warn subcode omitted for CUEBIN/GDI (per-track)
+        if (track.SubType != ChdSubType.None)
+        {
+            Log.LogWarning(
+                "Warning: Track {Track} has subcode data.  bin/cue and gdi formats cannot contain subcode data and it will be omitted.",
+                track.TrackNumber);
+            Log.LogWarning("       : This may affect usage of the output image.  Use bin/toc output to keep all data.");
+        }
+
+        // chdman.cpp:2995 swap if ((GDI && version>4) || CUEBIN) && audio
+        // For GD tracks called via this single-track path we treat as GDI when _isGdRom,
+        // otherwise CUEBIN (always swap). This matches ExtractToDirectory GDI vs CD split.
         var isAudio = track.TrackType == ChdTrackType.Audio;
+        var shouldSwap = isAudio && (!_isGdRom || Version > 4);
+        const int tempBufferSize = 32 * 1024 * 1024;
         try
         {
             using var fs = new FileStream(
@@ -4167,6 +4391,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             var frameBuf = new byte[unitBytes];
             ulong written = 0;
             var totalCooked = (ulong)framesToWrite * (ulong)track.DataSize;
+            var outputFrameSize = track.DataSize;
+            var bufferSize = (tempBufferSize / outputFrameSize) * outputFrameSize;
+            if (bufferSize == 0) bufferSize = outputFrameSize;
+            var buffer = new byte[bufferSize];
+            var buffOffs = 0;
             for (var f = 0; f < framesToWrite; f++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -4174,18 +4403,21 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 var err = Read(chdOffset, frameBuf, 0, (int)unitBytes, cancellationToken);
                 if (err != ChdError.Chderrnone)
                     return err;
-                if (isAudio)
+                if (shouldSwap)
                 {
                     for (var i = 0; i < track.DataSize; i += 2)
                         (frameBuf[i], frameBuf[i + 1]) = (frameBuf[i + 1], frameBuf[i]);
                 }
-                // Also handle legacy GD-ROM single-swap case: if _isLegacyGdRom and audio, the above swap
-                // already covers the chdman cooked swap (which for non-legacy is one swap, for legacy would be
-                // double-swap in MAME; but our corpus has no legacy GD-ROMs, so single swap is correct).
-                // To also match MAME's legacy double-swap, we would need to swap again when _isLegacyGdRom,
-                // but that would be a second swap (net zero). Since no legacy in corpus, keep single swap.
-                fs.Write(frameBuf, 0, track.DataSize);
+
+                Array.Copy(frameBuf, 0, buffer, buffOffs, track.DataSize);
+                buffOffs += track.DataSize;
                 written += (ulong)track.DataSize;
+                if (buffOffs == buffer.Length || f == framesToWrite - 1)
+                {
+                    fs.Write(buffer, 0, buffOffs);
+                    buffOffs = 0;
+                }
+
                 if (progress != null)
                 {
                     progress.Report(
@@ -4235,6 +4467,16 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         if (actualFrames < 0)
             actualFrames = 0;
 
+        // chdman.cpp:2960 warn subcode omitted for CUEBIN (GD CUE split is CUEBIN)
+        if (track.SubType != ChdSubType.None || (trackIndex > 0 && tracks[trackIndex - 1].SubType != ChdSubType.None))
+        {
+            Log.LogWarning(
+                "Warning: Track {Track} has subcode data.  bin/cue and gdi formats cannot contain subcode data and it will be omitted.",
+                track.TrackNumber);
+            Log.LogWarning("       : This may affect usage of the output image.  Use bin/toc output to keep all data.");
+        }
+
+        const int tempBufferSize = 32 * 1024 * 1024;
         try
         {
             using var fs = new FileStream(
@@ -4251,6 +4493,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             // pulled use prev's datasize, which may differ if track types differ; for progress we
             // approximate with current track's datasize).
             var totalCooked = (ulong)actualFrames * (ulong)track.DataSize;
+            // chdman.cpp:2968 buffer aligned to output_frame_size (datasize for CUEBIN)
+            // For split case max datasize of involved tracks
+            var maxDataSize = track.DataSize;
+            if (trackIndex > 0) maxDataSize = Math.Max(maxDataSize, tracks[trackIndex - 1].DataSize);
+            var bufferSize = (tempBufferSize / maxDataSize) * maxDataSize;
+            if (bufferSize == 0) bufferSize = maxDataSize;
+            var buffer = new byte[bufferSize];
+            var buffOffs = 0;
 
             for (var f = 0; f < actualFrames; f++)
             {
@@ -4279,19 +4529,28 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
                 if (frameOfs < 0)
                     frameOfs = 0;
+                // chdman uses get_track_start_phys (physframeofs) via cdrom translation to chdframeofs;
+                // direct CHD offset via StartFrame (chdframeofs) yields identical chd lba (phys - phys + chd)
                 var chdOffset = (srcTrack.StartFrame + (ulong)frameOfs) * unitBytes;
                 var err = Read(chdOffset, frameBuf, 0, (int)unitBytes, cancellationToken);
                 if (err != ChdError.Chderrnone)
                     return err;
 
+                // CUEBIN always swaps audio (chdman.cpp:2995)
                 if (isAudio)
                 {
                     for (var i = 0; i < dataSize; i += 2)
                         (frameBuf[i], frameBuf[i + 1]) = (frameBuf[i + 1], frameBuf[i]);
                 }
 
-                fs.Write(frameBuf, 0, dataSize);
+                Array.Copy(frameBuf, 0, buffer, buffOffs, dataSize);
+                buffOffs += dataSize;
                 written += (ulong)dataSize;
+                if (buffOffs == buffer.Length || f == actualFrames - 1)
+                {
+                    fs.Write(buffer, 0, buffOffs);
+                    buffOffs = 0;
+                }
 
                 if (progress != null)
                 {

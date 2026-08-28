@@ -90,4 +90,32 @@ public sealed class ChdTrackInfo
             _ => "NONE"
         };
     }
+
+    /// <summary>Returns MAME <c>get_type_string</c> value (MODE1, MODE1_RAW, MODE2, etc., AUDIO) without size suffix.</summary>
+    public string GetMameTypeString()
+    {
+        return TrackType switch
+        {
+            ChdTrackType.Mode1 => "MODE1",
+            ChdTrackType.Mode1Raw => "MODE1_RAW",
+            ChdTrackType.Mode2 => "MODE2",
+            ChdTrackType.Mode2Form1 => "MODE2_FORM1",
+            ChdTrackType.Mode2Form2 => "MODE2_FORM2",
+            ChdTrackType.Mode2FormMix => "MODE2_FORM_MIX",
+            ChdTrackType.Mode2Raw => "MODE2_RAW",
+            ChdTrackType.Audio => "AUDIO",
+            _ => "UNKNOWN"
+        };
+    }
+
+    /// <summary>Returns MAME <c>get_subtype_string</c> value (RW, RW_RAW, NONE).</summary>
+    public string GetMameSubTypeString()
+    {
+        return SubType switch
+        {
+            ChdSubType.Normal => "RW",
+            ChdSubType.Raw => "RW_RAW",
+            _ => "NONE"
+        };
+    }
 }

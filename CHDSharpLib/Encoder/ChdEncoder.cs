@@ -1,7 +1,6 @@
 using System.Buffers.Binary;
 using CHDSharp.Encoder.Interfaces;
 using CHDSharp.Encoder.Models;
-using CHDSharp.Models;
 using MapEntry = CHDSharp.Encoder.Models.MapEntry;
 
 namespace CHDSharp.Encoder;
@@ -176,7 +175,8 @@ public static class ChdEncoder
             throw new ArgumentException("unitBytes must be greater than zero", nameof(unitBytes));
         // chdman.cpp:2087 — blank hard disk Data size % sector_size must be 0
         if (totalBytes % unitBytes != 0)
-            throw new ArgumentException($"Data size {totalBytes} is not divisible by sector size {unitBytes}", nameof(totalBytes));
+            throw new ArgumentException($"Data size {totalBytes} is not divisible by sector size {unitBytes}",
+                nameof(totalBytes));
         ValidateHunkSize(hunkBytes, unitBytes);
 
         codecTags ??= [CodecTags.Zlib];
@@ -410,9 +410,11 @@ public static class ChdEncoder
                 hunkBytes = bytesPerFrame;
 
             if (hunkBytes < HunkSizeMin)
-                throw new ArgumentException($"Invalid hunk size {hunkBytes} (minimum {HunkSizeMin})", nameof(hunkBytes));
+                throw new ArgumentException($"Invalid hunk size {hunkBytes} (minimum {HunkSizeMin})",
+                    nameof(hunkBytes));
             if (hunkBytes > HunkSizeMax)
-                throw new ArgumentException($"Invalid hunk size {hunkBytes} (maximum {HunkSizeMax})", nameof(hunkBytes));
+                throw new ArgumentException($"Invalid hunk size {hunkBytes} (maximum {HunkSizeMax})",
+                    nameof(hunkBytes));
 
             if (parentHdrLd != null && parentHdrLd.UnitBytes != bytesPerFrame)
                 throw new ArgumentException(
@@ -1286,7 +1288,7 @@ public static class ChdEncoder
                 );
 
             // chdman.cpp:2476 factor check: hunk must be multiple or factor of input hunk
-            if ((hunkBytes % sourceHunkBytes != 0) && (sourceHunkBytes % hunkBytes != 0))
+            if (hunkBytes % sourceHunkBytes != 0 && sourceHunkBytes % hunkBytes != 0)
                 throw new ArgumentException(
                     "Hunk size is not a whole multiple or factor of input hunk size"
                 );
@@ -1297,11 +1299,13 @@ public static class ChdEncoder
             if (sliceStart < 0)
                 throw new ArgumentOutOfRangeException(nameof(options.InputStartBytes), "InputStartBytes must be >= 0");
             if (sliceLength is < 0)
-                throw new ArgumentOutOfRangeException(nameof(options.InputLengthBytes), "InputLengthBytes must be >= 0");
+                throw new ArgumentOutOfRangeException(nameof(options.InputLengthBytes),
+                    "InputLengthBytes must be >= 0");
 
-            var startBytes = (ulong)(sliceStart);
+            var startBytes = (ulong)sliceStart;
             if (startBytes > sourceLogicalBytes)
-                throw new ArgumentException($"Input start offset {startBytes} is beyond end of input ({sourceLogicalBytes})");
+                throw new ArgumentException(
+                    $"Input start offset {startBytes} is beyond end of input ({sourceLogicalBytes})");
             ulong logicalBytes;
             if (sliceLength.HasValue)
             {

@@ -1,37 +1,41 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>CHDSharpEncoderTest</RootNamespace>
-    <!-- xUnit1051 wants test calls to pass TestContext.Current.CancellationToken; the CHD
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>CHDSharpEncoderTest</RootNamespace>
+        <!-- xUnit1051 wants test calls to pass TestContext.Current.CancellationToken; the CHD
              API legitimately accepts caller-supplied tokens, so tests use their own. -->
-    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="10.0.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.v3" Version="4.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Using Include="CHDSharp.Encoder.Models" />
-    <Using Include="CHDSharp.Encoder.Interfaces" />
-    <Using Include="CHDSharp.Models" />
-    <Using Include="Xunit" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\CHDSharpTester\chdman.exe" Link="chdman.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
+        <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="10.0.1">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="xunit.v3" Version="4.0.0" />
+        <PackageReference Update="Meziantou.Analyzer" Version="3.0.190">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <Using Include="CHDSharp.Encoder.Models" />
+        <Using Include="CHDSharp.Encoder.Interfaces" />
+        <Using Include="CHDSharp.Models" />
+        <Using Include="Xunit" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="..\CHDSharpTester\chdman.exe" Link="chdman.exe">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Visible>false</Visible>
+        </Content>
+    </ItemGroup>
 </Project>
