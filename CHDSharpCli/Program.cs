@@ -23,6 +23,13 @@ internal static class Program
 {
     private static int _exitPrompted;
 
+    // chdman.cpp:2749 variable regex — (%*)(%([+-]?\d+)?([a-zA-Z]))
+    private static readonly Regex ChdmanVariablesRegex = new(
+        "(%*)(%([+-]?\\d+)?([a-zA-Z]))",
+        RegexOptions.Compiled
+        | RegexOptions.ExplicitCapture
+    );
+
     /// <summary>
     ///     Application entry point. Parses command-line arguments and dispatches to the
     ///     appropriate operation: directory scanning, random-access test, list-based verification,
@@ -1665,10 +1672,10 @@ internal static class Program
                 }
 
                 // 2076: if cylinders==0 && parent opened, read GDDD from parent (overwrites CHS and sector_size)
-                uint? finalCyl = identCyl;
-                uint? finalHeads = identHeads;
-                uint? finalSectors = identSectors;
-                uint finalSectorSize = unitBytes;
+                var finalCyl = identCyl;
+                var finalHeads = identHeads;
+                var finalSectors = identSectors;
+                var finalSectorSize = unitBytes;
                 if (!finalCyl.HasValue && parentHdrHd != null)
                 {
                     if (!TryGetParentGddd(outputParentPath, out var pcyl, out var pheads, out var psecs, out var pbps,
@@ -1700,7 +1707,7 @@ internal static class Program
                 }
 
                 // 2091: if cylinders==0 guess_chs (even for input file)
-                bool needGuess = !finalCyl.HasValue || finalCyl.Value == 0;
+                var needGuess = !finalCyl.HasValue || finalCyl.Value == 0;
                 if (needGuess)
                 {
                     if (inputFilesize == 0)
@@ -1722,10 +1729,8 @@ internal static class Program
                     encodeOptions.Metadata ??= new List<MetadataEntry>();
                     var glist = (List<MetadataEntry>)encodeOptions.Metadata;
                     if (glist.All(e => e.Tag != MetadataWriter.HardDiskMetadataTag))
-                    {
                         glist.Add(MetadataWriter.BuildHardDiskMetadata(finalCyl!.Value, finalHeads!.Value,
                             finalSectors!.Value, finalSectorSize));
-                    }
                 }
 
                 // Ensure GDDD exists (if guess added, already; if explicit CHS, added; otherwise fallback)
@@ -1943,7 +1948,7 @@ internal static class Program
         }
 
         // 2087: validate Data size % sector_size for blank (filesize = sizeBytes if provided else 0)
-        ulong blankFilesize = sizeBytes ?? 0UL;
+        var blankFilesize = sizeBytes ?? 0UL;
         // If CHS provided, filesize for validation is still sizeBytes (if any) per chdman; but if size not provided, filesize 0 passes
         if (sizeBytes.HasValue && blankFilesize % unitBytes != 0)
         {
@@ -1978,7 +1983,7 @@ internal static class Program
         try
         {
             var codecTags = ChdCodecs.ParseCodecTags(codecs);
-            ulong logSize = sizeBytes ?? (chsCylinders.HasValue
+            var logSize = sizeBytes ?? (chsCylinders.HasValue
                 ? (ulong)chsCylinders.Value * chsHeads!.Value * chsSectors!.Value * unitBytes
                 : 0);
             log.Information(
@@ -2731,7 +2736,7 @@ internal static class Program
             ["--force"] = ("force", false),
             ["-f"] = ("force", false),
             ["--verbose"] = ("verbose", false),
-            ["-v"] = ("verbose", false),
+            ["-v"] = ("verbose", false)
         };
 
         HashSet<string> valid;
@@ -3269,7 +3274,6 @@ internal static class Program
                 {
                     var tmpErr = ChdFile.Open(inputPath, sourceParentPath, out var tmpChd);
                     if (tmpErr == ChdError.Chderrnone && tmpChd != null)
-                    {
                         using (tmpChd)
                         {
                             if (tmpChd.IsHdd || tmpChd.IsDvd)
@@ -3281,7 +3285,6 @@ internal static class Program
                             else
                                 defaults = [CodecTags.Lzma, CodecTags.Zlib, CodecTags.Huff, CodecTags.Flac];
                         }
-                    }
                 }
                 catch
                 {
@@ -3389,7 +3392,7 @@ internal static class Program
                     return;
                 }
 
-                if ((effectiveHunk % sourceHunkBytes != 0) && (sourceHunkBytes % effectiveHunk != 0))
+                if (effectiveHunk % sourceHunkBytes != 0 && sourceHunkBytes % effectiveHunk != 0)
                 {
                     Console.Error.WriteLine("Error: Hunk size is not a whole multiple or factor of input hunk size");
                     log.Warning("Hunk size is not a whole multiple or factor of input hunk size");
@@ -3522,7 +3525,7 @@ internal static class Program
             {
                 ["--input"] = ("input", true), ["-i"] = ("input", true),
                 ["--inputparent"] = ("inputparent", true), ["-ip"] = ("inputparent", true),
-                ["--fix"] = ("fix", false), ["-f"] = ("fix", false),
+                ["--fix"] = ("fix", false), ["-f"] = ("fix", false)
             };
             var verifyValid = new HashSet<string>(StringComparer.Ordinal) { "input", "inputparent", "fix" };
             var seenVerify = new HashSet<string>(StringComparer.Ordinal);
@@ -3627,7 +3630,7 @@ internal static class Program
             var infoDefs = new Dictionary<string, (string canonical, bool hasParam)>(StringComparer.Ordinal)
             {
                 ["--input"] = ("input", true), ["-i"] = ("input", true),
-                ["--verbose"] = ("verbose", false), ["-v"] = ("verbose", false),
+                ["--verbose"] = ("verbose", false), ["-v"] = ("verbose", false)
             };
             var infoValid = new HashSet<string>(StringComparer.Ordinal) { "input", "verbose" };
             var seenInfo = new HashSet<string>(StringComparer.Ordinal);
@@ -4710,13 +4713,6 @@ internal static class Program
         return ulong.TryParse(s, NumberStyles.None, CultureInfo.InvariantCulture, out result);
     }
 
-    // chdman.cpp:2749 variable regex — (%*)(%([+-]?\d+)?([a-zA-Z]))
-    private static readonly Regex ChdmanVariablesRegex = new(
-        "(%*)(%([+-]?\\d+)?([a-zA-Z]))",
-        RegexOptions.Compiled
-| RegexOptions.ExplicitCapture
-    );
-
     /// <summary>
     ///     Formats a track number using chdman's printf-style <c>"%" + formatPart + "d"</c>
     ///     (chdman.cpp:2774 <c>util::string_format("%" + format_part + "d", tracknum+1)</c>).
@@ -4786,7 +4782,7 @@ internal static class Program
             var type = m.Groups[4].Value;
             if (leading.Length % 2 != 0)
                 continue; // escaped — odd leading %
-            string replacement = "";
+            var replacement = "";
             if (string.Equals(type, "t", StringComparison.Ordinal))
             {
                 if (isSplitBin)
@@ -5888,7 +5884,6 @@ internal static class Program
                 }
 
                 if (effectiveSplitBin && binPath != null)
-                {
                     if (!ChdmanTemplateContainsUnescapedTrackVariable(binPath, true))
                     {
                         Console.Error.WriteLine(
@@ -5897,7 +5892,6 @@ internal static class Program
                             "A track number variable (%t) must be specified in the output bin filename when --splitbin is enabled");
                         return;
                     }
-                }
 
                 if (chd.IsGdRom)
                 {
@@ -6331,10 +6325,10 @@ internal static class Program
     private sealed class VerboseHunkLogger
     {
         private readonly Dictionary<string, int> _counts = new(StringComparer.Ordinal);
+        private readonly long _intervalTicks = Stopwatch.Frequency / 2; // 0.5s like chdman.cpp:967
+        private long _lastTicks;
         private long _totalRaw;
         private long _totalStored;
-        private long _lastTicks;
-        private readonly long _intervalTicks = Stopwatch.Frequency / 2; // 0.5s like chdman.cpp:967
 
         public VerboseHunkLogger()
         {

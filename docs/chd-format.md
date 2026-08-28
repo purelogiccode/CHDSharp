@@ -4,7 +4,7 @@ layout: default
 
 # CHD Format Reference
 
-This page documents the **CHD (Compressed Hunks of Data)** on-disk format as implemented by CHDSharp. It is based on the MAME 0.288 sources.
+This page documents the **CHD (Compressed Hunks of Data)** on-disk format as implemented by CHDSharp. It is based on the MAME 0.289 sources (`References/mame-mame0289`). For the full creation workflow, map-compression walk-through, and a minimal writer recipe, see [CHD Deep Reference](chd-deep-reference.md) (audited expansion of `References/CHDInfo.md`).
 
 ---
 
@@ -121,7 +121,7 @@ Each **expanded** entry is 12 bytes:
 [10-11]  uint16  crc16            CRC-16 (CCITT) of the uncompressed hunk
 ```
 
-The map encoding applies RLE to compression types (runs of 3–18 and 19–290 become `RLE_SMALL`/`RLE_LARGE`), promotes consecutive self/parent references to `SELF_0/1` and `PARENT_0/1/PARENT_SELF` pseudo-types, Huffman-encodes the type stream, then writes per-entry auxiliary data (lengths, CRC16s, offsets) at fixed bit widths. The whole uncompressed map's CRC16 is verified against the map header.
+The map encoding promotes consecutive self/parent references to `SELF_0/1` and `PARENT_0/1/PARENT_SELF` pseudo-types **before** RLE, then RLE-encodes the type stream (repeats beyond the first: runs of 4–19 → `RLE_SMALL` (`[RLE_SMALL][count-3]`), runs of 20–275 → `RLE_LARGE` per triplet, iterated for longer runs), Huffman-encodes the RLE symbols, then writes per-entry auxiliary data (for `TYPE_0..3`: `[lengthbits of complength][16 bits CRC16]` with offset implicit via `datastart` + cumulative lengths; for `NONE`: `[CRC16]`; for `SELF`/`PARENT`: fixed-width index). The whole uncompressed map's CRC16 is verified against the map header. See [Deep Reference §5](chd-deep-reference.md#5-v5-compressed-map-encoding-detail-chdcpp2071--chdheaderscs509) for the byte-accurate walk-through.
 
 **Encoder quirk (small maps):** chdman sizes the bitstream buffer as `(8*16 + (12 + max(lengthbits+16, hunkbits, parentunitbits)) * hunkcount) / 8 + 1` bytes *including* the 16-byte header. For small hunk counts that area is smaller than the actual tree + symbol + auxiliary bits, so MAME's `bitstream_out` silently drops whole trailing bytes while `flush()` still counts them in the map's compressed-length field; the dropped positions read back as zeroes. When a dropped byte is nonzero the stored map no longer matches its header CRC16 and the file cannot be re-opened — not even by chdman itself (reproducible with a single-hunk `createraw`, e.g. `-hs 65536` over random data). CHDSharp's encoder replicates the allocation and clipping byte-for-byte whenever chdman's output is well-formed, and falls back to the full bitstream when clipping would corrupt the map.
 
