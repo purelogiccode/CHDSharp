@@ -13,6 +13,17 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.4.1
+
+- **Complete `chdman` parity** — all 16 audited discrepancies (D1–D16) plus EdgeGaps §1–§3 fixed and verified against MAME 0.289. Battle-test still green (2611/2611 synthetic + 3003/3003 real-world). Highlights:
+  - `createhd -i` now writes correct `GDDD` geometry, `createhd --ident` CHS extraction, blank `none` enforcement, and `guess_chs` parity.
+  - `extractcd` now defaults to cooked sectors and matches `chdman` for all 43 CDs + 3 GD-ROMs; GD-ROM Redump `has_physical_pregap` / `SINGLE-DENSITY` / `HIGH-DENSITY` handling is now exact.
+  - `copy` per-type default codecs (`lzma,zlib,huff,flac` vs `cdlz,cdzl,cdfl` vs `avhu`) and parent hunk-size inheritance/factor checks.
+  - `DVD ` metadata now empty (length 0), 32 MiB aligned extraction with correct audio byte-swap, and `addmeta --valuetext` no trailing NUL — all matching `chdman`.
+  - CLI option parsing is now `chdman`-strict (unknown/duplicate/missing, per-command valid sets, `isb`/`ish`/`ib`/`ih` exclusion, trailing `B` handling).
+- **New CHD Deep Reference** — `docs/chd-deep-reference.md` audited against MAME 0.289 and the library, with 9 `⚠ Correction`s vs the old reference.
+- **Tooling** — `Meziantou.Analyzer 3.0.190`, zero warnings, targets `net8.0` / `net9.0` / `net10.0`.
+
 ## What's New in v1.4.0
 
 - **Full `chdman` CLI argument parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand: `info`, `verify`, `createraw`, `createhd`, `createcd`, `createdvd`, `createld`, `extractraw`, `extracthd`, `extractcd`, `extractdvd`, `extractld`, `copy`, `addmeta`, `delmeta`, `dumpmeta`, `listtemplates`.

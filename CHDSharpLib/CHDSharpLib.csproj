@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.4.0: Full chdman CLI argument parity, byte-for-byte encoder parity with MAME chdman for every codec (incl. createld/cdzs/zstd), and a battle-test harness (2611/2611 synthetic + 3003/3003 real-world). VendoredZSTD replaces the ZstdSharp.Port NuGet dependency — zero native dependencies, all codecs vendored in pure C#. 38 bugs fixed. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.4.1: chdman parity complete — 16 discrepancies fixed (createhd GDDD, extractcd cooked/raw, GD-ROM Redump, CLI strictness, copy defaults, parent hunk inheritance), DVD empty-payload parity, 32 MiB aligned extraction with correct audio byte-swap, and an audited CHD Deep Reference (MAME 0.289). Pure C# — zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>

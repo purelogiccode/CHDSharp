@@ -4,6 +4,8 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
+> **v1.4.1** — complete `chdman` parity (GD-ROM Redump, `createhd -i` GDDD, `extractcd` cooked/raw, `copy` per-type defaults, strict CLI validation). Targets `net8.0` / `net9.0` / `net10.0`.
+
 ---
 
 ## Usage
@@ -92,9 +94,9 @@ CHDSharp createld --output ld.chd --input movie.avi -c avhu
 CHDSharp extractraw --output game.bin --input game.chd
 CHDSharp extracthd --output disk.img --input disk.chd
 
-# Extract a CD CHD to BIN/CUE
+# Extract a CD CHD to BIN/CUE (cooked by default — matches chdman; add --raw for 2448-byte frames)
 CHDSharp extractcd --output game.cue --input game.chd
-CHDSharp extractcd -o game.cue -i game.chd --outputbin game.bin
+CHDSharp extractcd -o game.cue -i game.chd --outputbin game.bin --raw
 
 # Extract a DVD CHD to ISO
 CHDSharp extractdvd --output game.iso --input game.chd

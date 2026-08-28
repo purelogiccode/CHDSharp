@@ -36,6 +36,7 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 | Page | Description |
 |------|-------------|
 | [CHD Format Reference](chd-format.md) | The on-disk format: headers, maps, metadata, hashing, delta CHDs — V1 through V5. |
+| [CHD Deep Reference](chd-deep-reference.md) | Audited deep dive: V1–V5 history, codecs, creation workflow, V5 map quirk, metadata, hashing, parent/child — with `⚠ Correction`s vs the old reference (MAME 0.289). |
 | [Codecs](codecs.md) | All ten decompression codecs: how they work and how each is implemented. |
 | [Architecture](architecture.md) | Solution layout, library design, data flow, threading model. |
 
@@ -92,8 +93,8 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 - **Metadata** — tag/index query API (`GetMetadata`) plus the full entry list; checksum-flag aware. IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support.
 - **Track info & extraction** — CD/GD-ROM TOC parsing (`ChdTrackInfo`), CUE/GDI descriptor generation, legacy `CHGT` little-endian CDDA handling (`IsLittleEndianAudio`), and whole-image extraction (`.bin`/`.cue`, `.iso`, `.img`, `.raw`, `.gdi`).
 - **Pluggable logging** — `Microsoft.Extensions.Logging` integration, silent by default.
-- **100% chdman match** — cross-checked against `chdman` (MAME 0.288/0.289) via `info`, `verify`, `extractraw`, and the `CHDSharpBattleTest` harness (2611/2611 synthetic + 3003/3003 real-world checks passing).
-- **Full `chdman` CLI parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand with matching options and exit codes.
+- **100% chdman match** — cross-checked against `chdman` (MAME 0.289) via `info`, `verify`, `extractraw`, and the `CHDSharpBattleTest` harness (2611/2611 synthetic + 3003/3003 real-world checks passing). v1.4.1 closes the last 16 discrepancies: `createhd -i` GDDD, `extractcd` cooked/raw, GD-ROM Redump, `copy` per-type defaults, DVD empty payload, and strict CLI validation.
+- **Full `chdman` CLI parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand with matching options and exit codes (strict validation parity as of v1.4.1).
 
 ---
 

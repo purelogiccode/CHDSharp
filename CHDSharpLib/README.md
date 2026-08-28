@@ -10,6 +10,18 @@
 
 ---
 
+## What's New in v1.4.1
+
+Complete `chdman` parity against MAME 0.289 — 16 discrepancies fixed and battle-verified (2611/2611 synthetic + 3003/3003 real-world):
+
+- **`createhd` / `createraw` parity** — `createhd -i` now synthesizes `GDDD` geometry (51-byte delta gone), `createhd --ident` extracts CHS from ATA bytes 2/6/12, blank images enforce `-c none`, `createraw` validates `--unitsize` / hunk size (16 B–1 MiB, multiple of unit), and `listtemplates` shows all 17 templates. Parent/ident fallback and `guess_chs` now match `chdman`.
+- **`extractcd` cooked vs raw** — `ExtractToDirectory(..., cooked: true)` writes cooked sectors (`track.DataSize`, subcode omitted, audio byte-swapped) and matches `chdman extractcd` for all 43 CDs + 3 GD-ROMs; `cooked: false` (default) keeps 2448-byte raw frames with library compat. CLI `extractcd` defaults to cooked (`--raw` to keep raw). Extraction now uses a 32 MiB aligned buffer with batch writes and correct per-mode audio swap (CUEBIN always, GDI only `Version>4`).
+- **GD-ROM Redump** — `has_physical_pregap` / `padframes` / `splitframes` fixup ported; `ChdTrackInfo` gains `SplitFrames`/`PhysFrameOfs`, `REM SINGLE-DENSITY` / `HIGH-DENSITY` emitted, `MODE_GDI` vs `MODE_CUEBIN` handled per `chdman`.
+- **`copy` and parent handling** — `copy` now picks per-type defaults (`get_compression_defaults:2426`), parent hunk-size inheritance and factor check (`hunk % input && input % hunk`) for `createraw`/`createhd`/`createcd`/`createdvd`/`copy`, and `info --verbose` per-codec `SELF`/`PARENT`/`MINI` stats with 0.5 s throttling.
+- **DVD and metadata** — `DVD ` tag is now empty (length 0) per `chdman`, `addmeta --valuetext` no trailing NUL, and `extractcd --outputbin` requires `%t` when `is_splitbin`.
+- **CLI strictness** — unknown/duplicate/missing-parameter errors, per-command valid sets, `isb`/`ish`/`ib`/`ih` mutual exclusion and `10MB` trailing-`B` handling now match `chdman` verbatim.
+- **Docs** — new `docs/chd-deep-reference.md` audited against MAME 0.289 with 9 `⚠ Correction`s; `docs/chd-format.md` fixed (RLE, 0.289). `Meziantou.Analyzer 3.0.190`, zero warnings. Targets `net8.0` / `net9.0` / `net10.0` — pure C#, no native dependencies.
+
 ## What's New in v1.4.0
 
 - **Byte-for-byte parity with `chdman` for *every* codec** — including `createld` (AVHuff),

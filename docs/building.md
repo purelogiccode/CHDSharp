@@ -32,7 +32,7 @@ CSharp_CHDSharp.sln
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.4.0) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.4.1) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.4.0`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.4.1`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -153,7 +153,7 @@ dotnet publish CHDSharpCli/CHDSharpCli.csproj -c Release -r win-x64 --self-conta
 dotnet publish CHDSharpCli/CHDSharpCli.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-The repository ships ready-made zip bundles under `CHDSharpLib/bin/Release/` (e.g. `CHDSharp_win-x64_v1.4.0.zip`). The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows).
+The repository ships ready-made zip bundles under `CHDSharpLib/bin/Release/` (e.g. `CHDSharp_win-x64_v1.4.1.zip`). The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows).
 
 ---
 

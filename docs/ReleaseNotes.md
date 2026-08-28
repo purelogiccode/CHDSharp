@@ -2,12 +2,14 @@
 
 ## CHDSharp v1.4.1
 
+Complete `chdman` parity — 16 audited discrepancies (D1–D16) plus EdgeGaps §1–§3 fixed and verified against MAME 0.289. All 2611/2611 synthetic + 3003/3003 real-world battle checks pass.
+
 ### Fixed `createhd -i` missing `GDDD` metadata (D2)
 
 `CHDSharp createhd -i image.img -o out.chd` now synthesizes the `GDDD` hard-disk geometry tag
 (`CYLS:…HEADS:…SECS:…BPS:…`) via `MetadataWriter.BuildHardDiskMetadata`, matching
 `chdman createhd -i` byte-for-byte. The 51-byte delta on all 3 HDD test images is gone and
-`chdman info` shows identical `GDDD` on both products.
+`chdman info` shows identical `GDDD` on both products. Honours `-isb`/`-ish`/`-ib`/`-ih` slicing when present.
 
 ### Fixed `extractcd` cooked vs raw frame convention (D1)
 
@@ -24,6 +26,63 @@ native `libFLAC`; the container bytes may differ while Data SHA-1/overall SHA-1 
 `chdman verify` remain identical. `docs/encoder.md` now carries the caveat and the
 validation table notes that 25/43 `createcd:cdzl` products are byte-identical while the
 remaining 18 are logical-parity only.
+
+### GD-ROM Redump parity (D12)
+
+Ported `chdman has_physical_pregap` / `padframes` / `splitframes` fixup for GD-ROM Redump CUE/BIN.
+`ChdTrackInfo` now exposes `SplitFrames` / `PhysFrameOfs`, `CHDFile` adds `TryWriteGdRomTrackCooked` with cross-track reads and the 45000-frame high-density boundary skip, and `extractcd` emits `REM SINGLE-DENSITY AREA` / `REM HIGH-DENSITY AREA`. `MODE_GDI` (pad-aware LBA) vs `MODE_CUEBIN` (split CUE with pad/split) are now handled per `chdman` (`is_splitbin = mode==GDI || --splitbin || (is_gdrom && mode==CUEBIN)`).
+
+### CLI strictness parity (D13)
+
+Option parsing now matches `chdman` verbatim: unknown / duplicate / missing-parameter errors, per-command valid sets (`createraw` rejects `-tp`/`-d`, etc.), `isb`/`ish`/`ib`/`ih` mutual exclusion (`Start offset cannot be in both…`), and `parse_number` trailing-`B` handling (`10MB`). Error phrasing (`Required parameters missing`, `Multiple parameters…`) matches `chdman.cpp`.
+
+### `copy` per-type defaults and parent handling (D14–D16, EdgeGaps 1.1–1.3)
+
+- `copy` now uses `get_compression_defaults:2426` per media type — HDD/DVD → `lzma,zlib,huff,flac`, CD/GD → `cdlz,cdlz,cdfl`, laserdisc → `avhu` (`ChdEncoder.GetDefaultCopyCodecs`).
+- Parent hunk-size inheritance and factor check (`parse_hunk_size:1331`, `hunk % input && input % hunk`) for `createraw`/`createhd`/`createcd`/`createdvd`/`createld`/`copy`.
+- `createhd` template+parent / `chs`+parent guards (`do_create_hd:1980/1998`), `IDENT` CHS extraction from ATA bytes 2/6/12 (`>=16_514_064 → cyl=0`), `GDDD` fallback, `filesize % sectorsize` check and `guess_chs` parity.
+- `info --verbose` now shows per-codec `SELF`/`PARENT`/`MINI` hunk buckets and `verify` throttles to 0.5 s with `Error:` to `stderr` (`report_error:950` parity).
+
+### DVD empty payload, extraction buffering and audio-swap parity
+
+- `MetadataWriter.BuildDvdMetadata` now returns an empty payload (length 0) per `chdman write_metadata(DVD_METADATA_TAG,0,"")` instead of a single `0x00` byte.
+- `CHDFile` extraction now uses a 32 MiB temp buffer aligned to `outputFrameSize` with batch writes, correct audio byte-swap (CUEBIN always, GDI only `Version>4` per `chdman 2959/2994`), and proper subcode preservation for `MODE_NORMAL` (`.toc`) vs warn/omit for `CUEBIN`/`GDI`.
+
+### Hard-disk templates and defaults (D4–D11)
+
+- `listtemplates` now shows all 17 templates (added 4× Quantum Fireball CR).
+- `createraw`/`createhd` defaults now correctly use `s_default_raw_compression` / `s_default_hd_compression` (`lzma,zlib,huff,flac`) and enforce blank HD `none` only.
+- `createraw` unit-size / hunk-size defaults, 16 B–1 MiB limits and granularity checks match `chdman`.
+- `addmeta --valuetext` no longer appends a trailing NUL (`text.size()` parity) and `extractcd --outputbin` now requires `%t` when `is_splitbin`.
+
+### New CHD Deep Reference
+
+New `docs/chd-deep-reference.md` — audited expansion of `References/CHDInfo.md` against MAME 0.289 (`chd.h`/`chd.cpp`/`chdcodec.h`) and `CHDSharpLib` (`CHDHeaders.cs`/`CHDBlockRead.cs`/`MapCompressor.cs`). 9 inline `⚠ Correction`s (ZLIB_PLUS secondary codec, `cdzs` subcode `zstd`, work buffer 256 vs 257, RLE thresholds `4–19`/`20–275`, promotion before RLE, implicit `datastart` offset, DVD empty payload, uncompressed-map `offsetWord`, `hunkbytes` limits) and a full V1–V5, codec, and map-encoding reference. Sidebar updated. `docs/chd-format.md` corrected to 0.289 and RLE description fixed.
+
+### Tooling
+
+Added `Meziantou.Analyzer 3.0.190` to every project (was `3.0.177` centrally) and fixed all analyzer warnings. Zero build warnings. `VendoredZSTD`/`VendoredZLib` style cleanups only — no codec behaviour change.
+
+### NuGet Package
+
+```
+dotnet add package CHDSharp --version 1.4.1
+```
+
+Targets `net8.0`, `net9.0`, `net10.0`. Pure C# — zero native dependencies.
+
+### CLI Binaries
+
+Pre-built self-contained single-file executables (binary: `CHDSharp`):
+
+| Binary | Platform | Architecture |
+|--------|----------|-------------|
+| `CHDSharp_win-x64_v1.4.1.zip` | Windows | x64 |
+| `CHDSharp_win-arm64_v1.4.1.zip` | Windows | ARM64 |
+| `CHDSharp_linux-x64_v1.4.1.zip` | Linux | x64 |
+| `CHDSharp_linux-arm64_v1.4.1.zip` | Linux | ARM64 |
+| `CHDSharpTester_win-x64_v1.4.1.zip` | Windows | x64 |
+| `CHDSharpTester_win-arm64_v1.4.1.zip` | Windows | ARM64 |
 
 ---
 
