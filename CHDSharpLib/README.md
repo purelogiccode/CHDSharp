@@ -10,9 +10,19 @@
 
 ---
 
+## What's New in v1.4.2
+
+Final byte-parity gaps closed against MAME 0.289 — battle harness still green (2907/2907 synthetic + 3003/3003 real-world):
+
+- **LZMA raw-encode byte parity** — the encoder now replicates `chd.cpp`'s 1 MiB compression work buffer (256-hunk ring, 128-hunk batches) exactly: partial final hunks keep the stale slot bytes from the previous cycle and the raw SHA-1 folds only the valid bytes (`m_compsha1.append(dest, numbytes)` parity). `createraw`/`createhd -i` on non-hunk-aligned inputs now produce byte-identical files and hashes.
+- **`createhd` size / CHS quirks** — size parsing matches `chdman` `sscanf("%I64u")` (leading digits only: `"512K"` = 512 bytes) and sub-geometry sizes round **up** to the guessed-CHS product; new `ChdEncodeOptions.LogicalLengthBytes` override.
+- **Laserdisc AVI byte parity** — `createld`/`extractld` output is byte-identical to `chdman`.
+- **DVD metadata correction** — `DVD ` payload is exactly one NUL byte (length 1) per `chd.h:351` `std::string` `length()+1` behaviour (corrects the v1.4.1 note).
+- **Strict CLI validation** — `info`/`verify` now validate the full option list (duplicate `-i` detection, per-command sets) and return `chdman`-consistent exit codes.
+
 ## What's New in v1.4.1
 
-Complete `chdman` parity against MAME 0.289 — 16 discrepancies fixed and battle-verified (2611/2611 synthetic + 3003/3003 real-world):
+Complete `chdman` parity against MAME 0.289 — 16 discrepancies fixed and battle-verified (2907/2907 synthetic + 3003/3003 real-world):
 
 - **`createhd` / `createraw` parity** — `createhd -i` now synthesizes `GDDD` geometry (51-byte delta gone), `createhd --ident` extracts CHS from ATA bytes 2/6/12, blank images enforce `-c none`, `createraw` validates `--unitsize` / hunk size (16 B–1 MiB, multiple of unit), and `listtemplates` shows all 17 templates. Parent/ident fallback and `guess_chs` now match `chdman`.
 - **`extractcd` cooked vs raw** — `ExtractToDirectory(..., cooked: true)` writes cooked sectors (`track.DataSize`, subcode omitted, audio byte-swapped) and matches `chdman extractcd` for all 43 CDs + 3 GD-ROMs; `cooked: false` (default) keeps 2448-byte raw frames with library compat. CLI `extractcd` defaults to cooked (`--raw` to keep raw). Extraction now uses a 32 MiB aligned buffer with batch writes and correct per-mode audio swap (CUEBIN always, GDI only `Version>4`).
@@ -35,6 +45,10 @@ Complete `chdman` parity against MAME 0.289 — 16 discrepancies fixed and battl
 - **38 bugs fixed** from a deep code review — including thread-safe parallel verification,
   correct CLI exit codes, `ReadHunk(Span)` hunk caching, `MemoryMappedFile` disposal on view
   failure, and `LzmaStream.Seek` position fixes.
+
+> **Parity tables:** the complete chdman-vs-CHDSharp comparison (encoder byte-identical
+> matrices, decoder, delta, copy, CLI suites — 2907/2907 checks) lives in
+> [docs/chdman-parity.md](../docs/chdman-parity.md).
 
 ## What's New in v1.3.0
 

@@ -9,8 +9,8 @@
         <AssemblyName>CHDSharpBattleTest</AssemblyName>
         <NeutralLanguage>en</NeutralLanguage>
         <Company>PureLogicCode.com</Company>
-        <AssemblyVersion>1.4.1</AssemblyVersion>
-        <FileVersion>1.4.1</FileVersion>
+        <AssemblyVersion>1.4.2</AssemblyVersion>
+        <FileVersion>1.4.2</FileVersion>
         <DebugType>embedded</DebugType>
         <DebugSymbols>true</DebugSymbols>
         <IsPackable>false</IsPackable>

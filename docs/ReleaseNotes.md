@@ -1,8 +1,72 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.4.2
+
+Final byte-parity gaps closed against MAME 0.289. Battle harness stays green: **2907/2907 synthetic + 3003/3003 real-world checks**.
+
+### LZMA raw-encode byte parity — MAME compression work-buffer replication
+
+The raw encoder now replicates `chd.cpp`'s 1 MiB compression work buffer (`RingBufferedRawReader`): a 256-hunk ring filled in 128-hunk batches (`async_read`), where ring slots past EOF or past a short final batch keep the stale bytes of the cycle that previously occupied them. Hunks are compressed from the ring — stale tail bytes included — while the raw SHA-1 folds only the valid bytes, exactly like `m_compsha1.append(dest, numbytes)`. This fixes the LZMA byte-parity hash-update-order bug: `createraw` on inputs whose length is not a multiple of the hunk size now produces byte-identical files and identical SHA-1 to `chdman`. Companion fixes in `FlacLpcMath`, `LibFlacEncoder`, `LzBinTree` and `LzmaEncoder` keep the remaining codec paths byte-exact.
+
+### `createhd` size / CHS quirks (D-parity)
+
+- Size parsing now matches `chdman.cpp:2035` — `sscanf("%I64u")` reads leading digits only and silently ignores trailing characters (`"512K"` = 512 bytes).
+- Small sizes are rounded **up** to the guessed-CHS product (`guess_chs` parity): the CHD logical size is exactly `cylinders * heads * sectors * bytes_per_sector`, and hunks past the source's data are encoded from the work buffer's stale slots (see above), matching `chdman createhd -i`.
+- `InfoTest`/`VerifyTest` now receive the full arg list so strict option validation (duplicate `-i/--input` detection etc.) matches `chdman`'s `core_options` parser; `info` returns exit code 1 on failure.
+
+### Laserdisc AVI byte parity
+
+`createld` / `extractld` AVI output is now byte-identical to `chdman` (`AviWriter` fixes).
+
+### DVD metadata payload correction
+
+`DVD ` metadata is written as exactly one NUL byte (length 1), not an empty payload — `chd.h:351`'s `std::string` overload passes `input.length() + 1`, so `write_metadata(DVD_METADATA_TAG, 0, "")` stores a single NUL. This corrects the v1.4.1 note (which documented an empty payload).
+
+### CLI fixes
+
+- `createraw` accepts `--hunk-size` / `--unit-size` aliases alongside `--hunksize` / `--unitsize` / `-hs` / `-us`.
+- `extractcd` `%t` filename-template regex rewritten with named groups (escaped `%%` and width/sign specifiers handled correctly).
+- `hash` command help text corrected (`--result text|json|sfv`, `--tracks`, no phantom `count` argument).
+- New `ChdEncodeOptions.LogicalLengthBytes` override for byte-parity encoding of over-/under-sized `createhd` sources.
+
+### Tooling and testing
+
+- `CHDSharpBattleTest` multi-targets `net8.0;net9.0;net10.0` with `LangVersion=latest` and copies the built CLI next to the battle exe for self-contained parity runs (`BattleHarness.CliFull.cs` — full `chdman` CLI suite, 2463 lines).
+- Formatting and style pass across CLI, encoder, and vendored codecs; analyzer warnings silenced (MA0008 StructLayout, unused-variable suppressions).
+- `divergency.md` removed; `Missmatch.md` now records the battle result: **2907 checks — 2907 passed, 0 failed**.
+
+### Documentation
+
+- New `docs/cli-commands.md` (413 lines) — full `chdman`/CHDSharp argument tables for every command; `CHDSharpCli/README.md` expanded.
+- CHD format history added to `docs/chd-format.md`; language simplified and stale DVD metadata notes corrected.
+- Wiki home (`docs/README.md`) rewritten with CHD history; `ReleaseNotes` added to sidebar and `_config.yml`; docs site URL fixed; Peterson Fernandes added to key contributors.
+
+### NuGet Package
+
+```
+dotnet add package CHDSharp --version 1.4.2
+```
+
+Targets `net8.0`, `net9.0`, `net10.0`. Pure C# — zero native dependencies.
+
+### CLI Binaries
+
+Pre-built self-contained single-file executables (binary: `CHDSharp`):
+
+| Binary | Platform | Architecture |
+|--------|----------|-------------|
+| `CHDSharp_win-x64_v1.4.2.zip` | Windows | x64 |
+| `CHDSharp_win-arm64_v1.4.2.zip` | Windows | ARM64 |
+| `CHDSharp_linux-x64_v1.4.2.zip` | Linux | x64 |
+| `CHDSharp_linux-arm64_v1.4.2.zip` | Linux | ARM64 |
+| `CHDSharpTester_win-x64_v1.4.2.zip` | Windows | x64 |
+| `CHDSharpTester_win-arm64_v1.4.2.zip` | Windows | ARM64 |
+
+---
+
 ## CHDSharp v1.4.1
 
-Complete `chdman` parity — 16 audited discrepancies (D1–D16) plus EdgeGaps §1–§3 fixed and verified against MAME 0.289. All 2611/2611 synthetic + 3003/3003 real-world battle checks pass.
+Complete `chdman` parity — 16 audited discrepancies (D1–D16) plus EdgeGaps §1–§3 fixed and verified against MAME 0.289. All 2907/2907 synthetic + 3003/3003 real-world battle checks pass.
 
 ### Fixed `createhd -i` missing `GDDD` metadata (D2)
 

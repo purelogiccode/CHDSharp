@@ -2,7 +2,7 @@
 
 **WPF desktop application for batch-testing CHD files using the CHDSharp library and MAME chdman.**
 
-> **v1.4.1** — targets `net8.0-windows` / `net9.0-windows` / `net10.0-windows`. Verified against MAME 0.289 (2611/2611 synthetic + 3003/3003 real-world).
+> **v1.4.2** — targets `net8.0-windows` / `net9.0-windows` / `net10.0-windows`. Verified against MAME 0.289 (2907/2907 synthetic + 3003/3003 real-world).
 
 > Cross-checks CHDSharpLib's decompression against `chdman` output, with PDF report export.
 > Also includes codec tests (cdzs/zstd) and parent/child chain tests — previously in CHDSharpTest.
@@ -128,6 +128,9 @@ CHDSharpTester/
 | Parent/Child Chain | Yes | Build parent/child pair, test requires parent, wrong parent rejection, full read through chain, CheckFileWithParent, chdman verify with parent |
 
 Tests requiring `chdman.exe` are automatically skipped if it is not configured.
+
+For the head-to-head battle harness (2907/2907 synthetic checks, byte-identical encode,
+full CLI parity) see [docs/chdman-parity.md](../docs/chdman-parity.md).
 
 ---
 

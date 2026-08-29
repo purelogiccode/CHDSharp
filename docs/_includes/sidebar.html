@@ -51,6 +51,29 @@
     </li>
 </ul>
 
+<p class="nav-heading">CLI &amp; writing</p>
+<ul class="nav-list">
+    <li>
+        <a href="{{ 'cli-commands.html' | relative_url }}"{% if page.path== 'cli-commands.md' %} class="active"{% endif %}>CLI Command Reference</a>
+    </li>
+    <li>
+        <a href="{{ 'encoder.html' | relative_url }}"{% if page.path== 'encoder.md' %} class="active"{% endif %}>Encoder (CHD creation)</a>
+    </li>
+</ul>
+
+<p class="nav-heading">Parity &amp; validation</p>
+<ul class="nav-list">
+    <li>
+        <a href="{{ 'chdman-parity.html' | relative_url }}"{% if page.path== 'chdman-parity.md' %} class="active"{% endif %}>CHDman Parity (battle test)</a>
+    </li>
+    <li>
+        <a href="{{ 'libchdr-comparison.html' | relative_url }}"{% if page.path== 'libchdr-comparison.md' %} class="active"{% endif %}>Comparison with libchdr</a>
+    </li>
+    <li>
+        <a href="{{ 'testing.html' | relative_url }}"{% if page.path== 'testing.md' %} class="active"{% endif %}>Testing</a>
+    </li>
+</ul>
+
 <p class="nav-heading">Operations</p>
 <ul class="nav-list">
     <li>
@@ -62,23 +85,10 @@
     <li>
         <a href="{{ 'error-codes.html' | relative_url }}"{% if page.path== 'error-codes.md' %} class="active"{% endif %}>Error Codes</a>
     </li>
-    <li>
-        <a href="{{ 'testing.html' | relative_url }}"{% if page.path== 'testing.md' %} class="active"{% endif %}>Testing</a>
-    </li>
-</ul>
-
-<p class="nav-heading">Writing CHDs</p>
-<ul class="nav-list">
-    <li>
-        <a href="{{ 'encoder.html' | relative_url }}"{% if page.path== 'encoder.md' %} class="active"{% endif %}>Encoder (CHD creation)</a>
-    </li>
 </ul>
 
 <p class="nav-heading">Reference</p>
 <ul class="nav-list">
-    <li>
-        <a href="{{ 'libchdr-comparison.html' | relative_url }}"{% if page.path== 'libchdr-comparison.md' %} class="active"{% endif %}>Comparison with libchdr</a>
-    </li>
     <li>
         <a href="{{ 'troubleshooting.html' | relative_url }}"{% if page.path== 'troubleshooting.md' %} class="active"{% endif %}>Troubleshooting &amp; FAQ</a>
     </li>

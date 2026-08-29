@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.4.1: chdman parity complete — 16 discrepancies fixed (createhd GDDD, extractcd cooked/raw, GD-ROM Redump, CLI strictness, copy defaults, parent hunk inheritance), DVD empty-payload parity, 32 MiB aligned extraction with correct audio byte-swap, and an audited CHD Deep Reference (MAME 0.289). Pure C# — zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.4.2: final chdman parity — LZMA raw-encode work-buffer replication (MAME 1 MiB ring, stale-slot bytes and SHA-1 hash-order), createhd size/CHS quirks (sscanf %I64u leading digits, guess_chs round-up), laserdisc AVI byte-parity, strict info/verify option validation, DVD metadata single-NUL payload, CLI exit codes; battle harness 2907/2907 vs MAME 0.289. Pure C# — zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>

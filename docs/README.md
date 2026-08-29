@@ -60,6 +60,21 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 | [Extraction](extraction.md) | TOC parsing, CUE/GDI/ISO/IMG/RAW extraction, classification. |
 | [Parent/Child CHDs](parent-child-chds.md) | Differential CHDs, unit-based references, parent validation. |
 
+### CLI &amp; writing
+
+| Page | Description |
+|------|-------------|
+| [CLI Command Reference](cli-commands.md) | Every `CHDSharp` CLI command and accepted argument, side by side with `chdman` (MAME 0.289). |
+| [Encoder (CHD creation)](encoder.md) | `CHDSharp.Encoder`: raw/CD encoding, codecs, dedup, `chdman` validation, ratio logging. |
+
+### Parity &amp; validation
+
+| Page | Description |
+|------|-------------|
+| [CHDman Parity (battle test)](chdman-parity.md) | Complete head-to-head battle results: **2907/2907 checks** against `chdman` — byte-identical encoding for every codec (raw, CD, delta, copy), decoder parity on 190 assets, CLI exit-code/output parity, and the full per-suite tables. |
+| [Comparison with libchdr](libchdr-comparison.md) | Feature parity vs the C reference library, plus the five-way table (CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr). |
+| [Testing](testing.md) | The xUnit suite, the 30-file corpus, generators, and the WPF tester. |
+
 ### Operations
 
 | Page | Description |
@@ -67,24 +82,30 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 | [Performance](performance.md) | Throughput, parallelism tuning, caching, `Precache()`. |
 | [Logging](logging.md) | Pluggable logging via `Microsoft.Extensions.Logging`. |
 | [Error Codes](error-codes.md) | Every `ChdError` value and its meaning. |
-| [Testing](testing.md) | The xUnit suite, the 30-file corpus, generators, and the WPF tester. |
-
-### Writing CHDs
-
-| Page | Description |
-|------|-------------|
-| [Encoder (CHD creation)](encoder.md) | `CHDSharp.Encoder`: raw/CD encoding, codecs, dedup, `chdman` validation, ratio logging. |
 
 ### Reference
 
 | Page | Description |
 |------|-------------|
-| [CLI Command Reference](cli-commands.md) | Every `CHDSharp` CLI command and accepted argument, side by side with `chdman` (MAME 0.289). |
-| [Comparison with libchdr](libchdr-comparison.md) | Feature parity vs the C reference library, plus the five-way table (CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr). |
-| [Troubleshooting & FAQ](troubleshooting.md) | Common errors, known limitations, and fixes. |
+| [Troubleshooting &amp; FAQ](troubleshooting.md) | Common errors, known limitations, and fixes. |
 | [Release Notes](ReleaseNotes.md) | Version history and changelog. |
 
 ---
+
+## chdman parity at a glance
+
+Every producible combination is cross-checked against `chdman` (MAME 0.289) by `CHDSharpBattleTest`; the full per-suite tables are on the [CHDman Parity page](chdman-parity.md).
+
+| Area | Outcome |
+|------|---------|
+| Raw encode — 69 input×codec/hunk/unit combinations | **byte-identical `.chd`** in every case (723/723 checks) |
+| CD encode — 21 input×codec/hunk combinations (cdzl, cdlz, cdzs, cdfl, zlib, none) | **byte-identical `.chd`** including TOC metadata (210/210) |
+| Delta child encode (both parent directions + cross-interop) | **byte-identical** children, wrong parent rejected (19/19) |
+| Copy / re-compression to all codecs | content-identical, cross-verified (43/43) |
+| Decode — 190 assets (ours and chdman's), 6 read paths each | all match chdman extract byte-for-byte (1140/1140) |
+| Header `info` parity | `Chd.ReadHeader` == `chdman info` field-for-field (13/13) |
+| CLI — every command and documented arg | exit-code + output + error parity with chdman (759/759) |
+| Real-world CHD collections (`--real`) | last sweep: 3003/3003 checks on 56 CHDs |
 
 ## Feature overview
 
@@ -105,8 +126,8 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 - **Metadata** — tag/index query API (`GetMetadata`) plus the full entry list; checksum-flag aware. IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support.
 - **Track info & extraction** — CD/GD-ROM TOC parsing (`ChdTrackInfo`), CUE/GDI descriptor generation, legacy `CHGT` little-endian CDDA handling (`IsLittleEndianAudio`), and whole-image extraction (`.bin`/`.cue`, `.iso`, `.img`, `.raw`, `.gdi`).
 - **Pluggable logging** — `Microsoft.Extensions.Logging` integration, silent by default.
-- **100% chdman match** — cross-checked against `chdman` (MAME 0.289) via `info`, `verify`, `extractraw`, and the `CHDSharpBattleTest` harness (2611/2611 synthetic + 3003/3003 real-world checks passing). v1.4.1 closes the last 16 discrepancies: `createhd -i` GDDD, `extractcd` cooked/raw, GD-ROM Redump, `copy` per-type defaults, DVD empty payload, and strict CLI validation.
-- **Full `chdman` CLI parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand with matching options and exit codes (strict validation parity as of v1.4.1).
+- **100% chdman match** — cross-checked against `chdman` (MAME 0.289) via `info`, `verify`, `extractraw`, and the `CHDSharpBattleTest` harness (**2907/2907 synthetic checks — byte-identical output for every codec — plus 3003/3003 real-world checks**). Full tables on the [CHDman Parity page](chdman-parity.md). v1.4.2 closes the last 16 discrepancies: `createhd -i` GDDD, `extractcd` cooked/raw, GD-ROM Redump, `copy` per-type defaults, DVD empty payload, and strict CLI validation.
+- **Full `chdman` CLI parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand with matching options and exit codes (strict validation parity as of v1.4.2).
 
 ---
 
@@ -143,7 +164,7 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 | `CHDSharpCli` | Command-line CHD manager (binary: `CHDSharp`). Full `chdman` subcommand parity. |
 | `CHDSharpTest` | xUnit unit + corpus test suite (602 tests, 30 deterministic CHD files). |
 | `CHDSharpEncoderTest` | xUnit encoder suite (434 tests) with chdman cross-validation. |
-| `CHDSharpBattleTest` | Battle harness: 2611/2611 (deterministic) + 3003/3003 (real-world) checks vs `chdman`. |
+| `CHDSharpBattleTest` | Battle harness: 2907/2907 (deterministic) + 3003/3003 (real-world) checks vs `chdman`. |
 | `CHDSharpTestGen` | Deterministic corpus generator (drives vintage `chdman` binaries). |
 | `CHDSharpTester` | WPF interactive batch verifier cross-checked against `chdman`. |
 

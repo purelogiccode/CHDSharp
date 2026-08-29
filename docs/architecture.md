@@ -18,7 +18,7 @@ This page describes the solution layout and the internal design of the library.
 | `CHDSharpTestGen` | Console | Deterministic corpus generator driving vintage `chdman`/`hdcomp` binaries. |
 | `CHDSharpTester` | WPF | Interactive batch verification, cross-checked against `chdman`. |
 | `CHDSharpEncoderTest` | xUnit | Encoder tests (434) with chdman cross-validation. |
-| `CHDSharpBattleTest` | Console | Battle harness: 2611/2611 (deterministic) + 3003/3003 (real-world) checks vs `chdman` on CHD corpora. |
+| `CHDSharpBattleTest` | Console | Battle harness: 2907/2907 (deterministic) + 3003/3003 (real-world) checks vs `chdman` on CHD corpora. |
 
 
 All projects share versioning and analyzer settings via `Directory.Build.props`.

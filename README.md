@@ -12,9 +12,19 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.4.2
+
+- **Final `chdman` parity** — closes the last byte-parity gaps against MAME 0.289 (battle harness still green, 2907/2907 synthetic + 3003/3003 real-world):
+  - LZMA raw-encode now replicates `chd.cpp`'s 1 MiB compression work buffer exactly — partial final hunks keep the stale slot bytes from the previous cycle and fold into the raw SHA-1 (hash-update-order parity).
+  - `createhd` size parsing matches `chdman` (`sscanf %I64u` leading digits only — `"512K"` = 512 bytes) and small sizes round **up** to the guessed-CHS product.
+  - Laserdisc `createld`/`extractld` AVI output is now byte-identical.
+  - Strict `info`/`verify` option validation (duplicate `-i`, per-command sets) with `chdman`-consistent exit codes; DVD metadata corrected to the single-NUL byte payload (std::string `length()+1`).
+- **CLI fixes** — `createraw` accepts `--hunk-size`/`--unit-size` aliases, `extractcd` `%t` template regex fixed, corrected `hash` help texts, and a new full CLI reference (`docs/cli-commands.md`).
+- **Docs** — CHD format history added to `docs/chd-format.md`, wiki home updated, docs URL fixed.
+
 ## What's New in v1.4.1
 
-- **Complete `chdman` parity** — all 16 audited discrepancies (D1–D16) plus EdgeGaps §1–§3 fixed and verified against MAME 0.289. Battle-test still green (2611/2611 synthetic + 3003/3003 real-world). Highlights:
+- **Complete `chdman` parity** — all 16 audited discrepancies (D1–D16) plus EdgeGaps §1–§3 fixed and verified against MAME 0.289. Battle-test still green (2907/2907 synthetic + 3003/3003 real-world). Highlights:
   - `createhd -i` now writes correct `GDDD` geometry, `createhd --ident` CHS extraction, blank `none` enforcement, and `guess_chs` parity.
   - `extractcd` now defaults to cooked sectors and matches `chdman` for all 43 CDs + 3 GD-ROMs; GD-ROM Redump `has_physical_pregap` / `SINGLE-DENSITY` / `HIGH-DENSITY` handling is now exact.
   - `copy` per-type default codecs (`lzma,zlib,huff,flac` vs `cdlz,cdzl,cdfl` vs `avhu`) and parent hunk-size inheritance/factor checks.
@@ -535,7 +545,7 @@ The full wiki lives in [`docs/`](docs/README.md):
 |---------|------|-------------|
 | `CHDSharpTest` | xUnit | Unit + corpus tests (602 tests, 30 CHD fixtures) |
 | `CHDSharpEncoderTest` | xUnit | Encoder tests (434 tests, chdman cross-validation) |
-| `CHDSharpBattleTest` | Console | Battle harness: 2611/2611 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
+| `CHDSharpBattleTest` | Console | Battle harness: 2907/2907 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestGen` | Console | Deterministic corpus generator |
 

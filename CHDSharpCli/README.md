@@ -4,7 +4,7 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
-> **v1.4.1** — complete `chdman` parity (GD-ROM Redump, `createhd -i` GDDD, `extractcd` cooked/raw, `copy` per-type defaults, strict CLI validation). Targets `net8.0` / `net9.0` / `net10.0`.
+> **v1.4.2** — complete `chdman` parity (GD-ROM Redump, `createhd -i` GDDD, `extractcd` cooked/raw, `copy` per-type defaults, strict CLI validation, createhd size/CHS quirks, laserdisc AVI byte-parity). Targets `net8.0` / `net9.0` / `net10.0`.
 
 ---
 
@@ -53,6 +53,26 @@ For help with any command, run:
 | `--detect <file>` | Detect game platform |
 | `--hash <file.chd>` | Compute content hashes |
 | `--batch <in-dir> <out-dir>` | Batch extract/create |
+
+---
+
+## chdman Parity (battle-verified)
+
+`CHDSharp` is battle-tested against `chdman.exe` (MAME 0.289) by `CHDSharpBattleTest` — every command, option, alias, size-suffix form, and error path, with **exit-code and output parity** verified on a deterministic corpus. Current dense-corpus result: **2907/2907 checks** (synthetic) + 3003/3003 (real-world CHDs).
+
+| Suite | Checks | Coverage |
+|-------|-------:|----------|
+| `cli-info` / `cli-verify` | 190 + 190 | every corpus asset: field-by-field `info` output parity and `verify` exit-code parity |
+| `cli-createraw` / `cli-createhd` / `cli-createcd` | 45 + 12 + 4 | CLI output **byte-identical** to chdman, content + verify parity |
+| `cli-copy` / `cli-extractraw` / `cli-extractcd` / `cli-addmeta` | 4 + 4 + 3 + 11 | copy/extract/metadata output parity (extract byte-identical, CUE structural parity, metadata byte-identical) |
+| Full arg-parity suites (`cli-*-full`, `cli-help`, `cli-hash`, `cli-batch`, `cli-misc`, `cli-force`, `cli-alias-suffix`, `cli-error`) | 296 | every documented argument on both tools — aliases, `K`/`M`/`G` suffixes, parent/slice variants, duplicate/invalid/missing-param errors with matching exit codes |
+| **CLI total** | **759** | ✅ 759/759 |
+
+Full per-check tables: [docs/chdman-parity.md](../docs/chdman-parity.md).
+
+```bash
+dotnet run --project CHDSharpBattleTest        # rerun the whole battle (requires chdman.exe at repo root)
+```
 
 ---
 
