@@ -2,23 +2,75 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
         <RootNamespace>CHDSharpBattleTest</RootNamespace>
         <AssemblyName>CHDSharpBattleTest</AssemblyName>
+        <NeutralLanguage>en</NeutralLanguage>
+        <Company>PureLogicCode.com</Company>
+        <AssemblyVersion>1.4.1</AssemblyVersion>
+        <FileVersion>1.4.1</FileVersion>
+        <DebugType>embedded</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+        <IsPackable>false</IsPackable>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <PublishSingleFile>false</PublishSingleFile>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisLevel>latest</AnalysisLevel>
+        <!-- Battles are long-running: produce directly runnable exe next to chdman -->
+        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
+        <!-- Build CHDSharp CLI alongside the battle so CHDSharp.exe is always available for parity runs -->
+        <ProjectReference Include="..\CHDSharpCli\CHDSharpCli.csproj" ReferenceOutputAssembly="false" />
     </ItemGroup>
-    <ItemGroup></ItemGroup>
+
+    <!-- Bring repo-root chdman.exe next to the battle executable (mirrors CHDBattleTest bundling).
+         CHDSharpBattleTest resolves tools via search; this guarantees a local copy after build. -->
+    <ItemGroup>
+        <None Include="..\chdman.exe" Link="chdman.exe" Condition="Exists('..\chdman.exe')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Visible>false</Visible>
+        </None>
+        <!-- Also handle Unix name variant when cross-building -->
+        <None Include="..\chdman" Link="chdman" Condition="Exists('..\chdman')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Visible>false</Visible>
+        </None>
+    </ItemGroup>
+
+    <!-- After building the CLI, copy its entire output (CHDSharp.exe + CHDSharp.dll + deps) next to the battle exe.
+         Framework-dependent apphost needs dll+runtimeconfig+deps.json beside the exe. -->
+    <Target Name="CopyCliToBattleOutput" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+        <ItemGroup>
+            <_CliAllFiles Include="..\CHDSharpCli\bin\$(Configuration)\$(TargetFramework)\*.*"
+                          Condition="Exists('..\CHDSharpCli\bin\$(Configuration)\$(TargetFramework)')" />
+        </ItemGroup>
+        <Copy SourceFiles="@(_CliAllFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true"
+              Condition="'@(_CliAllFiles)' != ''" />
+        <Message Text="Copied CLI output @(_CliAllFiles) -&gt; $(OutputPath)" Importance="High"
+                 Condition="'@(_CliAllFiles)' != ''" />
+    </Target>
+
     <ItemGroup>
         <Using Include="CHDSharpBattleTest.Models" />
         <Using Include="CHDSharp.Models" />
         <Using Include="CHDSharp.Encoder.Models" />
         <Using Include="CHDSharp.Encoder.Interfaces" />
+        <Using Include="System.IO" />
+        <Using Include="System.Collections.Generic" />
+        <Using Include="System.Linq" />
     </ItemGroup>
+
     <ItemGroup>
-      <PackageReference Update="Meziantou.Analyzer" Version="3.0.190">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
+        <PackageReference Update="Meziantou.Analyzer" Version="3.0.190">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 </Project>

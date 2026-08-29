@@ -278,7 +278,9 @@ internal static class Program
                     PrintCommandHelp("verify");
                     return 1;
                 case "verify":
-                    var verified = VerifyTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
+                    // Pass the full arg list so the strict option validation (duplicate
+                    // -i/--input detection etc.) matches chdman's core_options parser.
+                    var verified = VerifyTest(cmdArgs);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
                     return verified ? 0 : 1;
                 case "info" when cmdArgs.Length < 1:
@@ -287,9 +289,9 @@ internal static class Program
                     PrintCommandHelp("info");
                     return 1;
                 case "info":
-                    InfoTest(ParseInput(cmdArgs, 0), cmdArgs.Skip(1).ToArray());
+                    var infoOk = InfoTest(cmdArgs);
                     serilogLogger.Information("Done:  Time = {Time}", sw.Elapsed.TotalSeconds);
-                    return 0;
+                    return infoOk ? 0 : 1;
                 case "detect" when cmdArgs.Length < 1:
                     serilogLogger.Warning("detect requires a file path");
                     return 1;
@@ -1255,7 +1257,9 @@ internal static class Program
                 switch (canonical)
                 {
                     case "size":
-                        if (!TryParsePlainUlong(param, out var szPlain) || szPlain == 0)
+                        // chdman.cpp:2035 — sscanf("%I64u"): reads leading digits only and
+                        // silently ignores any trailing characters ("512K" = 512 bytes).
+                        if (!TryParseScanSize(param, out var szPlain) || szPlain == 0)
                         {
                             Console.Error.WriteLine("Error: Invalid size specified");
                             log.Warning("--createhd: invalid size: {Value}", param);
@@ -2042,6 +2046,7 @@ internal static class Program
             }
 
             if (chsCylinders.HasValue && chsHeads.HasValue && chsSectors.HasValue)
+            {
                 ChdEncoder.CreateBlankWithChs(
                     outputPath,
                     chsCylinders.Value,
@@ -2052,15 +2057,22 @@ internal static class Program
                     codecTags,
                     encodeOptions
                 );
+            }
             else if (sizeBytes != null)
+            {
+                // chdman.cpp:2091-2131 — guess CHS from the size, then create with
+                // totalsectors * sector_size (rounds small sizes UP to the CHS product).
+                var geo = MetadataWriter.GuessChs(sizeBytes.Value, unitBytes);
+                var chsBytes = (ulong)geo.Cylinders * geo.Heads * geo.Sectors * unitBytes;
                 ChdEncoder.CreateBlank(
                     outputPath,
-                    sizeBytes.Value,
+                    chsBytes,
                     hunkBytes,
                     unitBytes,
                     codecTags,
                     encodeOptions
                 );
+            }
 
             logger?.LogSummary();
             log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
@@ -3516,9 +3528,10 @@ internal static class Program
     }
 
     /// <summary>Verifies a CHD, optionally repairing mismatched SHA-1 header fields (<c>--fix</c>).</summary>
-    private static bool VerifyTest(string file, string[] options)
+    private static bool VerifyTest(string[] args)
     {
         var log = Log.Logger;
+        var file = ParseInput(args, 0);
         // chdman.cpp:3508 strict validation for verify: valid {input, inputparent, fix}
         {
             var verifyDefs = new Dictionary<string, (string canonical, bool hasParam)>(StringComparer.Ordinal)
@@ -3529,11 +3542,11 @@ internal static class Program
             };
             var verifyValid = new HashSet<string>(StringComparer.Ordinal) { "input", "inputparent", "fix" };
             var seenVerify = new HashSet<string>(StringComparer.Ordinal);
-            for (var i = 0; i < options.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
-                var arg = options[i];
+                var arg = args[i];
                 if (string.IsNullOrEmpty(arg) || arg[0] != '-')
-                    continue; // positional file path leftover from ParseInput; ignore
+                    continue; // positional file path; ignore here
                 if (!verifyDefs.TryGetValue(arg, out var def))
                 {
                     Console.Error.WriteLine($"Error: Option '{arg}' not valid for this command");
@@ -3560,7 +3573,7 @@ internal static class Program
 
                 if (def.hasParam)
                 {
-                    if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                    if (i + 1 >= args.Length || (!string.IsNullOrEmpty(args[i + 1]) && args[i + 1][0] == '-'))
                     {
                         Console.Error.WriteLine("Error: Option is missing parameter");
                         log.Warning("Error: Option is missing parameter");
@@ -3576,8 +3589,8 @@ internal static class Program
         }
 
         var fix =
-            options.Contains("--fix", StringComparer.Ordinal)
-            || options.Contains("-f", StringComparer.Ordinal);
+            args.Contains("--fix", StringComparer.Ordinal)
+            || args.Contains("-f", StringComparer.Ordinal);
         if (fix)
         {
             var err = Chd.CheckFileAndRepair(file, out var repaired);
@@ -3592,10 +3605,10 @@ internal static class Program
         }
 
         string? parentFile = null;
-        for (var i = 0; i < options.Length - 1; i++)
-            if (options[i] is "-ip" or "--inputparent")
+        for (var i = 0; i < args.Length - 1; i++)
+            if (args[i] is "-ip" or "--inputparent")
             {
-                parentFile = options[i + 1];
+                parentFile = args[i + 1];
                 break;
             }
 
@@ -3621,11 +3634,11 @@ internal static class Program
     ///     Prints a full header/map dump (chdman <c>info</c> + CHDlite header-dump parity):
     ///     version, sizes, codecs per map slot, map CRC-16 status, parent linkage, and metadata list.
     /// </summary>
-    private static void InfoTest(string file, string[]? options = null)
+    private static bool InfoTest(string[] args)
     {
         var log = Log.Logger;
+        var file = ParseInput(args, 0);
         var verbose = false;
-        if (options != null)
         {
             var infoDefs = new Dictionary<string, (string canonical, bool hasParam)>(StringComparer.Ordinal)
             {
@@ -3634,17 +3647,17 @@ internal static class Program
             };
             var infoValid = new HashSet<string>(StringComparer.Ordinal) { "input", "verbose" };
             var seenInfo = new HashSet<string>(StringComparer.Ordinal);
-            for (var i = 0; i < options.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
-                var arg = options[i];
+                var arg = args[i];
                 if (!arg.StartsWith('-'))
-                    continue; // positional file path (already consumed by ParseInput); ignore
+                    continue; // positional file path; ignore here
                 if (!infoDefs.TryGetValue(arg, out var def))
                 {
                     Console.Error.WriteLine($"Error: Option '{arg}' not valid for this command");
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
                     PrintCommandHelp("info");
-                    return;
+                    return false;
                 }
 
                 if (!infoValid.Contains(def.canonical))
@@ -3652,7 +3665,7 @@ internal static class Program
                     Console.Error.WriteLine($"Error: Option '{arg}' not valid for this command");
                     log.Warning("Error: Option '{Option}' not valid for this command", arg);
                     PrintCommandHelp("info");
-                    return;
+                    return false;
                 }
 
                 if (seenInfo.Contains(def.canonical))
@@ -3660,17 +3673,17 @@ internal static class Program
                     Console.Error.WriteLine("Error: Multiple parameters of the same type specified");
                     log.Warning("Error: Multiple parameters of the same type specified");
                     PrintCommandHelp("info");
-                    return;
+                    return false;
                 }
 
                 if (def.hasParam)
                 {
-                    if (i + 1 >= options.Length || (!string.IsNullOrEmpty(options[i + 1]) && options[i + 1][0] == '-'))
+                    if (i + 1 >= args.Length || (!string.IsNullOrEmpty(args[i + 1]) && args[i + 1][0] == '-'))
                     {
                         Console.Error.WriteLine("Error: Option is missing parameter");
                         log.Warning("Error: Option is missing parameter");
                         PrintCommandHelp("info");
-                        return;
+                        return false;
                     }
 
                     i++;
@@ -3686,7 +3699,7 @@ internal static class Program
         if (err != ChdError.Chderrnone || header == null)
         {
             log.Warning("Info failed: {Error}", err);
-            return;
+            return false;
         }
 
         // Match chdman info output format exactly (Key: Value)
@@ -3731,14 +3744,14 @@ internal static class Program
 
         // Metadata listing
         if (header.MetaOffset == 0 && !verbose)
-            return;
+            return true;
 
         var openErr = ChdFile.Open(file, out var chd);
         if (openErr != ChdError.Chderrnone || chd == null)
         {
             if (header.MetaOffset != 0)
                 log.Warning("  Cannot open for metadata listing: {Error}", openErr);
-            return;
+            return true;
         }
 
         using (chd)
@@ -3845,6 +3858,8 @@ internal static class Program
                 }
             }
         }
+
+        return true;
     }
 
     /// <summary>chdman.cpp:2054 — reads IDNT metadata from parent CHD if present (no error if missing).</summary>
@@ -4698,19 +4713,21 @@ internal static class Program
 
     /// <summary>
     ///     Parses a plain decimal number without K/M/G suffix, matching chdman's <c>sscanf I64FMT</c>
-    ///     for <c>--size</c> (chdman.cpp:2035). Strict: whole string must be digits (no suffix).
+    ///     for <c>--size</c> (chdman.cpp:2035). Reads leading digits and silently ignores any
+    ///     trailing characters (so "512K" parses as 512 bytes, exactly like chdman).
     /// </summary>
-    private static bool TryParsePlainUlong(string s, out ulong result)
+    private static bool TryParseScanSize(string s, out ulong result)
     {
         result = 0;
         if (string.IsNullOrWhiteSpace(s))
             return false;
         s = s.Trim();
-        // strict: all chars must be digits
-        foreach (var ch in s)
-            if (!char.IsDigit(ch))
-                return false;
-        return ulong.TryParse(s, NumberStyles.None, CultureInfo.InvariantCulture, out result);
+        var idx = 0;
+        while (idx < s.Length && char.IsDigit(s[idx]))
+            idx++;
+        if (idx == 0)
+            return false;
+        return ulong.TryParse(s.Substring(0, idx), NumberStyles.None, CultureInfo.InvariantCulture, out result);
     }
 
     /// <summary>

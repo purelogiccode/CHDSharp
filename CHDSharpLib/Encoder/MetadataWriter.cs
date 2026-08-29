@@ -89,6 +89,43 @@ public static class MetadataWriter
         return tag == GdRomOldMetadataTag;
     }
 
+    /// <summary>Guessed CHS geometry for a hard disk image (cylinders / heads / sectors).</summary>
+    public readonly record struct ChsGeometry(uint Cylinders, uint Heads, uint Sectors);
+
+    /// <summary>
+    ///     Replicates chdman's <c>guess_chs</c> (chdman.cpp:1119): given a byte count and sector
+    ///     size, finds the smallest sector-count ≥ <paramref name="totalBytes" />/bps that is
+    ///     expressible as cylinders × heads × sectors, preferring the largest sectors per track
+    ///     (63 down to 2) and the largest heads (16 down to 2). Returns the guessed geometry.
+    /// </summary>
+    public static ChsGeometry GuessChs(ulong totalBytes, uint bytesPerSector)
+    {
+        if (bytesPerSector == 0)
+            return default;
+
+        for (var totalSectors = totalBytes / bytesPerSector;; totalSectors++)
+        {
+            for (uint curSectors = 63; curSectors > 1; curSectors--)
+            {
+                if (totalSectors % curSectors != 0)
+                    continue;
+
+                var totalHeads = totalSectors / curSectors;
+                for (uint curHeads = 16; curHeads > 1; curHeads--)
+                {
+                    if (totalHeads % curHeads != 0)
+                        continue;
+
+                    var curCylinders = (uint)(totalHeads / curHeads);
+                    if (curCylinders == 0)
+                        continue;
+
+                    return new ChsGeometry(curCylinders, curHeads, curSectors);
+                }
+            }
+        }
+    }
+
     /// <summary>
     ///     Builds the 'GDDD' hard-disk geometry metadata entry, matching MAME's
     ///     <c>HARD_DISK_METADATA_FORMAT</c> (<c>"%u/%u/%u/%u"</c>, written by
@@ -102,41 +139,8 @@ public static class MetadataWriter
         // Replicates chdman's guess_chs (chdman.cpp): given the file size and sector size,
         // find a C/H/S tuple that exactly divides the total sector count, preferring the
         // largest number of sectors per track (63 down to 2) and largest heads (16 down to 2).
-        uint cylinders = 0,
-            heads = 0,
-            sectorsPerTrack = 0;
-        if (bytesPerSector > 0)
-            for (var totalSectors = totalBytes / bytesPerSector;; totalSectors++)
-            {
-                var found = false;
-                for (uint curSectors = 63; curSectors > 1 && !found; curSectors--)
-                {
-                    if (totalSectors % curSectors != 0)
-                        continue;
-
-                    var totalHeads = totalSectors / curSectors;
-                    for (uint curHeads = 16; curHeads > 1; curHeads--)
-                    {
-                        if (totalHeads % curHeads != 0)
-                            continue;
-
-                        var curCylinders = (uint)(totalHeads / curHeads);
-                        if (curCylinders == 0)
-                            continue;
-
-                        cylinders = curCylinders;
-                        heads = curHeads;
-                        sectorsPerTrack = curSectors;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (found)
-                    break;
-            }
-
-        return BuildHardDiskMetadata(cylinders, heads, sectorsPerTrack, bytesPerSector);
+        var geo = GuessChs(totalBytes, bytesPerSector);
+        return BuildHardDiskMetadata(geo.Cylinders, geo.Heads, geo.Sectors, bytesPerSector);
     }
 
     /// <summary>

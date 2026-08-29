@@ -29,7 +29,7 @@ internal sealed class CheckSkippedException : Exception
 ///     The battle harness: cross-checks CHDSharpLib (decode) and CHDSharp.Encoder (encode)
 ///     against chdman.exe. Every check is recorded, reported, and summed into an exit code.
 /// </summary>
-internal sealed class BattleHarness
+internal sealed partial class BattleHarness
 {
     private static readonly string[] CdCodecMatrix =
     [
@@ -1461,6 +1461,11 @@ internal sealed class BattleHarness
         RunCliExtractRawSuite();
         RunCliExtractCdSuite();
         RunCliAddMetaSuite();
+
+        // Full parity: exhaustively test every CLI command and every documented arg
+        // (aliases, size suffixes, parent variants, slice windows, force/verbose,
+        //  error paths). Runs CHDSharp.exe vs chdman.exe and checks exit-code/content parity.
+        RunCliFullParitySuites();
     }
 
     private void RunCliInfoSuite()
