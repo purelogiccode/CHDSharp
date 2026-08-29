@@ -155,12 +155,16 @@ internal static class FlacLpcMath
         if (np > 0)
             for (var n = 0; n <= np; n++)
             {
-                window[n] = (float)(0.5f - 0.5f * Math.Cos(Math.PI * n / np));
-                window[length - np - 1 + n] = (float)(
-                    0.5f - 0.5f * Math.Cos(Math.PI * (n + np) / np)
-                );
+                // window.c uses cosf(): the double argument M_PI*n/Np is rounded to float at the
+                // call, the cosine is computed in double (MSVC CRT) and rounded back to float,
+                // and 0.5f-0.5f* stays float arithmetic throughout. Emulate every rounding step.
+                window[n] = 0.5f - 0.5f * Cosf(Math.PI * n / np);
+                window[length - np - 1 + n] = 0.5f - 0.5f * Cosf(Math.PI * (n + np) / np);
             }
     }
+
+    /// <summary>Mimics MSVC's cosf: float argument, double-precision cosine, float result.</summary>
+    private static float Cosf(double x) => (float)Math.Cos((double)(float)x);
 
     private static void WindowRectangle(Span<float> window, int length)
     {
@@ -350,9 +354,16 @@ internal static class FlacLpcMath
 
     // ---------------- lpc.c: coefficient quantization ----------------
 
-    /// <summary>FLAC__lpc_quantize_coefficients. Returns false on failure.</summary>
+    /// <summary>
+    ///     FLAC__lpc_quantize_coefficients. The C signature takes <c>const FLAC__real lp_coeff[]</c>
+    ///     (float), so <paramref name="lpCoeff" /> must already hold the float-rounded coefficients
+    ///     libFLAC stores in <c>private_-&gt;lp_coeff</c>. The error accumulation multiplies the
+    ///     float coefficient by the float-converted shift factor and rounds the product to float
+    ///     before adding to the double accumulator, exactly like the C expression
+    ///     <c>error += lp_coeff[i] * (1 &lt;&lt; *shift)</c>. Returns false on failure.
+    /// </summary>
     public static bool QuantizeCoefficients(
-        ReadOnlySpan<double> lpCoeff,
+        ReadOnlySpan<float> lpCoeff,
         uint order,
         uint precision,
         Span<int> qlpCoeff,
@@ -362,7 +373,7 @@ internal static class FlacLpcMath
         var cmax = 0.0;
         for (var i = 0; i < (int)order; i++)
         {
-            var d = Math.Abs(lpCoeff[i]);
+            var d = Math.Abs((double)lpCoeff[i]);
             if (d > cmax)
                 cmax = d;
         }
@@ -378,7 +389,15 @@ internal static class FlacLpcMath
         var qmin = -qmax;
         qmax--;
 
-        var log2Cmax = (int)Math.Floor(Math.Log(cmax, 2.0));
+        // C uses frexp(cmax, &log2cmax); log2cmax-- — the exact floor(log2(cmax)). A
+        // Math.Log-based approximation can be off by one at powers of two.
+        int log2Cmax;
+        {
+            var bits = BitConverter.DoubleToInt64Bits(cmax);
+            var biasedExp = (int)((bits >> 52) & 0x7FF);
+            log2Cmax = biasedExp - 1023;
+        }
+
         shift = (int)precision - log2Cmax - 1;
 
         const int maxShiftLimit = (1 << (FlacBitMath.SubframeLpcQlpShiftLen - 1)) - 1;

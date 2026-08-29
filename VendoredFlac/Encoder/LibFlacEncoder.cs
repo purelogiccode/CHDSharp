@@ -498,9 +498,14 @@ internal sealed class LibFlacEncoder
                             continue;
 
                         var qlp = new int[32];
+                        // libFLAC stores lp_coeff as FLAC__real (float) in compute_lp_coefficients
+                        // and quantizes those float-rounded values; mirror that rounding here.
+                        var lpFloat = new float[32];
+                        for (var li = 0; li < (int)guessLpc; li++)
+                            lpFloat[li] = (float)_lpCoeff[(int)((guessLpc - 1) * 32 + li)];
                         if (
                             !FlacLpcMath.QuantizeCoefficients(
-                                _lpCoeff.AsSpan((int)((guessLpc - 1) * 32), (int)guessLpc),
+                                lpFloat,
                                 guessLpc,
                                 _qlpCoeffPrec,
                                 qlp,

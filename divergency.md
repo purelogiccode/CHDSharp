@@ -556,3 +556,134 @@ $iso="$w\disc.iso"
 ---
 
 *Generated from `H:\CHDBattleResults_141\results.csv` (1177 rows, 56/56 files, 2026-08-28 23:15).*
+
+---
+
+## 10. LZMA SDK version mismatch — root cause of `LzBinTree` divergence (Fixed, Battle-verified)
+
+**Date:** 2026-08-29
+**Status:** Fixed, battle-verified
+
+### Finding
+
+The vendored LZMA library (`VendoredLZMA/`) is based on **LZMA SDK 26.02** (2026-06-25), located at
+`References/LZMA SDK/lzma2602/`. MAME's chdman uses **LZMA SDK 23.01** (2023-03-14), located at
+`References/mame-mame0289/3rdparty/lzma/C/`.
+
+The SDK 26.02 C# `GetMatches` in `LzBinTree.cs` uses a **fundamentally different algorithm** from
+the C reference `Bt4_MatchFinder_GetMatches` in `LzFind.c`. The vendored C# code was already modified
+from the SDK to match the C reference, but had a hash-update-order bug that caused the SON array
+to diverge.
+
+### Root cause (Fixed)
+
+In `Bt4_MatchFinder_GetMatches` (LzFind.c:1208), the C reference updates ALL hash tables
+(h2, h3, **and hv/main**) BEFORE calling `SkipMatchesSpec` on the fast-path exit
+(LzFind.c:1225-1227). The C# code updated the main hash table AFTER the d2/d3 checks and
+after `Skip(1)` returned.
+
+When `Skip(1)` was called from the fast-path (full-length d2/d3 match), it read a stale
+main hash entry for the next position. If the next position hashed to the same bucket,
+Skip's tree walk saw a different match candidate, went LEFT instead of RIGHT at some nodes,
+and produced zero right children in the SON array. This caused `GetMatches` at pos=2500 to
+miss the (28, dist=2351) candidate.
+
+### Fix
+
+`VendoredLZMA/LZ/LzBinTree.cs:GetMatches`: moved `_hash[_fixHashSize + hashValue] = Pos;`
+before the d2/d3 fast-path checks, matching the C reference hash-update order.
+
+### SDK 26.02 algorithm (original C# `GetMatches`)
+
+```csharp
+// maxLen starts at 1 (kStartMaxLen)
+UInt32 maxLen = kStartMaxLen; // = 1
+
+// Direct hash2 check: just check first byte, record match length 2
+if (curMatch2 > matchMinPos)
+    if (_bufferBase[_bufferOffset + curMatch2] == _bufferBase[cur])
+    {
+        distances[offset++] = maxLen = 2;
+        distances[offset++] = _pos - curMatch2 - 1;
+    }
+
+// Direct hash3 check: just check first byte, record match length 3
+if (curMatch3 > matchMinPos)
+    if (_bufferBase[_bufferOffset + curMatch3] == _bufferBase[cur])
+    {
+        if (curMatch3 == curMatch2)
+            offset -= 2;  // deduplicate
+        distances[offset++] = maxLen = 3;
+        distances[offset++] = _pos - curMatch3 - 1;
+    }
+```
+
+### C reference algorithm (`Bt4_MatchFinder_GetMatches` in LzFind.c)
+
+```c
+// maxLen starts at 3
+maxLen = 3;
+
+// d2/d3 fast-path with UPDATE_maxLen extension
+if (d2 < mmm && *(cur - d2) == *cur)
+{
+    distances[0] = 2;
+    distances[1] = d2 - 1;
+    distances += 2;
+    if (*(cur - d2 + 2) == cur[2])
+    {
+        // d2 extends to 3+, fall through to UPDATE_maxLen
+    }
+    else if (d3 < mmm && *(cur - d3) == *cur)
+    {
+        d2 = d3;
+        distances[1] = d3 - 1;
+        distances += 2;
+    }
+    else
+        break;
+
+    UPDATE_maxLen       // extend match byte-by-byte
+    distances[-2] = maxLen;
+    if (maxLen == lenLimit) { SkipMatchesSpec(...); MOVE_POS_RET }
+    break;
+}
+```
+
+### Key differences
+
+| Aspect | SDK 26.02 C# | C reference (LzFind.c) |
+|--------|-------------|----------------------|
+| `maxLen` initial | `kStartMaxLen` (= 1) | 3 (for BT4) |
+| hash2 handling | Direct: check byte[0], record len=2 | d2 fast-path: check byte[0], check byte[2] for extension |
+| hash3 handling | Direct: check byte[0], record len=3 | d3 fallback from d2, or standalone d3 |
+| hash4 update | Before hash2/hash3 checks | After hash2/hash3 checks |
+| Deduplication | `if (curMatch3 == curMatch2) offset -= 2` | d2 overwritten by d3 (`d2 = d3`) |
+| Match extension | None (tree walk extends from maxLen) | `UPDATE_maxLen` macro extends before tree walk |
+| Tree walk threshold | Records tree matches > maxLen (1, 2, or 3) | Records tree matches > maxLen (3) |
+
+### Impact
+
+The SDK algorithm would NOT produce byte-identical output to chdman either — it uses a fundamentally
+different match-finding strategy. The vendored code was correctly modified to use the C reference's
+d2/d3 fast-path algorithm, but a hash-update-order bug in `GetMatches` caused the SON binary tree
+to build differently from C, resulting in 13/976 LZMA hunks being 1 byte larger. **Fixed and
+battle-verified (2026-08-29).**
+
+### Trace evidence
+
+Full MF trace comparison (2104 ReadMatchDistances entries for a 4096-byte hunk):
+- First **2067 entries are byte-identical** between C and C#
+- **Divergence at entry 2068 (matchfinder pos=2500):**
+  - C: `pairs=4: 15@0 28@2351` — tree walk finds 28-byte match at distance 2351
+  - C#: `pairs=2: 15@0` — tree walk misses the 28@2351 candidate
+- **SON array at pos=2500:**
+  - C: `p2499=[2498,158]` — right child = 158 (enables walk to reach distance 2351)
+  - C#: `p2499=[2498,0]` — right child = 0 (walk exits immediately)
+- Right children in C follow pattern `right = pos - 2351` for positions 2480–2498
+- These right children were set by Skip calls between positions 2228–2499
+
+### Next steps
+
+1. ✅ Run the battle suite to verify byte-identical LZMA output — **DONE** (2026-08-29,2935 checks, all LZMA tests pass,4 real CHDs verified)
+2. Update battle suite to assert LZMA hunk-level equality (not just decompressed-data equality) — optional, low priority

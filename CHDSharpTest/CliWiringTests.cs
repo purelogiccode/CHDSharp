@@ -700,7 +700,7 @@ public sealed class CliWiringTests : IDisposable
     public void Info_missing_file_reports_error()
     {
         var (exitCode, output) = RunCli("info", "--input", @"Z:\no\such\file.chd");
-        Assert.Equal(0, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("Info failed", output, StringComparison.Ordinal);
     }
 
@@ -762,7 +762,7 @@ public sealed class CliWiringTests : IDisposable
             "--input",
             @"Z:\no\such\file.chd"
         );
-        Assert.Equal(0, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("not found", output, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -780,7 +780,7 @@ public sealed class CliWiringTests : IDisposable
             "--input",
             @"Z:\no\such\file.avi"
         );
-        Assert.Equal(0, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("not found", output, StringComparison.OrdinalIgnoreCase);
     }
 

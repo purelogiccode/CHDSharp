@@ -69,10 +69,24 @@ internal class BinTree : InWindow, IMatchFinder
         uint keepAddBufferAfter
     )
     {
+        Create(historySize, keepAddBufferBefore, matchMaxLen, keepAddBufferAfter, null);
+    }
+
+    public void Create(
+        uint historySize,
+        uint keepAddBufferBefore,
+        uint matchMaxLen,
+        uint keepAddBufferAfter,
+        uint? cutValue
+    )
+    {
         if (historySize > KMaxValForNormalize - 256)
             throw new Exception();
 
-        _cutValue = 16 + (matchMaxLen >> 1);
+        // LzmaEnc overrides the SDK default with props.mc = 16 + (numFastBytes >> 1)
+        // (LzmaEncProps_Normalize); the old SDK default derived it from matchMaxLen instead,
+        // producing a deeper tree walk and different match lists than MAME's chdman.
+        _cutValue = cutValue ?? 16 + (matchMaxLen >> 1);
 
         var windowReservSize =
             (historySize + keepAddBufferBefore + matchMaxLen + keepAddBufferAfter) / 2 + 256;
@@ -155,6 +169,10 @@ internal class BinTree : InWindow, IMatchFinder
         {
             var d2 = Pos - _hash[hash2Value];
             var d3 = Pos - _hash[KHash3Offset + hash3Value];
+
+            // C reference updates ALL hash tables before d2/d3 checks and SkipMatchesSpec.
+            // The main hash must be updated here so that Skip(1) from the fast-path sees the
+            // correct entry when the next position hashes to the same bucket.
             _hash[hash2Value] = Pos;
             _hash[KHash3Offset + hash3Value] = Pos;
             _hash[_fixHashSize + hashValue] = Pos;
@@ -248,60 +266,64 @@ internal class BinTree : InWindow, IMatchFinder
                     distances[offset++] = Pos - curMatch - 1;
                 }
 
-        var count = _cutValue;
+        var cmCheck = Pos > _cyclicBufferSize ? Pos - _cyclicBufferSize : 0u;
 
-        while (true)
+        if (cmCheck < curMatch)
         {
-            if (curMatch <= matchMinPos || count-- == 0)
+            var cutValue = _cutValue;
+            do
             {
-                _son[ptr0] = _son[ptr1] = KEmptyHashValue;
-                break;
-            }
+                var delta = Pos - curMatch;
+                var cyclicPos =
+                (
+                    delta <= _cyclicBufferPos
+                        ? _cyclicBufferPos - delta
+                        : _cyclicBufferPos - delta + _cyclicBufferSize
+                ) << 1;
 
-            var delta = Pos - curMatch;
-            var cyclicPos =
-            (
-                delta <= _cyclicBufferPos
-                    ? _cyclicBufferPos - delta
-                    : _cyclicBufferPos - delta + _cyclicBufferSize
-            ) << 1;
-
-            var pby1 = BufferOffset + curMatch;
-            var len = Math.Min(len0, len1);
-            if (BufferBase[pby1 + len] == BufferBase[cur + len])
-            {
-                while (++len != lenLimit)
-                    if (BufferBase[pby1 + len] != BufferBase[cur + len])
-                        break;
-
-                if (maxLen < len)
+                var pby1 = BufferOffset + curMatch;
+                var len = Math.Min(len0, len1);
+                if (BufferBase[pby1 + len] == BufferBase[cur + len])
                 {
-                    distances[offset++] = maxLen = len;
-                    distances[offset++] = delta - 1;
-                    if (len == lenLimit)
+                    if (++len != lenLimit && BufferBase[pby1 + len] == BufferBase[cur + len])
+                        while (++len != lenLimit)
+                            if (BufferBase[pby1 + len] != BufferBase[cur + len])
+                                break;
+
+                    if (maxLen < len)
                     {
-                        _son[ptr1] = _son[cyclicPos];
-                        _son[ptr0] = _son[cyclicPos + 1];
-                        break;
+                        maxLen = (uint)len;
+                        distances[offset++] = maxLen;
+                        distances[offset++] = delta - 1;
+                        if (len == lenLimit)
+                        {
+                            _son[ptr1] = _son[cyclicPos];
+                            _son[ptr0] = _son[cyclicPos + 1];
+                            MovePos();
+                            return offset;
+                        }
                     }
                 }
-            }
 
-            if (BufferBase[pby1 + len] < BufferBase[cur + len])
-            {
-                _son[ptr1] = curMatch;
-                ptr1 = cyclicPos + 1;
-                curMatch = _son[ptr1];
-                len1 = len;
+                if (BufferBase[pby1 + len] < BufferBase[cur + len])
+                {
+                    _son[ptr1] = curMatch;
+                    ptr1 = cyclicPos + 1;
+                    curMatch = _son[ptr1];
+                    len1 = len;
+                }
+                else
+                {
+                    _son[ptr0] = curMatch;
+                    ptr0 = cyclicPos;
+                    curMatch = _son[ptr0];
+                    len0 = len;
+                }
             }
-            else
-            {
-                _son[ptr0] = curMatch;
-                ptr0 = cyclicPos;
-                curMatch = _son[ptr0];
-                len0 = len;
-            }
+            while (--cutValue != 0 && cmCheck < curMatch);
         }
+
+        _son[ptr0] = _son[ptr1] = KEmptyHashValue;
 
         MovePos();
         return offset;
@@ -355,54 +377,57 @@ internal class BinTree : InWindow, IMatchFinder
             uint len1;
             var len0 = len1 = _numHashDirectBytes;
 
-            var count = _cutValue;
-            while (true)
+            var cmCheck = Pos > _cyclicBufferSize ? Pos - _cyclicBufferSize : 0u;
+
+            if (cmCheck < curMatch)
             {
-                if (curMatch <= matchMinPos || count-- == 0)
+                var cutValue = _cutValue;
+                do
                 {
-                    _son[ptr0] = _son[ptr1] = KEmptyHashValue;
-                    break;
-                }
+                    var delta = Pos - curMatch;
+                    var cyclicPos =
+                    (
+                        delta <= _cyclicBufferPos
+                            ? _cyclicBufferPos - delta
+                            : _cyclicBufferPos - delta + _cyclicBufferSize
+                    ) << 1;
 
-                var delta = Pos - curMatch;
-                var cyclicPos =
-                (
-                    delta <= _cyclicBufferPos
-                        ? _cyclicBufferPos - delta
-                        : _cyclicBufferPos - delta + _cyclicBufferSize
-                ) << 1;
-
-                var pby1 = BufferOffset + curMatch;
-                var len = Math.Min(len0, len1);
-                if (BufferBase[pby1 + len] == BufferBase[cur + len])
-                {
-                    while (++len != lenLimit)
-                        if (BufferBase[pby1 + len] != BufferBase[cur + len])
-                            break;
-
-                    if (len == lenLimit)
+                    var pby1 = BufferOffset + curMatch;
+                    var len = Math.Min(len0, len1);
+                    if (BufferBase[pby1 + len] == BufferBase[cur + len])
                     {
-                        _son[ptr1] = _son[cyclicPos];
-                        _son[ptr0] = _son[cyclicPos + 1];
-                        break;
+                        while (++len != lenLimit)
+                            if (BufferBase[pby1 + len] != BufferBase[cur + len])
+                                break;
+
+                        if (len == lenLimit)
+                        {
+                            _son[ptr1] = _son[cyclicPos];
+                            _son[ptr0] = _son[cyclicPos + 1];
+                            goto skipDone;
+                        }
+                    }
+
+                    if (BufferBase[pby1 + len] < BufferBase[cur + len])
+                    {
+                        _son[ptr1] = curMatch;
+                        ptr1 = cyclicPos + 1;
+                        curMatch = _son[ptr1];
+                        len1 = len;
+                    }
+                    else
+                    {
+                        _son[ptr0] = curMatch;
+                        ptr0 = cyclicPos;
+                        curMatch = _son[ptr0];
+                        len0 = len;
                     }
                 }
-
-                if (BufferBase[pby1 + len] < BufferBase[cur + len])
-                {
-                    _son[ptr1] = curMatch;
-                    ptr1 = cyclicPos + 1;
-                    curMatch = _son[ptr1];
-                    len1 = len;
-                }
-                else
-                {
-                    _son[ptr0] = curMatch;
-                    ptr0 = cyclicPos;
-                    curMatch = _son[ptr0];
-                    len0 = len;
-                }
+                while (--cutValue != 0 && cmCheck < curMatch);
             }
+
+            _son[ptr0] = _son[ptr1] = KEmptyHashValue;
+            skipDone:
 
             MovePos();
         } while (--num != 0);

@@ -197,7 +197,9 @@ public static class MetadataWriter
 
     /// <summary>
     ///     Builds the 'DVD ' metadata entry for a DVD-ROM image, matching chdman <c>createdvd</c>
-    ///     (<c>write_metadata(DVD_METADATA_TAG, 0, "")</c>): the payload is empty (length 0).
+    ///     (<c>chd->write_metadata(DVD_METADATA_TAG, 0, "")</c>). The std::string overload in
+    ///     chd.h:351 passes <c>input.length() + 1</c>, so the payload written for an empty string
+    ///     is exactly one NUL byte (length 1), not an empty payload.
     /// </summary>
     public static MetadataEntry BuildDvdMetadata()
     {
@@ -205,7 +207,7 @@ public static class MetadataWriter
         {
             Tag = DvdMetadataTag,
             Flags = ChdMdflagsChecksum,
-            Payload = []
+            Payload = [0x00]
         };
     }
 

@@ -101,6 +101,14 @@ public static class ChdEncoder
             options?.InputLengthBytes
         );
 
+        // chdman createhd parity: the CHD logical size is exactly cylinders*heads*sectors*
+        // bytes_per_sector (the geometry from IDENT/parent GDDD or guess_chs), which can be
+        // larger OR smaller than the source slice. Hunks past the source end come from the
+        // compression work buffer (stale slot data, folded into the raw SHA-1 exactly like
+        // MAME's m_compsha1.append(dest, numbytes)).
+        if (options?.LogicalLengthBytes is { } logicalOverride && logicalOverride >= 0)
+            logicalBytes = (ulong)logicalOverride;
+
         // User-supplied metadata entries plus optional automatic classification
         // ('DVD ' for ISO-9660 images, synthesized 'GDDD' hard-disk geometry otherwise).
         var metadataEntries = new List<MetadataEntry>();
@@ -1015,9 +1023,12 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    ///     Builds a hunk reader for a raw stream: seekable sources are read by offset,
-    ///     non-seekable sources are drained sequentially (the pipeline reads hunks strictly in
-    ///     order on a single producer thread, so no rewinding is ever needed).
+    ///     Builds a hunk reader for a raw stream: seekable sources are read through a replica of
+    ///     MAME's 1 MiB compression work buffer (a ring that is filled in 128-hunk batches and
+    ///     only zeroed once, so a partial final hunk keeps the stale bytes a previous cycle left
+    ///     in its slots — chd.cpp compress_begin/async_read), non-seekable sources are drained
+    ///     sequentially (the pipeline reads hunks strictly in order on a single producer thread,
+    ///     so no rewinding is ever needed).
     /// </summary>
     private static Func<uint, byte[], int> CreateRawStreamReader(
         Stream source,
@@ -1029,13 +1040,77 @@ public static class ChdEncoder
     {
         if (seekable)
         {
-            source.Position = startBytes;
-            return (hunkIndex, buffer) =>
-                ReadRawHunk(source, hunkIndex, buffer, logicalBytes, hunkBytes);
+            var reader = new RingBufferedRawReader(source, startBytes, logicalBytes, hunkBytes);
+            return reader.ReadHunk;
         }
 
-        var reader = new SequentialStreamReader(source, startBytes);
-        return (hunkIndex, buffer) => reader.ReadHunk(hunkIndex, buffer, logicalBytes, hunkBytes);
+        var sequential = new SequentialStreamReader(source, startBytes);
+        return (hunkIndex, buffer) => sequential.ReadHunk(hunkIndex, buffer, logicalBytes, hunkBytes);
+    }
+
+    /// <summary>
+    ///     Replica of chd.cpp's compression work buffer: <c>WORK_BUFFER_HUNKS</c> (256) hunks,
+    ///     zeroed once, filled by <c>async_read</c> in half-buffer (128-hunk) batches at
+    ///     <c>read_done_offset % work_buffer_bytes</c>; <c>chd_rawfile_compressor::read_data</c>
+    ///     copies only the bytes the file still holds, so ring slots past EOF (or past a short
+    ///     final batch) keep the data of the cycle that previously occupied them. Hunks are
+    ///     compressed from the ring — stale tail bytes included — while the raw SHA-1 only folds
+    ///     the valid bytes, exactly like <c>m_compsha1.append(dest, numbytes)</c>.
+    /// </summary>
+    private sealed class RingBufferedRawReader
+    {
+        private const int WorkBufferHunks = 256;
+        private const int HunksPerBatch = WorkBufferHunks / 2;
+
+        private readonly Stream _source;
+        private readonly long _startBytes;
+        private readonly ulong _logicalBytes;
+        private readonly uint _hunkBytes;
+        private readonly byte[] _ring;
+        private readonly ulong _ringBytes;
+        private ulong _ringFilled;
+
+        public RingBufferedRawReader(Stream source, long startBytes, ulong logicalBytes, uint hunkBytes)
+        {
+            _source = source;
+            _startBytes = startBytes;
+            _logicalBytes = logicalBytes;
+            _hunkBytes = hunkBytes;
+            _ring = new byte[WorkBufferHunks * hunkBytes];
+            _ringBytes = (ulong)_ring.Length;
+        }
+
+        public int ReadHunk(uint hunkIndex, byte[] buffer)
+        {
+            var hunkStart = (ulong)hunkIndex * _hunkBytes;
+            if (hunkStart >= _logicalBytes)
+                return 0;
+
+            // chdman queues a read batch only when its slots are all consumed, so hunk h is
+            // compressed with the ring state right after the batch containing h completed
+            var need = hunkStart + _hunkBytes;
+            while (_ringFilled < need && _ringFilled < _logicalBytes)
+            {
+                var num = Math.Min((ulong)HunksPerBatch * _hunkBytes, _logicalBytes - _ringFilled);
+                var dest = (int)(_ringFilled % _ringBytes);
+                _source.Position = _startBytes + (long)_ringFilled;
+                var toRead = (int)num;
+                var read = 0;
+                while (read < toRead)
+                {
+                    var n = _source.Read(_ring, dest + read, toRead - read);
+                    if (n <= 0)
+                        break;
+                    read += n;
+                }
+
+                // a short read leaves the rest of the batch slots untouched (stale ring data)
+                _ringFilled += num;
+            }
+
+            Buffer.BlockCopy(_ring, (int)(hunkStart % _ringBytes), buffer, 0, (int)_hunkBytes);
+            return (int)Math.Min(_hunkBytes, _logicalBytes - hunkStart);
+        }
     }
 
     /// <summary>
@@ -1752,27 +1827,6 @@ public static class ChdEncoder
                 storedBytes / (double)hunkBytes
             )
         );
-    }
-
-    /// <summary>
-    ///     Reads hunk <paramref name="hunkIndex" /> from a raw stream; returns the number of
-    ///     valid bytes (the tail of a partial final hunk stays zero-filled for the file, but is
-    ///     excluded from the raw SHA-1 — matching chdman's verify semantics).
-    /// </summary>
-    private static int ReadRawHunk(
-        Stream source,
-        uint hunkIndex,
-        byte[] buffer,
-        ulong logicalBytes,
-        uint hunkBytes
-    )
-    {
-        var streamOffset = (long)hunkIndex * hunkBytes;
-        if (streamOffset >= (long)logicalBytes)
-            return 0;
-
-        source.Position = streamOffset;
-        return source.Read(buffer, 0, (int)hunkBytes);
     }
 
     /// <summary>

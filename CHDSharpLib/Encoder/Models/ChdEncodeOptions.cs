@@ -132,6 +132,17 @@ public sealed class ChdEncodeOptions
     public long? InputLengthBytes { get; set; }
 
     /// <summary>
+    ///     Overrides the logical image size of the encoded CHD (MAME chdman <c>createhd</c> parity:
+    ///     the CHD is created at <c>cylinders * heads * sectors * bytes_per_sector</c> — the
+    ///     guessed-CHS product — which rounds sub-geometry inputs UP past the actual file length).
+    ///     Hunks past the source's data are encoded from MAME's compression work buffer, whose
+    ///     slots keep the data of earlier cycles when the source ends (<c>chd.cpp async_read</c>),
+    ///     and the same bytes fold into the raw SHA-1. When <c>null</c>, the logical size is the
+    ///     source length. Default: <c>null</c>.
+    /// </summary>
+    public long? LogicalLengthBytes { get; set; }
+
+    /// <summary>
     ///     When <c>true</c>, <see cref="ChdEncoder.Copy" /> preserves legacy CD/GD-ROM metadata tags
     ///     (<c>CHCD</c>, <c>CHTR</c>, <c>CHGT</c>) instead of upgrading them to their modern
     ///     equivalents (<c>CHT2</c>, <c>CHGD</c>). Default: <c>false</c> (legacy tags are upgraded,
