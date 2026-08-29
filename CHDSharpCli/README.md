@@ -139,6 +139,257 @@ CHDSharp listtemplates
 | `--template` | `-tp` | Hard disk template ID |
 | `--ident` | `-id` | ATA IDENTIFY DEVICE file |
 
+### CHDSharp-Only Option Aliases
+
+Accepted by CHDSharp in addition to the chdman spellings:
+
+| Alias | Equivalent to | Accepted on |
+|---------|----------------|-------------|
+| `--hunk-size` | `--hunksize` | `createraw`, `createcd`, `createdvd` |
+| `--unit-size` | `--unitsize` | `createraw` |
+| `--codecs` | `--compression` | `createld`, `copy`, `batch` |
+| `--tasks`, `-t` | `--numprocessors` | `createraw`, `createcd`, `createdvd`, `createld`, `copy` |
+| `--dvd`, `-d` | Force DVD metadata | `createraw` |
+| `--cooked` | Cooked (2048-byte) sector output | `extractcd` |
+| `--raw`, `--raw-frames` | Raw (2448-byte) frame output | `extractcd` |
+| `--no-upgrade` | Preserve legacy metadata tags | `copy` |
+
+Notes:
+- `-f` means **force** on create/extract/copy/dumpmeta commands and **fix** on `verify`.
+- `-t` means **tag** on `addmeta`/`delmeta`/`dumpmeta` and is an alias for `--numprocessors` on the create/copy commands.
+- Numeric values accept `K`/`M`/`G` suffixes (`10M` = 10485760). Exception: `createhd --size` follows chdman's strict plain-digit parsing.
+- Create/extract/copy/batch commands also accept positional `<input> <output>` before any flags.
+
+### Accepted Arguments by Command
+
+Every option accepted by each command (✱ = required). For the side-by-side comparison with `chdman` 0.289, see the [CLI Command Reference](../docs/cli-commands.md).
+
+#### info
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--input` ✱ | `-i` | Input CHD file |
+| `--verbose` | `-v` | Additional information |
+
+#### verify
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--input` ✱ | `-i` | Input CHD file |
+| `--inputparent` | `-ip` | Parent CHD file |
+| `--fix` | `-f` | Fix mismatched SHA-1 header fields |
+
+#### createraw (alias: `create`)
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output CHD file |
+| `--input` ✱ | `-i` | Input file |
+| `--outputparent` | `-op` | Output parent CHD |
+| `--force` | `-f` | Overwrite existing output |
+| `--inputstartbyte` | `-isb` | Starting byte offset within input |
+| `--inputstarthunk` | `-ish` | Starting hunk offset within input |
+| `--inputbytes` | `-ib` | Effective length of input in bytes |
+| `--inputhunks` | `-ih` | Effective length of input in hunks |
+| `--hunksize` | `-hs` | Hunk size in bytes |
+| `--unitsize` | `-us` | Unit size in bytes (required if no output parent) |
+| `--compression` | `-c` | Codecs (default: `lzma,zlib,huff,flac`) |
+| `--numprocessors` | `-np` | Parallel workers |
+| `--dvd` | `-d` | Force DVD metadata |
+| `--verbose` | `-v` | Per-hunk compression logging |
+
+#### createhd
+
+Input is optional — omit for a blank zero-filled image.
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output CHD file |
+| `--input` | `-i` | Input file (optional; omit for blank) |
+| `--outputparent` | `-op` | Output parent CHD |
+| `--force` | `-f` | Overwrite existing output |
+| `--inputstartbyte` | `-isb` | Starting byte offset within input |
+| `--inputstarthunk` | `-ish` | Starting hunk offset within input |
+| `--inputbytes` | `-ib` | Effective length of input in bytes |
+| `--inputhunks` | `-ih` | Effective length of input in hunks |
+| `--hunksize` | `-hs` | Hunk size in bytes |
+| `--compression` | `-c` | Codecs (default: `none` for blank images) |
+| `--template` | `-tp` | Hard disk template ID (see `listtemplates`) |
+| `--ident` | `-id` | 512-byte ATA IDENTIFY DEVICE file |
+| `--chs` | `-chs` | CHS geometry: `cylinders,heads,sectors` |
+| `--size` | `-s` | Size of blank image |
+| `--sectorsize` | `-ss` | Sector size in bytes (default: 512) |
+| `--numprocessors` | `-np` | Parallel workers |
+| `--verbose` | `-v` | Per-hunk compression logging |
+
+#### createcd
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output CHD file |
+| `--input` ✱ | `-i` | Input file: `.cue`, `.gdi`, `.iso`, `.toc`, `.nrg`, `.cdr`, `.toast` |
+| `--outputparent` | `-op` | Output parent CHD |
+| `--force` | `-f` | Overwrite existing output |
+| `--hunksize` | `-hs` | Hunk size in bytes (default: 19584 = 8 × 2448) |
+| `--compression` | `-c` | Codecs (default: `cdlz,cdzl,cdfl`) |
+| `--numprocessors` | `-np` | Parallel workers |
+| `--verbose` | `-v` | Per-hunk compression logging |
+
+#### createdvd
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output CHD file |
+| `--input` ✱ | `-i` | Input file (raw binary, size divisible by 2048) |
+| `--outputparent` | `-op` | Output parent CHD |
+| `--force` | `-f` | Overwrite existing output |
+| `--inputstartbyte` | `-isb` | Starting byte offset within input |
+| `--inputstarthunk` | `-ish` | Starting hunk offset within input |
+| `--inputbytes` | `-ib` | Effective length of input in bytes |
+| `--inputhunks` | `-ih` | Effective length of input in hunks |
+| `--hunksize` | `-hs` | Hunk size in bytes |
+| `--compression` | `-c` | Codecs (default: `lzma,zlib,huff,flac`) |
+| `--numprocessors` | `-np` | Parallel workers |
+| `--verbose` | `-v` | Per-hunk compression logging |
+
+#### createld
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output CHD file |
+| `--input` ✱ | `-i` | Input AVI file |
+| `--outputparent` | `-op` | Output parent CHD |
+| `--force` | `-f` | Overwrite existing output |
+| `--inputstartframe` | `-isf` | Starting frame within input |
+| `--inputframes` | `-if` | Effective length of input in frames |
+| `--hunksize` | `-hs` | Hunk size in bytes |
+| `--compression` | `-c` | Codecs (default: `avhu`) |
+| `--numprocessors` | `-np` | Parallel workers |
+| `--verbose` | `-v` | Per-hunk compression logging |
+
+#### extractraw / extracthd / extractdvd
+
+All three share the same option set.
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output file |
+| `--input` ✱ | `-i` | Input CHD file |
+| `--inputparent` | `-ip` | Parent CHD file |
+| `--force` | `-f` | Overwrite existing output |
+| `--inputstartbyte` | `-isb` | Starting byte offset within input |
+| `--inputstarthunk` | `-ish` | Starting hunk offset within input |
+| `--inputbytes` | `-ib` | Effective length of input in bytes |
+| `--inputhunks` | `-ih` | Effective length of input in hunks |
+
+#### extractcd
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output CUE file |
+| `--input` ✱ | `-i` | Input CHD file |
+| `--outputbin` | `-ob` | Output BIN file name (supports `%t` track-number variables, e.g. `trk%02t.bin`) |
+| `--splitbin` | `-sb` | Output one binary file per track |
+| `--inputparent` | `-ip` | Parent CHD file |
+| `--force` | `-f` | Overwrite existing output |
+| `--cooked` | — | Force cooked (2048-byte) sectors (default) |
+| `--raw`, `--raw-frames` | — | Write full 2448-byte raw frames |
+
+#### extractld
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output AVI file |
+| `--input` ✱ | `-i` | Input CHD file |
+| `--inputparent` | `-ip` | Parent CHD file |
+| `--force` | `-f` | Overwrite existing output |
+| `--inputstartframe` | `-isf` | Starting frame within input |
+| `--inputframes` | `-if` | Effective length of input in frames |
+
+#### copy
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` ✱ | `-o` | Output CHD file |
+| `--input` ✱ | `-i` | Input CHD file |
+| `--inputparent` | `-ip` | Parent CHD file for input |
+| `--outputparent` | `-op` | Parent CHD file for output |
+| `--force` | `-f` | Overwrite existing output |
+| `--inputstartbyte` | `-isb` | Starting byte offset within input |
+| `--inputstarthunk` | `-ish` | Starting hunk offset within input |
+| `--inputbytes` | `-ib` | Effective length of input in bytes |
+| `--inputhunks` | `-ih` | Effective length of input in hunks |
+| `--hunksize` | `-hs` | Hunk size in bytes |
+| `--compression` | `-c` | Codecs (default: per input CHD type) |
+| `--numprocessors` | `-np` | Parallel workers |
+| `--no-upgrade` | — | Preserve legacy metadata tags |
+| `--verbose` | `-v` | Per-hunk compression logging |
+
+#### addmeta
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--input` ✱ | `-i` | Input CHD file |
+| `--tag` ✱ | `-t` | 4-character metadata tag |
+| `--index` | `-ix` | Indexed instance of this tag (default: 0) |
+| `--valuetext` | `-vt` | Text for the metadata |
+| `--valuefile` | `-vf` | File containing data to add |
+| `--nochecksum` | `-nocs` | Exclude this metadata from the overall SHA-1 |
+
+#### delmeta
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--input` ✱ | `-i` | Input CHD file |
+| `--tag` ✱ | `-t` | 4-character metadata tag |
+| `--index` | `-ix` | Indexed instance of this tag (default: 0) |
+
+#### dumpmeta
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--input` ✱ | `-i` | Input CHD file |
+| `--tag` ✱ | `-t` | 4-character metadata tag |
+| `--output` | `-o` | Output file for binary data (default: stdout) |
+| `--force` | `-f` | Overwrite existing output |
+| `--index` | `-ix` | Indexed instance of this tag (default: 0) |
+
+#### listtemplates
+
+Takes no options. Prints the built-in hard disk geometry templates.
+
+#### hash
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--input` ✱ | `-i` | Input CHD file |
+| `--hashes` | — | Comma-separated hash types: `sha1`, `sha256`, `crc32`, `xxh3` (default: `sha1`) |
+| `--result` | — | Output format: `text`, `json`, `sfv` (default: `text`) |
+| `--tracks` | — | Compute per-track hashes (CD only) |
+
+#### batch
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--input` ✱ | `-i` | Input directory |
+| `--output` ✱ | `-o` | Output directory |
+| `--action` | — | `extract` (default) or `create` |
+| `--compression` | `-c` | Codecs for create mode |
+
+#### random / list / parent / toc / cue / classify / detect
+
+All take the file (or files) as positional arguments or via `--input`/`-i`:
+
+| Command | Arguments |
+|---------|-----------|
+| `random <file.chd>` | Random-access read test |
+| `list <listfile.txt>` | Verify every `.chd` path listed in a text file |
+| `parent <child.chd> <parent.chd>` | Verify a child CHD against its parent |
+| `toc <file.chd>` | Print table-of-contents for a CD/GD-ROM CHD |
+| `cue <file.chd> [binfile]` | Generate a CUE sheet (optional BIN name) |
+| `classify <file.chd>` | Classify CHD media type |
+| `detect <file>` | Detect game platform |
+
 ### Accepted Input File Types
 
 | Command | Accepted Formats |

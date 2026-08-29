@@ -79,6 +79,7 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 
 | Page | Description |
 |------|-------------|
+| [CLI Command Reference](cli-commands.md) | Every `CHDSharp` CLI command and accepted argument, side by side with `chdman` (MAME 0.289). |
 | [Comparison with libchdr](libchdr-comparison.md) | Feature parity vs the C reference library, plus the five-way table (CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr). |
 | [Troubleshooting & FAQ](troubleshooting.md) | Common errors, known limitations, and fixes. |
 | [Release Notes](ReleaseNotes.md) | Version history and changelog. |
