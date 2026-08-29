@@ -279,7 +279,8 @@ Pre-built self-contained single-file executables (binary renamed from `CHDSharpC
 
 ## Acknowledgments
 
-- **Gordon Jefferyes** -- original C# CHDSharp implementation (RomVault)
+- **Peterson Fernandes** -- extended Gordon Jefferyes' original CHD reader into a full-featured library: encoder, CLI, NuGet package, VendoredZSTD, async/stream APIs, parent/child chaining, parallel verification and encoding, V5 compressed maps, DVD/GD-ROM/laserdisc support, 100% `chdman` byte-parity, and a comprehensive test suite
+- **Gordon Jefferyes** -- original C# CHDSharp reader (RomVault)
 - **MAME** -- CHD format specification and `chdman` reference implementation
 - **libchdr** (Romain Tisseraud) -- C reference library
 - **ZstdSharp.Port** (Oleg Stepanischev) -- pure C# Zstd port, vendored in-repo as `VendoredZSTD`

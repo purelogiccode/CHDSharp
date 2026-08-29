@@ -154,7 +154,8 @@ This is a combined work. The project code is **MIT**; `VendoredFlac` is **LGPL-2
 
 ## Acknowledgments
 
-- **Gordon Jefferyes** — original C# CHDSharp implementation (RomVault).
+- **Peterson Fernandes** — extended Gordon Jefferyes' original CHD reader into a full-featured library: encoder, CLI (`CHDSharp`), NuGet package, VendoredZSTD, async/stream APIs, parent/child chaining, parallel verification and encoding, V5 compressed maps, DVD/GD-ROM/laserdisc support, 100% `chdman` byte-parity, and a comprehensive test suite.
+- **Gordon Jefferyes** — original C# CHDSharp reader (RomVault).
 - **MAME** — CHD format specification and `chdman` reference implementation.
 - **libchdr** (Romain Tisseraud) — C reference library, used for parity comparison.
 - **ZstdSharp.Port** (Oleg Stepanischev) — pure C# Zstd port, vendored in-repo as `VendoredZSTD`; now matches MAME's zstd 1.5.5 frames byte-for-byte.

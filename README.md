@@ -619,7 +619,9 @@ The `VendoredFlac` component (FLAC encoder/decoder) is based on [CUETools.Flake]
 
 ### Special Thanks
 
-**Gordon Jefferyes ([@gjefferyes](https://github.com/gjefferyes))** — the original author of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp), which this project is forked from. Gordon built the foundational C# CHD reader (V1–V5 headers, zlib/lzma/huffman/flac codecs, and a custom LZMA/FLAC stack) that this project extends with Zstd, AVHuff, parallel verification, async APIs, metadata support, encoding capabilities, and comprehensive testing.
+**Gordon Jefferyes ([@gjefferyes](https://github.com/gjefferyes))** — the original author of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp), which this project is forked from. Gordon built the foundational C# CHD reader (V1–V5 headers, zlib/lzma/huffman/flac codecs, and a custom LZMA/FLAC stack).
+
+**Peterson Fernandes ([@purelogiccode](https://github.com/purelogiccode))** — extended Gordon's reader into a full-featured library and toolchain. Peterson added the encoder subsystem, CLI (`CHDSharp`), NuGet package, VendoredZSTD (pure C# zstd 1.5.5), async/stream APIs, parent/child chaining, parallel verification and encoding, V5 compressed maps, DVD/GD-ROM/laserdisc support, platform detection, 100% `chdman` byte-parity (MAME 0.289), and a comprehensive test suite (4200+ unit tests, 2900+ battle checks).
 
 ### Acknowledgments
 

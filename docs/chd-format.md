@@ -35,7 +35,8 @@ CHD quickly outgrew its original purpose:
 | **Olivier Galibert** | V5 codec work, DVD support, modern C++ refactoring |
 | **Vas Crabb** | API modernization, error handling, ongoing MAME maintenance |
 | **Romain Tisseraud** | [libchdr](https://github.com/rtissera/libchdr) — standalone C library for reading CHDs |
-| **Gordon Jefferyes** | [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) — original C# CHD reader |
+| **Gordon Jefferyes** | [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) — original C# CHD reader (read-only, no encoder) |
+| **Peterson Fernandes** | [CHDSharp](https://github.com/purelogiccode/CHDSharp) — extended Gordon's reader into a full library: encoder, CLI, NuGet package, Zstd codec, async/stream APIs, parent/child chaining, parallel verification/encoding, V5 compressed maps, DVD/GD-ROM/laserdisc support, chdman byte-parity, comprehensive test suite |
 
 ### chdman — the reference tool
 
