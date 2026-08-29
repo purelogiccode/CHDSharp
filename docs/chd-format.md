@@ -8,36 +8,75 @@ This page documents the **CHD (Compressed Hunks of Data)** on-disk format as imp
 
 ---
 
-## 1. Overview
+## 1. History
 
-A CHD file stores a logical disk image split into fixed-size blocks called **hunks**. Each hunk can be:
+### Origins
+
+**Aaron Giles** created the CHD format in **March 2002** for MAME 0.59. It was originally called *"Compressed Hard Disk"* — the name was later backronymed to *"Compressed Hunks of Data"* as the format expanded beyond hard drives.
+
+The first problem CHD solved was storing arcade hard disk images. Games like Atari's *War: The Final Assault* (1998) ran on 3dfx Voodoo hardware with internal hard drives. These raw disk images were hundreds of megabytes — far too large to distribute as-is. CHD provided transparent compression while preserving data integrity through checksums.
+
+The first game actually using a CHD file was **Wargods**, added to MAME 0.63 on **12 January 2003**.
+
+### Growth beyond hard disks
+
+CHD quickly outgrew its original purpose:
+
+- **V3 (November 2003)** — the format was redesigned to handle **CD-ROMs**. The old `hdcomp` tool was renamed to **`chdman`** to reflect the broader scope.
+- **V4 (March 2009)** — added **laserdisc A/V support**, enabling preservation of games like *Dragon's Lair* and *Space Ace*.
+- **V5 (February 2012)** — the current version. Added multi-codec support, compressed maps, and fine-grained parent/child differential storage.
+- **2023** — DVD support was added by Olivier Galibert.
+
+### Key contributors
+
+| Person | Contribution |
+|--------|-------------|
+| **Aaron Giles** | Created CHD (V1–V3), `chdman`, MAME project coordinator 2005–2011 |
+| **Olivier Galibert** | V5 codec work, DVD support, modern C++ refactoring |
+| **Vas Crabb** | API modernization, error handling, ongoing MAME maintenance |
+| **Romain Tisseraud** | [libchdr](https://github.com/rtissera/libchdr) — standalone C library for reading CHDs |
+| **Gordon Jefferyes** | [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) — original C# CHD reader |
+
+### chdman — the reference tool
+
+**`chdman`** is MAME's official command-line tool for creating, inspecting, verifying, and converting CHD files. It defines correct behavior for the format — any implementation that wants to be compatible must match its output byte-for-byte.
+
+It was originally called `hdcomp` (hard disk compressor) and was renamed to `chdman` in November 2003 when CHD V3 expanded the format to CD-ROMs.
+
+---
+
+## 2. What is a CHD file?
+
+A CHD file stores a disk image split into fixed-size blocks called **hunks** (typically 4 KiB–64 KiB). Each hunk can be:
 
 - stored **uncompressed**,
 - **compressed** with one of several codecs,
-- **deduplicated** (a copy of another hunk in the same file — *self reference*), or
-- **inherited** from a parent CHD (delta/incremental images — *parent reference*).
+- **deduplicated** — identical to another hunk in the same file (*self reference*), or
+- **inherited** from a parent CHD — only changed hunks are stored (*parent reference*).
 
-A **map** (one entry per hunk) records how and where each hunk's data is stored. A linked list of **metadata** blobs (tagged with four-character tags) carries information such as hard-disk geometry, CD track layouts, and laserdisc A/V parameters.
+A **map** (one entry per hunk) records how and where each hunk's data is stored. A linked list of **metadata** blobs (tagged with four-character codes like `GDDD` or `CHT2`) carries information such as hard-disk geometry, CD track layouts, and laserdisc A/V parameters.
 
-All multibyte values on disk are **big-endian**. The file starts with the magic tag `MComprHD`.
-
----
-
-## 2. Version history (V1 → V5)
-
-| Version | Header size | Highlights |
-|---------|-------------|------------|
-| **V1** | 76 bytes | Hard-coded CHS geometry (512-byte sectors); only zlib/raw; MD5 only; **no metadata**; 8-byte packed map entries. |
-| **V2** | 80 bytes | Same as V1 plus `seclen` (bytes per sector) at offset 76. |
-| **V3** | 120 bytes | Major redesign: `logicalbytes`, `metaoffset`, explicit `hunkbytes`, SHA1 hashes, `ZLIB_PLUS` (type 2, secondary codec), 16-byte map entries with CRC32. |
-| **V4** | 108 bytes | Drops MD5; `sha1` becomes the *combined* raw+metadata hash; adds `rawsha1` (raw data only); adds A/V compression type 3. |
-| **V5** | 124 bytes | Current MAME format: up to **4 codecs** identified by 4-char tags, `mapoffset` (map at end of file), `unitbytes` (sub-hunk granularity for parent refs), CRC16 map entries, compressed (Huffman+RLE) or uncompressed maps. |
+All multi-byte values are stored **big-endian** (big byte first). Every CHD file starts with the 8-byte magic tag `MComprHD`.
 
 ---
 
-## 3. Headers
+## 3. Version history
+
+| Version | Date | MAME | Header | Highlights |
+|---------|------|------|--------|------------|
+| **V1** | Mar 2002 | 0.59 | 76 bytes | Original format. Hard-coded CHS geometry (512-byte sectors). Zlib compression only. MD5 checksums. No metadata. 8-byte packed map entries. |
+| **V2** | Jun 2003 | 0.69u1 | 80 bytes | Adds `seclen` field (bytes per sector). Otherwise identical to V1. |
+| **V3** | Nov 2003 | 0.77u1 | 120 bytes | Major redesign: supports CD-ROMs, drops CHS geometry, adds `logicalbytes` and `hunkbytes`. SHA1 hashes alongside MD5. Metadata support. New 16-byte map entries with CRC32 per hunk. `ZLIB_PLUS` for CD audio (FLAC). `hdcomp` tool renamed to `chdman`. |
+| **V4** | Mar 2009 | 0.130u1 | 108 bytes | Drops MD5. Splits SHA1 into `rawsha1` (data only) and combined `sha1` (data + metadata). Adds A/V compression for laserdiscs. |
+| **V5** | Feb 2012 | 0.145u1 | 124 bytes | Current version. Up to 4 codecs by four-character tags. Compressed map (Huffman-encoded) for smaller files. `unitbytes` for fine-grained parent references. |
+
+---
+
+## 4. Headers
 
 ### V5 header (124 bytes)
+
+This is the header layout used by all modern CHD files:
 
 ```
 [0-7]    "MComprHD"                magic
@@ -68,7 +107,9 @@ All multibyte values on disk are **big-endian**. The file starts with the magic 
 
 ---
 
-## 4. Maps
+## 5. Maps
+
+The map tells the decoder where to find each hunk and how it is stored. Different CHD versions use different map formats.
 
 ### V1/V2 map — 8 bytes per entry
 
@@ -148,7 +189,9 @@ A `PARENT` entry stores a **parent-unit index**, not a hunk index. With `units_i
 
 ---
 
-## 5. Codecs
+## 6. Codecs
+
+CHD supports several compression algorithms. Each hunk is compressed independently, so the decoder only needs to decompress the hunks it actually reads.
 
 | FourCC | Name | Notes |
 |--------|------|-------|
@@ -167,9 +210,9 @@ See [Codecs](codecs.md) for implementation details.
 
 ---
 
-## 6. Metadata
+## 7. Metadata
 
-Metadata is a linked list of tagged binary blobs:
+Metadata entries store extra information about the disk image — things like hard-disk geometry, CD track listings, and laserdisc video parameters. Metadata is stored as a linked list of tagged binary blobs:
 
 ```
 [0-3]   uint32   metatag    4-char tag ('GDDD', 'CHT2', 'DVD ', ...)
@@ -197,7 +240,9 @@ CHDSharp reads metadata lazily, guards against cyclic chains, caps entries at 1 
 
 ---
 
-## 7. Hashing & integrity
+## 8. Hashing and integrity
+
+CHD uses several checksums to verify data integrity:
 
 | Hash | Scope | Used in |
 |------|-------|---------|
@@ -217,15 +262,21 @@ CHDSharp's deep verification recomputes all of these; see [Verification](verific
 
 ---
 
-## 8. Parent/child (delta) CHDs
+## 9. Parent/child (delta) CHDs
 
-A child CHD stores only hunks that differ from its parent; identical hunks become `PARENT` references. The child header stores the parent's `sha1`/`md5`. When a `PARENT` entry is read and no parent was supplied, CHDSharp returns `Chderrrequiresparent`; if the supplied parent's hashes do not match, it returns `Chderrinvalidparent`.
+A child CHD stores only the hunks that differ from its parent. Hunks that are identical to the parent become `PARENT` references instead of storing data again. This saves a lot of space when you have multiple versions of the same game.
+
+The child header stores the parent's `sha1`/`md5` hash so the decoder can verify the correct parent is supplied. If no parent was provided when reading a `PARENT` entry, CHDSharp returns `Chderrrequiresparent`; if the parent's hashes do not match, it returns `Chderrinvalidparent`.
 
 See [Parent/Child CHDs](parent-child-chds.md).
 
 ---
 
-## 9. File layout (V5 example)
+## 10. File layout
+
+Here is how a V5 CHD file is organized on disk:
+
+### Compressed V5 (typical)
 
 ```
 [0]                     V5 header (124 bytes)
@@ -234,4 +285,16 @@ See [Parent/Child CHDs](parent-child-chds.md).
 [...]                   ... more data blocks (variable size)
 [...]                   metadata linked list (if any)
 [end-of-file]           compressed V5 map (at mapoffset)
+```
+
+### Uncompressed V5
+
+For uncompressed images (all codec slots zero), the map uses 4-byte entries and sits right after the header:
+
+```
+[0]                     V5 header (124 bytes)
+[124]                   uncompressed map (hunkcount × 4 bytes)
+[124 + hunkcount×4]     raw hunk data block 0
+[...]                   raw hunk data block 1
+[...]                   metadata linked list (if any)
 ```

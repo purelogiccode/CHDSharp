@@ -12,7 +12,9 @@ For the concise on-disk format, see [CHD Format Reference](chd-format.md). For c
 
 ## 1. Overview
 
-CHD (Compressed Hunks of Data) is MAME's lossless compressed disk image format. A CHD file stores a logical disk image split into fixed-size blocks called **hunks**. Each hunk can be stored uncompressed, compressed with one of several codecs, deduplicated (`COMPRESSION_SELF` — copy from another hunk in the same file), or inherited from a parent CHD (`COMPRESSION_PARENT` — delta/incremental images).
+CHD (Compressed Hunks of Data) is MAME's lossless compressed disk image format, created by **Aaron Giles** in **March 2002** (MAME 0.59). Originally called "Compressed Hard Disk," it was designed to store arcade hard disk images with integrity verification. The format expanded to cover CD-ROMs (V3, 2003), laserdiscs (V4, 2009), and DVDs (2023), becoming the universal non-ROM media container for MAME.
+
+A CHD file stores a logical disk image split into fixed-size blocks called **hunks**. Each hunk can be stored uncompressed, compressed with one of several codecs, deduplicated (`COMPRESSION_SELF` — copy from another hunk in the same file), or inherited from a parent CHD (`COMPRESSION_PARENT` — delta/incremental images).
 
 **Key source files (MAME 0.289):**
 
@@ -301,7 +303,7 @@ Write the 16-byte header (`length`, `datastart`, `crc`, `lengthbits`, `hunkbits`
 [8-15]  uint64_t next       file offset of next entry (0 = end)
 ```
 
-`flags & CHD_MDFLAGS_CHECKSUM` means the entry participates in the overall SHA1 (`chd.cpp:1734`). Length is `0 … <16 MiB` (`chd.cpp:1545`); the historical minimum `≥1` is waived for the `DVD ` marker which CHDSharp writes as **length 0** (empty payload, `MetadataWriter.cs:BuildDvdMetadata` — CHDInfo implied a single null byte; corrected in `3644726`).
+`flags & CHD_MDFLAGS_CHECKSUM` means the entry participates in the overall SHA1 (`chd.cpp:1734`). Length is `0 … <16 MiB` (`chd.cpp:1545`); the historical minimum `≥1` is waived for the `DVD ` marker. chdman's `write_metadata(DVD_METADATA_TAG,0,"")` calls the `std::string` overload which passes `input.length() + 1`, so the actual payload written is one NUL byte (length 1). CHDSharp matches this behavior (`MetadataWriter.cs:BuildDvdMetadata`).
 
 ### Standard tags (`chd.h:212`)
 
@@ -439,7 +441,7 @@ for each hunk:
 
 **⚠ Minimal-simplification notes vs CHDInfo §9:**
 
-- CHDInfo wrote `DVD` metadata as a single null byte; CHDSharp's `DVD` marker is **empty (length 0)** to match `chdman createdvd`'s `write_metadata(DVD_METADATA_TAG,0,"")` (`MetadataWriter.cs:BuildDvdMetadata`). Tests assert `Assert.Empty` (`RawEncodeMetadataTests.cs:143`).
+- CHDInfo wrote `DVD` metadata as a single null byte; chdman actually writes via `std::string("") + NUL` = one NUL byte (length 1). CHDSharp matches this (`MetadataWriter.cs:BuildDvdMetadata`). Tests assert `Assert.Single` + `Assert.Equal(0x00, ...)` (`RawEncodeMetadataTests.cs:144`).
 - CHDInfo wrote `If compressors[0] == 0 → uncompressed (including map)` correctly; CHDSharp enforces `IsValidCodec` on each non-zero slot (`CHDHeaders.cs:413`).
 - `hunkbytes` must be `>0`, `≤ 128 MiB` in CHDSharp (`CHDHeaders.cs:13`, shared limit), and `hunkbytes % unitbytes == 0`; MAME's comment says "512k maximum" (`chd.h:157`) but the encoder validates the weaker `%` condition and CHDSharp allows larger hunks for testing. `mapoffset`, `logicalbytes`, and `totalhunks = ceil(logicalBytes / hunkBytes)` must be consistent.
 - The uncompressed-map data start is **not** `124` unconditionally; it is `mapoffset + hunkcount*4`. Each `offsetWord` encodes `fileOffset / hunkbytes`, not `hunkIndex + 1`.
