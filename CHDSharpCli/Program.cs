@@ -24,10 +24,11 @@ internal static class Program
     private static int _exitPrompted;
 
     // chdman.cpp:2749 variable regex — (%*)(%([+-]?\d+)?([a-zA-Z]))
+    // Named groups: lead = leading literal %s (escape check), spec = full %spec,
+    // part = printf width/sign, type = conversion letter (e.g. 't' for track number).
     private static readonly Regex ChdmanVariablesRegex = new(
-        "(%*)(%([+-]?\\d+)?([a-zA-Z]))",
+        "(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))",
         RegexOptions.Compiled
-        | RegexOptions.ExplicitCapture
     );
 
     /// <summary>
@@ -934,8 +935,10 @@ internal static class Program
         }
 
         // chdman.cpp:1892 — createraw requires unitsize when no parent
-        var hunkExplicit = options.Contains("--hunksize") || options.Contains("-hs");
-        var unitExplicit = options.Contains("--unitsize") || options.Contains("-us");
+        var hunkExplicit = options.Contains("--hunksize") || options.Contains("-hs") ||
+                           options.Contains("--hunk-size");
+        var unitExplicit = options.Contains("--unitsize") || options.Contains("-us") ||
+                           options.Contains("--unit-size");
         // --dvd forces 2048-byte units (like createdvd), so unitsize is considered supplied when -d is set
         if (dvd && !unitExplicit)
             unitExplicit = true;
@@ -4834,10 +4837,10 @@ internal static class Program
         // Iterate over matches in original template sequentially (regex_search loop)
         foreach (Match m in ChdmanVariablesRegex.Matches(template))
         {
-            var leading = m.Groups[1].Value;
-            var full = m.Groups[2].Value;
-            var part = m.Groups[3].Value;
-            var type = m.Groups[4].Value;
+            var leading = m.Groups["lead"].Value;
+            var full = m.Groups["spec"].Value;
+            var part = m.Groups["part"].Value;
+            var type = m.Groups["type"].Value;
             if (leading.Length % 2 != 0)
                 continue; // escaped — odd leading %
             var replacement = "";
@@ -4864,8 +4867,8 @@ internal static class Program
         var found = false;
         foreach (Match m in ChdmanVariablesRegex.Matches(template))
         {
-            var leading = m.Groups[1].Value;
-            var type = m.Groups[4].Value;
+            var leading = m.Groups["lead"].Value;
+            var type = m.Groups["type"].Value;
             if (leading.Length % 2 != 0)
                 continue;
             if (!string.Equals(type, "t", StringComparison.Ordinal))
@@ -5282,12 +5285,11 @@ internal static class Program
                 Log.Logger.Information("  List built-in hard disk geometry templates.");
                 break;
             case "random":
-                Log.Logger.Information("{Exe} random <file> [count]", exe);
+                Log.Logger.Information("{Exe} random <file>", exe);
                 Log.Logger.Information(
                     "  Random-access stress test: reads random hunks from the CHD."
                 );
-                Log.Logger.Information("  <file>   Input CHD file (positional, required)");
-                Log.Logger.Information("  [count]  Number of random reads (default: 1000)");
+                Log.Logger.Information("  <file>  Input CHD file (positional or --input/-i, required)");
                 break;
             case "list":
                 Log.Logger.Information("{Exe} list --input <file>", exe);
@@ -5328,7 +5330,7 @@ internal static class Program
                 break;
             case "hash":
                 Log.Logger.Information(
-                    "{Exe} hash --input <file> [--hashes sha1,sha256,crc32,xxh3] [--format text|json|sfv] [--per-track]",
+                    "{Exe} hash --input <file> [--hashes sha1,sha256,crc32,xxh3] [--result text|json|sfv] [--tracks]",
                     exe
                 );
                 Log.Logger.Information(
@@ -5339,9 +5341,9 @@ internal static class Program
                     "  --hashes           Comma-separated hash types (default: sha1)"
                 );
                 Log.Logger.Information(
-                    "  --format           Output format: text, json, sfv (default: text)"
+                    "  --result           Output format: text, json, sfv (default: text)"
                 );
-                Log.Logger.Information("  --per-track        Compute per-track hashes (CD only)");
+                Log.Logger.Information("  --tracks           Compute per-track hashes (CD only)");
                 break;
             case "batch":
                 Log.Logger.Information(
