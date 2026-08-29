@@ -293,6 +293,7 @@ internal class BinTree : InWindow, IMatchFinder
                 }
             }
 
+            // ReSharper disable once UnusedVariable
             var matchMinPos = Pos > _cyclicBufferSize ? Pos - _cyclicBufferSize : 0;
             var cur = BufferOffset + Pos;
 
