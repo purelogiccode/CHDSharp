@@ -4,7 +4,17 @@ Welcome to the **CHDSharp** documentation wiki.
 
 CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — the disk-image format used by [MAME](https://www.mamedev.org/) for arcade hard disks, CD/GD-ROMs, DVDs, and laserdisc A/V content. It supports every CHD format version (V1–V5), every compression codec ever shipped in a CHD (including Zstd and AVHuff), parent/child differential chains, parallel verification, metadata, TOC parsing, extraction, and CHD creation — with **zero native dependencies** and a **100% byte-for-byte match with MAME `chdman`**.
 
-> This project is a fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by Gordon Jefferyes, extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, lazy parent resolution, and a comprehensive test suite. The C reference implementation ([libchdr 0.3.0](https://github.com/rtissera/libchdr)) and the MAME 0.288 sources are used as the authoritative format references.
+> This project is a fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by Gordon Jefferyes, extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, lazy parent resolution, and a comprehensive test suite. The C reference implementation ([libchdr 0.3.0](https://github.com/rtissera/libchdr)) and the MAME 0.289 sources are used as the authoritative format references.
+
+---
+
+## About CHD
+
+**CHD** was created by **Aaron Giles** in **March 2002** (MAME 0.59). Originally called *"Compressed Hard Disk,"* it was designed to store arcade hard disk images — the first game using CHD was *Wargods* (January 2003). The name was later backronymed to *"Compressed Hunks of Data"* as the format expanded to cover CD-ROMs (V3, November 2003), laserdiscs (V4, March 2009), and DVDs (2023).
+
+The format's companion tool, **`chdman`**, started life as `hdcomp` (hard disk compressor) and was renamed when V3 broadened CHD's scope beyond hard drives. Today, `chdman` is the reference implementation — any tool that wants to be compatible must match its output byte-for-byte.
+
+CHDSharp is a pure C# implementation that reads and writes every CHD version with 100% parity against `chdman` (MAME 0.289). See [CHD Format Reference](chd-format.md) for the full history and on-disk format.
 
 ---
 
@@ -71,6 +81,7 @@ CHDSharp is a **pure C# CHD (Compressed Hunks of Data) reader and writer** — t
 |------|-------------|
 | [Comparison with libchdr](libchdr-comparison.md) | Feature parity vs the C reference library, plus the five-way table (CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr). |
 | [Troubleshooting & FAQ](troubleshooting.md) | Common errors, known limitations, and fixes. |
+| [Release Notes](ReleaseNotes.md) | Version history and changelog. |
 
 ---
 
