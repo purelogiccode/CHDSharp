@@ -164,7 +164,10 @@ internal static class FlacLpcMath
     }
 
     /// <summary>Mimics MSVC's cosf: float argument, double-precision cosine, float result.</summary>
-    private static float Cosf(double x) => (float)Math.Cos((double)(float)x);
+    private static float Cosf(double x)
+    {
+        return (float)Math.Cos((float)x);
+    }
 
     private static void WindowRectangle(Span<float> window, int length)
     {

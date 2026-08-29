@@ -1,3 +1,4 @@
+using System.Text;
 using VendoredLZMA.LZ;
 using VendoredLZMA.Models;
 using VendoredLZMA.RangeCoder;
@@ -33,6 +34,17 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
     private static readonly byte[] GFastPos = BuildFastPos();
 
     private static readonly string[] KMatchFinderIds = { "BT2", "BT4" };
+
+    // TEMP: MF tracing for chdman parity debugging
+    internal static int TraceFrom = -1, TraceTo = -1;
+    internal static List<string> MfLog = new();
+    private static TextWriter? _mfTrace;
+#pragma warning disable CS0414 // Field is assigned but its value is never used
+    private static int _mfTracePosFrom = 0, _mfTracePosTo = 999999;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
+#pragma warning disable CS0414 // Field is assigned but its value is never used
+    private static int _mfTraceHunkCount;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
 
     private readonly uint[] _alignPrices = new uint[Base.KAlignTableSize];
 
@@ -396,7 +408,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         if (_dictionarySize == _dictionarySizePrev && _numFastBytesPrev == _numFastBytes)
             return;
 
-        ((LZ.BinTree)_matchFinder).Create(
+        ((BinTree)_matchFinder).Create(
             _dictionarySize,
             KNumOpts,
             _numFastBytes,
@@ -469,23 +481,21 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         _repMatchLenEncoder.UpdateTables((uint)1 << _posStateBits);
     }
 
-    // TEMP: MF tracing for chdman parity debugging
-    internal static int TraceFrom = -1, TraceTo = -1;
-    internal static List<string> MfLog = new();
-    private static System.IO.TextWriter? _mfTrace;
-#pragma warning disable CS0414 // Field is assigned but its value is never used
-    private static int _mfTracePosFrom = 0, _mfTracePosTo = 999999;
-#pragma warning restore CS0414 // Field is assigned but its value is never used
-#pragma warning disable CS0414 // Field is assigned but its value is never used
-    private static int _mfTraceHunkCount;
-#pragma warning restore CS0414 // Field is assigned but its value is never used
-    internal static void EnableMfTrace(string path) {
+    internal static void EnableMfTrace(string path)
+    {
         if (_mfTrace != null) return;
-        var sw = new System.IO.StreamWriter(path, false, System.Text.Encoding.UTF8, 65536); sw.AutoFlush = true;
-        _mfTrace = System.IO.TextWriter.Synchronized(sw);
+        var sw = new StreamWriter(path, false, Encoding.UTF8, 65536);
+        sw.AutoFlush = true;
+        _mfTrace = TextWriter.Synchronized(sw);
         _mfTraceHunkCount = 0;
     }
-    internal static void DisableMfTrace() { _mfTrace?.Flush(); _mfTrace?.Dispose(); _mfTrace = null; }
+
+    internal static void DisableMfTrace()
+    {
+        _mfTrace?.Flush();
+        _mfTrace?.Dispose();
+        _mfTrace = null;
+    }
 
     private uint ReadMatchDistances(out uint numPairs)
     {
@@ -495,13 +505,14 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
 
         if (TraceFrom >= 0)
         {
-            var mf = (LZ.BinTree)_matchFinder!;
+            var mf = (BinTree)_matchFinder!;
             var pos2 = mf.Pos;
             if (pos2 >= TraceFrom && pos2 < TraceTo)
             {
-                var sb2 = new System.Text.StringBuilder();
-                sb2.Append($"MF pos={pos2} numAvail={_numAvail} streamPos={mf.StreamPos} bufOff={mf.BufferOffset} pairs={numPairs}:");
-                for (int i = 0; i < numPairs; i += 2)
+                var sb2 = new StringBuilder();
+                sb2.Append(
+                    $"MF pos={pos2} numAvail={_numAvail} streamPos={mf.StreamPos} bufOff={mf.BufferOffset} pairs={numPairs}:");
+                for (var i = 0; i < numPairs; i += 2)
                     sb2.Append($" {_matchDistances[i]}@{_matchDistances[i + 1]}");
                 MfLog.Add(sb2.ToString());
             }

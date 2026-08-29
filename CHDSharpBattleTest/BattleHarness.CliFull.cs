@@ -334,7 +334,7 @@ internal sealed partial class BattleHarness
             ("raw-flac", TestDataGenerator.Pcm16(64 * 1024, _seed + 5), "flac"),
             ("raw-none", TestDataGenerator.Random(32 * 1024, _seed + 6), "none"),
             ("raw-multi", TestDataGenerator.Mixed(64 * 1024, _seed + 7), "lzma,zlib,huff,flac"),
-            ("raw-zlibzstd", TestDataGenerator.Random(64 * 1024, _seed + 8), "zlib,zstd"),
+            ("raw-zlibzstd", TestDataGenerator.Random(64 * 1024, _seed + 8), "zlib,zstd")
         };
         // quick reduces
         var eff = _quick ? cases.Take(2).ToArray() : cases;
@@ -708,7 +708,8 @@ internal sealed partial class BattleHarness
             var r = _cli.Run("createhd", "-o", o, "-s", "1048576", "-hs", "8192", "-np", "2", "-f");
             AssertCliSuccess(r, "hd hs np");
             var o2 = Path.Combine(dir, "hd_hs2.chd");
-            var r2 = _cli.Run("createhd", "-o", o2, "-s", "1048576", "--hunksize", "8192", "--numprocessors", "2", "-f");
+            var r2 = _cli.Run("createhd", "-o", o2, "-s", "1048576", "--hunksize", "8192", "--numprocessors", "2",
+                "-f");
             AssertCliSuccess(r2, "hd long hs np");
         });
         Check(suite, "createhd input slices -isb -ib", () =>
@@ -807,7 +808,7 @@ internal sealed partial class BattleHarness
         {
             ("cue-mixed", cueMixed),
             ("cue-audio", cueAudio),
-            ("iso", iso),
+            ("iso", iso)
         };
         var codecs = _quick ? new[] { "cdzl", "none" } : new[] { "cdzl", "cdlz", "cdfl", "none" };
         // ReSharper disable once UnusedVariable
@@ -815,46 +816,44 @@ internal sealed partial class BattleHarness
             { "19584", "39168", "4K" /* for testing suffix: actually 4K wrong for CD, should fail */ };
 
         foreach (var (label, src) in sources)
+        foreach (var codec in codecs)
         {
-            foreach (var codec in codecs)
+            Check(suite, $"createcd {label} c={codec}", () =>
             {
-                Check(suite, $"createcd {label} c={codec}", () =>
-                {
-                    var oCli = Path.Combine(dir, $"{label}-{codec}.cli.chd");
-                    var oMan = Path.Combine(dir, $"{label}-{codec}.ref.chd");
-                    var cr = _cli.Run("createcd", "-i", src, "-o", oCli, "-c", codec, "-f");
-                    AssertCliSuccess(cr, $"CLI createcd {label} {codec}");
-                    var mr = _chdman.Run("createcd", "-i", src, "-o", oMan, "-c", codec, "-f");
-                    Assert(mr.ExitCode == 0, $"chdman createcd {label} {codec} failed: {mr.Combined}");
-                    // extract parity
-                    var ce = _chdman.Run("extractcd", "-i", oCli, "-o", oCli + ".cue", "-f");
-                    var me = _chdman.Run("extractcd", "-i", oMan, "-o", oMan + ".cue", "-f");
-                    Assert(ce.ExitCode == 0 && me.ExitCode == 0, "extractcd after create failed");
-                });
-                // hunk size variation
-                Check(suite, $"createcd {label} hs=39168", () =>
-                {
-                    var oCli = Path.Combine(dir, $"{label}-{codec}-hs.cli.chd");
-                    var cr = _cli.Run("createcd", "-i", src, "-o", oCli, "-c", codec, "-hs", "39168", "-f");
-                    // 39168 is valid CD hunk (19584*2)
-                    AssertCliSuccess(cr, "hs 39168");
-                });
-                Check(suite, $"createcd {label} --hunksize long", () =>
-                {
-                    var o = Path.Combine(dir, $"{label}-{codec}-hs2.cli.chd");
-                    var r = _cli.Run("createcd", "-i", src, "-o", o, "-c", codec, "--hunksize", "19584", "-f");
-                    AssertCliSuccess(r, "long hunk");
-                });
-                Check(suite, $"createcd {label} -np 2 alias", () =>
-                {
-                    var o = Path.Combine(dir, $"{label}-{codec}-np.cli.chd");
-                    var r = _cli.Run("createcd", "-i", src, "-o", o, "-c", codec, "-np", "2", "-f");
-                    AssertCliSuccess(r, "np alias");
-                    var o2 = Path.Combine(dir, $"{label}-{codec}-np2.cli.chd");
-                    var r2 = _cli.Run("createcd", "-i", src, "-o", o2, "-c", codec, "--numprocessors", "2", "-f");
-                    AssertCliSuccess(r2, "long np");
-                });
-            }
+                var oCli = Path.Combine(dir, $"{label}-{codec}.cli.chd");
+                var oMan = Path.Combine(dir, $"{label}-{codec}.ref.chd");
+                var cr = _cli.Run("createcd", "-i", src, "-o", oCli, "-c", codec, "-f");
+                AssertCliSuccess(cr, $"CLI createcd {label} {codec}");
+                var mr = _chdman.Run("createcd", "-i", src, "-o", oMan, "-c", codec, "-f");
+                Assert(mr.ExitCode == 0, $"chdman createcd {label} {codec} failed: {mr.Combined}");
+                // extract parity
+                var ce = _chdman.Run("extractcd", "-i", oCli, "-o", oCli + ".cue", "-f");
+                var me = _chdman.Run("extractcd", "-i", oMan, "-o", oMan + ".cue", "-f");
+                Assert(ce.ExitCode == 0 && me.ExitCode == 0, "extractcd after create failed");
+            });
+            // hunk size variation
+            Check(suite, $"createcd {label} hs=39168", () =>
+            {
+                var oCli = Path.Combine(dir, $"{label}-{codec}-hs.cli.chd");
+                var cr = _cli.Run("createcd", "-i", src, "-o", oCli, "-c", codec, "-hs", "39168", "-f");
+                // 39168 is valid CD hunk (19584*2)
+                AssertCliSuccess(cr, "hs 39168");
+            });
+            Check(suite, $"createcd {label} --hunksize long", () =>
+            {
+                var o = Path.Combine(dir, $"{label}-{codec}-hs2.cli.chd");
+                var r = _cli.Run("createcd", "-i", src, "-o", o, "-c", codec, "--hunksize", "19584", "-f");
+                AssertCliSuccess(r, "long hunk");
+            });
+            Check(suite, $"createcd {label} -np 2 alias", () =>
+            {
+                var o = Path.Combine(dir, $"{label}-{codec}-np.cli.chd");
+                var r = _cli.Run("createcd", "-i", src, "-o", o, "-c", codec, "-np", "2", "-f");
+                AssertCliSuccess(r, "np alias");
+                var o2 = Path.Combine(dir, $"{label}-{codec}-np2.cli.chd");
+                var r2 = _cli.Run("createcd", "-i", src, "-o", o2, "-c", codec, "--numprocessors", "2", "-f");
+                AssertCliSuccess(r2, "long np");
+            });
         }
 
         // parent differential
@@ -1121,7 +1120,6 @@ internal sealed partial class BattleHarness
                 "input"
             );
             if (Directory.Exists(inputDir))
-            {
                 foreach (var sub in new[]
                          {
                              "createld_avi_uyvy_3_frames_no_audio",
@@ -1132,7 +1130,6 @@ internal sealed partial class BattleHarness
                     if (File.Exists(p))
                         return p;
                 }
-            }
 
             dir = dir.Parent;
         }
@@ -1236,7 +1233,6 @@ internal sealed partial class BattleHarness
         // parent differential extract
         var child = _assets.FirstOrDefault(a => a.ParentPath != null);
         if (child != null)
-        {
             Check(suite, "extractraw -ip parent parity", () =>
             {
                 var cliOut = Path.Combine(dir, "child_ip.cli.bin");
@@ -1254,7 +1250,6 @@ internal sealed partial class BattleHarness
                     child.ParentPath!, "--force");
                 AssertCliSuccess(r2, "long ip");
             });
-        }
 
         // error paths
         Check(suite, "extractraw duplicate -ip → error parity", () =>
@@ -1461,14 +1456,12 @@ internal sealed partial class BattleHarness
             a.ChdPath.Contains("gd", StringComparison.OrdinalIgnoreCase));
         // Since we don't generate GD-ROM in synthetic, skip unless real corpus has it
         if (gd != null)
-        {
             Check(suite, "extractcd GD-ROM -> GDI", () =>
             {
                 var gdi = Path.Combine(dir, "gd.cli.gdi");
                 var r = _cli.Run("extractcd", "-i", gd.ChdPath, "-o", gdi, "-f");
                 AssertCliSuccess(r, "gd gdi");
             });
-        }
 
         // .toc mode
         Check(suite, "extractcd .toc output (TOC mode)", () =>
@@ -1554,7 +1547,6 @@ internal sealed partial class BattleHarness
         });
 
         foreach (var codec in new[] { "zstd", "huff", "flac", "none", "zlib" })
-        {
             Check(suite, $"copy codec {codec}", () =>
             {
                 var o = Path.Combine(dir, $"copy_{codec}.cli.chd");
@@ -1565,7 +1557,6 @@ internal sealed partial class BattleHarness
                 var mr = _chdman.Run("copy", "-i", src.ChdPath, "-o", mo, "-c", codec, "-f");
                 Assert(mr.ExitCode == 0, $"man copy {codec}");
             });
-        }
 
         Check(suite, "copy --compression long alias", () =>
         {
@@ -2129,14 +2120,12 @@ internal sealed partial class BattleHarness
             AssertCliSuccess(r, "classify long");
         });
         if (cd != null)
-        {
             Check(suite, "classify CD", () =>
             {
                 var r = _cli.Run("classify", "-i", cd.ChdPath);
                 AssertCliSuccess(r, "classify cd");
                 Assert(r.Combined.Contains("cd", StringComparison.OrdinalIgnoreCase), "classify cd not cd");
             });
-        }
 
         Check(suite, "detect (CLI)", () =>
         {
@@ -2275,7 +2264,6 @@ internal sealed partial class BattleHarness
 
         // size suffixes: K, M, G and plain, also lowercase
         foreach (var (s, expected) in new[] { ("1K", 1024), ("4K", 4096), ("1M", 1048576), ("1k", 1024) })
-        {
             Check(suite, $"suffix {s} for -hs", () =>
             {
                 var o = Path.Combine(dir, $"s_{s}.chd");
@@ -2284,7 +2272,6 @@ internal sealed partial class BattleHarness
                     Assert(Chd.ReadHeader(o, out var h) == ChdError.Chderrnone && h!.HunkBytes == expected,
                         $"hs {s} not {expected}");
             });
-        }
 
         // 2M exceeds max 1M - should be rejected (CLI and chdman both error)
         Check(suite, "suffix 2M exceeds max -> error", () =>
@@ -2311,37 +2298,30 @@ internal sealed partial class BattleHarness
 
         // alias checks for hunksize
         foreach (var hsAlias in new[] { "-hs", "--hunksize", "--hunk-size" })
-        {
             Check(suite, $"alias {hsAlias}", () =>
             {
                 var o = Path.Combine(dir, $"alias_{hsAlias.Trim('-')}.chd");
                 var r = _cli.Run("createraw", "-i", raw, "-o", o, "-c", "zlib", hsAlias, "4096", "-us", "512", "-f");
                 AssertCliSuccess(r, hsAlias);
             });
-        }
 
         foreach (var usAlias in new[] { "-us", "--unitsize", "--unit-size" })
-        {
             Check(suite, $"alias {usAlias}", () =>
             {
                 var o = Path.Combine(dir, $"alias_{usAlias.Trim('-').Replace("unit", "u")}.chd");
                 var r = _cli.Run("createraw", "-i", raw, "-o", o, "-c", "zlib", "-hs", "4096", usAlias, "512", "-f");
                 AssertCliSuccess(r, usAlias);
             });
-        }
 
         foreach (var cAlias in new[] { "-c", "--compression" })
-        {
             Check(suite, $"alias {cAlias}", () =>
             {
                 var o = Path.Combine(dir, $"alias_c_{cAlias.Trim('-')}.chd");
                 var r = _cli.Run("createraw", "-i", raw, "-o", o, cAlias, "zlib", "-hs", "4096", "-us", "512", "-f");
                 AssertCliSuccess(r, cAlias);
             });
-        }
 
         foreach (var npAlias in new[] { "-np", "--numprocessors", "-t", "--tasks" })
-        {
             Check(suite, $"alias {npAlias}", () =>
             {
                 var o = Path.Combine(dir, $"alias_np_{npAlias.Trim('-')}.chd");
@@ -2349,10 +2329,8 @@ internal sealed partial class BattleHarness
                     "1", "-f");
                 AssertCliSuccess(r, npAlias);
             });
-        }
 
         foreach (var fAlias in new[] { "-f", "--force" })
-        {
             Check(suite, $"alias {fAlias} for force", () =>
             {
                 var o = Path.Combine(dir, $"alias_f_{fAlias.Trim('-')}.chd");
@@ -2361,7 +2339,6 @@ internal sealed partial class BattleHarness
                 var r2 = _cli.Run("createraw", "-i", raw, "-o", o, "-c", "none", "-hs", "4096", "-us", "512", fAlias);
                 AssertCliSuccess(r2, fAlias);
             });
-        }
 
         // Test legacy positional args (input output without -i/-o)
         Check(suite, "createraw positional args", () =>
@@ -2398,10 +2375,9 @@ internal sealed partial class BattleHarness
             ("copy", new[] { "-i", src, "-o", Path.Combine(dir, "err_copy.chd"), "-f" }),
             ("extractraw", new[] { "-i", src, "-o", Path.Combine(dir, "err_extractraw.bin"), "-f" }),
             ("info", new[] { "-i", src }),
-            ("verify", new[] { "-i", src }),
+            ("verify", new[] { "-i", src })
         };
         foreach (var (cmd, baseArgs) in commands)
-        {
             Check(suite, $"{cmd} invalid option parity", () =>
             {
                 var cr = _cli.Run(cmd, baseArgs.Concat(new[] { "--bogus" }).ToArray());
@@ -2417,7 +2393,6 @@ internal sealed partial class BattleHarness
                 Assert(mr.ExitCode != 0 || mr.Combined.Contains("not valid", StringComparison.OrdinalIgnoreCase),
                     $"{cmd} chdman should also fail");
             });
-        }
 
         // Test duplicate detection across commands
         Check(suite, "copy duplicate -c parity already tested, but generic duplicate for createraw already", () =>

@@ -9,10 +9,6 @@ namespace CHDSharp.Encoder;
 /// </summary>
 internal sealed class AviWriter : IDisposable
 {
-    private static readonly uint FccYuy2 = FourCc("YUY2");
-    private static readonly uint Fcc00Dc = FourCc("00dc");
-    private static readonly uint Fcc01Wb = FourCc("01wb");
-
     // Fixed 'indx' (master AVI index) reservation per stream, exactly like MAME's
     // aviio.cpp write_indx_chunk: 24 + 16 * MAX_AVI_SIZE_IN_GB / 4 (MAX_AVI_SIZE_IN_GB=1024).
     // With no entries in use MAME overwrites the chunk id with 'JUNK' but keeps the size.
@@ -20,6 +16,9 @@ internal sealed class AviWriter : IDisposable
     private const uint AvifHasIndex = 0x10;
     private const uint AvifIsInterleaved = 0x100;
     private const uint HandlerDib = 0x20424944; // 'DIB '
+    private static readonly uint FccYuy2 = FourCc("YUY2");
+    private static readonly uint Fcc00Dc = FourCc("00dc");
+    private static readonly uint Fcc01Wb = FourCc("01wb");
     private readonly uint _audioChannels;
     private readonly uint _audioSampleRate;
     private readonly uint _height;

@@ -72,60 +72,6 @@ internal class BinTree : InWindow, IMatchFinder
         Create(historySize, keepAddBufferBefore, matchMaxLen, keepAddBufferAfter, null);
     }
 
-    public void Create(
-        uint historySize,
-        uint keepAddBufferBefore,
-        uint matchMaxLen,
-        uint keepAddBufferAfter,
-        uint? cutValue
-    )
-    {
-        if (historySize > KMaxValForNormalize - 256)
-            throw new Exception();
-
-        // LzmaEnc overrides the SDK default with props.mc = 16 + (numFastBytes >> 1)
-        // (LzmaEncProps_Normalize); the old SDK default derived it from matchMaxLen instead,
-        // producing a deeper tree walk and different match lists than MAME's chdman.
-        _cutValue = cutValue ?? 16 + (matchMaxLen >> 1);
-
-        var windowReservSize =
-            (historySize + keepAddBufferBefore + matchMaxLen + keepAddBufferAfter) / 2 + 256;
-
-        base.Create(
-            historySize + keepAddBufferBefore,
-            matchMaxLen + keepAddBufferAfter,
-            windowReservSize
-        );
-
-        _matchMaxLen = matchMaxLen;
-
-        var cyclicBufferSize = historySize + 1;
-        if (_cyclicBufferSize != cyclicBufferSize)
-            _son = new uint[(_cyclicBufferSize = cyclicBufferSize) * 2];
-
-        var hs = KBt2HashSize;
-
-        if (_hashArray)
-        {
-            hs = historySize - 1;
-            hs |= hs >> 1;
-            hs |= hs >> 2;
-            hs |= hs >> 4;
-            hs |= hs >> 8;
-            hs >>= 1;
-            hs |= 0xFFFF;
-            if (hs > 1 << 24)
-                hs >>= 1;
-
-            _hashMask = hs;
-            hs++;
-            hs += _fixHashSize;
-        }
-
-        if (hs != _hashSizeSum)
-            _hash = new uint[_hashSizeSum = hs];
-    }
-
     public uint GetMatches(uint[] distances)
     {
         uint lenLimit;
@@ -292,7 +238,7 @@ internal class BinTree : InWindow, IMatchFinder
 
                     if (maxLen < len)
                     {
-                        maxLen = (uint)len;
+                        maxLen = len;
                         distances[offset++] = maxLen;
                         distances[offset++] = delta - 1;
                         if (len == lenLimit)
@@ -319,8 +265,7 @@ internal class BinTree : InWindow, IMatchFinder
                     curMatch = _son[ptr0];
                     len0 = len;
                 }
-            }
-            while (--cutValue != 0 && cmCheck < curMatch);
+            } while (--cutValue != 0 && cmCheck < curMatch);
         }
 
         _son[ptr0] = _son[ptr1] = KEmptyHashValue;
@@ -422,8 +367,7 @@ internal class BinTree : InWindow, IMatchFinder
                         curMatch = _son[ptr0];
                         len0 = len;
                     }
-                }
-                while (--cutValue != 0 && cmCheck < curMatch);
+                } while (--cutValue != 0 && cmCheck < curMatch);
             }
 
             _son[ptr0] = _son[ptr1] = KEmptyHashValue;
@@ -431,6 +375,60 @@ internal class BinTree : InWindow, IMatchFinder
 
             MovePos();
         } while (--num != 0);
+    }
+
+    public void Create(
+        uint historySize,
+        uint keepAddBufferBefore,
+        uint matchMaxLen,
+        uint keepAddBufferAfter,
+        uint? cutValue
+    )
+    {
+        if (historySize > KMaxValForNormalize - 256)
+            throw new Exception();
+
+        // LzmaEnc overrides the SDK default with props.mc = 16 + (numFastBytes >> 1)
+        // (LzmaEncProps_Normalize); the old SDK default derived it from matchMaxLen instead,
+        // producing a deeper tree walk and different match lists than MAME's chdman.
+        _cutValue = cutValue ?? 16 + (matchMaxLen >> 1);
+
+        var windowReservSize =
+            (historySize + keepAddBufferBefore + matchMaxLen + keepAddBufferAfter) / 2 + 256;
+
+        base.Create(
+            historySize + keepAddBufferBefore,
+            matchMaxLen + keepAddBufferAfter,
+            windowReservSize
+        );
+
+        _matchMaxLen = matchMaxLen;
+
+        var cyclicBufferSize = historySize + 1;
+        if (_cyclicBufferSize != cyclicBufferSize)
+            _son = new uint[(_cyclicBufferSize = cyclicBufferSize) * 2];
+
+        var hs = KBt2HashSize;
+
+        if (_hashArray)
+        {
+            hs = historySize - 1;
+            hs |= hs >> 1;
+            hs |= hs >> 2;
+            hs |= hs >> 4;
+            hs |= hs >> 8;
+            hs >>= 1;
+            hs |= 0xFFFF;
+            if (hs > 1 << 24)
+                hs >>= 1;
+
+            _hashMask = hs;
+            hs++;
+            hs += _fixHashSize;
+        }
+
+        if (hs != _hashSizeSum)
+            _hash = new uint[_hashSizeSum = hs];
     }
 
     internal void SetType(int numHashBytes)

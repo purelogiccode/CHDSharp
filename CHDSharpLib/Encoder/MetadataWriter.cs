@@ -90,10 +90,6 @@ public static class MetadataWriter
         return tag == GdRomOldMetadataTag;
     }
 
-    /// <summary>Guessed CHS geometry for a hard disk image (cylinders / heads / sectors).</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public readonly record struct ChsGeometry(uint Cylinders, uint Heads, uint Sectors);
-
     /// <summary>
     ///     Replicates chdman's <c>guess_chs</c> (chdman.cpp:1119): given a byte count and sector
     ///     size, finds the smallest sector-count ≥ <paramref name="totalBytes" />/bps that is
@@ -106,24 +102,22 @@ public static class MetadataWriter
             return default;
 
         for (var totalSectors = totalBytes / bytesPerSector;; totalSectors++)
+        for (uint curSectors = 63; curSectors > 1; curSectors--)
         {
-            for (uint curSectors = 63; curSectors > 1; curSectors--)
+            if (totalSectors % curSectors != 0)
+                continue;
+
+            var totalHeads = totalSectors / curSectors;
+            for (uint curHeads = 16; curHeads > 1; curHeads--)
             {
-                if (totalSectors % curSectors != 0)
+                if (totalHeads % curHeads != 0)
                     continue;
 
-                var totalHeads = totalSectors / curSectors;
-                for (uint curHeads = 16; curHeads > 1; curHeads--)
-                {
-                    if (totalHeads % curHeads != 0)
-                        continue;
+                var curCylinders = (uint)(totalHeads / curHeads);
+                if (curCylinders == 0)
+                    continue;
 
-                    var curCylinders = (uint)(totalHeads / curHeads);
-                    if (curCylinders == 0)
-                        continue;
-
-                    return new ChsGeometry(curCylinders, curHeads, curSectors);
-                }
+                return new ChsGeometry(curCylinders, curHeads, curSectors);
             }
         }
     }
@@ -454,4 +448,8 @@ public static class MetadataWriter
             _ => "NONE"
         };
     }
+
+    /// <summary>Guessed CHS geometry for a hard disk image (cylinders / heads / sectors).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly record struct ChsGeometry(uint Cylinders, uint Heads, uint Sectors);
 }

@@ -666,6 +666,7 @@ public static unsafe partial class Methods
                 }
 
                 ip0 = ip1;
+                // ReSharper disable once ConvertToCompoundAssignment
                 ip1 = ip1 + step;
                 if (ip1 > ilimit)
                     goto _cleanup;

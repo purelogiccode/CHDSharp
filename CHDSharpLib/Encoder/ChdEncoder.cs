@@ -1049,71 +1049,6 @@ public static class ChdEncoder
     }
 
     /// <summary>
-    ///     Replica of chd.cpp's compression work buffer: <c>WORK_BUFFER_HUNKS</c> (256) hunks,
-    ///     zeroed once, filled by <c>async_read</c> in half-buffer (128-hunk) batches at
-    ///     <c>read_done_offset % work_buffer_bytes</c>; <c>chd_rawfile_compressor::read_data</c>
-    ///     copies only the bytes the file still holds, so ring slots past EOF (or past a short
-    ///     final batch) keep the data of the cycle that previously occupied them. Hunks are
-    ///     compressed from the ring — stale tail bytes included — while the raw SHA-1 only folds
-    ///     the valid bytes, exactly like <c>m_compsha1.append(dest, numbytes)</c>.
-    /// </summary>
-    private sealed class RingBufferedRawReader
-    {
-        private const int WorkBufferHunks = 256;
-        private const int HunksPerBatch = WorkBufferHunks / 2;
-
-        private readonly Stream _source;
-        private readonly long _startBytes;
-        private readonly ulong _logicalBytes;
-        private readonly uint _hunkBytes;
-        private readonly byte[] _ring;
-        private readonly ulong _ringBytes;
-        private ulong _ringFilled;
-
-        public RingBufferedRawReader(Stream source, long startBytes, ulong logicalBytes, uint hunkBytes)
-        {
-            _source = source;
-            _startBytes = startBytes;
-            _logicalBytes = logicalBytes;
-            _hunkBytes = hunkBytes;
-            _ring = new byte[WorkBufferHunks * hunkBytes];
-            _ringBytes = (ulong)_ring.Length;
-        }
-
-        public int ReadHunk(uint hunkIndex, byte[] buffer)
-        {
-            var hunkStart = (ulong)hunkIndex * _hunkBytes;
-            if (hunkStart >= _logicalBytes)
-                return 0;
-
-            // chdman queues a read batch only when its slots are all consumed, so hunk h is
-            // compressed with the ring state right after the batch containing h completed
-            var need = hunkStart + _hunkBytes;
-            while (_ringFilled < need && _ringFilled < _logicalBytes)
-            {
-                var num = Math.Min((ulong)HunksPerBatch * _hunkBytes, _logicalBytes - _ringFilled);
-                var dest = (int)(_ringFilled % _ringBytes);
-                _source.Position = _startBytes + (long)_ringFilled;
-                var toRead = (int)num;
-                var read = 0;
-                while (read < toRead)
-                {
-                    var n = _source.Read(_ring, dest + read, toRead - read);
-                    if (n <= 0)
-                        break;
-                    read += n;
-                }
-
-                // a short read leaves the rest of the batch slots untouched (stale ring data)
-                _ringFilled += num;
-            }
-
-            Buffer.BlockCopy(_ring, (int)(hunkStart % _ringBytes), buffer, 0, (int)_hunkBytes);
-            return (int)Math.Min(_hunkBytes, _logicalBytes - hunkStart);
-        }
-    }
-
-    /// <summary>
     ///     Detects an ISO-9660 filesystem image: the primary volume descriptor at sector 16
     ///     (byte offset 0x8000 from the image start) starts with the "CD001" magic. Restores the
     ///     stream position. Only seekable streams can be probed.
@@ -2112,6 +2047,71 @@ public static class ChdEncoder
                 storedBytes / (double)hunkBytes
             )
         );
+    }
+
+    /// <summary>
+    ///     Replica of chd.cpp's compression work buffer: <c>WORK_BUFFER_HUNKS</c> (256) hunks,
+    ///     zeroed once, filled by <c>async_read</c> in half-buffer (128-hunk) batches at
+    ///     <c>read_done_offset % work_buffer_bytes</c>; <c>chd_rawfile_compressor::read_data</c>
+    ///     copies only the bytes the file still holds, so ring slots past EOF (or past a short
+    ///     final batch) keep the data of the cycle that previously occupied them. Hunks are
+    ///     compressed from the ring — stale tail bytes included — while the raw SHA-1 only folds
+    ///     the valid bytes, exactly like <c>m_compsha1.append(dest, numbytes)</c>.
+    /// </summary>
+    private sealed class RingBufferedRawReader
+    {
+        private const int WorkBufferHunks = 256;
+        private const int HunksPerBatch = WorkBufferHunks / 2;
+        private readonly uint _hunkBytes;
+        private readonly ulong _logicalBytes;
+        private readonly byte[] _ring;
+        private readonly ulong _ringBytes;
+
+        private readonly Stream _source;
+        private readonly long _startBytes;
+        private ulong _ringFilled;
+
+        public RingBufferedRawReader(Stream source, long startBytes, ulong logicalBytes, uint hunkBytes)
+        {
+            _source = source;
+            _startBytes = startBytes;
+            _logicalBytes = logicalBytes;
+            _hunkBytes = hunkBytes;
+            _ring = new byte[WorkBufferHunks * hunkBytes];
+            _ringBytes = (ulong)_ring.Length;
+        }
+
+        public int ReadHunk(uint hunkIndex, byte[] buffer)
+        {
+            var hunkStart = (ulong)hunkIndex * _hunkBytes;
+            if (hunkStart >= _logicalBytes)
+                return 0;
+
+            // chdman queues a read batch only when its slots are all consumed, so hunk h is
+            // compressed with the ring state right after the batch containing h completed
+            var need = hunkStart + _hunkBytes;
+            while (_ringFilled < need && _ringFilled < _logicalBytes)
+            {
+                var num = Math.Min((ulong)HunksPerBatch * _hunkBytes, _logicalBytes - _ringFilled);
+                var dest = (int)(_ringFilled % _ringBytes);
+                _source.Position = _startBytes + (long)_ringFilled;
+                var toRead = (int)num;
+                var read = 0;
+                while (read < toRead)
+                {
+                    var n = _source.Read(_ring, dest + read, toRead - read);
+                    if (n <= 0)
+                        break;
+                    read += n;
+                }
+
+                // a short read leaves the rest of the batch slots untouched (stale ring data)
+                _ringFilled += num;
+            }
+
+            Buffer.BlockCopy(_ring, (int)(hunkStart % _ringBytes), buffer, 0, (int)_hunkBytes);
+            return (int)Math.Min(_hunkBytes, _logicalBytes - hunkStart);
+        }
     }
 
     /// <summary>
