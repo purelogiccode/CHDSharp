@@ -1663,6 +1663,7 @@ internal sealed partial class BattleHarness
             var r = _cli.Run("copy", "-i", src.ChdPath, "-o", o, "--no-upgrade", "-f");
             AssertCliSuccess(r, "no-upgrade");
             var mo = Path.Combine(dir, "copy_noupgrade.ref.chd");
+            // ReSharper disable once UnusedVariable
             var mr = _chdman.Run("copy", "-i", src.ChdPath, "-o", mo, "--no-upgrade", "-f");
             // chdman may not support --no-upgrade? Check: our CLI adds it; chdman copy does not have that flag (maybe it does?)
             // If chdman rejects, we just check CLI success
@@ -2041,6 +2042,7 @@ internal sealed partial class BattleHarness
         var chd2 = Path.Combine(inDir, "batch2.chd");
         _cli.Run("createraw", "-i", srcRaw, "-o", chd1, "-c", "zlib", "-hs", "4096", "-us", "512", "-f");
         _cli.Run("createraw", "-i", srcRaw, "-o", chd2, "-c", "none", "-hs", "4096", "-us", "512", "-f");
+        // ReSharper disable once UnusedVariable
         TestDataGenerator.CreateMixedCd(inDir, _seed, out var cue, out _);
         Check(suite, "batch extract .chd", () =>
         {

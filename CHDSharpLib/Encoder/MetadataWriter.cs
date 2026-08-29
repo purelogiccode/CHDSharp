@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text;
 using CHDSharp.Encoder.Models;
 
@@ -90,6 +91,7 @@ public static class MetadataWriter
     }
 
     /// <summary>Guessed CHS geometry for a hard disk image (cylinders / heads / sectors).</summary>
+    [StructLayout(LayoutKind.Sequential)]
     public readonly record struct ChsGeometry(uint Cylinders, uint Heads, uint Sectors);
 
     /// <summary>
