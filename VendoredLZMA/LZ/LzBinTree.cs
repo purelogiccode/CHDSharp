@@ -160,7 +160,12 @@ internal class BinTree : InWindow, IMatchFinder
                     distances[offset - 2] = maxLen;
                     if (maxLen == lenLimit)
                     {
-                        Skip(1);
+                        // C reference: SkipMatchesSpec(MF_PARAMS(p)) with the PRE-update hash
+                        // head, then MOVE_POS. Skip(1) would re-read the head we just overwrote
+                        // (== Pos), walk the position against itself, and splice empty links
+                        // into the tree.
+                        SkipMatchesSpec(lenLimit, curMatch, Pos, cur, _cyclicBufferPos);
+                        MovePos();
                         return offset;
                     }
                 }
@@ -185,7 +190,9 @@ internal class BinTree : InWindow, IMatchFinder
                 distances[offset - 2] = maxLen;
                 if (maxLen == lenLimit)
                 {
-                    Skip(1);
+                    // C reference: SkipMatchesSpec(MF_PARAMS(p)) with the PRE-update hash head.
+                    SkipMatchesSpec(lenLimit, curMatch, Pos, cur, _cyclicBufferPos);
+                    MovePos();
                     return offset;
                 }
             }
@@ -272,6 +279,69 @@ internal class BinTree : InWindow, IMatchFinder
 
         MovePos();
         return offset;
+    }
+
+    /// <summary>
+    ///     Inserts the current position into the binary tree without recording distances,
+    ///     walking the chain from <paramref name="curMatch" /> (the caller-captured pre-update
+    ///     hash head). Transliterated from LZMA SDK 23.01 LzFind.c SkipMatchesSpec.
+    /// </summary>
+    private void SkipMatchesSpec(uint lenLimit, uint curMatch, uint pos, uint cur, uint cyclicBufferPos)
+    {
+        var ptr0 = (cyclicBufferPos << 1) + 1;
+        var ptr1 = cyclicBufferPos << 1;
+        uint len1;
+        var len0 = len1 = 0;
+
+        var cmCheck = Pos > _cyclicBufferSize ? Pos - _cyclicBufferSize : 0u;
+
+        if (cmCheck < curMatch)
+        {
+            var cutValue = _cutValue;
+            do
+            {
+                var delta = pos - curMatch;
+                var cyclicPos =
+                (
+                    delta <= cyclicBufferPos
+                        ? cyclicBufferPos - delta
+                        : cyclicBufferPos - delta + _cyclicBufferSize
+                ) << 1;
+
+                var pby1 = BufferOffset + curMatch;
+                var len = Math.Min(len0, len1);
+                if (BufferBase[pby1 + len] == BufferBase[cur + len])
+                {
+                    while (++len != lenLimit)
+                        if (BufferBase[pby1 + len] != BufferBase[cur + len])
+                            break;
+
+                    if (len == lenLimit)
+                    {
+                        _son[ptr1] = _son[cyclicPos];
+                        _son[ptr0] = _son[cyclicPos + 1];
+                        return;
+                    }
+                }
+
+                if (BufferBase[pby1 + len] < BufferBase[cur + len])
+                {
+                    _son[ptr1] = curMatch;
+                    ptr1 = cyclicPos + 1;
+                    curMatch = _son[ptr1];
+                    len1 = len;
+                }
+                else
+                {
+                    _son[ptr0] = curMatch;
+                    ptr0 = cyclicPos;
+                    curMatch = _son[ptr0];
+                    len0 = len;
+                }
+            } while (--cutValue != 0 && cmCheck < curMatch);
+        }
+
+        _son[ptr0] = _son[ptr1] = KEmptyHashValue;
     }
 
     public void Skip(uint num)

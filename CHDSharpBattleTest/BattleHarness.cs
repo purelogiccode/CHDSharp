@@ -336,6 +336,17 @@ internal sealed partial class BattleHarness
                 ("text", TestDataGenerator.Text(512 * 1024, _seed), full),
                 ("pcm16", TestDataGenerator.Pcm16(512 * 1024, _seed), full),
                 ("unaligned", TestDataGenerator.Random(1_000_448, _seed), aligned512),
+                // > 256 hunks with a partial final hunk: exercises chdman's compressor
+                // work-buffer stale-tail quirk that the aligned small corpora can't catch
+                (
+                    "long-tail",
+                    TestDataGenerator.Random(1_050_112, _seed),
+                    [
+                        new RawConfig("zlib", 4096, 512),
+                        new RawConfig("zstd", 4096, 512),
+                        new RawConfig("flac", 4096, 512)
+                    ]
+                ),
                 ("tiny1", TestDataGenerator.Random(1, _seed), oursOnly),
                 ("tiny100", TestDataGenerator.Random(100, _seed), oursOnly)
             ];
@@ -515,6 +526,7 @@ internal sealed partial class BattleHarness
         TestDataGenerator.CreateMixedCd(dir, _seed, out var mixedCue, out _);
         TestDataGenerator.CreateAudioOnlyCd(dir, _seed, out var audioCue, out _);
         TestDataGenerator.CreateIso(dir, _seed, out var isoPath);
+        TestDataGenerator.CreateLongMixedCd(dir, _seed, out var longCue, out _);
 
         var configs = _quick
             ? new[]
@@ -533,7 +545,8 @@ internal sealed partial class BattleHarness
             {
                 ("cd-mixed", mixedCue),
                 ("cd-audio", audioCue),
-                ("disc-iso", isoPath)
+                ("disc-iso", isoPath),
+                ("cd-long", longCue)
             }
         )
         foreach (var cfg in configs)
@@ -1799,9 +1812,13 @@ internal sealed partial class BattleHarness
         var dir = Path.Combine(_workDir, "cli-copy");
         Directory.CreateDirectory(dir);
 
-        // Use a raw asset from the library test
+        // Use a raw asset from the library test — prefer the >256-hunk partial-tail one so the
+        // copy path also exercises chdman's work-buffer stale-tail quirk
         var srcAsset =
             _assets.FirstOrDefault(a =>
+                string.Equals(a.Key, "long-tail|zlib(4096/512)|ours", StringComparison.Ordinal)
+            )
+            ?? _assets.FirstOrDefault(a =>
                 string.Equals(a.Key, "mixed|zlib(4096/512)|ours", StringComparison.Ordinal)
             )
             ?? _assets.FirstOrDefault(a =>
@@ -1866,6 +1883,17 @@ internal sealed partial class BattleHarness
                 var cliExtract = ExtractRaw(cliCopy);
                 var refExtract = ExtractRaw(refCopy);
                 AssertEqual(refExtract, cliExtract, "copied content");
+            }
+        );
+
+        Check(
+            suite,
+            "copy byte-identical",
+            () =>
+            {
+                var cliBytes = File.ReadAllBytes(cliCopy);
+                var refBytes = File.ReadAllBytes(refCopy);
+                AssertEqual(refBytes, cliBytes, "chd file bytes");
             }
         );
 

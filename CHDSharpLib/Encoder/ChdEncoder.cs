@@ -1429,6 +1429,71 @@ public static class ChdEncoder
     }
 
     /// <summary>
+    ///     Replicates chdman's compressor work-buffer "stale tail" behavior for byte parity:
+    ///     <para>
+    ///         chd_file_compressor::async_read (chd.cpp) double-buffers the hunk stream: it reads
+    ///         WORK_BUFFER_HUNKS/2 (128) hunks per pass into one of two halves of a
+    ///         WORK_BUFFER_HUNKS (256) hunk circular buffer. When the logical size is not a whole
+    ///         multiple of the hunk size, the final read is truncated in the middle of the last hunk;
+    ///         the remaining tail (hunkBytes − realBytes) of that hunk's buffer slot still holds the
+    ///         previous pass's data for the same slot — the tail of source hunk
+    ///         (R−3)·128 + (lastHunk mod 128), where R = ⌈hunkCount / 128⌉ — and chdman compresses the
+    ///         whole buffer including that stale tail. (Files of ≤ 256 hunks never reuse a buffer
+    ///         half, so there the tail is genuinely zero.)
+    ///     </para>
+    ///     <para>
+    ///         CHDSharp zero-fills partial final hunks (correct data, but not byte-identical to
+    ///         chdman). This wrapper reproduces chdman's deterministic stale tail from the same
+    ///         hunk stream the encoder feeds on. The returned read count (and therefore the raw
+    ///         SHA-1) is unchanged: like chdman (which hashes only the bytes actually read), only the
+    ///         real bytes are folded into the SHA-1.
+    ///     </para>
+    /// </summary>
+    private static Func<uint, byte[], int> ApplyChdmanWorkBufferTail(
+        Func<uint, byte[], int> readHunk,
+        uint hunkCount,
+        uint hunkBytes,
+        ulong logicalBytes
+    )
+    {
+        var lastHunk = hunkCount - 1;
+        var realBytes = (int)(logicalBytes - (ulong)lastHunk * hunkBytes);
+        if (hunkCount <= 256 || realBytes >= (int)hunkBytes)
+            return readHunk;
+
+        // R = number of 128-hunk read passes; the stale bytes come from pass R−2 (same buffer
+        // half), which at the last hunk's slot held hunk (R−3)·128 + (lastHunk mod 128).
+        var readCount = (hunkCount + 127) / 128;
+        var staleHunk = (readCount - 3) * 128 + lastHunk % 128;
+        var tailOffset = realBytes;
+        var tailLength = (int)hunkBytes - realBytes;
+
+        // Eager: the stale content is whatever the previous pass wrote to the slot, which is
+        // fully deterministic source data (identical to a fresh read of the same hunk).
+        byte[] stale;
+        if (staleHunk < hunkCount)
+        {
+            stale = new byte[hunkBytes];
+            readHunk(staleHunk, stale);
+        }
+        else
+        {
+            stale = Array.Empty<byte>();
+        }
+
+        if (stale.Length == (int)hunkBytes)
+            return (hunkIndex, buffer) =>
+            {
+                var bytes = readHunk(hunkIndex, buffer);
+                if (hunkIndex == lastHunk)
+                    Array.Copy(stale, tailOffset, buffer, tailOffset, tailLength);
+                return bytes;
+            };
+
+        return readHunk;
+    }
+
+    /// <summary>
     ///     Returns chdman's <c>get_compression_defaults</c> (<c>chdman.cpp:2426</c>) for <c>copy</c> when
     ///     <c>-c</c> is omitted: HD/DVD → <c>lzma,zlib,huff,flac</c>, LD → <c>avhu</c>, CD/GD → <c>cdlz,cdzl,cdfl</c>,
     ///     else RAW → <c>lzma,zlib,huff,flac</c>.
@@ -1553,6 +1618,7 @@ public static class ChdEncoder
             codecTags,
             options?.TaskCount ?? Chd.TaskCount
         );
+        readHunk = ApplyChdmanWorkBufferTail(readHunk, hunkCount, hunkBytes, logicalBytes);
 
         using var fs = new FileStream(
             chdPath,
@@ -1644,6 +1710,10 @@ public static class ChdEncoder
         var hunkCount = (uint)((logicalBytes + hunkBytes - 1) / hunkBytes);
         if (hunkCount == 0)
             hunkCount = 1;
+
+        // chdman parity: the compressed hunk data (not the SHA-1) keeps the stale work-buffer
+        // tail in a partial final hunk; replicate it for the uncompressed store as well
+        readHunk = ApplyChdmanWorkBufferTail(readHunk, hunkCount, hunkBytes, logicalBytes);
 
         ChdFile? parent = null;
         if (options?.ParentPath is { Length: > 0 } parentPath)

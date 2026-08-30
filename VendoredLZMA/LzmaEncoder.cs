@@ -1,4 +1,3 @@
-using System.Text;
 using VendoredLZMA.LZ;
 using VendoredLZMA.Models;
 using VendoredLZMA.RangeCoder;
@@ -34,17 +33,6 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
     private static readonly byte[] GFastPos = BuildFastPos();
 
     private static readonly string[] KMatchFinderIds = { "BT2", "BT4" };
-
-    // TEMP: MF tracing for chdman parity debugging
-    internal static int TraceFrom = -1, TraceTo = -1;
-    internal static List<string> MfLog = new();
-    private static TextWriter? _mfTrace;
-#pragma warning disable CS0414 // Field is assigned but its value is never used
-    private static int _mfTracePosFrom = 0, _mfTracePosTo = 999999;
-#pragma warning restore CS0414 // Field is assigned but its value is never used
-#pragma warning disable CS0414 // Field is assigned but its value is never used
-    private static int _mfTraceHunkCount;
-#pragma warning restore CS0414 // Field is assigned but its value is never used
 
     private readonly uint[] _alignPrices = new uint[Base.KAlignTableSize];
 
@@ -151,9 +139,6 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         ICodeProgress? progress
     )
     {
-        // TEMP: enable MF tracing if LZMA_MF_TRACE env var is set to a file path
-        var mfTracePath = Environment.GetEnvironmentVariable("LZMA_MF_TRACE");
-        if (!string.IsNullOrEmpty(mfTracePath)) EnableMfTrace(mfTracePath);
         _needReleaseMfStream = false;
         try
         {
@@ -481,42 +466,11 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         _repMatchLenEncoder.UpdateTables((uint)1 << _posStateBits);
     }
 
-    internal static void EnableMfTrace(string path)
-    {
-        if (_mfTrace != null) return;
-        var sw = new StreamWriter(path, false, Encoding.UTF8, 65536);
-        sw.AutoFlush = true;
-        _mfTrace = TextWriter.Synchronized(sw);
-        _mfTraceHunkCount = 0;
-    }
-
-    internal static void DisableMfTrace()
-    {
-        _mfTrace?.Flush();
-        _mfTrace?.Dispose();
-        _mfTrace = null;
-    }
-
     private uint ReadMatchDistances(out uint numPairs)
     {
         _additionalOffset++;
         _numAvail = _matchFinder!.GetNumAvailableBytes();
         numPairs = _matchFinder.GetMatches(_matchDistances);
-
-        if (TraceFrom >= 0)
-        {
-            var mf = (BinTree)_matchFinder!;
-            var pos2 = mf.Pos;
-            if (pos2 >= TraceFrom && pos2 < TraceTo)
-            {
-                var sb2 = new StringBuilder();
-                sb2.Append(
-                    $"MF pos={pos2} numAvail={_numAvail} streamPos={mf.StreamPos} bufOff={mf.BufferOffset} pairs={numPairs}:");
-                for (var i = 0; i < numPairs; i += 2)
-                    sb2.Append($" {_matchDistances[i]}@{_matchDistances[i + 1]}");
-                MfLog.Add(sb2.ToString());
-            }
-        }
 
         if (numPairs == 0)
             return 0;

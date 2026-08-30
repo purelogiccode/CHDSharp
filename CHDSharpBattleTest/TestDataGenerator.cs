@@ -204,6 +204,52 @@ internal static class TestDataGenerator
         );
     }
 
+    /// <summary>
+    ///     Creates a 3-track CD whose padded logical size exceeds 256 hunks with a partial final
+    ///     hunk. This deliberately trips chdman's compressor work-buffer stale-tail behavior
+    ///     (chd.cpp <c>async_read</c> reuses the 256-hunk double buffer, so the tail of the last
+    ///     hunk holds the previous pass's bytes for the same slot), which the older small corpora
+    ///     (<c>≤ 256</c> hunks) never exercised.
+    /// </summary>
+    public static void CreateLongMixedCd(string dir, int seed, out string cuePath, out string binPath)
+    {
+        cuePath = Path.Combine(dir, "cd-long.cue");
+        binPath = Path.Combine(dir, "cd-long.bin");
+        var rng = new Random(seed + 1);
+
+        // padded totals: 2000 + 800 + 804 = 3604 frames = 451 hunks (> 256) with a 4-frame tail
+        const int track1Frames = 2000; // MODE1/2352
+        const int track2Frames = 800; // AUDIO (no pregap: 800 -> padded 800)
+        const int track3Frames = 801; // MODE2/2352 (801 -> padded 804)
+
+        using var fs = File.Create(binPath);
+        var lba = 0;
+
+        for (var f = 0; f < track1Frames; f++, lba++)
+            WriteMode1Frame(fs, lba, MakeSectorData(2048, rng, seed + f));
+
+        for (var f = 0; f < track2Frames; f++, lba++)
+            WriteAudioFrame(fs, lba, rng, false);
+
+        for (var f = 0; f < track3Frames; f++, lba++)
+            WriteMode2Frame(fs, lba, MakeSectorData(2336, rng, seed + 10_000 + f));
+
+        fs.Flush();
+
+        File.WriteAllText(
+            cuePath,
+            $"""
+             FILE "cd-long.bin" BINARY
+               TRACK 01 MODE1/2352
+                 INDEX 01 00:00:00
+               TRACK 02 AUDIO
+                 INDEX 01 {FramesToMsf(track1Frames)}
+               TRACK 03 MODE2/2352
+                 INDEX 01 {FramesToMsf(track1Frames + track2Frames)}
+             """
+        );
+    }
+
     /// <summary>Creates a single audio-track CD (byte-swap exercise: LE BIN → BE CHD).</summary>
     public static void CreateAudioOnlyCd(
         string dir,

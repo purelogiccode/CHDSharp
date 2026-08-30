@@ -365,11 +365,28 @@ internal class HunkProcessor
         {
             try
             {
+                // chdman parity: MAME's chd_file_compressor compresses through a 256-hunk work
+                // buffer that is zeroed once and then re-filled by alternating 128-hunk reads.
+                // The final read is truncated to logical_bytes, so the last (partial) hunk keeps,
+                // past the valid bytes, whatever the same buffer slot held 256 hunks earlier
+                // (chd.cpp async_read: WORK_BUFFER_HUNKS=256, numbytes=work_buffer_bytes/2).
+                // Replicate that: capture hunk (last-256) and reuse its tail; below 256 hunks the
+                // slot was never written before, so zero fill (the buffer starts cleared).
+                var lastHunk = _hunkCount - 1;
+                var staleSourceHunk = lastHunk >= 256 ? lastHunk - 256 : uint.MaxValue;
+                byte[]? staleBuffer = null;
+
                 for (uint h = 0; h < _hunkCount; h++)
                 {
                     var buffer = _owner._rawPool.Rent();
                     Array.Clear(buffer, 0, buffer.Length);
                     var hashBytes = _readHunk(h, buffer);
+
+                    if (h == staleSourceHunk)
+                        staleBuffer = buffer.ToArray();
+
+                    if (h == lastHunk && hashBytes < buffer.Length && staleBuffer != null)
+                        Array.Copy(staleBuffer, hashBytes, buffer, hashBytes, buffer.Length - hashBytes);
 
                     // the running raw SHA-1 is appended in hunk order on the producer thread
                     // (one serial pass; per-hunk hashing for dedup runs on the workers)
