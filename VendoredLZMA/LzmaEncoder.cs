@@ -1,3 +1,4 @@
+using System.Globalization;
 using VendoredLZMA.LZ;
 using VendoredLZMA.Models;
 using VendoredLZMA.RangeCoder;
@@ -189,7 +190,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                         throw new InvalidParamException();
 
                     var matchFinderIndexPrev = _matchFinderType;
-                    var m = FindMatchFinder(s.ToUpper());
+                    var m = FindMatchFinder(s.ToUpper(CultureInfo.InvariantCulture));
                     if (m < 0)
                         throw new InvalidParamException();
 

@@ -6411,8 +6411,7 @@ internal static partial class Program
         }
     }
 
-    [GeneratedRegex("(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))", RegexOptions.Compiled
-    )]
+    [GeneratedRegex("(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))", RegexOptions.Compiled, matchTimeoutMilliseconds: 1000)]
     private static partial Regex MyRegex();
 
     /// <summary>

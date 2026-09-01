@@ -365,8 +365,6 @@ internal static partial class ChdTocParser
     }
 
     [GeneratedRegex(
-        @"(?<key>\w+) *: *(?<value>[^ ]+)",
-        RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture
-    )]
+        @"(?<key>\w+) *: *(?<value>[^ ]+)", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1000)]
     private static partial Regex MyRegex();
 }
