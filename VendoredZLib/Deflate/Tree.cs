@@ -602,6 +602,7 @@ internal static class Tree
                 ref buf,
                 storedLen
             );
+
         s.Pending += storedLen;
 #if DEBUG
         s.CompressedLen = (s.CompressedLen + 3 + 7) & unchecked((uint)~7);

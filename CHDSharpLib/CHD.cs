@@ -788,12 +788,14 @@ public static partial class Chd
                         Util.ToHex(md5Check.Hash),
                         Util.ToHex(expectedMd5)
                     );
+
                 if (sha1Mismatch && sha1Check?.Hash != null)
                     Log.LogWarning(
                         "Full-image raw SHA-1 mismatch: computed {Computed}, header stores {Expected} — the decompressed data does not match the hashes recorded in the CHD header (corrupt or modified file)",
                         Util.ToHex(sha1Check.Hash),
                         Util.ToHex(expectedSha1)
                     );
+
                 return ChdError.Chderrdecompressionerror;
             }
 
@@ -936,12 +938,14 @@ public static partial class Chd
                         Util.ToHex(md5Check.Hash),
                         Util.ToHex(expectedMd5)
                     );
+
                 if (sha1Mismatch && sha1Check?.Hash != null)
                     Log.LogWarning(
                         "Full-image raw SHA-1 mismatch: computed {Computed}, header stores {Expected} — the decompressed data does not match the hashes recorded in the CHD header (corrupt or modified file)",
                         Util.ToHex(sha1Check.Hash),
                         Util.ToHex(expectedSha1)
                     );
+
                 return ChdError.Chderrdecompressionerror;
             }
 
@@ -1294,6 +1298,15 @@ public static partial class Chd
     /// </summary>
     /// <param name="file">The stream positioned at the start of the compressed data section.</param>
     /// <param name="chd">The parsed CHD header containing compression and hunk information.</param>
+    /// <param name="computedRawSha1">
+    ///     The SHA-1 of the decompressed raw data (20 bytes), or
+    ///     <c>null</c> if the pipeline was cancelled or failed before hashing completed.
+    /// </param>
+    /// <param name="failureInfo">
+    ///     When this method returns and an error occurred, a diagnostic snapshot
+    ///     of the first failing hunk (index, location, codec, reason) or of the hash mismatch;
+    ///     <c>null</c> when no diagnostic was captured.
+    /// </param>
     /// <param name="progress">
     ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
     ///     report after each hunk is hashed (in order). <c>null</c> disables progress reporting.
@@ -1308,15 +1321,6 @@ public static partial class Chd
     ///     against the header and <see cref="ChdError.Chderrdecompressionerror" /> is returned on
     ///     mismatch. When <c>false</c>, the mismatch check is skipped and only data corruption fails
     ///     (used by <see cref="CheckFileAndRepair" /> so a corrupt header hash can be repaired).
-    /// </param>
-    /// <param name="computedRawSha1">
-    ///     The SHA-1 of the decompressed raw data (20 bytes), or
-    ///     <c>null</c> if the pipeline was cancelled or failed before hashing completed.
-    /// </param>
-    /// <param name="failureInfo">
-    ///     When this method returns and an error occurred, a diagnostic snapshot
-    ///     of the first failing hunk (index, location, codec, reason) or of the hash mismatch;
-    ///     <c>null</c> when no diagnostic was captured.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
@@ -1428,7 +1432,7 @@ public static partial class Chd
                                 // file-backed hunk types.
                                 var isFileBacked =
                                     mapEntry.Comptype
-                                    is CompressionType.Compressiontype0
+                                        is CompressionType.Compressiontype0
                                         or CompressionType.Compressiontype1
                                         or CompressionType.Compressiontype2
                                         or CompressionType.Compressiontype3
@@ -1513,6 +1517,7 @@ public static partial class Chd
                                 chd.Map[block],
                                 $"error while reading hunk data from the file: {ex.Message}"
                             );
+
                         Interlocked.CompareExchange(
                             ref errMaster.Value,
                             (long)ChdError.Chderrinvalidfile,
@@ -1636,16 +1641,15 @@ public static partial class Chd
                                 sizetoGo -= (ulong)sizenext;
 
                                 proc++;
-                                if (progress != null)
-                                    progress.Report(
-                                        new ChdProgress(
-                                            proc,
-                                            chd.Totalblocks,
-                                            (long)(chd.Totalbytes - sizetoGo),
-                                            (long)chd.Totalbytes,
-                                            sw!.Elapsed
-                                        )
-                                    );
+                                progress?.Report(
+                                    new ChdProgress(
+                                        proc,
+                                        chd.Totalblocks,
+                                        (long)(chd.Totalbytes - sizetoGo),
+                                        (long)chd.Totalbytes,
+                                        sw!.Elapsed
+                                    )
+                                );
 
                                 if (proc == chd.Totalblocks)
                                     return;
@@ -1720,7 +1724,8 @@ public static partial class Chd
                 {
                     TotalHunks = (int)chd.Totalblocks,
                     FileLength = fileLength,
-                    Detail = $"header MD5 mismatch: computed {Util.ToHex(computedMd5)}, header stores {Util.ToHex(chd.Md5)} — the decompressed data does not match the hashes recorded in the CHD header"
+                    Detail =
+                        $"header MD5 mismatch: computed {Util.ToHex(computedMd5)}, header stores {Util.ToHex(chd.Md5)} — the decompressed data does not match the hashes recorded in the CHD header"
                 };
                 return ChdError.Chderrdecompressionerror;
             }
@@ -1735,7 +1740,8 @@ public static partial class Chd
                 {
                     TotalHunks = (int)chd.Totalblocks,
                     FileLength = fileLength,
-                    Detail = $"header raw SHA-1 mismatch: computed {Util.ToHex(computedRawSha1)}, header stores {Util.ToHex(chd.Rawsha1)} — the decompressed data does not match the hashes recorded in the CHD header"
+                    Detail =
+                        $"header raw SHA-1 mismatch: computed {Util.ToHex(computedRawSha1)}, header stores {Util.ToHex(chd.Rawsha1)} — the decompressed data does not match the hashes recorded in the CHD header"
                 };
                 return ChdError.Chderrdecompressionerror;
             }

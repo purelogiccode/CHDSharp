@@ -54,7 +54,7 @@ internal static class Crc32
         uint value = 0;
         for (var i = 1; i < ch + 1; i++)
         {
-            if (0 != (val & 1))
+            if ((val & 1) != 0)
                 value |= 1U << (ch - i);
 
             val >>= 1;

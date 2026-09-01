@@ -998,6 +998,7 @@ internal static partial class Deflater
             || (s.Status == FinishState && flush != ZFinish)
         )
             return ReturnWithError(ref strm, ZStreamError);
+
         if (strm.AvailOut == 0)
             return ReturnWithError(ref strm, ZBufError);
 
@@ -3314,6 +3315,7 @@ internal static partial class Deflater
                         ref extraLbits,
                         ref extraBlbits
                     );
+
                 s.Strstart++;
                 s.Lookahead--;
                 if (strm.AvailOut == 0)

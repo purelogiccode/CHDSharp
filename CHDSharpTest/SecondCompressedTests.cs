@@ -1962,7 +1962,7 @@ public class SecondCompressedTests
         Assert.Equal(
             CompressionType.Compressionerror,
             ChdCommon.ConvMapEntryFlagtoCompressionType(
-                MapEntryFlag.Mapentryflagnocrc | MapEntryFlag.Mapentrytypeinvalid
+                MapEntryFlag.Mapentryflagnocrc
             )
         );
         Assert.Equal(

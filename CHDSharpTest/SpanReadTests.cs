@@ -55,7 +55,9 @@ public class SpanReadTests
     private static void OpenTestChd(out ChdFile chd)
     {
         var ms = BuildTestChd();
-        var err = ChdFile.Open(ms, true, out chd!);
+#pragma warning disable CS8601 // Possible null reference assignment.
+        var err = ChdFile.Open(ms, true, out chd);
+#pragma warning restore CS8601 // Possible null reference assignment.
         Assert.Equal(ChdError.Chderrnone, err);
     }
 

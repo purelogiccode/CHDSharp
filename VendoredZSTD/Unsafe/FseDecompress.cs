@@ -291,6 +291,7 @@ public static unsafe partial class Methods
             > wkspSize
         )
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
+
         assert(
             (nuint)(sizeof(FseDecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
             <= wkspSize
@@ -326,6 +327,7 @@ public static unsafe partial class Methods
                     wksp->dtable,
                     1
                 );
+
             return FSE_decompress_usingDTable_generic(
                 dst,
                 dstCapacity,

@@ -112,7 +112,7 @@ internal static class ChdBlockRead
         LogBlockSummary(Log, chd.Map.Length, totalFound, chd.Blocksize, null);
         for (var i = 0; i < 6; i++)
         {
-            if ((compressionCount[i] == 0) & (compressionSelfCount[i] == 0))
+            if (compressionCount[i] == 0 && compressionSelfCount[i] == 0)
                 continue;
 
             var comp = "";

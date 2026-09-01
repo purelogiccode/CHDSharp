@@ -203,6 +203,7 @@ public static unsafe partial class Methods
                 HistCheckInputE.CheckMaxSymbolValue,
                 (uint*)workSpace
             );
+
         *maxSymbolValuePtr = 255;
         return HIST_countFast_wksp(
             count,

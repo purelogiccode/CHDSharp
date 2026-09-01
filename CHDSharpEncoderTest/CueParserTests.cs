@@ -51,7 +51,7 @@ public class CueParserTests : IDisposable
         Assert.Equal(8, toc.Tracks[1].Frames);
         Assert.Equal(0L, toc.Tracks[0].FileOffset);
         Assert.Equal(13500L * 2352, toc.Tracks[1].FileOffset);
-        Assert.True(!toc.Tracks[0].Swap, "data track should not be byte-swapped");
+        Assert.False(toc.Tracks[0].Swap, "data track should not be byte-swapped");
         Assert.True(toc.Tracks[1].Swap, "audio track must be byte-swapped");
     }
 

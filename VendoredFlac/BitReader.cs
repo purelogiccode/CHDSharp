@@ -280,37 +280,37 @@ internal unsafe class BitReader
         var x = Readbits(8);
         uint v;
         int i;
-        if (0 == (x & 0x80))
+        if ((x & 0x80) == 0)
         {
             v = x;
             i = 0;
         }
-        else if (0xC0 == (x & 0xE0)) /* 110xxxxx */
+        else if ((x & 0xE0) == 0xC0) /* 110xxxxx */
         {
             v = x & 0x1F;
             i = 1;
         }
-        else if (0xE0 == (x & 0xF0)) /* 1110xxxx */
+        else if ((x & 0xF0) == 0xE0) /* 1110xxxx */
         {
             v = x & 0x0F;
             i = 2;
         }
-        else if (0xF0 == (x & 0xF8)) /* 11110xxx */
+        else if ((x & 0xF8) == 0xF0) /* 11110xxx */
         {
             v = x & 0x07;
             i = 3;
         }
-        else if (0xF8 == (x & 0xFC)) /* 111110xx */
+        else if ((x & 0xFC) == 0xF8) /* 111110xx */
         {
             v = x & 0x03;
             i = 4;
         }
-        else if (0xFC == (x & 0xFE)) /* 1111110x */
+        else if ((x & 0xFE) == 0xFC) /* 1111110x */
         {
             v = x & 0x01;
             i = 5;
         }
-        else if (0xFE == x) /* 11111110 */
+        else if (x == 0xFE) /* 11111110 */
         {
             v = 0;
             i = 6;
@@ -323,7 +323,7 @@ internal unsafe class BitReader
         for (; i > 0; i--)
         {
             x = Readbits(8);
-            if (0x80 != (x & 0xC0)) /* 10xxxxxx */
+            if ((x & 0xC0) != 0x80) /* 10xxxxxx */
                 throw new InvalidDataException("invalid utf8 encoding");
 
             v <<= 6;
@@ -343,57 +343,59 @@ internal unsafe class BitReader
     {
         Fill();
         fixed (byte* unaryTable = ByteToUnaryTable)
-        fixed (ushort* t = Crc16.Table)
         {
-            var mask = (1U << k) - 1;
-            var bptr = _bptrM;
-            var bend = _bendM;
-            var haveBits = _haveBitsM;
-            var cache = _cacheM;
-            var crc = _crc16M;
-            for (var i = n; i > 0; i--)
+            fixed (ushort* t = Crc16.Table)
             {
-                uint bits;
-                var origBptr = bptr;
-                while ((bits = unaryTable[cache >> 56]) == 8)
+                var mask = (1U << k) - 1;
+                var bptr = _bptrM;
+                var bend = _bendM;
+                var haveBits = _haveBitsM;
+                var cache = _cacheM;
+                var crc = _crc16M;
+                for (var i = n; i > 0; i--)
                 {
-                    // Zero-pad past the end (matching Fill()); the terminating 1-bit of a valid
-                    // unary code lives in real data already cached. Only after 8 padding bytes
-                    // can the cache be all zero, which means the stream is truncated/corrupt.
-                    if (bptr >= bend + 8)
-                        throw new InvalidDataException(
-                            "FLAC bitstream truncated (rice read past end of buffer)"
-                        );
+                    uint bits;
+                    var origBptr = bptr;
+                    while ((bits = unaryTable[cache >> 56]) == 8)
+                    {
+                        // Zero-pad past the end (matching Fill()); the terminating 1-bit of a valid
+                        // unary code lives in real data already cached. Only after 8 padding bytes
+                        // can the cache be all zero, which means the stream is truncated/corrupt.
+                        if (bptr >= bend + 8)
+                            throw new InvalidDataException(
+                                "FLAC bitstream truncated (rice read past end of buffer)"
+                            );
 
-                    cache <<= 8;
-                    var b = bptr < bend ? *bptr : (byte)0;
-                    bptr++;
-                    cache |= (ulong)b << (64 - haveBits);
-                    crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ b]);
+                        cache <<= 8;
+                        var b = bptr < bend ? *bptr : (byte)0;
+                        bptr++;
+                        cache |= (ulong)b << (64 - haveBits);
+                        crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ b]);
+                    }
+
+                    var msbs = bits + ((uint)(bptr - origBptr) << 3);
+                    // assumes k <= 41 (have_bits < 41 + 7 + 1 + 8 == 57, so we don't loose bits here)
+                    while (haveBits < 56)
+                    {
+                        haveBits += 8;
+                        var b = bptr < bend ? *bptr : (byte)0;
+                        bptr++;
+                        cache |= (ulong)b << (64 - haveBits);
+                        crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ b]);
+                    }
+
+                    var btsk = k + (int)bits + 1;
+                    var uval = (msbs << k) | (uint)((cache >> (64 - btsk)) & mask);
+                    cache <<= btsk;
+                    haveBits -= btsk;
+                    *r++ = (int)((uval >> 1) ^ -(int)(uval & 1));
                 }
 
-                var msbs = bits + ((uint)(bptr - origBptr) << 3);
-                // assumes k <= 41 (have_bits < 41 + 7 + 1 + 8 == 57, so we don't loose bits here)
-                while (haveBits < 56)
-                {
-                    haveBits += 8;
-                    var b = bptr < bend ? *bptr : (byte)0;
-                    bptr++;
-                    cache |= (ulong)b << (64 - haveBits);
-                    crc = (ushort)((crc << 8) ^ t[(crc >> 8) ^ b]);
-                }
-
-                var btsk = k + (int)bits + 1;
-                var uval = (msbs << k) | (uint)((cache >> (64 - btsk)) & mask);
-                cache <<= btsk;
-                haveBits -= btsk;
-                *r++ = (int)((uval >> 1) ^ -(int)(uval & 1));
+                _haveBitsM = haveBits;
+                _cacheM = cache;
+                _bptrM = bptr;
+                _crc16M = crc;
             }
-
-            _haveBitsM = haveBits;
-            _cacheM = cache;
-            _bptrM = bptr;
-            _crc16M = crc;
         }
     }
 

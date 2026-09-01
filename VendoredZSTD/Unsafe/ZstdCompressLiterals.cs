@@ -53,8 +53,10 @@ public static unsafe partial class Methods
             var b = ((byte*)src)[0];
             nuint p;
             for (p = 1; p < srcSize; p++)
+            {
                 if (((byte*)src)[p] != b)
                     return 0;
+            }
 
             return 1;
         }
@@ -232,11 +234,13 @@ public static unsafe partial class Methods
         }
 
         if (cLitSize == 1)
+        {
             if (srcSize >= 8 || AllBytesIdentical(src, srcSize) != 0)
             {
                 memcpy(nextHuf, prevHuf, (uint)sizeof(ZstdHufCTablesT));
                 return ZSTD_compressRleLiteralsBlock(dst, dstCapacity, src, srcSize);
             }
+        }
 
         if (hType == SymbolEncodingTypeE.SetCompressed)
             nextHuf->repeatMode = HufRepeat.HufRepeatCheck;

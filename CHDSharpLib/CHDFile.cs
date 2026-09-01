@@ -1112,8 +1112,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             return;
         }
 
-        if (_readAhead != null)
-            _readAhead.Dispose();
+        _readAhead?.Dispose();
 
         _readAhead = new ReadAheadManager(this, lookAhead);
     }
@@ -2617,7 +2616,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         var me = _chd.Map[hunknum];
 
         // Read-ahead L2 cache: check if a background task already decompressed this hunk.
-        if (_readAhead != null && _readAhead.TryGet(hunknum, buffer))
+        if (_readAhead?.TryGet(hunknum, buffer) == true)
         {
             // Also seed the LRU cache so random revisits benefit.
             if (_cacheSize > 1)
@@ -3488,7 +3487,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             return _tracks?.ToList() ?? new List<ChdTrackInfo>();
 
         // Clone to avoid mutating the cached _tracks.
-        var mutated = _tracks.Select(t => CloneTrack(t)).ToList();
+        var mutated = _tracks.ConvertAll(t => CloneTrack(t));
         var hasPhysicalPregap = mutated[0].PadFrames == 0;
 
         for (var tracknum = 1; tracknum < mutated.Count; tracknum++)
@@ -3518,8 +3517,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                         );
                         mutated[tracknum] = CloneTrack(
                             currTrack,
-                            preGap: currTrack.PreGap + 225,
                             splitFrames: 225,
+                            preGap: currTrack.PreGap + 225,
                             preGapDataSize: currTrack.DataSize,
                             preGapType: currTrack.TrackType
                         );
@@ -3544,8 +3543,8 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 mutated[tracknum - 1] = CloneTrack(prev, padFrames: curextra);
                 mutated[tracknum] = CloneTrack(
                     curr,
-                    preGap: curr.PreGap + curextra,
                     splitFrames: curextra,
+                    preGap: curr.PreGap + curextra,
                     preGapDataSize: curr.DataSize,
                     preGapType: curr.TrackType
                 );
@@ -3730,17 +3729,17 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                         CultureInfo.InvariantCulture,
                         $"    PREGAP {FramesToMsf(track.PreGap)}"
                     );
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"    INDEX 01 00:00:00");
+                    sb.AppendLine("    INDEX 01 00:00:00");
                     break;
                 case > 0 when track.PreGapDataSize > 0:
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"    INDEX 00 00:00:00");
+                    sb.AppendLine("    INDEX 00 00:00:00");
                     sb.AppendLine(
                         CultureInfo.InvariantCulture,
                         $"    INDEX 01 {FramesToMsf(track.PreGap)}"
                     );
                     break;
                 default:
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"    INDEX 01 00:00:00");
+                    sb.AppendLine("    INDEX 01 00:00:00");
                     break;
             }
 
@@ -4023,11 +4022,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                     CultureInfo.InvariantCulture,
                     $"       Pregap: {t.PreGap:N0} frames{(t.PreGapDataSize > 0 ? " (data in file)" : "")}"
                 );
+
             if (t.PostGap > 0)
                 sb.AppendLine(
                     CultureInfo.InvariantCulture,
                     $"       Postgap: {t.PostGap:N0} frames"
                 );
+
             if (t.ExtraFrames > 0)
                 sb.AppendLine(
                     CultureInfo.InvariantCulture,
@@ -4444,16 +4445,15 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                     buffOffs = 0;
                 }
 
-                if (progress != null)
-                    progress.Report(
-                        new ChdProgress(
-                            0,
-                            0,
-                            (long)written,
-                            (long)totalCooked,
-                            sw!.Elapsed
-                        )
-                    );
+                progress?.Report(
+                    new ChdProgress(
+                        0,
+                        0,
+                        (long)written,
+                        (long)totalCooked,
+                        sw!.Elapsed
+                    )
+                );
             }
 
             return ChdError.Chderrnone;
@@ -4574,16 +4574,15 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                     buffOffs = 0;
                 }
 
-                if (progress != null)
-                    progress.Report(
-                        new ChdProgress(
-                            0,
-                            0,
-                            (long)written,
-                            (long)totalCooked,
-                            sw!.Elapsed
-                        )
-                    );
+                progress?.Report(
+                    new ChdProgress(
+                        0,
+                        0,
+                        (long)written,
+                        (long)totalCooked,
+                        sw!.Elapsed
+                    )
+                );
             }
 
             return ChdError.Chderrnone;

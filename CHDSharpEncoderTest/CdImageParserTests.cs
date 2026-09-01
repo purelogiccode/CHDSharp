@@ -92,7 +92,7 @@ public class CdImageParserTests : IDisposable
 
         var toc = GdiParser.Parse(path);
 
-        Assert.True((toc.Flags & CdTocFlags.GdRom) != 0);
+        Assert.NotEqual(0u, toc.Flags & CdTocFlags.GdRom);
         Assert.Equal(2, toc.Tracks.Count);
         Assert.Equal(CdTrackType.Mode1Raw, toc.Tracks[0].TrackType);
         Assert.Equal(200, toc.Tracks[0].Frames); // 100 data + 100 pad
@@ -247,7 +247,7 @@ public class CdImageParserTests : IDisposable
         Assert.Equal(CdTrackType.Audio, toc.Tracks[0].TrackType);
         Assert.Equal(50, toc.Tracks[0].Frames);
         Assert.Equal(150, toc.Tracks[0].Pregap);
-        Assert.True(!toc.Tracks[0].Swap, "TOC files must not be byte-swapped by default");
+        Assert.False(toc.Tracks[0].Swap, "TOC files must not be byte-swapped by default");
     }
 
     [Fact]
@@ -328,7 +328,7 @@ public class CdImageParserTests : IDisposable
 
         var toc = CdImageParser.Parse(gdi);
 
-        Assert.True((toc.Flags & CdTocFlags.GdRom) != 0);
+        Assert.NotEqual(0u, toc.Flags & CdTocFlags.GdRom);
         Assert.Equal(20, toc.Tracks[0].Frames);
     }
 

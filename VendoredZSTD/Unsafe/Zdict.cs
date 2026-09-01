@@ -92,7 +92,7 @@ public static unsafe partial class Methods
                     if (offset2 >= 1024)
                         offset2 = 0;
                     repOffsets[offset1] += 3;
-                    repOffsets[offset2] += 1;
+                    repOffsets[offset2]++;
                 }
             }
         }
@@ -563,6 +563,7 @@ public static unsafe partial class Methods
                 (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize,
                 dictContentSize
             );
+
         return dictBufferCapacity < hSize + dictContentSize
             ? dictBufferCapacity
             : hSize + dictContentSize;

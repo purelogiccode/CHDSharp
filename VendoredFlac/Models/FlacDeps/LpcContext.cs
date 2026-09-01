@@ -447,8 +447,8 @@ internal unsafe class LpcContext
     /// </summary>
     /// <param name="subframe">Subframe info containing cached autocorrelation data.</param>
     /// <param name="order">Maximum order</param>
-    /// <param name="samples">Samples pointer</param>
     /// <param name="blocksize">Block size</param>
+    /// <param name="samples">Samples pointer</param>
     /// <param name="window">Window function</param>
     /// <param name="sections">Window sections for autocorrelation computation.</param>
     public void GetReflection(

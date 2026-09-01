@@ -52,6 +52,7 @@ public static class TocParser
                         throw new InvalidDataException(
                             $"FILE command without a preceding TRACK: {rawLine}"
                         );
+
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed FILE command: {rawLine}");
 
@@ -150,6 +151,7 @@ public static class TocParser
                         throw new InvalidDataException(
                             $"START command without a preceding TRACK: {rawLine}"
                         );
+
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed START command: {rawLine}");
 

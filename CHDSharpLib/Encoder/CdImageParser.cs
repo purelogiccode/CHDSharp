@@ -51,8 +51,7 @@ public static class CdImageParser
         var doubleQuote = false;
         var sb = new StringBuilder();
 
-        var i = 0;
-        while (i < line.Length)
+        for (var i = 0; i < line.Length; i++)
         {
             var c = line[i];
             if (!singleQuote && c == '"')
@@ -78,8 +77,6 @@ public static class CdImageParser
             {
                 sb.Append(c);
             }
-
-            i++;
         }
 
         if (sb.Length > 0)

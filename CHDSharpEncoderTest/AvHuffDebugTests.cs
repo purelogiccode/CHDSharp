@@ -66,7 +66,7 @@ public class AvHuffDebugTests
                     + $"ch1size={(compressed[12] << 8) | compressed[13]}\n"
                     + $"video starts at {14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])}: "
                     + $"0x{compressed[14 + ((compressed[10] << 8) | compressed[11]) + ((compressed[12] << 8) | compressed[13])]:X2} "
-                    + $"(expect 0x80)"
+                    + "(expect 0x80)"
                 );
                 Assert.Equal(raw, buf);
             }

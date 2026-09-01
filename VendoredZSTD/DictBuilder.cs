@@ -51,22 +51,26 @@ public static unsafe class DictBuilder
 
         var dictBuffer = new byte[dictCapacity];
         fixed (byte* dictBufferPtr = dictBuffer)
-        fixed (byte* samplesBufferPtr = ms.GetBuffer())
-        fixed (nuint* samplesSizesPtr = samplesSizes)
         {
-            var dictSize = (int)
-                Methods
-                    .ZDICT_optimizeTrainFromBuffer_fastCover(
-                        dictBufferPtr,
-                        (nuint)dictCapacity,
-                        samplesBufferPtr,
-                        samplesSizesPtr,
-                        (uint)samplesSizes.Length,
-                        &@params
-                    )
-                    .EnsureZdictSuccess();
+            fixed (byte* samplesBufferPtr = ms.GetBuffer())
+            {
+                fixed (nuint* samplesSizesPtr = samplesSizes)
+                {
+                    var dictSize = (int)
+                        Methods
+                            .ZDICT_optimizeTrainFromBuffer_fastCover(
+                                dictBufferPtr,
+                                (nuint)dictCapacity,
+                                samplesBufferPtr,
+                                samplesSizesPtr,
+                                (uint)samplesSizes.Length,
+                                &@params
+                            )
+                            .EnsureZdictSuccess();
 
-            return new Span<byte>(dictBuffer, 0, dictSize);
+                    return new Span<byte>(dictBuffer, 0, dictSize);
+                }
+            }
         }
     }
 }

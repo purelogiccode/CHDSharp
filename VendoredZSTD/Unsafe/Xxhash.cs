@@ -378,8 +378,7 @@ public static unsafe partial class Methods
     {
         val = XXH64_round(0, val);
         acc ^= val;
-        acc = acc * 0x9E3779B185EBCA87UL + 0x85EBCA77C2B2AE63UL;
-        return acc;
+        return acc * 0x9E3779B185EBCA87UL + 0x85EBCA77C2B2AE63UL;
     }
 
     private static ulong XXH64_avalanche(ulong h64)

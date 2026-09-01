@@ -378,8 +378,7 @@ public static class DiscDetector
                 var toRead = Math.Min(found.Value.Length, maxBytes);
                 var content = new List<byte>((int)toRead);
                 var remaining = toRead;
-                var lba = found.Value.Extent;
-                while (remaining > 0)
+                for (var lba = found.Value.Extent; remaining > 0; lba++)
                 {
                     var sector = readSector(lba);
                     if (sector == null)
@@ -388,7 +387,6 @@ public static class DiscDetector
                     var chunk = (int)Math.Min(remaining, 2048u);
                     content.AddRange(sector.AsSpan(0, chunk).ToArray());
                     remaining -= (uint)chunk;
-                    lba++;
                 }
 
                 return content.ToArray();

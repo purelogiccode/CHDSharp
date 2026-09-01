@@ -132,18 +132,21 @@ public static unsafe partial class Methods
             {
                 case SymbolEncodingTypeE.SetRepeat:
                     if (dctx->litEntropy == 0)
+                    {
                         return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorDictionaryCorrupted)
                         );
+                    }
 
                     goto case SymbolEncodingTypeE.SetCompressed;
                 case SymbolEncodingTypeE.SetCompressed:
                     if (srcSize < 5)
+                    {
                         return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                         );
-
-                {
+                    }
+                    {
                     nuint lhSize,
                         litSize,
                         litCSize;
@@ -181,32 +184,44 @@ public static unsafe partial class Methods
                     }
 
                     if (litSize > 0 && dst == null)
-                        return unchecked(
+                        {
+                            return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall)
                         );
+                        }
 
-                    if (litSize > 1 << 17)
-                        return unchecked(
+                        if (litSize > 1 << 17)
+                        {
+                            return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                         );
+                        }
 
-                    if (singleStream == 0)
-                        if (litSize < 6)
-                            return unchecked(
+                        if (singleStream == 0)
+                        {
+                            if (litSize < 6)
+                            {
+                                return unchecked(
                                 (nuint)(-(int)ZstdErrorCode.ZstdErrorLiteralsHeaderWrong)
                             );
+                            }
+                        }
 
-                    if (litCSize + lhSize > srcSize)
-                        return unchecked(
+                        if (litCSize + lhSize > srcSize)
+                        {
+                            return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                         );
+                        }
 
-                    if (expectedWriteSize < litSize)
-                        return unchecked(
+                        if (expectedWriteSize < litSize)
+                        {
+                            return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall)
                         );
+                        }
 
-                    ZSTD_allocateLiteralsBuffer(
+                        ZSTD_allocateLiteralsBuffer(
                         dctx,
                         dst,
                         dstCapacity,
@@ -257,29 +272,33 @@ public static unsafe partial class Methods
                     }
                     else
                     {
-                        if (singleStream != 0)
-                            hufSuccess = HUF_decompress1X1_DCtx_wksp(
-                                dctx->entropy.hufTable,
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->workspace,
-                                sizeof(uint) * 640,
-                                flags
-                            );
-                        else
-                            hufSuccess = HUF_decompress4X_hufOnly_wksp(
-                                dctx->entropy.hufTable,
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->workspace,
-                                sizeof(uint) * 640,
-                                flags
-                            );
-                    }
+                            if (singleStream != 0)
+                            {
+                                hufSuccess = HUF_decompress1X1_DCtx_wksp(
+                                                            dctx->entropy.hufTable,
+                                                            dctx->litBuffer,
+                                                            litSize,
+                                                            istart + lhSize,
+                                                            litCSize,
+                                                            dctx->workspace,
+                                                            sizeof(uint) * 640,
+                                                            flags
+                                                        );
+                            }
+                            else
+                            {
+                                hufSuccess = HUF_decompress4X_hufOnly_wksp(
+                                                            dctx->entropy.hufTable,
+                                                            dctx->litBuffer,
+                                                            litSize,
+                                                            istart + lhSize,
+                                                            litCSize,
+                                                            dctx->workspace,
+                                                            sizeof(uint) * 640,
+                                                            flags
+                                                        );
+                            }
+                        }
 
                     if (dctx->litBufferLocation == ZstdLitLocationE.ZstdSplit)
                     {
@@ -321,11 +340,13 @@ public static unsafe partial class Methods
                     }
 
                     if (ERR_isError(hufSuccess))
-                        return unchecked(
+                        {
+                            return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                         );
+                        }
 
-                    dctx->litPtr = dctx->litBuffer;
+                        dctx->litPtr = dctx->litBuffer;
                     dctx->litSize = litSize;
                     dctx->litEntropy = 1;
                     if (litEncType == SymbolEncodingTypeE.SetCompressed)
@@ -354,11 +375,13 @@ public static unsafe partial class Methods
                         case 3:
                             lhSize = 3;
                             if (srcSize < 3)
-                                return unchecked(
+                                {
+                                    return unchecked(
                                     (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                                 );
+                                }
 
-                            litSize = MEM_readLE24(istart) >> 4;
+                                litSize = MEM_readLE24(istart) >> 4;
                             break;
                     }
 
@@ -380,11 +403,13 @@ public static unsafe partial class Methods
                     if (lhSize + litSize + 32 > srcSize)
                     {
                         if (litSize + lhSize > srcSize)
-                            return unchecked(
+                            {
+                                return unchecked(
                                 (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                             );
+                            }
 
-                        if (dctx->litBufferLocation == ZstdLitLocationE.ZstdSplit)
+                            if (dctx->litBufferLocation == ZstdLitLocationE.ZstdSplit)
                         {
                             memcpy(
                                 dctx->litBuffer,
@@ -447,20 +472,24 @@ public static unsafe partial class Methods
                         case 1:
                             lhSize = 2;
                             if (srcSize < 3)
-                                return unchecked(
+                                {
+                                    return unchecked(
                                     (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                                 );
+                                }
 
-                            litSize = (nuint)(MEM_readLE16(istart) >> 4);
+                                litSize = (nuint)(MEM_readLE16(istart) >> 4);
                             break;
                         case 3:
                             lhSize = 3;
                             if (srcSize < 4)
-                                return unchecked(
+                                {
+                                    return unchecked(
                                     (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                                 );
+                                }
 
-                            litSize = MEM_readLE24(istart) >> 4;
+                                litSize = MEM_readLE24(istart) >> 4;
                             break;
                     }
 
@@ -468,11 +497,13 @@ public static unsafe partial class Methods
                         return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
                     if (litSize > 1 << 17)
-                        return unchecked(
+                        {
+                            return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected)
                         );
+                        }
 
-                    if (expectedWriteSize < litSize)
+                        if (expectedWriteSize < litSize)
                         return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
                     ZSTD_allocateLiteralsBuffer(
@@ -743,7 +774,7 @@ public static unsafe partial class Methods
         var highThreshold = tableSize - 1;
         assert(maxSymbolValue <= (35 > 52 ? 35 : 52));
         assert(tableLog <= 9);
-        assert(wkspSize >= sizeof(short) * (52 + 1) + (1U << 9) + sizeof(ulong));
+        assert(wkspSize >= (sizeof(short) * (52 + 1)) + (1U << 9) + sizeof(ulong));
         {
             ZstdSeqSymbolHeader dTableH;
             dTableH.tableLog = tableLog;
@@ -752,6 +783,7 @@ public static unsafe partial class Methods
                 var largeLimit = (short)(1 << (int)(tableLog - 1));
                 uint s;
                 for (s = 0; s < maxSv1; s++)
+                {
                     if (normalizedCounter[s] == -1)
                     {
                         tableDecode[highThreshold--].baseValue = s;
@@ -764,6 +796,7 @@ public static unsafe partial class Methods
                         assert(normalizedCounter[s] >= 0);
                         symbolNext[s] = (ushort)normalizedCounter[s];
                     }
+                }
             }
 
             memcpy(dt, &dTableH, (uint)sizeof(ZstdSeqSymbolHeader));
@@ -802,11 +835,11 @@ public static unsafe partial class Methods
                     nuint u;
                     for (u = 0; u < unroll; ++u)
                     {
-                        var uPosition = (position + u * step) & tableMask;
+                        var uPosition = (position + (u * step)) & tableMask;
                         tableDecode[uPosition].baseValue = spread[s + u];
                     }
 
-                    position = (position + unroll * step) & tableMask;
+                    position = (position + (unroll * step)) & tableMask;
                 }
 
                 assert(position == 0);
@@ -1450,6 +1483,7 @@ public static unsafe partial class Methods
             || oMatchEnd > oendW
             || (MEM_32bits && (nuint)(oend - op) < sequenceLength + 32)
         )
+        {
             return ZSTD_execSequenceEnd(
                 op,
                 oend,
@@ -1465,6 +1499,8 @@ public static unsafe partial class Methods
                 virtualStart,
                 dictEnd
             );
+        }
+
         assert(op <= oLitEnd);
         assert(oLitEnd < oMatchEnd);
         assert(oMatchEnd <= oend);
@@ -1474,12 +1510,14 @@ public static unsafe partial class Methods
         assert(32 >= 16);
         ZSTD_copy16(op, *litPtr);
         if (sequenceLitLength > 16)
+        {
             ZSTD_wildcopy(
                 op + 16,
                 *litPtr + 16,
                 (nint)(sequenceLitLength - 16),
                 ZstdOverlapE.ZstdNoOverlap
             );
+        }
 
         op = oLitEnd;
         *litPtr = iLitEnd;
@@ -1556,6 +1594,7 @@ public static unsafe partial class Methods
             || oMatchEnd > oendW
             || (MEM_32bits && (nuint)(oend - op) < sequenceLength + 32)
         )
+        {
             return ZSTD_execSequenceEndSplitLitBuffer(
                 op,
                 oend,
@@ -1567,6 +1606,8 @@ public static unsafe partial class Methods
                 virtualStart,
                 dictEnd
             );
+        }
+
         assert(op <= oLitEnd);
         assert(oLitEnd < oMatchEnd);
         assert(oMatchEnd <= oend);
@@ -1576,12 +1617,14 @@ public static unsafe partial class Methods
         assert(32 >= 16);
         ZSTD_copy16(op, *litPtr);
         if (sequence.litLength > 16)
+        {
             ZSTD_wildcopy(
                 op + 16,
                 *litPtr + 16,
                 (nint)(sequence.litLength - 16),
                 ZstdOverlapE.ZstdNoOverlap
             );
+        }
 
         op = oLitEnd;
         *litPtr = iLitEnd;
@@ -1691,7 +1734,7 @@ public static unsafe partial class Methods
                         /* Always read extra bits, this keeps the logic simple,
                          * avoids branches, and avoids accidentally reading 0 bits.
                          */
-                        uint extraBits = 30 > 25 ? 30 - 25 : 0;
+                        const uint extraBits = 30 > 25 ? 30 - 25 : 0;
                         offset =
                             ofBase
                             + (
@@ -1837,9 +1880,11 @@ public static unsafe partial class Methods
                     if (leftoverLit != 0)
                     {
                         if (leftoverLit > (nuint)(oend - op))
+                        {
                             return unchecked(
                                 (nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall)
                             );
+                        }
 
                         ZSTD_safecopyDstBeforeSrc(op, litPtr, (nint)leftoverLit);
                         sequence.litLength -= leftoverLit;
@@ -1876,6 +1921,7 @@ public static unsafe partial class Methods
             }
 
             if (nbSeq > 0)
+            {
                 for (;;)
                 {
                     var sequence = ZSTD_decodeSequence(&seqState, isLongOffset);
@@ -1896,6 +1942,7 @@ public static unsafe partial class Methods
                         break;
                     BIT_reloadDStream(&seqState.DStream);
                 }
+            }
 
             if (nbSeq != 0)
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorCorruptionDetected));
@@ -1986,8 +2033,10 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
+                {
                     System.Runtime.CompilerServices.Unsafe.Add(ref seqState.prevOffset.e0, (int)i) =
                         dctx->entropy.rep[i];
+                }
             }
 
             if (ERR_isError(BIT_initDStream(ref seqState.DStream, ip, (nuint)(iend - ip))))
@@ -2031,7 +2080,7 @@ public static unsafe partial class Methods
                                 /* Always read extra bits, this keeps the logic simple,
                                  * avoids branches, and avoids accidentally reading 0 bits.
                                  */
-                                uint extraBits = 30 > 25 ? 30 - 25 : 0;
+                                const uint extraBits = 30 > 25 ? 30 - 25 : 0;
                                 offset =
                                     ofBase
                                     + (
@@ -2167,12 +2216,14 @@ public static unsafe partial class Methods
                     assert(32 >= 16);
                     ZSTD_copy16(op, litPtr);
                     if (sequenceLitLength > 16)
+                    {
                         ZSTD_wildcopy(
                             op + 16,
                             litPtr + 16,
                             (nint)(sequenceLitLength - 16),
                             ZstdOverlapE.ZstdNoOverlap
                         );
+                    }
 
                     var opInner = oLitEnd;
                     litPtr = iLitEnd;
@@ -2250,11 +2301,13 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
+                {
                     dctx->entropy.rep[i] = (uint)
                         System.Runtime.CompilerServices.Unsafe.Add(
                             ref seqState.prevOffset.e0,
                             (int)i
                         );
+                }
             }
         }
 
@@ -2433,9 +2486,11 @@ public static unsafe partial class Methods
                     if (leftoverLit != 0)
                     {
                         if (leftoverLit > (nuint)(oend - op))
+                        {
                             return unchecked(
                                 (nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall)
                             );
+                        }
 
                         ZSTD_safecopyDstBeforeSrc(op, litPtr, (nint)leftoverLit);
                         sequences[(seqNb - 8) & (8 - 1)].litLength -= leftoverLit;
@@ -2516,9 +2571,11 @@ public static unsafe partial class Methods
                     if (leftoverLit != 0)
                     {
                         if (leftoverLit > (nuint)(oend - op))
+                        {
                             return unchecked(
                                 (nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall)
                             );
+                        }
 
                         ZSTD_safecopyDstBeforeSrc(op, litPtr, (nint)leftoverLit);
                         sequence->litLength -= leftoverLit;
@@ -2756,7 +2813,7 @@ public static unsafe partial class Methods
                         ? info.maxNbAdditionalBits
                         : table[u].nbAdditionalBits;
                 if (table[u].nbAdditionalBits > 22)
-                    info.longOffsetShare += 1;
+                    info.longOffsetShare++;
             }
 
             assert(tableLog <= 8);
@@ -2862,7 +2919,9 @@ public static unsafe partial class Methods
                 && sizeof(nuint) == sizeof(void*)
                 && unchecked((nuint)(-1)) - (nuint)dst < 1 << 20
             )
+            {
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
+            }
 
             if (
                 isLongOffset != default
@@ -2874,7 +2933,9 @@ public static unsafe partial class Methods
                     isLongOffset != default
                     && info.maxNbAdditionalBits <= (uint)(MEM_32bits ? 25 : 57)
                 )
+                {
                     isLongOffset = ZstdLongOffsetE.ZstdLoIsRegularOffset;
+                }
 
                 if (usePrefetchDecoder == 0)
                 {
@@ -2886,6 +2947,7 @@ public static unsafe partial class Methods
 
             dctx->ddictIsCold = 0;
             if (usePrefetchDecoder != 0)
+            {
                 return ZSTD_decompressSequencesLong(
                     dctx,
                     dst,
@@ -2896,8 +2958,10 @@ public static unsafe partial class Methods
                     isLongOffset,
                     frame
                 );
+            }
 
             if (dctx->litBufferLocation == ZstdLitLocationE.ZstdSplit)
+            {
                 return ZSTD_decompressSequencesSplitLitBuffer(
                     dctx,
                     dst,
@@ -2908,6 +2972,8 @@ public static unsafe partial class Methods
                     isLongOffset,
                     frame
                 );
+            }
+
             return ZSTD_decompressSequences(
                 dctx,
                 dst,

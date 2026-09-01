@@ -156,7 +156,6 @@ internal static class Crc16
         }
 
         /* return combined crc */
-        crc1 = Reflect(crc1);
-        return crc1;
+        return Reflect(crc1);
     }
 }

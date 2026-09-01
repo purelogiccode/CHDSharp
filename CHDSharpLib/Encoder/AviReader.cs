@@ -93,6 +93,7 @@ public sealed class AviReader : IDisposable
             throw new NotSupportedException(
                 $"Unsupported AVI video format '{FourCcToString(stream.Format)}'; YUY2, VYUY or UYVY is required"
             );
+
         if (frameNum >= (uint)stream.Chunks.Count)
             throw new ArgumentOutOfRangeException(
                 nameof(frameNum),

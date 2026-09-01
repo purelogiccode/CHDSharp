@@ -762,7 +762,7 @@ internal class AudioDecoder : IAudioSource
     private bool skip_bytes(int bytes)
     {
         for (var j = 0; j < bytes; j++)
-            if (0 == _io.Read(_framesBuffer, 0, 1))
+            if (_io.Read(_framesBuffer, 0, 1) == 0)
                 return false;
 
         return true;
@@ -802,7 +802,7 @@ internal class AudioDecoder : IAudioSource
                     var skip = 0;
                     for (var j = 0; j < 4; j++)
                     {
-                        if (0 == _io.Read(_framesBuffer, 0, 1))
+                        if (_io.Read(_framesBuffer, 0, 1) == 0)
                             throw new InvalidDataException("FLAC stream not found");
 
                         skip <<= 7;

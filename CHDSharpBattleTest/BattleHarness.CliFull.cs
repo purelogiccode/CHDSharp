@@ -110,6 +110,7 @@ internal sealed partial class BattleHarness
                 var r = _cli.Run("help", cmd);
                 AssertCliSuccess(r, $"help {cmd}");
             });
+
         Check(suite, "unknown command → graceful exit 0 via help fallback", () =>
         {
             // Program.cs treats unknown trailing args as directories; it does NOT error on unknown command if passed as second token?

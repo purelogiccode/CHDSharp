@@ -56,14 +56,18 @@ public unsafe class Decompressor : IDisposable
     {
         EnsureNotDisposed();
         if (dict.IsEmpty)
+        {
             Methods.ZSTD_DCtx_loadDictionary(_dctx, null, 0).EnsureZstdSuccess();
+        }
         else
+        {
             fixed (byte* dictPtr = dict)
             {
                 Methods
                     .ZSTD_DCtx_loadDictionary(_dctx, dictPtr, (nuint)dict.Length)
                     .EnsureZstdSuccess();
             }
+        }
 
         GC.KeepAlive(this);
     }
@@ -90,15 +94,20 @@ public unsafe class Decompressor : IDisposable
     {
         var expectedDstSize = GetDecompressedSize(src);
         if (expectedDstSize > (ulong)maxDecompressedSize)
+        {
             throw new ZstdException(
                 ZstdErrorCode.ZstdErrorDstSizeTooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than {nameof(maxDecompressedSize)} {maxDecompressedSize}"
             );
+        }
+
         if (expectedDstSize > Constants.MaxByteArrayLength)
+        {
             throw new ZstdException(
                 ZstdErrorCode.ZstdErrorDstSizeTooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than max possible byte array size {Constants.MaxByteArrayLength}"
             );
+        }
 
         var dest = new byte[expectedDstSize];
         var length = Unwrap(src, dest);
@@ -114,7 +123,8 @@ public unsafe class Decompressor : IDisposable
     {
         EnsureNotDisposed();
         fixed (byte* srcPtr = src)
-        fixed (byte* destPtr = dest)
+        {
+            fixed (byte* destPtr = dest)
         {
             var returnValue = (int)
                 Methods
@@ -128,6 +138,7 @@ public unsafe class Decompressor : IDisposable
                     .EnsureZstdSuccess();
             GC.KeepAlive(this);
             return returnValue;
+        }
         }
     }
 
@@ -155,7 +166,8 @@ public unsafe class Decompressor : IDisposable
     {
         EnsureNotDisposed();
         fixed (byte* srcPtr = src)
-        fixed (byte* destPtr = dest)
+        {
+            fixed (byte* destPtr = dest)
         {
             var returnValue = Methods.ZSTD_decompressDCtx(
                 _dctx,
@@ -175,6 +187,7 @@ public unsafe class Decompressor : IDisposable
             returnValue.EnsureZstdSuccess();
             written = (int)returnValue;
             return true;
+        }
         }
     }
 
@@ -213,13 +226,15 @@ public unsafe class Decompressor : IDisposable
     internal nuint DecompressStream(ref ZstdInBufferS input, ref ZstdOutBufferS output)
     {
         fixed (ZstdInBufferS* inputPtr = &input)
-        fixed (ZstdOutBufferS* outputPtr = &output)
+        {
+            fixed (ZstdOutBufferS* outputPtr = &output)
         {
             var returnValue = Methods
                 .ZSTD_decompressStream(_dctx, outputPtr, inputPtr)
                 .EnsureZstdSuccess();
             GC.KeepAlive(this);
             return returnValue;
+        }
         }
     }
 }

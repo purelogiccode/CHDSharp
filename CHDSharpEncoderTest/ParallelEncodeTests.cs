@@ -227,7 +227,7 @@ public class ParallelEncodeTests : IDisposable
         // Use a generous tolerance to avoid flaky tests.
         Assert.True(
             parallelTime * 2.0 < singleTime,
-            $"expected parallel to be >= 2x faster than single-threaded: "
+            "expected parallel to be >= 2x faster than single-threaded: "
             + $"single {singleTime.TotalSeconds:F2}s, parallel {parallelTime.TotalSeconds:F2}s"
         );
 

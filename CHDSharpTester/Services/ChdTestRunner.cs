@@ -924,7 +924,7 @@ internal class ChdTestRunner
         }
 
         sha1.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-        return HashUtil.ToHex(sha1.Hash!);
+        return HashUtil.ToHex(sha1.Hash);
     }
 
     private static void Report(
@@ -1136,6 +1136,7 @@ internal class ChdTestRunner
                 headerIssues.Add(
                     $"Hunks*HunkBytes ({(ulong)chd.HunkCount * chd.HunkBytes}) < TotalBytes ({chd.TotalBytes})"
                 );
+
             if (headerIssues.Count == 0)
             {
                 detail.Add(
@@ -1185,7 +1186,7 @@ internal class ChdTestRunner
 
             using (c)
             {
-                return c != null && c.HunkBytes % 2448 == 0;
+                return c?.HunkBytes % 2448 == 0;
             }
         });
         if (cdSource == null)
@@ -1483,7 +1484,7 @@ internal class ChdTestRunner
 
             using (c)
             {
-                return c != null && c.HunkBytes % 2448 == 0;
+                return c?.HunkBytes % 2448 == 0;
             }
         });
         if (source == null)
@@ -1543,7 +1544,7 @@ internal class ChdTestRunner
                                 TestName = "Parent Chain Tests",
                                 Status = TestStatus.Skipped,
                                 Detail =
-                                    $"chdman failed to build parent/child set. "
+                                    "chdman failed to build parent/child set. "
                                     + $"parent(exit={rParent.ExitCode}) child(exit={rChild.ExitCode})"
                             }
                         ]

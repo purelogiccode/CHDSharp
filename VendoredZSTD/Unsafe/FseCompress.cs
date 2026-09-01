@@ -40,6 +40,7 @@ public static unsafe partial class Methods
             > wkspSize
         )
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorTableLogTooLarge));
+
         tableU16[-2] = (ushort)tableLog;
         tableU16[-1] = (ushort)maxSymbolValue;
         assert(tableLog < 16);
@@ -316,6 +317,7 @@ public static unsafe partial class Methods
                 tableLog,
                 0
             );
+
         return FSE_writeNCount_generic(
             buffer,
             bufferSize,
@@ -670,10 +672,13 @@ public static unsafe partial class Methods
         {
             FSE_encodeSymbol(&bitC, &cState2, *--ip);
             if (sizeof(nuint) * 8 < (14 - 2) * 2 + 7)
+            {
                 if (fast != 0)
                     BIT_flushBitsFast(&bitC);
                 else
                     BIT_flushBits(&bitC);
+            }
+
             FSE_encodeSymbol(&bitC, &cState1, *--ip);
             if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7)
             {

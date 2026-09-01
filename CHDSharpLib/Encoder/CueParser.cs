@@ -129,6 +129,7 @@ public static class CueParser
                         throw new InvalidDataException(
                             $"INDEX command without a preceding TRACK: {rawLine}"
                         );
+
                     if (tokens.Count < 3)
                         throw new InvalidDataException($"Malformed INDEX command: {rawLine}");
                     if (
@@ -180,6 +181,7 @@ public static class CueParser
                         throw new InvalidDataException(
                             $"PREGAP command without a preceding TRACK: {rawLine}"
                         );
+
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed PREGAP command: {rawLine}");
 
@@ -195,6 +197,7 @@ public static class CueParser
                         throw new InvalidDataException(
                             $"POSTGAP command without a preceding TRACK: {rawLine}"
                         );
+
                     if (tokens.Count < 2)
                         throw new InvalidDataException($"Malformed POSTGAP command: {rawLine}");
 

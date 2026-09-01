@@ -14,6 +14,7 @@ public static unsafe partial class Methods
                 customMem.opaque,
                 size
             );
+
         return malloc(size);
     }
 

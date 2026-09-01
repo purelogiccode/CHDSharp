@@ -12,7 +12,10 @@ internal static class ChdDiagnostics
     [ThreadStatic] private static string? _detail;
 
     /// <summary>Records a failure detail for the current thread, overwriting any previous one.</summary>
-    internal static void SetDetail(string detail) => _detail = detail;
+    internal static void SetDetail(string detail)
+    {
+        _detail = detail;
+    }
 
     /// <summary>
     ///     Returns the most recent failure detail recorded on the current thread (or

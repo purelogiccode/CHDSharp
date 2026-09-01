@@ -119,8 +119,10 @@ public class DecompressionStream : Stream
                 var oldInputPos = _input.pos;
                 var result = DecompressStream(ref output, buffer);
                 if (output.pos > 0 || oldInputPos != _input.pos)
+                {
                     // Keep result from last decompress call that made some progress, so we known if we're at end of frame
                     _lastDecompressResult = result;
+                }
 
                 // If decompression filled the output buffer, there might still be data buffered in the decompressor context
                 _contextDrained = output.pos < output.size;
@@ -181,8 +183,10 @@ public class DecompressionStream : Stream
                 var oldInputPos = _input.pos;
                 var result = DecompressStream(ref output, buffer.Span);
                 if (output.pos > 0 || oldInputPos != _input.pos)
+                {
                     // Keep result from last decompress call that made some progress, so we known if we're at end of frame
                     _lastDecompressResult = result;
+                }
 
                 // If decompression filled the output buffer, there might still be data buffered in the decompressor context
                 _contextDrained = output.pos < output.size;
@@ -215,11 +219,13 @@ public class DecompressionStream : Stream
     private unsafe nuint DecompressStream(ref ZstdOutBufferS output, Span<byte> outputBuffer)
     {
         fixed (byte* inputBufferPtr = _inputBuffer)
-        fixed (byte* outputBufferPtr = outputBuffer)
+        {
+            fixed (byte* outputBufferPtr = outputBuffer)
         {
             _input.src = inputBufferPtr;
             output.dst = outputBufferPtr;
             return _decompressor!.DecompressStream(ref _input, ref output);
+        }
         }
     }
 

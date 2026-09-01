@@ -2,6 +2,32 @@ namespace VendoredZSTD.Unsafe;
 
 public enum ZstdCParameter
 {
+    /* note : additional experimental parameters are also available
+     * within the experimental section of the API.
+     * At the time of this writing, they include :
+     * ZSTD_c_rsyncable
+     * ZSTD_c_format
+     * ZSTD_c_forceMaxWindow
+     * ZSTD_c_forceAttachDict
+     * ZSTD_c_literalCompressionMode
+     * ZSTD_c_targetCBlockSize
+     * ZSTD_c_srcSizeHint
+     * ZSTD_c_enableDedicatedDictSearch
+     * ZSTD_c_stableInBuffer
+     * ZSTD_c_stableOutBuffer
+     * ZSTD_c_blockDelimiters
+     * ZSTD_c_validateSequences
+     * ZSTD_c_useBlockSplitter
+     * ZSTD_c_useRowMatchFinder
+     * ZSTD_c_prefetchCDictTables
+     * ZSTD_c_enableSeqProducerFallback
+     * ZSTD_c_maxBlockSize
+     * Because they are not stable, it's necessary to define ZSTD_STATIC_LINKING_ONLY to access them.
+     * note : never ever use experimentalParam? names directly;
+     *        also, the enums values themselves are unstable and can still change.
+     */
+    ZstdCExperimentalParam2 = 10,
+
     /* Set compression parameters according to pre-defined cLevel table.
      * Note that exact compression parameters are dynamically determined,
      * depending on both compression level and srcSize (when known).
@@ -181,32 +207,6 @@ public enum ZstdCParameter
      *        also, the enums values themselves are unstable and can still change.
      */
     ZstdCExperimentalParam1 = 500,
-
-    /* note : additional experimental parameters are also available
-     * within the experimental section of the API.
-     * At the time of this writing, they include :
-     * ZSTD_c_rsyncable
-     * ZSTD_c_format
-     * ZSTD_c_forceMaxWindow
-     * ZSTD_c_forceAttachDict
-     * ZSTD_c_literalCompressionMode
-     * ZSTD_c_targetCBlockSize
-     * ZSTD_c_srcSizeHint
-     * ZSTD_c_enableDedicatedDictSearch
-     * ZSTD_c_stableInBuffer
-     * ZSTD_c_stableOutBuffer
-     * ZSTD_c_blockDelimiters
-     * ZSTD_c_validateSequences
-     * ZSTD_c_useBlockSplitter
-     * ZSTD_c_useRowMatchFinder
-     * ZSTD_c_prefetchCDictTables
-     * ZSTD_c_enableSeqProducerFallback
-     * ZSTD_c_maxBlockSize
-     * Because they are not stable, it's necessary to define ZSTD_STATIC_LINKING_ONLY to access them.
-     * note : never ever use experimentalParam? names directly;
-     *        also, the enums values themselves are unstable and can still change.
-     */
-    ZstdCExperimentalParam2 = 10,
 
     /* note : additional experimental parameters are also available
      * within the experimental section of the API.

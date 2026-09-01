@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 
 namespace CHDSharp;
 
@@ -42,9 +43,9 @@ internal sealed class EnvironmentSnapshot
 
             try
             {
-                using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-                return new System.Security.Principal.WindowsPrincipal(identity)
-                    .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator)
+                using var identity = WindowsIdentity.GetCurrent();
+                return new WindowsPrincipal(identity)
+                    .IsInRole(WindowsBuiltInRole.Administrator)
                     ? "yes"
                     : "no";
             }

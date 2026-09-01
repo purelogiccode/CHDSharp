@@ -236,7 +236,10 @@ public static unsafe partial class Methods
                 )
             )
         )
+        {
             return null;
+        }
+
         return ddict;
     }
 

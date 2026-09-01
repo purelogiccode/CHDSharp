@@ -146,7 +146,7 @@ public static unsafe partial class Methods
         var ip = istart;
         /* the next position */
         byte* ip1;
-        ip += ip - prefixLowest == 0 ? 1 : 0;
+        ip += ip == prefixLowest ? 1 : 0;
         {
             var current = (uint)(ip - @base);
             var windowLow = ZSTD_getLowestPrefixIndex(ms, current, cParams->windowLog);
@@ -194,6 +194,7 @@ public static unsafe partial class Methods
 
                 hl1 = ZSTD_hashPtr(ip1, hBitsL, 8);
                 if (idxl0 > prefixLowestIndex)
+                {
                     if (MEM_read64(matchl0) == MEM_read64(ip))
                     {
                         mLength = ZSTD_count(ip + 8, matchl0 + 8, iend) + 8;
@@ -207,12 +208,15 @@ public static unsafe partial class Methods
 
                         goto _match_found;
                     }
+                }
 
                 idxl1 = hashLong[hl1];
                 matchl1 = @base + idxl1;
                 if (idxs0 > prefixLowestIndex)
+                {
                     if (MEM_read32(matchs0) == MEM_read32(ip))
                         goto _search_next_long;
+                }
 
                 if (ip1 >= nextStep)
                 {
@@ -242,6 +246,7 @@ public static unsafe partial class Methods
             return (nuint)(iend - anchor);
             _search_next_long:
             if (idxl1 > prefixLowestIndex)
+            {
                 if (MEM_read64(matchl1) == MEM_read64(ip1))
                 {
                     ip = ip1;
@@ -256,6 +261,7 @@ public static unsafe partial class Methods
 
                     goto _match_found;
                 }
+            }
 
             mLength = ZSTD_count(ip + 4, matchs0 + 4, iend) + 4;
             offset = (uint)(ip - matchs0);
@@ -741,8 +747,8 @@ public static unsafe partial class Methods
         var mls = ms->cParams.minMatch;
         switch (mls)
         {
-            default:
             case 4:
+            default:
                 return ZSTD_compressBlock_doubleFast_noDict_4(ms, seqStore, rep, src, srcSize);
             case 5:
                 return ZSTD_compressBlock_doubleFast_noDict_5(ms, seqStore, rep, src, srcSize);
@@ -764,8 +770,8 @@ public static unsafe partial class Methods
         var mls = ms->cParams.minMatch;
         switch (mls)
         {
-            default:
             case 4:
+            default:
                 return ZSTD_compressBlock_doubleFast_dictMatchState_4(
                     ms,
                     seqStore,
@@ -1061,8 +1067,8 @@ public static unsafe partial class Methods
         var mls = ms->cParams.minMatch;
         switch (mls)
         {
-            default:
             case 4:
+            default:
                 return ZSTD_compressBlock_doubleFast_extDict_4(ms, seqStore, rep, src, srcSize);
             case 5:
                 return ZSTD_compressBlock_doubleFast_extDict_5(ms, seqStore, rep, src, srcSize);

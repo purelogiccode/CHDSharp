@@ -17,7 +17,7 @@ public static unsafe partial class Methods
     )
     {
         var bufPool = (ZstdmtBufferPoolS*)ZSTD_customCalloc(
-            (uint)sizeof(ZstdmtBufferPoolS) + (maxNbBuffers - 1) * (uint)sizeof(BufferS),
+            (uint)sizeof(ZstdmtBufferPoolS) + ((maxNbBuffers - 1) * (uint)sizeof(BufferS)),
             cMem
         );
         if (bufPool == null)
@@ -47,7 +47,7 @@ public static unsafe partial class Methods
     {
         nuint poolSize =
             (uint)sizeof(ZstdmtBufferPoolS)
-            + (bufPool->totalBuffers - 1) * (uint)sizeof(BufferS);
+            + ((bufPool->totalBuffers - 1) * (uint)sizeof(BufferS));
         uint u;
         nuint totalBufferSize = 0;
         SynchronizationWrapper.Enter(&bufPool->poolMutex);
@@ -218,7 +218,7 @@ public static unsafe partial class Methods
     private static ZstdmtCCtxPool* ZSTDMT_createCCtxPool(int nbWorkers, ZstdCustomMem cMem)
     {
         var cctxPool = (ZstdmtCCtxPool*)ZSTD_customCalloc(
-            (nuint)(sizeof(ZstdmtCCtxPool) + (nbWorkers - 1) * sizeof(ZstdCCtxS*)),
+            (nuint)(sizeof(ZstdmtCCtxPool) + ((nbWorkers - 1) * sizeof(ZstdCCtxS*))),
             cMem
         );
         assert(nbWorkers > 0);
@@ -258,7 +258,7 @@ public static unsafe partial class Methods
         {
             var nbWorkers = (uint)cctxPool->totalCCtx;
             nuint poolSize =
-                (uint)sizeof(ZstdmtCCtxPool) + (nbWorkers - 1) * (uint)sizeof(ZstdCCtxS*);
+                (uint)sizeof(ZstdmtCCtxPool) + ((nbWorkers - 1) * (uint)sizeof(ZstdCCtxS*));
             uint u;
             nuint totalCCtxSize = 0;
             for (u = 0; u < nbWorkers; u++)
@@ -355,11 +355,15 @@ public static unsafe partial class Methods
                 serialState->ldmState.hashTable == null
                 || serialState->ldmState.bucketOffsets == null
             )
+            {
                 return 1;
+            }
+
             memset(serialState->ldmState.hashTable, 0, (uint)hashSize);
             memset(serialState->ldmState.bucketOffsets, 0, (uint)numBuckets);
             serialState->ldmState.loadedDictEnd = 0;
             if (dictSize > 0)
+            {
                 if (dictContentType == ZstdDictContentTypeE.ZstdDctRawContent)
                 {
                     var dictEnd = (byte*)dict + dictSize;
@@ -375,6 +379,7 @@ public static unsafe partial class Methods
                             ? 0
                             : (uint)(dictEnd - serialState->ldmState.window.@base);
                 }
+            }
 
             serialState->ldmWindow = serialState->ldmState.window;
         }
@@ -829,7 +834,7 @@ public static unsafe partial class Methods
         assert(nbJobs > 0);
         assert((nbJobs & (nbJobs - 1)) == 0);
         mtctx->jobIDMask = nbJobs - 1;
-        mtctx->bufPool = ZSTDMT_createBufferPool(2 * nbWorkers + 3, cMem);
+        mtctx->bufPool = ZSTDMT_createBufferPool((2 * nbWorkers) + 3, cMem);
         mtctx->cctxPool = ZSTDMT_createCCtxPool((int)nbWorkers, cMem);
         mtctx->seqPool = ZSTDMT_createSeqPool(nbWorkers, cMem);
         initError = ZSTDMT_serialState_init(&mtctx->serial);
@@ -927,7 +932,7 @@ public static unsafe partial class Methods
         return (nuint)sizeof(ZstdmtCCtxS)
                + POOL_sizeof(mtctx->factory)
                + ZSTDMT_sizeof_bufferPool(mtctx->bufPool)
-               + (mtctx->jobIDMask + 1) * (uint)sizeof(ZstdmtJobDescription)
+               + ((mtctx->jobIDMask + 1) * (uint)sizeof(ZstdmtJobDescription))
                + ZSTDMT_sizeof_CCtxPool(mtctx->cctxPool)
                + ZSTDMT_sizeof_seqPool(mtctx->seqPool)
                + ZSTD_sizeof_CDict(mtctx->cdictLocal)
@@ -946,7 +951,7 @@ public static unsafe partial class Methods
                 return errCode;
         }
 
-        mtctx->bufPool = ZSTDMT_expandBufferPool(mtctx->bufPool, 2 * nbWorkers + 3);
+        mtctx->bufPool = ZSTDMT_expandBufferPool(mtctx->bufPool, (2 * nbWorkers) + 3);
         if (mtctx->bufPool == null)
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
         mtctx->cctxPool = ZSTDMT_expandCCtxPool(mtctx->cctxPool, (int)nbWorkers);
@@ -1066,12 +1071,16 @@ public static unsafe partial class Methods
     {
         uint jobLog;
         if (@params->ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
+        {
             jobLog =
-                21 > ZSTD_cycleLog(@params->cParams.chainLog, @params->cParams.strategy) + 3
-                    ? 21
-                    : ZSTD_cycleLog(@params->cParams.chainLog, @params->cParams.strategy) + 3;
+                        21 > ZSTD_cycleLog(@params->cParams.chainLog, @params->cParams.strategy) + 3
+                            ? 21
+                            : ZSTD_cycleLog(@params->cParams.chainLog, @params->cParams.strategy) + 3;
+        }
         else
+        {
             jobLog = 20 > @params->cParams.windowLog + 2 ? 20 : @params->cParams.windowLog + 2;
+        }
 
         return jobLog < (uint)(MEM_32bits ? 29 : 30) ? jobLog : (uint)(MEM_32bits ? 29 : 30);
     }
@@ -1113,6 +1122,7 @@ public static unsafe partial class Methods
         var ovLog = (int)(overlapRLog >= 8 ? 0 : @params->cParams.windowLog - (uint)overlapRLog);
         assert(overlapRLog is >= 0 and <= 8);
         if (@params->ldmParams.enableLdm == ZstdParamSwitchE.ZstdPsEnable)
+        {
             ovLog = (int)(
                 (
                     @params->cParams.windowLog < ZSTDMT_computeTargetJobLog(@params) - 2
@@ -1120,6 +1130,7 @@ public static unsafe partial class Methods
                         : ZSTDMT_computeTargetJobLog(@params) - 2
                 ) - (uint)overlapRLog
             );
+        }
 
         assert(0 <= ovLog && ovLog <= (sizeof(nuint) == 4 ? 30 : 31));
         return ovLog == 0 ? 0 : (nuint)1 << ovLog;
@@ -1259,7 +1270,10 @@ public static unsafe partial class Methods
                 dictContentType
             ) != 0
         )
+        {
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation));
+        }
+
         return 0;
     }
 
@@ -1439,11 +1453,13 @@ public static unsafe partial class Methods
                 assert(cSize >= mtctx->jobs[wJobId].dstFlushed);
                 assert(mtctx->jobs[wJobId].dstBuff.start != null);
                 if (toFlush > 0)
+                {
                     memcpy(
                         (sbyte*)output->dst + output->pos,
                         (sbyte*)mtctx->jobs[wJobId].dstBuff.start + mtctx->jobs[wJobId].dstFlushed,
                         (uint)toFlush
                     );
+                }
 
                 output->pos += toFlush;
                 mtctx->jobs[wJobId].dstFlushed += toFlush;

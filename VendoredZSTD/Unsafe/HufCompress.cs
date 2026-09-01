@@ -1324,7 +1324,7 @@ public static unsafe partial class Methods
         uint i;
         for (i = 0; i < maxSymbolValue + 1; i++)
             if (count[i] != 0)
-                cardinality += 1;
+                cardinality++;
 
         return cardinality;
     }

@@ -56,6 +56,7 @@ internal sealed class LibFlacEncoder
                 nameof(channels),
                 "Only 1 or 2 channels are supported"
             );
+
         if (blockSize < 16)
             throw new ArgumentOutOfRangeException(
                 nameof(blockSize),

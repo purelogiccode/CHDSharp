@@ -81,17 +81,17 @@ public static unsafe partial class Methods
             if (segmentFreqs[idx] == 0)
                 activeSegment.score += freqs[idx];
 
-            activeSegment.end += 1;
-            segmentFreqs[idx] += 1;
+            activeSegment.end++;
+            segmentFreqs[idx]++;
             if (activeSegment.end - activeSegment.begin == dmersInK + 1)
             {
                 /* Get hash value of the dmer to be eliminated from active segment */
                 var delIndex = FASTCOVER_hashPtrToIndex(ctx->samples + activeSegment.begin, f, d);
-                segmentFreqs[delIndex] -= 1;
+                segmentFreqs[delIndex]--;
                 if (segmentFreqs[delIndex] == 0)
                     activeSegment.score -= freqs[delIndex];
 
-                activeSegment.begin += 1;
+                activeSegment.begin++;
             }
 
             if (activeSegment.score > bestSegment.score)
@@ -101,8 +101,8 @@ public static unsafe partial class Methods
         while (activeSegment.begin < end)
         {
             var delIndex = FASTCOVER_hashPtrToIndex(ctx->samples + activeSegment.begin, f, d);
-            segmentFreqs[delIndex] -= 1;
-            activeSegment.begin += 1;
+            segmentFreqs[delIndex]--;
+            activeSegment.begin++;
         }
 
         {

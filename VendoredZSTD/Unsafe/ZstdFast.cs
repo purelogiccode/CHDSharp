@@ -329,6 +329,7 @@ public static unsafe partial class Methods
             hashTable[ZSTD_hashPtr(@base + current0 + 2, hlog, mls)] = current0 + 2;
             hashTable[ZSTD_hashPtr(ip0 - 2, hlog, mls)] = (uint)(ip0 - 2 - @base);
             if (repOffset2 > 0)
+            {
                 while (ip0 <= ilimit && MEM_read32(ip0) == MEM_read32(ip0 - repOffset2))
                 {
                     /* store sequence */
@@ -348,6 +349,7 @@ public static unsafe partial class Methods
                     ZSTD_storeSeq(seqStore, 0, anchor, iend, 1, rLength);
                     anchor = ip0;
                 }
+            }
         }
 
         goto _start;
@@ -452,10 +454,11 @@ public static unsafe partial class Methods
         var mls = ms->cParams.minMatch;
         assert(ms->dictMatchState == null);
         if (ms->cParams.targetLength > 1)
+        {
             switch (mls)
             {
-                default:
                 case 4:
+                default:
                     return ZSTD_compressBlock_fast_noDict_4_1(ms, seqStore, rep, src, srcSize);
                 case 5:
                     return ZSTD_compressBlock_fast_noDict_5_1(ms, seqStore, rep, src, srcSize);
@@ -464,11 +467,12 @@ public static unsafe partial class Methods
                 case 7:
                     return ZSTD_compressBlock_fast_noDict_7_1(ms, seqStore, rep, src, srcSize);
             }
+        }
 
         switch (mls)
         {
-            default:
             case 4:
+            default:
                 return ZSTD_compressBlock_fast_noDict_4_0(ms, seqStore, rep, src, srcSize);
             case 5:
                 return ZSTD_compressBlock_fast_noDict_5_0(ms, seqStore, rep, src, srcSize);
@@ -595,6 +599,7 @@ public static unsafe partial class Methods
                     var dictMatchIndex = dictMatchIndexAndTag >> 8;
                     var dictMatch = dictBase + dictMatchIndex;
                     if (dictMatchIndex > dictStartIndex && MEM_read32(dictMatch) == MEM_read32(ip0))
+                    {
                         if (matchIndex <= prefixStartIndex)
                         {
                             var offset = curr - dictMatchIndex - dictIndexDelta;
@@ -628,6 +633,7 @@ public static unsafe partial class Methods
                             );
                             break;
                         }
+                    }
                 }
 
                 if (matchIndex > prefixStartIndex && MEM_read32(match) == MEM_read32(ip0))
@@ -667,7 +673,7 @@ public static unsafe partial class Methods
 
                 ip0 = ip1;
                 // ReSharper disable once ConvertToCompoundAssignment
-                ip1 = ip1 + step;
+                ip1 += step;
                 if (ip1 > ilimit)
                     goto _cleanup;
                 curr = (uint)(ip0 - @base);
@@ -815,8 +821,8 @@ public static unsafe partial class Methods
         assert(ms->dictMatchState != null);
         switch (mls)
         {
-            default:
             case 4:
+            default:
                 return ZSTD_compressBlock_fast_dictMatchState_4_0(ms, seqStore, rep, src, srcSize);
             case 5:
                 return ZSTD_compressBlock_fast_dictMatchState_5_0(ms, seqStore, rep, src, srcSize);
@@ -1126,8 +1132,8 @@ public static unsafe partial class Methods
         assert(ms->dictMatchState == null);
         switch (mls)
         {
-            default:
             case 4:
+            default:
                 return ZSTD_compressBlock_fast_extDict_4_0(ms, seqStore, rep, src, srcSize);
             case 5:
                 return ZSTD_compressBlock_fast_extDict_5_0(ms, seqStore, rep, src, srcSize);

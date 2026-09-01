@@ -194,10 +194,10 @@ internal class AudioPcmConfig
         Dvdaudiogr120 = Speakerfrontleft | Speakerfrontright | Speakerbackleft | Speakerbackright,
 
         /// <summary>DVD Audio channel group 2, channel 0 (silent).</summary>
-        Dvdaudiogr20 = 0,
+        Dvdaudiogr20 = Directout,
 
         /// <summary>DVD Audio channel group 2, channel 1 (silent).</summary>
-        Dvdaudiogr21 = 0,
+        Dvdaudiogr21 = Directout,
 
         /// <summary>DVD Audio channel group 2, channel 2 (back center).</summary>
         Dvdaudiogr22 = Speakerbackcenter,

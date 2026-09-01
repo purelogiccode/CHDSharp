@@ -274,7 +274,7 @@ public static unsafe partial class Methods
                             d.@byte = wksp->symbols[symbol + s];
                             d.nbBits = nbBits;
                             dt[uStart] = d;
-                            uStart += 1;
+                            uStart++;
                         }
 
                         break;
@@ -379,6 +379,7 @@ public static unsafe partial class Methods
                 BIT_reloadDStream(bitDPtr) == BitDStreamStatus.BitDStreamUnfinished && p < pEnd
             )
                 *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
+
         while (p < pEnd)
             *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
         return (nuint)(pEnd - pStart);
@@ -1497,6 +1498,7 @@ public static unsafe partial class Methods
                 && p <= pEnd - 2
             )
                 p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
+
             while (p <= pEnd - 2)
                 p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
         }

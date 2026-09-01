@@ -203,9 +203,11 @@ public class CompressionStream : Stream
 
             var written = (int)_output.pos;
             if (written > 0)
+            {
                 await _innerStream
 .WriteAsync(_outputBuffer.AsMemory(0, written), cancellationToken)
                     .ConfigureAwait(false);
+            }
         } while (
             directive == ZstdEndDirective.ZstdEContinue ? input.pos < input.size : remaining > 0
         );
@@ -247,11 +249,13 @@ public class CompressionStream : Stream
     )
     {
         fixed (byte* inputBufferPtr = inputBuffer)
-        fixed (byte* outputBufferPtr = _outputBuffer)
+        {
+            fixed (byte* outputBufferPtr = _outputBuffer)
         {
             input.src = inputBufferPtr;
             _output.dst = outputBufferPtr;
             return _compressor!.CompressStream(ref input, ref _output, directive).EnsureZstdSuccess();
+        }
         }
     }
 

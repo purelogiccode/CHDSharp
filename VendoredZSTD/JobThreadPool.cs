@@ -30,6 +30,7 @@ internal unsafe class JobThreadPool : IDisposable
 
         var cancellationToken = poolThread.CancellationTokenSource.Token;
         while (!_queue.IsCompleted && !cancellationToken.IsCancellationRequested)
+        {
             try
             {
                 if (_queue.TryTake(out var job, -1, cancellationToken))
@@ -41,6 +42,7 @@ internal unsafe class JobThreadPool : IDisposable
             catch (OperationCanceledException)
             {
             }
+        }
     }
 
     private void CreateThread()
@@ -55,14 +57,18 @@ internal unsafe class JobThreadPool : IDisposable
         lock (_threads)
         {
             if (num < _numThreads)
+            {
                 for (var i = _numThreads - 1; i >= num; i--)
                 {
                     _threads[i].Cancel();
                     _threads.RemoveAt(i);
                 }
+            }
             else
+            {
                 for (var i = _numThreads; i < num; i++)
                     CreateThread();
+            }
         }
 
         _numThreads = num;
@@ -88,8 +94,10 @@ internal unsafe class JobThreadPool : IDisposable
         }
 
         if (cancel)
+        {
             foreach (var thread in jobThreads)
                 thread.Cancel();
+        }
 
         foreach (var thread in jobThreads)
             thread.Join();

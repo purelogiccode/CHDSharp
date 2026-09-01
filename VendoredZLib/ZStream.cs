@@ -237,6 +237,7 @@ public ref struct ZStream
                 nameof(value),
                 $"Value was out of range. Must be non-negative and less than the size of the {bufferName} buffer."
             );
+
         if (buffer.Length - value < availableBytes)
             throw new ArgumentOutOfRangeException(
                 nameof(value),

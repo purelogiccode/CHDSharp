@@ -351,10 +351,8 @@ internal class HunkProcessor
                     }
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (!_cancellationToken.IsCancellationRequested)
             {
-                if (_cancellationToken.IsCancellationRequested)
-                    throw;
                 // internal cancellation: an error was recorded and is rethrown below
             }
 

@@ -39,9 +39,9 @@ internal static partial class Program
         var serilogLogger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(
-                formatProvider: null,
                 outputTemplate: "{Message:lj}{NewLine}{Exception}"
-            )
+                ,
+                formatProvider: null)
             .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharp")))
             .CreateLogger();
 
@@ -910,6 +910,7 @@ internal static partial class Program
                     unitBytes,
                     tpl.SectorSize
                 );
+
             if (hunkBytes != 4096u)
                 log.Warning(
                     "  --hunksize/-hs overridden by template {Id} (was {Old}, now {New})",
@@ -917,6 +918,7 @@ internal static partial class Program
                     hunkBytes,
                     Math.Max(4096u / tpl.SectorSize * tpl.SectorSize, tpl.SectorSize)
                 );
+
             unitBytes = tpl.SectorSize;
             hunkBytes = Math.Max(4096u / tpl.SectorSize * tpl.SectorSize, tpl.SectorSize);
             log.Information(
@@ -1080,6 +1082,7 @@ internal static partial class Program
                             "  --unitsize/-us overridden by --dvd (was {Old}, now 2048)",
                             unitBytes
                         );
+
                     unitBytes = 2048;
                 }
                 else if (templateId.HasValue)
@@ -3511,6 +3514,7 @@ internal static partial class Program
                 );
             else
                 Log.Logger.Warning("  Verified FAILED: {Error}", parentResult.Error);
+
             return;
         }
 
@@ -5962,7 +5966,7 @@ internal static partial class Program
                 // MODE_NORMAL (.toc) is fully supported via GenerateTocFileContents / ExtractToc
 
                 // --outputbin %t handling (chdman.cpp:2748-2797) + quotation check (chdman.cpp:2714)
-                if (binPath != null && binPath.Contains('"'))
+                if (binPath?.Contains('"') == true)
                 {
                     Console.Error.WriteLine($"Output bin filename ({binPath}) must not contain quotation marks");
                     log.Warning("Output bin filename ({Bin}) must not contain quotation marks", binPath);
@@ -6407,6 +6411,10 @@ internal static partial class Program
         }
     }
 
+    [GeneratedRegex("(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))", RegexOptions.Compiled
+    )]
+    private static partial Regex MyRegex();
+
     /// <summary>
     ///     Mirrors chdman's console behaviour while encoding (chdman.cpp:967 progress and
     ///     chdman.cpp:1520 completion): writes a throttled (0.5 s) progress line to stderr and a
@@ -6417,9 +6425,9 @@ internal static partial class Program
     /// </summary>
     private sealed class EncodeProgressLogger
     {
-        private readonly bool _verbose;
         private readonly Dictionary<string, int> _counts = new(StringComparer.Ordinal);
         private readonly long _intervalTicks = Stopwatch.Frequency / 2; // 0.5s like chdman.cpp:967
+        private readonly bool _verbose;
         private long _lastTicks;
         private long _totalRaw;
         private long _totalStored;
@@ -6494,8 +6502,4 @@ internal static partial class Program
             );
         }
     }
-
-    [GeneratedRegex("(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))", RegexOptions.Compiled
-    )]
-    private static partial Regex MyRegex();
 }

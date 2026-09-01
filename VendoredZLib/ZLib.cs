@@ -492,7 +492,7 @@ public partial class ZLib : IZLib
     ///     Skips invalid compressed data until a possible full flush point can be found, or until all available input is
     ///     skipped. No output is provided.
     ///     <para>
-    ///         Searches for a 00 00 FF FF pattern in the compressed data. All full flush points have this pattern, but not
+    ///         Searches for a 00 00 FF pattern in the compressed data. All full flush points have this pattern, but not
     ///         all occurrences of this pattern are full flush points.
     ///     </para>
     /// </summary>

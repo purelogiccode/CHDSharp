@@ -8,10 +8,10 @@ namespace CHDSharpBench.Chdman;
 ///     External-tool comparison harness (Phase 7.4): runs the stock <c>chdman.exe</c> from MAME
 ///     side-by-side with the library on the same corpus and a synthetic image, then prints a
 ///     wall-clock comparison table (median of N runs). Usage:
-///     <c>
+///     <code>
 ///         CHDSharpBench --chdman &lt;path-to-chdman.exe&gt; [--corpus &lt;dir&gt;] [--codecs zlib,zstd,...] [--size-mb N]
 ///         [--runs N]
-///     </c>
+///     </code>
 ///     .
 ///     BenchmarkDotNet covers precise in-process timings; this harness adds the cross-tool
 ///     comparison the doc asks for (chdman vs. CHDSharp on identical inputs).
@@ -275,6 +275,7 @@ public static class ChdmanComparer
                         ',',
                         StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
                     );
+
             if (string.Equals(args[i], "--codecs", StringComparison.Ordinal) && i + 1 < args.Count)
                 return args[++i]
                     .Split(

@@ -104,6 +104,7 @@ internal class AudioBuffer
                     Pcm.ChannelCount,
                     Pcm.BitsPerSample
                 );
+
             _dataInSamples = true;
             return _samples;
         }
@@ -264,6 +265,7 @@ internal class AudioBuffer
                 dstOffset * Pcm.BlockAlign,
                 copyLength * Pcm.BlockAlign
             );
+
         if (_dataInSamples)
             Buffer.BlockCopy(
                 src.Samples,
@@ -272,6 +274,7 @@ internal class AudioBuffer
                 dstOffset * Pcm.ChannelCount * 4,
                 copyLength * Pcm.ChannelCount * 4
             );
+
         if (_dataInFloat)
             Buffer.BlockCopy(
                 src.FloatSamples,

@@ -385,8 +385,7 @@ internal static partial class Inflater
          * maximum code length that was allowed to get this far is one bit) */
         if (huff != 0)
             Unsafe.Add(ref table, next + huff) = new Code(
-                64 /* invalid code marker */
-                ,
+                64 /* invalid code marker */,
                 (byte)(len - drop),
                 0
             );

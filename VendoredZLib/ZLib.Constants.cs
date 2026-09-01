@@ -7,8 +7,7 @@ namespace VendoredZLib;
 #pragma warning disable MA0049 // Type name should not match containing namespace (vendored zlib keeps its historical class name)
 public partial class ZLib
 {
-#pragma warning disable CS1591
-#pragma warning disable CA1707
+#pragma warning disable CS1591, CA1707
     // Allowed flush values.
     public const int ZNoFlush = 0;
     public const int ZPartialFlush = 1;
@@ -50,6 +49,5 @@ public partial class ZLib
 
     // The only supported deflate compression method.
     public const int ZDeflated = 8;
-#pragma warning restore CA1707
-#pragma warning restore CS1591
+#pragma warning restore CA1707, CS1591
 }

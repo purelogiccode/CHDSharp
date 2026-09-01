@@ -185,6 +185,7 @@ public static class ChdEncoder
         if (totalBytes % unitBytes != 0)
             throw new ArgumentException($"Data size {totalBytes} is not divisible by sector size {unitBytes}",
                 nameof(totalBytes));
+
         ValidateHunkSize(hunkBytes, unitBytes);
 
         codecTags ??= [CodecTags.Zlib];
@@ -359,6 +360,7 @@ public static class ChdEncoder
                 throw new InvalidDataException(
                     $"Input start frame ({start}) is beyond end of input ({totalFrames})"
                 );
+
             if (end > totalFrames)
                 throw new InvalidDataException(
                     $"Input length is larger than available input from start offset ({totalFrames - start} frames)"
@@ -420,6 +422,7 @@ public static class ChdEncoder
             if (hunkBytes < HunkSizeMin)
                 throw new ArgumentException($"Invalid hunk size {hunkBytes} (minimum {HunkSizeMin})",
                     nameof(hunkBytes));
+
             if (hunkBytes > HunkSizeMax)
                 throw new ArgumentException($"Invalid hunk size {hunkBytes} (maximum {HunkSizeMax})",
                     nameof(hunkBytes));
@@ -1144,6 +1147,7 @@ public static class ChdEncoder
             throw new ArgumentException(
                 $"unitBytes ({unitBytes}) must be the CD frame size ({CdConstants.FrameSize})"
             );
+
         ValidateHunkSize(hunkBytes, unitBytes);
 
         codecTags ??= [CodecTags.Zlib];
@@ -1316,6 +1320,7 @@ public static class ChdEncoder
             if (startBytes > sourceLogicalBytes)
                 throw new ArgumentException(
                     $"Input start offset {startBytes} is beyond end of input ({sourceLogicalBytes})");
+
             ulong logicalBytes;
             if (sliceLength.HasValue)
             {

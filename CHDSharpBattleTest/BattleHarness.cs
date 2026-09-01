@@ -1563,6 +1563,7 @@ internal sealed partial class BattleHarness
                             string.Equals(chdmanInfo.Sha1, cliInfo.Sha1, StringComparison.Ordinal),
                             $"SHA1 {cliInfo.Sha1} != chdman {chdmanInfo.Sha1}"
                         );
+
                     if (chdmanInfo.DataSha1 != null)
                         Assert(
                             string.Equals(
@@ -2457,6 +2458,7 @@ internal sealed partial class BattleHarness
                                     ),
                                     $"SHA1 {cliInfo.Sha1} != chdman {chdmanInfo.Sha1}"
                                 );
+
                             if (chdmanInfo.DataSha1 != null)
                                 Assert(
                                     string.Equals(
@@ -2466,6 +2468,7 @@ internal sealed partial class BattleHarness
                                     ),
                                     $"Data SHA1 {cliInfo.DataSha1} != chdman {chdmanInfo.DataSha1}"
                                 );
+
                             if (chdmanInfo.ParentSha1 != null)
                                 Assert(
                                     string.Equals(

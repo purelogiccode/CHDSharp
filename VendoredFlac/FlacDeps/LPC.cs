@@ -247,7 +247,7 @@ internal static class Lpc
                 lpcTmp[i - 1 - j] += r * tmp;
             }
 
-            if (0 != (i & 1))
+            if ((i & 1) != 0)
                 lpcTmp[i2] += lpcTmp[i2] * r;
 
             for (var j = 0; j <= i; j++)

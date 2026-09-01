@@ -77,7 +77,8 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine("=== Session Details ===");
         sb.AppendLine($"Report Time (UTC): {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
         var uptime = DateTime.Now - _env.CreatedAt;
-        sb.AppendLine($@"Session Uptime: {(long)uptime.TotalHours:00}\{uptime.Minutes:00}\{uptime.Seconds:00} (hh\mm\ss)");
+        sb.AppendLine(
+            $@"Session Uptime: {(long)uptime.TotalHours:00}\{uptime.Minutes:00}\{uptime.Seconds:00} (hh\mm\ss)");
         sb.AppendLine($"Elevated: {EnvironmentSnapshot.Elevated}");
 
         sb.AppendLine();

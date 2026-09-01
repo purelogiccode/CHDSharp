@@ -115,6 +115,7 @@ public static unsafe partial class Methods
             ) == 0
         )
             return null;
+
         cctx->blockState.prevCBlock = (ZstdCompressedBlockStateT*)ZSTD_cwksp_reserve_object(
             &cctx->workspace,
             (nuint)sizeof(ZstdCompressedBlockStateT)
@@ -1214,7 +1215,7 @@ public static unsafe partial class Methods
                     );
             }
 
-                cCtxParams->deterministicRefPrefix = !(value == 0) ? 1 : 0;
+                cCtxParams->deterministicRefPrefix = value != 0 ? 1 : 0;
                 return (nuint)cCtxParams->deterministicRefPrefix;
             case ZstdCParameter.ZstdCExperimentalParam16:
             {
@@ -4875,22 +4876,20 @@ public static unsafe partial class Methods
         var countWorkspace = (uint*)workspace;
         var entropyWorkspace = countWorkspace + ((35 > 52 ? 35 : 52) + 1);
         var entropyWorkspaceSize = wkspSize - ((35 > 52 ? 35 : 52) + 1) * sizeof(uint);
-        ZstdSymbolEncodingTypeStatsT stats;
-        stats =
-            nbSeq != 0
-                ? ZSTD_buildSequencesStatistics(
-                    seqStorePtr,
-                    nbSeq,
-                    prevEntropy,
-                    nextEntropy,
-                    op,
-                    oend,
-                    strategy,
-                    countWorkspace,
-                    entropyWorkspace,
-                    entropyWorkspaceSize
-                )
-                : ZSTD_buildDummySequencesStatistics(nextEntropy);
+        var stats = nbSeq != 0
+            ? ZSTD_buildSequencesStatistics(
+                seqStorePtr,
+                nbSeq,
+                prevEntropy,
+                nextEntropy,
+                op,
+                oend,
+                strategy,
+                countWorkspace,
+                entropyWorkspace,
+                entropyWorkspaceSize
+            )
+            : ZSTD_buildDummySequencesStatistics(nextEntropy);
         {
             var errCode = stats.size;
             if (ERR_isError(errCode))
@@ -5396,6 +5395,7 @@ public static unsafe partial class Methods
                 seqStore,
                 (uint)(seqStore->sequences - seqStore->sequencesStart)
             );
+
         if (dstCapacity < ZstdBlockHeaderSize)
             return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
@@ -5701,6 +5701,7 @@ public static unsafe partial class Methods
                 )
                     zc->blockState.prevCBlock->entropy.fse.offcode_repeatMode =
                         FseRepeat.FseRepeatCheck;
+
                 cSize = ZSTD_noCompressBlock(dst, dstCapacity, src, srcSize, lastBlock);
                 {
                     var errCode = cSize;
@@ -6205,7 +6206,7 @@ public static unsafe partial class Methods
 
         {
             /*lastBlock*/
-            var cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1);
+            const uint cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1);
             MEM_writeLE24(dst, cBlockHeader24);
             return ZstdBlockHeaderSize;
         }
@@ -7069,7 +7070,7 @@ public static unsafe partial class Methods
         if (cctx->stage != ZstdCompressionStageE.ZstDcsEnding)
         {
             /* last block */
-            var cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1) + 0;
+            const uint cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1) + 0;
             if (dstCapacity < 4)
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
@@ -7754,6 +7755,7 @@ public static unsafe partial class Methods
             )
         )
             return null;
+
         return cdict;
     }
 
@@ -9528,7 +9530,7 @@ public static unsafe partial class Methods
         if (remaining == 0)
         {
             /* last block */
-            var cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1);
+            const uint cBlockHeader24 = 1 + ((uint)BlockTypeE.BtRaw << 1);
             if (dstCapacity < 4)
                 return unchecked((nuint)(-(int)ZstdErrorCode.ZstdErrorDstSizeTooSmall));
 
@@ -9659,6 +9661,7 @@ public static unsafe partial class Methods
                 )
                     cctx->blockState.prevCBlock->entropy.fse.offcode_repeatMode =
                         FseRepeat.FseRepeatCheck;
+
                 cBlockHeader =
                     lastBlock
                     + ((uint)BlockTypeE.BtCompressed << 1)

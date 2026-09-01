@@ -32,10 +32,10 @@ public partial class App
                 .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
                 .WriteTo.File(
                     logPath,
-                    rollingInterval: RollingInterval.Day,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
                     formatProvider: CultureInfo.InvariantCulture
-                )
+                    ,
+                    rollingInterval: RollingInterval.Day)
                 .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharpTester")))
                 .CreateLogger();
 

@@ -84,7 +84,7 @@ public class CueParserChdmanValidationTests : IDisposable
 
         // parse the CUE with our parser and build the CHT2 metadata strings it implies
         var toc = CueParser.Parse(cuePath);
-        var expected = toc.Tracks.Select(MetadataWriter.BuildChd2String).ToList();
+        var expected = toc.Tracks.ConvertAll(MetadataWriter.BuildChd2String);
 
         // read the metadata chdman actually wrote
         var openErr = ChdFile.Open(chdPath, out var chd);
@@ -146,7 +146,7 @@ public class CueParserChdmanValidationTests : IDisposable
         );
 
         var toc = CueParser.Parse(cuePath);
-        var expected = toc.Tracks.Select(MetadataWriter.BuildChd2String).ToList();
+        var expected = toc.Tracks.ConvertAll(MetadataWriter.BuildChd2String);
 
         var openErr = ChdFile.Open(chdPath, out var chd);
         Assert.Equal(ChdError.Chderrnone, openErr);

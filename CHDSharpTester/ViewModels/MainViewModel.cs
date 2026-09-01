@@ -61,7 +61,7 @@ internal class MainViewModel : INotifyPropertyChanged
         AddFolderCommand = new RelayCommand(_ => AddFolder());
         RemoveFileCommand = new RelayCommand(RemoveFile);
         RunTestsCommand = new RelayCommand(
-            _ => { _runTask = RunTestsAsync(); },
+            _ => _runTask = RunTestsAsync(),
             _ => CanRunTests
         );
         CancelTestsCommand = new RelayCommand(_ => CancelTests(), _ => IsRunning);
@@ -285,13 +285,9 @@ internal class MainViewModel : INotifyPropertyChanged
     {
         get
         {
-            if (_cachedFileResults == null)
-                _cachedFileResults =
-                    SessionResult?.FileResults != null
-                        ? new ObservableCollection<PerFileResult>(SessionResult.FileResults)
-                        : [];
-
-            return _cachedFileResults;
+            return _cachedFileResults ??= SessionResult?.FileResults != null
+                ? new ObservableCollection<PerFileResult>(SessionResult.FileResults)
+                : [];
         }
     }
 

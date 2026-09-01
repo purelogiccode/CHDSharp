@@ -6,38 +6,38 @@ public enum ChdCodec
     /// <summary>No compression codec selected.</summary>
     None = 0,
 
-    /// <summary>zlib (Deflate) compression.</summary>
-    Zlib = 0x7A6C6962, // zlib
-
-    /// <summary>LZMA compression.</summary>
-    Lzma = 0x6C7A6D61, // lzma
-
-    /// <summary>Huffman compression.</summary>
-    Huffman = 0x68756666, // huff
-
-    /// <summary>FLAC audio compression.</summary>
-    Flac = 0x666C6163, // flac
-
-    /// <summary>Zstandard compression.</summary>
-    Zstd = 0x7A737464, // zstd
-
-    /// <summary>zlib compression variant for CD data.</summary>
-    Cdzlib = 0x63647A6C, // cdzl
-
-    /// <summary>LZMA compression variant for CD data.</summary>
-    Cdlzma = 0x63646C7A, // cdlz
-
-    /// <summary>FLAC compression variant for CD data.</summary>
-    Cdflac = 0x6364666C, // cdfl
-
-    /// <summary>Zstandard compression variant for CD data.</summary>
-    Cdzstd = 0x63647A73, // cdzs
+    /// <summary>Error / unknown codec.</summary>
+    Error = 0x0eeeeeee,
 
     /// <summary>AV Huffman compression (V3/V4).</summary>
     Avhuff = 0x61766875, // avhu
 
-    /// <summary>Error / unknown codec.</summary>
-    Error = 0x0eeeeeee
+    /// <summary>FLAC compression variant for CD data.</summary>
+    Cdflac = 0x6364666C, // cdfl
+
+    /// <summary>LZMA compression variant for CD data.</summary>
+    Cdlzma = 0x63646C7A, // cdlz
+
+    /// <summary>zlib compression variant for CD data.</summary>
+    Cdzlib = 0x63647A6C, // cdzl
+
+    /// <summary>Zstandard compression variant for CD data.</summary>
+    Cdzstd = 0x63647A73, // cdzs
+
+    /// <summary>FLAC audio compression.</summary>
+    Flac = 0x666C6163, // flac
+
+    /// <summary>Huffman compression.</summary>
+    Huffman = 0x68756666, // huff
+
+    /// <summary>LZMA compression.</summary>
+    Lzma = 0x6C7A6D61, // lzma
+
+    /// <summary>zlib (Deflate) compression.</summary>
+    Zlib = 0x7A6C6962, // zlib
+
+    /// <summary>Zstandard compression.</summary>
+    Zstd = 0x7A737464 // zstd
 }
 
 /// <summary>Flags describing the type and properties of a hunk map entry.</summary>
@@ -46,12 +46,6 @@ public enum ChdCodec
 public enum MapEntryFlag
 #pragma warning restore MA0062
 {
-    /// <summary>Mask to isolate the hunk type from a map entry.</summary>
-    Mapentryflagtypemask = 0x000f, /* what type of hunk */
-
-    /// <summary>Indicates no CRC is present for this entry.</summary>
-    Mapentryflagnocrc = 0x0010, /* no CRC is present */
-
     /// <summary>Invalid or uninitialized entry.</summary>
     Mapentrytypeinvalid = 0x0000, /* invalid type */
 
@@ -62,16 +56,22 @@ public enum MapEntryFlag
     Mapentrytypeuncompressed = 0x0002, /* uncompressed data */
 
     /// <summary>Mini hunk: the offset field stores the raw data inline.</summary>
-    Mapentrytypemini = 0x0003, /* mini: use offset as raw data */
+    Mapentrytypemini = Mapentrytypecompressed | Mapentrytypeuncompressed, /* mini: use offset as raw data */
 
     /// <summary>Self-reference: same data as another hunk in this file.</summary>
     Mapentrytypeselfhunk = 0x0004, /* same as another hunk in this file */
 
     /// <summary>Parent reference: same data as a hunk in the parent CHD.</summary>
-    Mapentrytypeparenthunk = 0x0005, /* same as a hunk in the parent file */
+    Mapentrytypeparenthunk = Mapentrytypecompressed | Mapentrytypeselfhunk, /* same as a hunk in the parent file */
 
     /// <summary>Secondary compressed hunk (V3/V4): compressed with the secondary algorithm, typically FLAC for CDDA audio.</summary>
-    Mapentrytype2Ndcompressed = 0x0006 /* compressed with secondary algorithm (usually FLAC CDDA) */
+    Mapentrytype2Ndcompressed = Mapentrytypeuncompressed | Mapentrytypeselfhunk,
+
+    /// <summary>Mask to isolate the hunk type from a map entry.</summary>
+    Mapentryflagtypemask = 0x000f, /* what type of hunk */
+
+    /// <summary>Indicates no CRC is present for this entry.</summary>
+    Mapentryflagnocrc = 0x0010 /* no CRC is present */
 }
 
 /// <summary>CD-ROM track types. Matches MAME cdrom.h CD_TRACK_* values.</summary>
