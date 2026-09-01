@@ -40,8 +40,8 @@ public static unsafe partial class Methods
         var header = (nuint)(writeEntropy != 0 ? 200 : 0);
         var lhSize = (nuint)(
             3
-            + (litSize >= (1 * (1 << 10)) - header ? 1 : 0)
-            + (litSize >= (16 * (1 << 10)) - header ? 1 : 0)
+            + (litSize >= 1 * (1 << 10) - header ? 1 : 0)
+            + (litSize >= 16 * (1 << 10) - header ? 1 : 0)
         );
         var ostart = (byte*)dst;
         var oend = ostart + dstSize;
@@ -587,25 +587,19 @@ public static unsafe partial class Methods
             fseMetadata->llType == SymbolEncodingTypeE.SetCompressed
             || fseMetadata->llType == SymbolEncodingTypeE.SetRle
         )
-        {
             return 1;
-        }
 
         if (
             fseMetadata->mlType == SymbolEncodingTypeE.SetCompressed
             || fseMetadata->mlType == SymbolEncodingTypeE.SetRle
         )
-        {
             return 1;
-        }
 
         if (
             fseMetadata->ofType == SymbolEncodingTypeE.SetCompressed
             || fseMetadata->ofType == SymbolEncodingTypeE.SetRle
         )
-        {
             return 1;
-        }
 
         return 0;
     }
@@ -753,21 +747,17 @@ public static unsafe partial class Methods
         } while (lastSequence == 0);
 
         if (writeLitEntropy != 0)
-        {
             memcpy(
                 &nextCBlock->entropy.huf,
                 &prevCBlock->entropy.huf,
                 (uint)sizeof(ZstdHufCTablesT)
             );
-        }
 
         if (
             writeSeqEntropy != 0
             && ZSTD_needSequenceEntropyTables(&entropyMetadata->fseMetadata) != 0
         )
-        {
             return 0;
-        }
 
         if (ip < iend)
         {
@@ -792,13 +782,11 @@ public static unsafe partial class Methods
                 RepcodesS rep;
                 memcpy(&rep, prevCBlock->rep, (uint)sizeof(RepcodesS));
                 for (seq = sstart; seq < sp; ++seq)
-                {
                     ZSTD_updateRep(
                         rep.rep,
                         seq->offBase,
                         ZSTD_getSequenceLength(seqStorePtr, seq).litLength == 0 ? 1U : 0U
                     );
-                }
 
                 memcpy(nextCBlock->rep, &rep, (uint)sizeof(RepcodesS));
             }
@@ -828,7 +816,7 @@ public static unsafe partial class Methods
                 &zc->appliedParams,
                 &entropyMetadata,
                 zc->entropyWorkspace,
-                (8 << 10) + 512 + (sizeof(uint) * ((35 > 52 ? 35 : 52) + 2))
+                (8 << 10) + 512 + sizeof(uint) * ((35 > 52 ? 35 : 52) + 2)
             );
             if (ERR_isError(errCode))
                 return errCode;
@@ -847,7 +835,7 @@ public static unsafe partial class Methods
             zc->bmi2,
             lastBlock,
             zc->entropyWorkspace,
-            (8 << 10) + 512 + (sizeof(uint) * ((35 > 52 ? 35 : 52) + 2))
+            (8 << 10) + 512 + sizeof(uint) * ((35 > 52 ? 35 : 52) + 2)
         );
     }
 }

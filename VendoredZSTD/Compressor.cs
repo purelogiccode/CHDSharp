@@ -73,18 +73,14 @@ public unsafe class Compressor : IDisposable
     {
         EnsureNotDisposed();
         if (dict.IsEmpty)
-        {
             Methods.ZSTD_CCtx_loadDictionary(_cctx, null, 0).EnsureZstdSuccess();
-        }
         else
-        {
             fixed (byte* dictPtr = dict)
             {
                 Methods
                     .ZSTD_CCtx_loadDictionary(_cctx, dictPtr, (nuint)dict.Length)
                     .EnsureZstdSuccess();
             }
-        }
 
         GC.KeepAlive(this);
     }
@@ -122,14 +118,14 @@ public unsafe class Compressor : IDisposable
         fixed (byte* srcPtr = src)
         {
             fixed (byte* destPtr = dest)
-        {
-            var returnValue = (int)
-                Methods
-                    .ZSTD_compress2(_cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
-                    .EnsureZstdSuccess();
-            GC.KeepAlive(this);
-            return returnValue;
-        }
+            {
+                var returnValue = (int)
+                    Methods
+                        .ZSTD_compress2(_cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
+                        .EnsureZstdSuccess();
+                GC.KeepAlive(this);
+                return returnValue;
+            }
         }
     }
 
@@ -164,26 +160,26 @@ public unsafe class Compressor : IDisposable
         fixed (byte* srcPtr = src)
         {
             fixed (byte* destPtr = dest)
-        {
-            var returnValue = Methods.ZSTD_compress2(
-                _cctx,
-                destPtr,
-                (nuint)dest.Length,
-                srcPtr,
-                (nuint)src.Length
-            );
-            GC.KeepAlive(this);
-
-            if (returnValue == unchecked(0 - (nuint)ZstdErrorCode.ZstdErrorDstSizeTooSmall))
             {
-                written = default;
-                return false;
-            }
+                var returnValue = Methods.ZSTD_compress2(
+                    _cctx,
+                    destPtr,
+                    (nuint)dest.Length,
+                    srcPtr,
+                    (nuint)src.Length
+                );
+                GC.KeepAlive(this);
 
-            returnValue.EnsureZstdSuccess();
-            written = (int)returnValue;
-            return true;
-        }
+                if (returnValue == unchecked(0 - (nuint)ZstdErrorCode.ZstdErrorDstSizeTooSmall))
+                {
+                    written = default;
+                    return false;
+                }
+
+                returnValue.EnsureZstdSuccess();
+                written = (int)returnValue;
+                return true;
+            }
         }
     }
 
@@ -233,13 +229,13 @@ public unsafe class Compressor : IDisposable
         fixed (ZstdInBufferS* inputPtr = &input)
         {
             fixed (ZstdOutBufferS* outputPtr = &output)
-        {
-            var returnValue = Methods
-                .ZSTD_compressStream2(_cctx, outputPtr, inputPtr, directive)
-                .EnsureZstdSuccess();
-            GC.KeepAlive(this);
-            return returnValue;
-        }
+            {
+                var returnValue = Methods
+                    .ZSTD_compressStream2(_cctx, outputPtr, inputPtr, directive)
+                    .EnsureZstdSuccess();
+                GC.KeepAlive(this);
+                return returnValue;
+            }
         }
     }
 }

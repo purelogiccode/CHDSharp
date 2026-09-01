@@ -20,7 +20,7 @@ internal sealed class EnvironmentSnapshot
             Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
         WindowsVersion = GetWindowsVersion();
         CreatedAt = DateTime.Now;
-        Date = CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
+        Date = CreatedAt.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
         Bitness = Environment.Is64BitProcess ? "64-bit" : "32-bit";
     }
 

@@ -152,11 +152,9 @@ public static unsafe partial class Methods
                     var bytesToAlign = ZSTD_cwksp_bytes_to_align_ptr(alloc, 64);
                     void* objectEnd = (byte*)alloc + bytesToAlign;
                     if (objectEnd > ws->workspaceEnd)
-                    {
                         return unchecked(
                             (nuint)(-(int)ZstdErrorCode.ZstdErrorMemoryAllocation)
                         );
-                    }
 
                     ws->objectEnd = objectEnd;
                     ws->tableEnd = objectEnd;
@@ -274,10 +272,8 @@ public static unsafe partial class Methods
         void* end;
         void* top;
         if (ws->phase < phase)
-        {
             if (ERR_isError(ZSTD_cwksp_internal_advance_phase(ws, phase)))
                 return null;
-        }
 
         alloc = ws->tableEnd;
         end = (byte*)alloc + bytes;
@@ -354,13 +350,11 @@ public static unsafe partial class Methods
         assert(ws->tableValidEnd >= ws->objectEnd);
         assert(ws->tableValidEnd <= ws->allocStart);
         if (ws->tableValidEnd < ws->tableEnd)
-        {
             memset(
                 ws->tableValidEnd,
                 0,
                 (uint)(nuint)((byte*)ws->tableEnd - (byte*)ws->tableValidEnd)
             );
-        }
 
         ZSTD_cwksp_mark_tables_clean(ws);
     }

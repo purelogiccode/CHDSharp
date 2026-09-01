@@ -1,31 +1,4 @@
 [*.cs]
 dotnet_diagnostic.MA0051.severity = none
 
-dotnet_diagnostic.MA0048.severity = none
-
 dotnet_diagnostic.MA0015.severity = none
-
-dotnet_diagnostic.MA0009.severity = none
-
-dotnet_diagnostic.MA0004.severity = none
-
-dotnet_diagnostic.MA0016.severity = none
-
-dotnet_diagnostic.MA0011.severity = none
-
-dotnet_diagnostic.MA0026.severity = none
-
-dotnet_diagnostic.MA0055.severity = none
-
-# Vendored third-party ports (zlib/zstd/lzma/flac) intentionally mirror upstream
-# signatures, so unused parameters/locals are expected. Silence editor-only
-# "unused" inspections here to keep the code diff-able against upstream.
-[VendoredZSTD/**.cs, VendoredZLib/**.cs, VendoredLZMA/**.cs, VendoredFlac/**.cs]
-dotnet_diagnostic.IDE0059.severity = none
-dotnet_diagnostic.IDE0060.severity = none
-dotnet_diagnostic.CA1801.severity = none
-dotnet_diagnostic.CA1804.severity = none
-resharper_unused_parameter = none
-resharper_unused_parameter_highlighting = none
-resharper_unused_variable = none
-resharper_unused_variable_highlighting = none

@@ -42,7 +42,7 @@ public class AvHuffDebugTests
         Assert.True(compLen < rawBytes, $"compression didn't save space: {compLen} >= {rawBytes}");
 
         // write a 1-hunk CHD via the full pipeline and verify with CHDSharpLib
-        var chdPath = Path.Combine(Path.GetTempPath(), "avhuff_single.chd");
+        var chdPath = Path.Combine(Path.GetTempPath(), $"avhuff_single_{Guid.NewGuid():N}.chd");
         try
         {
             using var source = new MemoryStream(raw);

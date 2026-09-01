@@ -81,8 +81,10 @@ internal static class BattleReporter
         sb.AppendLine("# chdman vs CHDSharp — Corpus Battle Results");
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"- Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"- Files run: {rows.Select(r => r.File).Distinct(StringComparer.OrdinalIgnoreCase).Count()}");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"- Workers (-np): {cfg.Workers} | Codecs: raw/copy/dvd/hd=`{cfg.CodecRaw}`, cd/gd=`{cfg.CodecCd}`");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"- Files run: {rows.Select(r => r.File).Distinct(StringComparer.OrdinalIgnoreCase).Count()}");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"- Workers (-np): {cfg.Workers} | Codecs: raw/copy/dvd/hd=`{cfg.CodecRaw}`, cd/gd=`{cfg.CodecCd}`");
         sb.AppendLine($"- chdman: `{chdmanPath}` | CHDSharp: `{cliPath ?? "(not found)"}`");
         sb.AppendLine();
 
@@ -167,7 +169,8 @@ internal static class BattleReporter
         foreach (var (tool, st) in stats.OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase))
         {
             var wins = string.Equals(winner, tool, StringComparison.OrdinalIgnoreCase) && valid.Count == 2 ? st.Ok : 0;
-            sb.AppendLine(CultureInfo.InvariantCulture, $"| {tool} | {st.Runs} | {st.Ok} | {st.Secs:F1} | {st.Mibs:F1} | {wins} |");
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"| {tool} | {st.Runs} | {st.Ok} | {st.Secs:F1} | {st.Mibs:F1} | {wins} |");
         }
 
         sb.AppendLine();

@@ -242,16 +242,16 @@ internal sealed partial class BattleHarness
         var sChd = Path.Combine(work, "copy_s.chd");
 
         var (rm, rmIdx) = RunBattleTool("chdman", (c, a) => chdman.Run(c, a), battle, file, insp, rows, "copy",
-            "-i", file, "-o", mChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString());
+            "-i", file, "-o", mChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture));
         var (rs, rsIdx) = RunBattleTool("chdsharp", (c, a) => cli.Run(c, a), battle, file, insp, rows, "copy",
-            "-i", file, "-o", sChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString());
+            "-i", file, "-o", sChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         FillProductRows(rows, file, insp, battle, rm, rs, rmIdx, rsIdx, mChd, sChd);
 
         if (rm is { ExitCode: 0 })
-            CrossVerify(rows, chdman, cli, file, insp, battle, mChd, verifyWithCli: true);
+            CrossVerify(rows, chdman, cli, file, insp, battle, mChd, true);
         if (rs is { ExitCode: 0 })
-            CrossVerify(rows, chdman, cli, file, insp, battle, sChd, verifyWithCli: false);
+            CrossVerify(rows, chdman, cli, file, insp, battle, sChd, false);
 
         if (!_corpus.KeepTemp)
         {
@@ -307,23 +307,23 @@ internal sealed partial class BattleHarness
 
         // createraw requires an explicit unit size (both tools reject a bare create);
         // preserve the source CHD's geometry so the re-encode matches the original hunks
-        var geometry = cmd == "createraw"
-            ? new[] { "-hs", insp.HunkBytes.ToString(), "-us", insp.UnitBytes.ToString() }
+        var geometry = string.Equals(cmd, "createraw"
+, StringComparison.OrdinalIgnoreCase) ? new[] { "-hs", insp.HunkBytes.ToString(), "-us", insp.UnitBytes.ToString() }
             : Array.Empty<string>();
 
         var (rm, rmIdx) = RunBattleTool("chdman", (c, a) => chdman.Run(c, a), battle, file, insp, rows, cmd,
             new[] { "-i", input, "-o", mChd, "-c", codec }.Concat(geometry)
-                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString() }).ToArray());
+                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture) }).ToArray());
         var (rs, rsIdx) = RunBattleTool("chdsharp", (c, a) => cli.Run(c, a), battle, file, insp, rows, cmd,
             new[] { "-i", input, "-o", sChd, "-c", codec }.Concat(geometry)
-                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString() }).ToArray());
+                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture) }).ToArray());
 
         FillProductRows(rows, file, insp, battle, rm, rs, rmIdx, rsIdx, mChd, sChd);
 
         if (rm is { ExitCode: 0 })
-            CrossVerify(rows, chdman, cli, file, insp, battle, mChd, verifyWithCli: true);
+            CrossVerify(rows, chdman, cli, file, insp, battle, mChd, true);
         if (rs is { ExitCode: 0 })
-            CrossVerify(rows, chdman, cli, file, insp, battle, sChd, verifyWithCli: false);
+            CrossVerify(rows, chdman, cli, file, insp, battle, sChd, false);
 
         if (!_corpus.KeepTemp)
         {
@@ -425,7 +425,8 @@ internal sealed partial class BattleHarness
         var tail = r.Combined.Trim();
         var last = tail.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .LastOrDefault();
-        return $"exit {r.ExitCode}: {(string.IsNullOrEmpty(last) ? "(no output)" : last[..Math.Min(300, last.Length)])}";
+        return
+            $"exit {r.ExitCode}: {(string.IsNullOrEmpty(last) ? "(no output)" : last[..Math.Min(300, last.Length)])}";
     }
 
     private static BattleRow Row(

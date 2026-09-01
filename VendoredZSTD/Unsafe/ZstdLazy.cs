@@ -37,7 +37,7 @@ public static unsafe partial class Methods
             /* assumption : ip + 8 <= iend */
             var h = ZSTD_hashPtr(@base + idx, hashLog, mls);
             var matchIndex = hashTable[h];
-            var nextCandidatePtr = bt + (2 * (idx & btMask));
+            var nextCandidatePtr = bt + 2 * (idx & btMask);
             var sortMarkPtr = nextCandidatePtr + 1;
             hashTable[h] = idx;
             *nextCandidatePtr = matchIndex;
@@ -77,7 +77,7 @@ public static unsafe partial class Methods
         var prefixStart = @base + dictLimit;
         // ReSharper disable once TooWideLocalVariableScope
         byte* match;
-        var smallerPtr = bt + (2 * (curr & btMask));
+        var smallerPtr = bt + 2 * (curr & btMask);
         var largerPtr = smallerPtr + 1;
         /* this candidate is unsorted : next sorted candidate is reached through *smallerPtr, while *largerPtr contains previous unsorted candidate (which is already saved and can be overwritten) */
         var matchIndex = *smallerPtr;
@@ -91,7 +91,7 @@ public static unsafe partial class Methods
         assert(ip < iend);
         for (; nbCompares != 0 && matchIndex > windowLow; --nbCompares)
         {
-            var nextPtr = bt + (2 * (matchIndex & btMask));
+            var nextPtr = bt + 2 * (matchIndex & btMask);
             /* guaranteed minimum nb of common bytes */
             var matchLength =
                 commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
@@ -193,7 +193,7 @@ public static unsafe partial class Methods
         assert(dictMode == ZstdDictModeE.ZstdDictMatchState);
         for (; nbCompares != 0 && dictMatchIndex > dictLowLimit; --nbCompares)
         {
-            var nextPtr = dictBt + (2 * (dictMatchIndex & btMask));
+            var nextPtr = dictBt + 2 * (dictMatchIndex & btMask);
             /* guaranteed minimum nb of common bytes */
             var matchLength =
                 commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
@@ -278,8 +278,8 @@ public static unsafe partial class Methods
         var btMask = (uint)((1 << (int)btLog) - 1);
         var btLow = btMask >= curr ? 0 : curr - btMask;
         var unsortLimit = btLow > windowLow ? btLow : windowLow;
-        var nextCandidate = bt + (2 * (matchIndex & btMask));
-        var unsortedMark = bt + (2 * (matchIndex & btMask)) + 1;
+        var nextCandidate = bt + 2 * (matchIndex & btMask);
+        var unsortedMark = bt + 2 * (matchIndex & btMask) + 1;
         var nbCompares = 1U << (int)cParams->searchLog;
         var nbCandidates = nbCompares;
         uint previousCandidate = 0;
@@ -290,8 +290,8 @@ public static unsafe partial class Methods
             *unsortedMark = previousCandidate;
             previousCandidate = matchIndex;
             matchIndex = *nextCandidate;
-            nextCandidate = bt + (2 * (matchIndex & btMask));
-            unsortedMark = bt + (2 * (matchIndex & btMask)) + 1;
+            nextCandidate = bt + 2 * (matchIndex & btMask);
+            unsortedMark = bt + 2 * (matchIndex & btMask) + 1;
             nbCandidates--;
         }
 
@@ -301,7 +301,7 @@ public static unsafe partial class Methods
         matchIndex = previousCandidate;
         while (matchIndex != 0)
         {
-            var nextCandidateIdxPtr = bt + (2 * (matchIndex & btMask)) + 1;
+            var nextCandidateIdxPtr = bt + 2 * (matchIndex & btMask) + 1;
             var nextCandidateIdx = *nextCandidateIdxPtr;
             ZSTD_insertDUBT1(ms, matchIndex, iend, nbCandidates, unsortLimit, dictMode);
             matchIndex = nextCandidateIdx;
@@ -315,8 +315,8 @@ public static unsafe partial class Methods
             var dictLimit = ms->window.dictLimit;
             var dictEnd = dictBase + dictLimit;
             var prefixStart = @base + dictLimit;
-            var smallerPtr = bt + (2 * (curr & btMask));
-            var largerPtr = bt + (2 * (curr & btMask)) + 1;
+            var smallerPtr = bt + 2 * (curr & btMask);
+            var largerPtr = bt + 2 * (curr & btMask) + 1;
             var matchEndIdx = curr + 8 + 1;
             /* to be nullified at the end */
             uint dummy32;
@@ -325,7 +325,7 @@ public static unsafe partial class Methods
             hashTable[h] = curr;
             for (; nbCompares != 0 && matchIndex > windowLow; --nbCompares)
             {
-                var nextPtr = bt + (2 * (matchIndex & btMask));
+                var nextPtr = bt + 2 * (matchIndex & btMask);
                 /* guaranteed minimum nb of common bytes */
                 var matchLength =
                     commonLengthSmaller < commonLengthLarger
@@ -411,7 +411,6 @@ public static unsafe partial class Methods
             *smallerPtr = *largerPtr = 0;
             assert(nbCompares <= 1U << ((sizeof(nuint) == 4 ? 30 : 31) - 1));
             if (dictMode == ZstdDictModeE.ZstdDictMatchState && nbCompares != 0)
-            {
                 bestLength = ZSTD_DUBT_findBetterDictMatch(
                     ms,
                     ip,
@@ -422,7 +421,6 @@ public static unsafe partial class Methods
                     mls,
                     dictMode
                 );
-            }
 
             assert(matchEndIdx > curr + 8);
             ms->nextToUpdate = matchEndIdx - 8;
@@ -515,14 +513,11 @@ public static unsafe partial class Methods
                 }
 
                 if (count == cacheSize)
-                {
                     for (count = 0; count < chainLimit;)
                     {
                         if (i < minChain)
-                        {
                             if (i == 0 || ++countBeyondMinChain > cacheSize)
                                 break;
-                        }
 
                         chainTable[chainPos++] = i;
                         count++;
@@ -531,11 +526,8 @@ public static unsafe partial class Methods
 
                         i = tmpChainTable[i - tmpMinChain];
                     }
-                }
                 else
-                {
                     count = 0;
-                }
 
                 if (count != 0)
                     tmpHashTable[hashIdx] = ((chainPos - count) << 8) + count;
@@ -624,15 +616,13 @@ public static unsafe partial class Methods
             assert(matchIndex >= ddsLowestIndex);
             assert(match + 4 <= ddsEnd);
             if (MEM_read32(match) == MEM_read32(ip))
-            {
                 currentMl =
                     ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart) + 4;
-            }
 
             if (currentMl > ml)
             {
                 ml = currentMl;
-                assert(curr > (matchIndex + ddsIndexDelta));
+                assert(curr > matchIndex + ddsIndexDelta);
                 *offsetPtr = curr - (matchIndex + ddsIndexDelta) + 3;
                 if (ip + currentMl == iLimit)
                     return ml;
@@ -663,15 +653,13 @@ public static unsafe partial class Methods
                 assert(matchIndex >= ddsLowestIndex);
                 assert(match + 4 <= ddsEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
-                {
                     currentMl =
                         ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart) + 4;
-                }
 
                 if (currentMl > ml)
                 {
                     ml = currentMl;
-                    assert(curr > (matchIndex + ddsIndexDelta));
+                    assert(curr > matchIndex + ddsIndexDelta);
                     *offsetPtr = curr - (matchIndex + ddsIndexDelta) + 3;
                     if (ip + currentMl == iLimit)
                         break;
@@ -789,10 +777,8 @@ public static unsafe partial class Methods
                 var match = dictBase + matchIndex;
                 assert(match + 4 <= dictEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
-                {
                     currentMl =
                         ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart) + 4;
-                }
             }
 
             if (currentMl > ml)
@@ -843,16 +829,14 @@ public static unsafe partial class Methods
                 var match = dmsBase + matchIndex;
                 assert(match + 4 <= dmsEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
-                {
                     currentMl =
                         ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart) + 4;
-                }
 
                 if (currentMl > ml)
                 {
                     ml = currentMl;
                     assert(curr > matchIndex + dmsIndexDelta);
-                    assert(curr > (matchIndex + dmsIndexDelta));
+                    assert(curr > matchIndex + dmsIndexDelta);
                     *offsetPtr = curr - (matchIndex + dmsIndexDelta) + 3;
                     if (ip + currentMl == iLimit)
                         break;
@@ -1066,7 +1050,6 @@ public static unsafe partial class Methods
         const uint kMaxMatchStartPositionsToUpdate = 96;
         const uint kMaxMatchEndPositionsToUpdate = 32;
         if (useCache != 0)
-        {
             if (target - idx > kSkipThreshold)
             {
                 var bound = idx + kMaxMatchStartPositionsToUpdate;
@@ -1074,7 +1057,6 @@ public static unsafe partial class Methods
                 idx = target - kMaxMatchEndPositionsToUpdate;
                 ZSTD_row_fillHashCache(ms, @base, rowLog, mls, idx, ip + 1);
             }
-        }
 
         assert(target >= idx);
         ZSTD_row_update_internalImpl(ms, idx, target, mls, rowLog, rowMask, useCache);
@@ -1120,7 +1102,7 @@ public static unsafe partial class Methods
         assert(nbChunks == 1 || nbChunks == 2 || nbChunks == 4);
         for (i = 0; i < nbChunks; i++)
         {
-            var chunk = Sse2.LoadVector128((sbyte*)(Vector128<sbyte>*)(src + (16 * i)));
+            var chunk = Sse2.LoadVector128((sbyte*)(Vector128<sbyte>*)(src + 16 * i));
             var equalMask = Sse2.CompareEqual(chunk, comparisonMask);
             matches[i] = Sse2.MoveMask(equalMask);
         }
@@ -1128,12 +1110,10 @@ public static unsafe partial class Methods
         if (nbChunks == 1)
             return BitOperations.RotateRight((ushort)matches[0], (int)head);
         if (nbChunks == 2)
-        {
             return BitOperations.RotateRight(
                 ((uint)matches[1] << 16) | (uint)matches[0],
                 (int)head
             );
-        }
 
         assert(nbChunks == 4);
         return BitOperations.RotateRight(
@@ -1192,7 +1172,7 @@ public static unsafe partial class Methods
 
         {
             var chunkSize = (nuint)sizeof(nuint);
-            var shiftAmount = (chunkSize * 8) - chunkSize;
+            var shiftAmount = chunkSize * 8 - chunkSize;
             var xFf = ~(nuint)0;
             var x01 = xFf / 0xFF;
             var x80 = x01 << 7;
@@ -1412,11 +1392,9 @@ public static unsafe partial class Methods
                     var match = dictBase + matchIndex;
                     assert(match + 4 <= dictEnd);
                     if (MEM_read32(match) == MEM_read32(ip))
-                    {
                         currentMl =
                             ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart)
                             + 4;
-                    }
                 }
 
                 if (currentMl > ml)
@@ -1497,18 +1475,16 @@ public static unsafe partial class Methods
                         var match = dmsBase + matchIndex;
                         assert(match + 4 <= dmsEnd);
                         if (MEM_read32(match) == MEM_read32(ip))
-                        {
                             currentMl =
                                 ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart)
                                 + 4;
-                        }
                     }
 
                     if (currentMl > ml)
                     {
                         ml = currentMl;
                         assert(curr > matchIndex + dmsIndexDelta);
-                        assert(curr > (matchIndex + dmsIndexDelta));
+                        assert(curr > matchIndex + dmsIndexDelta);
                         *offsetPtr = curr - (matchIndex + dmsIndexDelta) + 3;
                         if (ip + currentMl == iLimit)
                             break;
@@ -3402,7 +3378,6 @@ public static unsafe partial class Methods
             }
 
             if (depth >= 1)
-            {
                 while (ip < ilimit)
                 {
                     ip++;
@@ -3415,7 +3390,7 @@ public static unsafe partial class Methods
                     {
                         var mlRep = ZSTD_count(ip + 4, ip + 4 - offset1, iend) + 4;
                         var gain2 = (int)(mlRep * 3);
-                        var gain1 = (int)((matchLength * 3) - ZSTD_highbit32((uint)offBase) + 1);
+                        var gain1 = (int)(matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1);
                         if (mlRep >= 4 && gain2 > gain1)
                         {
                             matchLength = mlRep;
@@ -3448,7 +3423,7 @@ public static unsafe partial class Methods
                                     prefixLowest
                                 ) + 4;
                             var gain2 = (int)(mlRep * 3);
-                            var gain1 = (int)((matchLength * 3) - ZSTD_highbit32((uint)offBase) + 1);
+                            var gain1 = (int)(matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1);
                             if (mlRep >= 4 && gain2 > gain1)
                             {
                                 matchLength = mlRep;
@@ -3473,8 +3448,8 @@ public static unsafe partial class Methods
                             dictMode
                         );
                         /* raw approx */
-                        var gain2 = (int)((ml2 * 4) - ZSTD_highbit32((uint)ofbCandidate));
-                        var gain1 = (int)((matchLength * 4) - ZSTD_highbit32((uint)offBase) + 4);
+                        var gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
+                        var gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 4);
                         if (ml2 >= 4 && gain2 > gain1)
                         {
                             matchLength = ml2;
@@ -3496,7 +3471,7 @@ public static unsafe partial class Methods
                         {
                             var mlRep = ZSTD_count(ip + 4, ip + 4 - offset1, iend) + 4;
                             var gain2 = (int)(mlRep * 4);
-                            var gain1 = (int)((matchLength * 4) - ZSTD_highbit32((uint)offBase) + 1);
+                            var gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1);
                             if (mlRep >= 4 && gain2 > gain1)
                             {
                                 matchLength = mlRep;
@@ -3530,7 +3505,7 @@ public static unsafe partial class Methods
                                     ) + 4;
                                 var gain2 = (int)(mlRep * 4);
                                 var gain1 = (int)(
-                                    (matchLength * 4) - ZSTD_highbit32((uint)offBase) + 1
+                                    matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1
                                 );
                                 if (mlRep >= 4 && gain2 > gain1)
                                 {
@@ -3556,8 +3531,8 @@ public static unsafe partial class Methods
                                 dictMode
                             );
                             /* raw approx */
-                            var gain2 = (int)((ml2 * 4) - ZSTD_highbit32((uint)ofbCandidate));
-                            var gain1 = (int)((matchLength * 4) - ZSTD_highbit32((uint)offBase) + 7);
+                            var gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
+                            var gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7);
                             if (ml2 >= 4 && gain2 > gain1)
                             {
                                 matchLength = ml2;
@@ -3570,7 +3545,6 @@ public static unsafe partial class Methods
 
                     break;
                 }
-            }
 
             if (offBase > 3)
             {
@@ -3627,7 +3601,6 @@ public static unsafe partial class Methods
             }
 
             if (isDxS != 0)
-            {
                 while (ip <= ilimit)
                 {
                     var current2 = (uint)(ip - @base);
@@ -3658,10 +3631,8 @@ public static unsafe partial class Methods
 
                     break;
                 }
-            }
 
             if (dictMode == ZstdDictModeE.ZstdNoDict)
-            {
                 while (ip <= ilimit && offset2 > 0 && MEM_read32(ip) == MEM_read32(ip - offset2))
                 {
                     matchLength = ZSTD_count(ip + 4, ip + 4 - offset2, iend) + 4;
@@ -3674,7 +3645,6 @@ public static unsafe partial class Methods
                     ip += matchLength;
                     anchor = ip;
                 }
-            }
         }
 
         offsetSaved2 = offsetSaved1 != 0 && offset1 != 0 ? offsetSaved1 : offsetSaved2;
@@ -4137,7 +4107,6 @@ public static unsafe partial class Methods
                 var repBase = repIndex < dictLimit ? dictBase : @base;
                 var repMatch = repBase + repIndex;
                 if (dictLimit - 1 - repIndex >= 3 && offset1 <= curr + 1 - windowLow)
-                {
                     if (MEM_read32(ip + 1) == MEM_read32(repMatch))
                     {
                         /* repcode detected we should take it */
@@ -4153,7 +4122,6 @@ public static unsafe partial class Methods
                         if (depth == 0)
                             goto _storeSequence;
                     }
-                }
             }
 
             {
@@ -4185,7 +4153,6 @@ public static unsafe partial class Methods
             }
 
             if (depth >= 1)
-            {
                 while (ip < ilimit)
                 {
                     ip++;
@@ -4197,7 +4164,6 @@ public static unsafe partial class Methods
                         var repBase = repIndex < dictLimit ? dictBase : @base;
                         var repMatch = repBase + repIndex;
                         if (dictLimit - 1 - repIndex >= 3 && offset1 <= curr - windowLow)
-                        {
                             if (MEM_read32(ip) == MEM_read32(repMatch))
                             {
                                 /* repcode detected */
@@ -4212,7 +4178,7 @@ public static unsafe partial class Methods
                                     ) + 4;
                                 var gain2 = (int)(repLength * 3);
                                 var gain1 = (int)(
-                                    (matchLength * 3) - ZSTD_highbit32((uint)offBase) + 1
+                                    matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1
                                 );
                                 if (repLength >= 4 && gain2 > gain1)
                                 {
@@ -4223,7 +4189,6 @@ public static unsafe partial class Methods
                                     start = ip;
                                 }
                             }
-                        }
                     }
 
                     {
@@ -4239,8 +4204,8 @@ public static unsafe partial class Methods
                             ZstdDictModeE.ZstdExtDict
                         );
                         /* raw approx */
-                        var gain2 = (int)((ml2 * 4) - ZSTD_highbit32((uint)ofbCandidate));
-                        var gain1 = (int)((matchLength * 4) - ZSTD_highbit32((uint)offBase) + 4);
+                        var gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
+                        var gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 4);
                         if (ml2 >= 4 && gain2 > gain1)
                         {
                             matchLength = ml2;
@@ -4261,7 +4226,6 @@ public static unsafe partial class Methods
                             var repBase = repIndex < dictLimit ? dictBase : @base;
                             var repMatch = repBase + repIndex;
                             if (dictLimit - 1 - repIndex >= 3 && offset1 <= curr - windowLow)
-                            {
                                 if (MEM_read32(ip) == MEM_read32(repMatch))
                                 {
                                     /* repcode detected */
@@ -4276,7 +4240,7 @@ public static unsafe partial class Methods
                                         ) + 4;
                                     var gain2 = (int)(repLength * 4);
                                     var gain1 = (int)(
-                                        (matchLength * 4) - ZSTD_highbit32((uint)offBase) + 1
+                                        matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1
                                     );
                                     if (repLength >= 4 && gain2 > gain1)
                                     {
@@ -4287,7 +4251,6 @@ public static unsafe partial class Methods
                                         start = ip;
                                     }
                                 }
-                            }
                         }
 
                         {
@@ -4303,8 +4266,8 @@ public static unsafe partial class Methods
                                 ZstdDictModeE.ZstdExtDict
                             );
                             /* raw approx */
-                            var gain2 = (int)((ml2 * 4) - ZSTD_highbit32((uint)ofbCandidate));
-                            var gain1 = (int)((matchLength * 4) - ZSTD_highbit32((uint)offBase) + 7);
+                            var gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
+                            var gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7);
                             if (ml2 >= 4 && gain2 > gain1)
                             {
                                 matchLength = ml2;
@@ -4317,7 +4280,6 @@ public static unsafe partial class Methods
 
                     break;
                 }
-            }
 
             if (offBase > 3)
             {
@@ -4360,7 +4322,6 @@ public static unsafe partial class Methods
                 var repBase = repIndex < dictLimit ? dictBase : @base;
                 var repMatch = repBase + repIndex;
                 if (dictLimit - 1 - repIndex >= 3 && offset2 <= repCurrent - windowLow)
-                {
                     if (MEM_read32(ip) == MEM_read32(repMatch))
                     {
                         /* repcode detected we should take it */
@@ -4378,7 +4339,6 @@ public static unsafe partial class Methods
                         anchor = ip;
                         continue;
                     }
-                }
 
                 break;
             }

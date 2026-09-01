@@ -584,14 +584,12 @@ public static unsafe partial class Methods
         {
             ZSTD_copy16(seqStorePtr->lit, literals);
             if (litLength > 16)
-            {
                 ZSTD_wildcopy(
                     seqStorePtr->lit + 16,
                     literals + 16,
                     (nint)litLength - 16,
                     ZstdOverlapE.ZstdNoOverlap
                 );
-            }
         }
         else
         {

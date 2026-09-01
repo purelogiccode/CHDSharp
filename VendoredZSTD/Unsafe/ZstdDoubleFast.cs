@@ -194,7 +194,6 @@ public static unsafe partial class Methods
 
                 hl1 = ZSTD_hashPtr(ip1, hBitsL, 8);
                 if (idxl0 > prefixLowestIndex)
-                {
                     if (MEM_read64(matchl0) == MEM_read64(ip))
                     {
                         mLength = ZSTD_count(ip + 8, matchl0 + 8, iend) + 8;
@@ -208,15 +207,12 @@ public static unsafe partial class Methods
 
                         goto _match_found;
                     }
-                }
 
                 idxl1 = hashLong[hl1];
                 matchl1 = @base + idxl1;
                 if (idxs0 > prefixLowestIndex)
-                {
                     if (MEM_read32(matchs0) == MEM_read32(ip))
                         goto _search_next_long;
-                }
 
                 if (ip1 >= nextStep)
                 {
@@ -246,7 +242,6 @@ public static unsafe partial class Methods
             return (nuint)(iend - anchor);
             _search_next_long:
             if (idxl1 > prefixLowestIndex)
-            {
                 if (MEM_read64(matchl1) == MEM_read64(ip1))
                 {
                     ip = ip1;
@@ -261,7 +256,6 @@ public static unsafe partial class Methods
 
                     goto _match_found;
                 }
-            }
 
             mLength = ZSTD_count(ip + 4, matchs0 + 4, iend) + 4;
             offset = (uint)(ip - matchs0);

@@ -17,14 +17,10 @@ public static unsafe partial class Methods
         var hashRateLog = @params->hashRateLog;
         state->rolling = ~(uint)0;
         if (hashRateLog > 0 && hashRateLog <= maxBitsInMask)
-        {
             state->stopMask =
-                        (((ulong)1 << (int)hashRateLog) - 1) << (int)(maxBitsInMask - hashRateLog);
-        }
+                (((ulong)1 << (int)hashRateLog) - 1) << (int)(maxBitsInMask - hashRateLog);
         else
-        {
             state->stopMask = ((ulong)1 << (int)hashRateLog) - 1;
-        }
     }
 
     /* ZSTD_ldm_gear_reset()
@@ -205,10 +201,8 @@ public static unsafe partial class Methods
         }
 
         if (@params->hashRateLog == 0)
-        {
             @params->hashRateLog =
                 @params->windowLog < @params->hashLog ? 0 : @params->windowLog - @params->hashLog;
-        }
 
         @params->bucketSizeLog =
             @params->bucketSizeLog < @params->hashLog ? @params->bucketSizeLog : @params->hashLog;
@@ -395,7 +389,6 @@ public static unsafe partial class Methods
             numSplits = 0;
             hashed = ZSTD_ldm_gear_feed(&hashState, ip, (nuint)(iend - ip), splits, &numSplits);
             for (n = 0; n < numSplits; n++)
-            {
                 if (ip + splits[n] >= istart + minMatchLength)
                 {
                     var split = ip + splits[n] - minMatchLength;
@@ -406,7 +399,6 @@ public static unsafe partial class Methods
                     entry.checksum = (uint)(xxhash >> 32);
                     ZSTD_ldm_insertEntry(ldmState, hash, entry, *@params);
                 }
-            }
 
             ip += hashed;
         }
@@ -423,11 +415,9 @@ public static unsafe partial class Methods
     {
         var curr = (uint)(anchor - ms->window.@base);
         if (curr > ms->nextToUpdate + 1024)
-        {
             ms->nextToUpdate =
                 curr
                 - (512 < curr - ms->nextToUpdate - 1024 ? 512 : curr - ms->nextToUpdate - 1024);
-        }
     }
 
     private static nuint ZSTD_ldm_generateSequences_internal(
@@ -610,12 +600,10 @@ public static unsafe partial class Methods
     {
         uint u;
         for (u = 0; u < size; u++)
-        {
             if (table[u].offset < reducerValue)
                 table[u].offset = 0;
             else
                 table[u].offset -= reducerValue;
-        }
     }
 
     /*
@@ -644,7 +632,7 @@ public static unsafe partial class Methods
         var istart = (byte*)src;
         var iend = istart + srcSize;
         const nuint kMaxChunkSize = 1 << 20;
-        var nbChunks = (srcSize / kMaxChunkSize) + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
+        var nbChunks = srcSize / kMaxChunkSize + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
         nuint chunk;
         nuint leftoverSize = 0;
         assert(
@@ -656,7 +644,7 @@ public static unsafe partial class Methods
         assert(sequences->size <= sequences->capacity);
         for (chunk = 0; chunk < nbChunks && sequences->size < sequences->capacity; ++chunk)
         {
-            var chunkStart = istart + (chunk * kMaxChunkSize);
+            var chunkStart = istart + chunk * kMaxChunkSize;
             var remaining = (nuint)(iend - chunkStart);
             var chunkEnd = remaining < kMaxChunkSize ? iend : chunkStart + kMaxChunkSize;
             var chunkSize = (nuint)(chunkEnd - chunkStart);

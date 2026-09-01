@@ -293,14 +293,12 @@ public static class ChdmanComparer
             if (
                 (
                     args[i].StartsWith(prefix, StringComparison.Ordinal)
-                    && int.TryParse(args[i][prefix.Length..], out var n)
-                    && n > 0
+                    && int.TryParse(args[i][prefix.Length..], System.Globalization.CultureInfo.InvariantCulture, out var n) && n > 0
                 )
                 || (
                     string.Equals(args[i], flag, StringComparison.Ordinal)
                     && i + 1 < args.Count
-                    && int.TryParse(args[i + 1], out n)
-                    && n > 0
+                    && int.TryParse(args[i + 1], System.Globalization.CultureInfo.InvariantCulture, out n) && n > 0
                 )
             )
                 return n;

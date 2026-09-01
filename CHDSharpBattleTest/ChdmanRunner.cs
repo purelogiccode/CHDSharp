@@ -97,8 +97,7 @@ internal sealed class ChdmanRunner
 
         if (
             !fields.TryGetValue("File Version", out var versionText)
-            || !int.TryParse(versionText, out var version)
-        )
+            || !int.TryParse(versionText, CultureInfo.InvariantCulture, out var version))
             return null;
 
         return new ChdmanInfo(

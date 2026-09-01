@@ -176,7 +176,7 @@ public class EncodeCdChdmanValidationTests : IDisposable
         for (var i = 2; i <= 8; i++)
         {
             var index00 = audioFrames * (i - 1);
-            sb.AppendLine($"  TRACK {i:D2} AUDIO");
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"  TRACK {i:D2} AUDIO");
             sb.AppendLine($"    INDEX 00 {Msf(index00)}");
             sb.AppendLine($"    INDEX 01 {Msf(index00 + 2)}");
         }

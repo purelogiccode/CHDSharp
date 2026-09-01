@@ -121,15 +121,14 @@ internal sealed partial class BattleHarness
         using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
         var buf = new byte[1 << 20];
         ulong state = 0x243F6A8885A308D3;
-        long remaining = ProbeBytes;
+        var remaining = ProbeBytes;
         while (remaining > 0)
         {
             var n = (int)Math.Min(buf.Length, remaining);
             for (var i = 0; i < n; i += 4096)
             {
                 var len = Math.Min(4096, n - i);
-                if ((i / 4096) % 2 == 0)
-                {
+                if (i / 4096 % 2 == 0)
                     for (var j = 0; j < len; j++)
                     {
                         state ^= state << 13;
@@ -137,12 +136,9 @@ internal sealed partial class BattleHarness
                         state ^= state << 17;
                         buf[i + j] = (byte)(state >> 56);
                     }
-                }
                 else
-                {
                     for (var j = 0; j < len; j++)
-                        buf[i + j] = (byte)(j * 7 + (i / 4096));
-                }
+                        buf[i + j] = (byte)(j * 7 + i / 4096);
             }
 
             fs.Write(buf, 0, n);

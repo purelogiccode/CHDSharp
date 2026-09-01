@@ -180,7 +180,7 @@ internal static class FlacLpcMath
     {
         var nMinus1 = length - 1;
         for (var n = 0; n < length; n++)
-            window[n] = (float)(0.5f - 0.5f * MathF.Cos((float)(2.0f * Math.PI * n / nMinus1)));
+            window[n] = 0.5f - 0.5f * MathF.Cos((float)(2.0f * Math.PI * n / nMinus1));
     }
 
     // ---------------- lpc.c: windowed autocorrelation ----------------

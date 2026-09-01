@@ -31,6 +31,10 @@
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.200">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference
             Include="Microsoft.Extensions.Logging.Abstractions"
             Version="10.0.11"

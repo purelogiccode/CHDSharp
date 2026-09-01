@@ -26,20 +26,16 @@ public static class ThrowHelper
     public static ulong EnsureContentSizeOk(this ulong returnValue)
     {
         if (returnValue == ZstdContentsizeUnknown)
-        {
             throw new ZstdException(
                 ZstdErrorCode.ZstdErrorGeneric,
                 "Decompressed content size is not specified"
             );
-        }
 
         if (returnValue == ZstdContentsizeError)
-        {
             throw new ZstdException(
                 ZstdErrorCode.ZstdErrorGeneric,
                 "Decompressed content size cannot be determined (e.g. invalid magic number, srcSize too small)"
             );
-        }
 
         return returnValue;
     }

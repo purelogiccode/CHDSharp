@@ -3859,7 +3859,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         for (var i = 0; i < _tracks.Count; i++)
         {
             var t = _tracks[i];
-            sb.AppendLine($"// Track {i + 1}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"// Track {i + 1}");
 
             var typeStr = t.GetMameTypeString();
             var subStr = t.GetMameSubTypeString();
@@ -3877,11 +3877,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
             var frameBytes = t.DataSize + t.SubSize;
             if (outputOffs == 0)
-                sb.AppendLine(
-                    $"DATAFILE \"{binFileName}\" {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"DATAFILE \"{binFileName}\" {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
             else
-                sb.AppendLine(
-                    $"DATAFILE \"{binFileName}\" #{outputOffs} {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"DATAFILE \"{binFileName}\" #{outputOffs} {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
 
             if (t.PreGap > 0)
                 sb.AppendLine($"START {FramesToMsf(t.PreGap)}");

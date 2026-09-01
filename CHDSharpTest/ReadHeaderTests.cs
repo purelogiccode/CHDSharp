@@ -9,6 +9,11 @@ public class ReadHeaderTests
 {
     private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
+    private static readonly string TempDir = Path.Combine(
+        Path.GetTempPath(),
+        $"CHDSharpReadHeaderTests_{Guid.NewGuid():N}"
+    );
+
     private static string DataPath(string name)
     {
         return Path.Combine(TestDataDir, name);
@@ -16,9 +21,8 @@ public class ReadHeaderTests
 
     private static string TempPath(string name)
     {
-        var dir = Path.Combine(Path.GetTempPath(), "CHDSharpReadHeaderTests");
-        Directory.CreateDirectory(dir);
-        return Path.Combine(dir, name);
+        Directory.CreateDirectory(TempDir);
+        return Path.Combine(TempDir, name);
     }
 
     // ── Filename overload ──

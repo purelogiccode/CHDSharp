@@ -40,10 +40,8 @@ public static unsafe partial class Methods
     private static void ZSTD_setBasePrices(OptStateT* optPtr, int optLevel)
     {
         if (ZSTD_compressedLiterals(optPtr) != 0)
-        {
             optPtr->litSumBasePrice =
                 optLevel != 0 ? ZSTD_fracWeight(optPtr->litSum) : ZSTD_bitWeight(optPtr->litSum);
-        }
 
         optPtr->litLengthSumBasePrice =
             optLevel != 0
@@ -505,13 +503,11 @@ public static unsafe partial class Methods
         var mlBase = matchLength - 3;
         assert(matchLength >= 3);
         if (optPtr->priceType == ZstdOptPriceE.ZopPredef)
-        {
             return (optLevel != 0 ? ZSTD_fracWeight(mlBase) : ZSTD_bitWeight(mlBase))
-                   + ((16 + offCode) * (1 << 8));
-        }
+                   + (16 + offCode) * (1 << 8);
 
         price =
-            (offCode * (1 << 8))
+            offCode * (1 << 8)
             + (
                 optPtr->offCodeSumBasePrice
                 - (
@@ -683,7 +679,7 @@ public static unsafe partial class Methods
         byte* match;
         var curr = (uint)(ip - @base);
         var btLow = btMask >= curr ? 0 : curr - btMask;
-        var smallerPtr = bt + (2 * (curr & btMask));
+        var smallerPtr = bt + 2 * (curr & btMask);
         var largerPtr = smallerPtr + 1;
         /* to be nullified at the end */
         uint dummy32;
@@ -700,7 +696,7 @@ public static unsafe partial class Methods
         assert(windowLow > 0);
         for (; nbCompares != 0 && matchIndex >= windowLow; --nbCompares)
         {
-            var nextPtr = bt + (2 * (matchIndex & btMask));
+            var nextPtr = bt + 2 * (matchIndex & btMask);
             /* guaranteed minimum nb of common bytes */
             var matchLength =
                 commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
@@ -846,8 +842,8 @@ public static unsafe partial class Methods
         var btLow = btMask >= curr ? 0 : curr - btMask;
         var windowLow = ZSTD_getLowestMatchIndex(ms, curr, cParams->windowLog);
         var matchLow = windowLow != 0 ? windowLow : 1;
-        var smallerPtr = bt + (2 * (curr & btMask));
-        var largerPtr = bt + (2 * (curr & btMask)) + 1;
+        var smallerPtr = bt + 2 * (curr & btMask);
+        var largerPtr = bt + 2 * (curr & btMask) + 1;
         /* farthest referenced position of any match => detects repetitive patterns */
         var matchEndIdx = curr + 8 + 1;
         /* to be nullified at the end */
@@ -893,11 +889,9 @@ public static unsafe partial class Methods
                         && ZSTD_readMINMATCH(ip, minMatch)
                         == ZSTD_readMINMATCH(ip - repOffset, minMatch)
                     )
-                    {
                         repLen =
                             (uint)ZSTD_count(ip + minMatch, ip + minMatch - repOffset, iLimit)
                             + minMatch;
-                    }
                 }
                 else
                 {
@@ -912,7 +906,6 @@ public static unsafe partial class Methods
                         && dictLimit - 1 - repIndex >= 3
                         && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch)
                     )
-                    {
                         repLen =
                             (uint)ZSTD_count_2segments(
                                 ip + minMatch,
@@ -921,7 +914,6 @@ public static unsafe partial class Methods
                                 dictEnd,
                                 prefixStart
                             ) + minMatch;
-                    }
 
                     if (
                         dictMode == ZstdDictModeE.ZstdDictMatchState
@@ -929,7 +921,6 @@ public static unsafe partial class Methods
                         && dictLimit - 1 - repIndex >= 3
                         && ZSTD_readMINMATCH(ip, minMatch) == ZSTD_readMINMATCH(repMatch, minMatch)
                     )
-                    {
                         repLen =
                             (uint)ZSTD_count_2segments(
                                 ip + minMatch,
@@ -938,7 +929,6 @@ public static unsafe partial class Methods
                                 dmsEnd,
                                 prefixStart
                             ) + minMatch;
-                    }
                 }
 
                 if (repLen > bestLength)
@@ -997,7 +987,7 @@ public static unsafe partial class Methods
         hashTable[h] = curr;
         for (; nbCompares != 0 && matchIndex >= matchLow; --nbCompares)
         {
-            var nextPtr = bt + (2 * (matchIndex & btMask));
+            var nextPtr = bt + 2 * (matchIndex & btMask);
             byte* match;
             /* guaranteed minimum nb of common bytes */
             var matchLength =
@@ -1088,7 +1078,7 @@ public static unsafe partial class Methods
             commonLengthSmaller = commonLengthLarger = 0;
             for (; nbCompares != 0 && dictMatchIndex > dmsLowLimit; --nbCompares)
             {
-                var nextPtr = dmsBt + (2 * (dictMatchIndex & dmsBtMask));
+                var nextPtr = dmsBt + 2 * (dictMatchIndex & dmsBtMask);
                 /* guaranteed minimum nb of common bytes */
                 var matchLength =
                     commonLengthSmaller < commonLengthLarger
@@ -1724,9 +1714,7 @@ public static unsafe partial class Methods
             || currPosInBlock >= optLdm->endPosInBlock
             || candidateMatchLength < 3
         )
-        {
             return;
-        }
 
         if (
             *nbMatches == 0
@@ -1946,7 +1934,7 @@ public static unsafe partial class Methods
                     continue;
                 if (cur == lastPos)
                     break;
-                if (optLevel == 0 && opt[cur + 1].price <= opt[cur].price + ((1 << 8) / 2))
+                if (optLevel == 0 && opt[cur + 1].price <= opt[cur].price + (1 << 8) / 2)
                     continue;
 
                 assert(opt[cur].price >= 0);
@@ -2197,9 +2185,7 @@ public static unsafe partial class Methods
             && curr == ms->window.dictLimit
             && srcSize > 8
         )
-        {
             ZSTD_initStats_ultra(ms, seqStore, rep, src, srcSize);
-        }
 
         return ZSTD_compressBlock_opt2(
             ms,
