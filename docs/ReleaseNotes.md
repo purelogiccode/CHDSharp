@@ -83,13 +83,14 @@ Complete `chdman` parity — 16 audited discrepancies (D1–D16) plus EdgeGaps �
 The 43 CD + 3 GD-ROM `extractcd` battleground cases flip from `0/43` to `43/43` parity
 and `disc.bin` sizes match `chdman` (e.g. Akai Shizuku `8,773,030 B`).
 
-### Documented `createcd -c cdzl` compressed-bytes divergence (D3)
+### Documented `createcd -c cdzl` compressed-bytes divergence (D3) — closed in v1.4.4
 
-`cdzl`/`cdfl` on audio-bearing discs can pick different FLAC subframes than MAME's
-native `libFLAC`; the container bytes may differ while Data SHA-1/overall SHA-1 and
-`chdman verify` remain identical. `docs/encoder.md` now carries the caveat and the
-validation table notes that 25/43 `createcd:cdzl` products are byte-identical while the
-remaining 18 are logical-parity only.
+`cdzl`/`cdfl` on audio-bearing discs historically picked different FLAC subframes than
+MAME's native `libFLAC` (container bytes differed while Data SHA-1/overall SHA-1 and
+`chdman verify` stayed identical). v1.4.4 fixed the two root causes — the fixed-predictor
+analysis window and the tukey-window `cosf` rounding — and `createcd`/`copy` with `flac`
+in the codec list is now byte-identical to `chdman` (verified on the 56-file corpus and a
+7.8 GB dual-layer XGD2 image).
 
 ### GD-ROM Redump parity (D12)
 

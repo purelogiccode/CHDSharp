@@ -156,17 +156,18 @@ internal static class FlacLpcMath
             for (var n = 0; n <= np; n++)
             {
                 // window.c uses cosf(): the double argument M_PI*n/Np is rounded to float at the
-                // call, the cosine is computed in double (MSVC CRT) and rounded back to float,
-                // and 0.5f-0.5f* stays float arithmetic throughout. Emulate every rounding step.
+                // call and the cosine is the CRT's native float cosine — MathF.Cos maps to that
+                // same UCRT cosf on Windows, matching chdman bit-for-bit (a double-cos-then-round
+                // emulation differs by 1 ULP on some arguments and flips rare LPC quantizations).
                 window[n] = 0.5f - 0.5f * Cosf(Math.PI * n / np);
                 window[length - np - 1 + n] = 0.5f - 0.5f * Cosf(Math.PI * (n + np) / np);
             }
     }
 
-    /// <summary>Mimics MSVC's cosf: float argument, double-precision cosine, float result.</summary>
+    /// <summary>Mimics the CRT's cosf: float argument, native float cosine, float result.</summary>
     private static float Cosf(double x)
     {
-        return (float)Math.Cos((float)x);
+        return MathF.Cos((float)x);
     }
 
     private static void WindowRectangle(Span<float> window, int length)
@@ -179,7 +180,7 @@ internal static class FlacLpcMath
     {
         var nMinus1 = length - 1;
         for (var n = 0; n < length; n++)
-            window[n] = (float)(0.5f - 0.5f * Math.Cos(2.0f * Math.PI * n / nMinus1));
+            window[n] = (float)(0.5f - 0.5f * MathF.Cos((float)(2.0f * Math.PI * n / nMinus1)));
     }
 
     // ---------------- lpc.c: windowed autocorrelation ----------------

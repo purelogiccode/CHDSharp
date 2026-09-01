@@ -358,7 +358,12 @@ internal sealed class LibFlacEncoder
         bestBits = VerbatimBits(sf[0], sig, bps, wasted);
 
         Span<float> rbps = stackalloc float[5];
-        var guessFixed = FlacLpcMath.FixedComputeBestPredictor(sig, 4, (uint)_blockSize - 4, rbps);
+        // libFLAC calls local_fixed_compute_best_predictor(integer_signal + FLAC__MAX_FIXED_ORDER,
+        // blocksize - FLAC__MAX_FIXED_ORDER, ...) on an UNPADDED array (stream_encoder.c:4029), so the
+        // analysis window is samples [4..blocksize) and the difference history data[-1..-4] is the real
+        // samples [3..0]. Our sig has 4 leading pad slots (sig[4+k] = signal[k]), so the same window
+        // starts at index 8 and its history is the real sample at sig[7] — not the pad zero.
+        var guessFixed = FlacLpcMath.FixedComputeBestPredictor(sig, 8, (uint)_blockSize - 4, rbps);
 
         if (rbps[1] == 0f && IsConstant(sig, _blockSize))
         {
