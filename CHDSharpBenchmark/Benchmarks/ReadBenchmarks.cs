@@ -82,11 +82,11 @@ public class ReadBenchmarks
         var chd = _chd!;
         chd.ConfigureCache(CacheSize);
         var bytes = 0UL;
-        var addr = _xor = _xor * 6364136223846793005UL + 1442695040888963407UL;
+        var addr = _xor = (_xor * 6364136223846793005UL) + 1442695040888963407UL;
         const int reads = 256;
         for (var i = 0; i < reads; i++)
         {
-            addr = (addr ^ (addr >> 30)) * 2685821657736338717UL + (ulong)i;
+            addr = ((addr ^ (addr >> 30)) * 2685821657736338717UL) + (ulong)i;
             var offset = addr % _imageBytes;
             var count = (int)Math.Min((ulong)_buf.Length, _imageBytes - offset);
             if (chd.Read(offset, _buf, 0, count) != ChdError.Chderrnone)

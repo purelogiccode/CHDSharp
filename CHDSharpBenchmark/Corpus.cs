@@ -39,9 +39,11 @@ public static class Corpus
 
             var resolved = ResolveDefault();
             if (!Directory.Exists(resolved))
+            {
                 throw new InvalidOperationException(
                     "Corpus directory could not be resolved. Pass --corpus <dir> or run from the repo root."
                 );
+            }
 
             return resolved;
         }
@@ -99,7 +101,9 @@ public static class Corpus
                     && comps[0] == (ChdCodec)codecTag
                     && comps.Skip(1).All(c => c == ChdCodec.None)
                 )
+                {
                     return file;
+                }
             }
 #pragma warning disable RCS1075
             catch (Exception)

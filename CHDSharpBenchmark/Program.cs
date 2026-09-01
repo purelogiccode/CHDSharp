@@ -22,6 +22,7 @@ public static class Program
             // Strip our own switches before handing the rest to BenchmarkDotNet.
             var runnerArgs = new List<string>();
             for (var i = 0; i < args.Length; i++)
+            {
                 switch (args[i])
                 {
                     case "--corpus" when i + 1 < args.Length:
@@ -40,6 +41,7 @@ public static class Program
 
                         break;
                 }
+            }
 
             if (chdmanExe != null)
             {

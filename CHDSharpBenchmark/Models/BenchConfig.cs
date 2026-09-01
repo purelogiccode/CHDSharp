@@ -22,7 +22,7 @@ public class BenchConfig : ManualConfig
 
 /// <summary>
 ///     Maps a codec name (lib <see cref="ChdCodec" />) to the encoder tag used by
-///     <see cref="CodecTags" /> (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl/none).
+///     <see cref="CodecTags" /> (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl/avhu/none).
 /// </summary>
 public static class CodecMap
 {
@@ -36,8 +36,10 @@ public static class CodecMap
         ("cdzl", ChdCodec.Cdzlib, CodecTags.Cdzl),
         ("cdlz", ChdCodec.Cdlzma, CodecTags.Cdlz),
         ("cdfl", ChdCodec.Cdflac, CodecTags.Cdfl),
-        ("cdzs", ChdCodec.Cdzstd, CodecTags.Cdzs)
-        // "none" has no decode codec; encode-only, exercised by the Encode group.
+        ("cdzs", ChdCodec.Cdzstd, CodecTags.Cdzs),
+        ("avhu", ChdCodec.Avhuff, CodecTags.Avhu),
+        // "none" is the uncompressed map path (V5 'none'); both readable and writable.
+        ("none", ChdCodec.None, CodecTags.None)
     ];
 
     public static string NameOf(ChdCodec codec)

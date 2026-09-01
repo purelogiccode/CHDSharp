@@ -58,9 +58,11 @@ public class VerifyBenchmarks
             {
                 var r = Chd.CheckFileWithParent(file, parent);
                 if (r.Error != ChdError.Chderrnone)
+                {
                     throw new InvalidOperationException(
                         $"CheckFileWithParent failed on '{file}': {r.Error}"
                     );
+                }
 
                 continue;
             }
@@ -87,9 +89,11 @@ public class VerifyBenchmarks
             {
                 var r = Chd.CheckFileWithParent(file, parent);
                 if (r.Error != ChdError.Chderrnone)
+                {
                     throw new InvalidOperationException(
                         $"CheckFileWithParent failed on '{file}': {r.Error}"
                     );
+                }
 
                 continue;
             }
@@ -114,9 +118,11 @@ public class VerifyBenchmarks
             var parent = _parents[file];
             var result = Chd.CheckFileWithParent(file, parent);
             if (result.Error != ChdError.Chderrnone)
+            {
                 throw new InvalidOperationException(
                     $"CheckFileWithParent failed on '{file}': {result.Error}"
                 );
+            }
 
             bytes += (ulong)new FileInfo(file).Length;
         }

@@ -10,7 +10,11 @@ namespace CHDSharpBenchmark.Benchmarks;
 ///     1 vs 8 workers shows the parallel pipeline win. Bytes processed per operation = 64 MiB;
 ///     MB/s = value ÷ Mean; Allocated reports the per-op managed peak. CD codecs (cdzl/cdlz/cdzs/
 ///     cdfl) run on CD-sized hunks (8 frames); the flac path additionally benefits from
-///     audio-like content, so its synthetic data pair alternates 16-bit samples.
+///     audio-like content, so its synthetic data pair alternates 16-bit samples. Two extras
+///     beyond the single-codec grid: <see cref="Encode_MultiChain" /> exercises the 4-slot
+///     fallback chain chdman uses by default (lzma,zlib,huff,flac), and
+///     <see cref="Encode_Avhu" /> encodes a synthetic laserdisc AVI (YUY2 video + PCM audio)
+///     through the A/V Huffman path (<c>EncodeLaserDisc</c>).
 /// </summary>
 [Config(typeof(BenchConfig))]
 public class EncodeBenchmarks
@@ -21,8 +25,17 @@ public class EncodeBenchmarks
     private const uint CdUnitBytes = CdConstants.FrameSize;
     private const int ImageBytes = 64 * 1024 * 1024; // 64 MiB
 
+    /// <summary>Dictionary key for the multi-codec fallback chain (not a real codec tag).</summary>
+    private const uint ChainKey = 0xCDCDCDCD;
+
+    /// <summary>The 4-slot codec chain chdman defaults to for hard disks (v5_multi corpus file).</summary>
+    private static readonly uint[] MultiChain =
+        [CodecTags.Lzma, CodecTags.Zlib, CodecTags.Huff, CodecTags.Flac];
+
     private readonly Dictionary<uint, byte[]> _images = new();
     private readonly Dictionary<uint, string> _tempDirs = new();
+    private byte[] _chainImage = [];
+    private string _aviPath = "";
 
     [ParamsSource(nameof(WorkerCounts))] public int TaskCount { get; set; }
 
@@ -44,6 +57,44 @@ public class EncodeBenchmarks
         _images[CodecTags.Cdlz] = BuildCdImage(ImageBytes, 0xC0DEC8B);
         _images[CodecTags.Cdzs] = BuildCdImage(ImageBytes, 0xC0DEC9B);
         _images[CodecTags.Cdfl] = BuildCdAudioImage(ImageBytes, 0xC0DECAB);
+
+        _chainImage = BuildRawImage(ImageBytes, 0xC0DECDB, 0.40);
+
+        // Laserdisc source: 320x240 YUY2 @30 fps, 48 frames (one hunk per frame), PCM audio.
+        // 44100 Hz divides evenly by 30 fps (1470 samples per frame).
+        _aviPath = Path.Combine(
+            Path.GetTempPath(),
+            $"chdbench_avhu_{Guid.NewGuid():N}",
+            "bench.avi"
+        );
+        Directory.CreateDirectory(Path.GetDirectoryName(_aviPath)!);
+        SyntheticAvi.Write(_aviPath, 320, 240, 30, 48, 44100);
+    }
+
+    [GlobalCleanup]
+    public void Cleanup()
+    {
+        foreach (var dir in _tempDirs.Values)
+        {
+            try
+            {
+                Directory.Delete(dir, true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+
+        if (File.Exists(_aviPath))
+        {
+            try
+            {
+                Directory.Delete(Path.GetDirectoryName(_aviPath)!, true);
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 
     public static IEnumerable<int> WorkerCounts()
@@ -53,21 +104,30 @@ public class EncodeBenchmarks
 
     private string RunEncode(uint codec, bool parallel)
     {
-        if (!_images.TryGetValue(codec, out var image))
-            throw new InvalidOperationException(
-                $"Benchmark image for codec {CodecTags.ToString(codec)} was not created (setup failed)"
-            );
+        return RunEncode([codec], parallel);
+    }
 
-        var outDir = GetTempDir(codec);
+    private string RunEncode(IReadOnlyList<uint> codecs, bool parallel)
+    {
+        var key = codecs.Count > 1 ? ChainKey : codecs[0];
+        if (codecs.Count == 1 && !_images.TryGetValue(codecs[0], out var image))
+        {
+            throw new InvalidOperationException(
+                $"Benchmark image for codec {CodecTags.ToString(codecs[0])} was not created (setup failed)"
+            );
+        }
+
+        var outDir = GetTempDir(key);
         var outPath = Path.Combine(outDir, "bench.chd");
-        using var src = new MemoryStream(image, false);
+        var buffer = codecs.Count > 1 ? _chainImage : _images[codecs[0]];
+        using var src = new MemoryStream(buffer, false);
 
         var options = new ChdEncodeOptions { TaskCount = parallel ? TaskCount : 1 };
-        var isCd = codec is CodecTags.Cdzl or CodecTags.Cdlz or CodecTags.Cdzs or CodecTags.Cdfl;
+        var isCd = codecs[0] is CodecTags.Cdzl or CodecTags.Cdlz or CodecTags.Cdzs or CodecTags.Cdfl;
         var hunkBytes = isCd ? CdHunkBytes : (uint)RawHunkBytes;
         var unitBytes = isCd ? CdUnitBytes : RawUnitBytes;
 
-        ChdEncoder.EncodeRaw(src, outPath, hunkBytes, unitBytes, [codec], options);
+        ChdEncoder.EncodeRaw(src, outPath, hunkBytes, unitBytes, codecs, options);
         return outPath;
     }
 
@@ -131,11 +191,35 @@ public class EncodeBenchmarks
         return RunEncode(CodecTags.Cdfl, TaskCount > 1);
     }
 
+    /// <summary>4-slot fallback chain (lzma,zlib,huff,flac) — chdman's default for hard disks.</summary>
+    [Benchmark]
+    public string Encode_MultiChain()
+    {
+        return RunEncode(MultiChain, TaskCount > 1);
+    }
+
+    /// <summary>Laserdisc A/V Huffman path: encodes the synthetic AVI via EncodeLaserDisc.</summary>
+    [Benchmark]
+    public string Encode_Avhu()
+    {
+        var outDir = GetTempDir(CodecTags.Avhu);
+        var outPath = Path.Combine(outDir, "bench.chd");
+        var options = new ChdEncodeOptions { TaskCount = TaskCount };
+        ChdEncoder.EncodeLaserDisc(_aviPath, outPath, options: options);
+        return outPath;
+    }
+
     private string GetTempDir(uint codec)
     {
         if (!_tempDirs.TryGetValue(codec, out var dir) || !Directory.Exists(dir))
         {
-            var name = codec == CodecTags.None ? "none" : CodecTags.ToString(codec);
+            var name = codec switch
+            {
+                ChainKey => "multi",
+                CodecTags.None => "none",
+                _ => CodecTags.ToString(codec)
+            };
+
             dir = Path.Combine(Path.GetTempPath(), $"chdbench_{name}_{Guid.NewGuid():N}");
             Directory.CreateDirectory(dir);
             _tempDirs[codec] = dir;
@@ -151,8 +235,10 @@ public class EncodeBenchmarks
         rng.NextBytes(data);
         var runStart = (int)(sizeBytes * (1.0 - randomRatio));
         for (var i = runStart; i < sizeBytes; i++)
+        {
             // Compressible runs: repeating word + zeros.
             data[i] = (byte)((i & 0x3FF) == 0 ? 0 : (i / 96) & 0xFF);
+        }
 
         return data;
     }
