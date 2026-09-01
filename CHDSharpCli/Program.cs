@@ -1045,7 +1045,7 @@ internal static class Program
                 parentPath != null ? $", parent {Path.GetFileName(parentPath)}" : "",
                 taskCount.HasValue ? $", {taskCount} tasks" : ""
             );
-            var logger = verbose ? new VerboseHunkLogger() : null;
+            var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger?.Options;
             if (
                 encodeOptions == null
@@ -2032,7 +2032,7 @@ internal static class Program
                 taskCount.HasValue ? $", {taskCount} tasks" : ""
             );
 
-            var logger = verbose ? new VerboseHunkLogger() : null;
+            var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger?.Options;
             if (
                 encodeOptions == null
@@ -2261,7 +2261,7 @@ internal static class Program
                 parentPath != null ? $", parent {Path.GetFileName(parentPath)}" : "",
                 taskCount.HasValue ? $", {taskCount} tasks" : ""
             );
-            var logger = verbose ? new VerboseHunkLogger() : null;
+            var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger?.Options;
             if (encodeOptions == null && (taskCount.HasValue || parentPath != null))
                 encodeOptions = new ChdEncodeOptions();
@@ -2468,7 +2468,7 @@ internal static class Program
         try
         {
             var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "avhu");
-            var logger = verbose ? new VerboseHunkLogger() : null;
+            var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger?.Options;
             if (encodeOptions == null && (taskCount.HasValue || outputParentPath != null))
                 encodeOptions = new ChdEncodeOptions();
@@ -3473,7 +3473,7 @@ internal static class Program
             else if (inputLengthHunks.HasValue)
                 encodeOptions.InputLengthBytes = inputLengthHunks.Value * sourceHunkBytes;
 
-            var logger = verbose ? new VerboseHunkLogger() : null;
+            var logger = new EncodeProgressLogger(verbose);
             encodeOptions.HunkCompleted = logger?.Options.HunkCompleted;
 
             ChdEncoder.Copy(inputPath, outputPath, codecTags, encodeOptions);
@@ -5521,7 +5521,7 @@ internal static class Program
                 taskCount.HasValue ? $", {taskCount} tasks" : ""
             );
 
-            var logger = verbose ? new VerboseHunkLogger() : null;
+            var logger = new EncodeProgressLogger(verbose);
             // DVD metadata must ALWAYS be written — createdvd exists to stamp the 'DVD ' tag.
             var encodeOptions = logger?.Options ?? new ChdEncodeOptions();
             if (taskCount.HasValue)
@@ -6411,19 +6411,25 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Logs one line per hunk (codec, sizes, compression ratio) while encoding, then a
-    ///     summary of the stored bytes and per-codec hunk counts.
+    ///     Mirrors chdman's console behaviour while encoding (chdman.cpp:967 progress and
+    ///     chdman.cpp:1520 completion): writes a throttled (0.5 s) progress line to stderr and a
+    ///     final "Compression complete ... final ratio" line. In verbose mode the line is one
+    ///     entry per hunk (codec, sizes, ratio) plus a Serilog summary; otherwise it is the
+    ///     chdman-style percentage line so redirected consumers (line-based readers treat a
+    ///     lone CR as a line terminator) and TTY users see the same live output chdman gives.
     /// </summary>
-    private sealed class VerboseHunkLogger
+    private sealed class EncodeProgressLogger
     {
+        private readonly bool _verbose;
         private readonly Dictionary<string, int> _counts = new(StringComparer.Ordinal);
         private readonly long _intervalTicks = Stopwatch.Frequency / 2; // 0.5s like chdman.cpp:967
         private long _lastTicks;
         private long _totalRaw;
         private long _totalStored;
 
-        public VerboseHunkLogger()
+        public EncodeProgressLogger(bool verbose)
         {
+            _verbose = verbose;
             Options.HunkCompleted = p =>
             {
                 _totalRaw += p.RawBytes;
@@ -6434,20 +6440,37 @@ internal static class Program
                 if (!isLast && _lastTicks != 0 && now - _lastTicks < _intervalTicks)
                     return;
                 _lastTicks = now;
-                // chdman progress goes to stderr; also log via Serilog for consistency
-                Console.Error.Write(
-                    $"  hunk {p.HunkIndex,6}/{p.HunkCount,6}  {p.CodecName,-5} {p.RawBytes,10} -> {p.StoredBytes,10} B  ({p.Ratio,5:P1})\r");
-                if (isLast)
-                    Console.Error.WriteLine();
-                Log.Logger.Information(
-                    "  hunk {Hunk,6}/{Count,6}  {Codec,-5} {Raw,10} -> {Stored,10} B  ({Ratio,5:P1})",
-                    p.HunkIndex,
-                    p.HunkCount,
-                    p.CodecName,
-                    p.RawBytes,
-                    p.StoredBytes,
-                    p.Ratio
-                );
+
+                if (_verbose)
+                {
+                    // chdman progress goes to stderr; also log via Serilog for consistency
+                    Console.Error.Write(
+                        $"  hunk {p.HunkIndex,6}/{p.HunkCount,6}  {p.CodecName,-5} {p.RawBytes,10} -> {p.StoredBytes,10} B  ({p.Ratio,5:P1})\r");
+                    if (isLast)
+                        Console.Error.WriteLine();
+                    Log.Logger.Information(
+                        "  hunk {Hunk,6}/{Count,6}  {Codec,-5} {Raw,10} -> {Stored,10} B  ({Ratio,5:P1})",
+                        p.HunkIndex,
+                        p.HunkCount,
+                        p.CodecName,
+                        p.RawBytes,
+                        p.StoredBytes,
+                        p.Ratio
+                    );
+                }
+                else
+                {
+                    // chdman.cpp:1513 / chdman.cpp:1520 formats, throttled the same way
+                    var ratioPercent = _totalRaw == 0 ? 100.0 : 100.0 * _totalStored / _totalRaw;
+                    if (isLast)
+                        Console.Error.Write(
+                            FormattableString.Invariant(
+                                $"Compression complete ... final ratio = {ratioPercent:F1}%            \n"));
+                    else
+                        Console.Error.Write(
+                            FormattableString.Invariant(
+                                $"Compressing, {100.0 * (p.HunkIndex + 1) / p.HunkCount:F1}% complete... (ratio={ratioPercent:F1}%)  \r"));
+                }
             };
         }
 
@@ -6456,6 +6479,9 @@ internal static class Program
 
         public void LogSummary()
         {
+            if (!_verbose)
+                return;
+
             var overall = _totalRaw == 0 ? 1.0 : _totalStored / (double)_totalRaw;
             Log.Logger.Information(
                 "  Ratio: {Stored:N0} / {Raw:N0} bytes = {Overall:P1}  [{Counts}]",

@@ -337,10 +337,16 @@ internal sealed partial class BattleHarness
                 ("pcm16", TestDataGenerator.Pcm16(512 * 1024, _seed), full),
                 ("unaligned", TestDataGenerator.Random(1_000_448, _seed), aligned512),
                 // > 256 hunks with a partial final hunk: exercises chdman's compressor
-                // work-buffer stale-tail quirk that the aligned small corpora can't catch
+                // work-buffer stale-tail quirk that the aligned small corpora can't catch.
+                // Must ALSO be >= 513 hunks (2,103,296 B = 514 hunks, 2,048-byte tail): the
+                // stale-ring corruption that produced tiny self-consistent CHDs (fixed in
+                // ChdEncoder.ApplyChdmanWorkBufferTail) only manifests from 513 hunks up —
+                // at 257 hunks the eager stale-hunk pre-read prefilled the ring in order and
+                // every hunk was still served correctly, so the old 1_050_112-byte case
+                // passed against the buggy build. See FailingParity.md in the app repo.
                 (
                     "long-tail",
-                    TestDataGenerator.Random(1_050_112, _seed),
+                    TestDataGenerator.Random(2_103_296, _seed),
                     [
                         new RawConfig("zlib", 4096, 512),
                         new RawConfig("zstd", 4096, 512),

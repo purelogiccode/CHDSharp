@@ -1468,29 +1468,27 @@ public static class ChdEncoder
         var tailOffset = realBytes;
         var tailLength = (int)hunkBytes - realBytes;
 
-        // Eager: the stale content is whatever the previous pass wrote to the slot, which is
-        // fully deterministic source data (identical to a fresh read of the same hunk).
-        byte[] stale;
-        if (staleHunk < hunkCount)
+        // Lazy capture: readHunk may be stateful (the raw stream reader replays chdman's 256-hunk
+        // work buffer), so it must never be called out of order. The pipeline reads hunks strictly
+        // in ascending order and staleHunk (= lastHunk − 256) always precedes lastHunk, so the
+        // stale slot content is captured when that hunk passes through the wrapper instead of via
+        // an eager pre-read (which used to fast-forward the ring and served every later hunk from
+        // a stale window near EOF, collapsing the whole image into SELF references).
+        var stale = new byte[hunkBytes];
+        var staleCaptured = false;
+        return (hunkIndex, buffer) =>
         {
-            stale = new byte[hunkBytes];
-            readHunk(staleHunk, stale);
-        }
-        else
-        {
-            stale = Array.Empty<byte>();
-        }
-
-        if (stale.Length == (int)hunkBytes)
-            return (hunkIndex, buffer) =>
+            var bytes = readHunk(hunkIndex, buffer);
+            if (hunkIndex == staleHunk)
             {
-                var bytes = readHunk(hunkIndex, buffer);
-                if (hunkIndex == lastHunk)
-                    Array.Copy(stale, tailOffset, buffer, tailOffset, tailLength);
-                return bytes;
-            };
+                Buffer.BlockCopy(buffer, 0, stale, 0, (int)hunkBytes);
+                staleCaptured = true;
+            }
 
-        return readHunk;
+            if (hunkIndex == lastHunk && staleCaptured)
+                Array.Copy(stale, tailOffset, buffer, tailOffset, tailLength);
+            return bytes;
+        };
     }
 
     /// <summary>
