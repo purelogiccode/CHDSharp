@@ -12,7 +12,7 @@ namespace CHDSharp;
 ///     Delegate for decompressing a single CHD hunk: reads compressed data from <paramref name="buffIn" /> and writes
 ///     decompressed output to <paramref name="buffOut" />.
 /// </summary>
-internal delegate ChdError ChdReader(
+public delegate ChdError ChdReader(
     byte[] buffIn,
     int buffInLength,
     byte[] buffOut,
@@ -24,7 +24,7 @@ internal delegate ChdError ChdReader(
 ///     Contains all CHD decompression codec implementations as reader delegates: zlib, LZMA, Huffman, FLAC, Zstd, and
 ///     their CD-sector variants.
 /// </summary>
-internal static partial class ChdReaders
+public static partial class ChdReaders
 {
     /// <summary>
     ///     Number of bytes in a cooked CD-ROM sector (2352 bytes: 12-byte sync, 4-byte header, 2048-byte user data,
@@ -69,7 +69,7 @@ internal static partial class ChdReaders
     ///     Decompresses a DEFLATE (zlib) compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />
     ///     .
     /// </summary>
-    internal static ChdError Zlib(
+    public static ChdError Zlib(
         byte[] buffIn,
         int buffInLength,
         byte[] buffOut,
@@ -121,7 +121,7 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses a Zstandard-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />.</summary>
-    internal static ChdError Zstd(
+    public static ChdError Zstd(
         byte[] buffIn,
         int buffInLength,
         byte[] buffOut,
@@ -173,7 +173,7 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses an LZMA-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />.</summary>
-    internal static ChdError Lzma(
+    public static ChdError Lzma(
         byte[] buffIn,
         int buffInLength,
         byte[] buffOut,
@@ -256,7 +256,7 @@ internal static partial class ChdReaders
     }
 
     /// <summary>Decompresses a Huffman-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />.</summary>
-    internal static ChdError Huffman(
+    public static ChdError Huffman(
         byte[] buffIn,
         int buffInLength,
         byte[] buffOut,
@@ -296,7 +296,7 @@ internal static partial class ChdReaders
     ///     Decompresses a FLAC-compressed hunk from <paramref name="buffIn" /> into <paramref name="buffOut" />, with
     ///     optional endian swapping.
     /// </summary>
-    internal static ChdError Flac(
+    public static ChdError Flac(
         byte[] buffIn,
         int buffInLength,
         byte[] buffOut,

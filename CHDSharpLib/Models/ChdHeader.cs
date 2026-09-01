@@ -4,10 +4,10 @@ namespace CHDSharp.Models;
 ///     Represents the fully parsed header of a CHD file including compression codecs, block map, checksums, and
 ///     metadata offsets.
 /// </summary>
-internal class ChdHeader
+public class ChdHeader
 {
     /// <summary>The size of each hunk (block) in bytes.</summary>
-    internal uint Blocksize;
+    public uint Blocksize;
 
     /// <summary>
     ///     The array of decompression delegate readers corresponding to each compression slot. Populated by
@@ -16,13 +16,13 @@ internal class ChdHeader
     internal ChdReader[] ChdReader = [];
 
     /// <summary>The array of compression codecs used by this CHD (up to 4 slots in V5). Populated by the header parsers.</summary>
-    internal ChdCodec[] Compression = [];
+    public ChdCodec[] Compression = [];
 
     /// <summary>Raw CHD global flags field (V1-V4). Bit 0 = has parent, bit 1 = writable. V5 has no flags field on disk (0).</summary>
     internal uint Flags;
 
     /// <summary>The parsed array of map entries describing each hunk's compression type, offset, and length.</summary>
-    internal MapEntry[] Map = [];
+    public MapEntry[] Map = [];
 
     /// <summary>File offset of the block map. Only populated for V5 headers; 0 otherwise.</summary>
     internal ulong Mapoffset;
@@ -83,7 +83,7 @@ internal class ChdHeader
     internal byte[]? Sha1;
 
     /// <summary>The total number of hunks in the image.</summary>
-    internal uint Totalblocks;
+    public uint Totalblocks;
 
     /// <summary>The total decompressed size of the image, in bytes.</summary>
     internal ulong Totalbytes;

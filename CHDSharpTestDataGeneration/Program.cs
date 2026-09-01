@@ -1,7 +1,7 @@
 using System.Text.Json;
 using CHDSharp;
 
-namespace CHDSharpTestGen;
+namespace CHDSharpTestDataGeneration;
 
 internal static class Program
 {

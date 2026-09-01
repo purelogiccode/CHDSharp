@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace CHDSharpTestGen;
+namespace CHDSharpTestDataGeneration;
 
 /// <summary>
 ///     Writes a minimal AVI file (uncompressed YUY2 video + 16-bit PCM audio) accepted by

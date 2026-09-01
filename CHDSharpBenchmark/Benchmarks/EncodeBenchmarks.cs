@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using CHDSharp.Encoder;
 
-namespace CHDSharpBench.Benchmarks;
+namespace CHDSharpBenchmark.Benchmarks;
 
 /// <summary>
 ///     Encode throughput per codec: a deterministic 64 MiB synthetic image (roughly 50% random,

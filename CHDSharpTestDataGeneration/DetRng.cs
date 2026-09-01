@@ -1,4 +1,4 @@
-namespace CHDSharpTestGen;
+namespace CHDSharpTestDataGeneration;
 
 /// <summary>Deterministic pseudo-random generator (xorshift64*) so the corpus is reproducible.</summary>
 internal sealed class DetRng

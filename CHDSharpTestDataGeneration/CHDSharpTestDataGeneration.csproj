@@ -2,14 +2,13 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-        <RootNamespace>CHDSharpTestGen</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
     </ItemGroup>
     <ItemGroup></ItemGroup>
     <ItemGroup>
-        <Using Include="CHDSharpTestGen.Models" />
+        <Using Include="CHDSharpTestDataGeneration.Models" />
         <Using Include="CHDSharp.Models" />
     </ItemGroup>
     <ItemGroup>

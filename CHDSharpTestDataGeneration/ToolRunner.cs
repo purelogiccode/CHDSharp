@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace CHDSharpTestGen;
+namespace CHDSharpTestDataGeneration;
 
 internal static class ToolRunner
 {

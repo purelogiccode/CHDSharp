@@ -1,7 +1,7 @@
 using System.Text.Json;
 using CHDSharp;
 
-namespace CHDSharpBench;
+namespace CHDSharpBenchmark;
 
 /// <summary>
 ///     Resolves the benchmark corpus directory (CHD files to decode/verify and, when present,

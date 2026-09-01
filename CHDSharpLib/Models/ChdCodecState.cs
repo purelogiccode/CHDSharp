@@ -8,7 +8,7 @@ namespace CHDSharp.Models;
 ///     Holds per-codec state and scratch buffers used across multiple hunk decompressions, avoiding repeated
 ///     allocations.
 /// </summary>
-internal class ChdCodecState : IDisposable
+public class ChdCodecState : IDisposable
 {
     /// <summary>Reusable AVHuff audio decoder instance.</summary>
     internal AudioDecoder? AvhuffAudioDecoder;

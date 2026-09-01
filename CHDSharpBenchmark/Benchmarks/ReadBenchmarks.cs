@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using CHDSharp;
 
-namespace CHDSharpBench.Benchmarks;
+namespace CHDSharpBenchmark.Benchmarks;
 
 /// <summary>
 ///     Byte-granular <see cref="ChdFile.Read(ulong, byte[], int, int, System.Threading.CancellationToken)" /> throughput

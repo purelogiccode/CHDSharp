@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using CHDSharp;
 
-namespace CHDSharpBench.Benchmarks;
+namespace CHDSharpBenchmark.Benchmarks;
 
 /// <summary>
 ///     Decode throughput per codec: opens the corpus CHD whose header declares the codec as its

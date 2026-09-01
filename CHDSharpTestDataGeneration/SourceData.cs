@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace CHDSharpTestGen;
+namespace CHDSharpTestDataGeneration;
 
 /// <summary>
 ///     Builds deterministic source images designed to force every CHD hunk encoding:

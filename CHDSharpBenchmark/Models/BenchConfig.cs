@@ -3,7 +3,7 @@ using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Jobs;
 using CHDSharp.Encoder;
 
-namespace CHDSharpBench.Models;
+namespace CHDSharpBenchmark.Models;
 
 /// <summary>
 ///     Shared BenchmarkDotNet configuration: ShortRun (3 warmup + 3 measurement iterations × 1

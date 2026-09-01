@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Running;
-using CHDSharpBench.Chdman;
+using CHDSharpBenchmark.Chdman;
 
-namespace CHDSharpBench;
+namespace CHDSharpBenchmark;
 
 public static class Program
 {

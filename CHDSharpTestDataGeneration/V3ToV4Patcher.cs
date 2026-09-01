@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CHDSharpTestGen;
+namespace CHDSharpTestDataGeneration;
 
 /// <summary>
 ///     Converts a standalone (no-parent) V3 CHD into a V4 CHD.

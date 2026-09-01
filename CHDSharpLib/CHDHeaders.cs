@@ -8,7 +8,7 @@ namespace CHDSharp;
 ///     Parses and validates CHD V1-V5 file headers, reading compression configuration, block maps, checksums, and
 ///     metadata pointers from the stream.
 /// </summary>
-internal static class ChdHeaders
+public static class ChdHeaders
 {
     private const uint MaxHunkBytes = 128 * 1024 * 1024;
     private const ulong MaxLogicalBytes = 1024UL * 1024 * 1024 * 1024;
@@ -400,7 +400,7 @@ internal static class ChdHeaders
     /// <param name="file">The stream positioned immediately after the CHD magic and version fields.</param>
     /// <param name="chd">When this method returns, contains the parsed header data.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code if the map is corrupt.</returns>
-    internal static ChdError ReadHeaderV5(Stream file, out ChdHeader chd)
+    public static ChdError ReadHeaderV5(Stream file, out ChdHeader chd)
     {
         chd = new ChdHeader();
         using var br = new BinaryReader(file, Encoding.UTF8, true);

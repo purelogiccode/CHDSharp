@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace CHDSharpTestGen.Models;
+namespace CHDSharpTestDataGeneration.Models;
 
 internal sealed class ManifestEntry
 {

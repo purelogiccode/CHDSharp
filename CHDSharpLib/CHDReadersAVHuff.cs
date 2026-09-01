@@ -9,7 +9,7 @@ namespace CHDSharp;
 ///     Provides AVHuff decompression support: combined Huffman/RLE-compressed audio and video interleaved in a single
 ///     CHD hunk.
 /// </summary>
-internal static partial class ChdReaders
+public static partial class ChdReaders
 {
     /*
      Source input buffer structure:

@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
 
-namespace CHDSharpTestGen;
+namespace CHDSharpTestDataGeneration;
 
 /// <summary>
 ///     Converts a V1 CHD into a V2 CHD. No stock MAME tool ever wrote V2 by default

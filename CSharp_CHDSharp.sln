@@ -8,11 +8,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpTest", "CHDSharpTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpTester", "CHDSharpTester\CHDSharpTester.csproj", "{952E2D2D-C029-440E-AA63-B0B0E284D97B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpTestGen", "CHDSharpTestGen\CHDSharpTestGen.csproj", "{EF6C4698-5ECC-4EAE-80C2-0993FA8D92D6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpTestDataGeneration", "CHDSharpTestDataGeneration\CHDSharpTestDataGeneration.csproj", "{EF6C4698-5ECC-4EAE-80C2-0993FA8D92D6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpEncoderTest", "CHDSharpEncoderTest\CHDSharpEncoderTest.csproj", "{D20F2BA0-FCA4-488C-ADC6-83B74F718FD4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpBench", "CHDSharpBench\CHDSharpBench.csproj", "{A7E5F40C-9B31-4A2C-BE77-5D1E2F3A4B5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpBenchmark", "CHDSharpBenchmark\CHDSharpBenchmark.csproj", "{A7E5F40C-9B31-4A2C-BE77-5D1E2F3A4B5C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHDSharpBattleTest", "CHDSharpBattleTest\CHDSharpBattleTest.csproj", "{C54DD988-C39B-47A6-91AD-D9700FB39202}"
 EndProject

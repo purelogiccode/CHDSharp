@@ -3,14 +3,14 @@ using System.Globalization;
 using CHDSharp;
 using CHDSharp.Encoder;
 
-namespace CHDSharpBench.Chdman;
+namespace CHDSharpBenchmark.Chdman;
 
 /// <summary>
 ///     External-tool comparison harness (Phase 7.4): runs the stock <c>chdman.exe</c> from MAME
 ///     side-by-side with the library on the same corpus and a synthetic image, then prints a
 ///     wall-clock comparison table (median of N runs). Usage:
 ///     <code>
-///         CHDSharpBench --chdman &lt;path-to-chdman.exe&gt; [--corpus &lt;dir&gt;] [--codecs zlib,zstd,...] [--size-mb N]
+///         CHDSharpBenchmark --chdman &lt;path-to-chdman.exe&gt; [--corpus &lt;dir&gt;] [--codecs zlib,zstd,...] [--size-mb N]
 ///         [--runs N]
 ///     </code>
 ///     .

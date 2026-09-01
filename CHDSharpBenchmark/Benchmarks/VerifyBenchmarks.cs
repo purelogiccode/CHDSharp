@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using CHDSharp;
 
-namespace CHDSharpBench.Benchmarks;
+namespace CHDSharpBenchmark.Benchmarks;
 
 /// <summary>
 ///     Full-image verification times: <see cref="Chd" /> with deep verification (every
