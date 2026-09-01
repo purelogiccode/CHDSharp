@@ -3774,7 +3774,7 @@ internal static partial class Program
 
         Console.WriteLine($"CHD size:     {BigintString((ulong)chdSize)} bytes");
         if (compression.Length > 0 && compression[0] != ChdCodec.None && header.TotalBytes != 0)
-            Console.WriteLine($"Ratio:        {100.0 * chdSize / header.TotalBytes:F1}%");
+            Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Ratio:        {100.0 * chdSize / header.TotalBytes:F1}%"));
 
         // SHA-1 hashes
         var overall = header.Sha1;

@@ -88,12 +88,12 @@ internal sealed class ChdmanRunner
         foreach (var rawLine in output.Split('\n'))
         {
             var line = rawLine.Trim();
-            var m = Regex.Match(line, @"^([A-Za-z][A-Za-z ]*?):\s+(.+?)\s*$", RegexOptions.ExplicitCapture,
-                TimeSpan.FromSeconds(1));
+            var m = Regex.Match(line, @"^(?<key>[A-Za-z][A-Za-z ]*?):\s+(?<value>.+?)\s*$",
+                RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(1));
             if (!m.Success)
                 continue;
 
-            fields[m.Groups[1].Value.Trim()] = m.Groups[2].Value.Trim();
+            fields[m.Groups["key"].Value.Trim()] = m.Groups["value"].Value.Trim();
         }
 
         if (
