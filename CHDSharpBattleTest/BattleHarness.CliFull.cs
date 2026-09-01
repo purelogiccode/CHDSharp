@@ -10,6 +10,11 @@ namespace CHDSharpBattleTest;
 /// </summary>
 internal sealed partial class BattleHarness
 {
+    internal static readonly string[] Second = new[] { "--bogus" };
+    internal static readonly string[] StringArray0 = new[] { "-np", "--numprocessors", "-t", "--tasks" };
+
+    internal static readonly string[] StringArray = new[] { "-np", "--numprocessors", "-t", "--tasks" };
+
     // ------------------------------------------------------------------------
     // entry point called from BattleHarness.RunCliSuite
     // ------------------------------------------------------------------------
@@ -417,7 +422,7 @@ internal sealed partial class BattleHarness
 
         Check(suite, "createraw -np variations", () =>
         {
-            foreach (var np in new[] { "-np", "--numprocessors", "-t", "--tasks" })
+            foreach (var np in StringArray)
             {
                 var o = Path.Combine(dir, $"np_{np.Trim('-')}.chd");
                 var r = _cli.Run("createraw", "-i", sampleInput, "-o", o, "-c", "zlib", "-hs", "4096", "-us", "512", np,
@@ -947,7 +952,7 @@ internal sealed partial class BattleHarness
         });
         Check(suite, "createdvd -np vs --numprocessors", () =>
         {
-            foreach (var np in new[] { "-np", "--numprocessors", "-t", "--tasks" })
+            foreach (var np in StringArray)
             {
                 var o = Path.Combine(dir, $"dvd_np_{np.Trim('-')}.chd");
                 var r = _cli.Run("createdvd", "-i", iso, "-o", o, np, "2", "-f");
@@ -1584,7 +1589,7 @@ internal sealed partial class BattleHarness
 
         Check(suite, "copy -np variants", () =>
         {
-            foreach (var np in new[] { "-np", "--numprocessors", "-t", "--tasks" })
+            foreach (var np in StringArray0)
             {
                 var o = Path.Combine(dir, $"copy_np_{np.Trim('-')}.cli.chd");
                 var r = _cli.Run("copy", "-i", src.ChdPath, "-o", o, "-c", "zlib", np, "2", "-f");
@@ -2081,7 +2086,7 @@ internal sealed partial class BattleHarness
             Assert(
                 r.Combined.Contains("Manufacturer", StringComparison.OrdinalIgnoreCase) ||
                 r.Combined.Contains("Cylinders", StringComparison.OrdinalIgnoreCase), "template header missing");
-            Assert(r.Combined.Contains("0", StringComparison.Ordinal), "template 0 missing");
+            Assert(r.Combined.Contains('0', StringComparison.Ordinal), "template 0 missing");
         });
         Check(suite, "listtemplates chdman parity", () =>
         {
@@ -2381,8 +2386,8 @@ internal sealed partial class BattleHarness
         foreach (var (cmd, baseArgs) in commands)
             Check(suite, $"{cmd} invalid option parity", () =>
             {
-                var cr = _cli.Run(cmd, baseArgs.Concat(new[] { "--bogus" }).ToArray());
-                var mr = _chdman.Run(cmd, baseArgs.Concat(new[] { "--bogus" }).ToArray());
+                var cr = _cli.Run(cmd, baseArgs.Concat(Second).ToArray());
+                var mr = _chdman.Run(cmd, baseArgs.Concat(Second).ToArray());
                 // CLI logs warning but returns 0 (consistent with Program.cs); check output instead of exit
                 Assert(
                     cr.Combined.Contains("not valid", StringComparison.OrdinalIgnoreCase) ||

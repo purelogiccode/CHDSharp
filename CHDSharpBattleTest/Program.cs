@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 
 namespace CHDSharpBattleTest;
 
@@ -79,7 +80,7 @@ internal static class Program
                     realDirs.Add(args[++i]);
                     break;
                 case "--real-timeout" when i + 1 < args.Length:
-                    if (!int.TryParse(args[++i], System.Globalization.CultureInfo.InvariantCulture, out var rt) || rt <= 0)
+                    if (!int.TryParse(args[++i], CultureInfo.InvariantCulture, out var rt) || rt <= 0)
                     {
                         Console.Error.WriteLine($"Invalid real timeout: {args[i]}");
                         return 2;
@@ -94,7 +95,7 @@ internal static class Program
                     noKeep = true;
                     break;
                 case "--seed" when i + 1 < args.Length:
-                    if (!int.TryParse(args[++i], System.Globalization.CultureInfo.InvariantCulture, out seed))
+                    if (!int.TryParse(args[++i], CultureInfo.InvariantCulture, out seed))
                     {
                         Console.Error.WriteLine($"Invalid seed: {args[i]}");
                         return 2;
@@ -111,7 +112,7 @@ internal static class Program
                     corpus.CodecCd = args[++i];
                     break;
                 case "--workers" when i + 1 < args.Length:
-                    if (!int.TryParse(args[++i], System.Globalization.CultureInfo.InvariantCulture, out var workers) || workers <= 0)
+                    if (!int.TryParse(args[++i], CultureInfo.InvariantCulture, out var workers) || workers <= 0)
                     {
                         Console.Error.WriteLine($"Invalid workers: {args[i]}");
                         return 2;
@@ -129,7 +130,7 @@ internal static class Program
                     corpus.Filter = args[++i];
                     break;
                 case "--min-mb" when i + 1 < args.Length:
-                    if (!double.TryParse(args[++i], System.Globalization.CultureInfo.InvariantCulture, out var minMb) || minMb < 0)
+                    if (!double.TryParse(args[++i], CultureInfo.InvariantCulture, out var minMb) || minMb < 0)
                     {
                         Console.Error.WriteLine($"Invalid min-mb: {args[i]}");
                         return 2;
@@ -138,7 +139,7 @@ internal static class Program
                     corpus.MinMb = minMb;
                     break;
                 case "--max-mb" when i + 1 < args.Length:
-                    if (!double.TryParse(args[++i], System.Globalization.CultureInfo.InvariantCulture, out var maxMb) || maxMb <= 0)
+                    if (!double.TryParse(args[++i], CultureInfo.InvariantCulture, out var maxMb) || maxMb <= 0)
                     {
                         Console.Error.WriteLine($"Invalid max-mb: {args[i]}");
                         return 2;
@@ -147,7 +148,7 @@ internal static class Program
                     corpus.MaxMb = maxMb;
                     break;
                 case "--max-files" when i + 1 < args.Length:
-                    if (!int.TryParse(args[++i], System.Globalization.CultureInfo.InvariantCulture, out var maxFiles) || maxFiles <= 0)
+                    if (!int.TryParse(args[++i], CultureInfo.InvariantCulture, out var maxFiles) || maxFiles <= 0)
                     {
                         Console.Error.WriteLine($"Invalid max-files: {args[i]}");
                         return 2;

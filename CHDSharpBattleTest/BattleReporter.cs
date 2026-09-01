@@ -34,7 +34,7 @@ internal static class BattleReporter
     {
         var sb = new StringBuilder();
         if (!File.Exists(csvPath))
-            sb.AppendLine(string.Join(',', CsvHeader));
+            sb.AppendJoin(',', CsvHeader).AppendLine();
 
         foreach (var r in rows)
             sb.Append(Csv(r.File)).Append(',')

@@ -1289,7 +1289,8 @@ internal static partial class Program
                         chsSectors = s;
                         break;
                     case "template":
-                        if (!int.TryParse(param, CultureInfo.InvariantCulture, out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
+                        if (!int.TryParse(param, CultureInfo.InvariantCulture, out var tp) || tp < 0 ||
+                            tp >= HardDiskTemplates.Templates.Length)
                         {
                             log.Warning("createhd: invalid template ID (0-{Max}): {Value}",
                                 HardDiskTemplates.Templates.Length - 1, param);
@@ -2913,7 +2914,8 @@ internal static partial class Program
                         taskCount = t;
                         break;
                     case "template":
-                        if (!int.TryParse(param, CultureInfo.InvariantCulture, out var tp) || tp < 0 || tp >= HardDiskTemplates.Templates.Length)
+                        if (!int.TryParse(param, CultureInfo.InvariantCulture, out var tp) || tp < 0 ||
+                            tp >= HardDiskTemplates.Templates.Length)
                         {
                             Log.Logger.Warning("Invalid template ID (0-{Max}): {Value}",
                                 HardDiskTemplates.Templates.Length - 1, param);
@@ -6411,7 +6413,7 @@ internal static partial class Program
         }
     }
 
-    [GeneratedRegex("(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))", RegexOptions.Compiled, matchTimeoutMilliseconds: 1000)]
+    [GeneratedRegex("(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))", RegexOptions.Compiled, 1000)]
     private static partial Regex MyRegex();
 
     /// <summary>

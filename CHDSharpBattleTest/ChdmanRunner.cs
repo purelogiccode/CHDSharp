@@ -88,7 +88,8 @@ internal sealed class ChdmanRunner
         foreach (var rawLine in output.Split('\n'))
         {
             var line = rawLine.Trim();
-            var m = Regex.Match(line, @"^([A-Za-z][A-Za-z ]*?):\s+(.+?)\s*$", RegexOptions.None | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(1));
+            var m = Regex.Match(line, @"^([A-Za-z][A-Za-z ]*?):\s+(.+?)\s*$", RegexOptions.ExplicitCapture,
+                TimeSpan.FromSeconds(1));
             if (!m.Success)
                 continue;
 

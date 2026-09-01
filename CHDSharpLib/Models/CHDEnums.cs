@@ -68,10 +68,13 @@ public enum MapEntryFlag
     Mapentrytype2Ndcompressed = Mapentrytypeuncompressed | Mapentrytypeselfhunk,
 
     /// <summary>Mask to isolate the hunk type from a map entry.</summary>
-    Mapentryflagtypemask = 0x000f, /* what type of hunk */
+    Mapentryflagtypemask = Mapentrytype2Ndcompressed | Mapentrytypecompressed | EnumMember, /* what type of hunk */
 
     /// <summary>Indicates no CRC is present for this entry.</summary>
-    Mapentryflagnocrc = 0x0010 /* no CRC is present */
+    Mapentryflagnocrc = 0x0010 /* no CRC is present */,
+
+    /// <summary>Internal flag used for mask calculation.</summary>
+    EnumMember = 8
 }
 
 /// <summary>CD-ROM track types. Matches MAME cdrom.h CD_TRACK_* values.</summary>

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO.Enumeration;
 using System.Text;
 using CHDSharp;
@@ -206,7 +207,7 @@ internal sealed partial class BattleHarness
         var path = Path.Combine(OutDir, "report.txt");
         var sb = new StringBuilder();
         sb.AppendLine($"CHDSharp battle test report  ({_chdman.VersionBanner()})");
-        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"seed={_seed} quick={_quick}  {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"seed={_seed} quick={_quick}  {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine();
         foreach (
             var c in _checks
@@ -218,7 +219,8 @@ internal sealed partial class BattleHarness
                 c.Skipped ? "SKIP"
                 : c.Passed ? "PASS"
                 : "FAIL";
-            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"[{status}] {c.Suite} | {c.Name} | {c.Detail} | {c.Seconds:N1}s");
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"[{status}] {c.Suite} | {c.Name} | {c.Detail} | {c.Seconds:N1}s");
         }
 
         sb.AppendLine();
@@ -246,17 +248,19 @@ internal sealed partial class BattleHarness
             var pass = group.Count(c => c.Passed);
             var fail = group.Count(c => c is { Passed: false, Skipped: false });
             var skip = group.Count(c => c.Skipped);
-            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{group.Key,-28} {pass,4} passed  {fail,4} failed  {skip,4} skipped"
-);
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"{group.Key,-28} {pass,4} passed  {fail,4} failed  {skip,4} skipped"
+            );
         }
 
         sb.AppendLine(new string('-', 56));
         if (_checks.Count == 0)
             sb.AppendLine("No checks recorded.");
         else
-            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"TOTAL {(string.IsNullOrEmpty(_checks[0].Suite) ? 0 : _checks.Count),4} checks: "
+            sb.AppendLine(CultureInfo.InvariantCulture,
+                $"TOTAL {(string.IsNullOrEmpty(_checks[0].Suite) ? 0 : _checks.Count),4} checks: "
                 + $"{_checks.Count(c => c.Passed)} passed, {_checks.Count(c => c is { Passed: false, Skipped: false })} failed, {_checks.Count(c => c.Skipped)} skipped"
-);
+            );
 
         return sb.ToString();
     }
@@ -1220,7 +1224,7 @@ internal sealed partial class BattleHarness
             Check(
                 suite2,
                 "copy (ours)",
-                () => { ChdEncoder.Copy(cdSrc.ChdPath, ourCdCopy, [CodecTags.Cdfl]); }
+                () => ChdEncoder.Copy(cdSrc.ChdPath, ourCdCopy, [CodecTags.Cdfl])
             );
             Check(suite2, "chdman verify (ours)", () => VerifyChdman(ourCdCopy));
             Check(
@@ -1756,7 +1760,8 @@ internal sealed partial class BattleHarness
                 $"createhd {tag}",
                 () =>
                 {
-                    var cliR = _cli!.Run("createhd", "-o", cliChd, "-s", size.ToString(System.Globalization.CultureInfo.InvariantCulture), "-f");
+                    var cliR = _cli!.Run("createhd", "-o", cliChd, "-s", size.ToString(CultureInfo.InvariantCulture),
+                        "-f");
                     Assert(
                         cliR.ExitCode == 0,
                         $"CLI createhd failed (exit={cliR.ExitCode}): {cliR.Combined.Trim()}"
@@ -1770,7 +1775,8 @@ internal sealed partial class BattleHarness
                 $"chdman createhd {tag}",
                 () =>
                 {
-                    var r = _chdman.Run("createhd", "-o", refChd, "-s", size.ToString(System.Globalization.CultureInfo.InvariantCulture), "-f");
+                    var r = _chdman.Run("createhd", "-o", refChd, "-s", size.ToString(CultureInfo.InvariantCulture),
+                        "-f");
                     Assert(r.ExitCode == 0, $"chdman createhd failed: {r.Combined.Trim()}");
                 }
             );
@@ -2325,6 +2331,7 @@ internal sealed partial class BattleHarness
         if (!string.Equals(_corpus.Filter, "*.chd", StringComparison.OrdinalIgnoreCase))
             q = q.Where(f =>
                 FileSystemName.MatchesSimpleExpression(_corpus.Filter, Path.GetFileName(f)));
+
         if (_corpus.MinMb > 0)
             q = q.Where(f => new FileInfo(f).Length >= _corpus.MinMb * 1048576);
         if (_corpus.MaxMb > 0)

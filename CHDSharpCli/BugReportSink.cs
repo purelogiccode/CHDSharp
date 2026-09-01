@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Serilog.Core;
@@ -69,15 +70,16 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine($"Bitness: {_env.Bitness}");
         sb.AppendLine($"Windows Version: {_env.WindowsVersion}");
         sb.AppendLine($"Runtime: {EnvironmentSnapshot.RuntimeVersion}");
-        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
         sb.AppendLine("Base Directory: [redacted]");
         sb.AppendLine("Temp Path: [redacted]");
 
         sb.AppendLine();
         sb.AppendLine("=== Session Details ===");
-        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Report Time (UTC): {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Report Time (UTC): {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
         var uptime = DateTime.Now - _env.CreatedAt;
-        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $@"Session Uptime: {(long)uptime.TotalHours:00}\{uptime.Minutes:00}\{uptime.Seconds:00} (hh\mm\ss)");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $@"Session Uptime: {(long)uptime.TotalHours:00}\{uptime.Minutes:00}\{uptime.Seconds:00} (hh\mm\ss)");
         sb.AppendLine($"Elevated: {EnvironmentSnapshot.Elevated}");
 
         sb.AppendLine();
@@ -87,7 +89,8 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine();
         sb.AppendLine("=== Log Context ===");
         sb.AppendLine($"Level: {logEvent.Level}");
-        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Log Timestamp (UTC): {logEvent.Timestamp.UtcDateTime:yyyy-MM-dd HH:mm:ss.fff}Z");
+        sb.AppendLine(CultureInfo.InvariantCulture,
+            $"Log Timestamp (UTC): {logEvent.Timestamp.UtcDateTime:yyyy-MM-dd HH:mm:ss.fff}Z");
         if (logEvent.Properties.Count > 0)
         {
             sb.AppendLine("Properties:");
@@ -140,7 +143,7 @@ internal sealed class BugReportSink : ILogEventSink
         {
             return value is ScalarValue scalar
                 ? scalar.Value?.ToString() ?? "null"
-                : value.ToString(null, System.Globalization.CultureInfo.InvariantCulture);
+                : value.ToString(null, CultureInfo.InvariantCulture);
         }
         catch
         {

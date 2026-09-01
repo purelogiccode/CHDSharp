@@ -3877,9 +3877,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
             var frameBytes = t.DataSize + t.SubSize;
             if (outputOffs == 0)
-                sb.AppendLine(CultureInfo.InvariantCulture, $"DATAFILE \"{binFileName}\" {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"DATAFILE \"{binFileName}\" {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
             else
-                sb.AppendLine(CultureInfo.InvariantCulture, $"DATAFILE \"{binFileName}\" #{outputOffs} {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"DATAFILE \"{binFileName}\" #{outputOffs} {FramesToMsf(t.Frames)} // length in bytes: {t.Frames * frameBytes}");
 
             if (t.PreGap > 0)
                 sb.AppendLine($"START {FramesToMsf(t.PreGap)}");

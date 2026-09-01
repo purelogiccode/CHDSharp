@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 
 namespace CHDSharpBattleTest;
 
@@ -242,9 +243,9 @@ internal sealed partial class BattleHarness
         var sChd = Path.Combine(work, "copy_s.chd");
 
         var (rm, rmIdx) = RunBattleTool("chdman", (c, a) => chdman.Run(c, a), battle, file, insp, rows, "copy",
-            "-i", file, "-o", mChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            "-i", file, "-o", mChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString(CultureInfo.InvariantCulture));
         var (rs, rsIdx) = RunBattleTool("chdsharp", (c, a) => cli.Run(c, a), battle, file, insp, rows, "copy",
-            "-i", file, "-o", sChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            "-i", file, "-o", sChd, "-c", codec, "-f", "-np", _corpus.Workers.ToString(CultureInfo.InvariantCulture));
 
         FillProductRows(rows, file, insp, battle, rm, rs, rmIdx, rsIdx, mChd, sChd);
 
@@ -308,15 +309,16 @@ internal sealed partial class BattleHarness
         // createraw requires an explicit unit size (both tools reject a bare create);
         // preserve the source CHD's geometry so the re-encode matches the original hunks
         var geometry = string.Equals(cmd, "createraw"
-, StringComparison.OrdinalIgnoreCase) ? new[] { "-hs", insp.HunkBytes.ToString(), "-us", insp.UnitBytes.ToString() }
+            , StringComparison.OrdinalIgnoreCase)
+            ? new[] { "-hs", insp.HunkBytes.ToString(), "-us", insp.UnitBytes.ToString() }
             : Array.Empty<string>();
 
         var (rm, rmIdx) = RunBattleTool("chdman", (c, a) => chdman.Run(c, a), battle, file, insp, rows, cmd,
             new[] { "-i", input, "-o", mChd, "-c", codec }.Concat(geometry)
-                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture) }).ToArray());
+                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString(CultureInfo.InvariantCulture) }).ToArray());
         var (rs, rsIdx) = RunBattleTool("chdsharp", (c, a) => cli.Run(c, a), battle, file, insp, rows, cmd,
             new[] { "-i", input, "-o", sChd, "-c", codec }.Concat(geometry)
-                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString(System.Globalization.CultureInfo.InvariantCulture) }).ToArray());
+                .Concat(new[] { "-f", "-np", _corpus.Workers.ToString(CultureInfo.InvariantCulture) }).ToArray());
 
         FillProductRows(rows, file, insp, battle, rm, rs, rmIdx, rsIdx, mChd, sChd);
 
@@ -411,6 +413,7 @@ internal sealed partial class BattleHarness
             if (r.ExitCode != 0)
                 rows[idx] = Row(file, insp, battle, toolName, false, r.Seconds, 0, null, r.ExitCode, 0, null,
                     ToolError(r));
+
             return (r, idx);
         }
         catch (Exception ex)
