@@ -36,6 +36,7 @@ internal sealed class CliRunner
             Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {ExePath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
+        var sw = Stopwatch.StartNew();
         if (!p.WaitForExit(TimeoutMs))
         {
             try
@@ -50,7 +51,8 @@ internal sealed class CliRunner
             throw new TimeoutException($"CHDSharp {command} timed out after {TimeoutMs}ms");
         }
 
-        return new RunResult(p.ExitCode, tOut.Result, tErr.Result);
+        sw.Stop();
+        return new RunResult(p.ExitCode, tOut.Result, tErr.Result, sw.Elapsed.TotalSeconds);
     }
 
     /// <summary>Runs <c>CHDSharp info</c> and returns the raw output text.</summary>

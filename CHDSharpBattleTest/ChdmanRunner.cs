@@ -39,6 +39,7 @@ internal sealed class ChdmanRunner
             Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {ExePath}");
         var tOut = p.StandardOutput.ReadToEndAsync();
         var tErr = p.StandardError.ReadToEndAsync();
+        var sw = Stopwatch.StartNew();
         if (!p.WaitForExit(TimeoutMs))
         {
             try
@@ -53,7 +54,8 @@ internal sealed class ChdmanRunner
             throw new TimeoutException($"chdman {command} timed out after {TimeoutMs}ms");
         }
 
-        return new RunResult(p.ExitCode, tOut.Result, tErr.Result);
+        sw.Stop();
+        return new RunResult(p.ExitCode, tOut.Result, tErr.Result, sw.Elapsed.TotalSeconds);
     }
 
     /// <summary>The version banner line, e.g. "chdman - MAME Compressed Hunks of Data (CHD) manager 0.289 (mame0289)".</summary>

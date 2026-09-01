@@ -67,6 +67,7 @@ internal sealed partial class BattleHarness
     private readonly int _realTimeoutMs;
     private readonly int _seed;
     private readonly string _workDir;
+    private readonly CorpusOptions _corpus;
 
     internal BattleHarness(
         string chdmanPath,
@@ -75,7 +76,8 @@ internal sealed partial class BattleHarness
         int seed,
         bool quick,
         List<string> realDirs,
-        int realTimeoutMs = 900_000
+        int realTimeoutMs = 900_000,
+        CorpusOptions? corpus = null
     )
     {
         _chdman = new ChdmanRunner(chdmanPath);
@@ -84,6 +86,7 @@ internal sealed partial class BattleHarness
         _quick = quick;
         _realDirs = realDirs;
         _realTimeoutMs = realTimeoutMs;
+        _corpus = corpus ?? new CorpusOptions();
         outDir ??= FindRepoRoot();
         OutDir = Path.Combine(outDir, "battle", $"battle-{DateTime.Now:yyyyMMdd-HHmmss}");
         _workDir = Path.Combine(OutDir, "artifacts");
@@ -166,6 +169,13 @@ internal sealed partial class BattleHarness
 
     internal int Run()
     {
+        // --list classifies real-corpus files only; no synthetic suites, no battles
+        if (_corpus.ListOnly)
+        {
+            RunRealSuites();
+            return _realDirs.Count > 0 ? 0 : 2;
+        }
+
         Console.WriteLine($"== CHDSharp battle test vs {_chdman.VersionBanner()}");
         Console.WriteLine($"== seed={_seed} quick={_quick} out={OutDir}");
         if (_cli != null)
@@ -178,6 +188,7 @@ internal sealed partial class BattleHarness
         RunCopySuite();
         RunDecodeSuite();
         RunInfoSuite();
+        RunSyntheticProbeSuite();
 
         if (_cli != null)
             RunCliSuite();
@@ -2257,6 +2268,7 @@ internal sealed partial class BattleHarness
 
     private void RunRealSuites()
     {
+        var wroteBattles = false;
         foreach (var rawRoot in _realDirs)
         {
             var root = Path.GetFullPath(rawRoot);
@@ -2268,21 +2280,72 @@ internal sealed partial class BattleHarness
 
             var files = new List<string>();
             CollectChdFiles(root, files);
+            files = FilterCorpusFiles(files);
             if (files.Count == 0)
             {
-                Console.WriteLine($"[SKIP] real-corpus — no *.chd files under: {root}");
+                Console.WriteLine($"[SKIP] real-corpus — no *.chd files matching the filters under: {root}");
                 continue;
             }
 
             Console.WriteLine();
             Console.WriteLine($"== Real-file corpus suite: {root}  ({files.Count} CHD files) ==");
 
+            // --list: classify only, run no battles
+            if (_corpus.ListOnly)
+            {
+                ListCorpus(files);
+                continue;
+            }
+
             // Real CHDs can be far larger than the synthetic corpus; give verify/extract a
             // longer per-command timeout (configurable via --real-timeout).
             var chdman = new ChdmanRunner(_chdman.ExePath, _realTimeoutMs);
             var cli = _cli != null ? new CliRunner(_cli.ExePath, _realTimeoutMs) : null;
 
+            if (_corpus.Resume)
+                _corpusCompleted = BattleReporter.LoadCompletedKeys(CorpusCsvPath);
+
             RunRealSuite(chdman, cli, root, files);
+            wroteBattles = true;
+        }
+
+        if (wroteBattles && _battleRows.Count > 0)
+        {
+            var mdPath = Path.Combine(OutDir, "battles.md");
+            BattleReporter.WriteMarkdown(mdPath, _battleRows, _corpus, _chdman.ExePath, _cli?.ExePath);
+            Console.WriteLine();
+            Console.WriteLine($"Corpus battle CSV:     {CorpusCsvPath}");
+            Console.WriteLine($"Corpus battle report:  {mdPath}");
+        }
+    }
+
+    /// <summary>Applies the corpus filters (--filter/--min-mb/--max-mb/--max-files), smallest file first.</summary>
+    private List<string> FilterCorpusFiles(List<string> files)
+    {
+        IEnumerable<string> q = files;
+        if (!string.Equals(_corpus.Filter, "*.chd", StringComparison.OrdinalIgnoreCase))
+            q = q.Where(f =>
+                System.IO.Enumeration.FileSystemName.MatchesSimpleExpression(_corpus.Filter, Path.GetFileName(f), true));
+        if (_corpus.MinMb > 0)
+            q = q.Where(f => new FileInfo(f).Length >= _corpus.MinMb * 1048576);
+        if (_corpus.MaxMb > 0)
+            q = q.Where(f => new FileInfo(f).Length <= _corpus.MaxMb * 1048576);
+        var list = q.OrderBy(f => new FileInfo(f).Length).ToList();
+        if (_corpus.MaxFiles > 0)
+            list = list.Take(_corpus.MaxFiles).ToList();
+        return list;
+    }
+
+    private static void ListCorpus(List<string> files)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"{"file",-70} {"size MiB",10} {"logical MiB",12} kind");
+        foreach (var f in files)
+        {
+            var insp = CorpusClassifier.Inspect(f);
+            var kind = !insp.IsChd ? "NOT A CHD" : $"{insp.Kind} V{insp.Version}";
+            Console.WriteLine(
+                $"{Path.GetFileName(f),-70} {new FileInfo(f).Length / 1048576.0,10:F1} {insp.LogicalBytes / 1048576.0,12:F1} {kind}");
         }
     }
 
@@ -2525,6 +2588,18 @@ internal sealed partial class BattleHarness
                         );
                     }
                 );
+            }
+
+            // timed decode/encode battles (extractraw, structured extract, copy, create) —
+            // standalone files only; delta children would need -ip plumbing on every tool call
+            if (_corpus.Battles)
+            {
+                if (cli == null)
+                    Console.WriteLine("      battles: skipped (CLI not available)");
+                else if (header.HasParent)
+                    Console.WriteLine("      battles: skipped (delta child)");
+                else
+                    RunCorpusBattles(chdman, cli, file);
             }
         }
 

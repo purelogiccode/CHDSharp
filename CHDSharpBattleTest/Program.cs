@@ -30,6 +30,22 @@ internal static class Program
               --no-keep         delete artifacts at the end when everything passed
               --help            show this help
 
+            Real-corpus battle options (merged from the former CHDBattleTest harness):
+
+              --no-battles      skip the timed decode/encode corpus battles (parity checks only)
+              --codec-raw <c>   codec for copy/dvd/hd/raw battles            (default zstd)
+              --codec-cd <c>    codec for cd/gd battles                      (default cdzl)
+              --workers <n>     -np passed to both tools in encode battles   (default cores)
+              --include-av      enable laserdisc extractld/createld battles
+              --lib-decode      extra in-process CHDSharpLib decode timing row
+              --filter <glob>   corpus file filter                           (default *.chd)
+              --min-mb <n>      skip files smaller than n MiB
+              --max-mb <n>      skip files larger than n MiB
+              --max-files <n>   limit number of corpus files (smallest first)
+              --list            classify corpus files only, run no battles
+              --resume          skip corpus files already present in results.csv
+              --keep-temp       keep per-file corpus battle work directories
+
             Exit code: 0 when every check passed, 1 when any failed, 2 on usage errors.
             """
         );
@@ -45,6 +61,7 @@ internal static class Program
         var seed = 1337;
         var realDirs = new List<string>();
         var realTimeoutMs = 900_000;
+        var corpus = new CorpusOptions();
 
         for (var i = 0; i < args.Length; i++)
             switch (args[i])
@@ -84,6 +101,69 @@ internal static class Program
                     }
 
                     break;
+                case "--no-battles":
+                    corpus.Battles = false;
+                    break;
+                case "--codec-raw" when i + 1 < args.Length:
+                    corpus.CodecRaw = args[++i];
+                    break;
+                case "--codec-cd" when i + 1 < args.Length:
+                    corpus.CodecCd = args[++i];
+                    break;
+                case "--workers" when i + 1 < args.Length:
+                    if (!int.TryParse(args[++i], out var workers) || workers <= 0)
+                    {
+                        Console.Error.WriteLine($"Invalid workers: {args[i]}");
+                        return 2;
+                    }
+
+                    corpus.Workers = workers;
+                    break;
+                case "--include-av":
+                    corpus.IncludeAv = true;
+                    break;
+                case "--lib-decode":
+                    corpus.LibDecode = true;
+                    break;
+                case "--filter" when i + 1 < args.Length:
+                    corpus.Filter = args[++i];
+                    break;
+                case "--min-mb" when i + 1 < args.Length:
+                    if (!double.TryParse(args[++i], out var minMb) || minMb < 0)
+                    {
+                        Console.Error.WriteLine($"Invalid min-mb: {args[i]}");
+                        return 2;
+                    }
+
+                    corpus.MinMb = minMb;
+                    break;
+                case "--max-mb" when i + 1 < args.Length:
+                    if (!double.TryParse(args[++i], out var maxMb) || maxMb <= 0)
+                    {
+                        Console.Error.WriteLine($"Invalid max-mb: {args[i]}");
+                        return 2;
+                    }
+
+                    corpus.MaxMb = maxMb;
+                    break;
+                case "--max-files" when i + 1 < args.Length:
+                    if (!int.TryParse(args[++i], out var maxFiles) || maxFiles <= 0)
+                    {
+                        Console.Error.WriteLine($"Invalid max-files: {args[i]}");
+                        return 2;
+                    }
+
+                    corpus.MaxFiles = maxFiles;
+                    break;
+                case "--list":
+                    corpus.ListOnly = true;
+                    break;
+                case "--resume":
+                    corpus.Resume = true;
+                    break;
+                case "--keep-temp":
+                    corpus.KeepTemp = true;
+                    break;
                 case "--help" or "-h":
                     PrintUsage();
                     return 0;
@@ -117,7 +197,8 @@ internal static class Program
             seed,
             quick,
             realDirs,
-            realTimeoutMs
+            realTimeoutMs,
+            corpus
         );
         try
         {
