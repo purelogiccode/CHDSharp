@@ -64,7 +64,7 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine($"Architecture: {EnvironmentSnapshot.Architecture}");
         sb.AppendLine($"Bitness: {EnvironmentSnapshot.Bitness}");
         sb.AppendLine($"Windows Version: {_env.WindowsVersion}");
-        sb.AppendLine($"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
+        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
         sb.AppendLine($"Base Directory: {EnvironmentSnapshot.BaseDirectory}");
         sb.AppendLine($"Temp Path: {EnvironmentSnapshot.TempPath}");
 

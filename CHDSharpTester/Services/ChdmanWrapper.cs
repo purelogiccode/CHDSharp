@@ -27,8 +27,8 @@ internal class ChdmanWrapper
 
     /// <summary>Runs chdman with the specified arguments and returns the captured process result.</summary>
     /// <param name="args">The arguments to pass to chdman.</param>
-    /// <returns>A <see cref="Result" /> containing the exit code and output streams.</returns>
-    public Result Run(params string[] args)
+    /// <returns>A <see cref="ChdmanResult" /> containing the exit code and output streams.</returns>
+    public ChdmanResult Run(params string[] args)
     {
         try
         {
@@ -52,7 +52,7 @@ internal class ChdmanWrapper
             var tErr = p.StandardError.ReadToEndAsync();
             p.WaitForExit();
             Task.WaitAll(tOut, tErr);
-            return new Result
+            return new ChdmanResult
             {
                 ExitCode = p.ExitCode,
                 StdOut = tOut.Result,
@@ -68,15 +68,15 @@ internal class ChdmanWrapper
 
     /// <summary>Runs chdman info on a CHD file and parses key header fields. Returns null on failure.</summary>
     /// <param name="file">The path to the CHD file.</param>
-    /// <returns>An <see cref="Info" /> instance with parsed fields, or null if chdman failed.</returns>
-    public Info? GetInfo(string file)
+    /// <returns>An <see cref="ChdmanInfo" /> instance with parsed fields, or null if chdman failed.</returns>
+    public ChdmanInfo? GetInfo(string file)
     {
         var r = Run("info", "-i", file);
         if (r.ExitCode != 0)
             return null;
 
         var text = r.All;
-        return new Info
+        return new ChdmanInfo
         {
             Version = ParseIntField(text, @"File Version:\s*(\d+)"),
             LogicalBytes = ParseULongField(text, @"Logical size:\s*([\d,]+)"),
@@ -205,8 +205,8 @@ internal class ChdmanWrapper
     /// <param name="output">The destination CHD file path.</param>
     /// <param name="compression">The compression codec(s) to apply.</param>
     /// <param name="parentOut">Optional parent output path for delta CHDs.</param>
-    /// <returns>A <see cref="Result" /> containing the exit code and output streams.</returns>
-    public Result CopyVerbose(
+    /// <returns>A <see cref="ChdmanResult" /> containing the exit code and output streams.</returns>
+    public ChdmanResult CopyVerbose(
         string input,
         string output,
         string compression,
@@ -225,13 +225,13 @@ internal class ChdmanWrapper
 
     private static int ParseIntField(string text, string pattern)
     {
-        var m = Regex.Match(text, pattern);
+        var m = Regex.Match(text, pattern, RegexOptions.None, TimeSpan.FromSeconds(1));
         return m.Success ? int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture) : 0;
     }
 
     private static ulong ParseULongField(string text, string pattern)
     {
-        var m = Regex.Match(text, pattern);
+        var m = Regex.Match(text, pattern, RegexOptions.None, TimeSpan.FromSeconds(1));
         return m.Success
             ? ulong.Parse(m.Groups[1].Value.Replace(",", ""), CultureInfo.InvariantCulture)
             : 0;
@@ -239,54 +239,13 @@ internal class ChdmanWrapper
 
     private static string? ParseStringField(string text, string pattern)
     {
-        var m = Regex.Match(text, pattern);
+        var m = Regex.Match(text, pattern, RegexOptions.None, TimeSpan.FromSeconds(1));
         return m.Success ? m.Groups[1].Value.Trim() : null;
     }
 
     private static string? ParseHexField(string text, string pattern)
     {
-        var m = Regex.Match(text, pattern);
+        var m = Regex.Match(text, pattern, RegexOptions.None, TimeSpan.FromSeconds(1));
         return m.Success ? m.Groups[1].Value.ToLowerInvariant() : null;
-    }
-
-    /// <summary>Represents parsed header information returned by chdman's info command.</summary>
-    public sealed class Info
-    {
-        /// <summary>The string description of compression codec(s) used by the CHD (e.g. "zstd", "cdzs", "cdzl,cdfl").</summary>
-        internal string Compression = "";
-
-        /// <summary>The raw data SHA1 hash, or null if not present.</summary>
-        internal string? DataSha1;
-
-        /// <summary>The size of each hunk, in bytes.</summary>
-        internal uint HunkBytes;
-
-        /// <summary>The logical (decompressed) size of the CHD image, in bytes.</summary>
-        internal ulong LogicalBytes;
-
-        /// <summary>The overall SHA1 hash (raw data + metadata), or null if not present.</summary>
-        internal string? Sha1;
-
-        /// <summary>The total number of hunks in the image.</summary>
-        internal uint TotalHunks;
-
-        /// <summary>The CHD file format version.</summary>
-        internal int Version;
-    }
-
-    /// <summary>Represents the result of a chdman process execution.</summary>
-    public sealed class Result
-    {
-        /// <summary>The process exit code.</summary>
-        internal int ExitCode;
-
-        /// <summary>The captured standard error text.</summary>
-        internal string StdErr = "";
-
-        /// <summary>The captured standard output text.</summary>
-        internal string StdOut = "";
-
-        /// <summary>Gets the combined standard output and standard error text.</summary>
-        internal string All => StdOut + "\n" + StdErr;
     }
 }

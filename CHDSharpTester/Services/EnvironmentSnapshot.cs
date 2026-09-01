@@ -22,7 +22,7 @@ internal sealed class EnvironmentSnapshot
     }
 
     /// <summary>Local timestamp when the snapshot was created.</summary>
-    public static string Date => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    public static string Date => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>The friendly application name (e.g. <c>CHDSharpTester</c>).</summary>
     public string ApplicationName { get; }
