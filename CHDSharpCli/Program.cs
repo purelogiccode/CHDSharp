@@ -19,17 +19,14 @@ namespace CHDSharp.Cli;
 ///     and CHD creation (raw and CUE/BIN CD images).
 ///     Uses Serilog for console logging throughout.
 /// </summary>
-internal static class Program
+internal static partial class Program
 {
     private static int _exitPrompted;
 
     // chdman.cpp:2749 variable regex — (%*)(%([+-]?\d+)?([a-zA-Z]))
     // Named groups: lead = leading literal %s (escape check), spec = full %spec,
     // part = printf width/sign, type = conversion letter (e.g. 't' for track number).
-    private static readonly Regex ChdmanVariablesRegex = new(
-        "(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))",
-        RegexOptions.Compiled
-    );
+    private static readonly Regex ChdmanVariablesRegex = MyRegex();
 
     /// <summary>
     ///     Application entry point. Parses command-line arguments and dispatches to the
@@ -1046,7 +1043,7 @@ internal static class Program
                 taskCount.HasValue ? $", {taskCount} tasks" : ""
             );
             var logger = new EncodeProgressLogger(verbose);
-            var encodeOptions = logger?.Options;
+            var encodeOptions = logger.Options;
             if (
                 encodeOptions == null
                 && (
@@ -1108,7 +1105,7 @@ internal static class Program
                 codecTags,
                 encodeOptions
             );
-            logger?.LogSummary();
+            logger.LogSummary();
             log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
             VerifyResultChd(outputPath, parentPath);
             return true;
@@ -2033,7 +2030,7 @@ internal static class Program
             );
 
             var logger = new EncodeProgressLogger(verbose);
-            var encodeOptions = logger?.Options;
+            var encodeOptions = logger.Options;
             if (
                 encodeOptions == null
                 && (
@@ -2105,7 +2102,7 @@ internal static class Program
                 );
             }
 
-            logger?.LogSummary();
+            logger.LogSummary();
             log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
             VerifyResultChd(outputPath);
             return true;
@@ -2262,7 +2259,7 @@ internal static class Program
                 taskCount.HasValue ? $", {taskCount} tasks" : ""
             );
             var logger = new EncodeProgressLogger(verbose);
-            var encodeOptions = logger?.Options;
+            var encodeOptions = logger.Options;
             if (encodeOptions == null && (taskCount.HasValue || parentPath != null))
                 encodeOptions = new ChdEncodeOptions();
 
@@ -2283,7 +2280,7 @@ internal static class Program
                 codecTags,
                 encodeOptions
             );
-            logger?.LogSummary();
+            logger.LogSummary();
             log.Information("  Created ({File:N0} bytes)", new FileInfo(outputPath).Length);
             VerifyResultChd(outputPath, parentPath);
         }
@@ -2469,7 +2466,7 @@ internal static class Program
         {
             var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "avhu");
             var logger = new EncodeProgressLogger(verbose);
-            var encodeOptions = logger?.Options;
+            var encodeOptions = logger.Options;
             if (encodeOptions == null && (taskCount.HasValue || outputParentPath != null))
                 encodeOptions = new ChdEncodeOptions();
 
@@ -3474,10 +3471,10 @@ internal static class Program
                 encodeOptions.InputLengthBytes = inputLengthHunks.Value * sourceHunkBytes;
 
             var logger = new EncodeProgressLogger(verbose);
-            encodeOptions.HunkCompleted = logger?.Options.HunkCompleted;
+            encodeOptions.HunkCompleted = logger.Options.HunkCompleted;
 
             ChdEncoder.Copy(inputPath, outputPath, codecTags, encodeOptions);
-            logger?.LogSummary();
+            logger.LogSummary();
             log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
             VerifyResultChd(outputPath, outputParentPath);
             return true;
@@ -4719,7 +4716,7 @@ internal static class Program
         if (idx == 0)
             return false; // no leading digits
 
-        if (!long.TryParse(s.Substring(0, idx), out var num) || num < 0)
+        if (!long.TryParse(s.AsSpan(0, idx), out var num) || num < 0)
             return false;
 
         long multiplier = 1;
@@ -4771,7 +4768,7 @@ internal static class Program
             idx++;
         if (idx == 0)
             return false;
-        return ulong.TryParse(s.Substring(0, idx), NumberStyles.None, CultureInfo.InvariantCulture, out result);
+        return ulong.TryParse(s.AsSpan(0, idx), NumberStyles.None, CultureInfo.InvariantCulture, out result);
     }
 
     /// <summary>
@@ -5523,7 +5520,7 @@ internal static class Program
 
             var logger = new EncodeProgressLogger(verbose);
             // DVD metadata must ALWAYS be written — createdvd exists to stamp the 'DVD ' tag.
-            var encodeOptions = logger?.Options ?? new ChdEncodeOptions();
+            var encodeOptions = logger.Options ?? new ChdEncodeOptions();
             if (taskCount.HasValue)
                 encodeOptions.TaskCount = taskCount;
 
@@ -5546,7 +5543,7 @@ internal static class Program
                 codecTags,
                 encodeOptions
             );
-            logger?.LogSummary();
+            logger.LogSummary();
             log.Information("  Created {Size:N0} bytes", new FileInfo(outputPath).Length);
             VerifyResultChd(outputPath, parentPath);
             return true;
@@ -5998,7 +5995,7 @@ internal static class Program
                         {
                             // chdman variable replacement for %t not applicable to toc single bin, but honor literal
                             // Single-bin toc: expand %t → 1 with printf semantics (CHDSharp convenience, chdman would leave literal)
-                            binTarget = binPath.Contains("%", StringComparison.Ordinal)
+                            binTarget = binPath.Contains('%', StringComparison.Ordinal)
                                 ? ExpandChdmanOutputBinTemplate(binPath, 1, true)
                                 : binPath;
                             if (!Path.IsPathRooted(binTarget)) binTarget = Path.Combine(outputDir, binTarget);
@@ -6049,7 +6046,7 @@ internal static class Program
                                 string trackFileName;
                                 string trackFile;
                                 // Expand %t template per chdman.cpp:2749 (leading_escape + printf width/sign)
-                                if (binPath.Contains("%", StringComparison.Ordinal))
+                                if (binPath.Contains('%', StringComparison.Ordinal))
                                 {
                                     var expanded =
                                         ExpandChdmanOutputBinTemplate(binPath, track.TrackNumber, true);
@@ -6271,7 +6268,7 @@ internal static class Program
                     string binTarget;
                     if (binPath != null)
                     {
-                        binTarget = binPath.Contains("%", StringComparison.Ordinal)
+                        binTarget = binPath.Contains('%', StringComparison.Ordinal)
                             ? ExpandChdmanOutputBinTemplate(binPath, 1, true)
                             : binPath;
                         if (!Path.IsPathRooted(binTarget)) binTarget = Path.Combine(outputDir, binTarget);
@@ -6497,4 +6494,8 @@ internal static class Program
             );
         }
     }
+
+    [GeneratedRegex("(?<lead>%*)(?<spec>%(?<part>[+-]?\\d+)?(?<type>[a-zA-Z]))", RegexOptions.Compiled
+    )]
+    private static partial Regex MyRegex();
 }

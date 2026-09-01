@@ -93,9 +93,26 @@ internal static partial class ChdReaders
         var bytesRead = 0;
         while (bytesRead < buffOutLength)
         {
-            var bytes = compStream.Read(buffOut, bytesRead, buffOutLength - bytesRead);
-            if (bytes == 0)
+            int bytes;
+            try
+            {
+                bytes = compStream.Read(buffOut, bytesRead, buffOutLength - bytesRead);
+            }
+            catch (InvalidDataException ex)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"deflate error after {bytesRead} of {buffOutLength} expected bytes: {ex.Message}"
+                );
                 return ChdError.Chderrinvaliddata;
+            }
+
+            if (bytes == 0)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"deflate stream ended after {bytesRead} of {buffOutLength} expected bytes (corrupt or truncated hunk data)"
+                );
+                return ChdError.Chderrinvaliddata;
+            }
 
             bytesRead += bytes;
         }
@@ -134,14 +151,21 @@ internal static partial class ChdReaders
                 new Span<byte>(buffOut, buffOutStart, buffOutLength)
             );
             if (written != buffOutLength)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"zstd produced {written} of {buffOutLength} expected bytes (corrupt or truncated hunk data)"
+                );
                 return ChdError.Chderrdecompressionerror;
+            }
         }
-        catch (ZstdException)
+        catch (ZstdException zex)
         {
+            ChdDiagnostics.SetDetail($"zstd error: {zex.Message}");
             return ChdError.Chderrdecompressionerror;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            ChdDiagnostics.SetDetail($"zstd unexpected error: {ex.Message}");
             return ChdError.Chderrdecompressionerror;
         }
 
@@ -204,9 +228,26 @@ internal static partial class ChdReaders
         var bytesRead = 0;
         while (bytesRead < buffOutLength)
         {
-            var bytes = compStream.Read(buffOut, bytesRead, buffOutLength - bytesRead);
-            if (bytes == 0)
+            int bytes;
+            try
+            {
+                bytes = compStream.Read(buffOut, bytesRead, buffOutLength - bytesRead);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"lzma error after {bytesRead} of {buffOutLength} expected bytes: {ex.Message}"
+                );
                 return ChdError.Chderrinvaliddata;
+            }
+
+            if (bytes == 0)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"lzma stream ended after {bytesRead} of {buffOutLength} expected bytes (corrupt or truncated hunk data)"
+                );
+                return ChdError.Chderrinvaliddata;
+            }
 
             bytesRead += bytes;
         }
@@ -230,10 +271,23 @@ internal static partial class ChdReaders
         var hd = new HuffmanDecoder(256, 16, bitbuf, codec.BHuffman);
 
         if (hd.ImportTreeHuffman() != HuffmanError.HufferrNone)
+        {
+            ChdDiagnostics.SetDetail(
+                $"huffman tree import failed with {buffInLength} input bytes (corrupt hunk data)"
+            );
             return ChdError.Chderrinvaliddata;
+        }
 
-        for (var j = 0; j < buffOutLength; j++)
-            buffOut[j] = (byte)hd.DecodeOne();
+        try
+        {
+            for (var j = 0; j < buffOutLength; j++)
+                buffOut[j] = (byte)hd.DecodeOne();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            ChdDiagnostics.SetDetail($"huffman decode failed: {ex.Message}");
+            return ChdError.Chderrinvaliddata;
+        }
 
         return ChdError.Chderrnone;
     }
@@ -273,24 +327,60 @@ internal static partial class ChdReaders
 
         srcPos = buffInStart;
         var dstPos = 0;
-        //this may require some error handling. Hopefully the while condition is reliable
         while (dstPos < buffOutLength)
         {
             if (srcPos >= buffInLength)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"flac input exhausted at byte {srcPos} of {buffInLength} after producing {dstPos} of {buffOutLength} bytes (corrupt or truncated hunk data)"
+                );
                 return ChdError.Chderrinvaliddata;
+            }
 
-            var read = codec.FlacAudioDecoder.DecodeFrame(buffIn, srcPos, buffInLength - srcPos);
-            codec.FlacAudioDecoder.Read(
-                codec.FlacAudioBuffer,
-                (int)codec.FlacAudioDecoder.Remaining
-            );
-            Array.Copy(
-                codec.FlacAudioBuffer.Bytes,
-                0,
-                buffOut,
-                dstPos,
-                codec.FlacAudioBuffer.ByteLength
-            );
+            int read;
+            try
+            {
+                read = codec.FlacAudioDecoder.DecodeFrame(buffIn, srcPos, buffInLength - srcPos);
+                codec.FlacAudioDecoder.Read(
+                    codec.FlacAudioBuffer,
+                    (int)codec.FlacAudioDecoder.Remaining
+                );
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"flac frame decode failed at input byte {srcPos} (produced {dstPos} of {buffOutLength} bytes): {ex.Message}"
+                );
+                return ChdError.Chderrinvaliddata;
+            }
+
+            // A decoder that consumes nothing would otherwise spin forever on corrupt input.
+            if (read <= 0)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"flac decoder consumed 0 bytes at input byte {srcPos} after producing {dstPos} of {buffOutLength} bytes (corrupt hunk data)"
+                );
+                return ChdError.Chderrinvaliddata;
+            }
+
+            try
+            {
+                Array.Copy(
+                    codec.FlacAudioBuffer.Bytes,
+                    0,
+                    buffOut,
+                    dstPos,
+                    codec.FlacAudioBuffer.ByteLength
+                );
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                ChdDiagnostics.SetDetail(
+                    $"flac frame produced {codec.FlacAudioBuffer.ByteLength} bytes at output offset {dstPos} of {buffOutLength}-byte buffer: {ex.Message}"
+                );
+                return ChdError.Chderrinvaliddata;
+            }
+
             dstPos += codec.FlacAudioBuffer.ByteLength;
             srcPos += read;
         }
@@ -345,7 +435,12 @@ internal static partial class ChdReaders
         var eccBytes = (frames + 7) / 8;
         var headerBytes = eccBytes + complenBytes;
         if (buffInLength < headerBytes)
+        {
+            ChdDiagnostics.SetDetail(
+                $"cd hunk too small: {buffInLength} bytes available, {headerBytes} header bytes required (corrupt or truncated hunk data)"
+            );
             return ChdError.Chderrinvaliddata;
+        }
 
         /* extract compressed length of base */
         var complenBase = (buffIn[eccBytes + 0] << 8) | buffIn[eccBytes + 1];
@@ -353,7 +448,12 @@ internal static partial class ChdReaders
             complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
 
         if (headerBytes + complenBase > buffInLength)
+        {
+            ChdDiagnostics.SetDetail(
+                $"cd hunk base stream ({complenBase} bytes) overruns input ({buffInLength - headerBytes} bytes available after the {headerBytes}-byte header)"
+            );
             return ChdError.Chderrinvaliddata;
+        }
 
         codec.BSector ??= new byte[frames * CdMaxSectorData];
         codec.BSubcode ??= new byte[frames * CdMaxSubcodeData];
@@ -417,7 +517,12 @@ internal static partial class ChdReaders
         var eccBytes = (frames + 7) / 8;
         var headerBytes = eccBytes + complenBytes;
         if (buffInLength < headerBytes)
+        {
+            ChdDiagnostics.SetDetail(
+                $"cd hunk too small: {buffInLength} bytes available, {headerBytes} header bytes required (corrupt or truncated hunk data)"
+            );
             return ChdError.Chderrinvaliddata;
+        }
 
         /* extract compressed length of base */
         var complenBase = (buffIn[eccBytes + 0] << 8) | buffIn[eccBytes + 1];
@@ -425,7 +530,12 @@ internal static partial class ChdReaders
             complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
 
         if (headerBytes + complenBase > buffInLength)
+        {
+            ChdDiagnostics.SetDetail(
+                $"cd hunk base stream ({complenBase} bytes) overruns input ({buffInLength - headerBytes} bytes available after the {headerBytes}-byte header)"
+            );
             return ChdError.Chderrinvaliddata;
+        }
 
         codec.BSector ??= new byte[frames * CdMaxSectorData];
         codec.BSubcode ??= new byte[frames * CdMaxSubcodeData];
@@ -549,7 +659,12 @@ internal static partial class ChdReaders
         var eccBytes = (frames + 7) / 8;
         var headerBytes = eccBytes + complenBytes;
         if (buffInLength < headerBytes)
+        {
+            ChdDiagnostics.SetDetail(
+                $"cd hunk too small: {buffInLength} bytes available, {headerBytes} header bytes required (corrupt or truncated hunk data)"
+            );
             return ChdError.Chderrinvaliddata;
+        }
 
         /* extract compressed length of base */
         var complenBase = (buffIn[eccBytes + 0] << 8) | buffIn[eccBytes + 1];
@@ -557,7 +672,12 @@ internal static partial class ChdReaders
             complenBase = (complenBase << 8) | buffIn[eccBytes + 2];
 
         if (headerBytes + complenBase > buffInLength)
+        {
+            ChdDiagnostics.SetDetail(
+                $"cd hunk base stream ({complenBase} bytes) overruns input ({buffInLength - headerBytes} bytes available after the {headerBytes}-byte header)"
+            );
             return ChdError.Chderrinvaliddata;
+        }
 
         codec.BSector ??= new byte[frames * CdMaxSectorData];
         codec.BSubcode ??= new byte[frames * CdMaxSubcodeData];

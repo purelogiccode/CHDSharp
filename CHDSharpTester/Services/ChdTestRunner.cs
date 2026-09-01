@@ -111,7 +111,7 @@ internal class ChdTestRunner
         }
     }
 
-    private PerFileResult TestSingleFile(
+    private static PerFileResult TestSingleFile(
         ChdFileEntry entry,
         ChdmanWrapper? chdman,
         IProgress<TestProgress>? progress,

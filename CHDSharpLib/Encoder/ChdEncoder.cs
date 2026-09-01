@@ -776,7 +776,7 @@ public static class ChdEncoder
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            err = chd.ReadHunk((uint)hunkIdx, hunkBuf);
+            err = chd.ReadHunk((uint)hunkIdx, hunkBuf, cancellationToken);
             if (err != ChdError.Chderrnone)
                 throw new InvalidDataException($"Failed to read hunk {hunkIdx}: {err}");
 
@@ -835,7 +835,7 @@ public static class ChdEncoder
                     // Interlaced: combine field0 (previous hunk) and field1 (current hunk)
                     // MAME assembles into fullbitmap with alternating-row stride
                     var prevBuf = new byte[chd.HunkBytes];
-                    err = chd.ReadHunk((uint)hunkIdx - 1, prevBuf);
+                    err = chd.ReadHunk((uint)hunkIdx - 1, prevBuf, cancellationToken);
                     if (err != ChdError.Chderrnone)
                         throw new InvalidDataException($"Failed to read hunk {hunkIdx - 1}: {err}");
 
@@ -1246,7 +1246,7 @@ public static class ChdEncoder
         ArgumentNullException.ThrowIfNull(sourcePath);
         options ??= new ChdEncodeOptions();
 
-        var openErr = ChdFile.Open(sourcePath, options.SourceParentPath, out var source);
+        var openErr = ChdFile.Open(sourcePath, options.SourceParentPath, out var source, cancellationToken);
         if (openErr != ChdError.Chderrnone || source == null)
             throw new IOException(
                 $"Cannot open source CHD '{sourcePath}' ({openErr.GetMessage()} ({openErr}))"
@@ -1716,7 +1716,7 @@ public static class ChdEncoder
         ChdFile? parent = null;
         if (options?.ParentPath is { Length: > 0 } parentPath)
         {
-            var perr = ChdFile.Open(parentPath, out parent);
+            var perr = ChdFile.Open(parentPath, out parent, cancellationToken);
             if (perr != ChdError.Chderrnone || parent == null)
                 throw new IOException(
                     $"Unable to open parent CHD '{parentPath}' ({perr.GetMessage()} ({perr}))"

@@ -13,7 +13,11 @@
         <Using Include="CHDSharp.Models" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Update="Meziantou.Analyzer" Version="3.0.194">
+      <PackageReference Update="Meziantou.Analyzer" Version="3.0.200">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Roslynator.Analyzers" Version="5.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>

@@ -130,7 +130,7 @@ public static class VbiParse
     ///     Packs the VBI data down into the 16-byte storage form (MAME's
     ///     <c>vbi_metadata_pack</c>): u24be frame number, white flag, then four u24be codes.
     /// </summary>
-    public static void MetadataPack(Span<byte> dest, uint frameNum, in VbiMetadata vbi)
+    public static void MetadataPack(Span<byte> dest, uint frameNum, VbiMetadata vbi)
     {
         PutU24Be(dest[..], frameNum);
         dest[3] = (byte)vbi.White;

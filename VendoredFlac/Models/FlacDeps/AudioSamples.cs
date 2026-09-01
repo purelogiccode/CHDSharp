@@ -3,7 +3,7 @@ namespace VendoredFlac.Models.FlacDeps;
 /// <summary>
 ///     Provides low-level unsafe memory operations for audio sample buffers.
 /// </summary>
-internal class AudioSamples
+internal static class AudioSamples
 {
     /// <summary>
     ///     Represents the maximum unsigned 32-bit integer value.

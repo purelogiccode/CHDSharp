@@ -34,7 +34,7 @@ internal sealed class BugReportSink : ILogEventSink
     public BugReportSink(EnvironmentSnapshot env)
     {
         _env = env ?? throw new ArgumentNullException(nameof(env));
-        _environmentLabel = $"{_env.WindowsVersion} ({_env.Architecture} {_env.Bitness})";
+        _environmentLabel = $"{_env.WindowsVersion} ({EnvironmentSnapshot.Architecture} {EnvironmentSnapshot.Bitness})";
     }
 
     /// <inheritdoc />
@@ -57,16 +57,16 @@ internal sealed class BugReportSink : ILogEventSink
     {
         var sb = new StringBuilder();
         sb.AppendLine("=== Environment Details ===");
-        sb.AppendLine($"Date: {_env.Date}");
+        sb.AppendLine($"Date: {EnvironmentSnapshot.Date}");
         sb.AppendLine($"Application Name: {_env.ApplicationName}");
         sb.AppendLine($"Application Version: {_env.ApplicationVersion}");
-        sb.AppendLine($"OS Version: {_env.OsVersion}");
-        sb.AppendLine($"Architecture: {_env.Architecture}");
-        sb.AppendLine($"Bitness: {_env.Bitness}");
+        sb.AppendLine($"OS Version: {EnvironmentSnapshot.OsVersion}");
+        sb.AppendLine($"Architecture: {EnvironmentSnapshot.Architecture}");
+        sb.AppendLine($"Bitness: {EnvironmentSnapshot.Bitness}");
         sb.AppendLine($"Windows Version: {_env.WindowsVersion}");
-        sb.AppendLine($"Processor Count: {_env.ProcessorCount}");
-        sb.AppendLine($"Base Directory: {_env.BaseDirectory}");
-        sb.AppendLine($"Temp Path: {_env.TempPath}");
+        sb.AppendLine($"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
+        sb.AppendLine($"Base Directory: {EnvironmentSnapshot.BaseDirectory}");
+        sb.AppendLine($"Temp Path: {EnvironmentSnapshot.TempPath}");
 
         sb.AppendLine();
         sb.AppendLine("=== Error Details ===");

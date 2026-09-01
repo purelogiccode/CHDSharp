@@ -35,8 +35,7 @@ public class CompressionStream : Stream
         if (!stream.CanWrite)
             throw new ArgumentException("Stream is not writable", nameof(stream));
 
-        if (bufferSize < 0)
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
+        ArgumentOutOfRangeException.ThrowIfNegative(bufferSize);
 
         _innerStream = stream;
         _compressor = compressor;
@@ -205,7 +204,7 @@ public class CompressionStream : Stream
             var written = (int)_output.pos;
             if (written > 0)
                 await _innerStream
-                    .WriteAsync(_outputBuffer, 0, written, cancellationToken)
+.WriteAsync(_outputBuffer.AsMemory(0, written), cancellationToken)
                     .ConfigureAwait(false);
         } while (
             directive == ZstdEndDirective.ZstdEContinue ? input.pos < input.size : remaining > 0

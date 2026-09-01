@@ -14,6 +14,14 @@ internal sealed class CheckFailedException : Exception
         : base(message)
     {
     }
+
+    public CheckFailedException()
+    {
+    }
+
+    public CheckFailedException(string? message, Exception? innerException) : base(message, innerException)
+    {
+    }
 }
 
 /// <summary>Thrown to skip a check (e.g. chdman rejects a configuration).</summary>
@@ -21,6 +29,14 @@ internal sealed class CheckSkippedException : Exception
 {
     public CheckSkippedException(string message)
         : base(message)
+    {
+    }
+
+    public CheckSkippedException()
+    {
+    }
+
+    public CheckSkippedException(string? message, Exception? innerException) : base(message, innerException)
     {
     }
 }

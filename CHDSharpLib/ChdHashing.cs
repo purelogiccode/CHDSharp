@@ -40,7 +40,7 @@ public static partial class Chd
         if (types == ChdHashType.None)
             return new ChdHashComputeResult(ChdError.Chderrnone, []);
 
-        var err = ChdFile.Open(filename, parentFilename, out var chd);
+        var err = ChdFile.Open(filename, parentFilename, out var chd, cancellationToken);
         if (err != ChdError.Chderrnone || chd == null)
             return new ChdHashComputeResult(err, []);
 

@@ -25,7 +25,7 @@ public static class CdImageParser
         switch (extension)
         {
             case ".gdi":
-                return new GdiParser().Parse(descriptorPath);
+                return GdiParser.Parse(descriptorPath);
             case ".cue":
                 return CueParser.Parse(descriptorPath);
             case ".nrg":
@@ -33,10 +33,10 @@ public static class CdImageParser
             case ".iso":
             case ".cdr":
             case ".toast":
-                return new IsoParser().Parse(descriptorPath);
+                return IsoParser.Parse(descriptorPath);
             default:
                 // MAME treats unknown extensions as cdrdao-style TOC files
-                return new TocParser().Parse(descriptorPath);
+                return TocParser.Parse(descriptorPath);
         }
     }
 

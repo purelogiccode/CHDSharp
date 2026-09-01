@@ -37,7 +37,7 @@ internal class Crc8
     /// <param name="pos">The starting position in the array.</param>
     /// <param name="count">The number of bytes to process.</param>
     /// <returns>The 8-bit CRC checksum.</returns>
-    internal byte ComputeChecksum(byte[] bytes, int pos, int count)
+    internal static byte ComputeChecksum(byte[] bytes, int pos, int count)
     {
         ushort crc = 0;
         for (var i = pos; i < pos + count; i++)

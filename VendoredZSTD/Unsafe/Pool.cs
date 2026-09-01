@@ -83,8 +83,7 @@ public static unsafe partial class Methods
     {
         if (ctx == null)
             return 0;
-        var jobThreadPool = GetThreadPool(ctx);
-        return (nuint)jobThreadPool.Size();
+        return (nuint)JobThreadPool.Size();
     }
 
     /* @return : 0 on success, 1 on error */

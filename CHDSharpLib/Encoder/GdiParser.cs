@@ -9,7 +9,7 @@ namespace CHDSharp.Encoder;
 ///     <c>&lt;track&gt; &lt;lba&gt; &lt;type&gt; &lt;sector size&gt; "&lt;file&gt;" &lt;offset&gt;</c>;
 ///     gaps between track LBAs become zero-filled pad frames at the end of the previous track.
 /// </summary>
-public class GdiParser
+public static class GdiParser
 {
     /// <summary>
     ///     Parses a GDI descriptor into a GD-ROM table of contents.
@@ -18,7 +18,7 @@ public class GdiParser
     /// <returns>The parsed table of contents (with <see cref="CdTocFlags.GdRom" /> set).</returns>
     /// <exception cref="FileNotFoundException">The GDI file or a referenced data file does not exist.</exception>
     /// <exception cref="InvalidDataException">The GDI file is malformed or uses unsupported track types.</exception>
-    public CdToc Parse(string gdiPath)
+    public static CdToc Parse(string gdiPath)
     {
         ArgumentNullException.ThrowIfNull(gdiPath);
         if (!File.Exists(gdiPath))

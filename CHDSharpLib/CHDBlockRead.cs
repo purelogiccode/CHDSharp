@@ -299,6 +299,37 @@ internal static class ChdBlockRead
     }
 
     /// <summary>
+    ///     Builds a human-readable description of the codec that decompresses the given map
+    ///     entry, for use in failure diagnostics.
+    /// </summary>
+    internal static string DescribeCompression(ChdHeader chd, MapEntry mapEntry)
+    {
+        switch (mapEntry.Comptype)
+        {
+            case CompressionType.Compressiontype0:
+            case CompressionType.Compressiontype1:
+            case CompressionType.Compressiontype2:
+            case CompressionType.Compressiontype3:
+                var index = (int)mapEntry.Comptype;
+                return index < chd.Compression.Length
+                    ? $"#{index} {chd.Compression[index]}"
+                    : mapEntry.Comptype.ToString();
+            case CompressionType.Compressionnone:
+                return "none (uncompressed)";
+            case CompressionType.Compressionself:
+                return "self-reference";
+            case CompressionType.Compressionmini:
+                return "mini (inline)";
+            case CompressionType.Compressionzero:
+                return "zero (unallocated)";
+            case CompressionType.Compressiontype2Nd:
+                return $"secondary {chd.SecondaryCodec}";
+            default:
+                return mapEntry.Comptype.ToString();
+        }
+    }
+
+    /// <summary>
     ///     Decompresses a single map entry into the output buffer, handling compression, caching, self-references, and
     ///     CRC validation.
     /// </summary>
@@ -340,7 +371,12 @@ internal static class ChdBlockRead
                     {
                         var buffIn = buffInOverride ?? mapEntry.BuffIn;
                         if (buffIn is null)
+                        {
+                            ChdDiagnostics.SetDetail(
+                                "compressed input buffer was not loaded for this hunk"
+                            );
                             return ChdError.Chderrcodecerror;
+                        }
 
                         var ret = compression[(int)mapEntry.Comptype]
                             .Invoke(buffIn, (int)mapEntry.Length, buffOut, buffOutLength, codec);
@@ -380,7 +416,12 @@ internal static class ChdBlockRead
                     {
                         var buffIn = buffInOverride ?? mapEntry.BuffIn;
                         if (buffIn is null)
+                        {
+                            ChdDiagnostics.SetDetail(
+                                "compressed input buffer was not loaded for this hunk"
+                            );
                             return ChdError.Chderrcodecerror;
+                        }
 
                         Array.Copy(buffIn, 0, buffOut, 0, buffOutLength);
 
@@ -430,7 +471,12 @@ internal static class ChdBlockRead
             {
                 var self = mapEntry.SelfMapEntry;
                 if (self is null)
+                {
+                    ChdDiagnostics.SetDetail(
+                        "self-reference target is unavailable (map flattening did not resolve this hunk)"
+                    );
                     return ChdError.Chderrinvaliddata;
+                }
 
                 var retcs = ReadBlock(
                     self,
@@ -459,7 +505,12 @@ internal static class ChdBlockRead
                     {
                         var buffIn = buffInOverride ?? mapEntry.BuffIn;
                         if (buffIn is null)
+                        {
+                            ChdDiagnostics.SetDetail(
+                                "compressed input buffer was not loaded for this hunk"
+                            );
                             return ChdError.Chderrcodecerror;
+                        }
 
                         var ret = mapEntry.SecondaryReader.Invoke(
                             buffIn,
@@ -501,14 +552,31 @@ internal static class ChdBlockRead
         }
 
         if (checkCrc)
+        {
             if (
-                (
-                    mapEntry.Crc != null
-                    && !Crc.VerifyDigest((uint)mapEntry.Crc, buffOut, 0, (uint)buffOutLength)
-                )
-                || (mapEntry.Crc16 != null && Crc16.Calc(buffOut, buffOutLength) != mapEntry.Crc16)
+                mapEntry.Crc != null
+                && !Crc.VerifyDigest((uint)mapEntry.Crc, buffOut, 0, (uint)buffOutLength)
             )
+            {
+                var computed = Crc.CalculateDigest(buffOut, 0, (uint)buffOutLength);
+                ChdDiagnostics.SetDetail(
+                    $"hunk CRC32 mismatch: expected 0x{(uint)mapEntry.Crc:X8}, computed 0x{computed:X8} (decompressed data does not match the checksum stored in the map)"
+                );
                 return ChdError.Chderrdecompressionerror;
+            }
+
+            if (mapEntry.Crc16 != null)
+            {
+                var computed16 = Crc16.Calc(buffOut, buffOutLength);
+                if (computed16 != mapEntry.Crc16)
+                {
+                    ChdDiagnostics.SetDetail(
+                        $"hunk CRC16 mismatch: expected 0x{mapEntry.Crc16:X4}, computed 0x{computed16:X4} (decompressed data does not match the checksum stored in the map)"
+                    );
+                    return ChdError.Chderrdecompressionerror;
+                }
+            }
+        }
 
         return ChdError.Chderrnone;
     }

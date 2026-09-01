@@ -34,7 +34,7 @@ public class CdImageParserTests : IDisposable
     public void Iso_2048Sectors_IsMode1()
     {
         var path = WriteFile("data.iso", new byte[2048 * 100]);
-        var toc = new IsoParser().Parse(path);
+        var toc = IsoParser.Parse(path);
 
         Assert.Single(toc.Tracks);
         Assert.Equal(CdTrackType.Mode1, toc.Tracks[0].TrackType);
@@ -48,7 +48,7 @@ public class CdImageParserTests : IDisposable
     public void Iso_2336Sectors_IsMode2()
     {
         var path = WriteFile("data.iso", new byte[2336 * 50]);
-        var toc = new IsoParser().Parse(path);
+        var toc = IsoParser.Parse(path);
 
         Assert.Equal(CdTrackType.Mode2, toc.Tracks[0].TrackType);
         Assert.Equal(2336, toc.Tracks[0].DataSize);
@@ -59,7 +59,7 @@ public class CdImageParserTests : IDisposable
     public void Iso_2352Sectors_IsMode2Raw()
     {
         var path = WriteFile("data.iso", new byte[2352 * 40]);
-        var toc = new IsoParser().Parse(path);
+        var toc = IsoParser.Parse(path);
 
         Assert.Equal(CdTrackType.Mode2Raw, toc.Tracks[0].TrackType);
         Assert.Equal(2352, toc.Tracks[0].DataSize);
@@ -70,7 +70,7 @@ public class CdImageParserTests : IDisposable
     public void Iso_UnrecognizedSize_Throws()
     {
         var path = WriteFile("bad.iso", new byte[1000]);
-        Assert.Throws<InvalidDataException>(() => new IsoParser().Parse(path));
+        Assert.Throws<InvalidDataException>(() => IsoParser.Parse(path));
     }
 
     // ----- GDI -----
@@ -90,7 +90,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        var toc = new GdiParser().Parse(path);
+        var toc = GdiParser.Parse(path);
 
         Assert.True((toc.Flags & CdTocFlags.GdRom) != 0);
         Assert.Equal(2, toc.Tracks.Count);
@@ -115,7 +115,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        var toc = new GdiParser().Parse(path);
+        var toc = GdiParser.Parse(path);
 
         Assert.Equal(CdTrackType.Mode1, toc.Tracks[0].TrackType);
         Assert.Equal(2048, toc.Tracks[0].DataSize);
@@ -138,7 +138,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        var toc = new GdiParser().Parse(path);
+        var toc = GdiParser.Parse(path);
 
         Assert.Equal(3, toc.Tracks.Count);
         Assert.Equal(300, toc.Tracks[0].Frames);
@@ -159,7 +159,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        Assert.Throws<InvalidDataException>(() => new GdiParser().Parse(path));
+        Assert.Throws<InvalidDataException>(() => GdiParser.Parse(path));
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        Assert.Throws<InvalidDataException>(() => new GdiParser().Parse(path));
+        Assert.Throws<InvalidDataException>(() => GdiParser.Parse(path));
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        Assert.Throws<InvalidDataException>(() => new GdiParser().Parse(path));
+        Assert.Throws<InvalidDataException>(() => GdiParser.Parse(path));
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        Assert.Throws<FileNotFoundException>(() => new GdiParser().Parse(path));
+        Assert.Throws<FileNotFoundException>(() => GdiParser.Parse(path));
     }
 
     // ----- TOC -----
@@ -218,7 +218,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        var toc = new TocParser().Parse(path);
+        var toc = TocParser.Parse(path);
 
         Assert.Single(toc.Tracks);
         Assert.Equal(CdTrackType.Mode1, toc.Tracks[0].TrackType);
@@ -241,7 +241,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        var toc = new TocParser().Parse(path);
+        var toc = TocParser.Parse(path);
 
         Assert.Single(toc.Tracks);
         Assert.Equal(CdTrackType.Audio, toc.Tracks[0].TrackType);
@@ -262,7 +262,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        var toc = new TocParser().Parse(path);
+        var toc = TocParser.Parse(path);
 
         Assert.True(toc.Tracks[0].Swap);
         Assert.Equal(2352L, toc.Tracks[0].FileOffset);
@@ -281,7 +281,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        var toc = new TocParser().Parse(path);
+        var toc = TocParser.Parse(path);
 
         // offset 10 frames in bytes + length 50 frames
         Assert.Equal(10L * 2352, toc.Tracks[0].FileOffset);
@@ -299,7 +299,7 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        Assert.Throws<InvalidDataException>(() => new TocParser().Parse(path));
+        Assert.Throws<InvalidDataException>(() => TocParser.Parse(path));
     }
 
     // ----- dispatcher -----

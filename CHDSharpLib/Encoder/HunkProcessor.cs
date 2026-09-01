@@ -288,7 +288,9 @@ internal class HunkProcessor
             {
                 Task.WaitAll(_tasks.ToArray());
             }
+#pragma warning disable RCS1075
             catch (Exception)
+#pragma warning restore RCS1075
             {
                 // tasks swallow their exceptions; nothing to rethrow here
             }

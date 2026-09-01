@@ -7,7 +7,7 @@ namespace CHDSharp.Encoder;
 ///     <c>cdrom_file::parse_iso</c>: MODE1/2048 when the size is divisible by 2048,
 ///     MODE2/2336, or MODE2_RAW/2352.
 /// </summary>
-public class IsoParser
+public static class IsoParser
 {
     /// <summary>
     ///     Parses an ISO image into a single-track table of contents.
@@ -16,7 +16,7 @@ public class IsoParser
     /// <returns>The parsed table of contents.</returns>
     /// <exception cref="FileNotFoundException">The ISO file does not exist.</exception>
     /// <exception cref="InvalidDataException">The file size matches no known sector size.</exception>
-    public CdToc Parse(string isoPath)
+    public static CdToc Parse(string isoPath)
     {
         ArgumentNullException.ThrowIfNull(isoPath);
         if (!File.Exists(isoPath))

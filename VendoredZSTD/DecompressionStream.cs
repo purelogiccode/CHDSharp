@@ -40,8 +40,7 @@ public class DecompressionStream : Stream
         if (!stream.CanRead)
             throw new ArgumentException("Stream is not readable", nameof(stream));
 
-        if (bufferSize < 0)
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
+        ArgumentOutOfRangeException.ThrowIfNegative(bufferSize);
 
         _innerStream = stream;
         _decompressor = decompressor;
@@ -197,7 +196,7 @@ public class DecompressionStream : Stream
             if (
                 (
                     bytesRead = await _innerStream
-                        .ReadAsync(_inputBuffer, 0, _inputBufferSize, cancellationToken)
+.ReadAsync(_inputBuffer.AsMemory(0, _inputBufferSize), cancellationToken)
                         .ConfigureAwait(false)
                 ) == 0
             )

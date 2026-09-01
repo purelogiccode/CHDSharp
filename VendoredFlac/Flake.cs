@@ -22,7 +22,7 @@ namespace VendoredFlac;
 /// <summary>
 ///     FLAC encoding constants as defined by the FLAC specification.
 /// </summary>
-internal class FlakeConstants
+internal static class FlakeConstants
 {
     /// <summary>
     ///     Maximum block size in samples (65535).

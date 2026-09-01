@@ -17,6 +17,7 @@ public static class DiscDetector
 
     private const string Ps1BootKey = "BOOT";
     private const string Ps2BootKey = "BOOT2";
+    private static readonly char[] AnyOf = new[] { '\\', ':' };
 
     /// <summary>
     ///     Detects the platform of a CHD file on disk: opens it (optionally with a parent) and runs
@@ -298,7 +299,7 @@ public static class DiscDetector
                     if (semi >= 0)
                         rawName = rawName[..semi];
 
-                    if (rawName.EndsWith(".", StringComparison.Ordinal))
+                    if (rawName.EndsWith('.'))
                         rawName = rawName[..^1];
 
                     entries.Add(
@@ -567,7 +568,7 @@ public static class DiscDetector
                     var pos = text.IndexOf(bootKey, StringComparison.Ordinal);
                     if (pos >= 0)
                     {
-                        var start = text.IndexOfAny(new[] { '\\', ':' }, pos);
+                        var start = text.IndexOfAny(AnyOf, pos);
                         if (start >= 0)
                         {
                             start++;

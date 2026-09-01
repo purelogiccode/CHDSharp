@@ -505,16 +505,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// </summary>
     public CompressionType GetHunkCompressionType(uint hunkIndex)
     {
-        if (hunkIndex >= HunkCount)
-            throw new ArgumentOutOfRangeException(nameof(hunkIndex));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(hunkIndex, HunkCount);
         return _chd.Map[hunkIndex].Comptype;
     }
 
     /// <summary>Returns the on-disk compressed length for a hunk (0 for SELF/PARENT/MINI).</summary>
     public uint GetHunkCompressedLength(uint hunkIndex)
     {
-        if (hunkIndex >= HunkCount)
-            throw new ArgumentOutOfRangeException(nameof(hunkIndex));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(hunkIndex, HunkCount);
         return _chd.Map[hunkIndex].Length;
     }
 
@@ -526,8 +524,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     /// </summary>
     public string GetHunkCodecName(uint hunkIndex)
     {
-        if (hunkIndex >= HunkCount)
-            throw new ArgumentOutOfRangeException(nameof(hunkIndex));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(hunkIndex, HunkCount);
         var me = _chd.Map[hunkIndex];
         return me.Comptype switch
         {
@@ -963,7 +960,9 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             File.Delete(tempPath);
         }
+#pragma warning disable RCS1075
         catch (Exception)
+#pragma warning restore RCS1075
         {
             // best effort
         }
@@ -1562,7 +1561,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             // when multiple awaited reads interleave (await continuations can resume on other
             // threads, so a shared or thread-local state would race).
             using var codec = new ChdCodecState();
-            return ChdBlockRead.ReadBlock(
+            var rbErr = ChdBlockRead.ReadBlock(
                 me,
                 new ArrayPool(_chd.Blocksize),
                 _chd.ChdReader,
@@ -1571,6 +1570,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 (int)_chd.Blocksize,
                 compressed
             );
+            if (rbErr != ChdError.Chderrnone)
+                LogHunkDecompressFailure(hunknum, dataEntry, rbErr);
+
+            return rbErr;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -2680,11 +2683,17 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 buffer,
                 (int)_chd.Blocksize
             );
-            if (rbErr == ChdError.Chderrnone && _cacheSize > 1)
-                AddToCache(hunknum, buffer);
-
             if (rbErr == ChdError.Chderrnone)
+            {
+                if (_cacheSize > 1)
+                    AddToCache(hunknum, buffer);
+
                 _readAhead?.SubmitReadAhead(hunknum);
+            }
+            else
+            {
+                LogHunkDecompressFailure(hunknum, dataEntry, rbErr);
+            }
 
             return rbErr;
         }
@@ -2798,7 +2807,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
             using var codec = _concurrentCodec.Value;
             ArgumentNullException.ThrowIfNull(codec);
-            return ChdBlockRead.ReadBlock(
+            var rbErr = ChdBlockRead.ReadBlock(
                 me,
                 new ArrayPool(_chd.Blocksize),
                 _chd.ChdReader,
@@ -2807,12 +2816,35 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 (int)_chd.Blocksize,
                 compressed
             );
+            if (rbErr != ChdError.Chderrnone)
+                LogHunkDecompressFailure(hunknum, dataEntry, rbErr);
+
+            return rbErr;
         }
         catch (Exception ex)
         {
             Log.LogWarning(ex, "Failed to decompress hunk {HunkNumber} (concurrent)", hunknum);
             return ChdError.Chderrdecompressionerror;
         }
+    }
+
+    /// <summary>
+    ///     Logs the diagnostic reason recorded by the codec for a failed hunk decompression
+    ///     (see <see cref="ChdDiagnostics" />). No-op when the codec recorded no detail.
+    /// </summary>
+    private void LogHunkDecompressFailure(uint hunknum, MapEntry dataEntry, ChdError err)
+    {
+        var detail = ChdDiagnostics.TakeDetail();
+        if (detail == null)
+            return;
+
+        Log.LogWarning(
+            "Hunk {HunkNumber} ({Compression}) decompression failed: {Error} | {Detail}",
+            hunknum,
+            ChdBlockRead.DescribeCompression(_chd, dataEntry),
+            err,
+            detail
+        );
     }
 
     /// <summary>

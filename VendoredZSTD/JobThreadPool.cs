@@ -95,7 +95,7 @@ internal unsafe class JobThreadPool : IDisposable
             thread.Join();
     }
 
-    public int Size()
+    public static int Size()
     {
         // todo not implemented
         // https://github.com/dotnet/runtime/issues/24200

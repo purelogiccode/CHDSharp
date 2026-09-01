@@ -10,6 +10,14 @@ internal class DataErrorException : Exception
         : base("Data Error")
     {
     }
+
+    public DataErrorException(string? message) : base(message)
+    {
+    }
+
+    public DataErrorException(string? message, Exception? innerException) : base(message, innerException)
+    {
+    }
 }
 
 /// <summary>
@@ -20,6 +28,14 @@ internal class InvalidParamException : Exception
     /// <summary>Initializes a new instance of the <see cref="InvalidParamException" /> class.</summary>
     internal InvalidParamException()
         : base("Invalid Parameter")
+    {
+    }
+
+    public InvalidParamException(string? message) : base(message)
+    {
+    }
+
+    public InvalidParamException(string? message, Exception? innerException) : base(message, innerException)
     {
     }
 }

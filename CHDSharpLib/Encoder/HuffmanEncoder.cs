@@ -21,8 +21,7 @@ internal sealed class HuffmanEncoder
     /// <param name="maxBits">Maximum code length in bits.</param>
     internal HuffmanEncoder(int numCodes, int maxBits)
     {
-        if (maxBits > 24)
-            throw new ArgumentOutOfRangeException(nameof(maxBits));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxBits, 24);
 
         _numCodes = numCodes;
         _maxBits = maxBits;

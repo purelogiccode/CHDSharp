@@ -9,7 +9,7 @@ namespace CHDSharp.Encoder;
 ///     AUDIOFILE/FILE (with SWAP, #decimal and MSF offsets/lengths), START, and the
 ///     COPY/PRE_EMPHASIS/CHANNEL control lines.
 /// </summary>
-public class TocParser
+public static class TocParser
 {
     /// <summary>
     ///     Parses a .toc descriptor into a table of contents.
@@ -18,7 +18,7 @@ public class TocParser
     /// <returns>The parsed table of contents.</returns>
     /// <exception cref="FileNotFoundException">The TOC file does not exist.</exception>
     /// <exception cref="InvalidDataException">The TOC file is malformed or uses an unknown track type.</exception>
-    public CdToc Parse(string tocPath)
+    public static CdToc Parse(string tocPath)
     {
         ArgumentNullException.ThrowIfNull(tocPath);
         if (!File.Exists(tocPath))

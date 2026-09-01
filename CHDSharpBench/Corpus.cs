@@ -101,7 +101,9 @@ public static class Corpus
                 )
                     return file;
             }
+#pragma warning disable RCS1075
             catch (Exception)
+#pragma warning restore RCS1075
             {
                 // skip files that do not parse
             }
@@ -135,7 +137,9 @@ public static class Corpus
                 result[name] = (parent, ok);
             }
         }
+#pragma warning disable RCS1075
         catch (Exception)
+#pragma warning restore RCS1075
         {
             // manifest absent or unreadable: treat every file as standalone + ok
         }

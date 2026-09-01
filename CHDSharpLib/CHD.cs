@@ -74,11 +74,11 @@ public static partial class Chd
             "{Filename}, V:{Version} {Compression}"
         );
 
-    private static readonly Action<ILogger, ChdError, Exception?> LogDecompressFailed =
-        LoggerMessage.Define<ChdError>(
+    private static readonly Action<ILogger, ChdError, string, Exception?> LogDecompressFailed =
+        LoggerMessage.Define<ChdError, string>(
             LogLevel.Error,
-            new EventId(6),
-            "Data Decompress Failed: {Error}"
+            new EventId(7),
+            "Data Decompress Failed: {Error} | {Detail}"
         );
 
     private static readonly Action<ILogger, Exception?> LogValid = LoggerMessage.Define(
@@ -532,11 +532,23 @@ public static partial class Chd
             var blocksToKeep = chd.Blocksize > 0 ? 1024 * 1024 * 512 / (int)chd.Blocksize : 0;
             ChdBlockRead.KeepMostRepeatedBlocks(chd, blocksToKeep);
 
-            valid = DecompressDataParallel(s, chd, out _, progress, cancellationToken);
+            valid = DecompressDataParallel(
+                s,
+                chd,
+                out _,
+                out var failureInfo,
+                progress,
+                cancellationToken
+            );
 
             if (valid != ChdError.Chderrnone)
             {
-                LogDecompressFailed(Log, valid, null);
+                LogDecompressFailed(
+                    Log,
+                    valid,
+                    failureInfo?.Describe() ?? "no hunk-level detail captured",
+                    null
+                );
                 return valid;
             }
 
@@ -610,6 +622,7 @@ public static partial class Chd
             s,
             chd,
             out computedRawSha1,
+            out _,
             progress,
             cancellationToken,
             false
@@ -768,7 +781,21 @@ public static partial class Chd
                 && sha1Check?.Hash != null
                 && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
             if (md5Mismatch || sha1Mismatch)
+            {
+                if (md5Mismatch && md5Check?.Hash != null)
+                    Log.LogWarning(
+                        "Full-image MD5 mismatch: computed {Computed}, header stores {Expected} — the decompressed data does not match the hashes recorded in the CHD header (corrupt or modified file)",
+                        Util.ToHex(md5Check.Hash),
+                        Util.ToHex(expectedMd5)
+                    );
+                if (sha1Mismatch && sha1Check?.Hash != null)
+                    Log.LogWarning(
+                        "Full-image raw SHA-1 mismatch: computed {Computed}, header stores {Expected} — the decompressed data does not match the hashes recorded in the CHD header (corrupt or modified file)",
+                        Util.ToHex(sha1Check.Hash),
+                        Util.ToHex(expectedSha1)
+                    );
                 return ChdError.Chderrdecompressionerror;
+            }
 
             return ChdError.Chderrnone;
         }
@@ -902,7 +929,21 @@ public static partial class Chd
                 && sha1Check?.Hash != null
                 && !Util.ByteArrEquals(expectedSha1, sha1Check.Hash);
             if (md5Mismatch || sha1Mismatch)
+            {
+                if (md5Mismatch && md5Check?.Hash != null)
+                    Log.LogWarning(
+                        "Full-image MD5 mismatch: computed {Computed}, header stores {Expected} — the decompressed data does not match the hashes recorded in the CHD header (corrupt or modified file)",
+                        Util.ToHex(md5Check.Hash),
+                        Util.ToHex(expectedMd5)
+                    );
+                if (sha1Mismatch && sha1Check?.Hash != null)
+                    Log.LogWarning(
+                        "Full-image raw SHA-1 mismatch: computed {Computed}, header stores {Expected} — the decompressed data does not match the hashes recorded in the CHD header (corrupt or modified file)",
+                        Util.ToHex(sha1Check.Hash),
+                        Util.ToHex(expectedSha1)
+                    );
                 return ChdError.Chderrdecompressionerror;
+            }
 
             return ChdError.Chderrnone;
         }
@@ -1234,7 +1275,9 @@ public static partial class Chd
                 )
                     metadata.AddRange(entries);
             }
+#pragma warning disable RCS1075
             catch (Exception)
+#pragma warning restore RCS1075
             {
                 // Fall through to the hunk-size fallback.
             }
@@ -1270,21 +1313,47 @@ public static partial class Chd
     ///     The SHA-1 of the decompressed raw data (20 bytes), or
     ///     <c>null</c> if the pipeline was cancelled or failed before hashing completed.
     /// </param>
+    /// <param name="failureInfo">
+    ///     When this method returns and an error occurred, a diagnostic snapshot
+    ///     of the first failing hunk (index, location, codec, reason) or of the hash mismatch;
+    ///     <c>null</c> when no diagnostic was captured.
+    /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code.</returns>
     [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
     private static ChdError DecompressDataParallel(
         Stream file,
         ChdHeader chd,
         out byte[]? computedRawSha1,
+        out DecompressFailureInfo? failureInfo,
         IProgress<ChdProgress>? progress = null,
         CancellationToken cancellationToken = default,
         bool verifyHashes = true
     )
     {
         computedRawSha1 = null;
+        failureInfo = null;
+
+        long fileLength;
+        try
+        {
+            fileLength = file.Length;
+        }
+        catch
+        {
+            fileLength = -1;
+        }
 
         if (chd.Totalblocks == 0)
+        {
+            failureInfo = new DecompressFailureInfo
+            {
+                TotalHunks = 0,
+                Compression = "n/a",
+                FileLength = fileLength,
+                Detail = "the CHD header declares 0 total hunks (empty or corrupt image)"
+            };
             return ChdError.Chderrinvaliddata;
+        }
 
         var taskCount = TaskCount; // snapshot so a concurrent change cannot desync sentinels vs workers
         var md5Check = MD5.Create();
@@ -1294,6 +1363,26 @@ public static partial class Chd
         var allTasks = new List<Task>();
         var ts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var sw = progress != null ? Stopwatch.StartNew() : null;
+
+        // First failure wins: workers and the producer race to record the diagnostic context
+        // (hunk index, codec, reason) of the hunk that aborted the pipeline.
+        DecompressFailureInfo? failureSlot = null;
+
+        void CaptureFailure(int hunkIndex, MapEntry mapEntry, string detail)
+        {
+            var info = new DecompressFailureInfo
+            {
+                HunkIndex = hunkIndex,
+                TotalHunks = (int)chd.Totalblocks,
+                HunkOffset = mapEntry.Offset,
+                CompressedLength = mapEntry.Length,
+                Compression = ChdBlockRead.DescribeCompression(chd, mapEntry),
+                FileLength = fileLength,
+                Detail = detail
+            };
+            Interlocked.CompareExchange(ref failureSlot, info, null);
+        }
+
         try
         {
             // Boxed error code shared across producer/workers/hasher threads.
@@ -1312,13 +1401,14 @@ public static partial class Chd
             var producerThread = Task.Factory.StartNew(
                 () =>
                 {
+                    var block = -1;
                     try
                     {
                         var blockPercent = chd.Totalblocks / 100;
                         if (blockPercent == 0)
                             blockPercent = 1;
 
-                        for (var block = 0; block < chd.Totalblocks; block++)
+                        for (block = 0; block < chd.Totalblocks; block++)
                         {
                             if (ct.IsCancellationRequested)
                                 break;
@@ -1331,6 +1421,50 @@ public static partial class Chd
 
                             if (mapEntry.Length > 0)
                             {
+                                // A hunk whose byte range extends beyond the physical file means the
+                                // file is truncated (incomplete download/copy); report that explicitly
+                                // instead of a confusing codec or IO error. Self/parent/mini entries
+                                // store non-file values in Offset, so the check only applies to
+                                // file-backed hunk types.
+                                var isFileBacked =
+                                    mapEntry.Comptype
+                                    is CompressionType.Compressiontype0
+                                        or CompressionType.Compressiontype1
+                                        or CompressionType.Compressiontype2
+                                        or CompressionType.Compressiontype3
+                                        or CompressionType.Compressionnone
+                                        or CompressionType.Compressiontype2Nd;
+                                if (
+                                    isFileBacked
+                                    && fileLength >= 0
+                                    && (
+                                        mapEntry.Offset >= (ulong)fileLength
+                                        || mapEntry.Length > (ulong)fileLength - mapEntry.Offset
+                                    )
+                                )
+                                {
+                                    CaptureFailure(
+                                        block,
+                                        mapEntry,
+                                        $"file is truncated: hunk {block} needs bytes [{mapEntry.Offset}, {mapEntry.Offset + mapEntry.Length}) but the file is only {fileLength:N0} bytes (incomplete download or copy)"
+                                    );
+                                    Log.LogWarning(
+                                        "Hunk {HunkNumber} range [{Offset}, {End}) exceeds file length {FileLength}",
+                                        block,
+                                        mapEntry.Offset,
+                                        mapEntry.Offset + mapEntry.Length,
+                                        fileLength
+                                    );
+                                    ts.Cancel();
+                                    Interlocked.CompareExchange(
+                                        ref errMaster.Value,
+                                        (long)ChdError.Chderrinvaliddata,
+                                        (long)ChdError.Chderrnone
+                                    );
+
+                                    break;
+                                }
+
                                 // The compressed length is attacker-controlled data from the hunk map.
                                 // Reject any hunk claiming more than the cap before reading/allocating,
                                 // mirroring the ReadHunk bounds check. Break (not return) so the sentinel
@@ -1371,8 +1505,14 @@ public static partial class Chd
                     catch (OperationCanceledException)
                     {
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        if (block >= 0)
+                            CaptureFailure(
+                                block,
+                                chd.Map[block],
+                                $"error while reading hunk data from the file: {ex.Message}"
+                            );
                         Interlocked.CompareExchange(
                             ref errMaster.Value,
                             (long)ChdError.Chderrinvalidfile,
@@ -1417,6 +1557,16 @@ public static partial class Chd
                                 {
                                     arrPoolOut.Return(outBuf);
                                     mapEntry.BuffOut = null;
+                                    var detail = ChdDiagnostics.TakeDetail() ?? $"codec returned {err}";
+                                    CaptureFailure(block, mapEntry, detail);
+                                    Log.LogWarning(
+                                        "Hunk {HunkNumber}/{TotalHunks} ({Compression}) decompression failed: {Error} | {Detail}",
+                                        block,
+                                        chd.Totalblocks,
+                                        ChdBlockRead.DescribeCompression(chd, mapEntry),
+                                        err,
+                                        detail
+                                    );
                                     ts.Cancel();
                                     Interlocked.CompareExchange(
                                         ref errMaster.Value,
@@ -1523,6 +1673,9 @@ public static partial class Chd
 
             Task.WaitAll(allTasks.ToArray());
 
+            // All workers are done: the first-failure snapshot is final.
+            failureInfo = failureSlot;
+
             LogVerifyingComplete(Log, null);
 
             arrPoolIn.ReadStats(out var issuedArraysTotal, out var returnedArraysTotal);
@@ -1562,14 +1715,30 @@ public static partial class Chd
                 && computedMd5 is not null
                 && !Util.ByteArrEquals(chd.Md5, computedMd5)
             )
+            {
+                failureInfo ??= new DecompressFailureInfo
+                {
+                    TotalHunks = (int)chd.Totalblocks,
+                    FileLength = fileLength,
+                    Detail = $"header MD5 mismatch: computed {Util.ToHex(computedMd5)}, header stores {Util.ToHex(chd.Md5)} — the decompressed data does not match the hashes recorded in the CHD header"
+                };
                 return ChdError.Chderrdecompressionerror;
+            }
 
             if (
                 !Util.IsAllZeroArray(chd.Rawsha1)
                 && computedRawSha1 is not null
                 && !Util.ByteArrEquals(chd.Rawsha1, computedRawSha1)
             )
+            {
+                failureInfo ??= new DecompressFailureInfo
+                {
+                    TotalHunks = (int)chd.Totalblocks,
+                    FileLength = fileLength,
+                    Detail = $"header raw SHA-1 mismatch: computed {Util.ToHex(computedRawSha1)}, header stores {Util.ToHex(chd.Rawsha1)} — the decompressed data does not match the hashes recorded in the CHD header"
+                };
                 return ChdError.Chderrdecompressionerror;
+            }
 
             return ChdError.Chderrnone;
         }

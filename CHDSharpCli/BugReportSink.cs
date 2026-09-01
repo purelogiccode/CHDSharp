@@ -30,7 +30,7 @@ internal sealed class BugReportSink : ILogEventSink
     public BugReportSink(EnvironmentSnapshot env)
     {
         _env = env ?? throw new ArgumentNullException(nameof(env));
-        _environmentLabel = $"{_env.WindowsVersion} ({_env.Architecture} {_env.Bitness})";
+        _environmentLabel = $"{_env.WindowsVersion} ({EnvironmentSnapshot.Architecture} {_env.Bitness})";
     }
 
     /// <inheritdoc />
@@ -64,17 +64,42 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine($"Date: {_env.Date}");
         sb.AppendLine($"Application Name: {_env.ApplicationName}");
         sb.AppendLine($"Application Version: {_env.ApplicationVersion}");
-        sb.AppendLine($"OS Version: {_env.OsVersion}");
-        sb.AppendLine($"Architecture: {_env.Architecture}");
+        sb.AppendLine($"OS Version: {EnvironmentSnapshot.OsVersion}");
+        sb.AppendLine($"Architecture: {EnvironmentSnapshot.Architecture}");
         sb.AppendLine($"Bitness: {_env.Bitness}");
         sb.AppendLine($"Windows Version: {_env.WindowsVersion}");
-        sb.AppendLine($"Processor Count: {_env.ProcessorCount}");
+        sb.AppendLine($"Runtime: {EnvironmentSnapshot.RuntimeVersion}");
+        sb.AppendLine($"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
         sb.AppendLine("Base Directory: [redacted]");
         sb.AppendLine("Temp Path: [redacted]");
 
         sb.AppendLine();
+        sb.AppendLine("=== Session Details ===");
+        sb.AppendLine($"Report Time (UTC): {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+        var uptime = DateTime.Now - _env.CreatedAt;
+        sb.AppendLine($@"Session Uptime: {(long)uptime.TotalHours:00}\{uptime.Minutes:00}\{uptime.Seconds:00} (hh\mm\ss)");
+        sb.AppendLine($"Elevated: {EnvironmentSnapshot.Elevated}");
+
+        sb.AppendLine();
         sb.AppendLine("=== Error Details ===");
         sb.AppendLine($"Error message: {logEvent.RenderMessage()}");
+
+        sb.AppendLine();
+        sb.AppendLine("=== Log Context ===");
+        sb.AppendLine($"Level: {logEvent.Level}");
+        sb.AppendLine($"Log Timestamp (UTC): {logEvent.Timestamp.UtcDateTime:yyyy-MM-dd HH:mm:ss.fff}Z");
+        if (logEvent.Properties.Count > 0)
+        {
+            sb.AppendLine("Properties:");
+            foreach (var property in logEvent.Properties.OrderBy(p => p.Key, StringComparer.Ordinal))
+                sb.AppendLine(
+                    $"  {property.Key} = {RenderPropertyValue(property.Value)}"
+                );
+        }
+        else
+        {
+            sb.AppendLine("Properties: (none)");
+        }
 
         sb.AppendLine();
         sb.AppendLine("=== Exception Details ===");
@@ -84,7 +109,14 @@ internal sealed class BugReportSink : ILogEventSink
             sb.AppendLine($"Type: {ex.GetType().FullName}");
             sb.AppendLine($"Message: {ex.Message}");
             sb.AppendLine($"Source: {ex.Source ?? string.Empty}");
+            sb.AppendLine($"HResult: 0x{ex.HResult:X8}");
             sb.AppendLine($"StackTrace: {ex.StackTrace ?? string.Empty}");
+            for (var inner = ex.InnerException; inner != null; inner = inner.InnerException)
+            {
+                sb.AppendLine($"--- Inner Exception: {inner.GetType().FullName} ---");
+                sb.AppendLine($"Message: {inner.Message}");
+                sb.AppendLine($"StackTrace: {inner.StackTrace ?? string.Empty}");
+            }
         }
         else
         {
@@ -95,6 +127,25 @@ internal sealed class BugReportSink : ILogEventSink
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    ///     Renders a Serilog property value: scalar values render their payload, richer
+    ///     values (structures, sequences) render through their <see cref="LogEventPropertyValue.ToString()" />
+    ///     representation. Returns <c>?</c> for values that cannot be rendered.
+    /// </summary>
+    private static string RenderPropertyValue(LogEventPropertyValue value)
+    {
+        try
+        {
+            return value is ScalarValue scalar
+                ? scalar.Value?.ToString() ?? "null"
+                : value.ToString();
+        }
+        catch
+        {
+            return "?";
+        }
     }
 
     [SuppressMessage(

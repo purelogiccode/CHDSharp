@@ -466,7 +466,7 @@ public class ChdImageStreamTests
         {
             stream.Position = 100;
             var buf = new byte[50];
-            var n = await stream.ReadAsync(buf, 0, 50);
+            var n = await stream.ReadAsync(buf.AsMemory(0, 50));
             Assert.Equal(50, n);
             for (var i = 0; i < 50; i++)
                 Assert.Equal((byte)((100 + i) & 0xFF), buf[i]);
@@ -485,7 +485,7 @@ public class ChdImageStreamTests
         {
             stream.Position = (long)TotalBytes;
             var buf = new byte[10];
-            var n = await stream.ReadAsync(buf, 0, 10);
+            var n = await stream.ReadAsync(buf.AsMemory(0, 10));
             Assert.Equal(0, n);
         }
     }

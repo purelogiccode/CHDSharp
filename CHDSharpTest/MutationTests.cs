@@ -216,7 +216,9 @@ public class MutationTests
             {
                 File.Delete(mutatedPath);
             }
+#pragma warning disable RCS1075
             catch (Exception)
+#pragma warning restore RCS1075
             {
                 // best effort cleanup
             }

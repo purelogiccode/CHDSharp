@@ -105,7 +105,7 @@ public class ExceptionHandlingTests
     public void ChdCodecState_implements_IDisposable()
     {
         var codec = new ChdCodecState();
-        Assert.IsAssignableFrom<IDisposable>(codec);
+        Assert.IsType<IDisposable>(codec, exactMatch: false);
     }
 
     [Fact]
