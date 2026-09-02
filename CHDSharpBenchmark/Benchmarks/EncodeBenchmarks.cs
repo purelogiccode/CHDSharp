@@ -110,6 +110,7 @@ public class EncodeBenchmarks
     private string RunEncode(IReadOnlyList<uint> codecs, bool parallel)
     {
         var key = codecs.Count > 1 ? ChainKey : codecs[0];
+        // ReSharper disable once UnusedVariable
         if (codecs.Count == 1 && !_images.TryGetValue(codecs[0], out var image))
         {
             throw new InvalidOperationException(
