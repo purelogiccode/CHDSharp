@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.4.2: final chdman parity — LZMA raw-encode work-buffer replication (MAME 1 MiB ring, stale-slot bytes and SHA-1 hash-order), createhd size/CHS quirks (sscanf %I64u leading digits, guess_chs round-up), laserdisc AVI byte-parity, strict info/verify option validation, DVD metadata single-NUL payload, CLI exit codes; battle harness 2907/2907 vs MAME 0.289. Pure C# — zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.4.3: consolidates all changes since v1.4.2 - closes the last chdman byte-parity gaps (stale work-buffer tail + LZMA match-finder insert, stale-ring corruption on partial-tail raw encodes of 513+ hunks, vendored FLAC byte parity via fixed-predictor analysis window + native cosf tukey window; byte-identical to chdman on the 7.8 GB XGD2 verification image), detailed decompression-failure diagnostics (hunk index, codec, CRC/truncation reasons), chdman-style progress + speed meter, single merged battle harness (3174/3174 vs MAME 0.289). Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>

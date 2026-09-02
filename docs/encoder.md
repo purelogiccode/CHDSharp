@@ -13,7 +13,7 @@ and `avhu` via `createld`), pass `chdman verify`, and extract back
 identically via `chdman extractraw`. The library is **100% pure C#** (no native DLLs)
 and runs identically on Windows and Linux.
 
-> **Byte-parity note (v1.4.4):** the FLAC encoder now reproduces libFLAC's fixed-predictor
+> **Byte-parity note (v1.4.3):** the FLAC encoder now reproduces libFLAC's fixed-predictor
 > analysis window (`integer_signal + FLAC__MAX_FIXED_ORDER` with real sample history) and the
 > CRT's native `cosf` for the apodization windows (`MathF.Cos`), closing the last known
 > container-byte divergences — verified byte-identical to `chdman` on a 7.8 GB dual-layer
@@ -81,7 +81,7 @@ The encoder is validated against `chdman.exe` v0.288 and the CHDSharpLib reader
 - **`cdzs` is byte-identical to chdman**: the in-repo `VendoredZSTD` port (a C-to-C# port of
   the zstd 1.5.5 tree that MAME bundles) emits the same frame bytes as C zstd for the same
   hunk buffers, so the old "managed zstd trailing byte" caveat is gone.
-- **`cdzl` is byte-identical to chdman** (v1.4.4): the vendored FLAC encoder now matches
+- **`cdzl` is byte-identical to chdman** (v1.4.3): the vendored FLAC encoder now matches
   libFLAC's fixed-predictor analysis window and the CRT's native `cosf` exactly, closing
   the historical audio-bearing-CD container divergence.
 - **`createld` output is byte-identical to `chdman createld`**: the AVI reader, AVHuff

@@ -1,5 +1,48 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.4.3
+
+Consolidates all changes since v1.4.2. Closes the partial-tail raw-encode corruption and the last FLAC byte-parity divergence. Battle harness green: **3174/3174 synthetic** vs MAME 0.289.
+
+### Partial-tail raw-encode corruption fix
+
+`EncodeRaw`/`createraw` on inputs of ≥ 513 hunks whose length is not a hunk multiple could produce a self-consistent-but-wrong CHD: stale compression ring-buffer slots from the previous fill cycle leaked into partial final hunks. The fix landed alongside guardrail tests so the class of bug cannot silently return:
+
+- a synthetic partial-tail probe that pins the exact stale-slot bytes,
+- partial-last-hunk unit tests per codec,
+- a resized long-tail case in the battle harness (`raw-encode long-tail x flac/zlib/zstd`).
+
+### FLAC encoder byte parity
+
+The vendored FLAC encoder now matches `chdman` byte-for-byte on the remaining divergence: the fixed-predictor analysis window and the tukey window's `cosf` rounding (native `cosf` semantics replicated). Verified byte-identical on:
+
+- the 7.8 GB *Perfect Dark Zero* XGD2 image (1,912,816 hunks, chdman default codec list),
+- a 100 MB partial-tail slice of the same source,
+- three single-hunk repro cases.
+
+### Byte-parity fixes earlier in the cycle
+
+- Stale work-buffer tail + LZMA match-finder insert parity (raw encode).
+
+### Diagnostics and output
+
+- Detailed decompression-failure messages: hunk index, codec, CRC/truncation reasons.
+- chdman-style progress + speed-meter output.
+
+### Verification status
+
+- `CHDSharpTest`: 12,648/12,648 (436/436 per TFM on net8.0/net9.0/net10.0 → 1,308/1,308 aggregate via the console runners).
+- `CHDSharpEncoderTest`: 1,308/1,308.
+- `CHDSharpBattleTest`: 3174/3174, including `raw-encode long-tail x *` for all three codecs.
+
+### NuGet Package
+
+```
+dotnet add package CHDSharp --version 1.4.3
+```
+
+Targets `net8.0`, `net9.0`, `net10.0`. Pure C# - zero native dependencies.
+
 ## CHDSharp v1.4.2
 
 Final byte-parity gaps closed against MAME 0.289. Battle harness stays green: **2907/2907 synthetic + 3003/3003 real-world checks**.
@@ -83,11 +126,11 @@ Complete `chdman` parity — 16 audited discrepancies (D1–D16) plus EdgeGaps �
 The 43 CD + 3 GD-ROM `extractcd` battleground cases flip from `0/43` to `43/43` parity
 and `disc.bin` sizes match `chdman` (e.g. Akai Shizuku `8,773,030 B`).
 
-### Documented `createcd -c cdzl` compressed-bytes divergence (D3) — closed in v1.4.4
+### Documented `createcd -c cdzl` compressed-bytes divergence (D3) — closed in v1.4.3
 
 `cdzl`/`cdfl` on audio-bearing discs historically picked different FLAC subframes than
 MAME's native `libFLAC` (container bytes differed while Data SHA-1/overall SHA-1 and
-`chdman verify` stayed identical). v1.4.4 fixed the two root causes — the fixed-predictor
+`chdman verify` stayed identical). v1.4.3 fixed the two root causes — the fixed-predictor
 analysis window and the tukey-window `cosf` rounding — and `createcd`/`copy` with `flac`
 in the codec list is now byte-identical to `chdman` (verified on the 56-file corpus and a
 7.8 GB dual-layer XGD2 image).

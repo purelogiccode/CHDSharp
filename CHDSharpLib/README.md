@@ -1,6 +1,5 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![License](https://img.shields.io/badge/license-MIT%20%2F%20LGPL-2.1-blue)](LICENSE.txt)
 
 # CHDSharpLib
 
@@ -9,6 +8,16 @@
 > Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes), extended with Zstd, AVHuff, V5 compressed map, random-access API, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, and lazy parent resolution.
 
 ---
+
+## What's New in v1.4.3
+
+Consolidates all changes since v1.4.2 - the last chdman byte-parity gaps are closed:
+
+- **Partial-tail raw-encode fix** - `EncodeRaw` on inputs of ≥ 513 hunks whose length is not hunk-aligned could produce a self-consistent-but-wrong CHD (stale compression ring-buffer slots). Fixed and locked down with guardrail tests: a synthetic probe, partial-last-hunk unit tests, and a resized long-tail battle case.
+- **FLAC encoder byte parity** - fixed-predictor analysis window + native `cosf` tukey-window rounding. The vendored FLAC encode is now byte-identical to `chdman` on the verification corpora: a 7.8 GB XGD2 image (1,912,816 hunks, default codec list), a 100 MB partial-tail slice, and three single-hunk repros.
+- **Earlier byte-parity fixes in the cycle** - stale work-buffer tail + LZMA match-finder insert parity.
+- **Diagnostics** - detailed decompression-failure messages (hunk index, codec, CRC/truncation reasons) and chdman-style progress + speed-meter output.
+- **Status** - `CHDSharpTest` 12,648/12,648 (1,308/1,308 per-TFM aggregate), `CHDSharpBattleTest` 3174/3174 vs MAME 0.289.
 
 ## What's New in v1.4.2
 
