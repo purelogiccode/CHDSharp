@@ -63,6 +63,10 @@ CHDSharpTester/
 ├── Services/
 │   ├── ChdTestRunner.cs      — Orchestrates test execution per file + session-level tests
 │   ├── ChdmanWrapper.cs      — Invokes chdman.exe (info, verify, extractraw, copy) and parses output
+│   ├── BugReportSink.cs      — Serilog sink forwarding Warning+ events to the Bug Report API
+│   ├── EnvironmentSnapshot.cs — Environment details embedded in every bug report
+│   ├── ApplicationStatsService.cs — Fire-and-forget launch telemetry
+│   ├── VersionCheckService.cs — GitHub latest-release check
 │   ├── HashUtil.cs           — SHA1 hex formatting
 │   ├── PdfExporter.cs        — PDF report generation (QuestPDF)
 │   └── TestProgress.cs       — Progress reporting model
@@ -91,12 +95,18 @@ CHDSharpTester/
 
 ---
 
+## Logging & Bug Reports
+
+All logging goes through Serilog (`MinimumLevel.Debug`): Debug sink + rolling-day file at `%LocalAppData%\CHDSharpTester\logs\chdsharp-tester-<date>.log` + `BugReportSink`. The on-screen log mirrors into the Serilog pipeline, top-level commands and `ChdmanWrapper` public methods log their failures, and every `Warning`+ event (except user cancellation) is POSTed fire-and-forget to the Bug Report API with environment, error, and exception details. See [Logging](../docs/logging.md).
+
+---
+
 ## Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
 | [WPF-UI](https://www.nuget.org/packages/WPF-UI/) | 4.3.0 | Modern WPF Fluent Design controls |
-| [QuestPDF](https://www.nuget.org/packages/QuestPDF/) | 2026.7.3 | PDF report generation |
+| [QuestPDF](https://www.nuget.org/packages/QuestPDF/) | 2026.8.0 | PDF report generation |
 | [Serilog](https://www.nuget.org/packages/Serilog/) | 4.4.0 | File + debug logging |
 | [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File/) | 7.0.0 | Log file sink |
 | [Serilog.Sinks.Debug](https://www.nuget.org/packages/Serilog.Sinks.Debug/) | 3.0.0 | Debug output sink |

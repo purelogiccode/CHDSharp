@@ -450,6 +450,8 @@ Chd.LoggerFactory = new SerilogLoggerFactory(
         .CreateLogger());
 ```
 
+The CLI (`CHDSharpCli`) and WPF tester (`CHDSharpTester`) always configure Serilog (console/debug + rolling-day file under `%LocalAppData%` + automatic `Warning`+ bug reports) — see [Logging](docs/logging.md).
+
 ---
 
 ## CLI
