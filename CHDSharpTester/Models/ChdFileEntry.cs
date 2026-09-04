@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Serilog;
 
 namespace CHDSharpTester.Models;
 
@@ -60,12 +61,14 @@ public class ChdFileEntry : INotifyPropertyChanged
                 _ => $"{fi.Length / (1024.0 * 1024 * 1024):F2} GB"
             };
         }
-        catch (FileNotFoundException)
+        catch (FileNotFoundException ex)
         {
+            Log.Debug(ex, "File not found refreshing size: {Path}", FilePath);
             FileSize = "N/A";
         }
-        catch (IOException)
+        catch (IOException ex)
         {
+            Log.Debug(ex, "IO error refreshing size: {Path}", FilePath);
             FileSize = "N/A";
         }
     }

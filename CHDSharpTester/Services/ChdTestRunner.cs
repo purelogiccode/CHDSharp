@@ -470,6 +470,7 @@ internal class ChdTestRunner
         catch (Exception ex)
         {
             t1Sw.Stop();
+            Log.Warning(ex, "Deep verification exception for {File}", entry.FileName);
             result.SubTests.Add(
                 new SubTestResult
                 {
@@ -739,6 +740,7 @@ internal class ChdTestRunner
                 }
                 catch (Exception ex)
                 {
+                    Log.Warning(ex, "GenerateCueSheet failed for {File}", entry.FileName);
                     detail.Add($"ERROR: GenerateCueSheet threw: {ex.Message}");
                     failures++;
                 }
@@ -886,6 +888,7 @@ internal class ChdTestRunner
                 }
                 catch (Exception ex)
                 {
+                    Log.Warning(ex, "Random access range failed for {File}: {Desc}", entry.FileName, desc);
                     details.Add($"{desc}: exception - {ex.Message}");
                     mismatchCount++;
                 }
@@ -1454,9 +1457,9 @@ internal class ChdTestRunner
                 if (Directory.Exists(tempDir))
                     Directory.Delete(tempDir, true);
             }
-            catch
+            catch (Exception ex)
             {
-                /* best effort */
+                Log.Debug(ex, "Best-effort temp cleanup failed: {Dir}", tempDir);
             }
         }
     }
@@ -1751,9 +1754,9 @@ internal class ChdTestRunner
                 if (Directory.Exists(tempDir))
                     Directory.Delete(tempDir, true);
             }
-            catch
+            catch (Exception ex)
             {
-                /* best effort */
+                Log.Debug(ex, "Best-effort temp cleanup failed: {Dir}", tempDir);
             }
         }
     }
@@ -1762,12 +1765,20 @@ internal class ChdTestRunner
 
     private static string CreateTempDir()
     {
-        var dir = Path.Combine(
-            Path.GetTempPath(),
-            "CHDSharpTester_" + Guid.NewGuid().ToString("N")
-        );
-        Directory.CreateDirectory(dir);
-        return dir;
+        try
+        {
+            var dir = Path.Combine(
+                Path.GetTempPath(),
+                "CHDSharpTester_" + Guid.NewGuid().ToString("N")
+            );
+            Directory.CreateDirectory(dir);
+            return dir;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Create temp directory failed");
+            throw;
+        }
     }
 
     private static string FormatFileSize(long length)

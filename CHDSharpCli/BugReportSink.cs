@@ -39,7 +39,7 @@ internal sealed class BugReportSink : ILogEventSink
     {
         if (logEvent == null)
             return;
-        if (logEvent.Level < LogEventLevel.Error)
+        if (logEvent.Level < LogEventLevel.Warning)
             return;
         if (logEvent.Exception is OperationCanceledException or TaskCanceledException)
             return;
@@ -71,8 +71,8 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine($"Windows Version: {_env.WindowsVersion}");
         sb.AppendLine($"Runtime: {EnvironmentSnapshot.RuntimeVersion}");
         sb.AppendLine(CultureInfo.InvariantCulture, $"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
-        sb.AppendLine("Base Directory: [redacted]");
-        sb.AppendLine("Temp Path: [redacted]");
+        sb.AppendLine($"Base Directory: {EnvironmentSnapshot.BaseDirectory}");
+        sb.AppendLine($"Temp Path: {EnvironmentSnapshot.TempPath}");
 
         sb.AppendLine();
         sb.AppendLine("=== Session Details ===");

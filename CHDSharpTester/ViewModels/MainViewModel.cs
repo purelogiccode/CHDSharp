@@ -296,41 +296,64 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private void AutoDetectChdman()
     {
-        var candidate = Path.Combine(AppContext.BaseDirectory, "chdman.exe");
-        if (File.Exists(candidate))
-            ChdmanPath = candidate;
+        try
+        {
+            var candidate = Path.Combine(AppContext.BaseDirectory, "chdman.exe");
+            if (File.Exists(candidate))
+                ChdmanPath = candidate;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Auto-detect chdman failed");
+        }
     }
 
     private void BrowseChdman()
     {
-        var dlg = new OpenFileDialog
+        try
         {
-            Title = "Select chdman.exe",
-            Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
-            FileName = "chdman.exe"
-        };
-        if (dlg.ShowDialog() == true)
+            var dlg = new OpenFileDialog
+            {
+                Title = "Select chdman.exe",
+                Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
+                FileName = "chdman.exe"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                ChdmanPath = dlg.FileName;
+                AddLog($"chdman.exe set to: {ChdmanPath}");
+            }
+        }
+        catch (Exception ex)
         {
-            ChdmanPath = dlg.FileName;
-            AddLog($"chdman.exe set to: {ChdmanPath}");
+            Log.Error(ex, "Browse chdman failed");
+            AddLog($"Error browsing for chdman: {ex.Message}");
         }
     }
 
     private void AddFiles()
     {
-        var dlg = new OpenFileDialog
+        try
         {
-            Title = "Select CHD files",
-            Filter = "CHD files (*.chd)|*.chd|All files (*.*)|*.*",
-            Multiselect = true
-        };
-        if (dlg.ShowDialog() == true)
-        {
-            foreach (var path in dlg.FileNames)
-                AddFileIfNew(path);
+            var dlg = new OpenFileDialog
+            {
+                Title = "Select CHD files",
+                Filter = "CHD files (*.chd)|*.chd|All files (*.*)|*.*",
+                Multiselect = true
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                foreach (var path in dlg.FileNames)
+                    AddFileIfNew(path);
 
-            UpdateFilesSummary();
-            AddLog($"Added {dlg.FileNames.Length} file(s). Total: {Files.Count}");
+                UpdateFilesSummary();
+                AddLog($"Added {dlg.FileNames.Length} file(s). Total: {Files.Count}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Add files failed");
+            AddLog($"Error adding files: {ex.Message}");
         }
     }
 
@@ -353,52 +376,74 @@ internal class MainViewModel : INotifyPropertyChanged
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "Error scanning folder: {Folder}", dlg.FolderName);
                 AddLog($"Error scanning folder: {ex.Message}");
             }
     }
 
     private void AddFileIfNew(string path)
     {
-        if (!Files.Any(f => string.Equals(f.FilePath, path, StringComparison.OrdinalIgnoreCase)))
-            Files.Add(new ChdFileEntry { FilePath = path });
+        try
+        {
+            if (!Files.Any(f => string.Equals(f.FilePath, path, StringComparison.OrdinalIgnoreCase)))
+                Files.Add(new ChdFileEntry { FilePath = path });
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Add file failed: {Path}", path);
+        }
     }
 
     private void RemoveFile(object? param)
     {
-        if (param is ChdFileEntry entry)
+        try
         {
-            Files.Remove(entry);
-            UpdateFilesSummary();
-            AddLog($"Removed: {entry.FileName}. Total: {Files.Count}");
+            if (param is ChdFileEntry entry)
+            {
+                Files.Remove(entry);
+                UpdateFilesSummary();
+                AddLog($"Removed: {entry.FileName}. Total: {Files.Count}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Remove file failed");
         }
     }
 
     private void UpdateFilesSummary()
     {
-        long totalSize = 0;
-        foreach (var f in Files)
-            try
-            {
-                totalSize += new FileInfo(f.FilePath).Length;
-            }
-            catch (FileNotFoundException)
-            {
-                // File may have been deleted since being added to the list
-            }
-            catch (IOException)
-            {
-                // File may be inaccessible
-            }
-
-        var sizeStr = totalSize switch
+        try
         {
-            < 1024 => $"{totalSize} B",
-            < 1024 * 1024 => $"{totalSize / 1024.0:F1} KB",
-            < 1024L * 1024 * 1024 => $"{totalSize / (1024.0 * 1024):F1} MB",
-            _ => $"{totalSize / (1024.0 * 1024 * 1024):F2} GB"
-        };
-        FilesSummary = $"{Files.Count} file(s) — {sizeStr} total";
-        OnPropertyChanged(nameof(CanRunTests));
+            long totalSize = 0;
+            foreach (var f in Files)
+                try
+                {
+                    totalSize += new FileInfo(f.FilePath).Length;
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Log.Debug(ex, "File deleted since added: {Path}", f.FilePath);
+                }
+                catch (IOException ex)
+                {
+                    Log.Debug(ex, "File inaccessible: {Path}", f.FilePath);
+                }
+
+            var sizeStr = totalSize switch
+            {
+                < 1024 => $"{totalSize} B",
+                < 1024 * 1024 => $"{totalSize / 1024.0:F1} KB",
+                < 1024L * 1024 * 1024 => $"{totalSize / (1024.0 * 1024):F1} MB",
+                _ => $"{totalSize / (1024.0 * 1024 * 1024):F2} GB"
+            };
+            FilesSummary = $"{Files.Count} file(s) — {sizeStr} total";
+            OnPropertyChanged(nameof(CanRunTests));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Update files summary failed");
+        }
     }
 
     private async Task RunTestsAsync()
@@ -453,8 +498,9 @@ internal class MainViewModel : INotifyPropertyChanged
 
             OnPropertyChanged(nameof(FileResults));
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
+            Log.Information(ex, "Test run cancelled by user");
             AddLog("Test run cancelled by user.");
             ProgressText = "Cancelled.";
             StatusText = "Cancelled by user.";
@@ -488,9 +534,13 @@ internal class MainViewModel : INotifyPropertyChanged
             {
                 _cts?.Cancel();
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException ex)
             {
-                // CTS may already be disposed
+                Log.Debug(ex, "CTS already disposed during cancel");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Cancel tests failed");
             }
         }
 
@@ -500,16 +550,27 @@ internal class MainViewModel : INotifyPropertyChanged
     /// <summary>Cancels any running tests and waits for the background task to complete. Called when the window is closing.</summary>
     internal async Task CancelAndShutdownAsync()
     {
-        CancelTests();
-        if (_runTask is { IsCompleted: false })
-            try
-            {
-                await _runTask.ConfigureAwait(false);
-            }
-            catch
-            {
-                // Task may have been cancelled or faulted; we're shutting down
-            }
+        try
+        {
+            CancelTests();
+            if (_runTask is { IsCompleted: false })
+                try
+                {
+                    await _runTask.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    Log.Debug(ex, "Shutdown task cancelled");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Shutdown task faulted");
+                }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Cancel and shutdown failed");
+        }
     }
 
     private async void ExportPdfAsync()
@@ -558,87 +619,125 @@ internal class MainViewModel : INotifyPropertyChanged
 
     private void CopyLog()
     {
-        if (!string.IsNullOrEmpty(LogText))
-            try
-            {
-                Clipboard.SetText(LogText);
-            }
-            catch (ExternalException)
-            {
-                AddLog("Failed to copy log to clipboard.");
-            }
+        try
+        {
+            if (!string.IsNullOrEmpty(LogText))
+                try
+                {
+                    Clipboard.SetText(LogText);
+                }
+                catch (ExternalException ex)
+                {
+                    Log.Warning(ex, "Failed to copy log to clipboard");
+                    AddLog("Failed to copy log to clipboard.");
+                }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Copy log failed");
+        }
     }
 
     private void CopyResults()
     {
-        if (SessionResult == null)
-            return;
-
-        var sb = new StringBuilder();
-        sb.AppendLine("=== CHDSharp Tester Results ===");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine(
-            CultureInfo.InvariantCulture,
-            $"Summary: {SessionResult.TotalFiles} files | "
-            + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, "
-            + $"{SessionResult.SkippedSubTests} skipped | {SessionResult.TotalElapsedSeconds:N1}s"
-        );
-        sb.AppendLine();
-
-        foreach (var file in SessionResult.FileResults)
-        {
-            var status =
-                file.AllPassed ? "PASS"
-                : file.Failed > 0 ? "FAIL"
-                : "SKIP";
-            sb.AppendLine(
-                CultureInfo.InvariantCulture,
-                $"--- {file.FileName} ({file.FileSize}) [{status}] {file.ElapsedSeconds:N2}s ---"
-            );
-            foreach (var t in file.SubTests)
-            {
-                var icon = t.Status switch
-                {
-                    TestStatus.Passed => "[PASS]",
-                    TestStatus.Failed => "[FAIL]",
-                    _ => "[SKIP]"
-                };
-                sb.AppendLine(
-                    CultureInfo.InvariantCulture,
-                    $"  {icon} {t.TestName,-22} {t.ElapsedSeconds,6:N2}s  {t.Detail}"
-                );
-            }
-
-            sb.AppendLine();
-        }
-
         try
         {
-            Clipboard.SetText(sb.ToString());
+            if (SessionResult == null)
+                return;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("=== CHDSharp Tester Results ===");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"Summary: {SessionResult.TotalFiles} files | "
+                + $"{SessionResult.PassedSubTests} passed, {SessionResult.FailedSubTests} failed, "
+                + $"{SessionResult.SkippedSubTests} skipped | {SessionResult.TotalElapsedSeconds:N1}s"
+            );
+            sb.AppendLine();
+
+            foreach (var file in SessionResult.FileResults)
+            {
+                var status =
+                    file.AllPassed ? "PASS"
+                    : file.Failed > 0 ? "FAIL"
+                    : "SKIP";
+                sb.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"--- {file.FileName} ({file.FileSize}) [{status}] {file.ElapsedSeconds:N2}s ---"
+                );
+                foreach (var t in file.SubTests)
+                {
+                    var icon = t.Status switch
+                    {
+                        TestStatus.Passed => "[PASS]",
+                        TestStatus.Failed => "[FAIL]",
+                        _ => "[SKIP]"
+                    };
+                    sb.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"  {icon} {t.TestName,-22} {t.ElapsedSeconds,6:N2}s  {t.Detail}"
+                    );
+                }
+
+                sb.AppendLine();
+            }
+
+            try
+            {
+                Clipboard.SetText(sb.ToString());
+            }
+            catch (ExternalException ex)
+            {
+                Log.Warning(ex, "Failed to copy results to clipboard");
+                AddLog("Failed to copy results to clipboard.");
+            }
         }
-        catch (ExternalException)
+        catch (Exception ex)
         {
-            AddLog("Failed to copy results to clipboard.");
+            Log.Error(ex, "Copy results failed");
         }
     }
 
     private void AddLog(string message)
     {
-        var ts = DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
-        LogEntries.Add(new LogEntry { Message = message, Timestamp = ts });
-        _logBuffer.AppendLine($"[{ts}] {message}");
-        LogText = _logBuffer.ToString();
+        try
+        {
+            var ts = DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+            LogEntries.Add(new LogEntry { Message = message, Timestamp = ts });
+            _logBuffer.AppendLine($"[{ts}] {message}");
+            LogText = _logBuffer.ToString();
+            Log.Information("{UiLog}", message);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Add log failed");
+        }
     }
 
     private static void ShowAbout()
     {
-        var about = new AboutWindow { Owner = Application.Current?.MainWindow };
-        about.ShowDialog();
+        try
+        {
+            var about = new AboutWindow { Owner = Application.Current?.MainWindow };
+            about.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Show about failed");
+        }
     }
 
     private static void ExitApp()
     {
-        Application.Current.MainWindow?.Close();
+        try
+        {
+            Application.Current.MainWindow?.Close();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Exit app failed");
+        }
     }
 
     /// <summary>Raises the <see cref="PropertyChanged" /> event for the specified property.</summary>

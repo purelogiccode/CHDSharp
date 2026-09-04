@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Serilog;
 
 namespace CHDSharp;
 
@@ -44,9 +45,9 @@ internal static class ApplicationStatsService
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             using var _ = await Client.SendAsync(request).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
-            // Best-effort: swallow all failures.
+            Log.Logger.Debug(ex, "Application stats send failed");
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Serilog;
 
 namespace CHDSharpTester.Services;
 
@@ -60,9 +61,9 @@ internal static class VersionCheckService
             return
                 $"A new version of CHDSharpTester is available: v{latestVersion.Major}.{latestVersion.Minor}.{latestVersion.Build}\nDownload: {url}";
         }
-        catch
+        catch (Exception ex)
         {
-            // Best-effort: swallow all failures.
+            Log.Debug(ex, "Version check failed");
             return null;
         }
     }

@@ -65,6 +65,7 @@ public partial class App
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "App.OnStartup failed");
             Debug.WriteLine($"App.OnStartup failed: {ex}");
         }
     }
@@ -80,6 +81,7 @@ public partial class App
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "App.OnExit failed");
             Debug.WriteLine($"App.OnExit failed: {ex}");
         }
 

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Navigation;
+using Serilog;
 
 namespace CHDSharpTester.Views;
 
@@ -40,6 +41,7 @@ internal partial class AboutWindow
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "Could not open link: {Uri}", e.Uri.AbsoluteUri);
             MessageBox.Show(
                 $"Could not open link: {ex.Message}",
                 "Error",

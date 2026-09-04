@@ -71,21 +71,32 @@ internal class ChdmanWrapper
     /// <returns>An <see cref="ChdmanInfo" /> instance with parsed fields, or null if chdman failed.</returns>
     public ChdmanInfo? GetInfo(string file)
     {
-        var r = Run("info", "-i", file);
-        if (r.ExitCode != 0)
-            return null;
-
-        var text = r.All;
-        return new ChdmanInfo
+        try
         {
-            Version = ParseIntField(text, @"File Version:\s*(\d+)"),
-            LogicalBytes = ParseULongField(text, @"Logical size:\s*([\d,]+)"),
-            HunkBytes = (uint)ParseULongField(text, @"Hunk Size:\s*([\d,]+)"),
-            TotalHunks = (uint)ParseULongField(text, @"Total Hunks:\s*([\d,]+)"),
-            Compression = ParseStringField(text, @"Compression:\s*(.+)") ?? "",
-            Sha1 = ParseHexField(text, @"(?<!Data )SHA1:\s*([0-9a-fA-F]{40})"),
-            DataSha1 = ParseHexField(text, @"Data SHA1:\s*([0-9a-fA-F]{40})")
-        };
+            var r = Run("info", "-i", file);
+            if (r.ExitCode != 0)
+            {
+                Log.Warning("chdman info failed for {File}: exit {Exit}", file, r.ExitCode);
+                return null;
+            }
+
+            var text = r.All;
+            return new ChdmanInfo
+            {
+                Version = ParseIntField(text, @"File Version:\s*(\d+)"),
+                LogicalBytes = ParseULongField(text, @"Logical size:\s*([\d,]+)"),
+                HunkBytes = (uint)ParseULongField(text, @"Hunk Size:\s*([\d,]+)"),
+                TotalHunks = (uint)ParseULongField(text, @"Total Hunks:\s*([\d,]+)"),
+                Compression = ParseStringField(text, @"Compression:\s*(.+)") ?? "",
+                Sha1 = ParseHexField(text, @"(?<!Data )SHA1:\s*([0-9a-fA-F]{40})"),
+                DataSha1 = ParseHexField(text, @"Data SHA1:\s*([0-9a-fA-F]{40})")
+            };
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "chdman info failed: {File}", file);
+            return null;
+        }
     }
 
     /// <summary>Runs chdman verify on a CHD file, optionally with a parent file.</summary>
@@ -94,31 +105,41 @@ internal class ChdmanWrapper
     /// <returns><c>true</c> if chdman exits with code 0; otherwise <c>false</c>.</returns>
     public bool Verify(string file, string? parent = null)
     {
-        var psi = new ProcessStartInfo
+        try
         {
-            FileName = _chdmanPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        psi.ArgumentList.Add("verify");
-        psi.ArgumentList.Add("-i");
-        psi.ArgumentList.Add(file);
-        if (parent != null)
-        {
-            psi.ArgumentList.Add("-ip");
-            psi.ArgumentList.Add(parent);
-        }
+            var psi = new ProcessStartInfo
+            {
+                FileName = _chdmanPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            psi.ArgumentList.Add("verify");
+            psi.ArgumentList.Add("-i");
+            psi.ArgumentList.Add(file);
+            if (parent != null)
+            {
+                psi.ArgumentList.Add("-ip");
+                psi.ArgumentList.Add(parent);
+            }
 
-        using var p =
-            Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
-        var tOut = p.StandardOutput.ReadToEndAsync();
-        var tErr = p.StandardError.ReadToEndAsync();
-        p.WaitForExit();
-        Task.WaitAll(tOut, tErr);
-        return p.ExitCode == 0;
+            using var p =
+                Process.Start(psi)
+                ?? throw new InvalidOperationException($"Failed to start process: {_chdmanPath}");
+            var tOut = p.StandardOutput.ReadToEndAsync();
+            var tErr = p.StandardError.ReadToEndAsync();
+            p.WaitForExit();
+            Task.WaitAll(tOut, tErr);
+            if (p.ExitCode != 0)
+                Log.Warning("chdman verify failed for {File}: exit {Exit}", file, p.ExitCode);
+            return p.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "chdman verify failed: {File}", file);
+            return false;
+        }
     }
 
     /// <summary>Extracts a raw byte range from a CHD file using chdman extractraw.</summary>
@@ -158,12 +179,20 @@ internal class ChdmanWrapper
             p.WaitForExit();
             Task.WaitAll(tOut, tErr);
             if (p.ExitCode != 0)
+            {
+                Log.Warning("chdman extractraw failed for {File}: exit {Exit}", input, p.ExitCode);
                 return null;
+            }
 
             using var fs = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.Read);
             var buffer = new byte[fs.Length];
             fs.ReadExactly(buffer);
             return buffer;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "chdman extractraw failed: {File}", input);
+            return null;
         }
         finally
         {
@@ -171,9 +200,9 @@ internal class ChdmanWrapper
             {
                 File.Delete(tempFile);
             }
-            catch
+            catch (Exception ex)
             {
-                // ignored
+                Log.Debug(ex, "Best-effort temp cleanup failed: {Path}", tempFile);
             }
         }
     }
@@ -189,15 +218,25 @@ internal class ChdmanWrapper
     /// <returns><c>true</c> if chdman exits with code 0 and the output file exists; otherwise <c>false</c>.</returns>
     public bool Copy(string input, string output, string compression, string? parentOut = null)
     {
-        var args = new List<string> { "copy", "-i", input, "-o", output, "-c", compression, "-f" };
-        if (parentOut != null)
+        try
         {
-            args.Add("-op");
-            args.Add(parentOut);
-        }
+            var args = new List<string> { "copy", "-i", input, "-o", output, "-c", compression, "-f" };
+            if (parentOut != null)
+            {
+                args.Add("-op");
+                args.Add(parentOut);
+            }
 
-        var r = Run(args.ToArray());
-        return r.ExitCode == 0 && File.Exists(output);
+            var r = Run(args.ToArray());
+            if (r.ExitCode != 0 || !File.Exists(output))
+                Log.Warning("chdman copy failed for {File}: exit {Exit}", input, r.ExitCode);
+            return r.ExitCode == 0 && File.Exists(output);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "chdman copy failed: {Input} -> {Output}", input, output);
+            return false;
+        }
     }
 
     /// <summary>Same as <see cref="Copy" /> but returns the full chdman result for diagnostics.</summary>
@@ -213,14 +252,22 @@ internal class ChdmanWrapper
         string? parentOut = null
     )
     {
-        var args = new List<string> { "copy", "-i", input, "-o", output, "-c", compression, "-f" };
-        if (parentOut != null)
+        try
         {
-            args.Add("-op");
-            args.Add(parentOut);
-        }
+            var args = new List<string> { "copy", "-i", input, "-o", output, "-c", compression, "-f" };
+            if (parentOut != null)
+            {
+                args.Add("-op");
+                args.Add(parentOut);
+            }
 
-        return Run(args.ToArray());
+            return Run(args.ToArray());
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "chdman copy failed: {Input} -> {Output}", input, output);
+            throw;
+        }
     }
 
     private static int ParseIntField(string text, string pattern)

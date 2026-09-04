@@ -36,13 +36,26 @@ internal static partial class Program
     /// <param name="args">Command-line arguments defining the operation and its parameters.</param>
     private static int Main(string[] args)
     {
+        var logPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "CHDSharp",
+            "logs",
+            "chdsharp-.log"
+        );
+
         var serilogLogger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(
                 outputTemplate: "{Message:lj}{NewLine}{Exception}"
                 ,
-                formatProvider: null)
-            .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharp")))
+                formatProvider: CultureInfo.InvariantCulture)
+            .WriteTo.File(
+                logPath,
+                outputTemplate:
+                "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+                formatProvider: CultureInfo.InvariantCulture,
+                rollingInterval: RollingInterval.Day)
+            .WriteTo.Sink(new BugReportSink(new EnvironmentSnapshot("CHDSharpCli")))
             .CreateLogger();
 
         Log.Logger = serilogLogger;
@@ -694,8 +707,9 @@ internal static partial class Program
             Log.Logger.Warning("Access denied listing {Dir}: {Message}", di.FullName, ex.Message);
             return;
         }
-        catch (DirectoryNotFoundException)
+        catch (DirectoryNotFoundException ex)
         {
+            Log.Logger.Debug(ex, "Directory not found during scan: {Dir}", di.FullName);
             return;
         }
 
@@ -3342,9 +3356,9 @@ internal static partial class Program
                                 defaults = [CodecTags.Lzma, CodecTags.Zlib, CodecTags.Huff, CodecTags.Flac];
                         }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    /* ignore — fall back to encoder default */
+                    Log.Logger.Debug(ex, "Could not determine default codecs for {Path}; using encoder default", inputPath);
                 }
 
                 codecTags = defaults;
@@ -3379,9 +3393,9 @@ internal static partial class Program
                     sourceUnitBytesForCopy = shdr.UnitBytes;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                /* ignore */
+                Log.Logger.Debug(ex, "Could not read source header for {Path}; using defaults", inputPath);
             }
 
             // chdman.cpp:2474-2477 parse_hunk_size + factor check for copy (also validates parent inheritance)
@@ -3767,9 +3781,9 @@ internal static partial class Program
         {
             chdSize = new FileInfo(file).Length;
         }
-        catch
+        catch (Exception ex)
         {
-            /* ignore */
+            Log.Logger.Debug(ex, "Could not get file size for {Path}", file);
         }
 
         Console.WriteLine($"CHD size:     {BigintString((ulong)chdSize)} bytes");
@@ -3844,8 +3858,9 @@ internal static partial class Program
                     {
                         name = chd.GetHunkCodecName(h);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Log.Logger.Debug(ex, "GetHunkCodecName failed for hunk {Hunk}", h);
                         name = "error";
                     }
 
@@ -3929,8 +3944,9 @@ internal static partial class Program
                 return true;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Logger.Debug(ex, "Unable to read parent ident metadata from {Path}", parentPath);
             return false;
         }
     }
@@ -3994,15 +4010,17 @@ internal static partial class Program
 
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Logger.Debug(ex, "Error parsing hard disk metadata in parent CHD {Path}", parentPath);
                     error = "Error parsing hard disk metadata in parent CHD";
                     return false;
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Logger.Debug(ex, "Unable to find hard disk metadata in parent CHD {Path}", parentPath);
             error = "Unable to find hard disk metadata in parent CHD";
             return false;
         }
@@ -5794,17 +5812,18 @@ internal static partial class Program
                         remaining -= (ulong)chunk;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     try
                     {
                         File.Delete(tempPath);
                     }
-                    catch
+                    catch (Exception cleanupEx)
                     {
-                        /* best-effort cleanup */
+                        Log.Logger.Debug(cleanupEx, "Best-effort temp cleanup failed for {Path}", tempPath);
                     }
 
+                    Log.Logger.Debug(ex, "Extract staging failed for {Output}", outputPath);
                     throw;
                 }
 
@@ -6406,9 +6425,9 @@ internal static partial class Program
             {
                 Console.ReadKey(true);
             }
-            catch
+            catch (Exception ex)
             {
-                // InvalidOperationException if no console available (e.g. redirected)
+                Log.Logger.Debug(ex, "Console read for exit prompt failed (no console available)");
             }
         }
     }

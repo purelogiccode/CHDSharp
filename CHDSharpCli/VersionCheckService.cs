@@ -73,9 +73,9 @@ internal static class VersionCheckService
                 Log.Logger.Information("  *** Download: {Url} ***", RepoReleasesUrl);
             Log.Logger.Information("");
         }
-        catch
+        catch (Exception ex)
         {
-            // Best-effort: swallow all failures.
+            Log.Logger.Debug(ex, "Version check failed");
         }
     }
 
