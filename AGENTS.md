@@ -61,8 +61,9 @@ dotnet pack -c Release CHDSharpLib/              # NuGet package
   `EnvironmentSnapshot.cs` — keep it intact when editing.
 - Delivery is best-effort: never throw into the logging pipeline; `Log.CloseAndFlush()` gives
   in-flight reports a bounded (5 s) grace period so short-lived CLI runs still deliver.
-- Opt-outs (used by CI): `CHDSHARP_NO_BUG_REPORTS=1` suppresses report delivery;
-  `CHDSHARP_NO_TELEMETRY=1` skips the launch-stats hit and the GitHub version check.
+- Opt-outs (used by CI and by the test harness when it spawns the CLI):
+  `CHDSHARP_NO_BUG_REPORTS=1` suppresses report delivery; `CHDSHARP_NO_TELEMETRY=1` skips the
+  launch-stats hit and the GitHub version check.
 - Route diagnostics through Serilog/`ILogger`, not `Console`/`Debug`. The only intentional
   `Console` writes are help/usage text, chdman-parity report output (`info`, errors on stderr),
   and the double-click "press any key" pause.

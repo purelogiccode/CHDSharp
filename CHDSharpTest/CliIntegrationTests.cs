@@ -44,6 +44,11 @@ public sealed class CliIntegrationTests
             CreateNoWindow = true
         };
 
+        // Tests drive error paths on purpose — spawned CLI runs must not file bug
+        // reports or usage stats against the production APIs.
+        psi.Environment["CHDSHARP_NO_BUG_REPORTS"] = "1";
+        psi.Environment["CHDSHARP_NO_TELEMETRY"] = "1";
+
         using var proc = Process.Start(psi);
         var stdoutTask = proc!.StandardOutput.ReadToEndAsync();
         var stderrTask = proc.StandardError.ReadToEndAsync();

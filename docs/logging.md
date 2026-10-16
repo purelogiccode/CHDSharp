@@ -124,5 +124,5 @@ Each report embeds the same sections:
 ## Notes
 
 - `LoggerFactory` is read lazily per operation, so you can swap providers at runtime; for predictable behavior, set it once at startup.
-- CI/scripted runs: set `CHDSHARP_NO_BUG_REPORTS=1` to suppress report delivery and `CHDSHARP_NO_TELEMETRY=1` to skip the launch-stats hit and the GitHub version check (the repository CI workflow sets both).
+- CI/scripted runs: set `CHDSHARP_NO_BUG_REPORTS=1` to suppress report delivery and `CHDSHARP_NO_TELEMETRY=1` to skip the launch-stats hit and the GitHub version check (the repository CI workflow and the test harness set both).
 - The logging package (`Microsoft.Extensions.Logging.Abstractions`) is the library's only non-Zstd dependency and is marked optional in the sense that the library functions perfectly with it never set.

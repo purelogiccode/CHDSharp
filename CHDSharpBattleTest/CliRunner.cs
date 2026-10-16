@@ -28,6 +28,12 @@ internal sealed class CliRunner
             UseShellExecute = false,
             CreateNoWindow = true
         };
+
+        // CLI parity suites drive error paths on purpose — spawned CLI runs must not
+        // file bug reports or usage stats against the production APIs.
+        psi.Environment["CHDSHARP_NO_BUG_REPORTS"] = "1";
+        psi.Environment["CHDSHARP_NO_TELEMETRY"] = "1";
+
         psi.ArgumentList.Add(command);
         foreach (var a in args)
             psi.ArgumentList.Add(a);
