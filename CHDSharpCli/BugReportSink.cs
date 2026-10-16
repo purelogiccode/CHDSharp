@@ -52,8 +52,6 @@ internal sealed class BugReportSink : ILogEventSink, IDisposable
     /// <inheritdoc />
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null)
-            return;
         if (logEvent.Level < LogEventLevel.Warning)
             return;
         if (DisabledByEnvironment)

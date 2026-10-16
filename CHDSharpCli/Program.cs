@@ -1069,18 +1069,6 @@ internal static partial class Program
             );
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
-            if (
-                encodeOptions == null
-                && (
-                    taskCount.HasValue
-                    || parentPath != null
-                    || dvd
-                    || templateId.HasValue
-                    || inputStartBytes.HasValue
-                    || inputLengthBytes.HasValue
-                )
-            )
-                encodeOptions = new ChdEncodeOptions();
 
             if (encodeOptions != null)
             {
@@ -2058,18 +2046,6 @@ internal static partial class Program
 
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
-            if (
-                encodeOptions == null
-                && (
-                    taskCount.HasValue
-                    || outputParentPath != null
-                    || inputStartBytes.HasValue
-                    || inputLengthBytes.HasValue
-                    || inputStartHunk.HasValue
-                    || inputLengthHunks.HasValue
-                )
-            )
-                encodeOptions = new ChdEncodeOptions();
 
             if (encodeOptions != null)
             {
@@ -2287,8 +2263,6 @@ internal static partial class Program
             );
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
-            if (encodeOptions == null && (taskCount.HasValue || parentPath != null))
-                encodeOptions = new ChdEncodeOptions();
 
             if (encodeOptions != null)
             {
@@ -2494,8 +2468,6 @@ internal static partial class Program
             var codecTags = ChdCodecs.ParseCodecTags(codecs ?? "avhu");
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
-            if (encodeOptions == null && (taskCount.HasValue || outputParentPath != null))
-                encodeOptions = new ChdEncodeOptions();
 
             if (encodeOptions != null)
             {
@@ -5562,7 +5534,7 @@ internal static partial class Program
 
             var logger = new EncodeProgressLogger(verbose);
             // DVD metadata must ALWAYS be written — createdvd exists to stamp the 'DVD ' tag.
-            var encodeOptions = logger.Options ?? new ChdEncodeOptions();
+            var encodeOptions = logger.Options;
             if (taskCount.HasValue)
                 encodeOptions.TaskCount = taskCount;
 

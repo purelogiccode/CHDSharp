@@ -328,7 +328,6 @@ internal sealed class AvHuffEncoder
         private readonly HuffmanEncoder _encoder = new(RleAlphabetSize, MaxBits);
         private ushort[] _rleBuffer = new ushort[1024];
         private int _rleCount;
-        private int _rleLength;
 
         /// <summary>
         ///     RLE-compresses and histograms one plane (MAME's <c>rle_and_histo_bitmap</c>).
@@ -351,7 +350,6 @@ internal sealed class AvHuffEncoder
             if (_rleBuffer.Length < itemsPerRow * rowCount)
                 _rleBuffer = new ushort[itemsPerRow * rowCount];
 
-            _rleLength = itemsPerRow * rowCount;
             var destPos = 0;
 
             _encoder.ResetHistogram();

@@ -10,7 +10,6 @@ internal class Crc
     private static readonly uint[] Crc32Lookup;
 
     private uint _crc;
-    private long _totalBytesRead;
 
     static Crc()
     {
@@ -46,10 +45,9 @@ internal class Crc
     /// <summary>Gets the CRC-32 result as an unsigned 32-bit integer.</summary>
     private uint Crc32ResultU => ~_crc;
 
-    /// <summary>Resets the CRC-32 state to its initial value and clears the byte count.</summary>
+    /// <summary>Resets the CRC-32 state to its initial value.</summary>
     public void Reset()
     {
-        _totalBytesRead = 0;
         _crc = 0xffffffffu;
     }
 
@@ -59,7 +57,6 @@ internal class Crc
     /// <param name="count">The number of bytes to process.</param>
     private void SlurpBlock(byte[] block, int offset, int count)
     {
-        _totalBytesRead += count;
         var crc = _crc;
 
         for (; (offset & 7) != 0 && count != 0; count--)
