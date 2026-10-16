@@ -25,7 +25,7 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             strm.DeflateRefs.ConfigurationTable;
 #else
-        MemoryMarshal.GetReference<Config>(s_configuration_table);
+            MemoryMarshal.GetReference<Config>(s_configuration_table);
 #endif
         var deflateType = Unsafe.Add(ref configurationTable, (uint)s.Level).deflate_type;
         ref var config = ref Unsafe.Add(ref configurationTable, (uint)level);
@@ -54,7 +54,7 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
                         refs.Prev;
 #else
-                    MemoryMarshal.GetReference<ushort>(s.prev);
+                        MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
 
                     SlideHash(s, ref prev, ref

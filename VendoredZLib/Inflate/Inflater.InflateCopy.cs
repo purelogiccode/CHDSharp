@@ -94,38 +94,38 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
             sourceRefs.Lens;
 #else
-        MemoryMarshal.GetReference<ushort>(state.lens);
+            MemoryMarshal.GetReference<ushort>(state.lens);
 #endif
         ref var sourceWork = ref
 #if NET7_0_OR_GREATER
             sourceRefs.Work;
 #else
-        MemoryMarshal.GetReference<ushort>(state.work);
+            MemoryMarshal.GetReference<ushort>(state.work);
 #endif
         ref var sourceCodes = ref
 #if NET7_0_OR_GREATER
             sourceRefs.Codes;
 #else
-        MemoryMarshal.GetReference<Code>(state.codes);
+            MemoryMarshal.GetReference<Code>(state.codes);
 #endif
 
         ref var destLens = ref
 #if NET7_0_OR_GREATER
             destRefs.Lens;
 #else
-        MemoryMarshal.GetReference<ushort>(copy.lens);
+            MemoryMarshal.GetReference<ushort>(copy.lens);
 #endif
         ref var destWork = ref
 #if NET7_0_OR_GREATER
             destRefs.Work;
 #else
-        MemoryMarshal.GetReference<ushort>(copy.work);
+            MemoryMarshal.GetReference<ushort>(copy.work);
 #endif
         ref var destCodes = ref
 #if NET7_0_OR_GREATER
             destRefs.Codes;
 #else
-        MemoryMarshal.GetReference<Code>(copy.codes);
+            MemoryMarshal.GetReference<Code>(copy.codes);
 #endif
 
         netUnsafe.CopyBlock(

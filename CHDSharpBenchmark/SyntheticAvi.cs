@@ -217,13 +217,13 @@ internal static class SyntheticAvi
             for (var y = 0; y < height; y++)
             {
                 for (var x = 0; x < width; x++)
-            {
-                var inBar = x >= barX && x < barX + 6;
-                var luma = inBar ? (byte)235 : (byte)(16 + (((x * 3) + (y * 2) + f) % 200));
-                var chroma = inBar ? (byte)64 : (byte)128;
-                frame[((y * width) + x) * 2] = luma;
-                frame[(((y * width) + x) * 2) + 1] = chroma;
-            }
+                {
+                    var inBar = x >= barX && x < barX + 6;
+                    var luma = inBar ? (byte)235 : (byte)(16 + (((x * 3) + (y * 2) + f) % 200));
+                    var chroma = inBar ? (byte)64 : (byte)128;
+                    frame[((y * width) + x) * 2] = luma;
+                    frame[(((y * width) + x) * 2) + 1] = chroma;
+                }
             }
 
             result[f] = frame;
@@ -260,7 +260,7 @@ internal static class SyntheticAvi
     {
         PatchSize(
             w.BaseStream as MemoryStream
-                ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
+            ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
             sizePos
         );
     }
@@ -273,7 +273,7 @@ internal static class SyntheticAvi
         body(w);
         PatchSize(
             w.BaseStream as MemoryStream
-                ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
+            ?? throw new InvalidOperationException("writer must wrap a MemoryStream"),
             sizePos
         );
         if ((w.BaseStream.Position & 1) == 1)

@@ -50,7 +50,9 @@ public class TocParserChdmanValidationTests : IDisposable
             "CD_DA\r\n\r\nTRACK MODE2_RAW\r\nNO COPY\r\nDATAFILE \"t.bin\" 0 1000\r\n" + startLine + "\r\n"
         );
         using (var fs = File.Create(binPath))
+        {
             fs.SetLength(2352L * 1000);
+        }
 
         var chdmanChd = Path.Combine(_testDataDir, "chdman.chd");
         var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman(

@@ -41,8 +41,7 @@ public class DecodeBenchmarks
     private ChdFile? _chd;
     private ulong _imageBytes;
 
-    [ParamsSource(nameof(CodecNames))]
-    public string Codec { get; set; } = "zlib";
+    [ParamsSource(nameof(CodecNames))] public string Codec { get; set; } = "zlib";
 
     public static IEnumerable<string> CodecNames()
     {

@@ -108,13 +108,13 @@ File template: `{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{Ne
 
 Both apps attach a `BugReportSink` (`CHDSharpCli/BugReportSink.cs`, `CHDSharpTester/Services/BugReportSink.cs`) that POSTs every log event at `Warning` or above to `https://www.purelogiccode.com/bugreport/api/send-bug-report` (`X-API-KEY` header, JSON body).
 
-- Fire-and-forget (`Task.Run`, 10 s `HttpClient` timeout): delivery never blocks or throws into the logging pipeline.
+- Fire-and-forget (`Task.Run`, 10 s `HttpClient` timeout): delivery never blocks or throws into the logging pipeline. On `Log.CloseAndFlush()`, the sink waits up to 5 s for in-flight reports so short-lived CLI sessions and crash shutdowns still deliver them.
 - `OperationCanceledException` / `TaskCanceledException` events are skipped (user cancellation is not a bug).
 - Server throttling (`HTTP 429`) and any transport failure are silently tolerated.
 
 Each report embeds the same sections:
 
-- `=== Environment Details ===` — Date, Application Name, Application Version, OS Version, Architecture, Bitness, Windows Version, Processor Count, Base Directory, Temp Path (plus Runtime/Session/Elevated context in the CLI sink).
+- `=== Environment Details ===` — Date, Application Name, Application Version, OS Version, Architecture, Bitness, the platform version (`Windows, Linux or MacOsX Version` in the CLI sink; `Windows Version` in the WPF tester, which is Windows-only), Processor Count, Base Directory, Temp Path (the CLI sink also adds Runtime/Session/Elevated context).
 - `=== Error Details ===` — the rendered log message.
 - `=== Exception Details ===` — Type, Message, Source, StackTrace (plus inner exceptions; `(none)` placeholders when the event carries no exception, e.g. a usage warning).
 - The JSON payload also carries `applicationName`, `version`, `environment`, and `stackTrace` per the Bug Report API.
@@ -124,4 +124,5 @@ Each report embeds the same sections:
 ## Notes
 
 - `LoggerFactory` is read lazily per operation, so you can swap providers at runtime; for predictable behavior, set it once at startup.
+- CI/scripted runs: set `CHDSHARP_NO_BUG_REPORTS=1` to suppress report delivery and `CHDSHARP_NO_TELEMETRY=1` to skip the launch-stats hit and the GitHub version check (the repository CI workflow sets both).
 - The logging package (`Microsoft.Extensions.Logging.Abstractions`) is the library's only non-Zstd dependency and is marked optional in the sense that the library functions perfectly with it never set.

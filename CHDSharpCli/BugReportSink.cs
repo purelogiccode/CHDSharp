@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
@@ -10,9 +11,10 @@ namespace CHDSharp;
 /// <summary>
 ///     A Serilog sink that forwards every log event at <see cref="LogEventLevel.Warning" /> or above to the
 ///     Bug Report API. Each report embeds the full environment snapshot and, when present, the exception details.
-///     The HTTP post is fire-and-forget so it never blocks application logging.
+///     The HTTP post is fire-and-forget so it never blocks application logging; in-flight posts are
+///     given a bounded grace period on disposal so short-lived sessions still deliver their reports.
 /// </summary>
-internal sealed class BugReportSink : ILogEventSink
+internal sealed class BugReportSink : ILogEventSink, IDisposable
 {
     private const string Endpoint = "https://www.purelogiccode.com/bugreport/api/send-bug-report";
     private static readonly HttpClient Client = new();
@@ -20,6 +22,19 @@ internal sealed class BugReportSink : ILogEventSink
 
     private readonly EnvironmentSnapshot _env;
     private readonly string _environmentLabel;
+
+    /// <summary>Reports that have been queued but not yet delivered.</summary>
+    private readonly ConcurrentDictionary<Task, byte> _inFlight = new();
+
+    /// <summary>
+    ///     <c>CHDSHARP_NO_BUG_REPORTS=1</c> suppresses report delivery. Used by CI/tests so
+    ///     intentionally-exercised warning paths never reach the production Bug Report API.
+    /// </summary>
+    private static readonly bool DisabledByEnvironment = string.Equals(
+        Environment.GetEnvironmentVariable("CHDSHARP_NO_BUG_REPORTS"),
+        "1",
+        StringComparison.Ordinal
+    );
 
     static BugReportSink()
     {
@@ -41,13 +56,45 @@ internal sealed class BugReportSink : ILogEventSink
             return;
         if (logEvent.Level < LogEventLevel.Warning)
             return;
+        if (DisabledByEnvironment)
+            return;
         if (logEvent.Exception is OperationCanceledException or TaskCanceledException)
             return;
 
         var message = BuildMessage(logEvent);
 
-        // Fire-and-forget: never block the logging pipeline.
-        _ = Task.Run(() => SendAsync(message, logEvent));
+        // Fire-and-forget: never block the logging pipeline. The task is tracked so Dispose
+        // can give in-flight reports a bounded grace period when the logger is closed.
+        var send = Task.Run(() => SendAsync(message, logEvent));
+        _inFlight.TryAdd(send, 0);
+        _ = send.ContinueWith(
+            completed => _inFlight.TryRemove(completed, out _),
+            CancellationToken.None,
+            TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default
+        );
+    }
+
+    /// <summary>
+    ///     Gives in-flight bug reports a short grace period to reach the API when the logger is
+    ///     closed (Serilog calls this from <c>Log.CloseAndFlush()</c>). Best-effort only: the wait
+    ///     is bounded and any failure is ignored.
+    /// </summary>
+    [SuppressMessage(
+        "ReSharper",
+        "CA1031",
+        Justification = "Bug-report delivery is best-effort and must never throw."
+    )]
+    public void Dispose()
+    {
+        try
+        {
+            Task.WhenAll(_inFlight.Keys).Wait(TimeSpan.FromSeconds(5));
+        }
+        catch
+        {
+            // Best-effort delivery only.
+        }
     }
 
     private static string DecodeApiKey()
@@ -68,11 +115,11 @@ internal sealed class BugReportSink : ILogEventSink
         sb.AppendLine($"OS Version: {EnvironmentSnapshot.OsVersion}");
         sb.AppendLine($"Architecture: {EnvironmentSnapshot.Architecture}");
         sb.AppendLine($"Bitness: {_env.Bitness}");
-        sb.AppendLine($"Windows Version: {_env.WindowsVersion}");
-        sb.AppendLine($"Runtime: {EnvironmentSnapshot.RuntimeVersion}");
+        sb.AppendLine($"Windows, Linux or MacOsX Version: {_env.WindowsVersion}");
         sb.AppendLine(CultureInfo.InvariantCulture, $"Processor Count: {EnvironmentSnapshot.ProcessorCount}");
         sb.AppendLine($"Base Directory: {EnvironmentSnapshot.BaseDirectory}");
         sb.AppendLine($"Temp Path: {EnvironmentSnapshot.TempPath}");
+        sb.AppendLine($"Runtime: {EnvironmentSnapshot.RuntimeVersion}");
 
         sb.AppendLine();
         sb.AppendLine("=== Session Details ===");

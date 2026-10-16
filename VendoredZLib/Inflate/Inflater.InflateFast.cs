@@ -35,13 +35,13 @@ internal static partial class Inflater
 #if NET7_0_OR_GREATER
             Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
-        MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
+            MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
         ref var @out = ref
 #if NET7_0_OR_GREATER
             Unsafe.Add(ref strm.OutputPtr, strm.NextOutput);
 #else
-        MemoryMarshal.GetReference(strm.Output2.Slice((int)strm.NextOutput));
+            MemoryMarshal.GetReference(strm.Output2.Slice((int)strm.NextOutput));
 #endif
 
         // decode literals and length/distances until end-of-block or not enough input data or output space

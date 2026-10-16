@@ -488,6 +488,7 @@ CHDSharpCli/bin/Release/net8.0/CHDSharp.exe info -i game.chd
 | [Serilog](https://www.nuget.org/packages/Serilog/) | 4.4.0 | Structured logging |
 | [Serilog.Extensions.Logging](https://www.nuget.org/packages/Serilog.Extensions.Logging/) | 10.0.0 | Bridges Serilog to `ILoggerFactory` |
 | [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console/) | 6.1.1 | Console log output |
+| [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File/) | 7.0.0 | Rolling-day file log (`%LocalAppData%\CHDSharp\logs`) |
 | `CHDSharpLib` | (project reference) | Core CHD library — see its LICENSE.txt |
 
 ---

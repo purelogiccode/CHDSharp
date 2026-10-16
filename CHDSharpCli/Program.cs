@@ -61,8 +61,17 @@ internal static partial class Program
         Log.Logger = serilogLogger;
         Chd.LoggerFactory = new SerilogLoggerFactory(serilogLogger);
 
-        ApplicationStatsService.TrackLaunch("chdsharp");
-        VersionCheckService.CheckAndNotify();
+        // CHDSHARP_NO_TELEMETRY=1 (used by CI/tests) skips the launch-stats hit and version check.
+        var telemetryDisabled = string.Equals(
+            Environment.GetEnvironmentVariable("CHDSHARP_NO_TELEMETRY"),
+            "1",
+            StringComparison.Ordinal
+        );
+        if (!telemetryDisabled)
+        {
+            ApplicationStatsService.TrackLaunch("chdsharp");
+            VersionCheckService.CheckAndNotify();
+        }
 
         try
         {
@@ -3358,7 +3367,8 @@ internal static partial class Program
                 }
                 catch (Exception ex)
                 {
-                    Log.Logger.Debug(ex, "Could not determine default codecs for {Path}; using encoder default", inputPath);
+                    Log.Logger.Debug(ex, "Could not determine default codecs for {Path}; using encoder default",
+                        inputPath);
                 }
 
                 codecTags = defaults;
@@ -3788,7 +3798,8 @@ internal static partial class Program
 
         Console.WriteLine($"CHD size:     {BigintString((ulong)chdSize)} bytes");
         if (compression.Length > 0 && compression[0] != ChdCodec.None && header.TotalBytes != 0)
-            Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Ratio:        {100.0 * chdSize / header.TotalBytes:F1}%"));
+            Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+                $"Ratio:        {100.0 * chdSize / header.TotalBytes:F1}%"));
 
         // SHA-1 hashes
         var overall = header.Sha1;
@@ -4768,8 +4779,9 @@ internal static partial class Program
         {
             result = checked(num * multiplier);
         }
-        catch (OverflowException)
+        catch (OverflowException ex)
         {
+            Log.Logger.Debug(ex, "Size value {Value} overflows after applying the K/M/G suffix", s);
             return false;
         }
 
@@ -4873,7 +4885,10 @@ internal static partial class Program
             else
             {
                 // chdman.cpp:2780 Warning: encountered unknown format value '%s', ignoring
-                Console.WriteLine($"Warning: encountered unknown format value '{type}', ignoring");
+                Log.Logger.Warning(
+                    "Warning: encountered unknown format value '{Type}', ignoring",
+                    type
+                );
             }
 
             if (!string.IsNullOrEmpty(replacement))
@@ -4894,7 +4909,10 @@ internal static partial class Program
                 continue;
             if (!string.Equals(type, "t", StringComparison.Ordinal))
             {
-                Console.WriteLine($"Warning: encountered unknown format value '{type}', ignoring");
+                Log.Logger.Warning(
+                    "Warning: encountered unknown format value '{Type}', ignoring",
+                    type
+                );
                 continue;
             }
 
@@ -6034,12 +6052,20 @@ internal static partial class Program
                         if (File.Exists(tocPath) && !force)
                         {
                             Console.Error.WriteLine($"Error: file already exists ({tocPath})");
+                            log.Warning(
+                                "Output file already exists: {Path} (use --force to overwrite)",
+                                tocPath
+                            );
                             return false;
                         }
 
                         if (File.Exists(binTarget) && !force)
                         {
                             Console.Error.WriteLine($"Error: file already exists ({binTarget})");
+                            log.Warning(
+                                "Output file already exists: {Path} (use --force to overwrite)",
+                                binTarget
+                            );
                             return false;
                         }
 
@@ -6307,12 +6333,20 @@ internal static partial class Program
                     if (File.Exists(tocPath) && !force)
                     {
                         Console.Error.WriteLine($"Error: file already exists ({tocPath})");
+                        log.Warning(
+                            "Output file already exists: {Path} (use --force to overwrite)",
+                            tocPath
+                        );
                         return false;
                     }
 
                     if (File.Exists(binTarget) && !force)
                     {
                         Console.Error.WriteLine($"Error: file already exists ({binTarget})");
+                        log.Warning(
+                            "Output file already exists: {Path} (use --force to overwrite)",
+                            binTarget
+                        );
                         return false;
                     }
 

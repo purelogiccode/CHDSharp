@@ -3080,7 +3080,7 @@ public static unsafe partial class Methods
             ZSTD_initFseState(&seqState.stateOffb, &seqState.DStream, dctx->OFTptr);
             ZSTD_initFseState(&seqState.stateML, &seqState.DStream, dctx->MLTptr);
             assert(dst != (null));
-            for (; ; )
+            for (;;)
             {
                 seq_t sequence = ZSTD_decodeSequence(&seqState, isLongOffset);
                 nuint oneSeqSize;
@@ -3200,8 +3200,7 @@ public static unsafe partial class Methods
                         );
                     }
 
-                    returnOneSeqSize:
-                    ;
+                    returnOneSeqSize: ;
                 }
 
                 if ((ERR_isError(oneSeqSize)))

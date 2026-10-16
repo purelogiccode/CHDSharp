@@ -1014,13 +1014,13 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             refs.PendingBuf;
 #else
-        MemoryMarshal.GetReference<byte>(s.pending_buf);
+            MemoryMarshal.GetReference<byte>(s.pending_buf);
 #endif
         ref var pendingOut = ref
 #if NET7_0_OR_GREATER
             refs.PendingOut;
 #else
-        MemoryMarshal.GetReference<byte>(s.pending_out);
+            MemoryMarshal.GetReference<byte>(s.pending_out);
 #endif
 
         // Flush as much pending output as possible
@@ -1129,7 +1129,7 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
                             refs.ConfigurationTable;
 #else
-                        MemoryMarshal.GetReference<Config>(s_configuration_table);
+                            MemoryMarshal.GetReference<Config>(s_configuration_table);
 #endif
                         var type = Unsafe.Add(ref configurationTable, (uint)s.Level).deflate_type;
                         bstate = type switch
@@ -1263,7 +1263,7 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             strm.DeflateRefs.ConfigurationTable;
 #else
-        MemoryMarshal.GetReference<Config>(s_configuration_table);
+            MemoryMarshal.GetReference<Config>(s_configuration_table);
 #endif
         ref var config = ref Unsafe.Add(ref configurationTable, (uint)s.Level);
         s.MaxLazyMatch = config.max_lazy;
@@ -1368,13 +1368,13 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             refs.Window;
 #else
-        MemoryMarshal.GetReference<byte>(s.window);
+            MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var nextOut = ref
 #if NET7_0_OR_GREATER
             strm.OutputPtr;
 #else
-        MemoryMarshal.GetReference(strm.Output2);
+            MemoryMarshal.GetReference(strm.Output2);
 #endif
         do
         {
@@ -1470,7 +1470,7 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
                 Unsafe.Add(ref strm.InputPtr, strm.NextInput);
 #else
-            MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
+                MemoryMarshal.GetReference(strm.Input2.Slice((int)strm.NextInput));
 #endif
             /* If any input was used, then no unused input remains in the window,
              * therefore s.block_start == s.strstart.
@@ -1650,116 +1650,116 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             refs.Window;
 #else
-        MemoryMarshal.GetReference<byte>(s.window);
+            MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var prev = ref
 #if NET7_0_OR_GREATER
             refs.Prev;
 #else
-        MemoryMarshal.GetReference<ushort>(s.prev);
+            MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
             refs.Head;
 #else
-        MemoryMarshal.GetReference<ushort>(s.head);
+            MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
             refs.BlCount;
 #else
-        MemoryMarshal.GetReference<ushort>(s.bl_count);
+            MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
             refs.Heap;
 #else
-        MemoryMarshal.GetReference<int>(s.heap);
+            MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
             refs.Depth;
 #else
-        MemoryMarshal.GetReference<byte>(s.depth);
+            MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
             refs.StaLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
             refs.StaDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
             refs.DynLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
             refs.DynDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
             refs.BlTree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
+            MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
             refs.BlOrder;
 #else
-        MemoryMarshal.GetReference<ushort>(s_bl_order);
+            MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
             refs.DistCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_dist_code);
+            MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
             refs.LengthCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_length_code);
+            MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
             refs.BaseDist;
 #else
-        MemoryMarshal.GetReference<int>(s_base_dist);
+            MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
             refs.BaseLength;
 #else
-        MemoryMarshal.GetReference<int>(s_base_length);
+            MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraDbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_dbits);
+            MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraLbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_lbits);
+            MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraBlbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_blbits);
+            MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
         for (;;)
@@ -2200,16 +2200,16 @@ internal static partial class Deflater
     }
 #else
         =>
-        flush = Tree.Tally(
-            s,
-            0,
-            c,
-            ref pendingBuf,
-            ref dynLtree,
-            ref dynDtree,
-            ref distCode,
-            ref lengthCode
-        );
+            flush = Tree.Tally(
+                s,
+                0,
+                c,
+                ref pendingBuf,
+                ref dynLtree,
+                ref dynDtree,
+                ref distCode,
+                ref lengthCode
+            );
 #endif
 
     private static BlockState DeflateRle(
@@ -2228,116 +2228,116 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             refs.Window;
 #else
-        MemoryMarshal.GetReference<byte>(s.window);
+            MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var sprev = ref
 #if NET7_0_OR_GREATER
             refs.Prev;
 #else
-        MemoryMarshal.GetReference<ushort>(s.prev);
+            MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
             refs.Head;
 #else
-        MemoryMarshal.GetReference<ushort>(s.head);
+            MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
             refs.BlCount;
 #else
-        MemoryMarshal.GetReference<ushort>(s.bl_count);
+            MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
             refs.Heap;
 #else
-        MemoryMarshal.GetReference<int>(s.heap);
+            MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
             refs.Depth;
 #else
-        MemoryMarshal.GetReference<byte>(s.depth);
+            MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
             refs.StaLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
             refs.StaDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
             refs.DynLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
             refs.DynDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
             refs.BlTree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
+            MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
             refs.BlOrder;
 #else
-        MemoryMarshal.GetReference<ushort>(s_bl_order);
+            MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
             refs.DistCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_dist_code);
+            MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
             refs.LengthCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_length_code);
+            MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
             refs.BaseDist;
 #else
-        MemoryMarshal.GetReference<int>(s_base_dist);
+            MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
             refs.BaseLength;
 #else
-        MemoryMarshal.GetReference<int>(s_base_length);
+            MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraDbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_dbits);
+            MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraLbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_lbits);
+            MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraBlbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_blbits);
+            MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
         for (;;)
@@ -2586,116 +2586,116 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             refs.Window;
 #else
-        MemoryMarshal.GetReference<byte>(s.window);
+            MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var prev = ref
 #if NET7_0_OR_GREATER
             refs.Prev;
 #else
-        MemoryMarshal.GetReference<ushort>(s.prev);
+            MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
             refs.Head;
 #else
-        MemoryMarshal.GetReference<ushort>(s.head);
+            MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
             refs.BlCount;
 #else
-        MemoryMarshal.GetReference<ushort>(s.bl_count);
+            MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
             refs.Heap;
 #else
-        MemoryMarshal.GetReference<int>(s.heap);
+            MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
             refs.Depth;
 #else
-        MemoryMarshal.GetReference<byte>(s.depth);
+            MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
             refs.StaLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
             refs.StaDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
             refs.DynLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
             refs.DynDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
             refs.BlTree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
+            MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
             refs.BlOrder;
 #else
-        MemoryMarshal.GetReference<ushort>(s_bl_order);
+            MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
             refs.DistCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_dist_code);
+            MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
             refs.LengthCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_length_code);
+            MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
             refs.BaseDist;
 #else
-        MemoryMarshal.GetReference<int>(s_base_dist);
+            MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
             refs.BaseLength;
 #else
-        MemoryMarshal.GetReference<int>(s_base_length);
+            MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraDbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_dbits);
+            MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraLbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_lbits);
+            MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraBlbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_blbits);
+            MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
         for (;;)
@@ -3039,116 +3039,116 @@ internal static partial class Deflater
 #if NET7_0_OR_GREATER
             refs.Window;
 #else
-        MemoryMarshal.GetReference<byte>(s.window);
+            MemoryMarshal.GetReference<byte>(s.window);
 #endif
         ref var prev = ref
 #if NET7_0_OR_GREATER
             refs.Prev;
 #else
-        MemoryMarshal.GetReference<ushort>(s.prev);
+            MemoryMarshal.GetReference<ushort>(s.prev);
 #endif
         ref var head = ref
 #if NET7_0_OR_GREATER
             refs.Head;
 #else
-        MemoryMarshal.GetReference<ushort>(s.head);
+            MemoryMarshal.GetReference<ushort>(s.head);
 #endif
         ref var blCount = ref
 #if NET7_0_OR_GREATER
             refs.BlCount;
 #else
-        MemoryMarshal.GetReference<ushort>(s.bl_count);
+            MemoryMarshal.GetReference<ushort>(s.bl_count);
 #endif
         ref var heap = ref
 #if NET7_0_OR_GREATER
             refs.Heap;
 #else
-        MemoryMarshal.GetReference<int>(s.heap);
+            MemoryMarshal.GetReference<int>(s.heap);
 #endif
         ref var depth = ref
 #if NET7_0_OR_GREATER
             refs.Depth;
 #else
-        MemoryMarshal.GetReference<byte>(s.depth);
+            MemoryMarshal.GetReference<byte>(s.depth);
 #endif
 
         ref var staLtree = ref
 #if NET7_0_OR_GREATER
             refs.StaLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_ltree);
 #endif
         ref var staDtree = ref
 #if NET7_0_OR_GREATER
             refs.StaDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
+            MemoryMarshal.GetReference<TreeNode>(Tree.s_dtree);
 #endif
         ref var dynLtree = ref
 #if NET7_0_OR_GREATER
             refs.DynLtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_ltree);
 #endif
         ref var dynDtree = ref
 #if NET7_0_OR_GREATER
             refs.DynDtree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
+            MemoryMarshal.GetReference<TreeNode>(s.dyn_dtree);
 #endif
         ref var blTree = ref
 #if NET7_0_OR_GREATER
             refs.BlTree;
 #else
-        MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
+            MemoryMarshal.GetReference<TreeNode>(s.bl_tree);
 #endif
         ref var blOrder = ref
 #if NET7_0_OR_GREATER
             refs.BlOrder;
 #else
-        MemoryMarshal.GetReference<ushort>(s_bl_order);
+            MemoryMarshal.GetReference<ushort>(s_bl_order);
 #endif
         ref var distCode = ref
 #if NET7_0_OR_GREATER
             refs.DistCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_dist_code);
+            MemoryMarshal.GetReference<byte>(s_dist_code);
 #endif
         ref var lengthCode = ref
 #if NET7_0_OR_GREATER
             refs.LengthCode;
 #else
-        MemoryMarshal.GetReference<byte>(s_length_code);
+            MemoryMarshal.GetReference<byte>(s_length_code);
 #endif
         ref var baseDist = ref
 #if NET7_0_OR_GREATER
             refs.BaseDist;
 #else
-        MemoryMarshal.GetReference<int>(s_base_dist);
+            MemoryMarshal.GetReference<int>(s_base_dist);
 #endif
         ref var baseLength = ref
 #if NET7_0_OR_GREATER
             refs.BaseLength;
 #else
-        MemoryMarshal.GetReference<int>(s_base_length);
+            MemoryMarshal.GetReference<int>(s_base_length);
 #endif
         ref var extraDbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraDbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_dbits);
+            MemoryMarshal.GetReference<int>(s_extra_dbits);
 #endif
         ref var extraLbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraLbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_lbits);
+            MemoryMarshal.GetReference<int>(s_extra_lbits);
 #endif
         ref var extraBlbits = ref
 #if NET7_0_OR_GREATER
             refs.ExtraBlbits;
 #else
-        MemoryMarshal.GetReference<int>(s_extra_blbits);
+            MemoryMarshal.GetReference<int>(s_extra_blbits);
 #endif
         BlockState state;
         // Process the input block.

@@ -1978,7 +1978,7 @@ internal sealed partial class BattleHarness
             }
             catch (Exception ex)
             {
-                throw new CheckFailedException($"json parse failed: {ex.Message} output:{r.Combined}");
+                throw new CheckFailedException($"json parse failed: {ex.Message} output:{r.Combined}", ex);
             }
         });
         Check(suite, "hash --result sfv (needs crc32)", () =>
