@@ -164,6 +164,9 @@ public class ParallelEncodeTests : IDisposable
     [Fact]
     public void ParallelEncode_IsFasterThanSingleThreaded()
     {
+        if (Environment.GetEnvironmentVariable("CI") == "true")
+            return; // shared CI runners are too noisy for timing assertions (the benchmark suite covers perf)
+
         if (Environment.ProcessorCount < 4)
             return; // cannot demonstrate parallel speedup on fewer cores
 

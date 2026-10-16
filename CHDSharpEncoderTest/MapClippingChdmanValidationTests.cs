@@ -11,12 +11,13 @@ namespace CHDSharpEncoderTest;
 ///     Root cause found while closing that gap: MAME's <c>compress_v5_map</c> sizes its map
 ///     bitstream buffer as <c>nbits_needed/8 + 1</c> bytes <em>including</em> the 16-byte map
 ///     header. For small hunk counts that area is smaller than the actual tree + symbols +
-///     auxiliary data, so MAME's <c>bitstream_out</c> silently drops whole trailing bytes (the
-///     zero-filled allocation shows through) while <c>flush()</c> keeps counting them in the
-///     map's compressed-length field. When a dropped byte would have been nonzero, the stored map
-///     no longer matches its header CRC-16 and the resulting CHD cannot be re-opened — not even
-///     by chdman itself (upstream bug, reproducible with a single-hunk <c>createraw</c> at hunk
-///     sizes 18816/19584/65536).
+///     auxiliary data, so MAME's <c>bitstream_out</c> silently drops whole trailing bytes
+///     (the zero-filled allocation shows through, and the byte immediately past the
+///     allocation can even be read out — it is uninitialized heap memory) while <c>flush()</c>
+///     keeps counting them in the map's compressed-length field. When a dropped byte would
+///     have been nonzero, the stored map no longer matches its header CRC-16 and the resulting
+///     CHD cannot be re-opened — not even by chdman itself (upstream bug, reproducible with a
+///     single-hunk <c>createraw</c> at hunk sizes 18816/19584/65536).
 ///     Our encoder replicates chdman's allocation and clipping so outputs stay byte-identical
 ///     wherever chdman's file is well-formed, and falls back to the full bitstream when clipping
 ///     would corrupt the map (chdman's reference is unreadable in those cases, so there are no
@@ -161,11 +162,25 @@ public class MapClippingChdmanValidationTests : IDisposable
         );
         Assert.True(createExit == 0, $"chdman createraw failed (exit={createExit})\n{cOut}{cErr}");
 
-        Assert.Equal(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
+        // chdman writes `complen + 16` bytes from a `nbits_needed/8 + 1`-byte zeroed buffer,
+        // so the file's final byte is read one byte past that buffer: 0x00 when the adjacent
+        // heap byte is clean (our port writes the deterministic 0x00 the benign clip is
+        // defined to produce), but recycled-heap garbage on some machines (ASCII heap
+        // fragments were observed on GitHub-Actions Windows runners). Everything else must
+        // match byte-for-byte.
+        var refBytes = File.ReadAllBytes(refPath);
+        var ourBytes = File.ReadAllBytes(oursPath);
+        Assert.Equal(refBytes.Length, ourBytes.Length);
+        Assert.Equal(refBytes[..^1], ourBytes[..^1]);
+        Assert.Equal(0x00, ourBytes[^1]);
 
-        // both files must be readable and round-trip the source
-        AssertDecodesTo(refPath, source);
+        // our output must be well-formed and round-trip the source
         AssertDecodesTo(oursPath, source);
+
+        // chdman's own file is well-formed only when the byte past its buffer preserves the
+        // map's CRC/padding semantics — true when that byte reads 0x00 (clean machines)
+        if (refBytes[^1] == 0x00)
+            AssertDecodesTo(refPath, source);
     }
 
     [Theory]
@@ -212,16 +227,23 @@ public class MapClippingChdmanValidationTests : IDisposable
         AssertDecodesTo(oursPath, source);
 
         // chdman 0.289 cannot re-open its own output for these inputs (upstream
-        // compress_v5_map clipping bug); pin that so a behavior change is noticed
-        var (refInfoExit, _, _) = ChdmanHelper.RunChdman("info", "-i", refPath);
-        Assert.True(
-            refInfoExit != 0,
-            "chdman can now read its own single-hunk output - the upstream clipping bug appears to be fixed; "
-            + "this divergence should be revisited and byte parity restored"
-        );
+        // compress_v5_map clipping bug). Its final map byte is read one byte past the zeroed
+        // bitstream buffer, so that comparison is only meaningful when the byte came out as
+        // 0x00 (clean heap); on a dirty heap (some CI runners) the garbage byte decides both
+        // readability and divergence, and is not asserted.
+        var refBytes = File.ReadAllBytes(refPath);
+        if (refBytes[^1] == 0x00)
+        {
+            var (refInfoExit, _, _) = ChdmanHelper.RunChdman("info", "-i", refPath);
+            Assert.True(
+                refInfoExit != 0,
+                "chdman can now read its own single-hunk output - the upstream clipping bug appears to be fixed; "
+                + "this divergence should be revisited and byte parity restored"
+            );
 
-        // and our bytes deliberately differ from chdman's broken ones
-        Assert.NotEqual(File.ReadAllBytes(refPath), File.ReadAllBytes(oursPath));
+            // and our bytes deliberately differ from chdman's broken ones
+            Assert.NotEqual(refBytes, File.ReadAllBytes(oursPath));
+        }
     }
 
     [Theory]
