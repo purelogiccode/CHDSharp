@@ -162,7 +162,12 @@ public class CancellationTokenTests
     /// <summary>Runs a deep check whose progress handler cancels <paramref name="cts" /> mid-run.</summary>
     private static void AssertCancelledMidRun(string path, CancellationTokenSource cts)
     {
-        var progress = new Progress<ChdProgress>(_ => cts.Cancel());
+        // Use a synchronous IProgress instead of Progress<T>: Progress<T> dispatches reports to
+        // the thread pool, so on a fast machine the run can finish (and the CTS be disposed)
+        // before the callback executes — the test then either sees no OCE or crashes the test
+        // host with ObjectDisposedException from cts.Cancel(). Inline reporting makes the
+        // cancellation land deterministically while CheckFile is still running.
+        var progress = new InlineProgress<ChdProgress>(_ => cts.Cancel());
 
         using var fs = File.OpenRead(path);
         Assert.Throws<OperationCanceledException>(() =>
@@ -273,6 +278,22 @@ public class CancellationTokenTests
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
                 chd!.ReadAsync(0, buffer, 0, buffer.Length, CancelledToken())
             );
+        }
+    }
+
+    /// <summary>An <see cref="IProgress{T}" /> that reports on the caller's thread (no dispatch).</summary>
+    private sealed class InlineProgress<T> : IProgress<T>
+    {
+        private readonly Action<T> _report;
+
+        public InlineProgress(Action<T> report)
+        {
+            _report = report;
+        }
+
+        public void Report(T value)
+        {
+            _report(value);
         }
     }
 }

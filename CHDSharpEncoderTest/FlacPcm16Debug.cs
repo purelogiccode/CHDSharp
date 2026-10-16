@@ -44,6 +44,9 @@ public class FlacPcm16Debug : IDisposable
     [Fact]
     public void Pcm16_Flac_ByteIdenticalToChdman()
     {
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
+
         // battle pcm16 corpus (seed 1337) — replicate TestDataGenerator.Pcm16 exactly
         var source = Pcm16(512 * 1024, 1337);
 
