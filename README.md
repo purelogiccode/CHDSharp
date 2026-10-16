@@ -12,6 +12,10 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.4.5
+
+- **Multisession cue parity** - ports MAME's `REM SESSION` / `REM LEAD-IN` / `REM LEAD-OUT` / session-pregap layout rules (IsoBuster/ImgBurn single-bin trim + zero-filled inter-session gaps, Redump/DiscImageCreator synthesized lead-in/out and `.img` heuristic). Multisession cues now produce byte-identical CHDs to `chdman createcd`; malformed lead-out values are rejected with a clear error instead of being encoded as a wrong image. Verification: 3 chdman byte-parity fixtures + unit tests, suite 451/451.
+
 ## What's New in v1.4.4
 
 - **Redump multi-cue Dreamcast parity** - a `.cue` with `REM SINGLE-DENSITY AREA` / `REM HIGH-DENSITY AREA` markers (MAME's `is_gdicue`) now gets the full GD-ROM layout: pregaps move onto the previous track as split regions, the last single-density track pads up to LBA 45000, and the CHD is written with `CHGD` metadata. Verified byte-identical to `chdman createcd` on a real 1.19 GB Redump multi-cue, with a byte-perfect `chdman extractcd` round-trip of all three tracks.

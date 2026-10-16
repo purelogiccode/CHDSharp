@@ -71,6 +71,14 @@ public static class CdTocFlags
 {
     /// <summary>The disc is a GD-ROM; tracks use CHGD metadata and physical (LBA) offsets.</summary>
     public const uint GdRom = 0x00000001;
+
+    /// <summary>
+    ///     The cue describes more than one session (IsoBuster/ImgBurn/Redump REM SESSION
+    ///     extensions). Mirrors MAME's <c>CD_FLAG_MULTISESSION</c> (0x4; 0x2 is MAME's
+    ///     <c>CD_FLAG_GDROMLE</c>, not modeled here). Sessions are never persisted in CHD
+    ///     metadata — the flag only drives the session layout adjustments during parsing.
+    /// </summary>
+    public const uint Multisession = 0x00000004;
 }
 
 /// <summary>Describes a single track of a CD, as parsed from a CUE/GDI/ISO/TOC sheet.</summary>
@@ -147,6 +155,24 @@ public struct CdTrack
     ///     "REM SINGLE-DENSITY AREA" / "REM HIGH-DENSITY AREA" markers.
     /// </summary>
     public int MulticueArea;
+
+    /// <summary>Session number the track belongs to (0-based; 0 for single-session discs).</summary>
+    public int Session;
+
+    /// <summary>
+    ///     Lead-in frames for the track: declared by <c>REM LEAD-IN</c> or the session
+    ///     <c>REM PREGAP</c>, or -1 when absent. Used only by the multisession layout rules;
+    ///     never persisted in CHD metadata.
+    /// </summary>
+    public int LeadIn;
+
+    /// <summary>
+    ///     Lead-out frames for the track as declared by <c>REM LEAD-OUT</c>, or -1 when absent.
+    ///     During multisession resolution it can be rewritten from an absolute lead-out position
+    ///     to the duration between the lead-out and the next track, mirroring MAME's parse_cue.
+    ///     Used only by the multisession layout rules; never persisted in CHD metadata.
+    /// </summary>
+    public int LeadOut;
 
     /// <summary>Physical (LBA) frame offset of the track on the disc (GDI).</summary>
     public int PhysicalFrameOffset;

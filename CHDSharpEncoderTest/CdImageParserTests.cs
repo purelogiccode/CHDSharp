@@ -378,6 +378,201 @@ public class CdImageParserTests : IDisposable
         Assert.Equal(45000, toc.Tracks[2].PhysicalFrameOffset);
     }
 
+    // ----- multisession cues (REM SESSION / LEAD-IN / LEAD-OUT) -----
+
+    [Fact]
+    public void Cue_SingleBinMultisession_TrimsAndPadsInterSessionData()
+    {
+        WriteFile("disc.bin", new byte[2352 * 550]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SESSION 01
+            FILE "disc.bin" BINARY
+              TRACK 01 MODE2/2352
+                INDEX 01 00:00:00
+            REM LEAD-OUT 00:01:25
+            REM SESSION 02
+              TRACK 02 MODE2/2352
+                INDEX 01 00:02:00
+            """
+        );
+
+        var toc = CueParser.Parse(cue);
+
+        Assert.NotEqual(0u, toc.Flags & CdTocFlags.Multisession);
+        // the absolute lead-out (100 frames) trims track 1 from 150 to 100 frames and becomes
+        // the 50-frame duration to the next track; that gap is zero-filled on track 1 and
+        // skipped in the file for track 2
+        Assert.Equal(0, toc.Tracks[0].Session);
+        Assert.Equal(100, toc.Tracks[0].Frames);
+        Assert.Equal(50, toc.Tracks[0].PadFrames);
+        Assert.Equal(50, toc.Tracks[0].LeadOut);
+        Assert.Equal(1, toc.Tracks[1].Session);
+        Assert.Equal(400, toc.Tracks[1].Frames);
+        Assert.Equal(150L * 2352, toc.Tracks[1].FileOffset);
+    }
+
+    [Fact]
+    public void Cue_SingleBinMultisession_ImgFileKeepsDummyData()
+    {
+        WriteFile("disc.img", new byte[2352 * 550]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SESSION 01
+            FILE "disc.img" BINARY
+              TRACK 01 MODE2/2352
+                INDEX 01 00:00:00
+            REM LEAD-OUT 00:01:25
+            REM SESSION 02
+              TRACK 02 MODE2/2352
+                INDEX 01 00:02:00
+            """
+        );
+
+        var toc = CueParser.Parse(cue);
+
+        // DiscImageCreator .img images carry no dummy data: the lead-out still trims track 1,
+        // but the gap is not converted into pad frames and track 2 keeps reading it
+        Assert.Equal(100, toc.Tracks[0].Frames);
+        Assert.Equal(0, toc.Tracks[0].PadFrames);
+        Assert.Equal(450, toc.Tracks[1].Frames);
+        Assert.Equal(100L * 2352, toc.Tracks[1].FileOffset);
+    }
+
+    [Fact]
+    public void Cue_MultiBinMultisession_SynthesizesLeadInAndLeadOut()
+    {
+        WriteFile("t1.bin", new byte[2352 * 300]);
+        WriteFile("t2.bin", new byte[2352 * 300]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SESSION 01
+            FILE "t1.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            REM SESSION 02
+            FILE "t2.bin" BINARY
+              TRACK 02 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
+
+        var toc = CueParser.Parse(cue);
+
+        Assert.NotEqual(0u, toc.Flags & CdTocFlags.Multisession);
+        // standard values are synthesized: 1m30s lead-out for the first session, 1m00s lead-in
+        // for the new session's first track
+        Assert.Equal(6750, toc.Tracks[0].LeadOut);
+        Assert.Equal(4500, toc.Tracks[1].LeadIn);
+    }
+
+    [Fact]
+    public void Cue_MultiBinMultisession_SessionPregapFeedsLeadIn()
+    {
+        WriteFile("t1.bin", new byte[2352 * 300]);
+        WriteFile("t2.bin", new byte[2352 * 300]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SESSION 01
+            FILE "t1.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            REM SESSION 02
+            REM PREGAP 00:01:00
+            FILE "t2.bin" BINARY
+              TRACK 02 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
+
+        var toc = CueParser.Parse(cue);
+
+        // the session pregap becomes the new session's lead-in, so the standard 4500-frame
+        // lead-in is not synthesized
+        Assert.Equal(75, toc.Tracks[1].LeadIn);
+        Assert.Equal(6750, toc.Tracks[0].LeadOut);
+    }
+
+    [Fact]
+    public void Cue_MultiBinThreeSessions_LaterSessionsUseShorterLeadOut()
+    {
+        WriteFile("t1.bin", new byte[2352 * 300]);
+        WriteFile("t2.bin", new byte[2352 * 300]);
+        WriteFile("t3.bin", new byte[2352 * 300]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SESSION 01
+            FILE "t1.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            REM SESSION 02
+            FILE "t2.bin" BINARY
+              TRACK 02 MODE1/2352
+                INDEX 01 00:00:00
+            REM SESSION 03
+            FILE "t3.bin" BINARY
+              TRACK 03 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
+
+        var toc = CueParser.Parse(cue);
+
+        // sessions after the first use the shorter 30s lead-out
+        Assert.Equal(6750, toc.Tracks[0].LeadOut);
+        Assert.Equal(2250, toc.Tracks[1].LeadOut);
+        Assert.Equal(-1, toc.Tracks[2].LeadOut);
+        Assert.Equal(4500, toc.Tracks[1].LeadIn);
+        Assert.Equal(4500, toc.Tracks[2].LeadIn);
+    }
+
+    [Fact]
+    public void Cue_WithoutSessions_LeavesLeadValuesUnset()
+    {
+        WriteFile("game.bin", new byte[2352 * 20]);
+        var cue = WriteFile(
+            "disc.cue",
+            "FILE \"game.bin\" BINARY\n  TRACK 01 MODE1/2352\n    INDEX 01 00:00:00\n"
+        );
+
+        var toc = CueParser.Parse(cue);
+
+        Assert.Equal(0u, toc.Flags & CdTocFlags.Multisession);
+        Assert.Equal(-1, toc.Tracks[0].LeadIn);
+        Assert.Equal(-1, toc.Tracks[0].LeadOut);
+    }
+
+    [Fact]
+    public void Cue_MultisessionNegativeLayout_ThrowsInsteadOfEncodingGarbage()
+    {
+        WriteFile("disc.bin", new byte[2352 * 550]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SESSION 01
+            FILE "disc.bin" BINARY
+              TRACK 01 MODE2/2352
+                INDEX 01 00:00:00
+            REM SESSION 02
+              TRACK 02 MODE2/2352
+                INDEX 01 00:02:00
+            REM LEAD-OUT 00:00:20
+              TRACK 03 MODE2/2352
+                INDEX 01 00:04:00
+            """
+        );
+
+        // the lead-out (20 frames) lies before track 2's INDEX 00 (150 frames), so MAME's math
+        // would produce a negative track length; the parser rejects it instead of writing a
+        // silently wrong CHD
+        Assert.Throws<InvalidDataException>(() => CueParser.Parse(cue));
+    }
+
     [Fact]
     public void Dispatcher_Gdi_RoutesToGdiParser()
     {

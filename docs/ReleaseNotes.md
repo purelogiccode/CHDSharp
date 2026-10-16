@@ -1,5 +1,30 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.4.5
+
+Ports MAME's multisession cue handling (REM SESSION / LEAD-IN / LEAD-OUT / session pregap) — the older IsoBuster/ImgBurn/DiscImageCreator layout rules — so multisession cues that chdman converts produce the same CHD through the built-in encoder.
+
+### Multisession cue parity (IsoBuster / ImgBurn / Redump / DiscImageCreator)
+
+Cues describing more than one session (`REM SESSION n`) carry session lead-out/lead-in times and sometimes a session `REM PREGAP`. MAME's `parse_cue` uses them to lay the image out — the built-in parser previously ignored them, so those cues could be encoded with a different track layout than chdman.
+
+- `CueParser` now parses the REM session extensions; tracks carry `Session`, `LeadIn` and `LeadOut` (MAME's `track_input_info`), and `CdTocFlags.Multisession` mirrors `CD_FLAG_MULTISESSION`.
+- **Single-bin layouts** (IsoBuster/ImgBurn): an absolute `REM LEAD-OUT` trims the session's last track and the inter-session dummy data becomes zero-filled pad frames; the lead-out is rewritten to the duration to the next track.
+- **Multi-bin layouts** (Redump/DiscImageCreator): the standard lead-out (6750 frames for the first session, 2250 afterwards) and lead-in (4500 frames) are synthesized when the cue omits them; a session `REM PREGAP` is folded into the new session's lead-in.
+- The `.img` extension heuristic is replicated: DiscImageCreator images have no dummy data, so the gap stays part of the next track's data.
+- Malformed lead-out values that MAME's math would turn into negative lengths are rejected with a clear `InvalidDataException` instead of being encoded as a silently wrong image.
+- Verified byte-identical to `chdman createcd` for single-bin `.bin`, single-bin `.img` and multi-bin synthetic fixtures (`MultisessionCueChdmanValidationTests`); full suite 451/451.
+
+### NuGet Package
+
+```
+dotnet add package CHDSharp --version 1.4.5
+```
+
+Targets `net8.0`, `net9.0`, `net10.0`. Pure C# - zero native dependencies.
+
+> **Status:** prepared in source; not yet published to NuGet (1.4.4 remains the latest published version).
+
 ## CHDSharp v1.4.4
 
 Two field-reported cdrdao/Redump descriptor divergences from MAME fixed; the built-in encoder now converts those files byte-identically to `chdman`.

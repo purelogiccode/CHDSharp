@@ -21,6 +21,24 @@ public static class CueParser
     private const int HighDensityStartLba = 45000;
 
     /// <summary>
+    ///     Parses the numeric/time value of a REM extension line ("REM SESSION 02",
+    ///     "REM LEAD-OUT 00:30:00"). MAME's tokenizer yields 0 for a missing or garbage value;
+    ///     the built-in parser fails loudly instead, because a malformed session layout would
+    ///     otherwise be encoded as a silently wrong image.
+    /// </summary>
+    /// <param name="remText">The REM line text, after the "REM" keyword.</param>
+    /// <param name="rawLine">The raw line, for the error message.</param>
+    /// <returns>The parsed frame count (or session number).</returns>
+    private static int ParseRemValue(string remText, string rawLine)
+    {
+        var tokens = Tokenize(remText);
+        if (tokens.Count < 2)
+            throw new InvalidDataException($"Malformed REM command: {rawLine}");
+
+        return ParseMsfToFrames(tokens[1]);
+    }
+
+    /// <summary>
     ///     Parses a CUE sheet file into a table of contents.
     /// </summary>
     /// <param name="cueFilePath">Path to the .cue file.</param>
@@ -40,6 +58,14 @@ public static class CueParser
         var isGdRom = IsGdiCue(cueFilePath);
         var currentArea = SingleDensity;
 
+        // Multisession state (MAME's parse_cue): session number from REM SESSION, a pending
+        // session pregap, a pending lead-in for the next track, and whether the cue spans more
+        // than one data file (single-bin IsoBuster/ImgBurn vs multi-bin Redump/DiscImageCreator).
+        var isMultiBin = false;
+        var sessionNumber = 0;
+        var sessionPregap = 0;
+        var pendingLeadIn = -1;
+
         var toc = new CdToc { Flags = isGdRom ? CdTocFlags.GdRom : 0 };
         var tracks = toc.Tracks;
         CdTrack? currentTrack = null;
@@ -57,19 +83,59 @@ public static class CueParser
             {
                 case "REM":
                 {
-                    // "REM SINGLE-DENSITY AREA" / "REM HIGH-DENSITY AREA" select the density area
-                    // the following tracks belong to (MAME's parse_cue keeps the same state).
-                    if (isGdRom)
+                    // MAME's parse_cue reads the IsoBuster/ImgBurn/Redump REM extensions here:
+                    // session numbers, session pregaps, session lead-in/lead-out times, and the
+                    // Redump multi-cue density-area markers.
+                    var text = rawLine.TrimStart();
+                    if (!text.StartsWith("REM", StringComparison.Ordinal))
+                        break;
+
+                    text = text[3..].TrimStart();
+
+                    if (text.StartsWith("SESSION", StringComparison.Ordinal))
                     {
-                        var text = rawLine.TrimStart();
-                        if (text.StartsWith("REM", StringComparison.Ordinal))
+                        // IsoBuster extension: "REM SESSION n" (1-based in the file).
+                        sessionNumber = ParseRemValue(text, rawLine) - 1;
+                        if (sessionNumber >= 1)
+                            toc.Flags |= CdTocFlags.Multisession;
+                    }
+                    else if (
+                        (toc.Flags & CdTocFlags.Multisession) != 0
+                        && text.StartsWith("PREGAP", StringComparison.Ordinal)
+                    )
+                    {
+                        // Session pregap (Redump/DiscImageCreator extension): folded into the
+                        // lead-in of the session's first track.
+                        sessionPregap = ParseRemValue(text, rawLine);
+                    }
+                    else if (text.StartsWith("LEAD-OUT", StringComparison.Ordinal))
+                    {
+                        // IsoBuster/ImgBurn (single bin): absolute lead-out position;
+                        // Redump/DiscImageCreator (multiple bins): duration of the lead-out.
+                        if (currentTrack is { } leadOutTrack)
                         {
-                            text = text[3..].TrimStart();
-                            if (text.StartsWith("SINGLE-DENSITY AREA", StringComparison.Ordinal))
-                                currentArea = SingleDensity;
-                            else if (text.StartsWith("HIGH-DENSITY AREA", StringComparison.Ordinal))
-                                currentArea = HighDensity;
+                            leadOutTrack.LeadOut = ParseRemValue(text, rawLine);
+                            currentTrack = leadOutTrack;
                         }
+                    }
+                    else if (text.StartsWith("LEAD-IN", StringComparison.Ordinal))
+                    {
+                        // Consumed by the next TRACK ("use previously saved lead-in value").
+                        pendingLeadIn = ParseRemValue(text, rawLine);
+                    }
+                    else if (
+                        isGdRom
+                        && text.StartsWith("SINGLE-DENSITY AREA", StringComparison.Ordinal)
+                    )
+                    {
+                        currentArea = SingleDensity;
+                    }
+                    else if (
+                        isGdRom
+                        && text.StartsWith("HIGH-DENSITY AREA", StringComparison.Ordinal)
+                    )
+                    {
+                        currentArea = HighDensity;
                     }
 
                     break;
@@ -80,7 +146,24 @@ public static class CueParser
                     if (tokens.Count < 3)
                         throw new InvalidDataException($"Malformed FILE command: {rawLine}");
 
-                    lastFile = Path.Combine(baseDir, tokens[1]);
+                    // MAME tracks whether the cue spans more than one data file: the multisession
+                    // lead-out padding rules differ between single-bin (IsoBuster/ImgBurn, dummy
+                    // data between the lead-out and the next session) and multi-bin
+                    // (Redump/DiscImageCreator, sessions in separate files).
+                    var resolvedFile = Path.Combine(baseDir, tokens[1]);
+                    if (!isMultiBin)
+                    {
+                        var previousFile = lastFile;
+                        lastFile = resolvedFile;
+                        isMultiBin =
+                            previousFile.Length > 0
+                            && !string.Equals(lastFile, previousFile, StringComparison.Ordinal);
+                    }
+                    else
+                    {
+                        lastFile = resolvedFile;
+                    }
+
                     switch (tokens[2])
                     {
                         case "BINARY":
@@ -133,8 +216,21 @@ public static class CueParser
                         PgDataSize = 0,
                         Index00 = -1,
                         Index01 = -1,
-                        MulticueArea = isGdRom ? currentArea : 0
+                        MulticueArea = isGdRom ? currentArea : 0,
+                        Session = sessionNumber,
+                        LeadIn = pendingLeadIn,
+                        LeadOut = -1
                     };
+
+                    // "use previously saved lead-in value" (MAME): a REM LEAD-IN only applies to
+                    // the next TRACK, and a session REM PREGAP folds into that same lead-in.
+                    pendingLeadIn = -1;
+                    if (sessionPregap != 0)
+                    {
+                        track.LeadIn =
+                            track.LeadIn == -1 ? sessionPregap : track.LeadIn + sessionPregap;
+                        sessionPregap = 0;
+                    }
 
                     ParseTrackType(tokens[2], ref track);
                     if (tokens.Count >= 4)
@@ -247,7 +343,7 @@ public static class CueParser
         if (currentTrack is { } last)
             tracks.Add(last);
 
-        ResolveTrackLengths(tracks);
+        ResolveTrackLengths(tracks, isMultiBin, (toc.Flags & CdTocFlags.Multisession) != 0);
         if (isGdRom)
             ApplyGdRomLayout(tracks);
 
@@ -302,7 +398,22 @@ public static class CueParser
         }
     }
 
-    private static void ResolveTrackLengths(List<CdTrack> tracks)
+    /// <summary>
+    ///     Resolves each track's length and file offset, mirroring MAME's parse_cue length pass
+    ///     including its multisession handling: for single-bin multisession cues the declared
+    ///     lead-out trims the session's last track and the inter-session dummy data becomes
+    ///     zero-filled pad frames; for multi-bin cues standard lead-in/lead-out values are
+    ///     synthesized when the cue omits them. A negative result is rejected with a clear error
+    ///     rather than encoded as a silently wrong image.
+    /// </summary>
+    /// <param name="tracks">The parsed tracks, in track order.</param>
+    /// <param name="isMultiBin">True when the cue references more than one data file.</param>
+    /// <param name="isMultisession">True when REM SESSION declared more than one session.</param>
+    private static void ResolveTrackLengths(
+        List<CdTrack> tracks,
+        bool isMultiBin,
+        bool isMultisession
+    )
     {
         for (var i = 0; i < tracks.Count; i++)
         {
@@ -315,7 +426,8 @@ public static class CueParser
             if (track.TrackType == CdTrackType.Audio)
                 track.Swap = true;
 
-            // WAV tracks already have their length and offset resolved
+            // WAV tracks already have their length and offset resolved. Like MAME, they also
+            // skip the multisession adjustments below (its parse_cue `continue`s here).
             if (track.FileOffset != 0)
             {
                 tracks[i] = track;
@@ -365,7 +477,80 @@ public static class CueParser
                 track.FileOffset = 0;
             }
 
+            if (isMultisession)
+            {
+                if (isMultiBin)
+                {
+                    // sessions live in separate files: synthesize the standard lead-out
+                    // (1m30s for the first session, 0m30s afterwards) and lead-in (1m00s)
+                    if (
+                        track.LeadOut == -1
+                        && i + 1 < tracks.Count
+                        && track.Session != tracks[i + 1].Session
+                    )
+                        track.LeadOut = track.Session == 0 ? 6750 : 2250;
+
+                    if (track.LeadIn == -1 && i > 0 && track.Session != tracks[i - 1].Session)
+                        track.LeadIn = 4500;
+                }
+                else
+                {
+                    // single-bin: the declared lead-out is the start of the lead-out, so the
+                    // session's last track is trimmed to it and the lead-out becomes the
+                    // duration between the lead-out and the next track's pregap
+                    if (track.LeadOut != -1)
+                    {
+                        var endFrames = track.LeadOut - track.Index00;
+                        if (track.Frames >= endFrames)
+                        {
+                            track.Frames = endFrames;
+
+                            if (i + 1 < tracks.Count)
+                                track.LeadOut = tracks[i + 1].Index00 - track.LeadOut;
+                        }
+                    }
+
+                    if (i > 0 && tracks[i - 1].LeadOut != -1)
+                    {
+                        // the inter-session dummy data of the previous track becomes an explicit
+                        // zero-filled gap, and the next session's data starts after it. Files
+                        // with a .img extension have no dummy data (DiscImageCreator) and keep
+                        // their layout untouched (MAME's extension heuristic).
+                        var previous = tracks[i - 1];
+                        var previousName = previous.FileName ?? string.Empty;
+                        if (!previousName.EndsWith(".img", StringComparison.OrdinalIgnoreCase))
+                        {
+                            previous.PadFrames += previous.LeadOut;
+                            tracks[i - 1] = previous;
+                            track.Frames -= previous.LeadOut;
+                            track.FileOffset +=
+                                (long)previous.LeadOut * (track.DataSize + track.SubSize);
+                        }
+                    }
+                }
+            }
+
             tracks[i] = track;
+        }
+
+        // A malformed session layout must not be encoded as a silently wrong image: MAME's math
+        // can go negative on inconsistent lead-out values, which would corrupt the output.
+        foreach (var track in tracks)
+        {
+            if (track.Frames < 0)
+                throw new InvalidDataException(
+                    $"Track {track.Number}: the session lead-out values leave a negative length ({track.Frames} frames); the cue's REM SESSION/LEAD-OUT values do not match the image."
+                );
+
+            if (track.PadFrames < 0)
+                throw new InvalidDataException(
+                    $"Track {track.Number}: the session lead-out values leave a negative gap ({track.PadFrames} frames); the cue's REM SESSION/LEAD-OUT values do not match the image."
+                );
+
+            if (track.FileOffset < 0)
+                throw new InvalidDataException(
+                    $"Track {track.Number}: the session lead-out values leave a negative file offset; the cue's REM SESSION/LEAD-OUT values do not match the image."
+                );
         }
     }
 
