@@ -1,3 +1,9 @@
+[![CI](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
+[![Tests](https://img.shields.io/badge/tests-xUnit-brightgreen)](#test-structure)
+[![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
+
 # CHDSharpTest
 
 **xUnit unit and corpus test suite for CHDSharp — tests header parsing, CRC checksums, and full decompression against a deterministic 30-file CHD corpus (V1–V5, all codecs).**

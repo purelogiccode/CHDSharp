@@ -1,5 +1,10 @@
-[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![CI](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
+[![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
+[![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
 
 # CHDSharpLib
 

@@ -1,3 +1,10 @@
+[![CI](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/purelogiccode/CHDSharp?color=blue)](https://github.com/purelogiccode/CHDSharp/releases/latest)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_%28WPF%29-blueviolet)](https://dotnet.microsoft.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)](../README.md#building)
+[![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
+[![License](https://img.shields.io/badge/license-GPL--3.0--only-blue)](../LICENSE.txt)
+
 # CHDSharpTester
 
 **WPF desktop application for batch-testing CHD files using the CHDSharp library and MAME chdman.**
