@@ -53,7 +53,7 @@ internal static class VersionCheckService
             if (latestVersion <= currentVersion)
                 return;
 
-            var assetName = GetExpectedAssetName();
+            var assetName = GetExpectedAssetName(latestVersion);
             var downloadUrl = release
                 .Assets?.FirstOrDefault(a =>
                     string.Equals(a.Name, assetName, StringComparison.OrdinalIgnoreCase)
@@ -85,16 +85,27 @@ internal static class VersionCheckService
         return Version.TryParse(tag, out var v) ? v : null;
     }
 
-    private static string GetExpectedAssetName()
+    /// <summary>
+    ///     Builds the release-asset name for the current platform, matching the bundles
+    ///     produced by <c>scripts/package-release.ps1</c> and attached to GitHub releases:
+    ///     <c>CHDSharp_{os}-{arch}_v{version}.zip</c> (e.g. <c>CHDSharp_win-x64_v1.5.0.zip</c>).
+    /// </summary>
+    /// <param name="version">The release version whose bundle should be looked up.</param>
+    /// <returns>The expected asset file name for this OS and CPU architecture.</returns>
+    private static string GetExpectedAssetName(Version version)
     {
+        var os = OperatingSystem.IsLinux()
+            ? "linux"
+            : OperatingSystem.IsMacOS()
+                ? "osx"
+                : "win";
         var arch = RuntimeInformation.OSArchitecture switch
         {
-            Architecture.Arm64 => "win-arm64",
-            Architecture.X64 => "win-x64",
-            Architecture.X86 => "win-x86",
-            _ => "win-x64"
+            Architecture.Arm64 => "arm64",
+            Architecture.X86 => "x86",
+            _ => "x64"
         };
 
-        return $"CHDSharp_{arch}_v{Assembly.GetEntryAssembly()?.GetName().Version}.zip";
+        return $"CHDSharp_{os}-{arch}_v{version}.zip";
     }
 }
