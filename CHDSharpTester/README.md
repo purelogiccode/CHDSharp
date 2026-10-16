@@ -152,4 +152,4 @@ full CLI parity) see [docs/chdman-parity.md](../docs/chdman-parity.md).
 ---
 
 For unit tests (header parsing, CRC checksums, error paths) that require no external files, see `CHDSharpTest`.
-For regenerating the deterministic test corpus, see `CHDSharpTestGen`.
+For regenerating the deterministic test corpus, see `CHDSharpTestDataGeneration`.

@@ -170,10 +170,10 @@ Every producible combination is cross-checked against `chdman` (MAME 0.289) by `
 |---------|---------|
 | `CHDSharpLib` | The library itself (this wiki documents it). Includes the encoder subsystem (`CHDSharp.Encoder`). |
 | `CHDSharpCli` | Command-line CHD manager (binary: `CHDSharp`). Full `chdman` subcommand parity. |
-| `CHDSharpTest` | xUnit unit + corpus test suite (602 tests, 30 deterministic CHD files). |
-| `CHDSharpEncoderTest` | xUnit encoder suite (434 tests) with chdman cross-validation. |
+| `CHDSharpTest` | xUnit unit + corpus test suite (4,214 tests per target framework, 30 deterministic CHD files). |
+| `CHDSharpEncoderTest` | xUnit encoder suite (451 tests) with chdman cross-validation. |
 | `CHDSharpBattleTest` | Battle harness: 2907/2907 (deterministic) + 3003/3003 (real-world) checks vs `chdman`. |
-| `CHDSharpTestGen` | Deterministic corpus generator (drives vintage `chdman` binaries). |
+| `CHDSharpTestDataGeneration` | Deterministic corpus generator (drives vintage `chdman` binaries). |
 | `CHDSharpTester` | WPF interactive batch verifier cross-checked against `chdman`. |
 
 ---

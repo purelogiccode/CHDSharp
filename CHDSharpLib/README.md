@@ -14,6 +14,12 @@
 
 ---
 
+## What's New in v1.5.0
+
+- **Release pipeline** - v1.5.0 ships from a single version tag via GitHub Actions: six platform CLI bundles (`CHDSharp_<rid>_v1.5.0.zip`), the NuGet package, the wiki and the docs site (`scripts/package-release.ps1`, `scripts/prepare-wiki.ps1`, `.github/workflows/release.yml`).
+- **Update-check fix** - the CLI's "new version available" notice now resolves the direct per-platform bundle download (asset name built from the release version plus OS and architecture).
+- **No library API changes** in this release - the package is unchanged apart from the version and a refreshed README.
+
 ## What's New in v1.4.5
 
 - **Multisession cue parity** - ports MAME's `REM SESSION` / `REM LEAD-IN` / `REM LEAD-OUT` / session-pregap layout rules (IsoBuster/ImgBurn single-bin trim + zero-filled inter-session gaps, Redump/DiscImageCreator synthesized lead-in/out and `.img` heuristic). Multisession cues now produce byte-identical CHDs to `chdman createcd`; malformed lead-out values are rejected with a clear error instead of being encoded as a wrong image. Verification: 3 chdman byte-parity fixtures + unit tests, suite 451/451.

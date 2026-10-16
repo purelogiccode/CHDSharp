@@ -4,11 +4,11 @@
 [![Corpus](https://img.shields.io/badge/corpus-30%20fixtures%20V1--V5-brightgreen)](../CHDSharpTest/TestData/manifest.json)
 [![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
 
-# CHDSharpTestGen
+# CHDSharpTestDataGeneration
 
 **Deterministic CHD test corpus generator for the CHDSharp xUnit test suite.**
 
-> **v1.4.2** — targets `net8.0` / `net9.0` / `net10.0`. Generates 30-file corpus for V1–V5 via MAME 0.289 `chdman`.
+> **v1.5.0** — targets `net8.0` / `net9.0` / `net10.0`. Generates the 30-file corpus for V1–V5 via MAME 0.289 `chdman`.
 
 Generates the 30-file CHD corpus in `CHDSharpTest/TestData/`, covering every format version (V1–V5), all compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants), every map type, and parent/child chains. All source images are built deterministically (seeded PRNG) so regenerating the corpus produces byte-identical output.
 
@@ -18,13 +18,13 @@ Generates the 30-file CHD corpus in `CHDSharpTest/TestData/`, covering every for
 
 ```bash
 # Generate the full corpus (output → ../CHDSharpTest/TestData/)
-dotnet run --project CHDSharpTestGen
+dotnet run --project CHDSharpTestDataGeneration
 
 # AVI passthrough test for chdman's aviio reader
-dotnet run --project CHDSharpTestGen -- --avitest
+dotnet run --project CHDSharpTestDataGeneration -- --avitest
 
 # Debug a single FLAC-hunked V5 CHD
-dotnet run --project CHDSharpTestGen -- --hunkdebug path\to\v5_flac.chd
+dotnet run --project CHDSharpTestDataGeneration -- --hunkdebug path\to\v5_flac.chd
 ```
 
 ### Prerequisites
@@ -89,7 +89,7 @@ Four vintage chdman binaries must be placed in `CHDSharpTest/chdman/`:
 ## Architecture
 
 ```
-CHDSharpTestGen/
+CHDSharpTestDataGeneration/
 ├── Program.cs          — Entry point, corpus generation pipeline, manifest writing
 ├── SourceData.cs       — Deterministic source image builder (raw, CD, AVI)
 ├── DetRng.cs           — xorshift64* deterministic PRNG
@@ -159,5 +159,5 @@ No NuGet package is produced — this tool is internal to the CHDSharp test infr
 ## Building
 
 ```bash
-dotnet build CHDSharpTestGen\CHDSharpTestGen.csproj -c Release
+dotnet build CHDSharpTestDataGeneration\CHDSharpTestDataGeneration.csproj -c Release
 ```

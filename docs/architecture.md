@@ -14,10 +14,10 @@ This page describes the solution layout and the internal design of the library.
 |---------|------|---------|
 | `CHDSharpLib` | Library | The CHD reader and encoder (NuGet package `CHDSharp`). Everything in this wiki's API pages lives here. The encoder subsystem (`CHDSharp.Encoder` namespace) creates V5 CHDs from raw binaries and CD images (CUE/GDI/ISO/TOC/NRG) with `chdman`-matched output — CRC16, SHA1, Deflate wrappers, V5 map compressor (`MapCompressor`, `Huffman16_8`), V5 header writer, all 10 writable codecs (zlib/zstd/lzma/huff/flac/cdzl/cdlz/cdzs/cdfl + avhu + none), SELF dedup, delta parents, CHT2/CHGD/GDDD/DVD metadata. 100% pure C#. See [Encoder](encoder.md). |
 | `CHDSharpCli` | Console | CLI CHD manager (binary: `CHDSharp`). Full `chdman` subcommand parity. |
-| `CHDSharpTest` | xUnit | Unit + corpus tests (602 tests, 30 CHD fixtures). |
-| `CHDSharpTestGen` | Console | Deterministic corpus generator driving vintage `chdman`/`hdcomp` binaries. |
+| `CHDSharpTest` | xUnit | Unit + corpus tests (4,214 tests per target framework, 30 CHD fixtures). |
+| `CHDSharpTestDataGeneration` | Console | Deterministic corpus generator driving vintage `chdman`/`hdcomp` binaries. |
 | `CHDSharpTester` | WPF | Interactive batch verification, cross-checked against `chdman`. |
-| `CHDSharpEncoderTest` | xUnit | Encoder tests (434) with chdman cross-validation. |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (451) with chdman cross-validation. |
 | `CHDSharpBattleTest` | Console | Battle harness: 2907/2907 (deterministic) + 3003/3003 (real-world) checks vs `chdman` on CHD corpora. |
 
 

@@ -1,5 +1,54 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.5.0
+
+First release produced end-to-end by GitHub Actions: one tag builds the six platform bundles, creates the GitHub release, publishes the NuGet package, and syncs the wiki and documentation site.
+
+### Release pipeline (`.github/workflows/release.yml`)
+
+Tag-triggered (`v*`), with a guard that fails when the tag does not match `Directory.Build.props`. Three jobs:
+
+- **Bundles & GitHub release** - `scripts/package-release.ps1` publishes the CLI for `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64` and `osx-arm64` as **framework-dependent single-file binaries** (the .NET runtime is not embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`, zips them as `CHDSharp_<rid>_v<version>.zip`, and attaches them to the GitHub release.
+- **NuGet publish** - packs `CHDSharpLib` and pushes to nuget.org; skips versions that are already published (idempotent re-runs).
+- **Wiki & Pages** - regenerates the wiki pages from `docs/` via `scripts/prepare-wiki.ps1` (including the wiki side menu) and pushes them to the wiki repository; requests a Pages rebuild.
+
+GitHub releases now ship **only the CLI**; the WPF Tester remains source-only.
+
+### Fixed: CLI update check resolves the platform bundle
+
+`VersionCheckService` built the expected release-asset name from the *currently running* version and mapped every OS to `win-*`, so the direct download link could never match (historical assets were also named `CHDSharpCli_...`). It now looks up `CHDSharp_{os}-{arch}_v{releaseVersion}.zip` - the exact names the release ships - and falls back to the releases page when the platform has no bundle.
+
+### Documentation
+
+- The `docs/` folder is deployed twice: as the Jekyll site (GitHub Pages) and as the GitHub wiki, with a shared side-menu structure.
+- Dark theme by default on the documentation site (persisted light/dark toggle).
+
+### Housekeeping
+
+- Test-spawned CLI runs set `CHDSHARP_NO_BUG_REPORTS=1` / `CHDSHARP_NO_TELEMETRY=1` (CI workflow and the test harness), so local full-suite runs no longer file bug reports.
+- Badges (CI, release, NuGet, platform, parity, license) on every README.
+
+### Download
+
+| Bundle | Platform | Architecture |
+|--------|----------|--------------|
+| `CHDSharp_win-x64_v1.5.0.zip` | Windows | x64 |
+| `CHDSharp_win-arm64_v1.5.0.zip` | Windows | ARM64 |
+| `CHDSharp_linux-x64_v1.5.0.zip` | Linux | x64 |
+| `CHDSharp_linux-arm64_v1.5.0.zip` | Linux | ARM64 |
+| `CHDSharp_osx-x64_v1.5.0.zip` | macOS | x64 (Intel) |
+| `CHDSharp_osx-arm64_v1.5.0.zip` | macOS | ARM64 (Apple Silicon) |
+
+Framework-dependent single-file builds; requires the .NET 10 runtime.
+
+### NuGet Package
+
+```
+dotnet add package CHDSharp --version 1.5.0
+```
+
+Targets `net8.0`, `net9.0`, `net10.0`. Pure C# - zero native dependencies.
+
 ## CHDSharp v1.4.5
 
 Ports MAME's multisession cue handling (REM SESSION / LEAD-IN / LEAD-OUT / session pregap) — the older IsoBuster/ImgBurn/DiscImageCreator layout rules — so multisession cues that chdman converts produce the same CHD through the built-in encoder.
@@ -23,7 +72,7 @@ dotnet add package CHDSharp --version 1.4.5
 
 Targets `net8.0`, `net9.0`, `net10.0`. Pure C# - zero native dependencies.
 
-> **Status:** prepared in source; not yet published to NuGet (1.4.4 remains the latest published version).
+> **NuGet:** published - `dotnet add package CHDSharp --version 1.4.5`.
 
 ## CHDSharp v1.4.4
 

@@ -9,9 +9,11 @@ BenchmarkDotNet.Artifacts/
 CHDSharpEncoder/CHDInfo.md
 CHDSharpEncoder/EncoderPlan.md
 CHDSharpEncoderTest/TestResults/
-whatsnew.md
 .aider*
 References/FutureEnhancements.md
 
 # Battle-test artifacts
 TestResults/
+
+# Release packaging / wiki staging
+artifacts/

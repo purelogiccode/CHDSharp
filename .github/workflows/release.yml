@@ -1,0 +1,136 @@
+# Builds and publishes a CHDSharp release from a version tag:
+#   - six platform bundles (framework-dependent single-file CLI) attached to the GitHub release
+#   - the CHDSharp NuGet package
+#   - the docs/ folder synced to the GitHub wiki (and a Pages rebuild request)
+#
+# Assets are named CHDSharp_<os>-<arch>_v<version>.zip - the exact names the CLI's
+# built-in update check (VersionCheckService) looks up via the GitHub releases API.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bundles:
+    name: Bundles & GitHub release
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Verify tag matches Directory.Build.props
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = [regex]::Match((Get-Content Directory.Build.props -Raw), "<Version>([^<]+)</Version>").Groups[1].Value
+          if ($tag -ne "v$version") { throw "Tag '$tag' does not match version 'v$version' in Directory.Build.props" }
+          Write-Host "Releasing v$version"
+
+      - name: Build release bundles
+        shell: pwsh
+        run: ./scripts/package-release.ps1 -OutputPath dist
+
+      - name: Create GitHub release and upload bundles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          ver="${tag#v}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --title "CHDSharp v$ver" --notes-file WhatsNew.md
+          fi
+          gh release upload "$tag" dist/*.zip --clobber
+          gh release view "$tag" --json url,assets --jq '.url, (.assets[]?.name)'
+
+  nuget:
+    name: NuGet publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDKs (8.0, 9.0, 10.0)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Pack and push to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+          version=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props | head -1)
+          if curl -fsS -o /dev/null "https://api.nuget.org/v3-flatcontainer/chdsharp/$version/chdsharp.$version.nupkg"; then
+            echo "CHDSharp $version is already published - skipping"
+            exit 0
+          fi
+          if [ -z "${NUGET_API_KEY:-}" ]; then
+            echo "::error::NUGET_API_KEY secret is not set"
+            exit 1
+          fi
+          dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
+          dotnet nuget push "CHDSharpLib/bin/Release/CHDSharp.$version.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+
+  wiki:
+    name: Wiki & Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare wiki pages from docs/
+        shell: pwsh
+        run: ./scripts/prepare-wiki.ps1 -OutputPath wiki-content
+
+      - name: Push wiki pages
+        env:
+          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WIKI_TOKEN:-}" ]; then
+            echo "::error::WIKI_TOKEN secret is not set"
+            exit 1
+          fi
+          git clone "https://x-access-token:${WIKI_TOKEN}@github.com/purelogiccode/CHDSharp.wiki.git" wiki-repo
+          cp -f wiki-content/*.md wiki-repo/
+          cd wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki is already up to date"
+          else
+            git commit -m "wiki: sync from docs/ (${GITHUB_REF_NAME})"
+            git push
+          fi
+
+      - name: Request Pages rebuild
+        env:
+          GH_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: gh api -X POST repos/purelogiccode/CHDSharp/pages/builds --jq '.status'

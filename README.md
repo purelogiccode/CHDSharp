@@ -18,6 +18,14 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.5.0
+
+- **First fully automated release** - one tag builds the six platform bundles, the GitHub release, the NuGet package, the wiki and the docs site (see `.github/workflows/release.yml` and `scripts/package-release.ps1`).
+- **Fixed built-in update check** - the CLI now links directly to the bundle for your platform (`CHDSharp_<os>-<arch>_v<version>.zip`); it previously looked up an asset name that could never match and always fell back to the releases page.
+- **Download the CLI** - bundles for Windows/Linux/macOS on x64 and ARM64 are attached to every [release](https://github.com/purelogiccode/CHDSharp/releases/latest); each contains a framework-dependent single-file binary plus `LICENSE.txt`, `README.md` and `WhatsNew.md` (requires the .NET 10 runtime).
+- **Documentation** - the `docs/` folder is now published twice: as the [documentation site](https://purelogiccode.github.io/CHDSharp/) and as the [GitHub wiki](https://github.com/purelogiccode/CHDSharp/wiki), both with the same side menu; dark theme by default.
+- **Housekeeping** - test-spawned CLI runs no longer file bug reports; badges on every README.
+
 ## What's New in v1.4.5
 
 - **Multisession cue parity** - ports MAME's `REM SESSION` / `REM LEAD-IN` / `REM LEAD-OUT` / session-pregap layout rules (IsoBuster/ImgBurn single-bin trim + zero-filled inter-session gaps, Redump/DiscImageCreator synthesized lead-in/out and `.img` heuristic). Multisession cues now produce byte-identical CHDs to `chdman createcd`; malformed lead-out values are rejected with a clear error instead of being encoded as a wrong image. Verification: 3 chdman byte-parity fixtures + unit tests, suite 451/451.
@@ -78,6 +86,8 @@ dotnet add package CHDSharp
 ```
 
 Targets `net8.0`, `net9.0`, and `net10.0`. Zero native dependencies — every codec (zlib, lzma, huffman, flac, zstd, AVHuff) is implemented in pure C#.
+
+Prebuilt CLI bundles for Windows, Linux and macOS (x64 + ARM64) are attached to each [release](https://github.com/purelogiccode/CHDSharp/releases/latest) — framework-dependent single-file binaries that require the [.NET 10 runtime](https://dotnet.microsoft.com/download/dotnet/10.0). See [WhatsNew.md](WhatsNew.md) for what changed in the latest release.
 
 ---
 
@@ -571,11 +581,11 @@ The full wiki lives in [`docs/`](docs/README.md):
 
 | Project | Type | Description |
 |---------|------|-------------|
-| `CHDSharpTest` | xUnit | Unit + corpus tests (602 tests, 30 CHD fixtures) |
-| `CHDSharpEncoderTest` | xUnit | Encoder tests (434 tests, chdman cross-validation) |
+| `CHDSharpTest` | xUnit | Unit + corpus tests (4,214 tests per TFM, 30 CHD fixtures) |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (451 tests, chdman cross-validation) |
 | `CHDSharpBattleTest` | Console | Battle harness: 2907/2907 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
-| `CHDSharpTestGen` | Console | Deterministic corpus generator |
+| `CHDSharpTestDataGeneration` | Console | Deterministic corpus generator |
 
 ```bash
 # Run all tests
@@ -591,7 +601,7 @@ dotnet run --project CHDSharpBattleTest
 dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
 
 # Regenerate corpus (requires chdman binaries)
-dotnet run --project CHDSharpTestGen
+dotnet run --project CHDSharpTestDataGeneration
 ```
 
 ---
@@ -638,7 +648,7 @@ CHDSharp/
 ├── CHDSharpTest/           Unit + corpus tests
 ├── CHDSharpEncoderTest/    Encoder tests
 ├── CHDSharpTester/         WPF interactive tester
-├── CHDSharpTestGen/        Corpus generator
+├── CHDSharpTestDataGeneration/  Corpus generator
 ├── CHDSharpBench/          Benchmarks
 ├── CHDSharpBattleTest/     Battle test harness
 ├── VendoredZLib/           Pure C# zlib port
