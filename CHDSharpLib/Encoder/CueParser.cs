@@ -352,7 +352,9 @@ public static class CueParser
 
     /// <summary>
     ///     Converts an MM:SS:FF (or bare frame count) token into a frame count.
-    ///     Matches MAME's <c>msf_to_frames</c>.
+    ///     Mirrors MAME's <c>msf_to_frames</c> for well-formed values; malformed tokens throw
+    ///     instead of producing MAME's silent partial parse (a 2-part "MM:SS" time or garbage
+    ///     would otherwise be encoded as a silently mistimed disc).
     /// </summary>
     public static int ParseMsfToFrames(string token)
     {
@@ -394,6 +396,8 @@ public static class CueParser
                      ):
                 return minutes * 60 * 75 + seconds * 75 + frame;
             default:
+                // Intentionally stricter than MAME (which reads "MM:SS" as MM:SS:00 and
+                // garbage as 0): silently mis-timing a disc is worse than failing loudly.
                 throw new InvalidDataException($"Invalid MSF time format [{token}]");
         }
     }
