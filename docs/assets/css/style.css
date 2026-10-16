@@ -1,17 +1,62 @@
+/* CHDSharp docs theme — dark is the default; html[data-theme="light"] opts into light. */
+
 * { box-sizing: border-box; }
 
 html, body { margin: 0; padding: 0; }
+
+:root {
+  color-scheme: dark;
+
+  --bg: #0d1117;
+  --bg-sidebar: #010409;
+  --bg-elevated: #161b22;
+  --bg-hover: #21262d;
+  --bg-active: rgba(56, 139, 253, 0.15);
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-heading: #f0f6fc;
+  --text-muted: #8b949e;
+  --link: #58a6ff;
+  --link-hover: #79c0ff;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --bg-sidebar: #f6f8fa;
+  --bg-elevated: #f6f8fa;
+  --bg-hover: #eaeef2;
+  --bg-active: #ddf4ff;
+  --border: #d8dee4;
+  --text: #24292f;
+  --text-heading: #1f2328;
+  --text-muted: #57606a;
+  --link: #0969da;
+  --link-hover: #0550ae;
+}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   font-size: 16px;
   line-height: 1.6;
-  color: #24292f;
-  background: #fff;
+  color: var(--text);
+  background: var(--bg);
 }
 
-a { color: #0969da; text-decoration: none; }
-a:hover { text-decoration: underline; }
+body,
+.sidebar,
+.theme-toggle,
+.markdown-body pre,
+.markdown-body code,
+.markdown-body kbd,
+.markdown-body table th,
+.markdown-body table tr:nth-child(2n) {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); text-decoration: underline; }
 
 .page { display: flex; min-height: 100vh; }
 
@@ -19,8 +64,8 @@ a:hover { text-decoration: underline; }
 .sidebar {
   width: 264px;
   flex-shrink: 0;
-  background: #f6f8fa;
-  border-right: 1px solid #d8dee4;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
   padding: 24px 0;
   position: sticky;
   top: 0;
@@ -28,10 +73,33 @@ a:hover { text-decoration: underline; }
   overflow-y: auto;
 }
 
-.brand { padding: 0 20px 20px; border-bottom: 1px solid #d8dee4; margin-bottom: 12px; }
-.brand-name { font-size: 20px; font-weight: 700; color: #24292f; display: block; }
-.brand-name:hover { text-decoration: none; color: #0969da; }
-.tagline { font-size: 13px; color: #57606a; }
+.brand { position: relative; padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.brand-name { font-size: 20px; font-weight: 700; color: var(--text-heading); display: block; }
+.brand-name:hover { text-decoration: none; color: var(--link); }
+.tagline { font-size: 13px; color: var(--text-muted); }
+
+.theme-toggle {
+  position: absolute;
+  top: 0;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.theme-toggle:hover { background: var(--bg-hover); border-color: var(--link); }
+.theme-toggle .icon-moon { display: none; }
+html[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+html[data-theme="light"] .theme-toggle .icon-moon { display: inline; }
 
 .nav-heading {
   margin: 16px 20px 4px;
@@ -39,7 +107,7 @@ a:hover { text-decoration: underline; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #57606a;
+  color: var(--text-muted);
 }
 
 .nav-list { list-style: none; margin: 0; padding: 0; }
@@ -48,15 +116,15 @@ a:hover { text-decoration: underline; }
   display: block;
   padding: 5px 20px;
   font-size: 14px;
-  color: #24292f;
+  color: var(--text);
   border-left: 3px solid transparent;
 }
-.nav-list a:hover { text-decoration: none; color: #0969da; background: #eaeef2; }
+.nav-list a:hover { text-decoration: none; color: var(--link); background: var(--bg-hover); }
 .nav-list a.active {
-  color: #0969da;
+  color: var(--link);
   font-weight: 600;
-  background: #ddf4ff;
-  border-left-color: #0969da;
+  background: var(--bg-active);
+  border-left-color: var(--link);
 }
 
 /* ---------- Content ---------- */
@@ -70,9 +138,9 @@ a:hover { text-decoration: underline; }
 .site-footer {
   margin-top: 40px;
   padding-top: 16px;
-  border-top: 1px solid #d8dee4;
+  border-top: 1px solid var(--border);
   font-size: 13px;
-  color: #57606a;
+  color: var(--text-muted);
 }
 
 /* ---------- Markdown body ---------- */
@@ -88,23 +156,23 @@ a:hover { text-decoration: underline; }
   margin-bottom: 12px;
   font-weight: 600;
   line-height: 1.25;
-  color: #1f2328;
+  color: var(--text-heading);
 }
 
 .markdown-body h1 {
   font-size: 2em;
   padding-bottom: 0.3em;
-  border-bottom: 1px solid #d8dee4;
+  border-bottom: 1px solid var(--border);
 }
 .markdown-body h2 {
   font-size: 1.5em;
   padding-bottom: 0.3em;
-  border-bottom: 1px solid #d8dee4;
+  border-bottom: 1px solid var(--border);
 }
 .markdown-body h3 { font-size: 1.25em; }
 .markdown-body h4 { font-size: 1em; }
 .markdown-body h5 { font-size: 0.875em; }
-.markdown-body h6 { font-size: 0.85em; color: #57606a; }
+.markdown-body h6 { font-size: 0.85em; color: var(--text-muted); }
 
 .markdown-body p { margin: 0 0 16px; }
 
@@ -112,14 +180,14 @@ a:hover { text-decoration: underline; }
 .markdown-body kbd {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.9em;
-  background: #f6f8fa;
+  background: var(--bg-elevated);
   border-radius: 6px;
   padding: 0.2em 0.4em;
 }
 
 .markdown-body pre {
-  background: #f6f8fa;
-  border: 1px solid #d8dee4;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 16px;
   overflow-x: auto;
@@ -131,8 +199,8 @@ a:hover { text-decoration: underline; }
 .markdown-body blockquote {
   margin: 0 0 16px;
   padding: 0 1em;
-  color: #57606a;
-  border-left: 0.25em solid #d8dee4;
+  color: var(--text-muted);
+  border-left: 0.25em solid var(--border);
 }
 .markdown-body blockquote > *:first-child { margin-top: 0; }
 .markdown-body blockquote > *:last-child { margin-bottom: 0; }
@@ -155,19 +223,19 @@ a:hover { text-decoration: underline; }
 .markdown-body table th,
 .markdown-body table td {
   padding: 6px 13px;
-  border: 1px solid #d8dee4;
+  border: 1px solid var(--border);
 }
 .markdown-body table th {
   font-weight: 600;
-  background: #f6f8fa;
+  background: var(--bg-elevated);
 }
-.markdown-body table tr:nth-child(2n) { background: #f6f8fa; }
+.markdown-body table tr:nth-child(2n) { background: var(--bg-elevated); }
 
 .markdown-body hr {
   height: 1px;
   padding: 0;
   margin: 24px 0;
-  background: #d8dee4;
+  background: var(--border);
   border: 0;
 }
 
@@ -181,7 +249,7 @@ a:hover { text-decoration: underline; }
     height: auto;
     position: static;
     border-right: none;
-    border-bottom: 1px solid #d8dee4;
+    border-bottom: 1px solid var(--border);
     padding: 16px 0;
   }
   .nav-heading { margin-top: 10px; }

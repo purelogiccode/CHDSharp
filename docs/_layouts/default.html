@@ -3,8 +3,18 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#0d1117">
     <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
     <meta name="description" content="{{ site.description }}">
+    <script>
+        // Dark is the default theme; only an explicit "light" choice switches away from it.
+        (function () {
+            var theme = 'dark';
+            try { theme = localStorage.getItem('chdsharp-theme') || 'dark'; } catch (e) { }
+            document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+        })();
+    </script>
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
 </head>
 <body>
@@ -23,5 +33,27 @@
         </footer>
     </main>
 </div>
+<script>
+    // Theme toggle: flip dark <-> light and remember the choice.
+    (function () {
+        var root = document.documentElement;
+        var toggle = document.getElementById('theme-toggle');
+        if (!toggle) return;
+
+        function syncLabel() {
+            var label = root.dataset.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+            toggle.setAttribute('aria-label', label);
+            toggle.setAttribute('title', label);
+        }
+
+        syncLabel();
+        toggle.addEventListener('click', function () {
+            var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+            root.dataset.theme = next;
+            try { localStorage.setItem('chdsharp-theme', next); } catch (e) { }
+            syncLabel();
+        });
+    })();
+</script>
 </body>
 </html>
