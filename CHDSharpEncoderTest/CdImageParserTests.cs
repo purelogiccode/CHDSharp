@@ -251,6 +251,25 @@ public class CdImageParserTests : IDisposable
     }
 
     [Fact]
+    public void Toc_BareStart_MeansZeroPregap()
+    {
+        WriteFile("audio.wav", new byte[2352 * 50]);
+        var path = WriteFile(
+            "disc.toc",
+            """
+            TRACK AUDIO
+            AUDIOFILE "audio.wav" 0 00:00:50
+            START
+            """
+        );
+
+        var toc = TocParser.Parse(path);
+
+        Assert.Single(toc.Tracks);
+        Assert.Equal(0, toc.Tracks[0].Pregap);
+    }
+
+    [Fact]
     public void Toc_SwapFlag_AndDecimalOffset()
     {
         WriteFile("data.bin", new byte[2352 * 60]);
@@ -318,6 +337,45 @@ public class CdImageParserTests : IDisposable
         Assert.Equal(0u, toc.Flags);
         Assert.Equal(CdTrackType.Mode1Raw, toc.Tracks[0].TrackType);
         Assert.Equal(20, toc.Tracks[0].Frames);
+    }
+
+    [Fact]
+    public void Cue_GdiCue_AppliesHighDensityAreaLayout()
+    {
+        WriteFile("track01.bin", new byte[2352 * 450]);
+        WriteFile("track02.bin", new byte[2352 * 676]);
+        WriteFile("track03.bin", new byte[2352 * 100]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SINGLE-DENSITY AREA
+            FILE "track01.bin" BINARY
+              TRACK 01 MODE1/2352
+                INDEX 01 00:00:00
+            FILE "track02.bin" BINARY
+              TRACK 02 AUDIO
+                INDEX 00 00:00:00
+                INDEX 01 00:02:00
+            REM HIGH-DENSITY AREA
+            FILE "track03.bin" BINARY
+              TRACK 03 MODE1/2352
+                INDEX 01 00:00:00
+            """
+        );
+
+        var toc = CueParser.Parse(cue);
+
+        Assert.NotEqual(0u, toc.Flags & CdTocFlags.GdRom);
+        // track 2's 150-frame pregap moves onto track 1 as a split region and out of track 2's file
+        Assert.Equal(600, toc.Tracks[0].Frames);
+        Assert.Equal(150, toc.Tracks[0].SplitFrames);
+        Assert.Equal(150L * 2352, toc.Tracks[1].FileOffset);
+        Assert.Equal(0, toc.Tracks[1].Pregap);
+        // the high-density transition pads track 2 up to LBA 45000 (zero-filled pad frames)
+        Assert.Equal(600, toc.Tracks[1].PhysicalFrameOffset);
+        Assert.Equal(43874, toc.Tracks[1].PadFrames);
+        Assert.Equal(44400, toc.Tracks[1].Frames);
+        Assert.Equal(45000, toc.Tracks[2].PhysicalFrameOffset);
     }
 
     [Fact]

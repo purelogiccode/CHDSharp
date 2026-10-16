@@ -18,15 +18,13 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.4.3: consolidates all changes since v1.4.2 - closes the last chdman byte-parity gaps (stale work-buffer tail + LZMA match-finder insert, stale-ring corruption on partial-tail raw encodes of 513+ hunks, vendored FLAC byte parity via fixed-predictor analysis window + native cosf tukey window; byte-identical to chdman on the 7.8 GB XGD2 verification image), detailed decompression-failure diagnostics (hunk index, codec, CRC/truncation reasons), chdman-style progress + speed meter, single merged battle harness (3174/3174 vs MAME 0.289). Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.4.4: two field-reported descriptor divergences from MAME fixed. (1) Redump multi-cue Dreamcast cues (REM SINGLE-DENSITY/HIGH-DENSITY AREA, is_gdicue) now get the full GD-ROM layout - pregaps move onto the previous track as split regions, the last single-density track pads up to LBA 45000, CHGD metadata is written - verified byte-identical to chdman createcd on a real 1.19 GB sample with a byte-perfect extractcd round-trip. (2) A bare cdrdao TOC `START` line is accepted as "no pregap" (MAME's parse_toc treats the missing time as 0), where it previously failed with `Malformed START command`; byte parity pinned by tests. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>
     <PropertyGroup>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <Deterministic>true</Deterministic>
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>

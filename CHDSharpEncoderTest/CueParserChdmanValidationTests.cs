@@ -162,4 +162,68 @@ public class CueParserChdmanValidationTests : IDisposable
                 Assert.Equal(expected[i], actual[i]);
         }
     }
+
+    [Fact]
+    public void DreamcastMulticue_MatchesChdmanBytes()
+    {
+        if (ChdmanHelper.ChdmanPath == null)
+            return;
+
+        // Redump multi-cue (is_gdicue): the single-density image's audio track, then the
+        // high-density area in its own file. MAME's parse_cue moves the audio pregap onto the
+        // data track and pads the last single-density track up to LBA 45000; chdman stores the
+        // result as CHGD. Ours must produce the same bytes.
+        const string cue = """
+                           REM SINGLE-DENSITY AREA
+                           FILE "track01.bin" BINARY
+                             TRACK 01 MODE1/2352
+                               INDEX 01 00:00:00
+                           FILE "track02.bin" BINARY
+                             TRACK 02 AUDIO
+                               INDEX 00 00:00:00
+                               INDEX 01 00:02:00
+                           REM HIGH-DENSITY AREA
+                           FILE "track03.bin" BINARY
+                             TRACK 03 MODE1/2352
+                               INDEX 01 00:00:00
+                           """;
+        var cuePath = Path.Combine(_testDataDir, "dreamcast.cue");
+        File.WriteAllText(cuePath, cue);
+        File.WriteAllBytes(Path.Combine(_testDataDir, "track01.bin"), PatternBytes(2352 * 450));
+        File.WriteAllBytes(Path.Combine(_testDataDir, "track02.bin"), PatternBytes(2352 * 676));
+        File.WriteAllBytes(Path.Combine(_testDataDir, "track03.bin"), PatternBytes(2352 * 100));
+
+        var chdmanChd = Path.Combine(_testDataDir, "multicue_chdman.chd");
+        var (exitCode, stdout, stderr) = ChdmanHelper.RunChdman(
+            "createcd",
+            "-i",
+            cuePath,
+            "-o",
+            chdmanChd,
+            "-c",
+            "zlib",
+            "-f"
+        );
+        Assert.True(exitCode == 0, $"chdman createcd failed: {exitCode}\n{stdout}\n{stderr}");
+
+        var ourChd = Path.Combine(_testDataDir, "multicue_ours.chd");
+        ChdEncoder.EncodeCd(cuePath, ourChd, codecTags: [CodecTags.Zlib]);
+
+        var ours = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(ourChd)));
+        var theirs = Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(chdmanChd))
+        );
+        Assert.True(
+            string.Equals(ours, theirs, StringComparison.OrdinalIgnoreCase),
+            $"products not byte-identical: ours={ours[..12]} chdman={theirs[..12]}"
+        );
+    }
+
+    private static byte[] PatternBytes(int length)
+    {
+        var bytes = new byte[length];
+        for (var i = 0; i < bytes.Length; i++)
+            bytes[i] = (byte)(i % 251);
+        return bytes;
+    }
 }

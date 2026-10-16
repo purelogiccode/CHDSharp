@@ -9,6 +9,11 @@
 
 ---
 
+## What's New in v1.4.4
+
+- **Redump multi-cue Dreamcast parity** - a `.cue` with `REM SINGLE-DENSITY AREA` / `REM HIGH-DENSITY AREA` markers (MAME's `is_gdicue`) now gets the full GD-ROM layout: pregaps move onto the previous track as split regions, the last single-density track pads up to LBA 45000, and the CHD is written with `CHGD` metadata. Verified byte-identical to `chdman createcd` on a real 1.19 GB Redump multi-cue, with a byte-perfect `chdman extractcd` round-trip of all three tracks.
+- **cdrdao TOC `START` parity** - a bare `START` line (cdrdao's documented form) is now accepted as "no pregap", matching MAME 0.289's `parse_toc` exactly (`msf_to_frames("")` is 0). Previously it threw `Malformed START command`, failing cdrdao `.toc` files that `chdman` converts fine. Locked down with a parse regression test and byte-parity tests against `chdman createcd` for both `START` and `START 00:00:00`.
+
 ## What's New in v1.4.3
 
 Consolidates all changes since v1.4.2 - the last chdman byte-parity gaps are closed:

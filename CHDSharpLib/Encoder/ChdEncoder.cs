@@ -1860,13 +1860,17 @@ public static class ChdEncoder
             if (frame >= (long)totalFrames)
                 break;
 
-            var track = FindTrackContainingFrame(toc, frame);
+            var trackIndex = FindTrackIndexContainingFrame(toc, frame);
+            var track = toc.Tracks[trackIndex];
             var frameInTrack = (int)(frame - track.LogicalFrameStart);
 
-            // frames past the track's data and GDI gap (pad) frames are zero-filled
+            // frames past the track's data region (hunk padding) and its zero-filled gap (pad)
+            // frames are not backed by the source files
             if (frameInTrack >= track.Frames)
                 continue;
-            if (track.PadFrames > 0 && frameInTrack >= track.Frames - track.PadFrames)
+
+            var dataFrames = track.Frames - track.PadFrames;
+            if (frameInTrack >= dataFrames)
                 continue;
 
             // the BIN file stores datasize+subsize bytes per sector (no subcode → 2352);
@@ -1875,12 +1879,35 @@ public static class ChdEncoder
             // (cdrom.cpp read_partial_sector, phys=true), so the pregap frames are read from
             // the file exactly like data frames.
             var binFrameSize = track.DataSize + track.SubSize;
-            var sourceOffset = track.FileOffset + (long)frameInTrack * binFrameSize;
-            var file = GetSourceFile(files, track.FileName!);
+            var sourceFileName = track.FileName!;
+            long sourceOffset;
+
+            // Redump multi-cue GD-ROMs move a pregap onto the end of the previous track as a
+            // split region: physically those sectors are the start of the NEXT track's file, so
+            // they are read from there - without this track's file offset, and with this track's
+            // audio swap - exactly like MAME's chd_cd_compressor::read_data.
+            if (
+                track.SplitFrames > 0
+                && frameInTrack >= dataFrames - track.SplitFrames
+                && trackIndex + 1 < toc.Tracks.Count
+            )
+            {
+                if (toc.Tracks[trackIndex + 1].FileName is { } nextFileName)
+                    sourceFileName = nextFileName;
+
+                sourceOffset =
+                    (long)(frameInTrack - (dataFrames - track.SplitFrames)) * binFrameSize;
+            }
+            else
+            {
+                sourceOffset = track.FileOffset + (long)frameInTrack * binFrameSize;
+            }
+
+            var file = GetSourceFile(files, sourceFileName);
             file.Position = sourceOffset;
             var bytesRead = file.Read(buffer, f * CdConstants.FrameSize, binFrameSize);
             if (bytesRead != binFrameSize)
-                throw new InvalidDataException($"Unexpected end of file [{track.FileName}]");
+                throw new InvalidDataException($"Unexpected end of file [{sourceFileName}]");
 
             // audio sectors are little-endian in BIN files; swap to big-endian for CHD
             if (track.Swap)
@@ -2021,14 +2048,17 @@ public static class ChdEncoder
         ReportHunkProgress(options, codecs, entry, result.HunkIndex, hunkCount, hunkBytes);
     }
 
-    private static CdTrack FindTrackContainingFrame(CdToc toc, long frame)
+    private static int FindTrackIndexContainingFrame(CdToc toc, long frame)
     {
-        foreach (var track in toc.Tracks)
+        for (var index = 0; index < toc.Tracks.Count; index++)
+        {
+            var track = toc.Tracks[index];
             if (
                 frame >= track.LogicalFrameStart
                 && frame < track.LogicalFrameStart + track.PaddedFrames
             )
-                return track;
+                return index;
+        }
 
         throw new InvalidDataException($"Frame {frame} falls outside all tracks");
     }

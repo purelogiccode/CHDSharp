@@ -11,6 +11,15 @@ namespace CHDSharp.Encoder;
 /// </summary>
 public static class CueParser
 {
+    /// <summary>Redump multi-cue density areas (MAME's <c>gdi_area</c>).</summary>
+    private const int SingleDensity = 0;
+
+    /// <summary>Redump multi-cue high-density area marker value.</summary>
+    private const int HighDensity = 1;
+
+    /// <summary>LBA the GD-ROM high-density area starts at (MAME's parse_cue).</summary>
+    private const int HighDensityStartLba = 45000;
+
     /// <summary>
     ///     Parses a CUE sheet file into a table of contents.
     /// </summary>
@@ -26,7 +35,12 @@ public static class CueParser
 
         var baseDir = Path.GetDirectoryName(Path.GetFullPath(cueFilePath)) ?? string.Empty;
 
-        var toc = new CdToc();
+        // Redump's Dreamcast multi-cue (is_gdicue): two images on one disc, marked by REM area
+        // comments. MAME treats such cues as GD-ROMs and applies the density-area layout below.
+        var isGdRom = IsGdiCue(cueFilePath);
+        var currentArea = SingleDensity;
+
+        var toc = new CdToc { Flags = isGdRom ? CdTocFlags.GdRom : 0 };
         var tracks = toc.Tracks;
         CdTrack? currentTrack = null;
         var lastFile = string.Empty;
@@ -41,6 +55,26 @@ public static class CueParser
 
             switch (tokens[0])
             {
+                case "REM":
+                {
+                    // "REM SINGLE-DENSITY AREA" / "REM HIGH-DENSITY AREA" select the density area
+                    // the following tracks belong to (MAME's parse_cue keeps the same state).
+                    if (isGdRom)
+                    {
+                        var text = rawLine.TrimStart();
+                        if (text.StartsWith("REM", StringComparison.Ordinal))
+                        {
+                            text = text[3..].TrimStart();
+                            if (text.StartsWith("SINGLE-DENSITY AREA", StringComparison.Ordinal))
+                                currentArea = SingleDensity;
+                            else if (text.StartsWith("HIGH-DENSITY AREA", StringComparison.Ordinal))
+                                currentArea = HighDensity;
+                        }
+                    }
+
+                    break;
+                }
+
                 case "FILE":
                 {
                     if (tokens.Count < 3)
@@ -98,7 +132,8 @@ public static class CueParser
                         PgType = 0,
                         PgDataSize = 0,
                         Index00 = -1,
-                        Index01 = -1
+                        Index01 = -1,
+                        MulticueArea = isGdRom ? currentArea : 0
                     };
 
                     ParseTrackType(tokens[2], ref track);
@@ -213,6 +248,9 @@ public static class CueParser
             tracks.Add(last);
 
         ResolveTrackLengths(tracks);
+        if (isGdRom)
+            ApplyGdRomLayout(tracks);
+
         return toc;
     }
 
@@ -325,6 +363,90 @@ public static class CueParser
                     GetFileSize(track.FileName!) / (track.DataSize + track.SubSize)
                 );
                 track.FileOffset = 0;
+            }
+
+            tracks[i] = track;
+        }
+    }
+
+    /// <summary>
+    ///     Returns whether a cue is Redump's Dreamcast multi-cue GDI format: both
+    ///     "REM SINGLE-DENSITY AREA" and "REM HIGH-DENSITY AREA" comments present
+    ///     (mirrors MAME's <c>cdrom_file::is_gdicue</c>).
+    /// </summary>
+    /// <param name="cueFilePath">Path of the cue file.</param>
+    /// <returns>True when the cue is a Redump multi-cue for a Dreamcast GDI disc.</returns>
+    private static bool IsGdiCue(string cueFilePath)
+    {
+        var hasSingleDensity = false;
+        var hasHighDensity = false;
+        foreach (var rawLine in File.ReadLines(cueFilePath))
+        {
+            var text = rawLine.TrimStart();
+            if (!text.StartsWith("REM", StringComparison.Ordinal))
+                continue;
+
+            text = text[3..].TrimStart();
+            if (text.StartsWith("SINGLE-DENSITY AREA", StringComparison.Ordinal))
+                hasSingleDensity = true;
+            else if (text.StartsWith("HIGH-DENSITY AREA", StringComparison.Ordinal))
+                hasHighDensity = true;
+
+            if (hasSingleDensity && hasHighDensity)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Applies MAME's <c>is_gdrom</c> layout fixups to a Redump multi-cue TOC. Each track's
+    ///     pregap moves onto the end of the previous track as a split region (those sectors are
+    ///     physically stored ahead of its own file) and is excluded from this track's file region,
+    ///     then the transition from the single-density to the high-density area pads the last
+    ///     single-density track up to LBA 45000 — those pad frames are zero-filled
+    ///     (<see cref="CdTrack.PadFrames" />), exactly like chdman.
+    /// </summary>
+    /// <param name="tracks">The parsed tracks, in track order.</param>
+    private static void ApplyGdRomLayout(List<CdTrack> tracks)
+    {
+        for (var i = 1; i < tracks.Count; i++)
+        {
+            var track = tracks[i];
+            var pregap = track.Pregap;
+            if (pregap > 0)
+            {
+                var previous = tracks[i - 1];
+                previous.Frames += pregap;
+                previous.SplitFrames += pregap;
+                tracks[i - 1] = previous;
+
+                track.FileOffset += (long)pregap * (track.DataSize + track.SubSize);
+                track.Frames -= pregap;
+                track.Index01 -= pregap;
+            }
+
+            track.Pregap = 0;
+            track.PgType = 0;
+            tracks[i] = track;
+        }
+
+        for (var i = 1; i < tracks.Count; i++)
+        {
+            var track = tracks[i];
+            if (track.MulticueArea == HighDensity && tracks[i - 1].MulticueArea == SingleDensity)
+            {
+                track.PhysicalFrameOffset = HighDensityStartLba;
+
+                var previous = tracks[i - 1];
+                var gap = HighDensityStartLba - (previous.Frames + previous.PhysicalFrameOffset);
+                previous.Frames += gap;
+                previous.PadFrames = gap;
+                tracks[i - 1] = previous;
+            }
+            else
+            {
+                track.PhysicalFrameOffset = tracks[i - 1].PhysicalFrameOffset + tracks[i - 1].Frames;
             }
 
             tracks[i] = track;

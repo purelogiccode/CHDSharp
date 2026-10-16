@@ -1,5 +1,36 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.4.4
+
+Two field-reported cdrdao/Redump descriptor divergences from MAME fixed; the built-in encoder now converts those files byte-identically to `chdman`.
+
+### Redump multi-cue Dreamcast (`is_gdicue`) parity
+
+A Redump Dreamcast `.cue` stores the single-density and high-density images in one descriptor, separated by `REM SINGLE-DENSITY AREA` / `REM HIGH-DENSITY AREA` comments. MAME's `parse_cue` detects this (`is_gdicue`), moves each track's pregap onto the previous track as a split region, and pads the last single-density track up to LBA 45000; chdman marks the result with `CHGD` GD-ROM metadata. The built-in cue parser ignored the comments, producing a plain-CD TOC with wrong frame counts, logical size and metadata.
+
+- `CueParser` now applies the full `is_gdrom` layout fixups; `CdTrack` carries `SplitFrames` (pregap sectors stored ahead of their own file) and `MulticueArea` (density area).
+- `EncodeCd` reads split frames from the next track's file start without the current track's file offset, keeping the current track's audio swap — exactly like MAME's `chd_cd_compressor::read_data`.
+- Verified on a real *18 Wheeler — American Pro Trucker (USA)* Redump multi-cue (1.19 GB): byte-identical CHD to `chdman createcd` (same SHA-1, same `CHGD` metadata), and `chdman extractcd` on our output restores all three original track files byte-for-byte.
+
+### cdrdao `START` parity
+
+cdrdao emits a bare `START` (no time) in its documented TOC examples. MAME's `parse_toc` tokenizes the missing time as an empty token and `msf_to_frames("")` is 0, so `chdman` converts those files with no pregap. The built-in `TocParser` rejected the line with `Malformed START command: START`, failing every `.toc` that chdman accepts.
+
+- A bare `START` now sets `Pregap = 0` (identical to `START 00:00:00`), matching MAME 0.289's `cdrom.cpp` `parse_toc` exactly.
+- Regression tests pin the parse (`Toc_BareStart_MeansZeroPregap`) and full byte parity with `chdman createcd` for both `START` forms (SHA-256 comparison in `TocParserChdmanValidationTests`).
+
+### Verification status
+
+- `CHDSharpEncoderTest`: 441/441 (parsers, encoder, codec and chdman-validation suites).
+
+### NuGet Package
+
+```
+dotnet add package CHDSharp --version 1.4.4
+```
+
+Targets `net8.0`, `net9.0`, `net10.0`. Pure C# - zero native dependencies.
+
 ## CHDSharp v1.4.3
 
 Consolidates all changes since v1.4.2. Closes the partial-tail raw-encode corruption and the last FLAC byte-parity divergence. Battle harness green: **3174/3174 synthetic** vs MAME 0.289.

@@ -133,6 +133,21 @@ public struct CdTrack
     /// <summary>Zero-filled frames appended at the end of the track's data region (GDI gaps).</summary>
     public int PadFrames;
 
+    /// <summary>
+    ///     Frames at the end of this track's data region that are physically the start of the
+    ///     NEXT track's file (a pregap stored ahead of its track, Redump multi-cue GD-ROMs).
+    ///     Those frames are read from the next track's file and excluded from this track's file
+    ///     region, mirroring MAME's <c>cdrom_file::track_info::splitframes</c>.
+    /// </summary>
+    public int SplitFrames;
+
+    /// <summary>
+    ///     Redump multi-cue density area the track belongs to (0 = single density, 1 = high
+    ///     density); always 0 for non-GD-ROM cues. Set by <see cref="CueParser" /> from the
+    ///     "REM SINGLE-DENSITY AREA" / "REM HIGH-DENSITY AREA" markers.
+    /// </summary>
+    public int MulticueArea;
+
     /// <summary>Physical (LBA) frame offset of the track on the disc (GDI).</summary>
     public int PhysicalFrameOffset;
 }

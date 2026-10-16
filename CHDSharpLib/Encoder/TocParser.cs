@@ -152,11 +152,14 @@ public static class TocParser
                             $"START command without a preceding TRACK: {rawLine}"
                         );
 
-                    if (tokens.Count < 2)
-                        throw new InvalidDataException($"Malformed START command: {rawLine}");
-
                     var track = tracks[trackIndex];
-                    track.Pregap = CueParser.ParseMsfToFrames(tokens[1]);
+                    // cdrdao emits a bare "START" to mark the track start after the previous
+                    // track. MAME's parse_toc tokenizes the (missing) time as an empty token and
+                    // msf_to_frames("") yields 0, so a bare START means "no pregap" — matching it
+                    // keeps bare and "START 00:00:00" identical, exactly like chdman.
+                    track.Pregap = tokens.Count >= 2
+                        ? CueParser.ParseMsfToFrames(tokens[1])
+                        : 0;
                     tracks[trackIndex] = track;
                     break;
                 }
