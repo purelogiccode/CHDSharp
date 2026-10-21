@@ -133,7 +133,7 @@ matches `Directory.Build.props`.
 6. **Tag and push**:
 
    ```bash
-   git tag v1.5.2
+   git tag -a v1.5.2 -m "CHDSharp v1.5.2"
    git push origin main v1.5.2
    ```
 
