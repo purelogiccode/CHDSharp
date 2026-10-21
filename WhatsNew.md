@@ -1,11 +1,10 @@
-# CHDSharp v1.5.0 — What's New
+# CHDSharp v1.5.2 - What's New
 
-**Released:** 2026-10-16 · [Full changelog](docs/ReleaseNotes.md) · [NuGet](https://www.nuget.org/packages/CHDSharp/1.5.0)
+**Released:** 2026-10-21 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.5.2)
 
-CHDSharp v1.5.0 is the first release produced end-to-end by the GitHub Actions pipeline:
-one tag push builds the six platform bundles, creates the GitHub release, publishes the
-NuGet package, and updates the [wiki](https://github.com/purelogiccode/CHDSharp/wiki) and
-the [documentation site](https://purelogiccode.github.io/CHDSharp/).
+CHDSharp v1.5.2 rolls up the v1.5.1 cue-layout parity fixes (this is the first release that ships
+the CLI bundles) and adds a repo-wide code-quality pass plus fully automated wiki and
+documentation-site deployment.
 
 ---
 
@@ -13,73 +12,85 @@ the [documentation site](https://purelogiccode.github.io/CHDSharp/).
 
 | Platform | Bundle |
 |----------|--------|
-| Windows x64 | [`CHDSharp_win-x64_v1.5.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.0/CHDSharp_win-x64_v1.5.0.zip) |
-| Windows ARM64 | [`CHDSharp_win-arm64_v1.5.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.0/CHDSharp_win-arm64_v1.5.0.zip) |
-| Linux x64 | [`CHDSharp_linux-x64_v1.5.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.0/CHDSharp_linux-x64_v1.5.0.zip) |
-| Linux ARM64 | [`CHDSharp_linux-arm64_v1.5.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.0/CHDSharp_linux-arm64_v1.5.0.zip) |
-| macOS Intel | [`CHDSharp_osx-x64_v1.5.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.0/CHDSharp_osx-x64_v1.5.0.zip) |
-| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.5.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.0/CHDSharp_osx-arm64_v1.5.0.zip) |
+| Windows x64 | [`CHDSharp_win-x64_v1.5.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.2/CHDSharp_win-x64_v1.5.2.zip) |
+| Windows ARM64 | [`CHDSharp_win-arm64_v1.5.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.2/CHDSharp_win-arm64_v1.5.2.zip) |
+| Linux x64 | [`CHDSharp_linux-x64_v1.5.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.2/CHDSharp_linux-x64_v1.5.2.zip) |
+| Linux ARM64 | [`CHDSharp_linux-arm64_v1.5.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.2/CHDSharp_linux-arm64_v1.5.2.zip) |
+| macOS Intel | [`CHDSharp_osx-x64_v1.5.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.2/CHDSharp_osx-x64_v1.5.2.zip) |
+| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.5.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.5.2/CHDSharp_osx-arm64_v1.5.2.zip) |
 
 Every bundle contains a **framework-dependent single-file** `CHDSharp` / `CHDSharp.exe`
 build (the .NET runtime is **not** embedded) plus `LICENSE.txt`, `README.md`, `README.txt`
 and this document. The [.NET 10 runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
-is required. On Linux/macOS run `chmod +x CHDSharp` if the binary is not executable after
-unzipping.
+is required.
 
 ---
 
-## Fixed: built-in update check
+## Fixed: `REM LEAD-OUT` at or before the session's last track
 
-The CLI's "a new version is available" notice now links **directly to the download for
-your platform**. The bundle the release ships (`CHDSharp_<os>-<arch>_v<version>.zip`) is
-exactly the name the update check looks up; previously it searched for the wrong asset
-name built from the *currently running* version, so the direct link never resolved and
-users were sent to the releases page instead.
+The parser compared the track's frame count with `leadOut - index00` using two `int` values.
+MAME compares a `uint32_t` frame count against a signed `int32_t` end frame
+(`cdrom.cpp:2748`), so a negative end frame converts to a huge unsigned value and the trim is
+skipped. Cues that declare `REM LEAD-OUT 00:00:00` (or any address at or before the last track
+of the session) therefore failed with:
 
-## Release engineering
-
-- **One tag, one release** — `Release` workflow: bundles (win/linux/osx × x64/arm64),
-  GitHub release, NuGet push, wiki sync, Pages rebuild. The workflow refuses to run if
-  the tag does not match `Directory.Build.props`.
-- **NuGet publishing is idempotent** — re-running the workflow skips a version that is
-  already on nuget.org.
-- **GitHub releases now ship only the CLI** — the WPF Tester remains source-only.
-
-## Also in this release
-
-- **Wiki + documentation site in sync** — the `docs/` folder is deployed twice from CI:
-  as the [documentation site](https://purelogiccode.github.io/CHDSharp/) and as the
-  [GitHub wiki](https://github.com/purelogiccode/CHDSharp/wiki), both with the same side menu.
-- **Dark theme by default** on the documentation site (with a persisted light/dark toggle).
-- **Test harness hardening** — test-spawned CLI runs set `CHDSHARP_NO_BUG_REPORTS=1` /
-  `CHDSHARP_NO_TELEMETRY=1`, so local full-suite runs no longer file bug reports.
-- **Badges on every README** (CI, release, NuGet, platform, parity, license).
-
----
-
-## Upgrading from v1.4.3 (or earlier)
-
-v1.5.0 rolls up everything from v1.4.4 and v1.4.5:
-
-- **Multisession cue parity** — ports MAME's `REM SESSION` / `REM LEAD-IN` / `REM LEAD-OUT`
-  / session-pregap layout rules (IsoBuster/ImgBurn single-bin trim with zero-filled
-  inter-session gaps, Redump/DiscImageCreator synthesized lead-in/out, `.img` heuristic).
-  Multisession cues now encode **byte-identically** to `chdman createcd`.
-- **Redump multi-cue Dreamcast GD-ROM parity** — cues with `REM SINGLE-DENSITY AREA` /
-  `REM HIGH-DENSITY AREA` markers get the full `is_gdicue` layout (split pregap regions,
-  LBA-45000 padding, `CHGD` metadata); verified byte-identical on a real 1.19 GB Redump
-  multi-cue with a byte-perfect `chdman extractcd` round-trip.
-- **cdrdao TOC `START` parity** — a bare `START` line (cdrdao's documented form) is
-  accepted as "no pregap", matching MAME 0.289's `parse_toc` exactly.
-
----
-
-## NuGet
-
-```bash
-dotnet add package CHDSharp --version 1.5.0
+```
+Track 2: the session lead-out values leave a negative length (-11400 frames); the cue's
+REM SESSION/LEAD-OUT values do not match the image.
 ```
 
-Targets `net8.0`, `net9.0` and `net10.0` — pure C#, zero native dependencies. Every
-codec (zlib, lzma, huffman, flac, zstd, AVHuff and the CD variants) is implemented
-in-repo and ships inside the package.
+while `chdman createcd` encoded the same cue, because the no-op lead-out leaves the cue's INDEX
+positions in charge of the layout. The parser now performs the same unsigned comparison, so the
+track layout and the CHD bytes match `chdman`.
+
+## Fixed: a pad larger than its track zeroed the whole track
+
+The CD reader treated the last `PadFrames` frames of a track as zero-filled padding. In chdman
+the pad start is an unsigned offset from the track start (`chdman.cpp:471-472`); when the pad is
+larger than the track the offset wraps below the track start, the pad region is unreachable, and
+every frame is read from the source file. The encoder now mirrors that rule, and the GD-ROM
+data/pad/split ordering follows the same frame layout (`splitStart = frames - splitFrames`,
+`padStart = splitStart - padFrames`).
+
+## Code quality (new in v1.5.2)
+
+The whole solution is now clean under the ReSharper command-line inspector:
+`jb inspectcode CSharp_CHDSharp.sln --severity=WARNING` reports **zero warnings or errors**
+(308 before the cleanup). The policy lives in the root `.editorconfig`:
+
+- **Vendored codecs are exempt and untouched.** `VendoredZLib`, `VendoredLZMA`, `VendoredFlac`
+  and `VendoredZSTD` are third-party ports; byte-for-byte `chdman` parity depends on them staying
+  verbatim, so their style/quality inspections are disabled instead of "fixed".
+- **Consumer-facing models are exempt from "never used" inspections** - public library records,
+  the JSON corpus manifest, and the WPF data models are read by callers, serializers and XAML
+  bindings rather than by the declaring assembly.
+- **First-party findings were fixed**: redundant null checks in the CLI encode paths, a write-only
+  AVI stream field, and dead tester state (`LogEntry`/`LogEntries` and the unread
+  `PerFileResult.FilePath`).
+
+## CI, wiki & docs (new in v1.5.2)
+
+- **Docs deploy from CI.** After the three-OS build/test matrix passes on a push to `main`, the
+  CI workflow regenerates the GitHub wiki from `docs/` and requests a Pages rebuild. The release
+  workflow does the same for tags, so the wiki and the documentation site stay in sync with the
+  code.
+- **Dark theme by default.** The documentation site uses a dark palette with a persisted
+  light/dark toggle and `color-scheme` metadata.
+- **Badges everywhere.** Every README (root, library, CLI, tests, generator, tester, benchmarks
+  and `docs/`) starts with its CI/NuGet/platform badge row.
+- **Release routine documented.** `AGENTS.md` now records the version bump, verification, tag,
+  bundle and wiki/Pages steps used for this release.
+
+## Verification
+
+- New `chdman createcd` byte-parity fixtures: zero lead-out, lead-out before the track, and the
+  pad-larger-than-track layout.
+- Parser regression tests for both lead-out shapes.
+- `CHDSharpEncoderTest` 454/454, `CHDSharpTest` 4214/4214, battle harness `--quick` 905/905 checks.
+- Full `dotnet test` across `net8.0`/`net9.0`/`net10.0`: 14,004 passed, 0 failed; full battle
+  harness: 3,174/3,174 checks, byte-identical `chdman` output.
+
+## Upgrading
+
+No public API changes. Replace the package; cues that encoded before produce the same bytes, and
+the two layouts above now encode instead of throwing.

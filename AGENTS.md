@@ -40,10 +40,17 @@ dotnet test                                      # xUnit suites (Microsoft.Testi
 dotnet run --project CHDSharpBattleTest          # chdman byte-parity harness (long; needs chdman.exe)
 dotnet run --project CHDSharpCli -- info -i game.chd
 dotnet pack -c Release CHDSharpLib/              # NuGet package
+jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections (must be clean)
 ```
 
 - Keep builds warning-free: Meziantou.Analyzer and Roslynator.Analyzers run in every project.
 - `CHDSharpLib` treats missing XML docs (CS1591) as errors — document every public API addition.
+- Keep ReSharper inspections clean too: `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`
+  must report zero findings. The policy lives in the root `.editorconfig`: the vendored codec
+  folders are exempt from style inspections and must stay verbatim for `chdman` parity — never
+  "fix" a warning there, suppress the inspection instead. InspectCode 2026.2 logs a few internal
+  `AssertionException`s while analyzing `VendoredZSTD` (an analyzer bug, not a finding); the
+  report is still empty, and `--exclude="Vendored*/**/*.cs"` silences the console.
 - Always run `dotnet test` before committing. Run the battle harness for changes touching
   encoding, decoding, CLI argument parsing, or anything chdman-visible.
 
@@ -83,6 +90,66 @@ dotnet pack -c Release CHDSharpLib/              # NuGet package
   `VendoredFlac` LGPL-2.1, `VendoredZLib` zlib, `VendoredLZMA` public domain, `VendoredZSTD`
   MIT, Tester GPL-3.0-only.
 
+## Releasing a new version
+
+The release is tag-driven: `release.yml` runs on `v*` tags and refuses to proceed unless the tag
+matches `Directory.Build.props`.
+
+1. **Bump the version** in `Directory.Build.props` (`Version`, `AssemblyVersion`, `FileVersion`).
+2. **Update the release notes**:
+   - `WhatsNew.md` — heading, release date, NuGet link and the six `v<version>` bundle links.
+   - `docs/ReleaseNotes.md` — new `## CHDSharp v<version>` section at the top.
+   - `README.md` and `CHDSharpLib/README.md` — new `## What's New in v<version>` block.
+   - Per-project banners (`CHDSharpCli`, `CHDSharpTest`, `CHDSharpTestDataGeneration`).
+   - `CHDSharpLib/CHDSharpLib.csproj` — `<PackageReleaseNotes>`.
+   - `docs/building.md` — the "currently `<version>`" line and the example bundle name.
+3. **Verify**:
+
+   ```bash
+   dotnet build -c Release
+   dotnet test
+   dotnet run --project CHDSharpBattleTest -c Release --framework net10.0
+   jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # must report 0 findings
+   ```
+
+4. **Commit and push `main`**, then wait for `ci.yml` (three-OS build/test, then the `docs` job
+   syncs the wiki and requests a Pages rebuild).
+5. **Build the bundles locally** (optional before tagging, required when the user asks for them):
+
+   ```bash
+   pwsh scripts/package-release.ps1
+   ```
+
+   Writes `CHDSharp_<rid>_v<version>.zip` for win/linux/osx × x64/arm64 into
+   `CHDSharpLib/bin/Release` (the default output path) without deleting other files there. Each
+   bundle gets the single framework-dependent binary (the .NET runtime is **not** embedded) plus
+   `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`. Asset names must match
+   `VersionCheckService.GetExpectedAssetName`:
+   `CHDSharp_{win|linux|osx}-{x64|arm64}_v<version>.zip`.
+
+6. **Tag and push**:
+
+   ```bash
+   git tag v1.5.2
+   git push origin main v1.5.2
+   ```
+
+   `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles,
+   creates the GitHub release with `WhatsNew.md` as the body, uploads the assets, publishes the
+   NuGet package (skipped when the version already exists), syncs the wiki and requests a Pages
+   rebuild.
+
+7. **Verify the release**:
+
+   ```bash
+   gh release view v1.5.2
+   gh run list --workflow=release.yml --limit 1
+   (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp/index.json).versions
+   ```
+
+Required repository secrets: `NUGET_API_KEY` (nuget.org push) and `WIKI_TOKEN` (wiki push and
+Pages rebuild request; needs `repo` scope).
+
 ## CI
 
 `.github/workflows/ci.yml` builds and tests on every push and pull request across Linux, macOS,
@@ -93,5 +160,8 @@ builds the full solution (WPF tester, battle harness, benchmark). Tests that nee
 when it is absent, so chdman validation only actually runs on Windows CI (the exe is copied from
 `CHDSharpTester/`); the battle harness itself is not part of CI. CI sets
 `CHDSHARP_NO_BUG_REPORTS=1`/`CHDSHARP_NO_TELEMETRY=1` so test-spawned CLI runs never reach the
-production bug-report API or usage stats. GitHub Pages deploys `docs/` separately via the
-repository-managed `pages-build-deployment` workflow.
+production bug-report API or usage stats. On a push to `main`, a `docs` job (after the
+build/test matrix) regenerates the GitHub wiki from `docs/` and requests a Pages rebuild; the
+same steps run in `release.yml` for tags, so code, wiki and the documentation site stay in sync.
+GitHub Pages is still served by the repository-managed `pages-build-deployment` workflow from
+`main`/`docs` (build type `legacy`).

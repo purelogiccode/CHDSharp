@@ -360,7 +360,6 @@ public sealed class AviReader : IDisposable
                         case StreamTypeVids:
                             stream.Width = (int)BinaryPrimitives.ReadUInt32LittleEndian(data[4..]);
                             stream.Height = (int)BinaryPrimitives.ReadUInt32LittleEndian(data[8..]);
-                            stream.Depth = BinaryPrimitives.ReadUInt16LittleEndian(data[14..]);
                             stream.Format = BinaryPrimitives.ReadUInt32LittleEndian(data[16..]);
                             break;
                         case StreamTypeAuds:
@@ -533,7 +532,6 @@ public sealed class AviReader : IDisposable
         public readonly List<(long Offset, int Length)> Chunks = [];
 
         public ushort Channels; // audio
-        public uint Depth; // video
         public uint Format; // video fourcc
         public uint Rate;
         public ushort SampleBits; // audio
@@ -565,6 +563,7 @@ public sealed class AviReader : IDisposable
         public int Height { get; internal set; }
 
         /// <summary>Video format fourcc ('YUY2', 'UYVY', ...).</summary>
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global -- public movie metadata
         public uint VideoFormat { get; internal set; }
 
         /// <summary>Total audio channels across all audio streams.</summary>
@@ -574,6 +573,7 @@ public sealed class AviReader : IDisposable
         public uint AudioSamplerate { get; internal set; }
 
         /// <summary>Audio bits per sample (8 or 16).</summary>
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global -- public movie metadata
         public uint AudioSamplebits { get; internal set; }
     }
 }

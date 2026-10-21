@@ -228,9 +228,6 @@ internal class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Gets the collection of structured log entries for data-bound display.</summary>
-    public ObservableCollection<LogEntry> LogEntries { get; } = [];
-
     /// <summary>Gets or sets the result of the most recent test session, or null if none has run.</summary>
     public TestSessionResult? SessionResult
     {
@@ -456,7 +453,6 @@ internal class MainViewModel : INotifyPropertyChanged
         StatusText = "Please wait... Processing...";
         SessionResult = null;
         _cachedFileResults = null;
-        LogEntries.Clear();
         _logBuffer.Clear();
         LogText = string.Empty;
         ProgressValue = 0;
@@ -704,7 +700,6 @@ internal class MainViewModel : INotifyPropertyChanged
         try
         {
             var ts = DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
-            LogEntries.Add(new LogEntry { Message = message, Timestamp = ts });
             _logBuffer.AppendLine($"[{ts}] {message}");
             LogText = _logBuffer.ToString();
             Log.Information("{UiLog}", message);

@@ -1,5 +1,3 @@
-# CHDSharp Wiki
-
 [![CI](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/purelogiccode/CHDSharp/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
@@ -7,6 +5,8 @@
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](building.md)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](chdman-parity.md)
 [![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
+
+# CHDSharp Wiki
 
 Welcome to the **CHDSharp** documentation wiki.
 
@@ -47,7 +47,7 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 | Page | Description |
 |------|-------------|
 | [Getting Started](getting-started.md) | Install the package, write your first program, tour the CLI. |
-| [Building](building.md) | Build the solution, create the NuGet package, publish the CLI. |
+| [Building](building.md) | Build the solution, run the analyzer/inspection gates, create the NuGet package, publish the CLI. |
 
 ### Format & internals
 
@@ -171,7 +171,7 @@ Every producible combination is cross-checked against `chdman` (MAME 0.289) by `
 | `CHDSharpLib` | The library itself (this wiki documents it). Includes the encoder subsystem (`CHDSharp.Encoder`). |
 | `CHDSharpCli` | Command-line CHD manager (binary: `CHDSharp`). Full `chdman` subcommand parity. |
 | `CHDSharpTest` | xUnit unit + corpus test suite (4,214 tests per target framework, 30 deterministic CHD files). |
-| `CHDSharpEncoderTest` | xUnit encoder suite (451 tests) with chdman cross-validation. |
+| `CHDSharpEncoderTest` | xUnit encoder suite (454 tests) with chdman cross-validation. |
 | `CHDSharpBattleTest` | Battle harness: 2907/2907 (deterministic) + 3003/3003 (real-world) checks vs `chdman`. |
 | `CHDSharpTestDataGeneration` | Deterministic corpus generator (drives vintage `chdman` binaries). |
 | `CHDSharpTester` | WPF interactive batch verifier cross-checked against `chdman`. |

@@ -18,8 +18,7 @@ public sealed class CorpusTests
                 e.GetProperty("file").GetString()!,
                 e.GetProperty("version").GetUInt32(),
                 e.GetProperty("parent").GetString() is { Length: > 0 } p ? p : null,
-                e.GetProperty("expect").GetString() ?? "ok",
-                e.GetProperty("note").GetString() ?? ""
+                e.GetProperty("expect").GetString() ?? "ok"
             ))
             .ToList();
     }
@@ -108,11 +107,5 @@ public sealed class CorpusTests
         Assert.NotEqual(ChdError.Chderrnone, err);
     }
 
-    public sealed record Entry(
-        string File,
-        uint Version,
-        string? Parent,
-        string Expect,
-        string Note
-    );
+    public sealed record Entry(string File, uint Version, string? Parent, string Expect);
 }

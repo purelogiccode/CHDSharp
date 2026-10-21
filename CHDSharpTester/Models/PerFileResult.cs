@@ -6,9 +6,6 @@ public class PerFileResult
     /// <summary>Gets or sets the display name of the tested file.</summary>
     public string FileName { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the full path of the tested file.</summary>
-    public string FilePath { get; set; } = string.Empty;
-
     /// <summary>Gets or sets the human-readable size of the tested file.</summary>
     public string FileSize { get; set; } = string.Empty;
 

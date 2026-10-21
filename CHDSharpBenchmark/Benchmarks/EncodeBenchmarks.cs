@@ -37,7 +37,8 @@ public class EncodeBenchmarks
     private byte[] _chainImage = [];
     private string _aviPath = "";
 
-    [ParamsSource(nameof(WorkerCounts))] public int TaskCount { get; set; }
+    [ParamsSource(nameof(WorkerCounts))] // ReSharper disable once UnusedAutoPropertyAccessor.Global -- assigned by BenchmarkDotNet
+    public int TaskCount { get; set; }
 
     [GlobalSetup]
     public void Setup()

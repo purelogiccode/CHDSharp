@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.4.5 (prepared, not yet published): ports MAME's multisession cue handling (REM SESSION / LEAD-IN / LEAD-OUT / session pregap). Single-bin IsoBuster/ImgBurn layouts trim the session's last track at the declared lead-out and turn the inter-session dummy data into zero-filled pad frames; multi-bin Redump/DiscImageCreator layouts synthesize the standard lead-in/lead-out (with the .img no-padding heuristic). Malformed lead-out values that MAME's math would turn negative are rejected with a clear error instead of being encoded as a silently wrong image. Verified byte-identical to chdman createcd on synthetic fixtures for all three layouts; suite 451/451. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.5.2: maintenance release on top of 1.5.1 (cue-layout parity fixes), which made real multisession rips encode byte-identically to chdman createcd. 1.5.2 cleans the whole solution under jb inspectcode (0 warnings/errors, was 308): vendored codecs are exempted from style inspections to protect byte-for-byte chdman parity, consumer-facing models are exempted from "never used" inspections, and first-party findings (redundant null checks, dead tester state) were fixed. CI now also syncs the docs/ wiki and requests a Pages rebuild on every push to main. No public API changes. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>
@@ -29,7 +29,7 @@
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Meziantou.Analyzer" Version="3.0.303">
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.315">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

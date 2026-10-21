@@ -505,7 +505,13 @@ public static class CueParser
                     if (track.LeadOut != -1)
                     {
                         var endFrames = track.LeadOut - track.Index00;
-                        if (track.Frames >= endFrames)
+
+                        // chdman.cpp:2748 compares the uint32_t frame count with a signed
+                        // int32_t end frame, so a lead-out at or before the track's INDEX 00
+                        // converts to a huge unsigned value and the trim is skipped instead of
+                        // producing a negative length. Mirror that conversion exactly: the
+                        // layout then matches chdman byte for byte.
+                        if ((uint)track.Frames >= (uint)endFrames)
                         {
                             track.Frames = endFrames;
 

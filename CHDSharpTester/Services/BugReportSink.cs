@@ -41,8 +41,6 @@ internal sealed class BugReportSink : ILogEventSink
     /// <inheritdoc />
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null)
-            return;
         if (logEvent.Level < LogEventLevel.Warning)
             return;
         if (logEvent.Exception is OperationCanceledException or TaskCanceledException)

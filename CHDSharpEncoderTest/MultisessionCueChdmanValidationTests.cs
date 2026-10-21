@@ -103,6 +103,55 @@ public class MultisessionCueChdmanValidationTests : IDisposable
         AssertMatchesChdman(cuePath, "multi_bin");
     }
 
+    [Fact]
+    public void SingleBinZeroLeadOut_MatchesChdmanBytes()
+    {
+        // A zero lead-out used to trim the session's last track to a negative length. chdman's
+        // uint32_t comparison skips the trim, so the cue's INDEX positions describe the disc.
+        const string cue = """
+                           REM SESSION 01
+                           FILE "disc.bin" BINARY
+                             TRACK 01 AUDIO
+                               INDEX 01 00:00:00
+                             TRACK 02 AUDIO
+                               INDEX 01 02:32:00
+                           REM LEAD-OUT 00:00:00
+                           REM SESSION 02
+                             TRACK 03 AUDIO
+                               INDEX 01 04:00:00
+                           """;
+        var cuePath = Path.Combine(_testDataDir, "zero_leadout.cue");
+        File.WriteAllText(cuePath, cue);
+        File.WriteAllBytes(Path.Combine(_testDataDir, "disc.bin"), PatternBytes(2352 * 20000));
+
+        AssertMatchesChdman(cuePath, "zero_leadout");
+    }
+
+    [Fact]
+    public void SingleBinLeadOutBeforeTheTrack_MatchesChdmanBytes()
+    {
+        // The lead-out lies before track 2's INDEX 00: chdman wraps the negative end frame to a
+        // huge unsigned value (no trim) and turns the absolute lead-out into the gap before
+        // track 3.
+        const string cue = """
+                           REM SESSION 01
+                           FILE "disc.bin" BINARY
+                             TRACK 01 MODE2/2352
+                               INDEX 01 00:00:00
+                           REM SESSION 02
+                             TRACK 02 MODE2/2352
+                               INDEX 01 00:02:00
+                           REM LEAD-OUT 00:00:20
+                             TRACK 03 MODE2/2352
+                               INDEX 01 00:04:00
+                           """;
+        var cuePath = Path.Combine(_testDataDir, "leadout_before_track.cue");
+        File.WriteAllText(cuePath, cue);
+        File.WriteAllBytes(Path.Combine(_testDataDir, "disc.bin"), PatternBytes(2352 * 550));
+
+        AssertMatchesChdman(cuePath, "leadout_before_track");
+    }
+
     private void AssertMatchesChdman(string cuePath, string tag)
     {
         if (ChdmanHelper.ChdmanPath == null)

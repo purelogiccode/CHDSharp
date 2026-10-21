@@ -1,5 +1,81 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.5.2
+
+Maintenance release on top of v1.5.1: the solution is now clean under the ReSharper inspector,
+CI deploys the wiki and documentation site, and the docs/READMEs were refreshed. No public API
+changes.
+
+### Code quality
+
+The whole solution is clean under the ReSharper command-line inspector: `jb inspectcode
+CSharp_CHDSharp.sln --severity=WARNING` reports **zero warnings or errors** (it reported 308
+before the cleanup). The root `.editorconfig` records the policy:
+
+- The four vendored codec projects (`VendoredZLib`, `VendoredLZMA`, `VendoredFlac`,
+  `VendoredZSTD`) are third-party ports kept verbatim. Their style/quality inspections are
+  disabled there because byte-for-byte `chdman` parity depends on the code staying untouched.
+- Consumer-facing models (public library records, the JSON corpus manifest, the WPF data models)
+  are exempt from "never used" inspections: their members are read by callers, serializers and
+  XAML bindings.
+- First-party findings were fixed, including redundant null checks in the CLI encode paths, a
+  write-only AVI stream field, and dead tester state (`LogEntry`/`LogEntries` and the unread
+  `PerFileResult.FilePath`).
+
+### CI, wiki & Pages
+
+- `ci.yml` gained a `docs` job: after the three-OS build/test matrix passes on a push to `main`,
+  it regenerates the GitHub wiki from `docs/` and requests a Pages rebuild. The tag-triggered
+  `release.yml` does the same on every release, so code, wiki and site stay in sync.
+- The documentation site keeps its dark-by-default palette with a persisted light/dark toggle.
+- Every README (root, library, CLI, tests, generator, tester, benchmarks and `docs/`) starts with
+  its badge row.
+
+### Verification
+
+- Full `dotnet test` across `net8.0`/`net9.0`/`net10.0`: 14,004 passed, 0 failed.
+- Full battle harness: 3,174/3,174 checks, byte-identical `chdman` output.
+- `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: 0 findings.
+
+## CHDSharp v1.5.1
+
+Two cue-layout divergences from `chdman` that made real multisession rips fail are fixed. Both
+were found through bug reports against CHDStudio (which uses this library as its built-in
+encoder) and are now covered by `chdman createcd` byte-parity fixtures.
+
+### Fixed: `REM LEAD-OUT` at or before the session's last track
+
+`CueParser.ResolveTrackLengths` computed `endFrames = leadOut - index00` and compared it with the
+track's frame count using two `int` values. MAME compares a `uint32_t` frame count against a
+signed `int32_t` end frame (`cdrom.cpp:2748`), so a negative end frame converts to a huge unsigned
+value and the trim is skipped. Cues that declare `REM LEAD-OUT 00:00:00` (or any address at or
+before the last track) therefore failed with:
+
+```
+Track 2: the session lead-out values leave a negative length (-11400 frames); the cue's
+REM SESSION/LEAD-OUT values do not match the image.
+```
+
+while `chdman createcd` encoded the same cue successfully (the no-op lead-out leaves the cue's
+INDEX positions in charge). The parser now performs the same unsigned comparison, so the layout -
+and the CHD bytes - match chdman.
+
+### Fixed: a pad larger than its track zeroed the whole track
+
+`ChdEncoder.ReadCdHunk` treated the last `PadFrames` frames of a track as zero-filled padding. In
+chdman the pad start is an unsigned offset from the track start (`chdman.cpp:471-472`); when the
+pad is larger than the track the offset wraps below the track start, the pad region is
+unreachable, and every frame is read from the source file. The encoder now mirrors that rule
+instead of writing a fully zeroed track, and the GD-ROM data/pad/split ordering follows the same
+frame layout (`splitStart = frames - splitFrames`, `padStart = splitStart - padFrames`).
+
+### Verification
+
+- New `chdman createcd` byte-parity fixtures: zero lead-out, lead-out before the track, and the
+  pad-larger-than-track layout.
+- Parser regression tests for both lead-out shapes.
+- `CHDSharpEncoderTest` 454/454, `CHDSharpTest` 4214/4214, battle harness `--quick` 905/905 checks.
+
 ## CHDSharp v1.5.0
 
 First release produced end-to-end by GitHub Actions: one tag builds the six platform bundles, creates the GitHub release, publishes the NuGet package, and syncs the wiki and documentation site.

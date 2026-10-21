@@ -2654,38 +2654,41 @@ internal sealed partial class BattleHarness
 
         if (info.Sha1 != null)
         {
-            var sha1 =
+            string? sha1 =
                 header.Sha1 != null && !Util.IsAllZeroArray(header.Sha1)
                     ? Util.ToHex(header.Sha1)
                     : null;
+            var sha1Text = sha1 ?? "(none)";
             Assert(
                 sha1 != null && string.Equals(sha1, info.Sha1, StringComparison.Ordinal),
-                $"combined SHA1 {sha1 ?? "(none)"} != chdman {info.Sha1}"
+                $"combined SHA1 {sha1Text} != chdman {info.Sha1}"
             );
         }
 
         if (info.DataSha1 != null)
         {
-            var rawSha1 =
+            string? rawSha1 =
                 header.RawSha1 != null && !Util.IsAllZeroArray(header.RawSha1)
                     ? Util.ToHex(header.RawSha1)
                     : null;
+            var rawSha1Text = rawSha1 ?? "(none)";
             Assert(
                 rawSha1 != null && string.Equals(rawSha1, info.DataSha1, StringComparison.Ordinal),
-                $"raw SHA1 {rawSha1 ?? "(none)"} != chdman {info.DataSha1}"
+                $"raw SHA1 {rawSha1Text} != chdman {info.DataSha1}"
             );
         }
 
         if (info.ParentSha1 != null)
         {
-            var parentSha1 =
+            string? parentSha1 =
                 header.ParentSha1 != null && !Util.IsAllZeroArray(header.ParentSha1)
                     ? Util.ToHex(header.ParentSha1)
                     : null;
+            var parentSha1Text = parentSha1 ?? "(none)";
             Assert(
                 parentSha1 != null
                 && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal),
-                $"parent SHA1 {parentSha1 ?? "(none)"} != chdman {info.ParentSha1}"
+                $"parent SHA1 {parentSha1Text} != chdman {info.ParentSha1}"
             );
         }
     }
@@ -2741,7 +2744,7 @@ internal sealed partial class BattleHarness
         Assert(info != null, "chdman info failed");
 
         Assert(
-            info != null && header.Version == (uint)info.Version,
+            header.Version == (uint)info.Version,
             $"version {header.Version} != chdman {info.Version}"
         );
         Assert(
@@ -2777,38 +2780,41 @@ internal sealed partial class BattleHarness
 
         if (info.Sha1 != null)
         {
-            var sha1 =
+            string? sha1 =
                 header.Sha1 != null && !Util.IsAllZeroArray(header.Sha1)
                     ? Util.ToHex(header.Sha1)
                     : null;
+            var sha1Text = sha1 ?? "(none)";
             Assert(
                 sha1 != null && string.Equals(sha1, info.Sha1, StringComparison.Ordinal),
-                $"combined SHA1 {sha1 ?? "(none)"} != chdman {info.Sha1}"
+                $"combined SHA1 {sha1Text} != chdman {info.Sha1}"
             );
         }
 
         if (info.DataSha1 != null)
         {
-            var rawSha1 =
+            string? rawSha1 =
                 header.RawSha1 != null && !Util.IsAllZeroArray(header.RawSha1)
                     ? Util.ToHex(header.RawSha1)
                     : null;
+            var rawSha1Text = rawSha1 ?? "(none)";
             Assert(
                 rawSha1 != null && string.Equals(rawSha1, info.DataSha1, StringComparison.Ordinal),
-                $"raw SHA1 {rawSha1 ?? "(none)"} != chdman {info.DataSha1}"
+                $"raw SHA1 {rawSha1Text} != chdman {info.DataSha1}"
             );
         }
 
         if (info.ParentSha1 != null)
         {
-            var parentSha1 =
+            string? parentSha1 =
                 header.ParentSha1 != null && !Util.IsAllZeroArray(header.ParentSha1)
                     ? Util.ToHex(header.ParentSha1)
                     : null;
+            var parentSha1Text = parentSha1 ?? "(none)";
             Assert(
                 parentSha1 != null
                 && string.Equals(parentSha1, info.ParentSha1, StringComparison.Ordinal),
-                $"parent SHA1 {parentSha1 ?? "(none)"} != chdman {info.ParentSha1}"
+                $"parent SHA1 {parentSha1Text} != chdman {info.ParentSha1}"
             );
         }
     }

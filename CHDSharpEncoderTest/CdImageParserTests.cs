@@ -548,7 +548,7 @@ public class CdImageParserTests : IDisposable
     }
 
     [Fact]
-    public void Cue_MultisessionNegativeLayout_ThrowsInsteadOfEncodingGarbage()
+    public void Cue_MultisessionLeadOutBeforeTheTrack_MatchesMameInsteadOfGoingNegative()
     {
         WriteFile("disc.bin", new byte[2352 * 550]);
         var cue = WriteFile(
@@ -567,10 +567,50 @@ public class CdImageParserTests : IDisposable
             """
         );
 
-        // the lead-out (20 frames) lies before track 2's INDEX 00 (150 frames), so MAME's math
-        // would produce a negative track length; the parser rejects it instead of writing a
-        // silently wrong CHD
-        Assert.Throws<InvalidDataException>(() => CueParser.Parse(cue));
+        // The lead-out (20 frames) lies before track 2's INDEX 00 (150 frames). chdman compares
+        // its uint32_t frame count against the signed end frame, so the negative end frame wraps
+        // to a huge value and the trim is skipped; the absolute lead-out then becomes the 20-frame
+        // gap before track 3. The parser must produce that same layout instead of a negative
+        // length (verified byte-identical to chdman createcd).
+        var toc = CueParser.Parse(cue);
+
+        Assert.Equal(150, toc.Tracks[0].Frames);
+        Assert.Equal(150, toc.Tracks[1].Frames);
+        Assert.Equal(20, toc.Tracks[1].LeadOut);
+        Assert.Equal(20, toc.Tracks[1].PadFrames);
+        Assert.Equal(230, toc.Tracks[2].Frames);
+        Assert.Equal(320L * 2352, toc.Tracks[2].FileOffset);
+    }
+
+    [Fact]
+    public void Cue_MultisessionZeroLeadOut_IsIgnoredLikeMame()
+    {
+        WriteFile("disc.bin", new byte[2352 * 20000]);
+        var cue = WriteFile(
+            "disc.cue",
+            """
+            REM SESSION 01
+            FILE "disc.bin" BINARY
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+              TRACK 02 AUDIO
+                INDEX 01 02:32:00
+            REM LEAD-OUT 00:00:00
+            REM SESSION 02
+              TRACK 03 AUDIO
+                INDEX 01 04:00:00
+            """
+        );
+
+        // A zero lead-out used to trim track 2 to -11400 frames. chdman's unsigned comparison
+        // skips the trim and keeps the absolute zero as a no-op gap, so the cue's indexes describe
+        // the disc (verified byte-identical to chdman createcd).
+        var toc = CueParser.Parse(cue);
+
+        Assert.Equal(11400, toc.Tracks[0].Frames);
+        Assert.Equal(6600, toc.Tracks[1].Frames);
+        Assert.Equal(0, toc.Tracks[1].PadFrames);
+        Assert.Equal(2000, toc.Tracks[2].Frames);
     }
 
     [Fact]

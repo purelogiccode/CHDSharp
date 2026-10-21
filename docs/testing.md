@@ -172,3 +172,4 @@ Exit code is `0` when every check passes, `1` on any failure, `2` on usage error
 2. **Corpus fixtures must be deterministic** — regenerate via `CHDSharpTestDataGeneration`, never hand-edit binaries.
 3. **New fixtures must be registered in `manifest.json`** with the correct expected version and pass/fail status.
 4. All 4,214 tests must pass per target framework before merging, and `CHDSharpBattleTest` must stay at 2907/2907 (synthetic) and 3003/3003 (real-world corpus).
+5. **Keep the inspectors clean** — `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING` must report no findings. Never edit vendored code to satisfy an inspection; exempt it in `.editorconfig` instead (see [Building](building.md#code-inspections)).

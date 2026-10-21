@@ -123,7 +123,6 @@ internal class ChdTestRunner
         var result = new PerFileResult
         {
             FileName = entry.FileName,
-            FilePath = entry.FilePath,
             FileSize = entry.FileSize
         };
 
@@ -1198,7 +1197,6 @@ internal class ChdTestRunner
                 new PerFileResult
                 {
                     FileName = "[Codec] Zstd",
-                    FilePath = "(none)",
                     FileSize = "-",
                     SubTests =
                     [
@@ -1310,7 +1308,6 @@ internal class ChdTestRunner
                 cdzsResult = new PerFileResult
                 {
                     FileName = "[Codec] cdzs",
-                    FilePath = cdzsPath,
                     FileSize = FormatFileSize(new FileInfo(cdzsPath).Length),
                     SubTests = subTests,
                     ElapsedSeconds = sw.Elapsed.TotalSeconds
@@ -1321,7 +1318,6 @@ internal class ChdTestRunner
                 cdzsResult = new PerFileResult
                 {
                     FileName = "[Codec] cdzs",
-                    FilePath = "(none)",
                     FileSize = "-",
                     SubTests =
                     [
@@ -1422,7 +1418,6 @@ internal class ChdTestRunner
                     zstdResult = new PerFileResult
                     {
                         FileName = "[Codec] zstd",
-                        FilePath = zstdPath,
                         FileSize = FormatFileSize(new FileInfo(zstdPath).Length),
                         SubTests = subTests,
                         ElapsedSeconds = sw.Elapsed.TotalSeconds
@@ -1433,7 +1428,6 @@ internal class ChdTestRunner
                     zstdResult = new PerFileResult
                     {
                         FileName = "[Codec] zstd",
-                        FilePath = "(none)",
                         FileSize = "-",
                         SubTests =
                         [
@@ -1496,7 +1490,6 @@ internal class ChdTestRunner
                 new PerFileResult
                 {
                     FileName = "[Chain] Parent/Child",
-                    FilePath = "(none)",
                     FileSize = "-",
                     SubTests =
                     [
@@ -1538,7 +1531,6 @@ internal class ChdTestRunner
                     new PerFileResult
                     {
                         FileName = "[Chain] Parent/Child",
-                        FilePath = "(none)",
                         FileSize = "-",
                         SubTests =
                         [
@@ -1739,7 +1731,6 @@ internal class ChdTestRunner
                 new PerFileResult
                 {
                     FileName = "[Chain] Parent/Child",
-                    FilePath = $"{parentPath}, {childPath}",
                     FileSize =
                         $"{FormatFileSize(new FileInfo(parentPath).Length)} + {FormatFileSize(new FileInfo(childPath).Length)}",
                     SubTests = subTests,

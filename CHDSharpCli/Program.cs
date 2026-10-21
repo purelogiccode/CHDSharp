@@ -1070,45 +1070,42 @@ internal static partial class Program
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
 
-            if (encodeOptions != null)
+            if (taskCount.HasValue)
+                encodeOptions.TaskCount = taskCount;
+
+            if (parentPath != null)
+                encodeOptions.ParentPath = parentPath;
+
+            if (inputStartBytes.HasValue)
+                encodeOptions.InputStartBytes = inputStartBytes.Value;
+
+            if (inputLengthBytes.HasValue)
+                encodeOptions.InputLengthBytes = inputLengthBytes.Value;
+
+            if (dvd)
             {
-                if (taskCount.HasValue)
-                    encodeOptions.TaskCount = taskCount;
+                // --dvd (createdvd parity): force 'DVD ' metadata and a 2048-byte unit size.
+                encodeOptions.Metadata = [MetadataWriter.BuildDvdMetadata()];
+                if (unitBytes != 2048u && unitBytes != 512u)
+                    log.Warning(
+                        "  --unitsize/-us overridden by --dvd (was {Old}, now 2048)",
+                        unitBytes
+                    );
 
-                if (parentPath != null)
-                    encodeOptions.ParentPath = parentPath;
-
-                if (inputStartBytes.HasValue)
-                    encodeOptions.InputStartBytes = inputStartBytes.Value;
-
-                if (inputLengthBytes.HasValue)
-                    encodeOptions.InputLengthBytes = inputLengthBytes.Value;
-
-                if (dvd)
-                {
-                    // --dvd (createdvd parity): force 'DVD ' metadata and a 2048-byte unit size.
-                    encodeOptions.Metadata = [MetadataWriter.BuildDvdMetadata()];
-                    if (unitBytes != 2048u && unitBytes != 512u)
-                        log.Warning(
-                            "  --unitsize/-us overridden by --dvd (was {Old}, now 2048)",
-                            unitBytes
-                        );
-
-                    unitBytes = 2048;
-                }
-                else if (templateId.HasValue)
-                {
-                    var tpl = HardDiskTemplates.GetTemplate(templateId.Value);
-                    encodeOptions.Metadata =
-                    [
-                        MetadataWriter.BuildHardDiskMetadata(
-                            tpl.Cylinders,
-                            tpl.Heads,
-                            tpl.Sectors,
-                            tpl.SectorSize
-                        )
-                    ];
-                }
+                unitBytes = 2048;
+            }
+            else if (templateId.HasValue)
+            {
+                var tpl = HardDiskTemplates.GetTemplate(templateId.Value);
+                encodeOptions.Metadata =
+                [
+                    MetadataWriter.BuildHardDiskMetadata(
+                        tpl.Cylinders,
+                        tpl.Heads,
+                        tpl.Sectors,
+                        tpl.SectorSize
+                    )
+                ];
             }
 
             ChdEncoder.EncodeRaw(
@@ -2047,29 +2044,25 @@ internal static partial class Program
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
 
-            if (encodeOptions != null)
-            {
-                if (taskCount.HasValue)
-                    encodeOptions.TaskCount = taskCount;
+            if (taskCount.HasValue)
+                encodeOptions.TaskCount = taskCount;
 
-                if (outputParentPath != null)
-                    encodeOptions.ParentPath = outputParentPath;
+            if (outputParentPath != null)
+                encodeOptions.ParentPath = outputParentPath;
 
-                if (inputStartBytes.HasValue)
-                    encodeOptions.InputStartBytes = inputStartBytes.Value;
-                else if (inputStartHunk.HasValue)
-                    encodeOptions.InputStartBytes = inputStartHunk.Value * hunkBytes;
+            if (inputStartBytes.HasValue)
+                encodeOptions.InputStartBytes = inputStartBytes.Value;
+            else if (inputStartHunk.HasValue)
+                encodeOptions.InputStartBytes = inputStartHunk.Value * hunkBytes;
 
-                if (inputLengthBytes.HasValue)
-                    encodeOptions.InputLengthBytes = inputLengthBytes.Value;
-                else if (inputLengthHunks.HasValue)
-                    encodeOptions.InputLengthBytes = inputLengthHunks.Value * hunkBytes;
-            }
+            if (inputLengthBytes.HasValue)
+                encodeOptions.InputLengthBytes = inputLengthBytes.Value;
+            else if (inputLengthHunks.HasValue)
+                encodeOptions.InputLengthBytes = inputLengthHunks.Value * hunkBytes;
 
             // Add ident metadata if provided
             if (identData != null)
             {
-                encodeOptions ??= new ChdEncodeOptions();
                 encodeOptions.Metadata ??= new List<MetadataEntry>();
                 ((List<MetadataEntry>)encodeOptions.Metadata).Add(
                     MetadataWriter.BuildIdentMetadata(identData)
@@ -2264,14 +2257,11 @@ internal static partial class Program
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
 
-            if (encodeOptions != null)
-            {
-                if (taskCount.HasValue)
-                    encodeOptions.TaskCount = taskCount;
+            if (taskCount.HasValue)
+                encodeOptions.TaskCount = taskCount;
 
-                if (parentPath != null)
-                    encodeOptions.ParentPath = parentPath;
-            }
+            if (parentPath != null)
+                encodeOptions.ParentPath = parentPath;
 
             ChdEncoder.EncodeCd(
                 inputPath,
@@ -2469,14 +2459,11 @@ internal static partial class Program
             var logger = new EncodeProgressLogger(verbose);
             var encodeOptions = logger.Options;
 
-            if (encodeOptions != null)
-            {
-                if (taskCount.HasValue)
-                    encodeOptions.TaskCount = taskCount;
+            if (taskCount.HasValue)
+                encodeOptions.TaskCount = taskCount;
 
-                if (outputParentPath != null)
-                    encodeOptions.ParentPath = outputParentPath;
-            }
+            if (outputParentPath != null)
+                encodeOptions.ParentPath = outputParentPath;
 
             log.Information(
                 "Creating laserdisc CHD: {Input} -> {Output}  (codecs {Codecs}{Parent}{Tasks})",

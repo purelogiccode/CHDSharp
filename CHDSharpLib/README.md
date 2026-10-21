@@ -14,6 +14,18 @@
 
 ---
 
+## What's New in v1.5.2
+
+- **Zero code-inspection warnings** - the solution passes `jb inspectcode` cleanly. The vendored codec sources were not modified (their style inspections are disabled in `.editorconfig` to protect `chdman` byte parity).
+- **CI deploys the docs** - after the three-OS build/test matrix passes on `main`, CI syncs the GitHub wiki from `docs/` and requests a Pages rebuild; the tag pipeline does the same on every release.
+- **No public API changes** - maintenance release; verified with the full `dotnet test` run (14,004/14,004 across `net8.0`/`net9.0`/`net10.0`) and the full battle harness (3,174/3,174 checks).
+
+## What's New in v1.5.1
+
+- **Single-bin multisession cues with an unusable lead-out now encode exactly like chdman** - a `REM LEAD-OUT` at or before the session's last track (`REM LEAD-OUT 00:00:00` is common in real IsoBuster/ImgBurn rips) used to trim the track to a negative length and abort (`the session lead-out values leave a negative length (-11400 frames)`). MAME compares a `uint32_t` frame count against a signed `int32_t` end frame, so the negative value wraps and the trim is skipped; the parser now performs the same unsigned comparison. Byte-identical to `chdman createcd` on the three reported failure shapes.
+- **A pad larger than its track no longer zeroes the track** - the CD reader now mirrors chdman's unsigned pad offset (`chdman.cpp:471-472`): when the pad is larger than the track the offset wraps below the track start, the pad region is unreachable, and every frame is read from the source file. The GD-ROM data/pad/split ordering now matches chdman as well.
+- **No public API changes** - behavior only; verified with 3 new `chdman createcd` byte-parity fixtures, 454/454 encoder tests and 4214/4214 library tests.
+
 ## What's New in v1.5.0
 
 - **Release pipeline** - v1.5.0 ships from a single version tag via GitHub Actions: six platform CLI bundles (`CHDSharp_<rid>_v1.5.0.zip`), the NuGet package, the wiki and the docs site (`scripts/package-release.ps1`, `scripts/prepare-wiki.ps1`, `.github/workflows/release.yml`).

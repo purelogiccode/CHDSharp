@@ -26,13 +26,13 @@ CSharp_CHDSharp.sln
 ├── CHDSharpTest/         xUnit unit + corpus tests
 ├── CHDSharpTestDataGeneration/  Deterministic corpus generator
 ├── CHDSharpTester/       WPF interactive tester
-├── CHDSharpEncoderTest/  xUnit encoder tests (451 tests)
+├── CHDSharpEncoderTest/  xUnit encoder tests (454 tests)
 ├── CHDSharpBattleTest/   Battle test harness (chdman vs CHDSharp)
 ├── VendoredZLib/         Pure C# zlib port
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.5.0) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.5.2) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.5.0`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.5.2`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -62,6 +62,32 @@ All projects enable:
 - `LangVersion 14`.
 - [Meziantou.Analyzer](https://github.com/meziantou/Meziantou.Analyzer) (build-time analyzer, `PrivateAssets=all`).
 - `CHDSharpLib` additionally treats missing XML documentation (`CS1591`) as an error, so **all public API members must carry XML doc comments**.
+
+### Code inspections
+
+The solution is kept **free of ReSharper warnings and errors**. The gate runs InspectCode from
+the [JetBrains command-line tools](https://www.jetbrains.com/help/resharper/InspectCode.html)
+(`jb`), from the repository root:
+
+```bash
+jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --output=inspectcode.xml
+```
+
+The inspection policy lives in the root `.editorconfig`:
+
+- **The vendored codecs are exempt.** `VendoredZLib`, `VendoredLZMA`, `VendoredFlac` and
+  `VendoredZSTD` are third-party ports checked in verbatim; byte-for-byte `chdman` parity depends
+  on them staying untouched, so their style/quality inspections (redundant code, unreachable
+  branches, naming, …) are disabled there. Never "fix" a finding inside those folders — exempt it
+  in `.editorconfig` instead.
+- **Consumer-facing models are exempt from "never used" inspections.** Public library records
+  (`CHDSharpLib/Models`), the JSON corpus manifest
+  (`CHDSharpTestDataGeneration/Models`) and the WPF data models (`CHDSharpTester/Models`) expose
+  members that are only read by callers, serializers or XAML bindings.
+
+> InspectCode 2026.2 logs internal `AssertionException`s while its nullable-flow analyzer walks
+> the vendored ZSTD sources. This is a bug in the analyzer, not a finding: the report is still
+> empty. Add `--exclude="Vendored*/**/*.cs"` if you want a silent console.
 
 ---
 
@@ -83,7 +109,7 @@ dotnet test -v detailed
 
 The suite contains **4,214 tests per target framework** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
 
-The companion **encoder suite** (`CHDSharpEncoderTest`, 451 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
+The companion **encoder suite** (`CHDSharpEncoderTest`, 454 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
 
 ```bash
 dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
@@ -157,7 +183,7 @@ For every runtime identifier the script publishes the CLI as a **framework-depen
 single-file** binary (`--self-contained false -p:PublishSingleFile=true` — the .NET
 runtime is *not* embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and
 `WhatsNew.md`, and writes `CHDSharp_<rid>_v<version>.zip` (the exact asset name the CLI's
-built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.5.0.zip`).
+built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.5.2.zip`).
 Existing files in the output path are never deleted. The binary is named `CHDSharp`
 (`CHDSharp.exe` on Windows); bundles require the .NET 10 runtime.
 
@@ -171,5 +197,5 @@ wiki — see [CI](#ci).
 
 The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`), producing deterministic builds and SourceLink-enabled symbols.
 
-- **`ci.yml`** — the build + test gatekeeper, on every push and pull request across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere, then runs both xUnit suites (`CHDSharpTest` — 4,214 tests per target framework — and `CHDSharpEncoderTest` — 451 tests) for all three TFMs. Test-spawned CLI runs are isolated from the production bug-report API via `CHDSHARP_NO_BUG_REPORTS=1` / `CHDSHARP_NO_TELEMETRY=1`.
+- **`ci.yml`** — the build + test gatekeeper, on every push and pull request across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere, then runs both xUnit suites (`CHDSharpTest` — 4,214 tests per target framework — and `CHDSharpEncoderTest` — 454 tests) for all three TFMs. Test-spawned CLI runs are isolated from the production bug-report API via `CHDSHARP_NO_BUG_REPORTS=1` / `CHDSHARP_NO_TELEMETRY=1`.
 - **`release.yml`** — the tag-triggered release pipeline: builds the six platform CLI bundles, creates the GitHub release, publishes the NuGet package, and syncs this documentation to the wiki. See [Publish the CLI](#publish-the-cli-release-bundles).

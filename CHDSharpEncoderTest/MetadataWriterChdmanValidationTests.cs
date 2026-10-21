@@ -218,7 +218,6 @@ public class MetadataWriterChdmanValidationTests : IDisposable
                     Tag = tag,
                     Flags = flags,
                     Length = length,
-                    Next = next,
                     Payload = payload
                 }
             );
@@ -254,7 +253,6 @@ public class MetadataWriterChdmanValidationTests : IDisposable
     {
         public byte Flags;
         public uint Length;
-        public ulong Next;
         public byte[] Payload = Array.Empty<byte>();
         public uint Tag;
     }

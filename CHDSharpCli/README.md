@@ -11,7 +11,7 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
-> **v1.5.0** — multisession cue parity, Redump GD-ROM multi-cue, cdrdao TOC `START`; six platform bundles attached to every release (`CHDSharp_<os>-<arch>_v<version>.zip`) and a fixed built-in update check. Release bundles are framework-dependent single-file binaries and require the .NET 10 runtime; the library targets `net8.0` / `net9.0` / `net10.0`.
+> **v1.5.2** — `REM LEAD-OUT` at or before a session's last track, and pads larger than their track, now encode byte-identically to `chdman createcd`; the solution is also clean under `jb inspectcode`, and CI keeps the wiki and docs site in sync. Six platform bundles are attached to every release (`CHDSharp_<os>-<arch>_v<version>.zip`). Release bundles are framework-dependent single-file binaries and require the .NET 10 runtime; the library targets `net8.0` / `net9.0` / `net10.0`.
 
 ---
 

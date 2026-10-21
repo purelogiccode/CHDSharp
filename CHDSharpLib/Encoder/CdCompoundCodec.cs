@@ -15,11 +15,9 @@ public abstract class CdCompoundCodec : IChdCodec
 {
     private readonly IChdCodec _baseCodec;
     private readonly byte[] _dataBuffer;
-    private readonly int _dataBytes;
     private readonly byte[] _eccBitmap;
     private readonly int _framesPerHunk;
     private readonly byte[] _subcodeBuffer;
-    private readonly int _subcodeBytes;
     private readonly IChdCodec _subcodeCodec;
 
     /// <summary>Creates a CD compound codec for CD-sized hunks.</summary>
@@ -34,12 +32,12 @@ public abstract class CdCompoundCodec : IChdCodec
             );
 
         _framesPerHunk = (int)(hunkBytes / CdConstants.FrameSize);
-        _dataBytes = _framesPerHunk * CdConstants.MaxSectorData;
-        _subcodeBytes = _framesPerHunk * CdConstants.MaxSubcodeData;
+        var dataBytes = _framesPerHunk * CdConstants.MaxSectorData;
+        var subcodeBytes = _framesPerHunk * CdConstants.MaxSubcodeData;
         _baseCodec = baseCodec;
         _subcodeCodec = subcodeCodec;
-        _dataBuffer = new byte[_dataBytes];
-        _subcodeBuffer = new byte[_subcodeBytes];
+        _dataBuffer = new byte[dataBytes];
+        _subcodeBuffer = new byte[subcodeBytes];
         _eccBitmap = new byte[(_framesPerHunk + 7) / 8];
     }
 

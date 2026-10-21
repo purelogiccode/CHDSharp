@@ -18,6 +18,19 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.5.2
+
+- **Zero code-inspection warnings** - `jb inspectcode` now reports no warnings or errors for the whole solution (308 before). The vendored codec sources are excluded from style inspections in `.editorconfig` and remain untouched for `chdman` parity; the first-party fixes removed redundant null checks and dead tester state.
+- **CI deploys the docs** - after the three-OS build/test matrix passes on `main`, CI regenerates the GitHub wiki from `docs/` and requests a Pages rebuild; the tag pipeline does the same on every release.
+- **Dark docs theme and badge rows** - the documentation site is dark by default with a persisted light/dark toggle, and every README starts with its badge row.
+- **Verification** - full `dotnet test` across `net8.0`/`net9.0`/`net10.0`: 14,004/14,004 passed; full battle harness: 3,174/3,174 checks, byte-identical `chdman` output.
+
+## What's New in v1.5.1
+
+- **Single-bin multisession cues with an unusable lead-out now encode exactly like chdman** - a `REM LEAD-OUT` at or before the session's last track (`REM LEAD-OUT 00:00:00` is common in real IsoBuster/ImgBurn rips) used to trim the track to a negative length and abort (`the session lead-out values leave a negative length (-11400 frames)`). MAME compares a `uint32_t` frame count against a signed `int32_t` end frame, so the negative value wraps and the trim is skipped; the parser now performs the same unsigned comparison. Byte-identical to `chdman createcd` on the three reported failure shapes.
+- **A pad larger than its track no longer zeroes the track** - the CD reader now mirrors chdman's unsigned pad offset (`chdman.cpp:471-472`): when the pad is larger than the track the offset wraps below the track start, the pad region is unreachable, and every frame is read from the source file. The GD-ROM data/pad/split ordering now matches chdman as well.
+- **Verification** - 3 new `chdman createcd` byte-parity fixtures plus parser regression tests; `CHDSharpEncoderTest` 454/454, `CHDSharpTest` 4214/4214, battle harness `--quick` 905/905 checks.
+
 ## What's New in v1.5.0
 
 - **First fully automated release** - one tag builds the six platform bundles, the GitHub release, the NuGet package, the wiki and the docs site (see `.github/workflows/release.yml` and `scripts/package-release.ps1`).
@@ -582,7 +595,7 @@ The full wiki lives in [`docs/`](docs/README.md):
 | Project | Type | Description |
 |---------|------|-------------|
 | `CHDSharpTest` | xUnit | Unit + corpus tests (4,214 tests per TFM, 30 CHD fixtures) |
-| `CHDSharpEncoderTest` | xUnit | Encoder tests (451 tests, chdman cross-validation) |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (454 tests, chdman cross-validation) |
 | `CHDSharpBattleTest` | Console | Battle harness: 2907/2907 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestDataGeneration` | Console | Deterministic corpus generator |
@@ -615,6 +628,9 @@ dotnet build -c Release
 
 # NuGet package
 dotnet pack -c Release CHDSharpLib/
+
+# ReSharper inspections (requires the JetBrains `jb` CLI); must report zero findings
+jb inspectcode CSharp_CHDSharp.sln --severity=WARNING
 ```
 
 Requires [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later. Works on Windows, Linux, and macOS.

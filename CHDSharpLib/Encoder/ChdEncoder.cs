@@ -1864,13 +1864,22 @@ public static class ChdEncoder
             var track = toc.Tracks[trackIndex];
             var frameInTrack = (int)(frame - track.LogicalFrameStart);
 
-            // frames past the track's data region (hunk padding) and its zero-filled gap (pad)
-            // frames are not backed by the source files
+            // frames past the track's data region (hunk padding) are not backed by the source file
             if (frameInTrack >= track.Frames)
                 continue;
 
-            var dataFrames = track.Frames - track.PadFrames;
-            if (frameInTrack >= dataFrames)
+            // chdman computes the zero-filled pad region as splitTrackStart - padFrames at an
+            // unsigned offset from the track's start (chdman.cpp:471-472). A pad larger than the
+            // track itself wraps below the track's start, so the region is unreachable and every
+            // frame is read from the source file instead - never a fully zeroed track.
+            var splitStart = track.Frames - track.SplitFrames;
+            var padStart = splitStart - track.PadFrames;
+            if (
+                track.PadFrames > 0
+                && padStart >= 0
+                && frameInTrack >= padStart
+                && frameInTrack < splitStart
+            )
                 continue;
 
             // the BIN file stores datasize+subsize bytes per sector (no subcode → 2352);
@@ -1888,15 +1897,14 @@ public static class ChdEncoder
             // audio swap - exactly like MAME's chd_cd_compressor::read_data.
             if (
                 track.SplitFrames > 0
-                && frameInTrack >= dataFrames - track.SplitFrames
+                && frameInTrack >= splitStart
                 && trackIndex + 1 < toc.Tracks.Count
             )
             {
                 if (toc.Tracks[trackIndex + 1].FileName is { } nextFileName)
                     sourceFileName = nextFileName;
 
-                sourceOffset =
-                    (long)(frameInTrack - (dataFrames - track.SplitFrames)) * binFrameSize;
+                sourceOffset = (long)(frameInTrack - splitStart) * binFrameSize;
             }
             else
             {

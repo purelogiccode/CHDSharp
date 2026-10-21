@@ -17,7 +17,7 @@ This page describes the solution layout and the internal design of the library.
 | `CHDSharpTest` | xUnit | Unit + corpus tests (4,214 tests per target framework, 30 CHD fixtures). |
 | `CHDSharpTestDataGeneration` | Console | Deterministic corpus generator driving vintage `chdman`/`hdcomp` binaries. |
 | `CHDSharpTester` | WPF | Interactive batch verification, cross-checked against `chdman`. |
-| `CHDSharpEncoderTest` | xUnit | Encoder tests (451) with chdman cross-validation. |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (454) with chdman cross-validation. |
 | `CHDSharpBattleTest` | Console | Battle harness: 2907/2907 (deterministic) + 3003/3003 (real-world) checks vs `chdman` on CHD corpora. |
 
 

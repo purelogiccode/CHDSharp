@@ -69,7 +69,7 @@ internal static class CorpusClassifier
         // laser-disc CHDs carry AVLD/AVAV metadata instead of a class
         foreach (var meta in chd.Metadata)
         {
-            var s = meta.ToString() ?? "";
+            var s = meta.ToString();
             if (s.Contains("AVLD", StringComparison.Ordinal) || s.Contains("AVAV", StringComparison.Ordinal))
                 return MediaKind.LaserDisc;
         }

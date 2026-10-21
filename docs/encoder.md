@@ -65,7 +65,7 @@ produces byte-identical output to encoding without one.
 ## Validation
 
 The encoder is validated against `chdman.exe` v0.288 and the CHDSharpLib reader
-(451 tests per target framework in `CHDSharpEncoderTest`):
+(454 tests per target framework in `CHDSharpEncoderTest`):
 
 - `chdman info` reports the file without errors; `chdman verify` passes (raw + overall SHA-1).
 - `chdman extractraw` of encoder output is byte-identical to the source (raw) and to

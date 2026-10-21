@@ -64,3 +64,44 @@ jobs:
 
       - name: Unit tests - CHDSharpEncoderTest
         run: dotnet test CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release --no-build
+
+  docs:
+    name: Wiki & Pages
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare wiki pages from docs/
+        shell: pwsh
+        run: ./scripts/prepare-wiki.ps1 -OutputPath wiki-content
+
+      - name: Push wiki pages
+        env:
+          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WIKI_TOKEN:-}" ]; then
+            echo "::error::WIKI_TOKEN secret is not set"
+            exit 1
+          fi
+          git clone "https://x-access-token:${WIKI_TOKEN}@github.com/purelogiccode/CHDSharp.wiki.git" wiki-repo
+          cp -f wiki-content/*.md wiki-repo/
+          cd wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki is already up to date"
+          else
+            git commit -m "wiki: sync from docs/ (${GITHUB_SHA::7})"
+            git push
+          fi
+
+      - name: Request Pages rebuild
+        env:
+          GH_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: gh api -X POST repos/purelogiccode/CHDSharp/pages/builds --jq '.status'
