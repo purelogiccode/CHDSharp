@@ -86,6 +86,9 @@ jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections 
 - Commit style: conventional prefixes — `feat:`, `fix:`, `docs:`, `bench:`, `release:`.
 - Docs: `docs/*.md` (Jekyll, deployed via GitHub Pages), `docs/ReleaseNotes.md`, and the
   per-project READMEs — update them when behavior, CLI surface, or logging changes.
+- Every `README.md` starts with its badge row. The docs site is dark by default via
+  `docs/_layouts/default.html` + `docs/assets/css/style.css` (no Jekyll `theme:` — the custom
+  layout must keep winning).
 - Licensing is mixed — do not strip or alter license headers/notices: library MIT,
   `VendoredFlac` LGPL-2.1, `VendoredZLib` zlib, `VendoredLZMA` public domain, `VendoredZSTD`
   MIT, Tester GPL-3.0-only.
@@ -146,6 +149,9 @@ matches `Directory.Build.props`.
    gh run list --workflow=release.yml --limit 1
    (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp/index.json).versions
    ```
+
+   NuGet can take a few minutes to index a freshly pushed package; the workflow logs
+   `Your package was pushed.` when the push succeeded even if the version is not yet listed.
 
 Required repository secrets: `NUGET_API_KEY` (nuget.org push) and `WIKI_TOKEN` (wiki push and
 Pages rebuild request; needs `repo` scope).
