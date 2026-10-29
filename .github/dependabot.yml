@@ -1,0 +1,45 @@
+# Dependabot keeps NuGet packages and GitHub Actions current.
+# Security updates are enabled in the repository settings; this file adds
+# scheduled version updates and groups them so the PR queue stays manageable.
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    groups:
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      analyzers:
+        patterns:
+          - "Meziantou.*"
+          - "Roslynator.*"
+      xunit:
+        patterns:
+          - "xunit*"
+      serilog:
+        patterns:
+          - "Serilog*"
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"

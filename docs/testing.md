@@ -152,7 +152,7 @@ It requires the `chdman` binaries in `CHDSharpTest/chdman/` for cross-checks.
 # Deterministic corpus (seed 1337 by default); requires chdman.exe (repo root or PATH)
 dotnet run --project CHDSharpBattleTest
 
-# Reduced smoke run
+# Reduced smoke run (CI runs this on Windows against CHDSharpTester/chdman.exe)
 dotnet run --project CHDSharpBattleTest -- --quick
 
 # Battle-test a real CHD collection (recursive; per-command timeout in seconds)

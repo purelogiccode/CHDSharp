@@ -12,5 +12,8 @@
     <LangVersion>14</LangVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
+    <!-- Fail restore/build on known vulnerable direct and transitive packages. -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
   </PropertyGroup>
 </Project>

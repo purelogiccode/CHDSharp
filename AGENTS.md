@@ -115,8 +115,9 @@ matches `Directory.Build.props`.
    jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # must report 0 findings
    ```
 
-4. **Commit and push `main`**, then wait for `ci.yml` (three-OS build/test, then the `docs` job
-   syncs the wiki and requests a Pages rebuild).
+4. **Commit and push `main`**, then wait for the `CI gate` (three-OS build/test, InspectCode,
+   package, coverage, docs build, and the chdman parity smoke), after which the `Wiki & Pages` job
+   syncs the wiki and requests a Pages rebuild.
 5. **Build the bundles locally** (optional before tagging, required when the user asks for them):
 
    ```bash
@@ -158,16 +159,42 @@ Pages rebuild request; needs `repo` scope).
 
 ## CI
 
-`.github/workflows/ci.yml` builds and tests on every push and pull request across Linux, macOS,
-and Windows (matrix). Each OS job installs the .NET 8/9/10 SDKs and runs both xUnit suites
-(`CHDSharpTest`, `CHDSharpEncoderTest`) for all three target frameworks. The CLI is built first
-because `CHDSharpTest` spawns `CHDSharpCli/bin/<config>/<tfm>/CHDSharp.dll`. The Windows job also
-builds the full solution (WPF tester, battle harness, benchmark). Tests that need `chdman` no-op
-when it is absent, so chdman validation only actually runs on Windows CI (the exe is copied from
-`CHDSharpTester/`); the battle harness itself is not part of CI. CI sets
-`CHDSHARP_NO_BUG_REPORTS=1`/`CHDSHARP_NO_TELEMETRY=1` so test-spawned CLI runs never reach the
-production bug-report API or usage stats. On a push to `main`, a `docs` job (after the
-build/test matrix) regenerates the GitHub wiki from `docs/` and requests a Pages rebuild; the
-same steps run in `release.yml` for tags, so code, wiki and the documentation site stay in sync.
-GitHub Pages is still served by the repository-managed `pages-build-deployment` workflow from
-`main`/`docs` (build type `legacy`).
+`.github/workflows/ci.yml` runs on every push to `main`, every pull request, and manual dispatch:
+
+- **`build & test`** - Linux/macOS/Windows matrix; installs the .NET 8/9/10 SDKs, builds with
+  `-warnaserror` (NuGet audit is on), and runs both xUnit suites (`CHDSharpTest`,
+  `CHDSharpEncoderTest`) for all three target frameworks. The CLI is built first because
+  `CHDSharpTest` spawns `CHDSharpCli/bin/<config>/<tfm>/CHDSharp.dll`; the Windows job also builds
+  the full solution (WPF tester, battle harness, benchmark).
+- **`quality`** - Windows; installs JetBrains ReSharper GlobalTools and fails on any
+  `jb inspectcode --severity=WARNING` finding, uploading the SARIF to code scanning.
+- **`package`** - packs `CHDSharpLib`, checks the `.nupkg` contents, and uploads it as an artifact.
+- **`coverage`** - collects merged Cobertura coverage for both suites on `net10.0`.
+- **`docs build`** - builds the Jekyll site with `--strict_front_matter`.
+- **`chdman parity (smoke)`** - Windows; runs the quick battle harness against
+  `CHDSharpTester/chdman.exe`.
+- **`CI gate`** - aggregates all of the above; this is the status check to require.
+- **`Wiki & Pages`** - on `main` only, after the gate, regenerates the GitHub wiki from `docs/`
+  and requests a Pages rebuild.
+
+Tests that need `chdman` no-op when it is absent, so the unit suites only run chdman validation
+on Windows; the quick battle job always passes the checked-in `CHDSharpTester/chdman.exe`
+explicitly. CI sets `CHDSHARP_NO_BUG_REPORTS=1`/`CHDSHARP_NO_TELEMETRY=1` so test-spawned CLI
+runs never reach the production bug-report API or usage stats. The same wiki/Pages steps run in
+`release.yml` for tags, so code, wiki and the documentation site stay in sync. GitHub Pages is
+still served by the repository-managed `pages-build-deployment` workflow from `main`/`docs`
+(build type `legacy`).
+
+## Security
+
+- CodeQL (`.github/workflows/codeql.yml`), Dependency Review
+  (`.github/workflows/dependency-review.yml`), and OpenSSF Scorecard
+  (`.github/workflows/scorecard.yml`) run in CI; Dependabot is configured in
+  `.github/dependabot.yml`.
+- Repository settings: Dependabot alerts/security updates, secret scanning with push protection,
+  private vulnerability reporting, read-only default workflow permissions, and mandatory
+  full-SHA action pinning with GitHub-owned/verified actions only.
+- `SECURITY.md` is the vulnerability-reporting policy. Never commit secrets; keep the CLI and
+  tests opt-out-aware (`CHDSHARP_NO_BUG_REPORTS`, `CHDSHARP_NO_TELEMETRY`).
+- `NuGetAuditMode=all` in `Directory.Build.props` plus `-warnaserror` in CI fails the build on
+  known vulnerable direct or transitive packages.

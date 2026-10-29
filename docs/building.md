@@ -197,5 +197,19 @@ wiki — see [CI](#ci).
 
 The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`), producing deterministic builds and SourceLink-enabled symbols.
 
-- **`ci.yml`** — the build + test gatekeeper, on every push and pull request across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere, then runs both xUnit suites (`CHDSharpTest` — 4,214 tests per target framework — and `CHDSharpEncoderTest` — 454 tests) for all three TFMs. Test-spawned CLI runs are isolated from the production bug-report API via `CHDSHARP_NO_BUG_REPORTS=1` / `CHDSHARP_NO_TELEMETRY=1`.
-- **`release.yml`** — the tag-triggered release pipeline: builds the six platform CLI bundles, creates the GitHub release, publishes the NuGet package, and syncs this documentation to the wiki. See [Publish the CLI](#publish-the-cli-release-bundles).
+- **`ci.yml`** - the build + test gatekeeper, on every push to `main`, every pull request, and manual dispatch. The `CI gate` job aggregates:
+  - `build & test` across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere with `-warnaserror` (NuGet audit covers direct and transitive packages), then runs both xUnit suites (`CHDSharpTest` - 4,214 tests per target framework - and `CHDSharpEncoderTest` - 454 tests) for all three TFMs.
+  - `quality`: `jb inspectcode --severity=WARNING`, failing on any finding and uploading SARIF to code scanning.
+  - `package`: `dotnet pack` plus a `.nupkg` content check, uploaded as an artifact.
+  - `coverage`: merged Cobertura coverage for both suites on `net10.0` (the wall-clock parallel-encode test is excluded because instrumentation invalidates its timing).
+  - `docs build`: Jekyll build of `docs/` with `--strict_front_matter`.
+  - `chdman parity (smoke)`: the quick battle harness against the checked-in `CHDSharpTester/chdman.exe`.
+  - `Wiki & Pages` (on `main` only, after the gate): syncs `docs/` to the wiki and requests a Pages rebuild.
+
+  Test-spawned CLI runs are isolated from the production bug-report API via `CHDSHARP_NO_BUG_REPORTS=1` / `CHDSHARP_NO_TELEMETRY=1`.
+- **`codeql.yml`** - CodeQL C# analysis (`security-extended`) plus GitHub Actions analysis on `main`, pull requests, and a weekly schedule.
+- **`dependency-review.yml`** - fails pull requests that add moderate-or-higher vulnerable dependencies.
+- **`scorecard.yml`** - OpenSSF Scorecard, published to the public API and code scanning.
+- **`release.yml`** - the tag-triggered release pipeline: builds the six platform CLI bundles, attests their provenance, creates the GitHub release, publishes the NuGet package, and syncs this documentation to the wiki. See [Publish the CLI](#publish-the-cli-release-bundles).
+
+Repository security settings (Dependabot alerts/security updates, secret scanning with push protection, private vulnerability reporting, read-only workflow permissions, and mandatory full-SHA action pinning) are described in [`SECURITY.md`](https://github.com/purelogiccode/CHDSharp/blob/main/SECURITY.md).

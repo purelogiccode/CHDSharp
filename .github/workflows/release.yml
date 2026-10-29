@@ -1,5 +1,6 @@
 # Builds and publishes a CHDSharp release from a version tag:
 #   - six platform bundles (framework-dependent single-file CLI) attached to the GitHub release
+#   - build provenance attestations for the bundles and the NuGet package
 #   - the CHDSharp NuGet package
 #   - the docs/ folder synced to the GitHub wiki (and a Pages rebuild request)
 #
@@ -12,7 +13,7 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -23,15 +24,22 @@ jobs:
     name: Bundles & GitHub release
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "true"
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup .NET SDK 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           dotnet-version: "10.0.x"
 
@@ -46,6 +54,11 @@ jobs:
       - name: Build release bundles
         shell: pwsh
         run: ./scripts/package-release.ps1 -OutputPath dist
+
+      - name: Attest bundle provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: "dist/*.zip"
 
       - name: Create GitHub release and upload bundles
         env:
@@ -62,17 +75,25 @@ jobs:
 
   nuget:
     name: NuGet publish
+    needs: bundles
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "true"
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup .NET SDKs (8.0, 9.0, 10.0)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           dotnet-version: |
             8.0.x
@@ -93,16 +114,28 @@ jobs:
             echo "::error::NUGET_API_KEY secret is not set"
             exit 1
           fi
-          dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
+          dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release -warnaserror
           dotnet nuget push "CHDSharpLib/bin/Release/CHDSharp.$version.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+
+      - name: Attest NuGet package provenance
+        if: hashFiles('CHDSharpLib/bin/Release/CHDSharp.*.nupkg') != ''
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: "CHDSharpLib/bin/Release/CHDSharp.*.nupkg"
 
   wiki:
     name: Wiki & Pages
+    needs: bundles
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Prepare wiki pages from docs/
         shell: pwsh

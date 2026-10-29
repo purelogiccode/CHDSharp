@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -9,11 +10,19 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+  # Test-spawned CLI runs must not hit the production bug-report API or usage stats.
+  CHDSHARP_NO_BUG_REPORTS: "1"
+  CHDSHARP_NO_TELEMETRY: "1"
+
 jobs:
-  build-and-test:
+  build:
     name: build & test (${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -22,19 +31,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
 
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-      DOTNET_NOLOGO: "true"
-      # Test-spawned CLI runs must not hit the production bug-report API or usage stats.
-      CHDSHARP_NO_BUG_REPORTS: "1"
-      CHDSHARP_NO_TELEMETRY: "1"
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup .NET SDKs (8.0, 9.0, 10.0)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           dotnet-version: |
             8.0.x
@@ -50,14 +54,14 @@ jobs:
       - name: Build (cross-platform projects)
         if: runner.os != 'Windows'
         run: |
-          dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
-          dotnet build CHDSharpCli/CHDSharpCli.csproj -c Release
-          dotnet build CHDSharpTest/CHDSharpTest.csproj -c Release
-          dotnet build CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release
+          dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release -warnaserror
+          dotnet build CHDSharpCli/CHDSharpCli.csproj -c Release -warnaserror
+          dotnet build CHDSharpTest/CHDSharpTest.csproj -c Release -warnaserror
+          dotnet build CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release -warnaserror
 
       - name: Build (full solution)
         if: runner.os == 'Windows'
-        run: dotnet build CSharp_CHDSharp.sln -c Release
+        run: dotnet build CSharp_CHDSharp.sln -c Release -warnaserror
 
       - name: Unit tests - CHDSharpTest
         run: dotnet test CHDSharpTest/CHDSharpTest.csproj -c Release --no-build
@@ -65,15 +69,240 @@ jobs:
       - name: Unit tests - CHDSharpEncoderTest
         run: dotnet test CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release --no-build
 
-  docs:
-    name: Wiki & Pages
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  quality:
+    name: quality (InspectCode)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      security-events: write
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDKs (8.0, 9.0, 10.0)
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Install JetBrains ReSharper command-line tools
+        run: dotnet tool install --global JetBrains.ReSharper.GlobalTools
+
+      - name: Run InspectCode
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --format=Sarif --output=inspectcode.sarif --exclude="Vendored*/**/*.cs" --no-updates
+
+      - name: Fail on inspection findings
+        shell: pwsh
+        run: |
+          $report = Get-Content inspectcode.sarif -Raw | ConvertFrom-Json
+          $results = @($report.runs[0].results)
+          Write-Host "InspectCode findings: $($results.Count)"
+          if ($results.Count -gt 0) {
+            foreach ($result in $results) {
+              $location = $result.locations[0].physicalLocation
+              Write-Host ("{0} {1}:{2} {3}" -f $result.ruleId, $location.artifactLocation.uri, $location.region.startLine, $result.message.text)
+            }
+            exit 1
+          }
+
+      - name: Upload InspectCode SARIF to code scanning
+        if: always() && hashFiles('inspectcode.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: github/codeql-action/upload-sarif@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          sarif_file: inspectcode.sarif
+          category: resharper
+
+  package:
+    name: package (NuGet) & workflow lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Lint GitHub Actions workflows
+        run: |
+          set -euo pipefail
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+          ./actionlint -color
+
+      - name: Setup .NET SDK 10
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Pack CHDSharp
+        run: dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release -o artifacts/packages -warnaserror
+
+      - name: Inspect package contents
+        run: |
+          set -euo pipefail
+          ls -l artifacts/packages
+          unzip -l artifacts/packages/CHDSharp.*.nupkg
+
+      - name: Upload NuGet package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: nuget-package
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+          retention-days: 14
+
+  coverage:
+    name: coverage (net10.0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK 10
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Build CLI and test suites (net10.0)
+        run: |
+          dotnet build CHDSharpCli/CHDSharpCli.csproj -c Release -f net10.0 -warnaserror
+          dotnet build CHDSharpTest/CHDSharpTest.csproj -c Release -f net10.0 -warnaserror
+          dotnet build CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release -f net10.0 -warnaserror
+
+      - name: Install dotnet-coverage
+        run: dotnet tool install --global dotnet-coverage --version 18.12.0
+
+      - name: Collect and merge coverage
+        run: |
+          set -euo pipefail
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          mkdir -p coverage
+          dotnet-coverage collect "dotnet test CHDSharpTest/CHDSharpTest.csproj -c Release -f net10.0 --no-build" -f cobertura -o coverage/lib.cobertura.xml --nologo
+          # Instrumentation invalidates wall-clock assertions, so skip the one timing benchmark.
+          dotnet-coverage collect "dotnet test CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release -f net10.0 --no-build --filter FullyQualifiedName!~ParallelEncode_IsFasterThanSingleThreaded" -f cobertura -o coverage/encoder.cobertura.xml --nologo
+          dotnet-coverage merge coverage/lib.cobertura.xml coverage/encoder.cobertura.xml -f cobertura -o coverage/coverage.cobertura.xml --nologo
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage
+          path: coverage/*.xml
+          if-no-files-found: error
+          retention-days: 14
+
+  docs_build:
+    name: docs build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@e5517072e87f198d9533967ae13d97c11b604005 # v1.99.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: false
+
+      - name: Build Jekyll site
+        run: |
+          gem install jekyll -v 4.3.4 --no-document
+          jekyll build --source docs --destination _site --strict_front_matter --trace
+
+  battle:
+    name: chdman parity (smoke)
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK 10
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Build battle harness (net10.0)
+        run: dotnet build CHDSharpBattleTest/CHDSharpBattleTest.csproj -c Release -f net10.0 -warnaserror
+
+      - name: Run quick chdman parity battle
+        run: dotnet run --project CHDSharpBattleTest -c Release --framework net10.0 --no-build -- --chdman CHDSharpTester/chdman.exe --quick --no-keep
+
+      - name: Upload battle artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: battle-artifacts
+          path: battle/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  ci:
+    name: CI gate
+    if: always()
+    needs: [build, quality, package, coverage, docs_build, battle]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify every required job succeeded
+        run: |
+          set -euo pipefail
+          for result in \
+            "build=${{ needs.build.result }}" \
+            "quality=${{ needs.quality.result }}" \
+            "package=${{ needs.package.result }}" \
+            "coverage=${{ needs.coverage.result }}" \
+            "docs_build=${{ needs.docs_build.result }}" \
+            "battle=${{ needs.battle.result }}"; do
+            name="${result%%=*}"
+            status="${result#*=}"
+            echo "$name: $status"
+            if [ "$status" != "success" ]; then
+              echo "::error::Required job '$name' did not succeed ($status)"
+              exit 1
+            fi
+          done
+
+  wiki:
+    name: Wiki & Pages
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Prepare wiki pages from docs/
         shell: pwsh
