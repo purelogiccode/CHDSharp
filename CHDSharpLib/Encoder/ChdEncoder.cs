@@ -1890,6 +1890,7 @@ public static class ChdEncoder
             var binFrameSize = track.DataSize + track.SubSize;
             var sourceFileName = track.FileName!;
             long sourceOffset;
+            var splitPregapNote = string.Empty;
 
             // Redump multi-cue GD-ROMs move a pregap onto the end of the previous track as a
             // split region: physically those sectors are the start of the NEXT track's file, so
@@ -1901,8 +1902,13 @@ public static class ChdEncoder
                 && trackIndex + 1 < toc.Tracks.Count
             )
             {
-                if (toc.Tracks[trackIndex + 1].FileName is { } nextFileName)
+                var nextTrack = toc.Tracks[trackIndex + 1];
+                if (nextTrack.FileName is { } nextFileName)
+                {
                     sourceFileName = nextFileName;
+                    splitPregapNote =
+                        $" (split pregap region read from track {nextTrack.Number}'s file)";
+                }
 
                 sourceOffset = (long)(frameInTrack - splitStart) * binFrameSize;
             }
@@ -1915,7 +1921,19 @@ public static class ChdEncoder
             file.Position = sourceOffset;
             var bytesRead = file.Read(buffer, f * CdConstants.FrameSize, binFrameSize);
             if (bytesRead != binFrameSize)
-                throw new InvalidDataException($"Unexpected end of file [{sourceFileName}]");
+            {
+                // A short read means the image ends before the sheet's layout does. Name the
+                // track, frame and byte range so the truncated file is identifiable without
+                // guessing (the old message only carried the file name).
+                throw new InvalidDataException(
+                    $"Unexpected end of file [{sourceFileName}]{splitPregapNote}: "
+                        + $"track {track.Number}, frame {frameInTrack} (logical frame {frame}), "
+                        + $"source offset 0x{sourceOffset:X} ({sourceOffset}), "
+                        + $"sector size {binFrameSize}: "
+                        + $"needed {binFrameSize} bytes but read {bytesRead}; "
+                        + $"the file is {file.Length} bytes long, shorter than the source layout declares."
+                );
+            }
 
             // audio sectors are little-endian in BIN files; swap to big-endian for CHD
             if (track.Swap)

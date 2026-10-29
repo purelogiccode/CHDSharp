@@ -282,6 +282,52 @@ public class EncodeCdTests : IDisposable
     }
 
     [Fact]
+    public void EncodeCd_TruncatedWav_ReportsTrackFrameAndOffset()
+    {
+        // The data chunk declares 10 audio frames but only 3 are present, the shape of a
+        // truncated rip. The short read must name the track, the frame within it, the logical
+        // frame and the source offset so the bad file can be diagnosed from the exception alone.
+        WriteTruncatedWav(declaredFrames: 10, presentFrames: 3);
+        WriteCue(
+            """
+            FILE "game.wav" WAVE
+              TRACK 01 AUDIO
+                INDEX 01 00:00:00
+            """
+        );
+
+        var exception = Assert.Throws<InvalidDataException>(() =>
+            ChdEncoder.EncodeCd(Path.Combine(_dir, "test.cue"), Path.Combine(_dir, "short.chd"))
+        );
+
+        Assert.Contains(
+            "game.wav]: track 1, frame 3 (logical frame 3)",
+            exception.Message,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "Unexpected end of file [",
+            exception.Message,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "source offset 0x1BBC (7100)",
+            exception.Message,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "sector size 2352: needed 2352 bytes but read 0",
+            exception.Message,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "the file is 7100 bytes long",
+            exception.Message,
+            StringComparison.Ordinal
+        );
+    }
+
+    [Fact]
     public void EncodeCd_MissingCue_Throws()
     {
         Assert.Throws<FileNotFoundException>(() =>
@@ -350,6 +396,34 @@ public class EncodeCdTests : IDisposable
     {
         using var fs = File.Create(Path.Combine(_dir, "game.bin"));
         fs.SetLength(size);
+    }
+
+    /// <summary>
+    ///     Writes a stereo 16-bit/44.1 kHz PCM WAV whose <c>data</c> chunk declares
+    ///     <paramref name="declaredFrames" /> CD frames but only <paramref name="presentFrames" />
+    ///     are present, the shape of a truncated rip.
+    /// </summary>
+    /// <param name="declaredFrames">Frame count written in the WAV data-chunk header.</param>
+    /// <param name="presentFrames">Frame count actually appended after the header.</param>
+    private void WriteTruncatedWav(int declaredFrames, int presentFrames)
+    {
+        var dataBytes = (long)declaredFrames * CdConstants.MaxSectorData;
+        using var fs = File.Create(Path.Combine(_dir, "game.wav"));
+        using var writer = new BinaryWriter(fs);
+        writer.Write("RIFF"u8);
+        writer.Write((uint)(36 + dataBytes));
+        writer.Write("WAVE"u8);
+        writer.Write("fmt "u8);
+        writer.Write(16);
+        writer.Write((short)1); // PCM
+        writer.Write((short)2); // stereo
+        writer.Write(44100);
+        writer.Write(44100 * 2 * 2);
+        writer.Write((short)4); // block alignment
+        writer.Write((short)16); // bits per sample
+        writer.Write("data"u8);
+        writer.Write((uint)dataBytes);
+        writer.Write(new byte[presentFrames * CdConstants.MaxSectorData]);
     }
 
     private static uint ReadU32Be(byte[] data, int offset)
