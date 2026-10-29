@@ -211,6 +211,71 @@ public class ReadAheadTests
         await chd.DisposeAsync();
     }
 
+    [Fact]
+    public async Task Dispose_does_not_wait_for_inflight_readahead_tasks()
+    {
+        // Hunk 0 starts at 3 * Blocksize; hunk 1 starts one block later. Allow the
+        // foreground hunk-0 read, then block the background read-ahead of hunk 1.
+        using var stream = new BlockingReadStream(
+            BuildTestChd(),
+            blockAtOrAfter: 4 * Blocksize
+        );
+
+        var err = ChdFile.Open(stream, leaveOpen: true, out var chd);
+        Assert.Equal(ChdError.Chderrnone, err);
+
+        chd!.ConfigureReadAhead(1);
+        var buf = new byte[Blocksize];
+        Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(0, buf));
+
+        Assert.True(
+            stream.WaitForBlockedRead(TimeSpan.FromSeconds(5)),
+            "read-ahead did not reach the blocking read"
+        );
+
+        // A read that ignores cancellation must not stall disposal. The task keeps the
+        // semaphore and token source alive until it finishes; the last one out disposes
+        // them, so the task's Release cannot hit a disposed semaphore.
+        await Task.Run(chd.Dispose).WaitAsync(TimeSpan.FromSeconds(5));
+
+        stream.Release();
+        Assert.True(
+            stream.WaitForBlockedReadToComplete(TimeSpan.FromSeconds(5)),
+            "the blocked read-ahead read did not complete"
+        );
+    }
+
+    [Fact]
+    public async Task Disable_readahead_does_not_wait_for_inflight_tasks()
+    {
+        using var stream = new BlockingReadStream(
+            BuildTestChd(),
+            blockAtOrAfter: 4 * Blocksize
+        );
+
+        var err = ChdFile.Open(stream, leaveOpen: true, out var chd);
+        Assert.Equal(ChdError.Chderrnone, err);
+        using var owner = chd!;
+
+        chd!.ConfigureReadAhead(1);
+        var buf = new byte[Blocksize];
+        Assert.Equal(ChdError.Chderrnone, chd.ReadHunk(0, buf));
+        Assert.True(
+            stream.WaitForBlockedRead(TimeSpan.FromSeconds(5)),
+            "read-ahead did not reach the blocking read"
+        );
+
+        // Disabling read-ahead disposes the manager; it must not wait for the blocked read.
+        await Task.Run(() => chd.ConfigureReadAhead(0)).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(0, chd.ReadAheadHunkCount);
+
+        stream.Release();
+        Assert.True(
+            stream.WaitForBlockedReadToComplete(TimeSpan.FromSeconds(5)),
+            "the blocked read-ahead read did not complete"
+        );
+    }
+
     // ── Read-ahead with LRU cache interaction ─────────────────────────────
 
     [Fact]
@@ -266,5 +331,93 @@ public class ReadAheadTests
 
         chd.ReadAheadHunkCount = 0;
         Assert.Equal(0, chd.ReadAheadHunkCount);
+    }
+}
+
+/// <summary>
+///     A seekable stream that blocks reads at or beyond a chosen offset until
+///     <see cref="Release" /> is called. Used to keep a read-ahead task in flight
+///     while testing disposal.
+/// </summary>
+internal sealed class BlockingReadStream : Stream
+{
+    private readonly Stream _inner;
+    private readonly long _blockAtOrAfter;
+    private readonly ManualResetEventSlim _blocked = new(false);
+    private readonly ManualResetEventSlim _blockedReadCompleted = new(false);
+    private readonly ManualResetEventSlim _gate = new(false);
+
+    internal BlockingReadStream(Stream inner, long blockAtOrAfter)
+    {
+        _inner = inner;
+        _blockAtOrAfter = blockAtOrAfter;
+    }
+
+    public override bool CanRead => true;
+
+    public override bool CanSeek => true;
+
+    public override bool CanWrite => false;
+
+    public override long Length => _inner.Length;
+
+    public override long Position
+    {
+        get => _inner.Position;
+        set => _inner.Position = value;
+    }
+
+    internal bool WaitForBlockedRead(TimeSpan timeout) => _blocked.Wait(timeout);
+
+    internal bool WaitForBlockedReadToComplete(TimeSpan timeout) =>
+        _blockedReadCompleted.Wait(timeout);
+
+    internal void Release() => _gate.Set();
+
+    public override void Flush()
+    {
+        // Read-only stream.
+    }
+
+    public override int Read(byte[] buffer, int offset, int count) =>
+        ReadCore(buffer.AsSpan(offset, count));
+
+    public override int Read(Span<byte> buffer) => ReadCore(buffer);
+
+    public override long Seek(long offset, SeekOrigin origin) => _inner.Seek(offset, origin);
+
+    public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _gate.Dispose();
+            _blocked.Dispose();
+            _blockedReadCompleted.Dispose();
+            _inner.Dispose();
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private int ReadCore(Span<byte> buffer)
+    {
+        var gated = false;
+        if (_inner.Position >= _blockAtOrAfter && !_gate.IsSet)
+        {
+            _blocked.Set();
+            _gate.Wait();
+            gated = true;
+        }
+
+        var read = _inner.Read(buffer);
+        if (gated)
+            _blockedReadCompleted.Set();
+
+        return read;
     }
 }

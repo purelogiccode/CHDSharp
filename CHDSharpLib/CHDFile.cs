@@ -2773,7 +2773,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         var me = _chd.Map[hunknum];
 
         if (me.Comptype == CompressionType.Compressionparent)
-            return ReadParentHunkConcurrent(me, buffer);
+            return ReadParentHunkConcurrent(me, buffer, cancellationToken);
 
         // Resolve the entry that actually holds compressed data (follow SELF links).
         var dataEntry = me;
@@ -2819,6 +2819,13 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 LogHunkDecompressFailure(hunknum, dataEntry, rbErr);
 
             return rbErr;
+        }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            // Disposal cancels in-flight read-ahead before releasing the stream/codec, so
+            // an ObjectDisposedException here is shutdown, not a decompression failure.
+            // Do not log it: Warning+ events are forwarded to the CLI bug-report sink.
+            return ChdError.Chderrdecompressionerror;
         }
         catch (Exception ex)
         {
@@ -2899,7 +2906,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
     ///     Parent-hunk resolution for <see cref="ReadHunkConcurrent" />: serializes on the
     ///     parent instance (its own state is not concurrency-safe) and uses a local stitch buffer.
     /// </summary>
-    private ChdError ReadParentHunkConcurrent(MapEntry me, byte[] buffer)
+    private ChdError ReadParentHunkConcurrent(
+        MapEntry me,
+        byte[] buffer,
+        CancellationToken cancellationToken
+    )
     {
         if (_parent == null)
         {
@@ -2923,7 +2934,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
             lock (_parent)
             {
-                return _parent.ReadHunkConcurrent((uint)me.Offset, buffer);
+                return _parent.ReadHunkConcurrent((uint)me.Offset, buffer, cancellationToken);
             }
         }
 
@@ -2939,7 +2950,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 if (parentHunk >= _parent.HunkCount)
                     return ChdError.Chderrinvalidparent;
 
-                return _parent.ReadHunkConcurrent((uint)parentHunk, buffer);
+                return _parent.ReadHunkConcurrent((uint)parentHunk, buffer, cancellationToken);
             }
 
             if (parentHunk + 1 >= _parent.HunkCount)
@@ -2947,14 +2958,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
             // Unaligned: stitch two adjacent parent hunks at the unit boundary (local scratch).
             var scratch = new byte[hunkbytes];
-            var e1 = _parent.ReadHunkConcurrent((uint)parentHunk, scratch);
+            var e1 = _parent.ReadHunkConcurrent((uint)parentHunk, scratch, cancellationToken);
             if (e1 != ChdError.Chderrnone)
                 return e1;
 
             var firstBytes = (int)((unitsInHunk - unitInHunk) * unitbytes);
             Array.Copy(scratch, (int)(unitInHunk * unitbytes), buffer, 0, firstBytes);
 
-            var e2 = _parent.ReadHunkConcurrent((uint)parentHunk + 1, scratch);
+            var e2 = _parent.ReadHunkConcurrent((uint)parentHunk + 1, scratch, cancellationToken);
             if (e2 != ChdError.Chderrnone)
                 return e2;
 
@@ -4809,6 +4820,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         private readonly ChdFile _chd;
         internal readonly int LookAhead;
         private readonly ConcurrentDictionary<uint, byte[]> _cache = new();
+        private readonly ConcurrentDictionary<uint, byte> _inFlight = new();
         private readonly SemaphoreSlim _semaphore;
         private readonly ThreadLocal<ChdCodecState> _codec = new(() => new ChdCodecState());
         private readonly CancellationTokenSource _cts = new();
@@ -4817,6 +4829,10 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 #else
         private readonly object _submitLock = new();
 #endif
+        private bool _disposed;
+        private int _disposeRequested;
+        private int _coreDisposed;
+        private int _activeTasks;
 
         internal ReadAheadManager(ChdFile chd, int lookAhead)
         {
@@ -4840,10 +4856,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         internal void SubmitReadAhead(uint currentHunk)
         {
             var total = _chd._chd.Totalblocks;
-            var token = _cts.Token;
 
             lock (_submitLock)
             {
+                if (_disposed)
+                    return;
+
+                var token = _cts.Token;
+
                 for (var i = 1; i <= LookAhead; i++)
                 {
                     var next = currentHunk + (uint)i;
@@ -4853,16 +4873,35 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                     if (_cache.ContainsKey(next))
                         continue;
 
-                    if (!_semaphore.Wait(0))
-                        break;
+                    // Never decompress the same hunk twice at once: the second task would
+                    // overwrite the first cache entry and leak that entry's permit.
+                    if (!_inFlight.TryAdd(next, 0))
+                        continue;
 
-                    _ = Task.Run(() => DecompressHunk(next, token), token);
+                    if (!_semaphore.Wait(0))
+                    {
+                        _inFlight.TryRemove(next, out _);
+                        break;
+                    }
+
+                    // Do not pass the token to Task.Run: a task canceled before it starts
+                    // would never run DecompressHunk and would leak its semaphore permit.
+                    Interlocked.Increment(ref _activeTasks);
+                    var task = Task.Run(() => DecompressHunk(next, token));
+                    _ = task.ContinueWith(
+                        static (_, state) => ((ReadAheadManager)state!).OnTaskCompleted(),
+                        this,
+                        CancellationToken.None,
+                        TaskContinuationOptions.ExecuteSynchronously,
+                        TaskScheduler.Default
+                    );
                 }
             }
         }
 
         private void DecompressHunk(uint hunknum, CancellationToken token)
         {
+            var cached = false;
             try
             {
                 if (token.IsCancellationRequested)
@@ -4871,29 +4910,78 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 var data = new byte[_chd._chd.Blocksize];
                 var err = _chd.ReadHunkConcurrent(hunknum, data, token);
                 if (err == ChdError.Chderrnone)
+                {
                     _cache[hunknum] = data;
-                else
-                    _semaphore.Release();
+                    cached = true;
+                }
             }
             catch (OperationCanceledException)
             {
-                _semaphore.Release();
+                // Shutdown or caller cancellation: release the permit below.
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"ReadAheadManager.DecompressHunk failed for hunk {hunknum}: {ex}");
-                _semaphore.Release();
             }
+            finally
+            {
+                _inFlight.TryRemove(hunknum, out _);
+
+                // A cached hunk holds its permit until TryGet consumes the entry.
+                if (!cached)
+                    _semaphore.Release();
+            }
+        }
+
+        /// <summary>
+        ///     Called after a background task finishes. The last task out disposes the
+        ///     manager's own resources when disposal was requested, so <see cref="Dispose" />
+        ///     never has to block on a read that ignores cancellation.
+        /// </summary>
+        private void OnTaskCompleted()
+        {
+            if (
+                Interlocked.Decrement(ref _activeTasks) == 0
+                && Volatile.Read(ref _disposeRequested) != 0
+            )
+                DisposeCore();
         }
 
         internal void Clear()
         {
-            _cache.Clear();
+            // Each cached entry owns a semaphore permit; release it when discarding.
+            foreach (var key in _cache.Keys)
+            {
+                if (_cache.TryRemove(key, out _))
+                    _semaphore.Release();
+            }
         }
 
         public void Dispose()
         {
+            lock (_submitLock)
+            {
+                if (_disposed)
+                    return;
+
+                _disposed = true;
+            }
+
             _cts.Cancel();
+
+            // Do not wait for in-flight tasks: a stream read that ignores cancellation
+            // would stall the caller. The last task to finish disposes the semaphore and
+            // token source, so their permits and token remain valid until then.
+            Volatile.Write(ref _disposeRequested, 1);
+            if (Volatile.Read(ref _activeTasks) == 0)
+                DisposeCore();
+        }
+
+        private void DisposeCore()
+        {
+            if (Interlocked.Exchange(ref _coreDisposed, 1) != 0)
+                return;
+
             _cts.Dispose();
             _codec.Dispose();
             _semaphore.Dispose();
