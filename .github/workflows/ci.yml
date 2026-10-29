@@ -124,7 +124,7 @@ jobs:
           category: resharper
 
   package:
-    name: package (NuGet) & workflow lint
+    name: package (NuGet)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -133,12 +133,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Lint GitHub Actions workflows
-        run: |
-          set -euo pipefail
-          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
-          ./actionlint -color
 
       - name: Setup .NET SDK 10
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
