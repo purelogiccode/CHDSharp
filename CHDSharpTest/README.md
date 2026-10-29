@@ -14,7 +14,7 @@
 
 **xUnit unit and corpus test suite for CHDSharp — tests header parsing, CRC checksums, and full decompression against a deterministic 30-file CHD corpus (V1–V5, all codecs).**
 
-> **v1.5.2** - targets `net8.0` / `net9.0` / `net10.0`. 4,214 tests per target framework; encoder suite 454 tests; battle harness 2907/2907 + 3003/3003 vs `chdman` 0.289; solution clean under `jb inspectcode`.
+> **v1.6.0** - targets `net8.0` / `net9.0` / `net10.0`. 4,216 tests per target framework; encoder suite 455 tests; full battle harness 3,174/3,174 checks vs `chdman` 0.289; solution clean under `jb inspectcode`.
 
 ---
 

@@ -85,7 +85,7 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 
 | Page | Description |
 |------|-------------|
-| [CHDman Parity (battle test)](chdman-parity.md) | Complete head-to-head battle results: **2907/2907 checks** against `chdman` — byte-identical encoding for every codec (raw, CD, delta, copy), decoder parity on 190 assets, CLI exit-code/output parity, and the full per-suite tables. |
+| [CHDman Parity (battle test)](chdman-parity.md) | Complete head-to-head battle results: **3,174/3,174 checks** against `chdman` — byte-identical encoding for every codec (raw, CD, delta, copy), decoder parity on 210 assets, CLI exit-code/output parity, and the full per-suite tables. |
 | [Comparison with libchdr](libchdr-comparison.md) | Feature parity vs the C reference library, plus the five-way table (CHDSharp vs chd-rs vs CHDlite vs chdman vs libchdr). |
 | [Testing](testing.md) | The xUnit suite, the 30-file corpus, generators, and the WPF tester. |
 
@@ -140,7 +140,7 @@ Every producible combination is cross-checked against `chdman` (MAME 0.289) by `
 - **Metadata** — tag/index query API (`GetMetadata`) plus the full entry list; checksum-flag aware. IDNT (ATA IDENTIFY), KEY (encryption), CIS (PCMCIA) metadata support.
 - **Track info & extraction** — CD/GD-ROM TOC parsing (`ChdTrackInfo`), CUE/GDI descriptor generation, legacy `CHGT` little-endian CDDA handling (`IsLittleEndianAudio`), and whole-image extraction (`.bin`/`.cue`, `.iso`, `.img`, `.raw`, `.gdi`).
 - **Pluggable logging** — `Microsoft.Extensions.Logging` integration, silent by default.
-- **100% chdman match** — cross-checked against `chdman` (MAME 0.289) via `info`, `verify`, `extractraw`, and the `CHDSharpBattleTest` harness (**2907/2907 synthetic checks — byte-identical output for every codec — plus 3003/3003 real-world checks**). Full tables on the [CHDman Parity page](chdman-parity.md). v1.4.2 closes the last 16 discrepancies: `createhd -i` GDDD, `extractcd` cooked/raw, GD-ROM Redump, `copy` per-type defaults, DVD empty payload, and strict CLI validation.
+- **100% chdman match** — cross-checked against `chdman` (MAME 0.289) via `info`, `verify`, `extractraw`, and the `CHDSharpBattleTest` harness (**3,174/3,174 synthetic checks — byte-identical output for every codec — plus 3003/3003 real-world checks**). Full tables on the [CHDman Parity page](chdman-parity.md). v1.4.2 closes the last 16 discrepancies: `createhd -i` GDDD, `extractcd` cooked/raw, GD-ROM Redump, `copy` per-type defaults, DVD empty payload, and strict CLI validation.
 - **Full `chdman` CLI parity** — the CLI (`CHDSharp`) accepts every `chdman` subcommand with matching options and exit codes (strict validation parity as of v1.4.2).
 
 ---
@@ -178,7 +178,7 @@ Every producible combination is cross-checked against `chdman` (MAME 0.289) by `
 | `CHDSharpCli` | Command-line CHD manager (binary: `CHDSharp`). Full `chdman` subcommand parity. |
 | `CHDSharpTest` | xUnit unit + corpus test suite (4,214 tests per target framework, 30 deterministic CHD files). |
 | `CHDSharpEncoderTest` | xUnit encoder suite (454 tests) with chdman cross-validation. |
-| `CHDSharpBattleTest` | Battle harness: 2907/2907 (deterministic) + 3003/3003 (real-world) checks vs `chdman`. |
+| `CHDSharpBattleTest` | Battle harness: 3,174/3,174 (deterministic) + 3003/3003 (real-world) checks vs `chdman`. |
 | `CHDSharpTestDataGeneration` | Deterministic corpus generator (drives vintage `chdman` binaries). |
 | `CHDSharpTester` | WPF interactive batch verifier cross-checked against `chdman`. |
 

@@ -4,7 +4,7 @@ layout: default
 
 # Testing
 
-CHDSharp ships a **4,214-test** xUnit suite (per target framework) plus a deterministic 30-file corpus covering every format version, codec, map type, and parent/child combination. Tests run on `net8.0`, `net9.0`, and `net10.0`.
+CHDSharp ships a **4,216-test** xUnit suite (per target framework) plus a deterministic 30-file corpus covering every format version, codec, map type, and parent/child combination. Tests run on `net8.0`, `net9.0`, and `net10.0`.
 
 ---
 
@@ -18,7 +18,7 @@ CHDSharp ships a **4,214-test** xUnit suite (per target framework) plus a determ
 | Interactive | `CHDSharpTester` | WPF app that batch-verifies folders and **cross-checks against `chdman`** (header info, deep verify, SHA1, random-access extraction, codec decode, parent chains). |
 | Encoder unit | `CHDSharpEncoderTest` | Tests for the `CHDSharp.Encoder` encoder: endian/CRC/SHA1/deflate primitives, Huffman + V5 map compression, header, CUE/GDI/ISO/TOC/NRG parsers, metadata writer, per-hunk ratio logging. |
 | Encoder validation | `CHDSharpEncoderTest` | Cross-validation of encoder output against `chdman.exe` v0.288 (`info`, `verify`, `extractraw`, `createcd`, `createraw`, `copy`, `createld`) and the CHDSharpLib reader — including **100 MB+ raw/CD round-trips** and byte-for-byte file comparison with `chdman` for every writable codec (zlib, zstd, lzma, huff, flac, cdzl, cdlz, cdzs, cdfl, avhu). |
-| Battle | `CHDSharpBattleTest` | Head-to-head harness that cross-checks the CHDSharpLib **decoder** and the `CHDSharp.Encoder` **encoder** against `chdman.exe` on a deterministic corpus of raw and CD images (`create*`, `verify`, `info`, extract parity, byte-identical encode for every writable codec, delta/parent, CD, A/V laserdisc) — **2907/2907 synthetic + 3003/3003 real-world checks passing**. Also scans real-world `*.chd` folders via `--real <dir>`. Full per-suite tables: [CHDman Parity (battle test)](chdman-parity.md). |
+| Battle | `CHDSharpBattleTest` | Head-to-head harness that cross-checks the CHDSharpLib **decoder** and the `CHDSharp.Encoder` **encoder** against `chdman.exe` on a deterministic corpus of raw and CD images (`create*`, `verify`, `info`, extract parity, byte-identical encode for every writable codec, delta/parent, CD, A/V laserdisc) — **3,174/3,174 synthetic + 3003/3003 real-world checks passing**. Also scans real-world `*.chd` folders via `--real <dir>`. Full per-suite tables: [CHDman Parity (battle test)](chdman-parity.md). |
 
 ---
 
@@ -133,20 +133,21 @@ It requires the `chdman` binaries in `CHDSharpTest/chdman/` for cross-checks.
 
 - **Decoder** — `chdman verify` / `info` parity, extract parity, and byte-identical decode vs the reference for every codec and CD/A/V laserdisc fixture.
 - **Encoder** — `chdman create*` parity: `chdman verify` (ours) and `chdman verify` (ref) both pass, output is **byte-identical** to chdman's, and extraction round-trips match.
-- **Delta/parent, CD, and A/V laserdisc scenarios** are covered; the deterministic corpus passes **2907/2907 checks**, and a real-world scan of 56 CHDs (`--real`, incl. zstd/cdzs/lzma/flac) passes **3003/3003 checks**.
+- **Delta/parent, CD, and A/V laserdisc scenarios** are covered; the deterministic corpus passes **3,174/3,174 checks**, and a real-world scan of 56 CHDs (`--real`, incl. zstd/cdzs/lzma/flac) passes **3003/3003 checks**.
 
 ### Current suite breakdown (dense corpus, seed 1337, vs chdman 0.289)
 
 | Suite family | Suites | Checks | What it proves |
 |--------------|-------:|-------:|----------------|
-| raw-encode | 69 | 723 | `EncodeRaw` is **byte-identical** to `chdman createraw` for every input × codec/hunk/unit cell |
-| cd-encode | 21 | 210 | `EncodeCd` is **byte-identical** to `chdman createcd` (incl. TOC metadata) |
+| raw-encode | 72 | 756 | `EncodeRaw` is **byte-identical** to `chdman createraw` for every input x codec/hunk/unit cell |
+| cd-encode | 28 | 280 | `EncodeCd` is **byte-identical** to `chdman createcd` (incl. TOC metadata) |
 | delta | 1 | 19 | Parent/child encode parity, both directions, cross-interop, wrong-parent rejection |
 | copy | 7 | 43 | Re-compression to every codec matches `chdman copy` content |
-| decode | 190 | 1140 | Every asset (ours + chdman's) passes 6 read/verify paths vs `chdman extract` |
+| decode | 210 | 1260 | Every asset (ours + chdman's) passes 6 read/verify paths vs `chdman extract` |
 | info | 13 | 13 | `Chd.ReadHeader` == `chdman info` field-for-field |
-| cli-* | 30 | 759 | CLI exit-code / output / error parity with chdman per command |
-| **Total** | **331** | **2907** | ✅ **2907/2907** |
+| cli-* | 30 | 800 | CLI exit-code / output / error parity with chdman per command |
+| probe | 1 | 3 | Partial-tail DVD probe |
+| **Total** | **362** | **3174** | ? **3174/3174** |
 
 ```bash
 # Deterministic corpus (seed 1337 by default); requires chdman.exe (repo root or PATH)
@@ -171,5 +172,5 @@ Exit code is `0` when every check passes, `1` on any failure, `2` on usage error
 1. **Every new feature needs a test** — corpus fixture for format-level behavior, unit test for API-level behavior.
 2. **Corpus fixtures must be deterministic** — regenerate via `CHDSharpTestDataGeneration`, never hand-edit binaries.
 3. **New fixtures must be registered in `manifest.json`** with the correct expected version and pass/fail status.
-4. All 4,214 tests must pass per target framework before merging, and `CHDSharpBattleTest` must stay at 2907/2907 (synthetic) and 3003/3003 (real-world corpus).
+4. All 4,216 tests must pass per target framework before merging, and `CHDSharpBattleTest` must stay at 3,174/3,174 (synthetic) and 3003/3003 (real-world corpus).
 5. **Keep the inspectors clean** — `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING` must report no findings. Never edit vendored code to satisfy an inspection; exempt it in `.editorconfig` instead (see [Building](building.md#code-inspections)).

@@ -17,7 +17,7 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
-> **v1.5.2** — `REM LEAD-OUT` at or before a session's last track, and pads larger than their track, now encode byte-identically to `chdman createcd`; the solution is also clean under `jb inspectcode`, and CI keeps the wiki and docs site in sync. Six platform bundles are attached to every release (`CHDSharp_<os>-<arch>_v<version>.zip`). Release bundles are framework-dependent single-file binaries and require the .NET 10 runtime; the library targets `net8.0` / `net9.0` / `net10.0`.
+> **v1.6.0** - read-ahead teardown no longer blocks on in-flight I/O, truncated CD sources report the exact track/frame/offset, and the project ships a full CI/security pipeline. Six platform bundles are attached to every release (`CHDSharp_<os>-<arch>_v<version>.zip`). Release bundles are framework-dependent single-file binaries and require the .NET 10 runtime; the library targets `net8.0` / `net9.0` / `net10.0`.
 
 ---
 
@@ -71,7 +71,7 @@ For help with any command, run:
 
 ## chdman Parity (battle-verified)
 
-`CHDSharp` is battle-tested against `chdman.exe` (MAME 0.289) by `CHDSharpBattleTest` — every command, option, alias, size-suffix form, and error path, with **exit-code and output parity** verified on a deterministic corpus. Current dense-corpus result: **2907/2907 checks** (synthetic) + 3003/3003 (real-world CHDs).
+`CHDSharp` is battle-tested against `chdman.exe` (MAME 0.289) by `CHDSharpBattleTest` — every command, option, alias, size-suffix form, and error path, with **exit-code and output parity** verified on a deterministic corpus. Current dense-corpus result: **3,174/3,174 checks** (synthetic) + 3003/3003 (real-world CHDs).
 
 | Suite | Checks | Coverage |
 |-------|-------:|----------|

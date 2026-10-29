@@ -6,7 +6,7 @@ layout: default
 
 Every CHDSharp feature (library **decoder**, `CHDSharp.Encoder` **encoder**, and the `CHDSharp` **CLI**) is battle-tested head-to-head against MAME's `chdman.exe` (reference implementation, MAME 0.289). The tables on this page are the complete, current results of that battle — every suite, every check, and the exact claim it makes.
 
-> **Latest result (dense corpus, seed 1337): 2907 / 2907 checks passed, 0 failed.** Run took ~207 s. All tables below reproduce deterministically via `CHDSharpBattleTest`.
+> **Latest result (dense corpus, seed 1337): 3,174 / 3,174 checks passed, 0 failed.** Run took ~318 s. All tables below reproduce deterministically via `CHDSharpBattleTest`.
 
 ```bash
 # Reproduce everything on this page
@@ -30,14 +30,15 @@ The harness compares three layers on every input:
 
 | Feature area | Suites | Checks | Result |
 |--------------|-------:|-------:|:------:|
-| Raw-image encoding (byte-identical) | 69 | 723 | ✅ 723/723 |
-| CD-image encoding (byte-identical) | 21 | 210 | ✅ 210/210 |
-| Delta (parent/child differential) | 1 | 19 | ✅ 19/19 |
-| Copy / re-compression | 7 | 43 | ✅ 43/43 |
-| Decoder (every asset, ours *and* chdman) | 190 | 1140 | ✅ 1140/1140 |
-| Header info parity | 13 | 13 | ✅ 13/13 |
-| CLI command battle suites | 30 | 759 | ✅ 759/759 |
-| **TOTAL** | **331** | **2907** | ✅ **2907/2907** |
+| Raw-image encoding (byte-identical) | 72 | 756 | ? 756/756 |
+| CD-image encoding (byte-identical) | 28 | 280 | ? 280/280 |
+| Delta (parent/child differential) | 1 | 19 | ? 19/19 |
+| Copy / re-compression | 7 | 43 | ? 43/43 |
+| Decoder (every asset, ours *and* chdman) | 210 | 1260 | ? 1260/1260 |
+| Header info parity | 13 | 13 | ? 13/13 |
+| CLI command battle suites | 30 | 800 | ? 800/800 |
+| Partial-tail probe | 1 | 3 | ? 3/3 |
+| **TOTAL** | **362** | **3174** | ? **3174/3174** |
 
 ---
 
@@ -174,7 +175,7 @@ Zlib-encoded source CHDs are re-compressed to every other writable codec, on bot
 
 ## 5. Decoder parity (every asset, both implementations)
 
-Every CHD produced anywhere in the run — by us **and** by chdman, raw and CD, plain and delta-child — is an **asset**. The decode suite re-opens all 190 assets (99 produced by CHDSharp, 91 by chdman — the eight extra are the CHDSharp-only tiny/1-byte cases for which chdman has no reference pair) and runs 6 checks on each:
+Every CHD produced anywhere in the run - by us **and** by chdman, raw and CD, plain and delta-child - is an **asset**. The decode suite re-opens all 210 assets (produced by both tools; the CHDSharp-only tiny/1-byte cases have no chdman reference pair) and runs 6 checks on each:
 
 | # | Check | Compares |
 |---|-------|----------|
@@ -185,7 +186,7 @@ Every CHD produced anywhere in the run — by us **and** by chdman, raw and CD, 
 | 5 | `ReadHunk == chdman extract` | `ReadHunk` at hunk 0, middle, and last hunk equals the source |
 | 6 | `Read past end -> error` | Out-of-range reads return an error, never garbage |
 
-Asset families covered (all 190, **all 6/6 ✅**):
+Asset families covered (all 210, **all 6/6 ?**):
 
 | Family | Assets | Codecs |
 |--------|-------:|--------|
@@ -214,16 +215,16 @@ The `CHDSharp` executable is exercised against `chdman.exe` on the same corpus. 
 
 | Suite | Checks | Coverage |
 |-------|-------:|----------|
-| `cli-info` | 190 | `info` on every asset: exit code, then **field-by-field output parity** (version, logical size, hunk/unit size, counts, compression label, SHA1, data SHA1) |
-| `cli-verify` | 190 | `verify` on every asset: exit-code parity with chdman |
+| `cli-info` | 210 | `info` on every asset: exit code, then **field-by-field output parity** (version, logical size, hunk/unit size, counts, compression label, SHA1, data SHA1) |
+| `cli-verify` | 210 | `verify` on every asset: exit-code parity with chdman |
 | `cli-createraw` | 45 | 3 inputs (zeros, random, mixed) × 3 codecs (zlib, lzma, none): CLI create, chdman create, **byte-identical CHD**, extracted content parity, chdman verify of CLI output |
 | `cli-createhd` | 12 | 3 sizes (4 KiB, 32 KiB, 1 MiB): CLI create, chdman create, byte-identical, verify |
 | `cli-createcd` | 4 | createcd from CUE: CLI vs chdman, content parity (extract), verify CLI output |
-| `cli-copy` | 4 | copy -c lzma: CLI vs chdman, content parity, verify |
+| `cli-copy` | 5 | copy -c lzma: CLI vs chdman, content parity, verify |
 | `cli-extractraw` | 4 | extractraw: CLI vs chdman output byte-identical + equals source |
 | `cli-extractcd` | 3 | extractcd: CLI vs chdman — CUE sheets structurally identical (bin name normalized) |
 | `cli-addmeta` | 11 | create (uncompressed) on both sides, addmeta/dumpmeta/delmeta on both sides, dumped metadata **byte-identical**, verify after meta ops |
-| **Core suites total** | **463** | ✅ 463/463 |
+| **Core suites total** | **504** | ? 504/504 |
 
 ### Full parity suites (per-command arg matrix)
 
@@ -253,7 +254,7 @@ The `CHDSharp` executable is exercised against `chdman.exe` on the same corpus. 
 | `cli-alias-suffix` | 21 | `K`/`M`/`k` suffixes for `-hs`, `M` for `-ib`, exceeds-max error, all alias spellings (`-hs`/`--hunksize`/`--hunk-size`, `-us`/`--unitsize`/`--unit-size`, `-c`/`--compression`, `-np`/`--numprocessors`, `-t`/`--tasks`, `-f`/`--force`), positional args |
 | `cli-error` | 11 | invalid-option parity per command (createraw, createcd, createdvd, copy, extractraw, info, verify), duplicate `-c`, missing input, hunk-not-multiple-of-unit error parity, unknown-command message |
 | **Full-parity total** | **296** | ✅ 296/296 |
-| **CLI battle total (core + full parity)** | **759** | ✅ **759/759** |
+| **CLI battle total (core + full parity)** | **800** | ? **800/800** |
 
 ---
 

@@ -20,6 +20,13 @@
 
 ---
 
+## What's New in v1.6.0
+
+- **Read-ahead teardown is non-blocking** - `Dispose()` and `ConfigureReadAhead(0)` no longer wait for in-flight reads, duplicate in-flight hunks can no longer leak a semaphore permit, and shutdown cancellation is not logged as a decompression failure.
+- **Truncated CD diagnostics** - a short read now reports the track, frame, logical frame, source offset, sector size, bytes needed/read and the file length.
+- **No public API changes** - maintenance release; verified with 14,013/14,013 tests across `net8.0`/`net9.0`/`net10.0` (4,216 library + 455 encoder per target framework), the full battle harness (3,174/3,174 checks), and `jb inspectcode` (0 findings).
+- **Supply-chain hardening** - CodeQL, Dependency Review, OpenSSF Scorecard, Dependabot, NuGet audit, SHA-pinned actions, secret scanning with push protection, private vulnerability reporting, and provenance-attested releases.
+
 ## What's New in v1.5.2
 
 - **Zero code-inspection warnings** - the solution passes `jb inspectcode` cleanly. The vendored codec sources were not modified (their style inspections are disabled in `.editorconfig` to protect `chdman` byte parity).

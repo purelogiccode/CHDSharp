@@ -26,13 +26,13 @@ CSharp_CHDSharp.sln
 ├── CHDSharpTest/         xUnit unit + corpus tests
 ├── CHDSharpTestDataGeneration/  Deterministic corpus generator
 ├── CHDSharpTester/       WPF interactive tester
-├── CHDSharpEncoderTest/  xUnit encoder tests (454 tests)
+├── CHDSharpEncoderTest/  xUnit encoder tests (455 tests)
 ├── CHDSharpBattleTest/   Battle test harness (chdman vs CHDSharp)
 ├── VendoredZLib/         Pure C# zlib port
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.5.2) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.6.0) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.5.2`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.6.0`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -107,9 +107,9 @@ dotnet test --filter "FullyQualifiedName~CorpusTests"
 dotnet test -v detailed
 ```
 
-The suite contains **4,214 tests per target framework** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
+The suite contains **4,216 tests per target framework** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
 
-The companion **encoder suite** (`CHDSharpEncoderTest`, 454 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
+The companion **encoder suite** (`CHDSharpEncoderTest`, 455 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
 
 ```bash
 dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
@@ -124,7 +124,7 @@ dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidatio
 > The generator is deterministic: regenerating produces byte-identical fixtures.
 
 The **battle harness** (`CHDSharpBattleTest`) cross-checks the decoder and encoder against
-`chdman.exe` (2907/2907 checks on the deterministic corpus; 3003/3003 on a real-world
+`chdman.exe` (3,174/3,174 checks on the deterministic corpus; 3003/3003 on a real-world
 scan of 56 CHDs), and can also scan any real-world CHD
 folders via `--real <dir>`:
 
@@ -183,7 +183,7 @@ For every runtime identifier the script publishes the CLI as a **framework-depen
 single-file** binary (`--self-contained false -p:PublishSingleFile=true` — the .NET
 runtime is *not* embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and
 `WhatsNew.md`, and writes `CHDSharp_<rid>_v<version>.zip` (the exact asset name the CLI's
-built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.5.2.zip`).
+built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.6.0.zip`).
 Existing files in the output path are never deleted. The binary is named `CHDSharp`
 (`CHDSharp.exe` on Windows); bundles require the .NET 10 runtime.
 
@@ -198,7 +198,7 @@ wiki — see [CI](#ci).
 The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`), producing deterministic builds and SourceLink-enabled symbols.
 
 - **`ci.yml`** - the build + test gatekeeper, on every push to `main`, every pull request, and manual dispatch. The `CI gate` job aggregates:
-  - `build & test` across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere with `-warnaserror` (NuGet audit covers direct and transitive packages), then runs both xUnit suites (`CHDSharpTest` - 4,214 tests per target framework - and `CHDSharpEncoderTest` - 454 tests) for all three TFMs.
+  - `build & test` across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere with `-warnaserror` (NuGet audit covers direct and transitive packages), then runs both xUnit suites (`CHDSharpTest` - 4,216 tests per target framework - and `CHDSharpEncoderTest` - 455 tests) for all three TFMs.
   - `quality`: `jb inspectcode --severity=WARNING`, failing on any finding and uploading SARIF to code scanning.
   - `package`: `dotnet pack` plus a `.nupkg` content check, uploaded as an artifact.
   - `coverage`: merged Cobertura coverage for both suites on `net10.0` (the wall-clock parallel-encode test is excluded because instrumentation invalidates its timing).

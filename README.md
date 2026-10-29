@@ -26,6 +26,13 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.6.0
+
+- **Read-ahead teardown is non-blocking** - `Dispose()` and `ConfigureReadAhead(0)` no longer wait for in-flight reads, and duplicate in-flight hunks can no longer leak a semaphore permit. Shutdown cancellation is no longer logged as a decompression failure.
+- **Truncated CD sources now identify the failure** - a short read reports the track, frame, logical frame, source offset, sector size, bytes needed/read and the file length.
+- **Full CI and supply-chain hardening** - a single `CI gate` adds InspectCode, packaging, coverage, docs build and a `chdman` parity smoke; CodeQL (C# + Actions), Dependency Review, OpenSSF Scorecard, Dependabot, NuGet audit, SHA-pinned actions, secret scanning with push protection, private vulnerability reporting, and provenance-attested releases.
+- **Verification** - 14,013/14,013 tests across `net8.0`/`net9.0`/`net10.0` (4,216 library + 455 encoder per target framework); full battle harness 3,174/3,174 checks; `jb inspectcode` 0 findings.
+
 ## What's New in v1.5.2
 
 - **Zero code-inspection warnings** - `jb inspectcode` now reports no warnings or errors for the whole solution (308 before). The vendored codec sources are excluded from style inspections in `.editorconfig` and remain untouched for `chdman` parity; the first-party fixes removed redundant null checks and dead tester state.
@@ -602,9 +609,9 @@ The full wiki lives in [`docs/`](docs/README.md):
 
 | Project | Type | Description |
 |---------|------|-------------|
-| `CHDSharpTest` | xUnit | Unit + corpus tests (4,214 tests per TFM, 30 CHD fixtures) |
-| `CHDSharpEncoderTest` | xUnit | Encoder tests (454 tests, chdman cross-validation) |
-| `CHDSharpBattleTest` | Console | Battle harness: 2907/2907 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
+| `CHDSharpTest` | xUnit | Unit + corpus tests (4,216 tests per TFM, 30 CHD fixtures) |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (455 tests, chdman cross-validation) |
+| `CHDSharpBattleTest` | Console | Battle harness: 3,174/3,174 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestDataGeneration` | Console | Deterministic corpus generator |
 

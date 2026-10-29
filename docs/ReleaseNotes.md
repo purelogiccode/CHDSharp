@@ -1,5 +1,51 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.6.0
+
+Reliability and supply-chain release on top of v1.5.2. No public API changes.
+
+**Released:** 2026-10-29 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.6.0) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.6.0)
+
+### Read-ahead teardown
+
+`ChdFile.Dispose()` and `ConfigureReadAhead(0)` no longer wait for in-flight read-ahead reads.
+The manager cancels, returns immediately, and lets the last background task dispose its semaphore
+and token source. This avoids stalling teardown on a stream read that ignores cancellation while
+still preventing `Release()` on a disposed semaphore. In-flight hunks are deduplicated, so two
+tasks can no longer race to cache the same hunk and leak a semaphore permit, and shutdown
+cancellation is no longer logged as a decompression failure.
+
+### Truncated CD diagnostics
+
+A short read while encoding a CD now reports the track, frame within the track, logical frame,
+source offset (hex and decimal), sector size, bytes needed/read and the file length. Split-pregap
+reads name the next track's file only when that file was actually used. The new
+`EncodeCd_TruncatedWav_ReportsTrackFrameAndOffset` test covers the shape of a truncated WAV rip.
+
+### CI, security and release automation
+
+- `ci.yml` now has a single `CI gate` over: three-OS build/test across .NET 8/9/10, InspectCode,
+  NuGet packaging and workflow linting, merged coverage, a Jekyll docs build, and a quick
+  `chdman` parity battle. The wiki/Pages sync runs after the gate on `main`.
+- CodeQL analyzes C# (`security-extended`) and GitHub Actions; Dependency Review blocks
+  moderate-or-higher vulnerable dependencies on pull requests; OpenSSF Scorecard publishes to the
+  public API and code scanning.
+- Dependabot keeps NuGet and Actions current; `NuGetAuditMode=all` plus `-warnaserror` fails the
+  build on known vulnerable direct or transitive packages.
+- Repository hardening: secret scanning with push protection, private vulnerability reporting,
+  read-only workflow permissions, mandatory full-SHA action pinning, selected actions, external
+  contributor approval, and branch/tag rulesets. Release bundles and the NuGet package carry
+  GitHub artifact provenance attestations.
+- `SECURITY.md` documents the reporting process, scope and release verification.
+
+### Verification
+
+- Full `dotnet test` across `net8.0`/`net9.0`/`net10.0`: **14,013 passed, 0 failed**
+  (4,216 library tests + 455 encoder tests per target framework).
+- Full battle harness: **3,174/3,174 checks**, byte-identical `chdman` output.
+- `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: **0 findings**.
+
 ## CHDSharp v1.5.2
 
 Maintenance release on top of v1.5.1: the solution is now clean under the ReSharper inspector,
