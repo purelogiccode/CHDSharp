@@ -26,6 +26,13 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.6.2
+
+- **Extraction failures keep their real cause** - the extraction writers no longer flatten every exception to `Chderrwriteerror`. The underlying exception is logged at warning level, data/codec failures return `Chderrdecompressionerror`, and genuine output I/O failures return `Chderrwriteerror`. This is the fix behind the opaque `track N: Chderrwriteerror` reports.
+- **Read-ahead teardown no longer races a cached hunk** - `ReadAheadManager.TryGet` and `Clear` tolerate a semaphore disposed between cache removal and permit release, so teardown cannot throw `ObjectDisposedException`.
+- **Damaged GD-ROM metadata returns an error instead of crashing** - `ExtractToDirectoryWithReporting` returns `Chderrinvaliddata` when a GD-ROM CHD yields no tracks.
+- **No encoder output changes** - quick battle harness 3,174/3,174 checks, byte-identical to `chdman` 0.289; CD (V3/V4/V5, cdfl/cdlz/cdzl/cdzs/default) and synthetic GD-ROM GDI extraction verified byte-identical to `chdman extractcd`.
+- **Verification** - 4,219 library tests + 455 encoder tests, `jb inspectcode` 0 findings.
 ## What's New in v1.6.1
 
 - **The bug-report API only receives real bugs** - expected user/usage errors are tagged via `logger.UserError(...)` and stay in the console and file logs without being posted as defects. That covers bad flags, invalid numbers, missing paths, sector-misaligned input, an existing output without `--force`, overridden format options and unsupported combinations (216 call sites). Genuine failures (`Open failed`, `* failed: {Message}`, verification and extraction failures) are still reported.

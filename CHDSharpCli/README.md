@@ -17,7 +17,7 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
-> **v1.6.1** - expected user errors (bad flags, missing paths, sector-misaligned input, an existing output without `--force`) are logged locally but no longer posted to the Bug Report API; real failures still are. Six platform bundles are attached to every release (`CHDSharp_<os>-<arch>_v<version>.zip`). Release bundles are framework-dependent single-file binaries and require the .NET 10 runtime; the library targets `net8.0` / `net9.0` / `net10.0`.
+> **v1.6.2** - extraction failures keep their real cause: the underlying exception is logged, data/codec errors map to `Chderrdecompressionerror` and output I/O to `Chderrwriteerror`. Read-ahead teardown can no longer race a disposed semaphore, and damaged GD-ROM metadata returns `Chderrinvaliddata`. Six platform bundles are attached to every release (`CHDSharp_<os>-<arch>_v<version>.zip`). Release bundles are framework-dependent single-file binaries and require the .NET 10 runtime; the library targets `net8.0` / `net9.0` / `net10.0`.
 
 ---
 

@@ -3986,9 +3986,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return ChdError.Chderrwriteerror;
+            Log.LogWarning(ex, "Failed to write extracted data");
+            return ex is InvalidDataException
+                ? ChdError.Chderrdecompressionerror
+                : ChdError.Chderrwriteerror;
         }
     }
 
@@ -4138,6 +4141,11 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
 
         if (IsGdRom)
         {
+            // Damaged CD metadata can identify a GD-ROM without yielding any tracks; report
+            // invalid data instead of dereferencing a null track list.
+            if (Tracks is not { Count: > 0 })
+                return new ExtractResult(created, trackResults, ChdError.Chderrinvaliddata);
+
             var gdTrackFiles = new List<string>();
             foreach (var track in Tracks!)
             {
@@ -4169,8 +4177,14 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 File.WriteAllText(gdiFile, GenerateGdiDescriptor(trackNames, cooked));
                 created.Add(gdiFile);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Log.LogWarning(
+                    ex,
+                    "Failed to write the GDI descriptor for '{BaseFileName}' in '{OutputDir}'",
+                    baseFileName,
+                    outputDir
+                );
                 return new ExtractResult(created, trackResults, ChdError.Chderrwriteerror);
             }
 
@@ -4228,6 +4242,7 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         }
         catch (Exception ex)
         {
+            Log.LogWarning(ex, "Failed to write extracted data");
             return new ExtractResult(
                 created,
                 trackResults,
@@ -4369,9 +4384,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return ChdError.Chderrwriteerror;
+            Log.LogWarning(ex, "Failed to write extracted data");
+            return ex is InvalidDataException
+                ? ChdError.Chderrdecompressionerror
+                : ChdError.Chderrwriteerror;
         }
     }
 
@@ -4473,9 +4491,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return ChdError.Chderrwriteerror;
+            Log.LogWarning(ex, "Failed to write extracted data");
+            return ex is InvalidDataException
+                ? ChdError.Chderrdecompressionerror
+                : ChdError.Chderrwriteerror;
         }
     }
 
@@ -4602,9 +4623,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return ChdError.Chderrwriteerror;
+            Log.LogWarning(ex, "Failed to write extracted data");
+            return ex is InvalidDataException
+                ? ChdError.Chderrdecompressionerror
+                : ChdError.Chderrwriteerror;
         }
     }
 
@@ -4772,9 +4796,12 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return ChdError.Chderrwriteerror;
+            Log.LogWarning(ex, "Failed to write extracted data");
+            return ex is InvalidDataException
+                ? ChdError.Chderrdecompressionerror
+                : ChdError.Chderrwriteerror;
         }
     }
 
@@ -4848,7 +4875,19 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
                 return false;
 
             Array.Copy(data, 0, buffer, 0, _chd._chd.Blocksize);
-            _semaphore.Release();
+
+            // Disposal may release the semaphore while a cached hunk is still being consumed.
+            // The permit is irrelevant once the manager is gone, so a disposed semaphore is not
+            // an error and must never surface as an unobserved exception.
+            try
+            {
+                _semaphore.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The manager was disposed after the cache entry was removed.
+            }
+
             return true;
         }
 
@@ -4952,8 +4991,17 @@ public sealed class ChdFile : IDisposable, IAsyncDisposable
             // Each cached entry owns a semaphore permit; release it when discarding.
             foreach (var key in _cache.Keys)
             {
-                if (_cache.TryRemove(key, out _))
+                if (!_cache.TryRemove(key, out _))
+                    continue;
+
+                try
+                {
                     _semaphore.Release();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // The manager was disposed while the cache was being cleared.
+                }
             }
         }
 

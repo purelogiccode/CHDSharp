@@ -32,7 +32,7 @@ CSharp_CHDSharp.sln
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.6.1) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.6.2) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.6.1`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.6.2`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -185,7 +185,7 @@ For every runtime identifier the script publishes the CLI as a **framework-depen
 single-file** binary (`--self-contained false -p:PublishSingleFile=true` — the .NET
 runtime is *not* embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and
 `WhatsNew.md`, and writes `CHDSharp_<rid>_v<version>.zip` (the exact asset name the CLI's
-built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.6.1.zip`).
+built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.6.2.zip`).
 Existing files in the output path are never deleted. The binary is named `CHDSharp`
 (`CHDSharp.exe` on Windows); bundles require the .NET 10 runtime.
 

@@ -20,6 +20,12 @@
 
 ---
 
+## What's New in v1.6.2
+
+- **Extraction failures keep their real cause** - a failed extracted-file write now logs the underlying exception and returns `Chderrdecompressionerror` for data/codec failures or `Chderrwriteerror` for output I/O instead of reporting every exception as a write error.
+- **Read-ahead teardown race fixed** - `ReadAheadManager.TryGet`/`Clear` ignore a semaphore released after disposal, so teardown cannot surface an unobserved `ObjectDisposedException`.
+- **Damaged GD-ROM metadata is reported** - `ExtractToDirectoryWithReporting` returns `Chderrinvaliddata` when a GD-ROM CHD has no readable tracks instead of dereferencing a null track list.
+- **No public API changes** - 4,219 library tests + 455 encoder tests, `jb inspectcode` 0 findings, quick battle harness 3,174/3,174 checks with byte-identical `chdman` output.
 ## What's New in v1.6.1
 
 - **Automatic bug reports now only cover real bugs** - CLI diagnostics for expected user input (bad flags, invalid numbers, missing paths, sector-misaligned sources, an existing output without `--force`, overridden format options) are logged at warning level but tagged so the Bug Report API never receives them; runtime failures are still reported. No library code changed.
