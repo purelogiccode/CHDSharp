@@ -202,7 +202,9 @@ there is no legacy `pages-build-deployment` build any more.
 - CodeQL (`.github/workflows/codeql.yml`), Dependency Review
   (`.github/workflows/dependency-review.yml`), and OpenSSF Scorecard
   (`.github/workflows/scorecard.yml`) run in CI; Dependabot is configured in
-  `.github/dependabot.yml`.
+  `.github/dependabot.yml`. Dependency Review self-skips with a warning when the repository
+  dependency graph is disabled (GitHub exposes no API to enable it for user-owned repos - it is a
+  Settings > Code security and analysis toggle); the enforcement returns as soon as it is on.
 - Repository settings: Dependabot alerts/security updates, secret scanning with push protection,
   private vulnerability reporting, read-only default workflow permissions, and mandatory
   full-SHA action pinning with GitHub-owned/verified actions only.

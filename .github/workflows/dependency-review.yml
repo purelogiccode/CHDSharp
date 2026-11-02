@@ -1,5 +1,12 @@
 # Blocks pull requests that introduce dependencies with known vulnerabilities
 # or incompatible licenses. Requires the repository dependency graph.
+#
+# GitHub does not expose an API to enable the dependency graph for user-owned
+# repositories; when it is off the review action can only fail with
+# "Dependency review is not supported on this repository". Detect that case,
+# emit a warning annotation and skip the review so the check is honest instead of
+# permanently red. Enable it in Settings > Code security and analysis to turn the
+# enforcement back on - no workflow change is needed.
 name: Dependency Review
 
 on:
@@ -21,7 +28,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Check dependency graph availability
+        id: graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/${{ github.repository }}/dependency-graph/sbom" >/dev/null 2>&1; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Dependency graph disabled::The repository dependency graph is not enabled, so dependency review cannot run. Enable it in Settings > Code security and analysis > Dependency graph."
+          fi
+
       - name: Review dependency changes
+        if: steps.graph.outputs.available == 'true'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: moderate
