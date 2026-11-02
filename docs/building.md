@@ -32,7 +32,7 @@ CSharp_CHDSharp.sln
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.6.0) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.6.1) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.6.0`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.6.1`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -70,16 +70,18 @@ the [JetBrains command-line tools](https://www.jetbrains.com/help/resharper/Insp
 (`jb`), from the repository root:
 
 ```bash
-jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --output=inspectcode.xml
+# The four vendored codec projects are excluded outright: they are checked in verbatim
+# and editing them for style would risk the byte-for-byte chdman parity guarantee.
+jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --exclude="Vendored*/**" --output=inspectcode.xml
 ```
 
 The inspection policy lives in the root `.editorconfig`:
 
-- **The vendored codecs are exempt.** `VendoredZLib`, `VendoredLZMA`, `VendoredFlac` and
-  `VendoredZSTD` are third-party ports checked in verbatim; byte-for-byte `chdman` parity depends
-  on them staying untouched, so their style/quality inspections (redundant code, unreachable
-  branches, naming, …) are disabled there. Never "fix" a finding inside those folders — exempt it
-  in `.editorconfig` instead.
+- **The vendored codecs are excluded from InspectCode.** `VendoredZLib`, `VendoredLZMA`,
+  `VendoredFlac` and `VendoredZSTD` (projects and sources) are third-party ports checked in
+  verbatim; byte-for-byte `chdman` parity depends on them staying untouched. They are skipped by
+  `--exclude="Vendored*/**"` in CI and by `.editorconfig`, and must never be edited to satisfy an
+  inspection.
 - **Consumer-facing models are exempt from "never used" inspections.** Public library records
   (`CHDSharpLib/Models`), the JSON corpus manifest
   (`CHDSharpTestDataGeneration/Models`) and the WPF data models (`CHDSharpTester/Models`) expose
@@ -87,7 +89,7 @@ The inspection policy lives in the root `.editorconfig`:
 
 > InspectCode 2026.2 logs internal `AssertionException`s while its nullable-flow analyzer walks
 > the vendored ZSTD sources. This is a bug in the analyzer, not a finding: the report is still
-> empty. Add `--exclude="Vendored*/**/*.cs"` if you want a silent console.
+> empty, and the `--exclude="Vendored*/**"` switch also silences the console.
 
 ---
 
@@ -183,13 +185,41 @@ For every runtime identifier the script publishes the CLI as a **framework-depen
 single-file** binary (`--self-contained false -p:PublishSingleFile=true` — the .NET
 runtime is *not* embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and
 `WhatsNew.md`, and writes `CHDSharp_<rid>_v<version>.zip` (the exact asset name the CLI's
-built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.6.0.zip`).
+built-in update check looks up on GitHub releases, e.g. `CHDSharp_win-x64_v1.6.1.zip`).
 Existing files in the output path are never deleted. The binary is named `CHDSharp`
 (`CHDSharp.exe` on Windows); bundles require the .NET 10 runtime.
 
 The `Release` GitHub Actions workflow (`.github/workflows/release.yml`) runs this script
 on a version tag, creates the GitHub release, pushes the NuGet package, and syncs the
 wiki — see [CI](#ci).
+
+---
+
+## Documentation site (Jekyll + DocFX)
+
+The published site at <https://purelogiccode.github.io/CHDSharp/> is the combination of two builds:
+
+- the Jekyll guides in `docs/` (dark theme, sidebar, and the same pages mirrored to the wiki), and
+- the DocFX API reference generated from `CHDSharpLib`'s XML documentation, published under
+  [`/api/`](https://purelogiccode.github.io/CHDSharp/api/).
+
+```bash
+# Guides only
+gem install jekyll -v 4.3.4 --no-document
+jekyll build --source docs --destination _site --strict_front_matter
+
+# Complete site: guides + API reference, with the CHDSharp theme applied
+pwsh scripts/build-api-docs.ps1
+```
+
+DocFX is pinned in `.config/dotnet-tools.json`, so `dotnet tool restore` installs exactly the
+version CI uses. `scripts/build-api-docs.ps1` runs `docfx metadata`, `docfx build` and appends
+`docfx/theme.css` to the template stylesheet so the reference matches the guides. Generated
+metadata (`docfx/*.yml`) and the rendered site (`_site/`) are git-ignored.
+
+The `Pages` workflow (`.github/workflows/pages.yml`) builds both halves into one artifact and deploys
+it with `actions/deploy-pages`. GitHub Pages uses `build_type: workflow`, so the wiki job no longer
+requests a legacy Pages rebuild.
 
 ---
 
@@ -202,9 +232,9 @@ The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`),
   - `quality`: `jb inspectcode --severity=WARNING`, failing on any finding and uploading SARIF to code scanning.
   - `package`: `dotnet pack` plus a `.nupkg` content check, uploaded as an artifact.
   - `coverage`: merged Cobertura coverage for both suites on `net10.0` (the wall-clock parallel-encode test is excluded because instrumentation invalidates its timing).
-  - `docs build`: Jekyll build of `docs/` with `--strict_front_matter`.
+  - `docs build (Jekyll + DocFX)`: builds `docs/` with `--strict_front_matter`, then generates the DocFX API reference, so broken XML docs or a broken `docfx.json` fail the gate.
   - `chdman parity (smoke)`: the quick battle harness against the checked-in `CHDSharpTester/chdman.exe`.
-  - `Wiki & Pages` (on `main` only, after the gate): syncs `docs/` to the wiki and requests a Pages rebuild.
+  - `Wiki sync` (on `main` only, after the gate): mirrors `docs/` to the wiki. The site itself is deployed by `pages.yml`.
 
   Test-spawned CLI runs are isolated from the production bug-report API via `CHDSHARP_NO_BUG_REPORTS=1` / `CHDSHARP_NO_TELEMETRY=1`.
 - **`codeql.yml`** - CodeQL C# analysis (`security-extended`) plus GitHub Actions analysis on `main`, pull requests, and a weekly schedule.

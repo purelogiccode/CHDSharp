@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.6.0: reliability and supply-chain release. Read-ahead Dispose and ConfigureReadAhead(0) no longer block on in-flight reads, duplicate in-flight hunks can no longer leak a semaphore permit, and shutdown cancellation is not logged as a decompression failure. Truncated CD sources now report track, frame, logical frame, source offset, sector size, bytes read and file length. The CI gate adds InspectCode, packaging, coverage, a Jekyll docs build and a chdman parity smoke; CodeQL (C# and Actions), Dependency Review, OpenSSF Scorecard, Dependabot, NuGet audit, SHA-pinned actions, secret scanning with push protection, private vulnerability reporting and provenance-attested releases harden the supply chain. No public API changes. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.6.1: bug-fix release. Expected user/usage errors in the CLI (bad flags, missing paths, sector-misaligned input, an existing output without --force, overridden format options) are now logged through ILogger.UserError and tagged so BugReportSink never posts them to the Bug Report API; genuine runtime failures are still reported. Adds a DocFX-generated per-member API reference published with the docs site (0 metadata warnings) and moves Pages deployment to a dedicated workflow. Console text and exit codes are unchanged (chdman parity). No public API changes. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>
@@ -29,7 +29,7 @@
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Meziantou.Analyzer" Version="3.0.317">
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.320">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

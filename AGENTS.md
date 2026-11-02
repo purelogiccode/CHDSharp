@@ -27,6 +27,7 @@ the CHD (Compressed Hunks of Data) disk-image format used by MAME.
 | `CHDSharpBenchmark/` | BenchmarkDotNet suite |
 | `CHDSharpTestDataGeneration/` | Deterministic corpus generator |
 | `docs/` | Jekyll documentation site (deployed to GitHub Pages) |
+| `docfx/`, `docfx.json` | DocFX API reference source + config (generated `/api/` site, pinned tool in `.config/dotnet-tools.json`) |
 | `References/` | Local chdman reference material; excluded from builds |
 
 ## Build / test / run
@@ -46,11 +47,13 @@ jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections 
 - Keep builds warning-free: Meziantou.Analyzer and Roslynator.Analyzers run in every project.
 - `CHDSharpLib` treats missing XML docs (CS1591) as errors — document every public API addition.
 - Keep ReSharper inspections clean too: `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`
-  must report zero findings. The policy lives in the root `.editorconfig`: the vendored codec
-  folders are exempt from style inspections and must stay verbatim for `chdman` parity — never
-  "fix" a warning there, suppress the inspection instead. InspectCode 2026.2 logs a few internal
-  `AssertionException`s while analyzing `VendoredZSTD` (an analyzer bug, not a finding); the
-  report is still empty, and `--exclude="Vendored*/**/*.cs"` silences the console.
+  must report zero findings. The four vendored codec projects - `VendoredFlac`, `VendoredLZMA`,
+  `VendoredZLib` and `VendoredZSTD` - are excluded from InspectCode entirely
+  (`--exclude="Vendored*/**"`, projects and sources). They must stay verbatim for byte-for-byte
+  `chdman` parity: never edit them to satisfy an inspection, and never remove the exclusion. The
+  same rule lives in the root `.editorconfig` so IDE inspections stay quiet inside those folders.
+  InspectCode 2026.2 also logs a few internal `AssertionException`s while analyzing
+  `VendoredZSTD` (an analyzer bug, not a finding); the report is still empty.
 - Always run `dotnet test` before committing. Run the battle harness for changes touching
   encoding, decoding, CLI argument parsing, or anything chdman-visible.
 
@@ -59,8 +62,13 @@ jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections 
 - The CLI and Tester configure Serilog at startup (`MinimumLevel.Debug`) and bridge the library
   with `Chd.LoggerFactory = new SerilogLoggerFactory(...)`; the logger is flushed on exit.
 - CLI sinks: console + rolling-day file (`%LocalAppData%\CHDSharp\logs\chdsharp-<date>.log`) +
-  `BugReportSink`. The sink POSTs **every Warning+ event** (except user cancellation) to
-  `https://www.purelogiccode.com/bugreport/api/send-bug-report`.
+  `BugReportSink`. The sink POSTs **every Warning+ event** (except user cancellation and expected
+  user/usage errors) to `https://www.purelogiccode.com/bugreport/api/send-bug-report`.
+- Expected user/usage errors (bad flags, missing paths, sector-misaligned input, `--force` needed,
+  format overrides, ...) are diagnostics about the user's input, not defects. Log them with
+  `logger.UserError(...)` (`CHDSharpCli/UserErrorLogging.cs`), which keeps them at warning level in
+  the console/file logs but tags them so `BugReportSink` never reports them. Real runtime failures
+  (`Open failed`, `* failed: {Message}`, verify failures, ...) stay on `logger.Warning(...)`.
 - Every report must embed: `=== Environment Details ===` (Date, Application Name, Application
   Version, OS Version, Architecture, Bitness, Windows, Linux or MacOsX Version, Processor Count,
   Base Directory, Temp Path), `=== Error Details ===` (message), and `=== Exception Details ===`
@@ -116,8 +124,8 @@ matches `Directory.Build.props`.
    ```
 
 4. **Commit and push `main`**, then wait for the `CI gate` (three-OS build/test, InspectCode,
-   package, coverage, docs build, and the chdman parity smoke), after which the `Wiki & Pages` job
-   syncs the wiki and requests a Pages rebuild.
+   package, coverage, Jekyll + DocFX docs build, and the chdman parity smoke), after which the
+   `Wiki sync` job mirrors `docs/` to the wiki and the `Pages` workflow deploys the site.
 5. **Build the bundles locally** (optional before tagging, required when the user asks for them):
 
    ```bash
@@ -140,8 +148,8 @@ matches `Directory.Build.props`.
 
    `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles,
    creates the GitHub release with `WhatsNew.md` as the body, uploads the assets, publishes the
-   NuGet package (skipped when the version already exists), syncs the wiki and requests a Pages
-   rebuild.
+   NuGet package (skipped when the version already exists), syncs the wiki and
+   deploys the documentation site (`pages.yml`).
 
 7. **Verify the release**:
 
@@ -170,27 +178,33 @@ Pages rebuild request; needs `repo` scope).
   `jb inspectcode --severity=WARNING` finding, uploading the SARIF to code scanning.
 - **`package`** - packs `CHDSharpLib`, checks the `.nupkg` contents, and uploads it as an artifact.
 - **`coverage`** - collects merged Cobertura coverage for both suites on `net10.0`.
-- **`docs build`** - builds the Jekyll site with `--strict_front_matter`.
+- **`docs build (Jekyll + DocFX)`** - builds the Jekyll site with `--strict_front_matter`, then
+  generates the DocFX API reference (`scripts/build-api-docs.ps1`).
 - **`chdman parity (smoke)`** - Windows; runs the quick battle harness against
   `CHDSharpTester/chdman.exe`.
 - **`CI gate`** - aggregates all of the above; this is the status check to require.
-- **`Wiki & Pages`** - on `main` only, after the gate, regenerates the GitHub wiki from `docs/`
-  and requests a Pages rebuild.
+- **`Wiki sync`** - on `main` only, after the gate, regenerates the GitHub wiki from `docs/`.
 
 Tests that need `chdman` no-op when it is absent, so the unit suites only run chdman validation
 on Windows; the quick battle job always passes the checked-in `CHDSharpTester/chdman.exe`
 explicitly. CI sets `CHDSHARP_NO_BUG_REPORTS=1`/`CHDSHARP_NO_TELEMETRY=1` so test-spawned CLI
-runs never reach the production bug-report API or usage stats. The same wiki/Pages steps run in
-`release.yml` for tags, so code, wiki and the documentation site stay in sync. GitHub Pages is
-still served by the repository-managed `pages-build-deployment` workflow from `main`/`docs`
-(build type `legacy`).
+runs never reach the production bug-report API or usage stats. The same wiki step runs in
+`release.yml` for tags, so code and wiki stay in sync.
+
+`.github/workflows/pages.yml` owns the documentation site: it builds the Jekyll guides plus the
+DocFX API reference (`/api/`, from `CHDSharpLib` XML docs, DocFX pinned in
+`.config/dotnet-tools.json`, driven by `scripts/build-api-docs.ps1`) and deploys the combined
+artifact with `actions/deploy-pages`. GitHub Pages is configured with `build_type: workflow`;
+there is no legacy `pages-build-deployment` build any more.
 
 ## Security
 
 - CodeQL (`.github/workflows/codeql.yml`), Dependency Review
   (`.github/workflows/dependency-review.yml`), and OpenSSF Scorecard
   (`.github/workflows/scorecard.yml`) run in CI; Dependabot is configured in
-  `.github/dependabot.yml`.
+  `.github/dependabot.yml`. Dependency Review self-skips with a warning when the repository
+  dependency graph is disabled (GitHub exposes no API to enable it for user-owned repos - it is a
+  Settings > Code security and analysis toggle); the enforcement returns as soon as it is on.
 - Repository settings: Dependabot alerts/security updates, secret scanning with push protection,
   private vulnerability reporting, read-only default workflow permissions, and mandatory
   full-SHA action pinning with GitHub-owned/verified actions only.

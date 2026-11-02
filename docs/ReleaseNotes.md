@@ -1,5 +1,54 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.6.1
+
+Bug-fix and documentation release on top of v1.6.0. No public API changes.
+
+**Released:** 2026-11-02 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.6.1) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.6.1)
+
+### Bug-report API no longer receives expected user errors
+
+Every one of the 383 `CHDSharpCli` reports in the Bug Report API was a normal validation outcome
+rather than a defect: 382 `Data size ... is not divisible by sector size 2048` and one
+`createdvd requires --input <file> --output <file>`. Both paths already matched `chdman`
+(`chdman.cpp:2263`, `chdman.cpp:2088`): identical console text, exit code `1`, no output file.
+They were logged at `Warning`, and `BugReportSink` forwards every `Warning+` event.
+
+- `BugReportSink` now skips events tagged with the `UserError` property.
+- New `ILogger.UserError(...)` extension (`CHDSharpCli/UserErrorLogging.cs`) keeps the event at
+  `Warning` for the console and file sinks but tags it, so nothing is hidden locally and nothing is
+  posted.
+- 216 usage/validation call sites were reclassified: unknown options, invalid numeric arguments,
+  missing paths, sector-misaligned input, an existing output file without `--force`, overridden
+  format options and unsupported option combinations.
+- Genuine runtime failures stay on `logger.Warning(...)` and are still reported: `Open failed`,
+  `* failed: {Message}`, verification failures, TOC/track extraction failures and access-denied.
+- Console text and exit codes are unchanged; the quick battle harness stays at 905/905 checks.
+- Regression tests cover the two reported paths in `CliIntegrationTests`.
+
+### Generated API reference
+
+- DocFX (pinned in `.config/dotnet-tools.json`) generates the per-member reference from the
+  `CHDSharpLib` XML documentation; `scripts/build-api-docs.ps1` drives metadata, build and the
+  theme step locally and in CI.
+- New `Pages` workflow builds the Jekyll guides plus the DocFX reference into a single artifact and
+  deploys it; GitHub Pages now uses `build_type: workflow`, and the wiki jobs no longer request a
+  legacy Pages rebuild.
+- The reference is published at
+  [purelogiccode.github.io/CHDSharp/api/](https://purelogiccode.github.io/CHDSharp/api/) and uses
+  the same GitHub-dark palette as the guides, with a sidebar link from the main site.
+- Removed 14 duplicate `<param>` XML-documentation blocks in `CHD.cs`; DocFX metadata now builds
+  with 0 warnings.
+
+### Verification
+
+- `dotnet build -c Release`: 0 warnings, 0 errors.
+- `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: 0 findings.
+- Quick battle harness: 905/905 checks, byte-identical `chdman` output.
+- `CI gate`: three-OS build/test across `net8.0`/`net9.0`/`net10.0`, InspectCode, packaging,
+  coverage, Jekyll + DocFX docs build and the `chdman` parity smoke.
+
 ## CHDSharp v1.6.0
 
 Reliability and supply-chain release on top of v1.5.2. No public API changes.

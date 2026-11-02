@@ -6,6 +6,11 @@ layout: default
 
 Complete reference for the public API of the `CHDSharp` package. All types live in the `CHDSharp` namespace (models in `CHDSharp.Models`, address helpers in `CHDSharp.Utils`).
 
+> **Generated reference:** this page is the guided tour. The full, per-member reference generated
+> from the XML documentation by DocFX is published at
+> [purelogiccode.github.io/CHDSharp/api/](https://purelogiccode.github.io/CHDSharp/api/) and rebuilt
+> on every push to `main`.
+
 ---
 
 ## `Chd` — static class

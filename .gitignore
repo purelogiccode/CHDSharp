@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
@@ -17,3 +17,8 @@ TestResults/
 
 # Release packaging / wiki staging
 artifacts/
+
+# DocFX generated API metadata and rendered site
+docfx/*.yml
+docfx/.manifest
+_site/

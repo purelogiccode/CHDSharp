@@ -110,6 +110,7 @@ Both apps attach a `BugReportSink` (`CHDSharpCli/BugReportSink.cs`, `CHDSharpTes
 
 - Fire-and-forget (`Task.Run`, 10 s `HttpClient` timeout): delivery never blocks or throws into the logging pipeline. On `Log.CloseAndFlush()`, the sink waits up to 5 s for in-flight reports so short-lived CLI sessions and crash shutdowns still deliver them.
 - `OperationCanceledException` / `TaskCanceledException` events are skipped (user cancellation is not a bug).
+- Events tagged with the `UserError` property are skipped: they describe expected user/usage errors (bad flags, missing paths, sector-misaligned input, an existing output file without `--force`, overridden format options, ...), which are not application defects. The CLI attaches the tag through `logger.UserError(...)` (`CHDSharpCli/UserErrorLogging.cs`); the event keeps `Warning` severity in the console and file logs, so nothing is hidden locally - it is only kept out of the Bug Report API. Real runtime failures stay on `logger.Warning(...)` and are still reported.
 - Server throttling (`HTTP 429`) and any transport failure are silently tolerated.
 
 Each report embeds the same sections:

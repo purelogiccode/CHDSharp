@@ -1,0 +1,125 @@
+/* CHDSharp API reference theme - matches the main docs site (GitHub dark palette). */
+
+:root {
+    color-scheme: dark;
+    --chd-bg: #0d1117;
+    --chd-bg-elevated: #161b22;
+    --chd-bg-sidebar: #010409;
+    --chd-border: #30363d;
+    --chd-text: #e6edf3;
+    --chd-text-muted: #8b949e;
+    --chd-link: #58a6ff;
+    --chd-link-hover: #79c0ff;
+}
+
+html,
+body {
+    background-color: var(--chd-bg) !important;
+    color: var(--chd-text);
+}
+
+body,
+article,
+.main-container,
+.content {
+    background-color: var(--chd-bg) !important;
+    color: var(--chd-text);
+}
+
+a,
+a:visited {
+    color: var(--chd-link);
+}
+
+a:hover,
+a:focus {
+    color: var(--chd-link-hover);
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    color: #f0f6fc;
+}
+
+.navbar,
+.navbar-dark,
+.sidebar,
+.affix,
+.toc,
+#affix,
+#toc {
+    background-color: var(--chd-bg-sidebar) !important;
+    border-color: var(--chd-border) !important;
+}
+
+.navbar a,
+.sidebar a,
+.toc a,
+#affix a,
+#toc a {
+    color: var(--chd-text);
+}
+
+.navbar a:hover,
+.sidebar a:hover,
+.toc a:hover,
+#affix a:hover,
+#toc a:hover,
+.sidebar a.active,
+.toc a.active {
+    color: var(--chd-link);
+}
+
+table,
+.table {
+    color: var(--chd-text);
+    --bs-table-color: var(--chd-text);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--chd-border);
+    --bs-table-striped-bg: var(--chd-bg-elevated);
+    --bs-table-striped-color: var(--chd-text);
+}
+
+thead th {
+    border-bottom-color: var(--chd-border) !important;
+}
+
+code,
+pre,
+.inheritance,
+.class,
+.namespace {
+    color: var(--chd-text);
+}
+
+pre {
+    background-color: var(--chd-bg-elevated) !important;
+    border: 1px solid var(--chd-border);
+    border-radius: 6px;
+}
+
+.alert-info,
+.alert-warning,
+.alert-light {
+    background-color: var(--chd-bg-elevated);
+    border-color: var(--chd-border);
+    color: var(--chd-text);
+}
+
+.footer,
+footer {
+    color: var(--chd-text-muted);
+    border-top: 1px solid var(--chd-border);
+}
+
+hr {
+    border-color: var(--chd-border);
+}
+
+input,
+.form-control,
+.search-input {
+    background-color: var(--chd-bg-elevated);
+    border-color: var(--chd-border);
+    color: var(--chd-text);
+}

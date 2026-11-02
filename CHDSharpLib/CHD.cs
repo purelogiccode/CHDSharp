@@ -394,8 +394,10 @@ public static partial class Chd
         return new ChdResult(ChdError.Chderrnone, ver, combined ?? computedRawSha1, headerMd5);
     }
 
-    /// <inheritdoc
-    ///     cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+    /// <summary>
+    ///     Validates a CHD file from a <see cref="Stream" /> and returns the CHD version plus the
+    ///     SHA1/MD5 hashes stored in its header.
+    /// </summary>
     /// <param name="s">A readable, seekable stream positioned at the start of the CHD file.</param>
     /// <param name="filename">The filename associated with the stream, used only for logging.</param>
     /// <param name="deepCheck">
@@ -678,8 +680,12 @@ public static partial class Chd
         return new ChdResult(err, ver, sha1, md5);
     }
 
-    /// <inheritdoc
-    ///     cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+    /// <summary>
+    ///     Fully verifies a (possibly child/differential) CHD by decompressing the whole image and
+    ///     comparing the computed hashes against the values stored in the header, resolving parent
+    ///     references against the CHD at <paramref name="parentFilename" />. Also returns the header
+    ///     version and hashes.
+    /// </summary>
     /// <param name="filename">Path to the CHD file to verify.</param>
     /// <param name="parentFilename">Path to the parent CHD, or <c>null</c>/empty for a standalone CHD.</param>
     /// <param name="chdVersion">
@@ -834,10 +840,16 @@ public static partial class Chd
         return new ChdResult(err, ver, sha1, md5);
     }
 
-    /// <inheritdoc
-    ///     cref="CheckFileWithParent(string,ParentResolver?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
+    /// <summary>
+    ///     Verifies a (possibly child) CHD file by decompressing all hunks and comparing hashes,
+    ///     resolving parent references lazily via a <see cref="ParentResolver" /> callback. Also
+    ///     returns the header version and hashes.
+    /// </summary>
     /// <param name="filename">Path to the CHD file to verify.</param>
-    /// <param name="parentResolver">A callback that resolves parent CHDs by SHA1/MD5 hash, or <c>null</c>.</param>
+    /// <param name="parentResolver">
+    ///     A callback that resolves parent CHDs by SHA1/MD5 hash, or <c>null</c> to fail on child
+    ///     CHDs.
+    /// </param>
     /// <param name="chdVersion">
     ///     When this method returns, contains the CHD version (1-5), or <c>null</c> if the file could not
     ///     be opened.
@@ -1119,7 +1131,6 @@ public static partial class Chd
         return err;
     }
 
-    /// <inheritdoc cref="ReadHeader(string,out ChdHeaderInfo?)" />
     /// <summary>
     ///     Reads and parses the full CHD header from an existing seekable stream
     ///     (libchdr <c>chd_read_header_file</c> parity). The stream is seeked as needed and left open.

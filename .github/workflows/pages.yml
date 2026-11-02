@@ -1,0 +1,88 @@
+# Builds the complete documentation site and deploys it to GitHub Pages:
+#   - the Jekyll guides from docs/
+#   - the DocFX API reference generated from CHDSharpLib's XML documentation (->
+#     /api/)
+#
+# GitHub Pages is configured with `build_type: workflow`, so this workflow owns the
+# deployment. It runs on every push to main that can affect the site, plus manual dispatch.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "CHDSharpLib/**"
+      - "docfx/**"
+      - "docfx.json"
+      - ".config/dotnet-tools.json"
+      - "scripts/build-api-docs.ps1"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "true"
+
+jobs:
+  build:
+    name: Build docs site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK 10
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: false
+
+      - name: Build Jekyll guides
+        run: |
+          gem install jekyll -v 4.3.4 --no-document
+          jekyll build --source docs --destination _site --strict_front_matter --trace
+
+      - name: Build DocFX API reference
+        shell: pwsh
+        run: ./scripts/build-api-docs.ps1
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
