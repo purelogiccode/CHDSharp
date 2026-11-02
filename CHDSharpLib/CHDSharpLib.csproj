@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.6.1: bug-fix release. Expected user/usage errors in the CLI (bad flags, missing paths, sector-misaligned input, an existing output without --force, overridden format options) are now logged through ILogger.UserError and tagged so BugReportSink never posts them to the Bug Report API; genuine runtime failures are still reported. Adds a DocFX-generated per-member API reference published with the docs site (0 metadata warnings) and moves Pages deployment to a dedicated workflow. Console text and exit codes are unchanged (chdman parity). No public API changes. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.6.2: extraction diagnostics release. File-writing failures during extraction now log the real exception and return Chderrdecompressionerror for data/codec failures or Chderrwriteerror for output I/O instead of flattening every failure to Chderrwriteerror. Read-ahead teardown no longer races a disposed semaphore, and damaged GD-ROM metadata returns Chderrinvaliddata instead of throwing. No encoder output changes: the quick battle harness stays 3,174/3,174 checks byte-identical to chdman 0.289, and CD/GD-ROM extraction is verified byte-identical to chdman extractcd. No public API changes. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>

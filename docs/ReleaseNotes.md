@@ -1,5 +1,42 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.6.2
+
+Diagnostics and extraction-robustness release on top of v1.6.1. No public API changes.
+
+**Released:** 2026-11-02 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.6.2) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.6.2)
+
+### Extraction failures keep their real cause
+
+Every exception raised while writing extracted data was folded into
+`ChdError.Chderrwriteerror`, so a codec, path, permission or disk failure all looked the same and
+callers could not tell a damaged CHD from an unwritable output volume.
+
+- `TryWriteCdCooked`, `TryWriteTrackCooked`, `TryWriteGdRomTrackCooked`, `TryWriteTrackToFile`,
+  `ExtractToc` and the descriptor writers now log the exception at warning level.
+- A data/codec exception (`InvalidDataException`) maps to `Chderrdecompressionerror`; output I/O
+  maps to `Chderrwriteerror`, preserving the caller's ability to classify the failure.
+- Regression test `ExtractionFailureLoggingTests` pins the warning and the returned code.
+
+### Read-ahead teardown race
+
+`ReadAheadManager.TryGet` and `Clear` can run while `Dispose` releases the semaphore. A permit
+release after disposal is now ignored, so teardown cannot surface an unobserved
+`ObjectDisposedException`.
+
+### Damaged GD-ROM metadata
+
+`ExtractToDirectoryWithReporting` returns `Chderrinvaliddata` when a GD-ROM CHD has no readable
+tracks instead of dereferencing a null track list.
+
+### Verification
+
+- 4,219 library tests + 455 encoder tests.
+- Quick battle harness: 3,174/3,174 checks, byte-identical `chdman` output.
+- `jb inspectcode`: 0 findings.
+- CD (V3/V4/V5, cdfl/cdlz/cdzl/cdzs/default) and synthetic GD-ROM GDI extraction compared
+  byte-for-byte with `chdman extractcd`.
 ## CHDSharp v1.6.1
 
 Bug-fix and documentation release on top of v1.6.0. No public API changes.
