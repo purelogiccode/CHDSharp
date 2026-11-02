@@ -396,13 +396,6 @@ public static partial class Chd
 
     /// <inheritdoc
     ///     cref="CheckFile(Stream,string,bool,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
-    /// <param name="s">A readable, seekable stream positioned at the start of the CHD file.</param>
-    /// <param name="filename">The filename associated with the stream, used only for logging.</param>
-    /// <param name="deepCheck">
-    ///     If <c>true</c>, performs full decompression of every hunk plus SHA1/MD5 hash
-    ///     verification (using up to <see cref="TaskCount" /> parallel workers); if <c>false</c>, only the header is
-    ///     validated.
-    /// </param>
     /// <param name="chdVersion">
     ///     When this method returns, contains the CHD version (1-5), or <c>null</c> if the header was
     ///     invalid.
@@ -414,14 +407,6 @@ public static partial class Chd
     /// <param name="chdMd5">
     ///     When this method returns, contains the MD5 hash from the header, or <c>null</c> if not available
     ///     (V4/V5).
-    /// </param>
-    /// <param name="progress">
-    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
-    ///     report after each decompressed hunk during deep verification. <c>null</c> (default) disables progress reporting.
-    /// </param>
-    /// <param name="cancellationToken">
-    ///     A token to cancel deep verification. <see cref="OperationCanceledException" />
-    ///     is thrown if cancellation is requested while hunks are being decompressed or hashed.
     /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
     public static ChdError CheckFile(
@@ -680,8 +665,6 @@ public static partial class Chd
 
     /// <inheritdoc
     ///     cref="CheckFileWithParent(string,string?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
-    /// <param name="filename">Path to the CHD file to verify.</param>
-    /// <param name="parentFilename">Path to the parent CHD, or <c>null</c>/empty for a standalone CHD.</param>
     /// <param name="chdVersion">
     ///     When this method returns, contains the CHD version (1-5), or <c>null</c> if the file could not
     ///     be opened.
@@ -691,14 +674,6 @@ public static partial class Chd
     ///     available.
     /// </param>
     /// <param name="chdMd5">When this method returns, contains the MD5 hash from the header, or <c>null</c> if not available.</param>
-    /// <param name="progress">
-    ///     An optional <see cref="IProgress{T}" /> receiving a <see cref="ChdProgress" />
-    ///     report after each decompressed hunk. <c>null</c> (default) disables progress reporting.
-    /// </param>
-    /// <param name="cancellationToken">
-    ///     A token to cancel verification. <see cref="OperationCanceledException" />
-    ///     is thrown if cancellation is requested while hunks are being read.
-    /// </param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
     public static ChdError CheckFileWithParent(
         string filename,
@@ -836,8 +811,6 @@ public static partial class Chd
 
     /// <inheritdoc
     ///     cref="CheckFileWithParent(string,ParentResolver?,IProgress{CHDSharp.Models.ChdProgress}?,System.Threading.CancellationToken)" />
-    /// <param name="filename">Path to the CHD file to verify.</param>
-    /// <param name="parentResolver">A callback that resolves parent CHDs by SHA1/MD5 hash, or <c>null</c>.</param>
     /// <param name="chdVersion">
     ///     When this method returns, contains the CHD version (1-5), or <c>null</c> if the file could not
     ///     be opened.
@@ -847,8 +820,6 @@ public static partial class Chd
     ///     available.
     /// </param>
     /// <param name="chdMd5">When this method returns, contains the MD5 hash from the header, or <c>null</c> if not available.</param>
-    /// <param name="progress">An optional progress reporter, or <c>null</c>.</param>
-    /// <param name="cancellationToken">A token to cancel verification.</param>
     /// <returns><see cref="ChdError.Chderrnone" /> on success; otherwise an error code describing the failure.</returns>
     public static ChdError CheckFileWithParent(
         string filename,
@@ -1119,7 +1090,6 @@ public static partial class Chd
         return err;
     }
 
-    /// <inheritdoc cref="ReadHeader(string,out ChdHeaderInfo?)" />
     /// <summary>
     ///     Reads and parses the full CHD header from an existing seekable stream
     ///     (libchdr <c>chd_read_header_file</c> parity). The stream is seeked as needed and left open.
