@@ -2,7 +2,7 @@
 #   - six platform bundles (framework-dependent single-file CLI) attached to the GitHub release
 #   - build provenance attestations for the bundles and the NuGet package
 #   - the CHDSharp NuGet package
-#   - the docs/ folder synced to the GitHub wiki (and a Pages rebuild request)
+#   - the docs/ folder synced to the GitHub wiki (Pages is deployed by pages.yml)
 #
 # Assets are named CHDSharp_<os>-<arch>_v<version>.zip - the exact names the CLI's
 # built-in update check (VersionCheckService) looks up via the GitHub releases API.
@@ -162,8 +162,3 @@ jobs:
             git commit -m "wiki: sync from docs/ (${GITHUB_REF_NAME})"
             git push
           fi
-
-      - name: Request Pages rebuild
-        env:
-          GH_TOKEN: ${{ secrets.WIKI_TOKEN }}
-        run: gh api -X POST repos/purelogiccode/CHDSharp/pages/builds --jq '.status'

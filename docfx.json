@@ -1,0 +1,53 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": ".",
+          "files": [
+            "CHDSharpLib/CHDSharpLib.csproj"
+          ]
+        }
+      ],
+      "dest": "docfx",
+      "outputFormat": "mref",
+      "properties": {
+        "TargetFramework": "net10.0"
+      }
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "src": "docfx",
+        "files": [
+          "index.md",
+          "toc.yml",
+          "*.yml"
+        ]
+      }
+    ],
+    "dest": "_site/api",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appTitle": "CHDSharp API Reference",
+      "_appName": "CHDSharp",
+      "_appFooter": "CHDSharp - pure C# CHD reader/writer. MIT licensed.",
+      "_enableSearch": true,
+      "_disableContribution": false,
+      "_gitContribute": {
+        "repo": "https://github.com/purelogiccode/CHDSharp",
+        "branch": "main",
+        "apiFolder": "docfx"
+      },
+      "_gitUrlPattern": "github"
+    },
+    "markdownEngineName": "markdig",
+    "noLangKeyword": false,
+    "keepFileLink": false,
+    "cleanFileCache": true
+  }
+}

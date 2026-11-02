@@ -2,3 +2,7 @@ title: CHDSharp
 description: Pure C# CHD (Compressed Hunks of Data) reader and writer — V1–V5, all codecs, parent/child chaining, 100% match with MAME chdman.
 markdown: kramdown
 url: https://github.com/purelogiccode/CHDSharp
+# Project site root. GitHub Pages injected this implicitly for the legacy build; the
+# `pages.yml` workflow builds Jekyll itself, so the prefix must be explicit or every
+# `relative_url` link would resolve to the user-site root.
+baseurl: "/CHDSharp"

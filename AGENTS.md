@@ -27,6 +27,7 @@ the CHD (Compressed Hunks of Data) disk-image format used by MAME.
 | `CHDSharpBenchmark/` | BenchmarkDotNet suite |
 | `CHDSharpTestDataGeneration/` | Deterministic corpus generator |
 | `docs/` | Jekyll documentation site (deployed to GitHub Pages) |
+| `docfx/`, `docfx.json` | DocFX API reference source + config (generated `/api/` site, pinned tool in `.config/dotnet-tools.json`) |
 | `References/` | Local chdman reference material; excluded from builds |
 
 ## Build / test / run
@@ -121,8 +122,8 @@ matches `Directory.Build.props`.
    ```
 
 4. **Commit and push `main`**, then wait for the `CI gate` (three-OS build/test, InspectCode,
-   package, coverage, docs build, and the chdman parity smoke), after which the `Wiki & Pages` job
-   syncs the wiki and requests a Pages rebuild.
+   package, coverage, Jekyll + DocFX docs build, and the chdman parity smoke), after which the
+   `Wiki sync` job mirrors `docs/` to the wiki and the `Pages` workflow deploys the site.
 5. **Build the bundles locally** (optional before tagging, required when the user asks for them):
 
    ```bash
@@ -145,8 +146,8 @@ matches `Directory.Build.props`.
 
    `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles,
    creates the GitHub release with `WhatsNew.md` as the body, uploads the assets, publishes the
-   NuGet package (skipped when the version already exists), syncs the wiki and requests a Pages
-   rebuild.
+   NuGet package (skipped when the version already exists), syncs the wiki and
+   deploys the documentation site (`pages.yml`).
 
 7. **Verify the release**:
 
@@ -175,20 +176,24 @@ Pages rebuild request; needs `repo` scope).
   `jb inspectcode --severity=WARNING` finding, uploading the SARIF to code scanning.
 - **`package`** - packs `CHDSharpLib`, checks the `.nupkg` contents, and uploads it as an artifact.
 - **`coverage`** - collects merged Cobertura coverage for both suites on `net10.0`.
-- **`docs build`** - builds the Jekyll site with `--strict_front_matter`.
+- **`docs build (Jekyll + DocFX)`** - builds the Jekyll site with `--strict_front_matter`, then
+  generates the DocFX API reference (`scripts/build-api-docs.ps1`).
 - **`chdman parity (smoke)`** - Windows; runs the quick battle harness against
   `CHDSharpTester/chdman.exe`.
 - **`CI gate`** - aggregates all of the above; this is the status check to require.
-- **`Wiki & Pages`** - on `main` only, after the gate, regenerates the GitHub wiki from `docs/`
-  and requests a Pages rebuild.
+- **`Wiki sync`** - on `main` only, after the gate, regenerates the GitHub wiki from `docs/`.
 
 Tests that need `chdman` no-op when it is absent, so the unit suites only run chdman validation
 on Windows; the quick battle job always passes the checked-in `CHDSharpTester/chdman.exe`
 explicitly. CI sets `CHDSHARP_NO_BUG_REPORTS=1`/`CHDSHARP_NO_TELEMETRY=1` so test-spawned CLI
-runs never reach the production bug-report API or usage stats. The same wiki/Pages steps run in
-`release.yml` for tags, so code, wiki and the documentation site stay in sync. GitHub Pages is
-still served by the repository-managed `pages-build-deployment` workflow from `main`/`docs`
-(build type `legacy`).
+runs never reach the production bug-report API or usage stats. The same wiki step runs in
+`release.yml` for tags, so code and wiki stay in sync.
+
+`.github/workflows/pages.yml` owns the documentation site: it builds the Jekyll guides plus the
+DocFX API reference (`/api/`, from `CHDSharpLib` XML docs, DocFX pinned in
+`.config/dotnet-tools.json`, driven by `scripts/build-api-docs.ps1`) and deploys the combined
+artifact with `actions/deploy-pages`. GitHub Pages is configured with `build_type: workflow`;
+there is no legacy `pages-build-deployment` build any more.
 
 ## Security
 

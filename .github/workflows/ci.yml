@@ -204,15 +204,22 @@ jobs:
           retention-days: 14
 
   docs_build:
-    name: docs build
+    name: docs build (Jekyll + DocFX)
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Setup .NET SDK 10
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
@@ -224,6 +231,10 @@ jobs:
         run: |
           gem install jekyll -v 4.3.4 --no-document
           jekyll build --source docs --destination _site --strict_front_matter --trace
+
+      - name: Build DocFX API reference
+        shell: pwsh
+        run: ./scripts/build-api-docs.ps1
 
   battle:
     name: chdman parity (smoke)
@@ -286,7 +297,7 @@ jobs:
           done
 
   wiki:
-    name: Wiki & Pages
+    name: Wiki sync
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: ci
     runs-on: ubuntu-24.04
@@ -324,7 +335,5 @@ jobs:
             git push
           fi
 
-      - name: Request Pages rebuild
-        env:
-          GH_TOKEN: ${{ secrets.WIKI_TOKEN }}
-        run: gh api -X POST repos/purelogiccode/CHDSharp/pages/builds --jq '.status'
+      # GitHub Pages is deployed by .github/workflows/pages.yml (build_type: workflow),
+      # which rebuilds the Jekyll guides and the DocFX API reference on every push.
