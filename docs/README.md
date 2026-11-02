@@ -69,7 +69,7 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 | Page | Description |
 |------|-------------|
 | [API Reference](api-reference.md) | Complete reference for `Chd`, `ChdFile`, and all public models/enums. |
-| [Generated API Reference](/api/) | Per-member DocFX reference generated from the library's XML documentation. |
+| [Generated API Reference](api/) | Per-member DocFX reference generated from the library's XML documentation. |
 | [Metadata](metadata.md) | Reading and querying CHD metadata tags (`GDDD`, `CHT2`, `AVAV`, …). |
 | [Verification](verification.md) | Full/parallel and header-only verification, checksum semantics. |
 | [Extraction](extraction.md) | TOC parsing, CUE/GDI/ISO/IMG/RAW extraction, classification. |
