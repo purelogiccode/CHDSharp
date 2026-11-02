@@ -59,8 +59,13 @@ jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections 
 - The CLI and Tester configure Serilog at startup (`MinimumLevel.Debug`) and bridge the library
   with `Chd.LoggerFactory = new SerilogLoggerFactory(...)`; the logger is flushed on exit.
 - CLI sinks: console + rolling-day file (`%LocalAppData%\CHDSharp\logs\chdsharp-<date>.log`) +
-  `BugReportSink`. The sink POSTs **every Warning+ event** (except user cancellation) to
-  `https://www.purelogiccode.com/bugreport/api/send-bug-report`.
+  `BugReportSink`. The sink POSTs **every Warning+ event** (except user cancellation and expected
+  user/usage errors) to `https://www.purelogiccode.com/bugreport/api/send-bug-report`.
+- Expected user/usage errors (bad flags, missing paths, sector-misaligned input, `--force` needed,
+  format overrides, ...) are diagnostics about the user's input, not defects. Log them with
+  `logger.UserError(...)` (`CHDSharpCli/UserErrorLogging.cs`), which keeps them at warning level in
+  the console/file logs but tags them so `BugReportSink` never reports them. Real runtime failures
+  (`Open failed`, `* failed: {Message}`, verify failures, ...) stay on `logger.Warning(...)`.
 - Every report must embed: `=== Environment Details ===` (Date, Application Name, Application
   Version, OS Version, Architecture, Bitness, Windows, Linux or MacOsX Version, Processor Count,
   Base Directory, Temp Path), `=== Error Details ===` (message), and `=== Exception Details ===`

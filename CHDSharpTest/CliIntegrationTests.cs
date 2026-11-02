@@ -155,4 +155,45 @@ public sealed class CliIntegrationTests
         Assert.Contains("extractcd:", output, StringComparison.Ordinal);
         Assert.Contains("help <command>", output, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Createdvd_rejects_input_size_that_is_not_sector_aligned()
+    {
+        // chdman.cpp:2263 - createdvd refuses input whose length is not a multiple of 2048.
+        var dir = Path.Combine(Path.GetTempPath(), "chdsharp-createdvd-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var input = Path.Combine(dir, "odd.iso");
+            File.WriteAllBytes(input, new byte[1000]);
+            var output = Path.Combine(dir, "out.chd");
+
+            var (exitCode, log) = RunCli("createdvd", "--input", input, "--output", output);
+
+            Assert.Equal(1, exitCode);
+            Assert.Contains(
+                "Data size 1,000 is not divisible by sector size 2048",
+                log,
+                StringComparison.Ordinal
+            );
+            Assert.False(File.Exists(output));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Createdvd_reports_usage_error_when_arguments_are_missing()
+    {
+        var (exitCode, log) = RunCli("createdvd");
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains(
+            "createdvd requires --input <file> --output <file>",
+            log,
+            StringComparison.Ordinal
+        );
+    }
 }

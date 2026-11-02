@@ -20,6 +20,14 @@ internal sealed class BugReportSink : ILogEventSink, IDisposable
     private static readonly HttpClient Client = new();
     private static readonly string ApiKey = DecodeApiKey();
 
+    /// <summary>
+    ///     Property attached to log events that describe an expected user or usage error (for example a bad
+    ///     command-line flag, an input file whose size is not sector-aligned, or a missing path). Those events
+    ///     are diagnostics about the user's input, not defects in this application, so they are never forwarded
+    ///     to the Bug Report API. Attach it with <c>logger.UserError(...)</c>.
+    /// </summary>
+    public const string UserErrorProperty = "UserError";
+
     private readonly EnvironmentSnapshot _env;
     private readonly string _environmentLabel;
 
@@ -53,6 +61,11 @@ internal sealed class BugReportSink : ILogEventSink, IDisposable
     public void Emit(LogEvent logEvent)
     {
         if (logEvent.Level < LogEventLevel.Warning)
+            return;
+        if (
+            logEvent.Properties.TryGetValue(UserErrorProperty, out var userError)
+            && userError is ScalarValue { Value: true }
+        )
             return;
         if (DisabledByEnvironment)
             return;
