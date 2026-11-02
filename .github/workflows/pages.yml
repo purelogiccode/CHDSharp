@@ -61,9 +61,17 @@ jobs:
           gem install jekyll -v 4.3.4 --no-document
           jekyll build --source docs --destination _site --strict_front_matter --trace
 
+      - name: Verify the site entry point exists
+        run: |
+          test -f _site/index.html
+          test -f _site/getting-started.html
+
       - name: Build DocFX API reference
         shell: pwsh
         run: ./scripts/build-api-docs.ps1
+
+      - name: Verify the API reference exists
+        run: test -f _site/api/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
