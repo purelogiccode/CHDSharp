@@ -26,6 +26,14 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.6.1
+
+- **The bug-report API only receives real bugs** - expected user/usage errors are tagged via `logger.UserError(...)` and stay in the console and file logs without being posted as defects. That covers bad flags, invalid numbers, missing paths, sector-misaligned input, an existing output without `--force`, overridden format options and unsupported combinations (216 call sites). Genuine failures (`Open failed`, `* failed: {Message}`, verification and extraction failures) are still reported.
+- **Generated API reference** - the docs site now publishes a per-member DocFX reference at [purelogiccode.github.io/CHDSharp/api/](https://purelogiccode.github.io/CHDSharp/api/), rebuilt on every push to `main`, with DocFX pinned in `.config/dotnet-tools.json` and driven by `scripts/build-api-docs.ps1`.
+- **Pages deploy via Actions** - a new `Pages` workflow builds the Jekyll guides and the DocFX reference into one artifact and deploys it, replacing the legacy Pages rebuild request.
+- **Cleaner XML docs** - 14 duplicate `<param>` blocks in `CHD.cs` were removed; DocFX metadata builds with 0 warnings.
+- **Verification** - `CI gate` green across `net8.0`/`net9.0`/`net10.0`, `jb inspectcode` 0 findings, quick battle harness 905/905 checks.
+
 ## What's New in v1.6.0
 
 - **Read-ahead teardown is non-blocking** - `Dispose()` and `ConfigureReadAhead(0)` no longer wait for in-flight reads, and duplicate in-flight hunks can no longer leak a semaphore permit. Shutdown cancellation is no longer logged as a decompression failure.

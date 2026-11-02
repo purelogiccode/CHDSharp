@@ -20,6 +20,12 @@
 
 ---
 
+## What's New in v1.6.1
+
+- **Automatic bug reports now only cover real bugs** - CLI diagnostics for expected user input (bad flags, invalid numbers, missing paths, sector-misaligned sources, an existing output without `--force`, overridden format options) are logged at warning level but tagged so the Bug Report API never receives them; runtime failures are still reported. No library code changed.
+- **Generated API reference** - a per-member DocFX reference built from the XML documentation is published with the docs site at [purelogiccode.github.io/CHDSharp/api/](https://purelogiccode.github.io/CHDSharp/api/). The library's duplicate `<param>` docs were removed, so DocFX metadata builds with 0 warnings.
+- **No public API changes** - behavior and documentation only; verified with the full suite across `net8.0`/`net9.0`/`net10.0`, `jb inspectcode` 0 findings and the quick battle harness (905/905 checks).
+
 ## What's New in v1.6.0
 
 - **Read-ahead teardown is non-blocking** - `Dispose()` and `ConfigureReadAhead(0)` no longer wait for in-flight reads, duplicate in-flight hunks can no longer leak a semaphore permit, and shutdown cancellation is not logged as a decompression failure.

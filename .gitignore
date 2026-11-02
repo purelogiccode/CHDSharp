@@ -20,4 +20,5 @@ artifacts/
 
 # DocFX generated API metadata and rendered site
 docfx/*.yml
+docfx/.manifest
 _site/
