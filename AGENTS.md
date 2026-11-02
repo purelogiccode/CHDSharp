@@ -47,11 +47,13 @@ jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections 
 - Keep builds warning-free: Meziantou.Analyzer and Roslynator.Analyzers run in every project.
 - `CHDSharpLib` treats missing XML docs (CS1591) as errors — document every public API addition.
 - Keep ReSharper inspections clean too: `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`
-  must report zero findings. The policy lives in the root `.editorconfig`: the vendored codec
-  folders are exempt from style inspections and must stay verbatim for `chdman` parity — never
-  "fix" a warning there, suppress the inspection instead. InspectCode 2026.2 logs a few internal
-  `AssertionException`s while analyzing `VendoredZSTD` (an analyzer bug, not a finding); the
-  report is still empty, and `--exclude="Vendored*/**/*.cs"` silences the console.
+  must report zero findings. The four vendored codec projects - `VendoredFlac`, `VendoredLZMA`,
+  `VendoredZLib` and `VendoredZSTD` - are excluded from InspectCode entirely
+  (`--exclude="Vendored*/**"`, projects and sources). They must stay verbatim for byte-for-byte
+  `chdman` parity: never edit them to satisfy an inspection, and never remove the exclusion. The
+  same rule lives in the root `.editorconfig` so IDE inspections stay quiet inside those folders.
+  InspectCode 2026.2 also logs a few internal `AssertionException`s while analyzing
+  `VendoredZSTD` (an analyzer bug, not a finding); the report is still empty.
 - Always run `dotnet test` before committing. Run the battle harness for changes touching
   encoding, decoding, CLI argument parsing, or anything chdman-visible.
 

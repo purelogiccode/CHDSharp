@@ -100,7 +100,7 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
-          jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --format=Sarif --output=inspectcode.sarif --exclude="Vendored*/**/*.cs" --no-updates
+          jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --format=Sarif --output=inspectcode.sarif --exclude="Vendored*/**" --no-updates
 
       - name: Fail on inspection findings
         shell: pwsh

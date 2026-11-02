@@ -70,16 +70,18 @@ the [JetBrains command-line tools](https://www.jetbrains.com/help/resharper/Insp
 (`jb`), from the repository root:
 
 ```bash
-jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --output=inspectcode.xml
+# The four vendored codec projects are excluded outright: they are checked in verbatim
+# and editing them for style would risk the byte-for-byte chdman parity guarantee.
+jb inspectcode CSharp_CHDSharp.sln --severity=WARNING --exclude="Vendored*/**" --output=inspectcode.xml
 ```
 
 The inspection policy lives in the root `.editorconfig`:
 
-- **The vendored codecs are exempt.** `VendoredZLib`, `VendoredLZMA`, `VendoredFlac` and
-  `VendoredZSTD` are third-party ports checked in verbatim; byte-for-byte `chdman` parity depends
-  on them staying untouched, so their style/quality inspections (redundant code, unreachable
-  branches, naming, …) are disabled there. Never "fix" a finding inside those folders — exempt it
-  in `.editorconfig` instead.
+- **The vendored codecs are excluded from InspectCode.** `VendoredZLib`, `VendoredLZMA`,
+  `VendoredFlac` and `VendoredZSTD` (projects and sources) are third-party ports checked in
+  verbatim; byte-for-byte `chdman` parity depends on them staying untouched. They are skipped by
+  `--exclude="Vendored*/**"` in CI and by `.editorconfig`, and must never be edited to satisfy an
+  inspection.
 - **Consumer-facing models are exempt from "never used" inspections.** Public library records
   (`CHDSharpLib/Models`), the JSON corpus manifest
   (`CHDSharpTestDataGeneration/Models`) and the WPF data models (`CHDSharpTester/Models`) expose
@@ -87,7 +89,7 @@ The inspection policy lives in the root `.editorconfig`:
 
 > InspectCode 2026.2 logs internal `AssertionException`s while its nullable-flow analyzer walks
 > the vendored ZSTD sources. This is a bug in the analyzer, not a finding: the report is still
-> empty. Add `--exclude="Vendored*/**/*.cs"` if you want a silent console.
+> empty, and the `--exclude="Vendored*/**"` switch also silences the console.
 
 ---
 
