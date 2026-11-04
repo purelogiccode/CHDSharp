@@ -1,5 +1,42 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.6.3
+
+Diagnostics and documentation release on top of v1.6.2. No public API or encoder-output changes.
+
+**Released:** 2026-11-03 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.6.3) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.6.3)
+
+### Expected `createcd` input failures stay out of the Bug Report API
+
+A report showed `--createcd failed: "Unrecognized ISO sector size (1866629376 bytes is not a
+multiple of 2048, 2336 or 2352)"` being filed as an application defect. The input is correctly
+rejected by `chdman` too (`cdrom.cpp:2078`, `parse_iso`): the file is not a valid raw ISO.
+
+- `createcd` now logs `InvalidDataException` (malformed ISO/CUE/GDI/TOC, truncated BIN/WAV,
+  invalid source layout) and `FileNotFoundException` (missing referenced file) through
+  `logger.UserError(...)`. The event stays at warning level in the console/file logs and the
+  console text and exit code are unchanged, but it is no longer POSTed to the Bug Report API.
+- `ArgumentException`, `IOException` and `UnauthorizedAccessException` failures still go through
+  `logger.Warning(...)` and are still reported.
+- Regression test `Createcd_rejects_iso_size_that_is_not_sector_aligned` covers the reported path.
+
+### Vendored codecs are documented as frozen
+
+`AGENTS.md` now has a dedicated **Vendored codecs (frozen)** section: `VendoredFlac`,
+`VendoredLZMA`, `VendoredZLib` and `VendoredZSTD` stay byte-for-byte verbatim for `chdman` parity
+and may only be edited when strictly necessary, never to satisfy an analyzer, formatter or
+InspectCode finding. The existing InspectCode and `.editorconfig` exclusions remain in place.
+
+### Verification
+
+- `dotnet build -c Release`: 0 warnings, 0 errors.
+- `jb inspectcode --severity=WARNING --exclude="Vendored*/**"`: 0 findings; vendored sources were
+  not modified.
+- Library tests: 4,220 passed and encoder tests: 455 passed on each of `net8.0`, `net9.0` and
+  `net10.0`.
+- Quick battle harness: 905/905 checks, byte-identical `chdman` output.
+
 ## CHDSharp v1.6.2
 
 Diagnostics and extraction-robustness release on top of v1.6.1. No public API changes.

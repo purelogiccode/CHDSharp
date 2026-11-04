@@ -1,11 +1,11 @@
-# CHDSharp v1.6.2 - What's New
+# CHDSharp v1.6.3 - What's New
 
-**Released:** 2026-11-02 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.6.2)
+**Released:** 2026-11-03 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.6.3)
 
-CHDSharp v1.6.2 is a diagnostics and extraction-robustness release. Extracted-file failures keep
-their real cause instead of being flattened to `Chderrwriteerror`, read-ahead teardown cannot race
-a disposed semaphore, and damaged GD-ROM metadata returns an error instead of crashing. Encoder
-output is unchanged and remains byte-identical to MAME `chdman` 0.289.
+CHDSharp v1.6.3 is a small diagnostics release. `createcd` now keeps expected malformed-input
+failures out of the Bug Report API while preserving the exact `chdman`-compatible console text and
+exit codes. The vendored codec libraries are explicitly documented as frozen, and no encoder output
+changed.
 
 ---
 
@@ -13,12 +13,12 @@ output is unchanged and remains byte-identical to MAME `chdman` 0.289.
 
 | Platform | Bundle |
 |----------|--------|
-| Windows x64 | [`CHDSharp_win-x64_v1.6.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.2/CHDSharp_win-x64_v1.6.2.zip) |
-| Windows ARM64 | [`CHDSharp_win-arm64_v1.6.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.2/CHDSharp_win-arm64_v1.6.2.zip) |
-| Linux x64 | [`CHDSharp_linux-x64_v1.6.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.2/CHDSharp_linux-x64_v1.6.2.zip) |
-| Linux ARM64 | [`CHDSharp_linux-arm64_v1.6.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.2/CHDSharp_linux-arm64_v1.6.2.zip) |
-| macOS Intel | [`CHDSharp_osx-x64_v1.6.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.2/CHDSharp_osx-x64_v1.6.2.zip) |
-| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.6.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.2/CHDSharp_osx-arm64_v1.6.2.zip) |
+| Windows x64 | [`CHDSharp_win-x64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_win-x64_v1.6.3.zip) |
+| Windows ARM64 | [`CHDSharp_win-arm64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_win-arm64_v1.6.3.zip) |
+| Linux x64 | [`CHDSharp_linux-x64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_linux-x64_v1.6.3.zip) |
+| Linux ARM64 | [`CHDSharp_linux-arm64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_linux-arm64_v1.6.3.zip) |
+| macOS Intel | [`CHDSharp_osx-x64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_osx-x64_v1.6.3.zip) |
+| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_osx-arm64_v1.6.3.zip) |
 
 Every bundle contains a **framework-dependent single-file** `CHDSharp` / `CHDSharp.exe`
 build (the .NET runtime is **not** embedded) plus `LICENSE.txt`, `README.md`, `README.txt`
@@ -27,34 +27,35 @@ is required.
 
 ---
 
-## Fixed: extraction failures keep their real cause
+## Fixed: expected `createcd` input errors no longer become bug reports
 
-Every exception raised while writing extracted data was folded into
-`ChdError.Chderrwriteerror`, so a codec, path, permission or disk failure all looked the same and
-callers could not tell a damaged CHD from an unwritable output volume. This is what produced the
-opaque `track 3: Chderrwriteerror` reports in consuming applications.
+A report showed `--createcd failed: "Unrecognized ISO sector size (...)"` being filed as an
+application defect. That input is rejected by `chdman` too (`cdrom.cpp:2078`, `parse_iso`): a
+raw ISO must be a multiple of 2048, 2336 or 2352 bytes.
 
-- The extraction writers now log the underlying exception at warning level.
-- `InvalidDataException` (data/codec failure) maps to `Chderrdecompressionerror`; output I/O maps to
-  `Chderrwriteerror`.
-- A regression test forces an unwritable target and asserts the warning and the returned code.
+- `createcd` now logs `InvalidDataException` (malformed ISO/CUE/GDI/TOC, truncated BIN/WAV,
+  invalid source layout) and `FileNotFoundException` (missing referenced file) through
+  `logger.UserError(...)`. The event stays at warning level in the console and rolling file logs,
+  and the console text and exit code are unchanged, but it is no longer POSTed to the Bug Report
+  API.
+- Other `ArgumentException` / `IOException` / `UnauthorizedAccessException` failures still use
+  `logger.Warning(...)` and are still reported.
+- Regression test `Createcd_rejects_iso_size_that_is_not_sector_aligned` covers the reported
+  non-sector-aligned ISO path.
 
-## Fixed: read-ahead teardown race
+## Documentation: vendored codecs are frozen
 
-`ReadAheadManager.TryGet` and `Clear` can run while `Dispose` releases the semaphore. A permit
-release after disposal is now ignored, so teardown cannot surface an unobserved
-`ObjectDisposedException`.
-
-## Fixed: damaged GD-ROM metadata
-
-`ExtractToDirectoryWithReporting` returns `Chderrinvaliddata` when a GD-ROM CHD has no readable
-tracks instead of dereferencing a null track list.
+`AGENTS.md` now has a **Vendored codecs (frozen)** section: `VendoredFlac`, `VendoredLZMA`,
+`VendoredZLib` and `VendoredZSTD` are kept byte-for-byte verbatim for `chdman` parity and may only
+be edited when strictly necessary - never to satisfy an analyzer, formatter or InspectCode finding.
+The existing InspectCode and `.editorconfig` exclusions remain in place.
 
 ## Verification
 
-- `dotnet build -c Release`: 0 warnings, 0 errors; `jb inspectcode --severity=WARNING`: 0 findings.
-- Library tests: **4,219 passed**. Encoder tests: **455 passed**.
-- Quick `chdman` parity battle: **3,174/3,174 checks passed**, byte-identical output.
-- CD (V3/V4/V5, all CD codecs) and synthetic GD-ROM GDI extraction compared byte-for-byte with
-  `chdman extractcd`.
-- No public API changes - behavior and diagnostics only.
+- `dotnet build -c Release`: 0 warnings, 0 errors.
+- `jb inspectcode --severity=WARNING --exclude="Vendored*/**"`: **0 findings**; no vendored sources
+  were modified.
+- Library tests: **4,220 passed** and encoder tests: **455 passed** on each of `net8.0`, `net9.0`
+  and `net10.0`.
+- Quick `chdman` parity battle: **905/905 checks passed**, byte-identical output.
+- No public API changes and no encoder output changes.

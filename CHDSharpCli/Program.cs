@@ -2275,14 +2275,17 @@ internal static partial class Program
             log.Information("  Created ({File:N0} bytes)", new FileInfo(outputPath).Length);
             VerifyResultChd(outputPath, parentPath);
         }
+        // Malformed descriptors and unreadable source images (unrecognized ISO sector size,
+        // malformed CUE/GDI/TOC, truncated BIN/WAV, missing referenced file) are user-input
+        // errors: the same input fails the same way in chdman, so they must not be reported
+        // as application defects.
+        catch (Exception ex) when (ex is InvalidDataException or FileNotFoundException)
+        {
+            log.UserError("--createcd failed: {Message}", ex.Message);
+            return false;
+        }
         catch (Exception ex)
-            when (ex
-                      is ArgumentException
-                      or InvalidDataException
-                      or IOException
-                      or UnauthorizedAccessException
-                      or FileNotFoundException
-                 )
+            when (ex is ArgumentException or IOException or UnauthorizedAccessException)
         {
             log.Warning("--createcd failed: {Message}", ex.Message);
             return false;
