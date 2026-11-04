@@ -196,4 +196,29 @@ public sealed class CliIntegrationTests
             StringComparison.Ordinal
         );
     }
+
+    [Fact]
+    public void Createcd_rejects_iso_size_that_is_not_sector_aligned()
+    {
+        // cdrom.cpp:2078 - parse_iso only accepts sizes that are a multiple of 2048,
+        // 2336 or 2352. This is an expected input error, not a defect.
+        var dir = Path.Combine(Path.GetTempPath(), "chdsharp-createcd-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var input = Path.Combine(dir, "odd.iso");
+            File.WriteAllBytes(input, new byte[1000]);
+            var output = Path.Combine(dir, "out.chd");
+
+            var (exitCode, log) = RunCli("createcd", "--input", input, "--output", output);
+
+            Assert.Equal(1, exitCode);
+            Assert.Contains("Unrecognized ISO sector size", log, StringComparison.Ordinal);
+            Assert.False(File.Exists(output));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
 }

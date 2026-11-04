@@ -49,13 +49,28 @@ jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections 
 - Keep ReSharper inspections clean too: `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`
   must report zero findings. The four vendored codec projects - `VendoredFlac`, `VendoredLZMA`,
   `VendoredZLib` and `VendoredZSTD` - are excluded from InspectCode entirely
-  (`--exclude="Vendored*/**"`, projects and sources). They must stay verbatim for byte-for-byte
-  `chdman` parity: never edit them to satisfy an inspection, and never remove the exclusion. The
-  same rule lives in the root `.editorconfig` so IDE inspections stay quiet inside those folders.
+  (`--exclude="Vendored*/**"`, projects and sources); never remove the exclusion. The same rule
+  lives in the root `.editorconfig` so IDE inspections stay quiet inside those folders. See
+  [Vendored codecs (frozen)](#vendored-codecs-frozen) before touching anything in those folders.
   InspectCode 2026.2 also logs a few internal `AssertionException`s while analyzing
   `VendoredZSTD` (an analyzer bug, not a finding); the report is still empty.
 - Always run `dotnet test` before committing. Run the battle harness for changes touching
   encoding, decoding, CLI argument parsing, or anything chdman-visible.
+
+## Vendored codecs (frozen)
+
+`VendoredFlac`, `VendoredLZMA`, `VendoredZLib` and `VendoredZSTD` are kept byte-for-byte verbatim
+from their upstream sources. They are **frozen by default**: editing them can break byte-for-byte
+`chdman` parity, which is the project's most important invariant.
+
+- Do not edit a vendored codec unless a change is **strictly necessary** (for example a correctness
+  or security fix with no viable alternative), and never merely to satisfy an analyzer, formatter
+  or InspectCode finding.
+- Keep the existing exclusions in the InspectCode command and the root `.editorconfig`; do not
+  remove them to make an inspection "see" the vendored sources.
+- If a vendored edit is truly required, explain why in the commit message and run the full battle
+  harness plus the relevant codec tests before committing.
+- Preserve all upstream license headers and notices.
 
 ## Logging & bug reports (behavior to preserve)
 
@@ -68,7 +83,9 @@ jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections 
   format overrides, ...) are diagnostics about the user's input, not defects. Log them with
   `logger.UserError(...)` (`CHDSharpCli/UserErrorLogging.cs`), which keeps them at warning level in
   the console/file logs but tags them so `BugReportSink` never reports them. Real runtime failures
-  (`Open failed`, `* failed: {Message}`, verify failures, ...) stay on `logger.Warning(...)`.
+  (`Open failed`, I/O failures in a `* failed: {Message}` event, verify failures, ...) stay on
+  `logger.Warning(...)`; malformed input images (`InvalidDataException`, missing referenced files)
+  are user errors instead.
 - Every report must embed: `=== Environment Details ===` (Date, Application Name, Application
   Version, OS Version, Architecture, Bitness, Windows, Linux or MacOsX Version, Processor Count,
   Base Directory, Temp Path), `=== Error Details ===` (message), and `=== Exception Details ===`

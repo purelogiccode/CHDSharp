@@ -26,6 +26,12 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.6.3
+
+- **Expected `createcd` input errors stay out of the Bug Report API** - malformed ISO/CUE/GDI/TOC files, truncated BIN/WAV sources and missing referenced files are now logged through `logger.UserError(...)`. The console text and exit code are unchanged (the same input is rejected by `chdman` too), but these diagnostics are no longer POSTed as application defects. Other I/O and runtime failures are still reported.
+- **Vendored codecs are explicitly frozen** - `AGENTS.md` now states that `VendoredFlac`, `VendoredLZMA`, `VendoredZLib` and `VendoredZSTD` stay byte-for-byte verbatim for `chdman` parity and may only be edited when strictly necessary, never to satisfy an analyzer or InspectCode finding.
+- **Verification** - 4,220 library tests + 455 encoder tests on each of `net8.0`/`net9.0`/`net10.0`, `jb inspectcode` 0 findings, quick battle harness 905/905 checks. No public API or encoder-output changes.
+
 ## What's New in v1.6.2
 
 - **Extraction failures keep their real cause** - the extraction writers no longer flatten every exception to `Chderrwriteerror`. The underlying exception is logged at warning level, data/codec failures return `Chderrdecompressionerror`, and genuine output I/O failures return `Chderrwriteerror`. This is the fix behind the opaque `track N: Chderrwriteerror` reports.
@@ -33,6 +39,7 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 - **Damaged GD-ROM metadata returns an error instead of crashing** - `ExtractToDirectoryWithReporting` returns `Chderrinvaliddata` when a GD-ROM CHD yields no tracks.
 - **No encoder output changes** - quick battle harness 3,174/3,174 checks, byte-identical to `chdman` 0.289; CD (V3/V4/V5, cdfl/cdlz/cdzl/cdzs/default) and synthetic GD-ROM GDI extraction verified byte-identical to `chdman extractcd`.
 - **Verification** - 4,219 library tests + 455 encoder tests, `jb inspectcode` 0 findings.
+
 ## What's New in v1.6.1
 
 - **The bug-report API only receives real bugs** - expected user/usage errors are tagged via `logger.UserError(...)` and stay in the console and file logs without being posted as defects. That covers bad flags, invalid numbers, missing paths, sector-misaligned input, an existing output without `--force`, overridden format options and unsupported combinations (216 call sites). Genuine failures (`Open failed`, `* failed: {Message}`, verification and extraction failures) are still reported.
