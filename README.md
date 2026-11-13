@@ -10,7 +10,7 @@
 [![Release](https://img.shields.io/github/v/release/purelogiccode/CHDSharp?color=blue)](https://github.com/purelogiccode/CHDSharp/releases/latest)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](#building)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](docs/chdman-parity.md)
 [![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](LICENSE.txt)
@@ -25,6 +25,13 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 > Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes) — extended with Zstd, AVHuff, V5 compressed maps, random access, async APIs, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, lazy parent resolution, encoding capabilities, and a comprehensive test suite.
 
 ---
+
+## What's New in v1.7.0
+
+- **.NET 11 and C# 15** - every project now multi-targets `net8.0`/`net9.0`/`net10.0`/`net11.0` (`net11.0-windows` for the WPF tester) and builds with `LangVersion 15`. The NuGet package includes `net11.0` assemblies for the library and all vendored codecs. Runtime packages (`Microsoft.Extensions.Logging.Abstractions`, `System.IO.Hashing`) are 11.0.0; their `netstandard2.0` assets keep the `net8.0`/`net9.0` targets working.
+- **Native CLI bundles** - Windows ships `.zip`, Linux ships `.tar.gz` and macOS ships `.dmg`. The update check resolves the correct extension per platform, and the release workflow builds each platform's bundles on its native runner.
+- **Tooling** - Dependabot updates for GitHub Actions, `Meziantou.Analyzer 3.0.339` and `xunit.v3 4.0.3`; the Pages workflow now uses the .NET 11 SDK so DocFX keeps building against `net11.0`.
+- **Verification** - 4,220 library tests + 455 encoder tests on each of the four target frameworks (18,700 total), `jb inspectcode` 0 findings, quick battle harness 905/905 checks. No public API or encoder-output changes.
 
 ## What's New in v1.6.3
 
@@ -135,9 +142,9 @@ See [docs/ReleaseNotes.md](docs/ReleaseNotes.md) for the full changelog.
 dotnet add package CHDSharp
 ```
 
-Targets `net8.0`, `net9.0`, and `net10.0`. Zero native dependencies — every codec (zlib, lzma, huffman, flac, zstd, AVHuff) is implemented in pure C#.
+Targets `net8.0`, `net9.0`, `net10.0`, and `net11.0`. Zero native dependencies — every codec (zlib, lzma, huffman, flac, zstd, AVHuff) is implemented in pure C#.
 
-Prebuilt CLI bundles for Windows, Linux and macOS (x64 + ARM64) are attached to each [release](https://github.com/purelogiccode/CHDSharp/releases/latest) — framework-dependent single-file binaries that require the [.NET 10 runtime](https://dotnet.microsoft.com/download/dotnet/10.0). See [WhatsNew.md](WhatsNew.md) for what changed in the latest release.
+Prebuilt CLI bundles for Windows, Linux and macOS (x64 + ARM64) are attached to each [release](https://github.com/purelogiccode/CHDSharp/releases/latest) — framework-dependent single-file binaries that require the [.NET 11 runtime](https://dotnet.microsoft.com/download/dotnet/11.0). Windows bundles are `.zip`, Linux bundles are `.tar.gz` and macOS bundles are `.dmg`; each contains `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`. See [WhatsNew.md](WhatsNew.md) for what changed in the latest release.
 
 ---
 
@@ -631,7 +638,7 @@ The full wiki lives in [`docs/`](docs/README.md):
 
 | Project | Type | Description |
 |---------|------|-------------|
-| `CHDSharpTest` | xUnit | Unit + corpus tests (4,216 tests per TFM, 30 CHD fixtures) |
+| `CHDSharpTest` | xUnit | Unit + corpus tests (4,220 tests per TFM, 30 CHD fixtures) |
 | `CHDSharpEncoderTest` | xUnit | Encoder tests (455 tests, chdman cross-validation) |
 | `CHDSharpBattleTest` | Console | Battle harness: 3,174/3,174 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
@@ -670,7 +677,7 @@ dotnet pack -c Release CHDSharpLib/
 jb inspectcode CSharp_CHDSharp.sln --severity=WARNING
 ```
 
-Requires [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later. Works on Windows, Linux, and macOS.
+Requires [.NET 11.0 SDK](https://dotnet.microsoft.com/download/dotnet/11.0) or later. Works on Windows, Linux, and macOS.
 
 ---
 

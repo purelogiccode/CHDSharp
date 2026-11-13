@@ -37,7 +37,8 @@ CHDSharp is a pure C# implementation that reads and writes every CHD version wit
 | | |
 |---|---|
 | Package | [`CHDSharp`](https://www.nuget.org/packages/CHDSharp/) |
-| Targets | `net8.0`, `net9.0`, `net10.0` |
+| Targets | `net8.0`, `net9.0`, `net10.0`, `net11.0` |
+| CLI bundles | `.zip` (Windows), `.tar.gz` (Linux), `.dmg` (macOS) |
 | Format versions | CHD V1 – V5 (read & write) |
 | Codecs | `zlib`, `lzma`, `huff`, `flac`, `zstd`, `avhu` + CD variants `cdzl`, `cdlz`, `cdfl`, `cdzs` |
 | Native dependencies | **none** |

@@ -7,7 +7,7 @@
 [![Last commit](https://img.shields.io/github/last-commit/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/commits/main)
 [![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
 [![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
@@ -19,6 +19,13 @@
 > Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes), extended with Zstd, AVHuff, V5 compressed map, random-access API, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, and lazy parent resolution.
 
 ---
+
+## What's New in v1.7.0
+
+- **.NET 11 and C# 15** - the package now multi-targets `net8.0`/`net9.0`/`net10.0`/`net11.0` and ships `lib/net11.0` assemblies for `CHDSharpLib` plus every vendored codec. All projects compile with `LangVersion 15`.
+- **Dependencies** - `Microsoft.Extensions.Logging.Abstractions` and `System.IO.Hashing` are 11.0.0 for every target; their `netstandard2.0` assets keep the `net8.0`/`net9.0` targets working.
+- **Native CLI bundles** - the CLI now ships `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS.
+- **No public API changes** - 4,220 library tests + 455 encoder tests on each of the four target frameworks, `jb inspectcode` 0 findings, quick battle harness 905/905 checks.
 
 ## What's New in v1.6.3
 
@@ -149,7 +156,7 @@ Complete `chdman` parity against MAME 0.289 — 16 discrepancies fixed and battl
 dotnet add package CHDSharp
 ```
 
-Targets `net8.0`, `net9.0`, and `net10.0`. No native dependencies — all codecs (including Zstd via the in-repo pure-C# `VendoredZSTD` port) are implemented from scratch in C#. The only runtime NuGet dependency is `Microsoft.Extensions.Logging.Abstractions` (optional logging).
+Targets `net8.0`, `net9.0`, `net10.0`, and `net11.0`. No native dependencies — all codecs (including Zstd via the in-repo pure-C# `VendoredZSTD` port) are implemented from scratch in C#. The runtime NuGet dependencies are the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction and `System.IO.Hashing` for hashing helpers.
 
 ---
 
@@ -855,7 +862,8 @@ dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| [Microsoft.Extensions.Logging.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions/) | 10.0.11 (all TFMs: net8.0 / net9.0 / net10.0) | Pluggable logging (optional) |
+| [Microsoft.Extensions.Logging.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions/) | 11.0.0 (all TFMs) | Pluggable logging (optional) |
+| [System.IO.Hashing](https://www.nuget.org/packages/System.IO.Hashing/) | 11.0.0 (all TFMs) | CRC32/XXH3 hashing helpers |
 
 All codec implementations are vendored in-repo as project references (no external runtime NuGet dependencies):
 

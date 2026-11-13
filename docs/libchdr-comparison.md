@@ -59,7 +59,7 @@ CHDSharp vs the two other independent CHD implementations (chd-rs 0.3.4 and CHDl
 | Multi-hash output (SHA-256/CRC32/XXH3) | ✅ SHA1/SHA256/CRC32/XXH3 | ❌ | ✅ SHA1/MD5/CRC32/SHA256/XXH3 | 🟡 SHA1/MD5 only | ❌ |
 | Batch mode (folder scan) | ✅ | ❌ | ✅ | ❌ | ❌ |
 | Native dependencies | **none** (pure C#) | none (pure-Rust crates) | zlib-ng / zstd / lzma / flac | zlib / lzma / flac | zlib (miniz) / LZMA SDK / zstd / dr_flac |
-| Language | C# (.NET 8/9/10) | Rust | C++ | C++ (MAME) | C |
+| Language | C# (.NET 8/9/10/11) | Rust | C++ | C++ (MAME) | C |
 
 The same table is also in the [repository README](../README.md#library-comparison-chdsharp-vs-chd-rs-vs-chdlite-vs-chdman-vs-libchdr).
 

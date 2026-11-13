@@ -37,20 +37,21 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDKs (8.0, 9.0, 10.0)
+      - name: Setup .NET SDKs (8.0, 9.0, 10.0, 11.0)
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             8.0.x
             9.0.x
             10.0.x
+            11.0.x
           cache: true
           cache-dependency-path: "**/*.csproj"
 
       # The WPF tester targets *-windows, so on Linux/macOS we build only the
       # cross-platform projects. CHDSharpTest spawns the CLI from
       # CHDSharpCli/bin/<config>/<tfm>/CHDSharp.dll, so it must be built first
-      # in the same configuration and for all three target frameworks.
+      # in the same configuration and for all four target frameworks.
       - name: Build (cross-platform projects)
         if: runner.os != 'Windows'
         run: |
@@ -83,13 +84,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDKs (8.0, 9.0, 10.0)
+      - name: Setup .NET SDKs (8.0, 9.0, 10.0, 11.0)
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             8.0.x
             9.0.x
             10.0.x
+            11.0.x
           cache: true
           cache-dependency-path: "**/*.csproj"
 
@@ -134,10 +136,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDK 10
+      - name: Setup .NET SDK 11
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: "11.0.x"
           cache: true
           cache-dependency-path: "**/*.csproj"
 
@@ -159,7 +161,7 @@ jobs:
           retention-days: 14
 
   coverage:
-    name: coverage (net10.0)
+    name: coverage (net11.0)
     runs-on: ubuntu-24.04
     timeout-minutes: 45
 
@@ -169,18 +171,18 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDK 10
+      - name: Setup .NET SDK 11
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: "11.0.x"
           cache: true
           cache-dependency-path: "**/*.csproj"
 
-      - name: Build CLI and test suites (net10.0)
+      - name: Build CLI and test suites (net11.0)
         run: |
-          dotnet build CHDSharpCli/CHDSharpCli.csproj -c Release -f net10.0 -warnaserror
-          dotnet build CHDSharpTest/CHDSharpTest.csproj -c Release -f net10.0 -warnaserror
-          dotnet build CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release -f net10.0 -warnaserror
+          dotnet build CHDSharpCli/CHDSharpCli.csproj -c Release -f net11.0 -warnaserror
+          dotnet build CHDSharpTest/CHDSharpTest.csproj -c Release -f net11.0 -warnaserror
+          dotnet build CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release -f net11.0 -warnaserror
 
       - name: Install dotnet-coverage
         run: dotnet tool install --global dotnet-coverage --version 18.12.0
@@ -190,9 +192,9 @@ jobs:
           set -euo pipefail
           export PATH="$PATH:$HOME/.dotnet/tools"
           mkdir -p coverage
-          dotnet-coverage collect "dotnet test CHDSharpTest/CHDSharpTest.csproj -c Release -f net10.0 --no-build" -f cobertura -o coverage/lib.cobertura.xml --nologo
+          dotnet-coverage collect "dotnet test CHDSharpTest/CHDSharpTest.csproj -c Release -f net11.0 --no-build" -f cobertura -o coverage/lib.cobertura.xml --nologo
           # Instrumentation invalidates wall-clock assertions, so skip the one timing benchmark.
-          dotnet-coverage collect "dotnet test CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release -f net10.0 --no-build --filter FullyQualifiedName!~ParallelEncode_IsFasterThanSingleThreaded" -f cobertura -o coverage/encoder.cobertura.xml --nologo
+          dotnet-coverage collect "dotnet test CHDSharpEncoderTest/CHDSharpEncoderTest.csproj -c Release -f net11.0 --no-build --filter FullyQualifiedName!~ParallelEncode_IsFasterThanSingleThreaded" -f cobertura -o coverage/encoder.cobertura.xml --nologo
           dotnet-coverage merge coverage/lib.cobertura.xml coverage/encoder.cobertura.xml -f cobertura -o coverage/coverage.cobertura.xml --nologo
 
       - name: Upload coverage report
@@ -214,10 +216,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDK 10
+      - name: Setup .NET SDK 11
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: "11.0.x"
           cache: true
           cache-dependency-path: "**/*.csproj"
 
@@ -252,18 +254,18 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDK 10
+      - name: Setup .NET SDK 11
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: "11.0.x"
           cache: true
           cache-dependency-path: "**/*.csproj"
 
-      - name: Build battle harness (net10.0)
-        run: dotnet build CHDSharpBattleTest/CHDSharpBattleTest.csproj -c Release -f net10.0 -warnaserror
+      - name: Build battle harness (net11.0)
+        run: dotnet build CHDSharpBattleTest/CHDSharpBattleTest.csproj -c Release -f net11.0 -warnaserror
 
       - name: Run quick chdman parity battle
-        run: dotnet run --project CHDSharpBattleTest -c Release --framework net10.0 --no-build -- --chdman CHDSharpTester/chdman.exe --quick --no-keep
+        run: dotnet run --project CHDSharpBattleTest -c Release --framework net11.0 --no-build -- --chdman CHDSharpTester/chdman.exe --quick --no-keep
 
       - name: Upload battle artifacts on failure
         if: failure()

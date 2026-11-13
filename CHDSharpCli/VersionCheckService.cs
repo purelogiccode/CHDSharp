@@ -88,7 +88,9 @@ internal static class VersionCheckService
     /// <summary>
     ///     Builds the release-asset name for the current platform, matching the bundles
     ///     produced by <c>scripts/package-release.ps1</c> and attached to GitHub releases:
-    ///     <c>CHDSharp_{os}-{arch}_v{version}.zip</c> (e.g. <c>CHDSharp_win-x64_v1.5.0.zip</c>).
+    ///     <c>CHDSharp_{os}-{arch}_v{version}</c> with a <c>.zip</c> (Windows),
+    ///     <c>.tar.gz</c> (Linux) or <c>.dmg</c> (macOS) extension
+    ///     (e.g. <c>CHDSharp_linux-x64_v1.7.0.tar.gz</c>).
     /// </summary>
     /// <param name="version">The release version whose bundle should be looked up.</param>
     /// <returns>The expected asset file name for this OS and CPU architecture.</returns>
@@ -99,6 +101,11 @@ internal static class VersionCheckService
             : OperatingSystem.IsMacOS()
                 ? "osx"
                 : "win";
+        var extension = OperatingSystem.IsWindows()
+            ? "zip"
+            : OperatingSystem.IsMacOS()
+                ? "dmg"
+                : "tar.gz";
         var arch = RuntimeInformation.OSArchitecture switch
         {
             Architecture.Arm64 => "arm64",
@@ -106,6 +113,6 @@ internal static class VersionCheckService
             _ => "x64"
         };
 
-        return $"CHDSharp_{os}-{arch}_v{version}.zip";
+        return $"CHDSharp_{os}-{arch}_v{version}.{extension}";
     }
 }

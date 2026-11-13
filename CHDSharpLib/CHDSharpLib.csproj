@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Library</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <IsPackable>true</IsPackable>
         <RootNamespace>CHDSharp</RootNamespace>
@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.6.3: diagnostics and documentation release. The CLI's createcd command now tags malformed images (InvalidDataException) and missing referenced files (FileNotFoundException) as expected user errors, so they stay in the console/file logs but are no longer posted to the Bug Report API; console text and exit codes are unchanged and other runtime failures are still reported. AGENTS.md now documents the vendored codec projects as frozen for chdman byte parity. No public API or encoder output changes: 4,220 library tests + 455 encoder tests, jb inspectcode 0 findings, quick battle harness 905/905 checks. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.7.0: .NET 11 and C# 15 release. All projects now multi-target net8.0/net9.0/net10.0/net11.0 and build with LangVersion 15, and the package includes net11.0 assemblies for CHDSharpLib and every vendored codec. CLI release bundles now use each platform's native format: .zip on Windows, .tar.gz on Linux and .dmg on macOS. No public API or encoder output changes: 4,220 library tests + 455 encoder tests on each target framework, jb inspectcode 0 findings, quick battle harness 905/905 checks. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0/net11.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>
@@ -29,19 +29,17 @@
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Meziantou.Analyzer" Version="3.0.322">
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.339">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" Condition="'$(TargetFramework)' == 'net8.0'" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" Condition="'$(TargetFramework)' == 'net9.0'" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" Condition="'$(TargetFramework)' == 'net10.0'" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.403" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="11.0.100" PrivateAssets="All" />
         <PackageReference Include="Roslynator.Analyzers" Version="5.0.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="System.IO.Hashing" Version="10.0.14" />
+        <PackageReference Include="System.IO.Hashing" Version="11.0.0" />
     </ItemGroup>
     <ItemGroup>
         <InternalsVisibleTo Include="CHDSharpTest" />
@@ -79,6 +77,9 @@
             <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net10.0\VendoredZLib.dll">
                 <PackagePath>lib\net10.0\VendoredZLib.dll</PackagePath>
             </_PackageFiles>
+            <_PackageFiles Include="..\VendoredZLib\bin\$(Configuration)\net11.0\VendoredZLib.dll">
+                <PackagePath>lib\net11.0\VendoredZLib.dll</PackagePath>
+            </_PackageFiles>
             <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net8.0\VendoredLZMA.dll">
                 <PackagePath>lib\net8.0\VendoredLZMA.dll</PackagePath>
             </_PackageFiles>
@@ -87,6 +88,9 @@
             </_PackageFiles>
             <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net10.0\VendoredLZMA.dll">
                 <PackagePath>lib\net10.0\VendoredLZMA.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredLZMA\bin\$(Configuration)\net11.0\VendoredLZMA.dll">
+                <PackagePath>lib\net11.0\VendoredLZMA.dll</PackagePath>
             </_PackageFiles>
             <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net8.0\VendoredFlac.dll">
                 <PackagePath>lib\net8.0\VendoredFlac.dll</PackagePath>
@@ -97,6 +101,9 @@
             <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net10.0\VendoredFlac.dll">
                 <PackagePath>lib\net10.0\VendoredFlac.dll</PackagePath>
             </_PackageFiles>
+            <_PackageFiles Include="..\VendoredFlac\bin\$(Configuration)\net11.0\VendoredFlac.dll">
+                <PackagePath>lib\net11.0\VendoredFlac.dll</PackagePath>
+            </_PackageFiles>
             <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net8.0\VendoredZSTD.dll">
                 <PackagePath>lib\net8.0\VendoredZSTD.dll</PackagePath>
             </_PackageFiles>
@@ -105,6 +112,9 @@
             </_PackageFiles>
             <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net10.0\VendoredZSTD.dll">
                 <PackagePath>lib\net10.0\VendoredZSTD.dll</PackagePath>
+            </_PackageFiles>
+            <_PackageFiles Include="..\VendoredZSTD\bin\$(Configuration)\net11.0\VendoredZSTD.dll">
+                <PackagePath>lib\net11.0\VendoredZSTD.dll</PackagePath>
             </_PackageFiles>
         </ItemGroup>
     </Target>

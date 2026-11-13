@@ -5,7 +5,7 @@
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen?logo=dependabot)](https://github.com/purelogiccode/CHDSharp/blob/main/.github/dependabot.yml)
 [![GitHub issues](https://img.shields.io/github/issues/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/issues)
 [![Last commit](https://img.shields.io/github/last-commit/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/commits/main)
-[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
 [![Tests](https://img.shields.io/badge/tests-xUnit-brightgreen)](#test-structure)
 [![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
@@ -14,7 +14,7 @@
 
 **xUnit unit and corpus test suite for CHDSharp — tests header parsing, CRC checksums, and full decompression against a deterministic 30-file CHD corpus (V1–V5, all codecs).**
 
-> **v1.6.3** - targets `net8.0` / `net9.0` / `net10.0`. 4,220 tests per target framework; encoder suite 455 tests; quick battle harness 905/905 checks vs `chdman` 0.289; solution clean under `jb inspectcode`. v1.6.3 adds the `createcd` non-sector-aligned ISO regression test and classifies malformed input images as user errors.
+> **v1.7.0** - targets `net8.0` / `net9.0` / `net10.0` / `net11.0`. 4,220 tests per target framework (18,700 across all four TFMs); encoder suite 455 tests per TFM; quick battle harness 905/905 checks vs `chdman` 0.289; solution clean under `jb inspectcode`.
 
 ---
 

@@ -1,11 +1,12 @@
 # Builds and publishes a CHDSharp release from a version tag:
-#   - six platform bundles (framework-dependent single-file CLI) attached to the GitHub release
+#   - six platform bundles (framework-dependent single-file CLI) attached to the GitHub release:
+#       Windows .zip, Linux .tar.gz, macOS .dmg
 #   - build provenance attestations for the bundles and the NuGet package
 #   - the CHDSharp NuGet package
 #   - the docs/ folder synced to the GitHub wiki (Pages is deployed by pages.yml)
 #
-# Assets are named CHDSharp_<os>-<arch>_v<version>.zip - the exact names the CLI's
-# built-in update check (VersionCheckService) looks up via the GitHub releases API.
+# Assets are named CHDSharp_<os>-<arch>_v<version>.<zip|tar.gz|dmg> - the exact names the
+# CLI's built-in update check (VersionCheckService) looks up via the GitHub releases API.
 name: Release
 
 on:
@@ -21,9 +22,48 @@ concurrency:
 
 jobs:
   bundles:
-    name: Bundles & GitHub release
-    runs-on: ubuntu-24.04
+    name: bundles (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            rids: linux-x64,linux-arm64
+          - os: windows-latest
+            rids: win-x64,win-arm64
+          - os: macos-latest
+            rids: osx-x64,osx-arm64
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK 11
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: "11.0.x"
+
+      - name: Build release bundles
+        shell: pwsh
+        run: ./scripts/package-release.ps1 -Rids ${{ matrix.rids }} -OutputPath dist
+
+      - name: Upload bundles
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bundles-${{ matrix.os }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: GitHub release
+    needs: bundles
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: write
       id-token: write
@@ -38,11 +78,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDK 10
-        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
-        with:
-          dotnet-version: "10.0.x"
-
       - name: Verify tag matches Directory.Build.props
         shell: pwsh
         run: |
@@ -51,14 +86,19 @@ jobs:
           if ($tag -ne "v$version") { throw "Tag '$tag' does not match version 'v$version' in Directory.Build.props" }
           Write-Host "Releasing v$version"
 
-      - name: Build release bundles
-        shell: pwsh
-        run: ./scripts/package-release.ps1 -OutputPath dist
+      - name: Download bundles
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: List bundles
+        run: ls -lh dist
 
       - name: Attest bundle provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: "dist/*.zip"
+          subject-path: "dist/*"
 
       - name: Create GitHub release and upload bundles
         env:
@@ -70,12 +110,12 @@ jobs:
           if ! gh release view "$tag" >/dev/null 2>&1; then
             gh release create "$tag" --title "CHDSharp v$ver" --notes-file WhatsNew.md
           fi
-          gh release upload "$tag" dist/*.zip --clobber
+          gh release upload "$tag" dist/* --clobber
           gh release view "$tag" --json url,assets --jq '.url, (.assets[]?.name)'
 
   nuget:
     name: NuGet publish
-    needs: bundles
+    needs: release
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -92,13 +132,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup .NET SDKs (8.0, 9.0, 10.0)
+      - name: Setup .NET SDKs (8.0, 9.0, 10.0, 11.0)
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             8.0.x
             9.0.x
             10.0.x
+            11.0.x
 
       - name: Pack and push to NuGet
         env:
@@ -125,7 +166,7 @@ jobs:
 
   wiki:
     name: Wiki & Pages
-    needs: bundles
+    needs: release
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:

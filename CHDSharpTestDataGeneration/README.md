@@ -5,7 +5,7 @@
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen?logo=dependabot)](https://github.com/purelogiccode/CHDSharp/blob/main/.github/dependabot.yml)
 [![GitHub issues](https://img.shields.io/github/issues/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/issues)
 [![Last commit](https://img.shields.io/github/last-commit/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/commits/main)
-[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
 [![Corpus](https://img.shields.io/badge/corpus-30%20fixtures%20V1--V5-brightgreen)](../CHDSharpTest/TestData/manifest.json)
 [![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
@@ -14,7 +14,7 @@
 
 **Deterministic CHD test corpus generator for the CHDSharp xUnit test suite.**
 
-> **v1.6.3** - targets `net8.0` / `net9.0` / `net10.0`. Generates the 30-file corpus for V1-V5 via MAME 0.289 `chdman`; version-aligned with the v1.6.3 release.
+> **v1.7.0** - targets `net8.0` / `net9.0` / `net10.0` / `net11.0`. Generates the 30-file corpus for V1-V5 via MAME 0.289 `chdman`; version-aligned with the v1.7.0 release.
 
 Generates the 30-file CHD corpus in `CHDSharpTest/TestData/`, covering every format version (V1–V5), all compression codecs (zlib, lzma, huffman, flac, zstd, avhu + CD variants), every map type, and parent/child chains. All source images are built deterministically (seeded PRNG) so regenerating the corpus produces byte-identical output.
 

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
+        <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows;net11.0-windows</TargetFrameworks>
         <UseWPF>true</UseWPF>
         <RootNamespace>CHDSharpTester</RootNamespace>
         <ApplicationIcon>Icon\chd.ico</ApplicationIcon>
@@ -11,7 +11,7 @@
         <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Meziantou.Analyzer" Version="3.0.322">
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.339">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -24,7 +24,7 @@
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
         <PackageReference Include="WPF-UI" Version="4.3.0" />
-        <PackageReference Include="QuestPDF" Version="2026.9.1" />
+        <PackageReference Include="QuestPDF" Version="2026.9.2" />
     </ItemGroup>
     <ItemGroup>
         <None Update="chdman.exe">

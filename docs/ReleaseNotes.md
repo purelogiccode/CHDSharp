@@ -1,5 +1,66 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.7.0
+
+Platform and packaging release on top of v1.6.3. No public API or encoder-output changes.
+
+**Released:** 2026-11-13 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.0) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.7.0)
+
+### .NET 11 and C# 15
+
+All projects now multi-target `net8.0;net9.0;net10.0;net11.0` (`net11.0-windows` for the WPF
+tester) and compile with `LangVersion 15`. The package includes `lib/net11.0` assemblies for
+`CHDSharpLib` and every vendored codec, and CI, CodeQL, DocFX and the release pipeline run on the
+.NET 11 SDK.
+
+The runtime packages (`Microsoft.Extensions.Logging.Abstractions`, `System.IO.Hashing`) and
+SourceLink are at 11.0.0/11.0.100 for every target. The runtime packages officially target
+net10+, but ship `netstandard2.0` assets, so `net8.0`/`net9.0` remain functional; their advisory
+TFM-support warnings are suppressed centrally in `Directory.Build.props`.
+
+### Platform-native CLI bundles
+
+- Windows remains `.zip`.
+- Linux is now `.tar.gz`.
+- macOS is now `.dmg`.
+- `VersionCheckService` resolves the extension for the running platform, and the release
+  workflow builds Linux, Windows and macOS bundles on their native runners before a final
+  release job attests and publishes all six assets.
+- `scripts/package-release.ps1` enforces that `.dmg` bundles are built on macOS, preserves the
+  executable bit for Unix binaries and updates the bundle `README.txt` accordingly.
+
+### Fixes from the release review
+
+- The Pages workflow now installs .NET 11; DocFX targets `net11.0`, so running it on the .NET 10
+  SDK would have failed.
+- `VersionCheckService` no longer looks up a `.zip` asset on Linux and macOS, where the new
+  bundles are `.tar.gz` and `.dmg`.
+- Runtime package versions are unified at 11.0.0; their `netstandard2.0` assets keep the
+  `net8.0`/`net9.0` targets functional, and the advisory TFM-support warnings are suppressed
+  centrally instead of leaking into every project build.
+- Documentation test counts, target-framework lists, bundle names and the supported-version table
+  were corrected.
+
+### Tooling
+
+Dependabot updates: GitHub Actions (`setup-dotnet 6.1.0`, `github/codeql-action 4.39.3`,
+`ruby/setup-ruby 1.338.0`), `Meziantou.Analyzer 3.0.339` and `xunit.v3 4.0.3`.
+
+### Verification
+
+- `dotnet build -c Release -warnaserror`: 0 warnings, 0 errors.
+- `jb inspectcode --severity=WARNING --exclude="Vendored*/**"`: 0 findings.
+- Library tests: 4,220 passed and encoder tests: 455 passed on each of `net8.0`, `net9.0`,
+  `net10.0` and `net11.0` (18,700 total).
+- Quick battle harness on `net11.0`: 905/905 checks, byte-identical `chdman` output.
+
+### Upgrade notes
+
+Use the bundle matching your platform: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS.
+Linux users may need `chmod +x CHDSharp` after extracting; macOS users should copy `CHDSharp` out
+of the mounted disk image. The CLI update check expects the new asset names.
+
 ## CHDSharp v1.6.3
 
 Diagnostics and documentation release on top of v1.6.2. No public API or encoder-output changes.

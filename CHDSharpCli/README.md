@@ -6,7 +6,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/issues)
 [![Last commit](https://img.shields.io/github/last-commit/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/commits/main)
 [![Release](https://img.shields.io/github/v/release/purelogiccode/CHDSharp?color=blue)](https://github.com/purelogiccode/CHDSharp/releases/latest)
-[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0-blueviolet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
 [![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
@@ -17,7 +17,7 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
-> **v1.6.3** - expected `createcd` input failures no longer create bug reports: malformed ISO/CUE/GDI/TOC images, truncated BIN/WAV sources and missing referenced files keep their unchanged console text and exit code but are tagged as user errors. Other I/O and runtime failures are still reported. Six platform bundles are attached to every release (`CHDSharp_<os>-<arch>_v<version>.zip`). Release bundles are framework-dependent single-file binaries and require the .NET 10 runtime; the library targets `net8.0` / `net9.0` / `net10.0`.
+> **v1.7.0** - the CLI now runs on .NET 11 and ships native platform bundles: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS. Release bundles are framework-dependent single-file binaries and require the .NET 11 runtime; the library targets `net8.0` / `net9.0` / `net10.0` / `net11.0`. No command-line behavior changed in this release.
 
 ---
 
@@ -484,14 +484,14 @@ When launched by double-clicking the executable (no arguments), the application 
 ## Building
 
 ```bash
-# Build (requires .NET 8.0+ SDK)
+# Build (requires .NET 11.0+ SDK)
 dotnet build CHDSharpCli/CHDSharpCli.csproj -c Release
 
 # Run
 dotnet run --project CHDSharpCli -- info -i game.chd
 
 # Run the built executable (the binary is named CHDSharp)
-CHDSharpCli/bin/Release/net8.0/CHDSharp.exe info -i game.chd
+CHDSharpCli/bin/Release/net11.0/CHDSharp.exe info -i game.chd
 ```
 
 ### Dependencies

@@ -6,7 +6,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/issues)
 [![Last commit](https://img.shields.io/github/last-commit/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/commits/main)
 [![Release](https://img.shields.io/github/v/release/purelogiccode/CHDSharp?color=blue)](https://github.com/purelogiccode/CHDSharp/releases/latest)
-[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_%28WPF%29-blueviolet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0_%28WPF%29-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)](../README.md#building)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
 [![License](https://img.shields.io/badge/license-GPL--3.0--only-blue)](../LICENSE.txt)
@@ -15,7 +15,7 @@
 
 **WPF desktop application for batch-testing CHD files using the CHDSharp library and MAME chdman.**
 
-> **v1.4.2** — targets `net8.0-windows` / `net9.0-windows` / `net10.0-windows`. Verified against MAME 0.289 (3,174/3,174 synthetic + 3003/3003 real-world).
+> **v1.4.2** — targets `net8.0-windows` / `net9.0-windows` / `net10.0-windows` / `net11.0-windows`. Verified against MAME 0.289 (3,174/3,174 synthetic + 3003/3003 real-world).
 
 > Cross-checks CHDSharpLib's decompression against `chdman` output, with PDF report export.
 > Also includes codec tests (cdzs/zstd) and parent/child chain tests — previously in CHDSharpTest.
@@ -39,7 +39,7 @@
 
 ### Prerequisites
 
-- .NET 10.0 SDK or runtime
+- .NET 11.0 SDK or runtime
 - `chdman.exe` (from MAME) placed next to the executable — automatically detected on startup
 
 ### Build & Run

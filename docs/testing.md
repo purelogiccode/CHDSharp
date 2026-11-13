@@ -4,7 +4,7 @@ layout: default
 
 # Testing
 
-CHDSharp ships a **4,216-test** xUnit suite (per target framework) plus a deterministic 30-file corpus covering every format version, codec, map type, and parent/child combination. Tests run on `net8.0`, `net9.0`, and `net10.0`.
+CHDSharp ships a **4,220-test** xUnit suite (per target framework) plus a deterministic 30-file corpus covering every format version, codec, map type, and parent/child combination. Tests run on `net8.0`, `net9.0`, `net10.0`, and `net11.0`.
 
 ---
 
@@ -76,7 +76,7 @@ CHDSharp ships a **4,216-test** xUnit suite (per target framework) plus a determ
 dotnet test
 
 # One framework
-dotnet test -f net10.0
+dotnet test -f net11.0
 
 # One class / filter
 dotnet test --filter "FullyQualifiedName~CorpusTests"
@@ -172,5 +172,5 @@ Exit code is `0` when every check passes, `1` on any failure, `2` on usage error
 1. **Every new feature needs a test** — corpus fixture for format-level behavior, unit test for API-level behavior.
 2. **Corpus fixtures must be deterministic** — regenerate via `CHDSharpTestDataGeneration`, never hand-edit binaries.
 3. **New fixtures must be registered in `manifest.json`** with the correct expected version and pass/fail status.
-4. All 4,216 tests must pass per target framework before merging, and `CHDSharpBattleTest` must stay at 3,174/3,174 (synthetic) and 3003/3003 (real-world corpus).
+4. All 4,220 tests must pass per target framework before merging, and `CHDSharpBattleTest` must stay at 3,174/3,174 (synthetic) and 3003/3003 (real-world corpus).
 5. **Keep the inspectors clean** — `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING` must report no findings. Never edit vendored code to satisfy an inspection; exempt it in `.editorconfig` instead (see [Building](building.md#code-inspections)).

@@ -22,11 +22,11 @@ or via the Package Manager Console:
 Install-Package CHDSharp
 ```
 
-The package targets `net8.0`, `net9.0`, and `net10.0` and has **no native dependencies**. Every codec — including Zstd and AVHuff — is implemented in managed code and vendored in-repo as pure C# projects, so all codec assemblies ship inside the package. The only runtime NuGet dependency is the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction (and `System.IO.Hashing` for hashing helpers).
+The package targets `net8.0`, `net9.0`, `net10.0`, and `net11.0` and has **no native dependencies**. Every codec — including Zstd and AVHuff — is implemented in managed code and vendored in-repo as pure C# projects, so all codec assemblies ship inside the package. The runtime NuGet dependencies are the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction and `System.IO.Hashing` for hashing helpers.
 
 ### Prebuilt CLI (no build required)
 
-Every [release](https://github.com/purelogiccode/CHDSharp/releases/latest) attaches six CLI bundles — `CHDSharp_<os>-<arch>_v<version>.zip` for Windows, Linux and macOS on x64 and ARM64. Each bundle is a framework-dependent **single-file** binary (`CHDSharp` / `CHDSharp.exe`) alongside `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`, and requires the [.NET 10 runtime](https://dotnet.microsoft.com/download/dotnet/10.0). On Linux/macOS run `chmod +x CHDSharp` if the binary is not executable after unzipping.
+Every [release](https://github.com/purelogiccode/CHDSharp/releases/latest) attaches six CLI bundles for Windows, Linux and macOS on x64 and ARM64: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS. Each bundle is a framework-dependent **single-file** binary (`CHDSharp` / `CHDSharp.exe`) alongside `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`, and requires the [.NET 11 runtime](https://dotnet.microsoft.com/download/dotnet/11.0). On Windows expand the archive; on Linux extract with `tar -xzf` and run `chmod +x CHDSharp` if needed; on macOS open the disk image and copy `CHDSharp` out of it.
 
 ### From source
 
