@@ -156,7 +156,7 @@ jobs:
             exit 1
           fi
           dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release -warnaserror
-          dotnet nuget push "CHDSharpLib/bin/Release/CHDSharp.$version.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+          dotnet nuget push "CHDSharpLib/bin/Release/CHDSharp.$version.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Attest NuGet package provenance
         if: hashFiles('CHDSharpLib/bin/Release/CHDSharp.*.nupkg') != ''
