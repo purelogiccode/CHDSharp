@@ -1,11 +1,10 @@
-# CHDSharp v1.6.3 - What's New
+# CHDSharp v1.7.0 - What's New
 
-**Released:** 2026-11-03 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.6.3)
+**Released:** 2026-11-13 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.0)
 
-CHDSharp v1.6.3 is a small diagnostics release. `createcd` now keeps expected malformed-input
-failures out of the Bug Report API while preserving the exact `chdman`-compatible console text and
-exit codes. The vendored codec libraries are explicitly documented as frozen, and no encoder output
-changed.
+CHDSharp v1.7.0 moves the complete solution to **.NET 11** and **C# 15**, keeps the
+`net8.0`/`net9.0` targets for current consumers, and switches the CLI bundles to each
+platform's native archive format. No library API or encoder output changed.
 
 ---
 
@@ -13,49 +12,64 @@ changed.
 
 | Platform | Bundle |
 |----------|--------|
-| Windows x64 | [`CHDSharp_win-x64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_win-x64_v1.6.3.zip) |
-| Windows ARM64 | [`CHDSharp_win-arm64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_win-arm64_v1.6.3.zip) |
-| Linux x64 | [`CHDSharp_linux-x64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_linux-x64_v1.6.3.zip) |
-| Linux ARM64 | [`CHDSharp_linux-arm64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_linux-arm64_v1.6.3.zip) |
-| macOS Intel | [`CHDSharp_osx-x64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_osx-x64_v1.6.3.zip) |
-| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.6.3.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.6.3/CHDSharp_osx-arm64_v1.6.3.zip) |
+| Windows x64 | [`CHDSharp_win-x64_v1.7.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_win-x64_v1.7.0.zip) |
+| Windows ARM64 | [`CHDSharp_win-arm64_v1.7.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_win-arm64_v1.7.0.zip) |
+| Linux x64 | [`CHDSharp_linux-x64_v1.7.0.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_linux-x64_v1.7.0.tar.gz) |
+| Linux ARM64 | [`CHDSharp_linux-arm64_v1.7.0.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_linux-arm64_v1.7.0.tar.gz) |
+| macOS Intel | [`CHDSharp_osx-x64_v1.7.0.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_osx-x64_v1.7.0.dmg) |
+| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.7.0.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_osx-arm64_v1.7.0.dmg) |
 
 Every bundle contains a **framework-dependent single-file** `CHDSharp` / `CHDSharp.exe`
 build (the .NET runtime is **not** embedded) plus `LICENSE.txt`, `README.md`, `README.txt`
-and this document. The [.NET 10 runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
+and this document. The [.NET 11 runtime](https://dotnet.microsoft.com/download/dotnet/11.0)
 is required.
 
 ---
 
-## Fixed: expected `createcd` input errors no longer become bug reports
+## .NET 11 and C# 15
 
-A report showed `--createcd failed: "Unrecognized ISO sector size (...)"` being filed as an
-application defect. That input is rejected by `chdman` too (`cdrom.cpp:2078`, `parse_iso`): a
-raw ISO must be a multiple of 2048, 2336 or 2352 bytes.
+- All 12 projects now multi-target `net8.0;net9.0;net10.0;net11.0`
+  (`net11.0-windows` for the WPF tester) and compile with `LangVersion 15`.
+- The NuGet package ships `lib/net11.0` assemblies for `CHDSharpLib` and all four vendored
+  codec assemblies.
+- CI, CodeQL, DocFX, the release pipeline and the documentation site all run on the .NET 11 SDK.
+- The runtime packages (`Microsoft.Extensions.Logging.Abstractions`, `System.IO.Hashing`) and
+  SourceLink are at 11.0.0/11.0.100 for every target. The packages ship `netstandard2.0` assets,
+  so the `net8.0`/`net9.0` targets remain functional; their advisory TFM-support warnings are
+  suppressed centrally.
 
-- `createcd` now logs `InvalidDataException` (malformed ISO/CUE/GDI/TOC, truncated BIN/WAV,
-  invalid source layout) and `FileNotFoundException` (missing referenced file) through
-  `logger.UserError(...)`. The event stays at warning level in the console and rolling file logs,
-  and the console text and exit code are unchanged, but it is no longer POSTed to the Bug Report
-  API.
-- Other `ArgumentException` / `IOException` / `UnauthorizedAccessException` failures still use
-  `logger.Warning(...)` and are still reported.
-- Regression test `Createcd_rejects_iso_size_that_is_not_sector_aligned` covers the reported
-  non-sector-aligned ISO path.
+## Native CLI bundles
 
-## Documentation: vendored codecs are frozen
+- **Windows** stays `.zip`.
+- **Linux** is now `.tar.gz`.
+- **macOS** is now `.dmg` (built on a macOS runner; the disk image contains the binary and
+  the documentation files).
+- `VersionCheckService` looks up the correct asset extension for the running platform, and
+  the release workflow builds each platform's bundles on its native runner before
+  publishing them together.
 
-`AGENTS.md` now has a **Vendored codecs (frozen)** section: `VendoredFlac`, `VendoredLZMA`,
-`VendoredZLib` and `VendoredZSTD` are kept byte-for-byte verbatim for `chdman` parity and may only
-be edited when strictly necessary - never to satisfy an analyzer, formatter or InspectCode finding.
-The existing InspectCode and `.editorconfig` exclusions remain in place.
+## Tooling and dependencies
+
+- Dependabot updates: GitHub Actions (`setup-dotnet 6.1.0`, `github/codeql-action 4.39.3`,
+  `ruby/setup-ruby 1.338.0`), `Meziantou.Analyzer 3.0.339` and `xunit.v3 4.0.3`.
+- The Pages workflow now uses the .NET 11 SDK, so the DocFX API reference keeps building
+  against the `net11.0` target.
+- Documentation, `WhatsNew.md`, the per-project READMEs and `AGENTS.md` describe the
+  four target frameworks and the new bundle formats.
 
 ## Verification
 
-- `dotnet build -c Release`: 0 warnings, 0 errors.
-- `jb inspectcode --severity=WARNING --exclude="Vendored*/**"`: **0 findings**; no vendored sources
-  were modified.
-- Library tests: **4,220 passed** and encoder tests: **455 passed** on each of `net8.0`, `net9.0`
-  and `net10.0`.
-- Quick `chdman` parity battle: **905/905 checks passed**, byte-identical output.
+- `dotnet build -c Release -warnaserror`: 0 warnings, 0 errors.
+- `jb inspectcode --severity=WARNING --exclude="Vendored*/**"`: **0 findings**.
+- Library tests: **4,220 passed** and encoder tests: **455 passed** on each of `net8.0`,
+  `net9.0`, `net10.0` and `net11.0` (**18,700 tests total**).
+- Quick `chdman` parity battle on `net11.0`: **905/905 checks passed**, byte-identical output.
 - No public API changes and no encoder output changes.
+
+## Upgrade notes
+
+- Use the bundle matching your platform: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on
+  macOS. On Linux run `chmod +x CHDSharp` after extracting if needed; on macOS drag `CHDSharp`
+  out of the mounted disk image.
+- The CLI's update check now expects the new asset names. Older releases remain downloadable
+  from the [releases page](https://github.com/purelogiccode/CHDSharp/releases).

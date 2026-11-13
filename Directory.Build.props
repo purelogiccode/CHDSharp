@@ -1,15 +1,19 @@
 <Project>
   <PropertyGroup>
-    <Version>1.6.3</Version>
-    <AssemblyVersion>1.6.3</AssemblyVersion>
-    <FileVersion>1.6.3</FileVersion>
+    <Version>1.7.0</Version>
+    <AssemblyVersion>1.7.0</AssemblyVersion>
+    <FileVersion>1.7.0</FileVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Company>PureLogicCode.com</Company>
     <NeutralLanguage>en</NeutralLanguage>
-    <LangVersion>14</LangVersion>
+    <LangVersion>15</LangVersion>
+    <!-- Logging.Abstractions/SourceLink/System.IO.Hashing 11.0.0 target net10+, but they ship
+         netstandard2.0 assets, so the library's net8.0/net9.0 targets remain functional.
+         Suppress the advisory TFM-support warnings those packages emit for the older targets. -->
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
     <!-- Fail restore/build on known vulnerable direct and transitive packages. -->

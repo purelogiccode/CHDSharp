@@ -40,13 +40,13 @@ Decode benchmarks prefer the standard single-codec V5 file names (`v5_zlib.chd`,
 
 ```powershell
 # all benchmark groups (BenchmarkDotNet, ShortRun config)
-dotnet run --project CHDSharpBenchmark -c Release --framework net10.0
+dotnet run --project CHDSharpBenchmark -c Release --framework net11.0
 
 # only the encode group, only zstd cases
-dotnet run --project CHDSharpBenchmark -c Release --framework net10.0 -- --filter *Encode*  --filter *zstd*
+dotnet run --project CHDSharpBenchmark -c Release --framework net11.0 -- --filter *Encode*  --filter *zstd*
 
 # publishing-grade numbers (more iterations)
-dotnet run --project CHDSharpBenchmark -c Release --framework net10.0 -- --job LongRun
+dotnet run --project CHDSharpBenchmark -c Release --framework net11.0 -- --job LongRun
 ```
 
 BenchmarkDotNet exports results to `BenchmarkDotNet.Artifacts/results/` (GitHub + HTML + CSV)
@@ -62,7 +62,7 @@ per operation (the proxy for encode peak memory).
 Compares the library against MAME's `chdman.exe` (wall-clock, median of N runs):
 
 ```powershell
-dotnet run --project CHDSharpBenchmark -c Release --framework net10.0 -- --chdman chdman.exe
+dotnet run --project CHDSharpBenchmark -c Release --framework net11.0 -- --chdman chdman.exe
 ```
 
 The harness runs four passes:

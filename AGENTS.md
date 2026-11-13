@@ -32,8 +32,8 @@ the CHD (Compressed Hunks of Data) disk-image format used by MAME.
 
 ## Build / test / run
 
-Requires .NET SDK 8 or later (`global.json` rolls forward; targets `net8.0;net9.0;net10.0`,
-LangVersion 14).
+Requires .NET SDK 11 or later (`global.json` rolls forward; targets
+`net8.0;net9.0;net10.0;net11.0`, LangVersion 15).
 
 ```bash
 dotnet build -c Release                          # whole solution
@@ -136,7 +136,7 @@ matches `Directory.Build.props`.
    ```bash
    dotnet build -c Release
    dotnet test
-   dotnet run --project CHDSharpBattleTest -c Release --framework net10.0
+   dotnet run --project CHDSharpBattleTest -c Release --framework net11.0
    jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # must report 0 findings
    ```
 
@@ -149,29 +149,30 @@ matches `Directory.Build.props`.
    pwsh scripts/package-release.ps1
    ```
 
-   Writes `CHDSharp_<rid>_v<version>.zip` for win/linux/osx × x64/arm64 into
-   `CHDSharpLib/bin/Release` (the default output path) without deleting other files there. Each
-   bundle gets the single framework-dependent binary (the .NET runtime is **not** embedded) plus
-   `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`. Asset names must match
-   `VersionCheckService.GetExpectedAssetName`:
-   `CHDSharp_{win|linux|osx}-{x64|arm64}_v<version>.zip`.
+   Writes the platform-native bundle for win/linux/osx × x64/arm64 into
+   `CHDSharpLib/bin/Release` (the default output path) without deleting other files there:
+   `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS. Each bundle gets the single
+   framework-dependent binary (the .NET runtime is **not** embedded) plus `LICENSE.txt`,
+   `README.md`, `README.txt` and `WhatsNew.md`. macOS `.dmg` bundles require macOS (use `-Rids`
+   on other hosts). Asset names must match `VersionCheckService.GetExpectedAssetName`:
+   `CHDSharp_{win|linux|osx}-{x64|arm64}_v<version>.<zip|tar.gz|dmg>`.
 
 6. **Tag and push**:
 
    ```bash
-   git tag -a v1.5.2 -m "CHDSharp v1.5.2"
-   git push origin main v1.5.2
+   git tag -a v1.7.0 -m "CHDSharp v1.7.0"
+   git push origin main v1.7.0
    ```
 
-   `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles,
-   creates the GitHub release with `WhatsNew.md` as the body, uploads the assets, publishes the
-   NuGet package (skipped when the version already exists), syncs the wiki and
-   deploys the documentation site (`pages.yml`).
+   `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles on
+   native runners (Windows `.zip`, Linux `.tar.gz`, macOS `.dmg`), creates the GitHub release
+   with `WhatsNew.md` as the body, uploads the assets, publishes the NuGet package (skipped when
+   the version already exists), syncs the wiki and deploys the documentation site (`pages.yml`).
 
 7. **Verify the release**:
 
    ```bash
-   gh release view v1.5.2
+   gh release view v1.7.0
    gh run list --workflow=release.yml --limit 1
    (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp/index.json).versions
    ```
@@ -186,15 +187,15 @@ Pages rebuild request; needs `repo` scope).
 
 `.github/workflows/ci.yml` runs on every push to `main`, every pull request, and manual dispatch:
 
-- **`build & test`** - Linux/macOS/Windows matrix; installs the .NET 8/9/10 SDKs, builds with
+- **`build & test`** - Linux/macOS/Windows matrix; installs the .NET 8/9/10/11 SDKs, builds with
   `-warnaserror` (NuGet audit is on), and runs both xUnit suites (`CHDSharpTest`,
-  `CHDSharpEncoderTest`) for all three target frameworks. The CLI is built first because
+  `CHDSharpEncoderTest`) for all four target frameworks. The CLI is built first because
   `CHDSharpTest` spawns `CHDSharpCli/bin/<config>/<tfm>/CHDSharp.dll`; the Windows job also builds
   the full solution (WPF tester, battle harness, benchmark).
 - **`quality`** - Windows; installs JetBrains ReSharper GlobalTools and fails on any
   `jb inspectcode --severity=WARNING` finding, uploading the SARIF to code scanning.
 - **`package`** - packs `CHDSharpLib`, checks the `.nupkg` contents, and uploads it as an artifact.
-- **`coverage`** - collects merged Cobertura coverage for both suites on `net10.0`.
+- **`coverage`** - collects merged Cobertura coverage for both suites on `net11.0`.
 - **`docs build (Jekyll + DocFX)`** - builds the Jekyll site with `--strict_front_matter`, then
   generates the DocFX API reference (`scripts/build-api-docs.ps1`).
 - **`chdman parity (smoke)`** - Windows; runs the quick battle harness against

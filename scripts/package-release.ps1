@@ -7,26 +7,33 @@
 .DESCRIPTION
     For every requested runtime identifier the CLI is published as a framework-dependent
     single-file executable - the .NET runtime itself is NOT embedded, so the bundle
-    requires the .NET 10 runtime to be installed. Each bundle is written as
-    CHDSharp_<rid>_v<version>.zip, the exact asset name VersionCheckService looks up on
-    GitHub releases for the built-in update check (e.g. CHDSharp_win-x64_v1.5.0.zip).
-    Existing files in the output path are never deleted.
+    requires the .NET 11 runtime to be installed. Bundles use the native archive format
+    for each platform - CHDSharp_<rid>_v<version>.zip on Windows,
+    CHDSharp_<rid>_v<version>.tar.gz on Linux and CHDSharp_<rid>_v<version>.dmg on macOS -
+    the exact asset names VersionCheckService looks up on GitHub releases for the built-in
+    update check (e.g. CHDSharp_linux-x64_v1.7.0.tar.gz). Existing files in the output
+    path are never deleted. macOS .dmg bundles require macOS; use -Rids on other hosts to
+    select only the formats you can build.
 
 .EXAMPLE
     pwsh scripts/package-release.ps1
-    pwsh scripts/package-release.ps1 -Rids win-x64 -OutputPath dist
+    pwsh scripts/package-release.ps1 -Rids win-x64,win-arm64 -OutputPath dist
+    pwsh scripts/package-release.ps1 -Rids osx-arm64 -OutputPath dist
 #>
 [CmdletBinding()]
 param(
     [string]$Version,
     [string]$OutputPath,
     [string]$Configuration = "Release",
-    [string]$TargetFramework = "net10.0",
+    [string]$TargetFramework = "net11.0",
     [string[]]$Rids = @("win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64")
 )
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+
+# Accept both -Rids win-x64,linux-x64 (CI matrix expansion) and -Rids win-x64 -Rids linux-x64.
+$Rids = @($Rids | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
 if (-not $Version) {
     $props = Get-Content (Join-Path $RepoRoot "Directory.Build.props") -Raw
@@ -54,6 +61,14 @@ $produced = [System.Collections.Generic.List[string]]::new()
 
 foreach ($rid in $Rids) {
     $isWindowsRid = $rid.StartsWith("win-", [StringComparison]::Ordinal)
+    $isLinuxRid = $rid.StartsWith("linux-", [StringComparison]::Ordinal)
+    $isMacRid = $rid.StartsWith("osx-", [StringComparison]::Ordinal)
+    if (-not ($isWindowsRid -or $isLinuxRid -or $isMacRid)) {
+        throw "Unsupported runtime identifier '$rid' (expected win-*, linux-* or osx-*)."
+    }
+    if ($isMacRid -and -not $IsMacOS) {
+        throw "macOS .dmg bundles must be built on macOS; requested '$rid' on $([Environment]::OSVersion.Platform)."
+    }
     $exeName = if ($isWindowsRid) { "CHDSharp.exe" } else { "CHDSharp" }
 
     $publishDir = Join-Path $artifactsRoot "publish/$rid"
@@ -80,13 +95,17 @@ foreach ($rid in $Rids) {
     Copy-Item $license $stageDir
     Copy-Item $readme $stageDir
     Copy-Item $whatsNew $stageDir
+    if (-not $isWindowsRid -and -not $IsWindows) {
+        & chmod +x (Join-Path $stageDir $exeName)
+        if ($LASTEXITCODE -ne 0) { throw "chmod +x failed for $exeName (exit code $LASTEXITCODE)" }
+    }
 
     $runExample = if ($isWindowsRid) { "CHDSharp.exe info -i game.chd" } else { "CHDSharp info -i game.chd" }
     $readmeTxtLines = @(
         "CHDSharp CLI v$Version",
         "Pure C# CHD (Compressed Hunks of Data) reader/writer -- MAME chdman-compatible.",
-        "Framework-dependent single-file build targeting .NET 10.",
-        "REQUIRES the .NET 10 runtime to be installed: https://dotnet.microsoft.com/download/dotnet/10.0",
+        "Framework-dependent single-file build targeting .NET 11.",
+        "REQUIRES the .NET 11 runtime to be installed: https://dotnet.microsoft.com/download/dotnet/11.0",
         "===============================================================================",
         "",
         "Run from a command prompt:",
@@ -95,7 +114,13 @@ foreach ($rid in $Rids) {
     if (-not $isWindowsRid) {
         $readmeTxtLines += @(
             "",
-            "NOTE: if the binary is not executable after unzipping, run: chmod +x $exeName"
+            "NOTE: if the binary is not executable after extracting the archive, run: chmod +x $exeName"
+        )
+    }
+    if ($isMacRid) {
+        $readmeTxtLines += @(
+            "",
+            "macOS: open the .dmg, copy CHDSharp anywhere (for example ~/bin), then run it from a terminal."
         )
     }
     $readmeTxtLines += @(
@@ -123,13 +148,28 @@ foreach ($rid in $Rids) {
         Write-Host "    smoke test: $($smoke | Select-Object -First 1)"
     }
 
-    $zipName = "CHDSharp_${rid}_v$Version.zip"
-    $zipPath = Join-Path $OutputPath $zipName
-    if (Test-Path $zipPath) { Remove-Item $zipPath }
-    [IO.Compression.ZipFile]::CreateFromDirectory($stageDir, $zipPath, [IO.Compression.CompressionLevel]::Optimal, $false)
-    $sizeMb = [math]::Round((Get-Item $zipPath).Length / 1MB, 2)
-    Write-Host "    -> $zipPath ($sizeMb MB)" -ForegroundColor Green
-    $produced.Add($zipPath)
+    $extension = if ($isWindowsRid) { "zip" } elseif ($isLinuxRid) { "tar.gz" } else { "dmg" }
+    $bundleName = "CHDSharp_${rid}_v$Version.$extension"
+    $bundlePath = Join-Path $OutputPath $bundleName
+    if (Test-Path $bundlePath) { Remove-Item $bundlePath }
+
+    switch ($extension) {
+        "zip" {
+            [IO.Compression.ZipFile]::CreateFromDirectory($stageDir, $bundlePath, [IO.Compression.CompressionLevel]::Optimal, $false)
+        }
+        "tar.gz" {
+            & tar -czf $bundlePath -C $stageDir .
+            if ($LASTEXITCODE -ne 0) { throw "tar failed for $rid (exit code $LASTEXITCODE)" }
+        }
+        "dmg" {
+            & hdiutil create -volname "CHDSharp v$Version" -srcfolder $stageDir -ov -format UDZO $bundlePath
+            if ($LASTEXITCODE -ne 0) { throw "hdiutil failed for $rid (exit code $LASTEXITCODE)" }
+        }
+    }
+
+    $sizeMb = [math]::Round((Get-Item $bundlePath).Length / 1MB, 2)
+    Write-Host "    -> $bundlePath ($sizeMb MB)" -ForegroundColor Green
+    $produced.Add($bundlePath)
 }
 
 Write-Host ""

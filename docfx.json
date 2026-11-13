@@ -12,7 +12,7 @@
       "dest": "docfx",
       "outputFormat": "mref",
       "properties": {
-        "TargetFramework": "net10.0"
+        "TargetFramework": "net11.0"
       }
     }
   ],

@@ -4,11 +4,11 @@
 
 | Version | Supported |
 |---------|-----------|
-| 1.5.x   | :white_check_mark: |
-| < 1.5   | :x: |
+| 1.7.x   | :white_check_mark: |
+| < 1.7   | :x: |
 
 Only the latest released minor line receives security fixes. The library targets
-`net8.0`, `net9.0`, and `net10.0`; the CLI ships as framework-dependent bundles for
+`net8.0`, `net9.0`, `net10.0`, and `net11.0`; the CLI ships as framework-dependent bundles for
 Windows, Linux, and macOS (x64/arm64).
 
 ## Reporting a vulnerability
@@ -82,7 +82,9 @@ Out of scope:
 ## Verifying a release
 
 ```bash
-gh attestation verify CHDSharp_win-x64_v1.5.2.zip --repo purelogiccode/CHDSharp
+gh attestation verify CHDSharp_win-x64_v1.7.0.zip --repo purelogiccode/CHDSharp
+gh attestation verify CHDSharp_linux-x64_v1.7.0.tar.gz --repo purelogiccode/CHDSharp
+gh attestation verify CHDSharp_osx-arm64_v1.7.0.dmg --repo purelogiccode/CHDSharp
 ```
 
 NuGet packages are published from the tag workflow; compare the package version,

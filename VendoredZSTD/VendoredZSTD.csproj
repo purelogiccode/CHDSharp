@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Library</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
         <RootNamespace>VendoredZSTD</RootNamespace>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -17,7 +17,7 @@
         </PackageReference>
         <PackageReference Include="InlineIL.Fody" Version="1.10.2" PrivateAssets="all" />
         <PackageReference Include="InlineMethod.Fody" Version="0.8.7" PrivateAssets="all" />
-        <PackageReference Include="Meziantou.Analyzer" Version="3.0.322">
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.339">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
