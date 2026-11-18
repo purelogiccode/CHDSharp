@@ -32,7 +32,7 @@ CSharp_CHDSharp.sln
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.7.0) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.7.1) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.7.0`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.7.1`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -193,7 +193,7 @@ single-file** binary (`--self-contained false -p:PublishSingleFile=true` — the
 runtime is *not* embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and
 `WhatsNew.md`, and writes the platform-native bundle: `CHDSharp_<rid>_v<version>.zip` on
 Windows, `.tar.gz` on Linux and `.dmg` on macOS (the exact asset names the CLI's built-in
-update check looks up on GitHub releases, e.g. `CHDSharp_linux-x64_v1.7.0.tar.gz`).
+update check looks up on GitHub releases, e.g. `CHDSharp_linux-x64_v1.7.1.tar.gz`).
 Existing files in the output path are never deleted. macOS `.dmg` bundles must be built on
 macOS. The binary is named `CHDSharp` (`CHDSharp.exe` on Windows); bundles require the
 .NET 11 runtime.

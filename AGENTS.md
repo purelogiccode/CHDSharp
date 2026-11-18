@@ -160,8 +160,8 @@ matches `Directory.Build.props`.
 6. **Tag and push**:
 
    ```bash
-   git tag -a v1.7.0 -m "CHDSharp v1.7.0"
-   git push origin main v1.7.0
+   git tag -a v1.7.1 -m "CHDSharp v1.7.1"
+   git push origin main v1.7.1
    ```
 
    `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles on
@@ -172,7 +172,7 @@ matches `Directory.Build.props`.
 7. **Verify the release**:
 
    ```bash
-   gh release view v1.7.0
+   gh release view v1.7.1
    gh run list --workflow=release.yml --limit 1
    (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp/index.json).versions
    ```

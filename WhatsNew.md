@@ -1,10 +1,10 @@
-# CHDSharp v1.7.0 - What's New
+# CHDSharp v1.7.1 - What's New
 
-**Released:** 2026-11-13 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.0)
+**Released:** 2026-11-18 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.1)
 
-CHDSharp v1.7.0 moves the complete solution to **.NET 11** and **C# 15**, keeps the
-`net8.0`/`net9.0` targets for current consumers, and switches the CLI bundles to each
-platform's native archive format. No library API or encoder output changed.
+CHDSharp v1.7.1 is a bug-fix release. It stops empty CLI paths from crashing and restores
+FLAC encoding for CD audio whose frames need more than 64 bytes of header metadata. No public
+API or `chdman`-visible encoder output changed.
 
 ---
 
@@ -12,12 +12,12 @@ platform's native archive format. No library API or encoder output changed.
 
 | Platform | Bundle |
 |----------|--------|
-| Windows x64 | [`CHDSharp_win-x64_v1.7.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_win-x64_v1.7.0.zip) |
-| Windows ARM64 | [`CHDSharp_win-arm64_v1.7.0.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_win-arm64_v1.7.0.zip) |
-| Linux x64 | [`CHDSharp_linux-x64_v1.7.0.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_linux-x64_v1.7.0.tar.gz) |
-| Linux ARM64 | [`CHDSharp_linux-arm64_v1.7.0.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_linux-arm64_v1.7.0.tar.gz) |
-| macOS Intel | [`CHDSharp_osx-x64_v1.7.0.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_osx-x64_v1.7.0.dmg) |
-| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.7.0.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.0/CHDSharp_osx-arm64_v1.7.0.dmg) |
+| Windows x64 | [`CHDSharp_win-x64_v1.7.1.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_win-x64_v1.7.1.zip) |
+| Windows ARM64 | [`CHDSharp_win-arm64_v1.7.1.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_win-arm64_v1.7.1.zip) |
+| Linux x64 | [`CHDSharp_linux-x64_v1.7.1.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_linux-x64_v1.7.1.tar.gz) |
+| Linux ARM64 | [`CHDSharp_linux-arm64_v1.7.1.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_linux-arm64_v1.7.1.tar.gz) |
+| macOS Intel | [`CHDSharp_osx-x64_v1.7.1.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_osx-x64_v1.7.1.dmg) |
+| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.7.1.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_osx-arm64_v1.7.1.dmg) |
 
 Every bundle contains a **framework-dependent single-file** `CHDSharp` / `CHDSharp.exe`
 build (the .NET runtime is **not** embedded) plus `LICENSE.txt`, `README.md`, `README.txt`
@@ -26,44 +26,44 @@ is required.
 
 ---
 
-## .NET 11 and C# 15
+## Empty CLI paths report the usage error
 
-- All 12 projects now multi-target `net8.0;net9.0;net10.0;net11.0`
-  (`net11.0-windows` for the WPF tester) and compile with `LangVersion 15`.
-- The NuGet package ships `lib/net11.0` assemblies for `CHDSharpLib` and all four vendored
-  codec assemblies.
-- CI, CodeQL, DocFX, the release pipeline and the documentation site all run on the .NET 11 SDK.
-- The runtime packages (`Microsoft.Extensions.Logging.Abstractions`, `System.IO.Hashing`) and
-  SourceLink are at 11.0.0/11.0.100 for every target. The packages ship `netstandard2.0` assets,
-  so the `net8.0`/`net9.0` targets remain functional; their advisory TFM-support warnings are
-  suppressed centrally.
+`extractcd -o ""` passed the old null check, reached
+`Path.GetDirectoryName("")` / `Directory.CreateDirectory("")` and crashed with an unhandled
+`ArgumentException`. An explicitly empty `--input` or `--output` is now treated as a missing
+path for every command that uses the shared create/extract argument parser, so the CLI prints
+the normal `... requires --input <file> --output <file>` usage text and exits with code 1.
 
-## Native CLI bundles
+Regression test: `Extractcd_reports_usage_error_for_an_empty_output_path`.
 
-- **Windows** stays `.zip`.
-- **Linux** is now `.tar.gz`.
-- **macOS** is now `.dmg` (built on a macOS runner; the disk image contains the binary and
-  the documentation files).
-- `VersionCheckService` looks up the correct asset extension for the running platform, and
-  the release workflow builds each platform's bundles on its native runner before
-  publishing them together.
+## FLAC frames have enough header room
+
+`CdflCodec` reserved only 64 bytes per FLAC frame for the frame header, subframe headers,
+Rice partition parameters and footer. Real CD audio using Fixed subframes can need 67 bytes,
+which made a valid one-frame-per-hunk source fail with
+`FLAC frame too large: 2419 bytes (buffer 2416)`.
+
+- `CdflCodec` now reserves 512 bytes of metadata per frame.
+- `AvHuffEncoder` does the same for each laserdisc audio channel's mono FLAC frame.
+- The allowance is only headroom: the encoded bytes are unchanged for every hunk that already
+  compressed, and the existing `total >= hunk size` check still decides whether a hunk is
+  stored compressed.
+
+Regression test: `CdflCodec_OneFrameHunk_EncodesWithoutOverflowingTheFrameBuffer`.
 
 ## Tooling and dependencies
 
-- Dependabot updates: GitHub Actions (`setup-dotnet 6.1.0`, `github/codeql-action 4.39.3`,
-  `ruby/setup-ruby 1.338.0`), `Meziantou.Analyzer 3.0.339` and `xunit.v3 4.0.3`.
-- The Pages workflow now uses the .NET 11 SDK, so the DocFX API reference keeps building
-  against the `net11.0` target.
-- Documentation, `WhatsNew.md`, the per-project READMEs and `AGENTS.md` describe the
-  four target frameworks and the new bundle formats.
+- `Meziantou.Analyzer` 3.0.339 -> 3.0.341.
+- `coverlet.collector` 10.1.0 -> 10.1.1.
+- `Serilog.Extensions.Logging` 10.0.0 -> 11.0.0.
 
 ## Verification
 
 - `dotnet build -c Release -warnaserror`: 0 warnings, 0 errors.
-- `jb inspectcode --severity=WARNING --exclude="Vendored*/**"`: **0 findings**.
-- Library tests: **4,220 passed** and encoder tests: **455 passed** on each of `net8.0`,
-  `net9.0`, `net10.0` and `net11.0` (**18,700 tests total**).
-- Quick `chdman` parity battle on `net11.0`: **905/905 checks passed**, byte-identical output.
+- `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: **0 findings**.
+- Library tests: **4,221 passed** and encoder tests: **456 passed** on each of `net8.0`,
+  `net9.0`, `net10.0` and `net11.0` (**18,708 tests total**).
+- CI quick `chdman` parity smoke: passed, byte-identical output.
 - No public API changes and no encoder output changes.
 
 ## Upgrade notes
@@ -71,5 +71,6 @@ is required.
 - Use the bundle matching your platform: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on
   macOS. On Linux run `chmod +x CHDSharp` after extracting if needed; on macOS drag `CHDSharp`
   out of the mounted disk image.
-- The CLI's update check now expects the new asset names. Older releases remain downloadable
-  from the [releases page](https://github.com/purelogiccode/CHDSharp/releases).
+- The CLI update check expects the same asset names as v1.7.0, with the version bumped to
+  v1.7.1. Older releases remain downloadable from the
+  [releases page](https://github.com/purelogiccode/CHDSharp/releases).
