@@ -74,6 +74,29 @@ public class CdflCodecTests : IDisposable
     }
 
     [Fact]
+    public void CdflCodec_OneFrameHunk_EncodesWithoutOverflowingTheFrameBuffer()
+    {
+        // A CHD with one CD frame per hunk makes the FLAC blocksize 588 samples. Fixed
+        // subframes can need more than 64 bytes of frame metadata, which used to overflow the
+        // per-hunk buffer ("FLAC frame too large: 2419 bytes (buffer 2416)").
+        var hunk = new byte[CdConstants.FrameSize];
+        for (var s = 0; s < 588; s++)
+        {
+            var sample = (int)(Math.Sin(s * 0.19) * 30000);
+            var offset = s * 4;
+            hunk[offset] = (byte)(sample >> 8);
+            hunk[offset + 1] = (byte)sample;
+            hunk[offset + 2] = (byte)(sample >> 8);
+            hunk[offset + 3] = (byte)sample;
+        }
+
+        var codec = new CdflCodec(CdConstants.FrameSize);
+        var compressed = codec.Compress(hunk);
+
+        Assert.NotNull(compressed);
+    }
+
+    [Fact]
     public void EncodeCd_WithCdfl_RoundTripsThroughChdSharpLib()
     {
         // data track with pattern + audio track with sine samples

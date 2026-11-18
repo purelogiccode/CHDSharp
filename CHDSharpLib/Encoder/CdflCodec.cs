@@ -14,6 +14,14 @@ namespace CHDSharp.Encoder;
 /// </summary>
 public sealed class CdflCodec : IChdCodec
 {
+    /// <summary>
+    ///     Extra space reserved per FLAC frame for its header, subframe headers, Rice
+    ///     partition parameters and footer. A frame's overhead can exceed 64 bytes (real
+    ///     reports show 67 bytes for a 2352-byte CD frame with Fixed subframes), so 64 was
+    ///     too tight and made valid audio fail with "FLAC frame too large".
+    /// </summary>
+    private const int FlacFrameHeaderAllowance = 512;
+
     private readonly int _blockSize;
     private readonly int _dataBytes;
     private readonly byte[] _flacBuffer;
@@ -38,8 +46,9 @@ public sealed class CdflCodec : IChdCodec
             _blockSize /= 2;
 
         _leBuffer = new byte[_dataBytes];
-        // worst case: verbatim subframes; add room for frame headers
-        _flacBuffer = new byte[_dataBytes + _framesPerHunk * 64];
+        // Worst case: fixed/verbatim subframes; reserve room for the frame metadata of every
+        // frame (see FlacFrameHeaderAllowance).
+        _flacBuffer = new byte[_dataBytes + _framesPerHunk * FlacFrameHeaderAllowance];
     }
 
     /// <inheritdoc />

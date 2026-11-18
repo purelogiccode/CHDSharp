@@ -4969,6 +4969,14 @@ internal static partial class Program
             rest.RemoveAt(0);
         }
 
+        // An explicitly empty argument (`-o ""`) is a missing path, not a valid one: passing it
+        // through used to reach Path.GetDirectoryName("")/Directory.CreateDirectory("") and crash
+        // with ArgumentException instead of printing the usage error.
+        if (string.IsNullOrWhiteSpace(input))
+            input = null;
+        if (string.IsNullOrWhiteSpace(output))
+            output = null;
+
         return (input, output, rest.ToArray());
     }
 

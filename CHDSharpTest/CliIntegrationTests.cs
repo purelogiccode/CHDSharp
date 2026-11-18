@@ -198,6 +198,23 @@ public sealed class CliIntegrationTests
     }
 
     [Fact]
+    public void Extractcd_reports_usage_error_for_an_empty_output_path()
+    {
+        // `-o ""` used to pass the null check, reach Directory.CreateDirectory("") and crash with
+        // an unhandled ArgumentException instead of printing the usage text.
+        var path = Path.Combine(TestDataDir, "v5_cd_default.chd");
+        var (exitCode, log) = RunCli("extractcd", "--input", path, "--output", "\"\"");
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains(
+            "extractcd requires --input <file> --output <file>",
+            log,
+            StringComparison.Ordinal
+        );
+        Assert.DoesNotContain("Unhandled exception", log, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Createcd_rejects_iso_size_that_is_not_sector_aligned()
     {
         // cdrom.cpp:2078 - parse_iso only accepts sizes that are a multiple of 2048,
