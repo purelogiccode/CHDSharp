@@ -16,6 +16,13 @@ internal sealed class AvHuffEncoder
 {
     private const int RleAlphabetSize = 256 + 16;
     private const int MaxBits = 16;
+
+    /// <summary>
+    ///     Extra space reserved for a per-channel FLAC frame's header, subframe headers, Rice
+    ///     parameters and footer. Fixed subframes can need more than 64 bytes (real CD audio
+    ///     frames showed 67), so the earlier 64-byte allowance could overflow the encoder.
+    /// </summary>
+    private const int FlacFrameHeaderAllowance = 512;
     private readonly DeltaRleEncoder _cbContext = new();
     private readonly DeltaRleEncoder _crContext = new();
 
@@ -171,7 +178,7 @@ internal sealed class AvHuffEncoder
         dest[8] = 0xFF;
         dest[9] = 0xFF;
 
-        var flacOut = new byte[samples * 2 + 64];
+        var flacOut = new byte[samples * 2 + FlacFrameHeaderAllowance];
         var pcm = new short[samples];
 
         for (var ch = 0; ch < channels; ch++)
