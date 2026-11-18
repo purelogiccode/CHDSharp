@@ -20,6 +20,11 @@
 
 ---
 
+## What's New in v1.7.1
+
+- **FLAC frame headroom** - `CdflCodec` and the AVHuff encoder now reserve 512 bytes of per-frame metadata instead of 64. Valid CD audio with large Fixed subframes no longer fails with `FLAC frame too large`; encoded bytes are unchanged for every hunk that already compressed.
+- **No public API changes** - 4,221 library tests + 456 encoder tests on each of the four target frameworks, `jb inspectcode` 0 findings, CI `chdman` parity smoke passed.
+
 ## What's New in v1.7.0
 
 - **.NET 11 and C# 15** - the package now multi-targets `net8.0`/`net9.0`/`net10.0`/`net11.0` and ships `lib/net11.0` assemblies for `CHDSharpLib` plus every vendored codec. All projects compile with `LangVersion 15`.

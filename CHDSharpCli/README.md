@@ -17,7 +17,7 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
-> **v1.7.0** - the CLI now runs on .NET 11 and ships native platform bundles: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS. Release bundles are framework-dependent single-file binaries and require the .NET 11 runtime; the library targets `net8.0` / `net9.0` / `net10.0` / `net11.0`. No command-line behavior changed in this release.
+> **v1.7.1** - bug-fix release: an explicitly empty `--input`/`--output` path now prints the normal usage error instead of crashing in `Directory.CreateDirectory("")`, and CD FLAC encoding reserves 512 bytes of frame metadata (was 64) so one-frame-per-hunk audio no longer fails with `FLAC frame too large`. Bundles remain `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS, and require the .NET 11 runtime; the library targets `net8.0` / `net9.0` / `net10.0` / `net11.0`.
 
 ---
 

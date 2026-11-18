@@ -26,6 +26,13 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.7.1
+
+- **Empty CLI paths no longer crash** - `extractcd -o ""` (and every other command using the shared `--input`/`--output` parser) now prints the normal `... requires --input <file> --output <file>` usage error instead of reaching `Directory.CreateDirectory("")` and throwing an unhandled `ArgumentException`.
+- **Large FLAC frames fit again** - `CdflCodec` and the AVHuff encoder reserve 512 bytes of FLAC metadata per frame (was 64), so one-frame-per-hunk CD audio with large Fixed subframes no longer fails with `FLAC frame too large`. Encoded output bytes are unchanged for every hunk that already compressed.
+- **Tooling** - `Meziantou.Analyzer 3.0.341`, `coverlet.collector 10.1.1` and `Serilog.Extensions.Logging 11.0.0`.
+- **Verification** - 4,221 library tests + 456 encoder tests on each of the four target frameworks (18,708 total), `jb inspectcode` 0 findings, CI `chdman` parity smoke passed. No public API changes.
+
 ## What's New in v1.7.0
 
 - **.NET 11 and C# 15** - every project now multi-targets `net8.0`/`net9.0`/`net10.0`/`net11.0` (`net11.0-windows` for the WPF tester) and builds with `LangVersion 15`. The NuGet package includes `net11.0` assemblies for the library and all vendored codecs. Runtime packages (`Microsoft.Extensions.Logging.Abstractions`, `System.IO.Hashing`) are 11.0.0; their `netstandard2.0` assets keep the `net8.0`/`net9.0` targets working.

@@ -11,7 +11,7 @@
     for each platform - CHDSharp_<rid>_v<version>.zip on Windows,
     CHDSharp_<rid>_v<version>.tar.gz on Linux and CHDSharp_<rid>_v<version>.dmg on macOS -
     the exact asset names VersionCheckService looks up on GitHub releases for the built-in
-    update check (e.g. CHDSharp_linux-x64_v1.7.0.tar.gz). Existing files in the output
+    update check (e.g. CHDSharp_linux-x64_v1.7.1.tar.gz). Existing files in the output
     path are never deleted. macOS .dmg bundles require macOS; use -Rids on other hosts to
     select only the formats you can build.
 

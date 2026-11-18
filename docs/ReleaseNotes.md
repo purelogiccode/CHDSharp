@@ -1,5 +1,58 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.7.1
+
+Bug-fix release on top of v1.7.0. No public API or encoder-output changes.
+
+**Released:** 2026-11-18 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.1) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.7.1)
+
+### Empty CLI paths report the usage error
+
+`extractcd -o ""` passed the old null check, reached
+`Path.GetDirectoryName("")` / `Directory.CreateDirectory("")` and crashed with an unhandled
+`ArgumentException`. `ParseCreateArgs` now treats an explicitly empty `--input` or `--output`
+as a missing path for every command that shares the parser, so the CLI prints the normal
+`... requires --input <file> --output <file>` usage text and exits with code 1.
+
+Regression test: `Extractcd_reports_usage_error_for_an_empty_output_path`.
+
+### FLAC frames have enough header room
+
+`CdflCodec` reserved only 64 bytes per FLAC frame for the frame header, subframe headers,
+Rice partition parameters and footer. Real CD audio using Fixed subframes can need 67 bytes,
+so a valid one-frame-per-hunk source failed with
+`FLAC frame too large: 2419 bytes (buffer 2416)`.
+
+- `CdflCodec` now reserves 512 bytes of metadata per frame.
+- `AvHuffEncoder` does the same for each laserdisc audio channel's mono FLAC frame.
+- The allowance is only headroom: encoded bytes are unchanged for every hunk that already
+  compressed, and the existing `total >= hunk size` check still decides whether a hunk is
+  stored compressed.
+
+Regression test: `CdflCodec_OneFrameHunk_EncodesWithoutOverflowingTheFrameBuffer`.
+
+### Tooling
+
+- `Meziantou.Analyzer` 3.0.339 -> 3.0.341.
+- `coverlet.collector` 10.1.0 -> 10.1.1.
+- `Serilog.Extensions.Logging` 10.0.0 -> 11.0.0.
+
+### Verification
+
+- `dotnet build -c Release -warnaserror`: 0 warnings, 0 errors.
+- `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: 0 findings.
+- Library tests: 4,221 passed and encoder tests: 456 passed on each of `net8.0`, `net9.0`,
+  `net10.0` and `net11.0` (18,708 total).
+- CI quick battle harness: passed, byte-identical `chdman` output.
+
+### Upgrade notes
+
+Use the bundle matching your platform: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on
+macOS. Linux users may need `chmod +x CHDSharp` after extracting; macOS users should copy
+`CHDSharp` out of the mounted disk image. The CLI update check expects the same asset names as
+v1.7.0, with the version bumped to v1.7.1.
+
 ## CHDSharp v1.7.0
 
 Platform and packaging release on top of v1.6.3. No public API or encoder-output changes.
