@@ -8,8 +8,8 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/graphs/contributors)
 [![GitHub stars](https://img.shields.io/github/stars/purelogiccode/CHDSharp?style=social)](https://github.com/purelogiccode/CHDSharp/stargazers)
 [![Release](https://img.shields.io/github/v/release/purelogiccode/CHDSharp?color=blue)](https://github.com/purelogiccode/CHDSharp/releases/latest)
-[![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
+[![NuGet CHDSharp](https://img.shields.io/nuget/v/CHDSharp?label=nuget%20chdsharp&color=blue)](https://www.nuget.org/packages/CHDSharp/)
+[![NuGet CHDSharp.Cli](https://img.shields.io/nuget/v/CHDSharp.Cli?label=nuget%20chdsharp.cli&color=blue)](https://www.nuget.org/packages/CHDSharp.Cli/)
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](#building)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](docs/chdman-parity.md)
@@ -148,11 +148,17 @@ See [docs/ReleaseNotes.md](docs/ReleaseNotes.md) for the full changelog.
 # .NET library
 dotnet add package CHDSharp
 
+# CLI as a .NET tool (Windows, Linux, macOS)
+dotnet tool install --global CHDSharp.Cli
+chdsharp help
+
 # Windows CLI via winget (manifest submitted with v1.7.2; available after review)
 winget install PureLogicCode.CHDSharp
 ```
 
 Targets `net8.0`, `net9.0`, `net10.0`, and `net11.0`. Zero native dependencies — every codec (zlib, lzma, huffman, flac, zstd, AVHuff) is implemented in pure C#.
+
+Both packages are published on NuGet: [`CHDSharp`](https://www.nuget.org/packages/CHDSharp/) for the library and [`CHDSharp.Cli`](https://www.nuget.org/packages/CHDSharp.Cli/) for the CLI .NET tool. `CHDSharp.Cli` bundles every managed dependency and runs on Windows, Linux and macOS wherever a compatible .NET runtime is installed.
 
 Prebuilt CLI bundles for Windows, Linux and macOS (x64 + ARM64) are attached to each [release](https://github.com/purelogiccode/CHDSharp/releases/latest) — framework-dependent single-file binaries that require the [.NET 11 runtime](https://dotnet.microsoft.com/download/dotnet/11.0). Windows bundles are `.zip`, Linux bundles are `.tar.gz` and macOS bundles are `.dmg`; each contains `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`. See [WhatsNew.md](WhatsNew.md) for what changed in the latest release.
 
@@ -714,7 +720,7 @@ CHDSharp/
 │   │   └── Interfaces/     IChdCodec interface
 │   ├── Models/             Public models (ChdHeaderInfo, ChdError, etc.)
 │   └── Utils/              Internal utilities (CRC, Huffman, BitStream)
-├── CHDSharpCli/            CLI tool (binary: CHDSharp)
+├── CHDSharpCli/            CLI tool (binary: CHDSharp; .NET tool: CHDSharp.Cli)
 ├── CHDSharpTest/           Unit + corpus tests
 ├── CHDSharpEncoderTest/    Encoder tests
 ├── CHDSharpTester/         WPF interactive tester

@@ -140,15 +140,36 @@ dotnet run --project CHDSharpBattleTest -- --real "D:\CHD Collection"
 ## Pack (NuGet)
 
 ```bash
+# Library package: CHDSharp.<version>.nupkg
 dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release
+
+# CLI .NET tool package: CHDSharp.Cli.<version>.nupkg
+dotnet pack CHDSharpCli/CHDSharpCli.csproj -c Release
 ```
 
-The package (`CHDSharp.<version>.nupkg`) is written to `CHDSharpLib/bin/Release/`. It includes:
+Both packages are written to their project's `bin/Release/` directory.
+
+The library package (`CHDSharp.<version>.nupkg`) includes:
 
 - The library DLL for `net8.0`, `net9.0`, `net10.0`, and `net11.0`.
 - The README (this wiki's sibling pages are referenced from it), the combined license file (`LICENSE.txt`), and the package icon.
 - Embedded PDBs (`DebugType=embedded`) and embedded SourceLink for debugging.
 - Deterministic, reproducible builds (`Deterministic=true`, `ContinuousIntegrationBuild` on GitHub Actions).
+
+The CLI package (`CHDSharp.Cli.<version>.nupkg`) is a `DotnetTool` package. It publishes the CLI for all four target frameworks under `tools/<tfm>/any`, includes the LICENSE, README and icon, and exposes the `chdsharp` command:
+
+```bash
+dotnet tool install --global CHDSharp.Cli
+chdsharp help
+dotnet tool uninstall --global CHDSharp.Cli
+```
+
+Test a locally packed tool without touching the global tool store:
+
+```bash
+dotnet tool install --tool-path ./tool-test --add-source ./CHDSharpCli/bin/Release CHDSharp.Cli --version <version>
+./tool-test/chdsharp help
+```
 
 ### Dependencies
 
@@ -200,8 +221,8 @@ macOS. The binary is named `CHDSharp` (`CHDSharp.exe` on Windows); bundles requi
 
 The `Release` GitHub Actions workflow (`.github/workflows/release.yml`) runs this script
 on a version tag with one native runner per platform, then attests and publishes all six
-assets in a final release job, pushes the NuGet package, and syncs the wiki — see
-[CI](#ci).
+assets in a final release job, pushes the `CHDSharp` and `CHDSharp.Cli` NuGet packages, and
+syncs the wiki — see [CI](#ci).
 
 ---
 

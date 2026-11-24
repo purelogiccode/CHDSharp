@@ -24,6 +24,17 @@ Install-Package CHDSharp
 
 The package targets `net8.0`, `net9.0`, `net10.0`, and `net11.0` and has **no native dependencies**. Every codec — including Zstd and AVHuff — is implemented in managed code and vendored in-repo as pure C# projects, so all codec assemblies ship inside the package. The runtime NuGet dependencies are the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction and `System.IO.Hashing` for hashing helpers.
 
+### CLI as a .NET tool
+
+The command-line tool is also published as the `CHDSharp.Cli` .NET tool. It runs on Windows, Linux and macOS and bundles every managed dependency:
+
+```bash
+dotnet tool install --global CHDSharp.Cli
+chdsharp help
+```
+
+Update or remove it with `dotnet tool update --global CHDSharp.Cli` and `dotnet tool uninstall --global CHDSharp.Cli`.
+
 ### Prebuilt CLI (no build required)
 
 Every [release](https://github.com/purelogiccode/CHDSharp/releases/latest) attaches six CLI bundles for Windows, Linux and macOS on x64 and ARM64: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS. Each bundle is a framework-dependent **single-file** binary (`CHDSharp` / `CHDSharp.exe`) alongside `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`, and requires the [.NET 11 runtime](https://dotnet.microsoft.com/download/dotnet/11.0). On Windows expand the archive; on Linux extract with `tar -xzf` and run `chmod +x CHDSharp` if needed; on macOS open the disk image and copy `CHDSharp` out of it.

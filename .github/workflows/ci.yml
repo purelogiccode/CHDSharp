@@ -143,19 +143,29 @@ jobs:
           cache: true
           cache-dependency-path: "**/*.csproj"
 
-      - name: Pack CHDSharp
-        run: dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release -o artifacts/packages -warnaserror
+      - name: Pack NuGet packages
+        run: |
+          dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release -o artifacts/packages -warnaserror
+          dotnet pack CHDSharpCli/CHDSharpCli.csproj -c Release -o artifacts/packages -warnaserror
 
       - name: Inspect package contents
         run: |
           set -euo pipefail
           ls -l artifacts/packages
           unzip -l artifacts/packages/CHDSharp.*.nupkg
+          unzip -l artifacts/packages/CHDSharp.Cli.*.nupkg | grep -E 'tools/net(8|9|10|11)\.0/any/(DotnetToolSettings\.xml|CHDSharp\.dll)'
 
-      - name: Upload NuGet package
+      - name: Smoke-test the CLI tool package
+        run: |
+          set -euo pipefail
+          version=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props | head -1)
+          dotnet tool install --tool-path artifacts/tool --add-source artifacts/packages CHDSharp.Cli --version "$version" --no-cache
+          artifacts/tool/chdsharp help
+
+      - name: Upload NuGet packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: nuget-package
+          name: nuget-packages
           path: artifacts/packages/*.nupkg
           if-no-files-found: error
           retention-days: 14

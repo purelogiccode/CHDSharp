@@ -4,8 +4,31 @@
         <TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
         <RootNamespace>CHDSharp</RootNamespace>
         <AssemblyName>CHDSharp</AssemblyName>
-        <PackageId>CHDSharpCli</PackageId>
         <ApplicationIcon>Icon\chd.ico</ApplicationIcon>
+        <IsPackable>true</IsPackable>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>chdsharp</ToolCommandName>
+    </PropertyGroup>
+    <PropertyGroup>
+        <PackageId>CHDSharp.Cli</PackageId>
+        <Title>CHDSharp CLI</Title>
+        <Authors>Peterson Fernandes</Authors>
+        <Description>Pure C# CHD (Compressed Hunks of Data) command-line tool, compatible with MAME's chdman. Install with 'dotnet tool install --global CHDSharp.Cli'. Supports CHD V1-V5, all 10 codecs, parent/child chains, verification, extraction and chdman-compatible creation.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>chd.png</PackageIcon>
+        <PackageTags>chd;mame;chdman;cli;dotnet-tool;disk-image;compression;emulation</PackageTags>
+        <PackageProjectUrl>https://github.com/purelogiccode/CHDSharp</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/purelogiccode/CHDSharp</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <PackageLicenseExpression></PackageLicenseExpression>
+        <PackageReleaseNotes>The CHDSharp command-line tool is now distributed as a .NET tool. Install with 'dotnet tool install --global CHDSharp.Cli' and run 'chdsharp help'. See https://github.com/purelogiccode/CHDSharp/blob/main/docs/ReleaseNotes.md for the full changelog.</PackageReleaseNotes>
+    </PropertyGroup>
+    <PropertyGroup>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <Deterministic>true</Deterministic>
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\CHDSharpLib\CHDSharpLib.csproj" />
@@ -23,6 +46,11 @@
         <PackageReference Include="Serilog.Extensions.Logging" Version="11.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+        <None Include="LICENSE.txt" Pack="true" PackagePath="\" />
+        <None Include="Icon\chd.png" Pack="true" PackagePath="\" />
     </ItemGroup>
     <ItemGroup>
         <Using Include="CHDSharp.Models" />

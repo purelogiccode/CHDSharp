@@ -43,7 +43,7 @@ Please include:
 
 In scope:
 
-- `CHDSharpLib` (NuGet package `CHDSharp`), `CHDSharpCli`, and the shipped bundles;
+- `CHDSharpLib` (NuGet package `CHDSharp`), `CHDSharpCli` (the `CHDSharp.Cli` .NET tool), and the shipped bundles;
 - memory-safety issues in the vendored codec ports (`VendoredZLib`, `VendoredLZMA`,
   `VendoredFlac`, `VendoredZSTD`);
 - denial of service via malformed CHD/CUE/GDI/AVI input;

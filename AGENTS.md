@@ -6,7 +6,8 @@ the CHD (Compressed Hunks of Data) disk-image format used by MAME.
 ## What this repo is
 
 - `CHDSharpLib` (NuGet package `CHDSharp`, MIT) — V1–V5 reading, all 10 codecs, parent/child
-  chains, parallel verification, and a full encoder.
+  chains, parallel verification, and a full encoder. The CLI ships as the `CHDSharp.Cli` .NET tool
+  package and as the six platform bundles attached to each GitHub release.
 - **The single most important invariant: byte-for-byte parity with MAME `chdman`** (MAME 0.289;
   `chdman.exe` is checked in at the repo root). Every encoder path (all codecs, CD/GD-ROM/DVD/
   laserdisc layouts, copy/partial-tail quirks) is verified to produce byte-identical output to
@@ -20,7 +21,7 @@ the CHD (Compressed Hunks of Data) disk-image format used by MAME.
 | Path | What |
 |---|---|
 | `CHDSharpLib/` | Library (NuGet: CHDSharp) — `CHD.cs`, `CHDFile.cs`, `Encoder/`, `Models/`, `Utils/` |
-| `CHDSharpCli/` | CLI binary named `CHDSharp` (chdman-compatible + extras); entry point `Program.cs` |
+| `CHDSharpCli/` | CLI binary named `CHDSharp` (chdman-compatible + extras, also the `CHDSharp.Cli` .NET tool); entry point `Program.cs` |
 | `CHDSharpTest/`, `CHDSharpEncoderTest/` | xUnit v3 test suites |
 | `CHDSharpBattleTest/` | chdman byte-parity battle harness (needs root `chdman.exe`) |
 | `CHDSharpTester/` | Windows-only WPF tester (GPL-3.0-only) |
@@ -40,7 +41,8 @@ dotnet build -c Release                          # whole solution
 dotnet test                                      # xUnit suites (Microsoft.Testing.Platform runner)
 dotnet run --project CHDSharpBattleTest          # chdman byte-parity harness (long; needs chdman.exe)
 dotnet run --project CHDSharpCli -- info -i game.chd
-dotnet pack -c Release CHDSharpLib/              # NuGet package
+dotnet pack -c Release CHDSharpLib/              # NuGet library package (CHDSharp)
+dotnet pack -c Release CHDSharpCli/              # .NET tool package (CHDSharp.Cli)
 jb inspectcode CSharp_CHDSharp.sln --severity=WARNING   # ReSharper inspections (must be clean)
 ```
 
@@ -168,8 +170,9 @@ matches `Directory.Build.props`.
 
    `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles on
    native runners (Windows `.zip`, Linux `.tar.gz`, macOS `.dmg`), creates the GitHub release
-   with `WhatsNew.md` as the body, uploads the assets, publishes the NuGet package (skipped when
-   the version already exists), syncs the wiki and deploys the documentation site (`pages.yml`).
+   with `WhatsNew.md` as the body, uploads the assets, publishes the `CHDSharp` and `CHDSharp.Cli`
+   NuGet packages (each skipped when its version already exists), syncs the wiki and deploys the
+   documentation site (`pages.yml`).
 
 7. **Verify the release**:
 
@@ -177,6 +180,7 @@ matches `Directory.Build.props`.
    gh release view v1.7.2
    gh run list --workflow=release.yml --limit 1
    (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp/index.json).versions
+   (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp.cli/index.json).versions
    ```
 
    NuGet can take a few minutes to index a freshly pushed package; the workflow logs

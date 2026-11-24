@@ -5,8 +5,8 @@
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen?logo=dependabot)](https://github.com/purelogiccode/CHDSharp/blob/main/.github/dependabot.yml)
 [![GitHub issues](https://img.shields.io/github/issues/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/issues)
 [![Last commit](https://img.shields.io/github/last-commit/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/commits/main)
-[![NuGet](https://img.shields.io/nuget/v/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/CHDSharp?color=blue)](https://www.nuget.org/packages/CHDSharp/)
+[![NuGet CHDSharp](https://img.shields.io/nuget/v/CHDSharp?label=nuget%20chdsharp&color=blue)](https://www.nuget.org/packages/CHDSharp/)
+[![NuGet CHDSharp.Cli](https://img.shields.io/nuget/v/CHDSharp.Cli?label=nuget%20chdsharp.cli&color=blue)](https://www.nuget.org/packages/CHDSharp.Cli/)
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
@@ -158,7 +158,12 @@ Complete `chdman` parity against MAME 0.289 — 16 discrepancies fixed and battl
 ## Installation
 
 ```bash
+# library
 dotnet add package CHDSharp
+
+# CLI as a .NET tool
+dotnet tool install --global CHDSharp.Cli
+chdsharp help
 ```
 
 Targets `net8.0`, `net9.0`, `net10.0`, and `net11.0`. No native dependencies — all codecs (including Zstd via the in-repo pure-C# `VendoredZSTD` port) are implemented from scratch in C#. The runtime NuGet dependencies are the optional `Microsoft.Extensions.Logging.Abstractions` logging abstraction and `System.IO.Hashing` for hashing helpers.

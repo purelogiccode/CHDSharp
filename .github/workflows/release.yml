@@ -1,8 +1,8 @@
 # Builds and publishes a CHDSharp release from a version tag:
 #   - six platform bundles (framework-dependent single-file CLI) attached to the GitHub release:
 #       Windows .zip, Linux .tar.gz, macOS .dmg
-#   - build provenance attestations for the bundles and the NuGet package
-#   - the CHDSharp NuGet package
+#   - build provenance attestations for the bundles and the NuGet packages
+#   - the CHDSharp library and CHDSharp.Cli .NET tool NuGet packages
 #   - the docs/ folder synced to the GitHub wiki (Pages is deployed by pages.yml)
 #
 # Assets are named CHDSharp_<os>-<arch>_v<version>.<zip|tar.gz|dmg> - the exact names the
@@ -147,22 +147,45 @@ jobs:
         run: |
           set -euo pipefail
           version=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props | head -1)
-          if curl -fsS -o /dev/null "https://api.nuget.org/v3-flatcontainer/chdsharp/$version/chdsharp.$version.nupkg"; then
-            echo "CHDSharp $version is already published - skipping"
+          is_published() {
+            curl -fsS -o /dev/null "https://api.nuget.org/v3-flatcontainer/$1/$version/$1.$version.nupkg"
+          }
+
+          pending=0
+          if ! is_published chdsharp; then pending=1; fi
+          if ! is_published chdsharp.cli; then pending=1; fi
+          if [ "$pending" -eq 0 ]; then
+            echo "CHDSharp and CHDSharp.Cli $version are already published - skipping"
             exit 0
           fi
+
           if [ -z "${NUGET_API_KEY:-}" ]; then
             echo "::error::NUGET_API_KEY secret is not set"
             exit 1
           fi
+
           dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release -warnaserror
-          dotnet nuget push "CHDSharpLib/bin/Release/CHDSharp.$version.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet pack CHDSharpCli/CHDSharpCli.csproj -c Release -warnaserror
+
+          push_package() {
+            local id="$1" file="$2"
+            if is_published "$id"; then
+              echo "$id $version is already published - skipping"
+              return 0
+            fi
+            dotnet nuget push "$file" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          }
+
+          push_package chdsharp "CHDSharpLib/bin/Release/CHDSharp.$version.nupkg"
+          push_package chdsharp.cli "CHDSharpCli/bin/Release/CHDSharp.Cli.$version.nupkg"
 
       - name: Attest NuGet package provenance
-        if: hashFiles('CHDSharpLib/bin/Release/CHDSharp.*.nupkg') != ''
+        if: hashFiles('CHDSharpLib/bin/Release/CHDSharp.*.nupkg', 'CHDSharpCli/bin/Release/CHDSharp.Cli.*.nupkg') != ''
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: "CHDSharpLib/bin/Release/CHDSharp.*.nupkg"
+          subject-path: |
+            CHDSharpLib/bin/Release/CHDSharp.*.nupkg
+            CHDSharpCli/bin/Release/CHDSharp.Cli.*.nupkg
 
   wiki:
     name: Wiki & Pages

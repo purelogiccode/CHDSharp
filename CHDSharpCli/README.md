@@ -6,6 +6,8 @@
 [![GitHub issues](https://img.shields.io/github/issues/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/issues)
 [![Last commit](https://img.shields.io/github/last-commit/purelogiccode/CHDSharp)](https://github.com/purelogiccode/CHDSharp/commits/main)
 [![Release](https://img.shields.io/github/v/release/purelogiccode/CHDSharp?color=blue)](https://github.com/purelogiccode/CHDSharp/releases/latest)
+[![NuGet CHDSharp](https://img.shields.io/nuget/v/CHDSharp?label=nuget%20chdsharp&color=blue)](https://www.nuget.org/packages/CHDSharp/)
+[![NuGet CHDSharp.Cli](https://img.shields.io/nuget/v/CHDSharp.Cli?label=nuget%20chdsharp.cli&color=blue)](https://www.nuget.org/packages/CHDSharp.Cli/)
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
 [![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
@@ -15,9 +17,34 @@
 
 **Command-line CHD manager — compatible with MAME's `chdman` command syntax.**
 
-The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
+The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows); the .NET tool command is `chdsharp`. It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
 > **v1.7.2** - bug-fix release: expected library diagnostics for child CHDs without a parent, corrupt or unsupported headers/maps, and unknown versions no longer reach the Bug Report API. They stay in the console and rolling file log, and CLI output is unchanged. Bundles remain `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS, and require the .NET 11 runtime; the library targets `net8.0` / `net9.0` / `net10.0` / `net11.0`.
+
+---
+
+## Installation
+
+### .NET tool (Windows, Linux, macOS)
+
+```bash
+dotnet tool install --global CHDSharp.Cli
+chdsharp help
+```
+
+The tool targets `net8.0`, `net9.0`, `net10.0` and `net11.0`; install it with any recent .NET SDK and run it wherever a compatible runtime is available. Update or remove it with `dotnet tool update --global CHDSharp.Cli` and `dotnet tool uninstall --global CHDSharp.Cli`.
+
+### Windows (winget)
+
+The v1.7.2 manifest is submitted to `microsoft/winget-pkgs`; the command becomes available once Microsoft has reviewed it:
+
+```powershell
+winget install PureLogicCode.CHDSharp
+```
+
+### Prebuilt bundles
+
+Every [release](https://github.com/purelogiccode/CHDSharp/releases/latest) attaches six framework-dependent single-file bundles for Windows, Linux and macOS on x64 and ARM64 (`.zip`, `.tar.gz` and `.dmg`). Extract the archive and run `CHDSharp` (`CHDSharp.exe` on Windows); the .NET 11 runtime is required.
 
 ---
 
@@ -499,7 +526,7 @@ CHDSharpCli/bin/Release/net11.0/CHDSharp.exe info -i game.chd
 | Package | Version | Purpose |
 |---------|---------|---------|
 | [Serilog](https://www.nuget.org/packages/Serilog/) | 4.4.0 | Structured logging |
-| [Serilog.Extensions.Logging](https://www.nuget.org/packages/Serilog.Extensions.Logging/) | 10.0.0 | Bridges Serilog to `ILoggerFactory` |
+| [Serilog.Extensions.Logging](https://www.nuget.org/packages/Serilog.Extensions.Logging/) | 11.0.0 | Bridges Serilog to `ILoggerFactory` |
 | [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console/) | 6.1.1 | Console log output |
 | [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File/) | 7.0.0 | Rolling-day file log (`%LocalAppData%\CHDSharp\logs`) |
 | `CHDSharpLib` | (project reference) | Core CHD library — see its LICENSE.txt |

@@ -5,6 +5,7 @@
 Bug-fix release on top of v1.7.1. No public API or encoder-output changes.
 
 **Released:** 2026-11-24 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.2) -
+[NuGet CLI](https://www.nuget.org/packages/CHDSharp.Cli/1.7.2) -
 [CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.7.2)
 
 ### Expected input diagnostics stay out of the Bug Report API
@@ -30,6 +31,11 @@ Regression tests: `CheckFile_ChildChd_TagsWarningAsUserError` and
 
 ### Tooling
 
+- The CLI is also published as the `CHDSharp.Cli` .NET tool
+  (`dotnet tool install --global CHDSharp.Cli`). The package targets `net8.0`, `net9.0`,
+  `net10.0` and `net11.0`, bundles every managed dependency under `tools/<tfm>/any`, and exposes
+  the `chdsharp` command. The release workflow packs, pushes and attests it independently of the
+  library package.
 - `Meziantou.Analyzer` 3.0.341 -> 3.0.342.
 - GitHub Actions: `ruby/setup-ruby` 1.342.0, `actions/dependency-review-action` 5.0.1 and
   `ossf/scorecard-action` 2.6.0.
