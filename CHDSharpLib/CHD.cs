@@ -103,6 +103,28 @@ public static partial class Chd
             "{Where}: Issued Arrays Total {Issued}, returned Arrays Total {Returned}, block size {BlockSize}"
         );
 
+    // The warnings below describe the input file, not a defect in the library: a child CHD given
+    // without its parent, a corrupt/unsupported header or map. They stay at warning level in the
+    // console and file logs but are tagged with the UserError scope so host applications (the CLI
+    // and Tester bug-report sinks) do not forward them to the Bug Report API.
+    private static void LogUnknownVersionAsUserError(uint version)
+    {
+        using (ChdLogger.BeginUserErrorScope(Log))
+            LogUnknownVersion(Log, version, null);
+    }
+
+    private static void LogHeaderReadFailedAsUserError(ChdError error)
+    {
+        using (ChdLogger.BeginUserErrorScope(Log))
+            LogHeaderReadFailed(Log, error, null);
+    }
+
+    private static void LogChildChdFoundAsUserError()
+    {
+        using (ChdLogger.BeginUserErrorScope(Log))
+            LogChildChdFound(Log, null);
+    }
+
     private static volatile int _taskCount = 8;
 
     private static readonly uint[] HeaderLengths = [0, 76, 80, 120, 108, 124];
@@ -478,7 +500,7 @@ public static partial class Chd
                     break;
                 default:
                 {
-                    LogUnknownVersion(Log, version, null);
+                    LogUnknownVersionAsUserError(version);
                     return ChdError.Chderrunsupportedversion;
                 }
             }
@@ -490,13 +512,13 @@ public static partial class Chd
 
         if (valid != ChdError.Chderrnone)
         {
-            LogHeaderReadFailed(Log, valid, null);
+            LogHeaderReadFailedAsUserError(valid);
             return valid;
         }
 
         if (chd != null && ChdHeaders.ValidateSizeLimits(chd) != ChdError.Chderrnone)
         {
-            LogHeaderReadFailed(Log, ChdError.Chderrinvaliddata, null);
+            LogHeaderReadFailedAsUserError(ChdError.Chderrinvaliddata);
             return ChdError.Chderrinvaliddata;
         }
 
@@ -508,7 +530,7 @@ public static partial class Chd
 
             if (!Util.IsAllZeroArray(chd.Parentmd5) || !Util.IsAllZeroArray(chd.Parentsha1))
             {
-                LogChildChdFound(Log, null);
+                LogChildChdFoundAsUserError();
                 return ChdError.Chderrrequiresparent;
             }
 
@@ -559,7 +581,7 @@ public static partial class Chd
 
         if (valid != ChdError.Chderrnone)
         {
-            LogHeaderReadFailed(Log, valid, null);
+            LogHeaderReadFailedAsUserError(valid);
             return valid;
         }
 
@@ -1191,7 +1213,7 @@ public static partial class Chd
                     valid = ChdHeaders.ReadHeaderV5(stream, out chd);
                     break;
                 default:
-                    LogUnknownVersion(Log, version, null);
+                    LogUnknownVersionAsUserError(version);
                     return ChdError.Chderrunsupportedversion;
             }
         }
@@ -1202,13 +1224,13 @@ public static partial class Chd
 
         if (valid != ChdError.Chderrnone)
         {
-            LogHeaderReadFailed(Log, valid, null);
+            LogHeaderReadFailedAsUserError(valid);
             return valid;
         }
 
         if (ChdHeaders.ValidateSizeLimits(chd) != ChdError.Chderrnone)
         {
-            LogHeaderReadFailed(Log, ChdError.Chderrinvaliddata, null);
+            LogHeaderReadFailedAsUserError(ChdError.Chderrinvaliddata);
             return ChdError.Chderrinvaliddata;
         }
 

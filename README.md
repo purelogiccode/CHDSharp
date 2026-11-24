@@ -26,12 +26,11 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
-## What's New in v1.7.1
+## What's New in v1.7.2
 
-- **Empty CLI paths no longer crash** - `extractcd -o ""` (and every other command using the shared `--input`/`--output` parser) now prints the normal `... requires --input <file> --output <file>` usage error instead of reaching `Directory.CreateDirectory("")` and throwing an unhandled `ArgumentException`.
-- **Large FLAC frames fit again** - `CdflCodec` and the AVHuff encoder reserve 512 bytes of FLAC metadata per frame (was 64), so one-frame-per-hunk CD audio with large Fixed subframes no longer fails with `FLAC frame too large`. Encoded output bytes are unchanged for every hunk that already compressed.
-- **Tooling** - `Meziantou.Analyzer 3.0.341`, `coverlet.collector 10.1.1` and `Serilog.Extensions.Logging 11.0.0`.
-- **Verification** - 4,221 library tests + 456 encoder tests on each of the four target frameworks (18,708 total), `jb inspectcode` 0 findings, CI `chdman` parity smoke passed. No public API changes.
+- **Expected input diagnostics stay out of the Bug Report API** - a child CHD opened without its parent, a corrupt or unsupported header/map, and an unknown version are now tagged with the library's `UserError` scope. The CLI and Tester bug-report sinks skip them, so expected input problems no longer arrive as application defects, while the console and rolling file log keep the warning. Decompression and full-image hash failures remain reportable.
+- **Tooling** - `Meziantou.Analyzer 3.0.342` and SHA-pinned GitHub Actions updates for `ruby/setup-ruby`, `actions/dependency-review-action` and `ossf/scorecard-action`.
+- **Verification** - 4,223 library tests + 456 encoder tests on each of the four target frameworks (18,716 total), `jb inspectcode` 0 findings, CI `chdman` parity smoke passed. No public API or encoder-output changes.
 
 ## What's New in v1.7.0
 
@@ -645,8 +644,8 @@ The full wiki lives in [`docs/`](docs/README.md):
 
 | Project | Type | Description |
 |---------|------|-------------|
-| `CHDSharpTest` | xUnit | Unit + corpus tests (4,220 tests per TFM, 30 CHD fixtures) |
-| `CHDSharpEncoderTest` | xUnit | Encoder tests (455 tests, chdman cross-validation) |
+| `CHDSharpTest` | xUnit | Unit + corpus tests (4,223 tests per TFM, 30 CHD fixtures) |
+| `CHDSharpEncoderTest` | xUnit | Encoder tests (456 tests, chdman cross-validation) |
 | `CHDSharpBattleTest` | Console | Battle harness: 3,174/3,174 (synthetic) + 3003/3003 (real-world) checks vs `chdman` |
 | `CHDSharpTester` | WPF | Interactive batch verification against `chdman` |
 | `CHDSharpTestDataGeneration` | Console | Deterministic corpus generator |

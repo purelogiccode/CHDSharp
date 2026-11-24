@@ -82,10 +82,12 @@ from their upstream sources. They are **frozen by default**: editing them can br
 - Expected user/usage errors (bad flags, missing paths, sector-misaligned input, `--force` needed,
   format overrides, ...) are diagnostics about the user's input, not defects. Log them with
   `logger.UserError(...)` (`CHDSharpCli/UserErrorLogging.cs`), which keeps them at warning level in
-  the console/file logs but tags them so `BugReportSink` never reports them. Real runtime failures
-  (`Open failed`, I/O failures in a `* failed: {Message}` event, verify failures, ...) stay on
-  `logger.Warning(...)`; malformed input images (`InvalidDataException`, missing referenced files)
-  are user errors instead.
+  the console/file logs but tags them so `BugReportSink` never reports them. Library diagnostics
+  about an unusable input image (child CHD without its parent, corrupt/unsupported header or map)
+  use `ChdLogger.BeginUserErrorScope`, which Serilog surfaces as the same `UserError` property.
+  Real runtime failures (`Open failed`, I/O failures in a `* failed: {Message}` event, verify
+  failures, ...) stay on `logger.Warning(...)`; malformed input images (`InvalidDataException`,
+  missing referenced files) are user errors instead.
 - Every report must embed: `=== Environment Details ===` (Date, Application Name, Application
   Version, OS Version, Architecture, Bitness, Windows, Linux or MacOsX Version, Processor Count,
   Base Directory, Temp Path), `=== Error Details ===` (message), and `=== Exception Details ===`
@@ -160,8 +162,8 @@ matches `Directory.Build.props`.
 6. **Tag and push**:
 
    ```bash
-   git tag -a v1.7.1 -m "CHDSharp v1.7.1"
-   git push origin main v1.7.1
+   git tag -a v1.7.2 -m "CHDSharp v1.7.2"
+   git push origin main v1.7.2
    ```
 
    `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles on
@@ -172,13 +174,25 @@ matches `Directory.Build.props`.
 7. **Verify the release**:
 
    ```bash
-   gh release view v1.7.1
+   gh release view v1.7.2
    gh run list --workflow=release.yml --limit 1
    (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp/index.json).versions
    ```
 
    NuGet can take a few minutes to index a freshly pushed package; the workflow logs
    `Your package was pushed.` when the push succeeded even if the version is not yet listed.
+
+8. **Submit the winget update** (after the Windows bundles exist):
+
+   ```powershell
+   ./scripts/update-winget-manifests.ps1 -Version 1.7.2
+   winget validate --manifest ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.2
+   wingetcreate submit --token $env:GH_TOKEN ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.2
+   ```
+
+   The generated manifest set lives under `packaging/winget/manifests/p/PureLogicCode/CHDSharp/`
+   and is submitted as a PR to `microsoft/winget-pkgs`. Winget review is external; the package
+   becomes installable with `winget install PureLogicCode.CHDSharp` once the PR is merged.
 
 Required repository secrets: `NUGET_API_KEY` (nuget.org push) and `WIKI_TOKEN` (wiki push and
 Pages rebuild request; needs `repo` scope).

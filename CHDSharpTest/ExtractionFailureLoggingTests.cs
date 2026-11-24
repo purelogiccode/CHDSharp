@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CHDSharp.Tests;
 
+[Collection("Logging")]
 public sealed class ExtractionFailureLoggingTests
 {
     private static readonly string TestDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");

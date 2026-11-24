@@ -1,5 +1,54 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.7.2
+
+Bug-fix release on top of v1.7.1. No public API or encoder-output changes.
+
+**Released:** 2026-11-24 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.2) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.7.2)
+
+### Expected input diagnostics stay out of the Bug Report API
+
+Verifying a directory that contains child CHDs and damaged images produced warning-level library
+diagnostics that the CLI forwarded to the Bug Report API, even though every file was handled
+exactly as expected:
+
+- `Child CHD found, cannot be processed` - a differential CHD opened without its parent
+  (`Chderrrequiresparent`).
+- `Header/map read failed: Chderrdecompressionerror` - a corrupt or truncated header/map.
+- `Unknown version` - a file whose header advertises an unsupported CHD version.
+
+The library now writes these diagnostics inside a `UserError` logging scope
+(`ChdLogger.BeginUserErrorScope`). Serilog's Microsoft.Extensions.Logging bridge turns the scope
+into the same `UserError` event property that the CLI and Tester bug-report sinks already check,
+so the warnings stay visible in the console and rolling file log but are no longer POSTed as
+application defects. Decompression and full-image hash failures remain reportable, so genuine
+codec defects are not hidden.
+
+Regression tests: `CheckFile_ChildChd_TagsWarningAsUserError` and
+`CheckFile_UnreadableMap_TagsWarningAsUserError`.
+
+### Tooling
+
+- `Meziantou.Analyzer` 3.0.341 -> 3.0.342.
+- GitHub Actions: `ruby/setup-ruby` 1.342.0, `actions/dependency-review-action` 5.0.1 and
+  `ossf/scorecard-action` 2.6.0.
+
+### Verification
+
+- `dotnet build -c Release -warnaserror`: 0 warnings, 0 errors.
+- `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: 0 findings.
+- Library tests: 4,223 passed and encoder tests: 456 passed on each of `net8.0`, `net9.0`,
+  `net10.0` and `net11.0` (18,716 total).
+- CI quick battle harness: passed, byte-identical `chdman` output.
+
+### Upgrade notes
+
+Use the bundle matching your platform: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on
+macOS. Linux users may need `chmod +x CHDSharp` after extracting; macOS users should copy
+`CHDSharp` out of the mounted disk image. The CLI update check expects the same asset names as
+v1.7.1, with the version bumped to v1.7.2.
+
 ## CHDSharp v1.7.1
 
 Bug-fix release on top of v1.7.0. No public API or encoder-output changes.

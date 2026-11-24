@@ -26,13 +26,13 @@ CSharp_CHDSharp.sln
 ├── CHDSharpTest/         xUnit unit + corpus tests
 ├── CHDSharpTestDataGeneration/  Deterministic corpus generator
 ├── CHDSharpTester/       WPF interactive tester
-├── CHDSharpEncoderTest/  xUnit encoder tests (455 tests)
+├── CHDSharpEncoderTest/  xUnit encoder tests (456 tests)
 ├── CHDSharpBattleTest/   Battle test harness (chdman vs CHDSharp)
 ├── VendoredZLib/         Pure C# zlib port
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.7.1) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.7.2) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.7.1`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.7.2`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -109,9 +109,9 @@ dotnet test --filter "FullyQualifiedName~CorpusTests"
 dotnet test -v detailed
 ```
 
-The suite contains **4,220 tests per target framework** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
+The suite contains **4,223 tests per target framework** (unit + corpus) that run against 30 deterministic CHD fixtures covering V1–V5 and every codec. See [Testing](testing.md).
 
-The companion **encoder suite** (`CHDSharpEncoderTest`, 455 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
+The companion **encoder suite** (`CHDSharpEncoderTest`, 456 tests) validates CHD creation against `chdman.exe` — including 100 MB+ raw/CD round-trips:
 
 ```bash
 dotnet test CHDSharpEncoderTest/ --filter "FullyQualifiedName~LargeFileValidationTests"
@@ -193,7 +193,7 @@ single-file** binary (`--self-contained false -p:PublishSingleFile=true` — the
 runtime is *not* embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and
 `WhatsNew.md`, and writes the platform-native bundle: `CHDSharp_<rid>_v<version>.zip` on
 Windows, `.tar.gz` on Linux and `.dmg` on macOS (the exact asset names the CLI's built-in
-update check looks up on GitHub releases, e.g. `CHDSharp_linux-x64_v1.7.1.tar.gz`).
+update check looks up on GitHub releases, e.g. `CHDSharp_linux-x64_v1.7.2.tar.gz`).
 Existing files in the output path are never deleted. macOS `.dmg` bundles must be built on
 macOS. The binary is named `CHDSharp` (`CHDSharp.exe` on Windows); bundles require the
 .NET 11 runtime.
@@ -238,7 +238,7 @@ requests a legacy Pages rebuild.
 The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`), producing deterministic builds and SourceLink-enabled symbols.
 
 - **`ci.yml`** - the build + test gatekeeper, on every push to `main`, every pull request, and manual dispatch. The `CI gate` job aggregates:
-  - `build & test` across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere with `-warnaserror` (NuGet audit covers direct and transitive packages), then runs both xUnit suites (`CHDSharpTest` - 4,220 tests per target framework - and `CHDSharpEncoderTest` - 455 tests) for all four TFMs.
+  - `build & test` across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere with `-warnaserror` (NuGet audit covers direct and transitive packages), then runs both xUnit suites (`CHDSharpTest` - 4,223 tests per target framework - and `CHDSharpEncoderTest` - 456 tests) for all four TFMs.
   - `quality`: `jb inspectcode --severity=WARNING`, failing on any finding and uploading SARIF to code scanning.
   - `package`: `dotnet pack` plus a `.nupkg` content check, uploaded as an artifact.
   - `coverage`: merged Cobertura coverage for both suites on `net11.0` (the wall-clock parallel-encode test is excluded because instrumentation invalidates its timing).

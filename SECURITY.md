@@ -82,9 +82,9 @@ Out of scope:
 ## Verifying a release
 
 ```bash
-gh attestation verify CHDSharp_win-x64_v1.7.1.zip --repo purelogiccode/CHDSharp
-gh attestation verify CHDSharp_linux-x64_v1.7.1.tar.gz --repo purelogiccode/CHDSharp
-gh attestation verify CHDSharp_osx-arm64_v1.7.1.dmg --repo purelogiccode/CHDSharp
+gh attestation verify CHDSharp_win-x64_v1.7.2.zip --repo purelogiccode/CHDSharp
+gh attestation verify CHDSharp_linux-x64_v1.7.2.tar.gz --repo purelogiccode/CHDSharp
+gh attestation verify CHDSharp_osx-arm64_v1.7.2.dmg --repo purelogiccode/CHDSharp
 ```
 
 NuGet packages are published from the tag workflow; compare the package version,

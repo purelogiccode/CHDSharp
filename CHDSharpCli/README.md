@@ -17,7 +17,7 @@
 
 The binary is named `CHDSharp` (e.g. `CHDSharp.exe` on Windows). It accepts the same subcommands and options as MAME's `chdman`, plus additional convenience commands.
 
-> **v1.7.1** - bug-fix release: an explicitly empty `--input`/`--output` path now prints the normal usage error instead of crashing in `Directory.CreateDirectory("")`, and CD FLAC encoding reserves 512 bytes of frame metadata (was 64) so one-frame-per-hunk audio no longer fails with `FLAC frame too large`. Bundles remain `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS, and require the .NET 11 runtime; the library targets `net8.0` / `net9.0` / `net10.0` / `net11.0`.
+> **v1.7.2** - bug-fix release: expected library diagnostics for child CHDs without a parent, corrupt or unsupported headers/maps, and unknown versions no longer reach the Bug Report API. They stay in the console and rolling file log, and CLI output is unchanged. Bundles remain `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS, and require the .NET 11 runtime; the library targets `net8.0` / `net9.0` / `net10.0` / `net11.0`.
 
 ---
 

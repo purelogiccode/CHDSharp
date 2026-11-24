@@ -20,6 +20,13 @@ internal sealed class BugReportSink : ILogEventSink
     private const string ApiKey =
         "hjh7yu6t56tyr540o9u8767676r5674534453235264c75b6t7ggghgg76trf564e";
 
+    /// <summary>
+    ///     Property attached to log events that describe expected user or input problems (for
+    ///     example a child CHD opened without its parent, or a corrupt header/map). Those events
+    ///     are not application defects, so they are never forwarded to the Bug Report API.
+    /// </summary>
+    public const string UserErrorProperty = "UserError";
+
     private static readonly HttpClient Client = new();
 
     private readonly EnvironmentSnapshot _env;
@@ -42,6 +49,11 @@ internal sealed class BugReportSink : ILogEventSink
     public void Emit(LogEvent logEvent)
     {
         if (logEvent.Level < LogEventLevel.Warning)
+            return;
+        if (
+            logEvent.Properties.TryGetValue(UserErrorProperty, out var userError)
+            && userError is ScalarValue { Value: true }
+        )
             return;
         if (logEvent.Exception is OperationCanceledException or TaskCanceledException)
             return;

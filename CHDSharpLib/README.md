@@ -20,10 +20,10 @@
 
 ---
 
-## What's New in v1.7.1
+## What's New in v1.7.2
 
-- **FLAC frame headroom** - `CdflCodec` and the AVHuff encoder now reserve 512 bytes of per-frame metadata instead of 64. Valid CD audio with large Fixed subframes no longer fails with `FLAC frame too large`; encoded bytes are unchanged for every hunk that already compressed.
-- **No public API changes** - 4,221 library tests + 456 encoder tests on each of the four target frameworks, `jb inspectcode` 0 findings, CI `chdman` parity smoke passed.
+- **Expected input warnings no longer become bug reports** - `Chd.CheckFile`/`Chd.ReadHeader` tag child-CHD (`requires parent`), corrupt/unsupported header or map, and unknown-version warnings with a `UserError` logging scope. The CLI and Tester sinks keep them in the console and file logs but out of the Bug Report API; decompression and full-image hash failures are still reported.
+- **No public API changes** - 4,223 library tests + 456 encoder tests on each of the four target frameworks, `jb inspectcode` 0 findings, CI `chdman` parity smoke passed.
 
 ## What's New in v1.7.0
 

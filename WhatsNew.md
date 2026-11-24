@@ -1,10 +1,10 @@
-# CHDSharp v1.7.1 - What's New
+# CHDSharp v1.7.2 - What's New
 
-**Released:** 2026-11-18 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.1)
+**Released:** 2026-11-24 - [Full changelog](docs/ReleaseNotes.md) - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.2)
 
-CHDSharp v1.7.1 is a bug-fix release. It stops empty CLI paths from crashing and restores
-FLAC encoding for CD audio whose frames need more than 64 bytes of header metadata. No public
-API or `chdman`-visible encoder output changed.
+CHDSharp v1.7.2 is a bug-fix release. It stops expected input diagnostics from being filed as
+application defects while keeping them visible in the console and file logs. No public API or
+`chdman`-visible encoder output changed.
 
 ---
 
@@ -12,12 +12,12 @@ API or `chdman`-visible encoder output changed.
 
 | Platform | Bundle |
 |----------|--------|
-| Windows x64 | [`CHDSharp_win-x64_v1.7.1.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_win-x64_v1.7.1.zip) |
-| Windows ARM64 | [`CHDSharp_win-arm64_v1.7.1.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_win-arm64_v1.7.1.zip) |
-| Linux x64 | [`CHDSharp_linux-x64_v1.7.1.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_linux-x64_v1.7.1.tar.gz) |
-| Linux ARM64 | [`CHDSharp_linux-arm64_v1.7.1.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_linux-arm64_v1.7.1.tar.gz) |
-| macOS Intel | [`CHDSharp_osx-x64_v1.7.1.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_osx-x64_v1.7.1.dmg) |
-| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.7.1.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.1/CHDSharp_osx-arm64_v1.7.1.dmg) |
+| Windows x64 | [`CHDSharp_win-x64_v1.7.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.2/CHDSharp_win-x64_v1.7.2.zip) |
+| Windows ARM64 | [`CHDSharp_win-arm64_v1.7.2.zip`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.2/CHDSharp_win-arm64_v1.7.2.zip) |
+| Linux x64 | [`CHDSharp_linux-x64_v1.7.2.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.2/CHDSharp_linux-x64_v1.7.2.tar.gz) |
+| Linux ARM64 | [`CHDSharp_linux-arm64_v1.7.2.tar.gz`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.2/CHDSharp_linux-arm64_v1.7.2.tar.gz) |
+| macOS Intel | [`CHDSharp_osx-x64_v1.7.2.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.2/CHDSharp_osx-x64_v1.7.2.dmg) |
+| macOS Apple Silicon | [`CHDSharp_osx-arm64_v1.7.2.dmg`](https://github.com/purelogiccode/CHDSharp/releases/download/v1.7.2/CHDSharp_osx-arm64_v1.7.2.dmg) |
 
 Every bundle contains a **framework-dependent single-file** `CHDSharp` / `CHDSharp.exe`
 build (the .NET runtime is **not** embedded) plus `LICENSE.txt`, `README.md`, `README.txt`
@@ -26,43 +26,38 @@ is required.
 
 ---
 
-## Empty CLI paths report the usage error
+## Expected input diagnostics stay out of the Bug Report API
 
-`extractcd -o ""` passed the old null check, reached
-`Path.GetDirectoryName("")` / `Directory.CreateDirectory("")` and crashed with an unhandled
-`ArgumentException`. An explicitly empty `--input` or `--output` is now treated as a missing
-path for every command that uses the shared create/extract argument parser, so the CLI prints
-the normal `... requires --input <file> --output <file>` usage text and exits with code 1.
+Verifying a folder that contains differential (child) CHDs and damaged images produced warnings
+that were forwarded to the Bug Report API even though every file was handled exactly as expected:
 
-Regression test: `Extractcd_reports_usage_error_for_an_empty_output_path`.
+- `Child CHD found, cannot be processed` - a child CHD opened without its parent
+  (`Chderrrequiresparent`).
+- `Header/map read failed: Chderrdecompressionerror` - a corrupt or truncated header/map.
+- `Unknown version` - a file whose header advertises an unsupported CHD version.
 
-## FLAC frames have enough header room
+The library now writes those diagnostics inside a `UserError` logging scope
+(`ChdLogger.BeginUserErrorScope`). Serilog's Microsoft.Extensions.Logging bridge turns the scope
+into the same `UserError` event property the CLI and Tester bug-report sinks already check, so the
+warnings are still visible in the console and rolling file log but are no longer POSTed as
+application defects. Decompression and full-image hash failures stay reportable, so real codec
+defects are not hidden.
 
-`CdflCodec` reserved only 64 bytes per FLAC frame for the frame header, subframe headers,
-Rice partition parameters and footer. Real CD audio using Fixed subframes can need 67 bytes,
-which made a valid one-frame-per-hunk source fail with
-`FLAC frame too large: 2419 bytes (buffer 2416)`.
-
-- `CdflCodec` now reserves 512 bytes of metadata per frame.
-- `AvHuffEncoder` does the same for each laserdisc audio channel's mono FLAC frame.
-- The allowance is only headroom: the encoded bytes are unchanged for every hunk that already
-  compressed, and the existing `total >= hunk size` check still decides whether a hunk is
-  stored compressed.
-
-Regression test: `CdflCodec_OneFrameHunk_EncodesWithoutOverflowingTheFrameBuffer`.
+Regression tests: `CheckFile_ChildChd_TagsWarningAsUserError` and
+`CheckFile_UnreadableMap_TagsWarningAsUserError`.
 
 ## Tooling and dependencies
 
-- `Meziantou.Analyzer` 3.0.339 -> 3.0.341.
-- `coverlet.collector` 10.1.0 -> 10.1.1.
-- `Serilog.Extensions.Logging` 10.0.0 -> 11.0.0.
+- `Meziantou.Analyzer` 3.0.341 -> 3.0.342.
+- GitHub Actions: `ruby/setup-ruby` 1.342.0, `actions/dependency-review-action` 5.0.1 and
+  `ossf/scorecard-action` 2.6.0.
 
 ## Verification
 
 - `dotnet build -c Release -warnaserror`: 0 warnings, 0 errors.
 - `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: **0 findings**.
-- Library tests: **4,221 passed** and encoder tests: **456 passed** on each of `net8.0`,
-  `net9.0`, `net10.0` and `net11.0` (**18,708 tests total**).
+- Library tests: **4,223 passed** and encoder tests: **456 passed** on each of `net8.0`,
+  `net9.0`, `net10.0` and `net11.0` (**18,716 tests total**).
 - CI quick `chdman` parity smoke: passed, byte-identical output.
 - No public API changes and no encoder output changes.
 
@@ -71,6 +66,6 @@ Regression test: `CdflCodec_OneFrameHunk_EncodesWithoutOverflowingTheFrameBuffer
 - Use the bundle matching your platform: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on
   macOS. On Linux run `chmod +x CHDSharp` after extracting if needed; on macOS drag `CHDSharp`
   out of the mounted disk image.
-- The CLI update check expects the same asset names as v1.7.0, with the version bumped to
-  v1.7.1. Older releases remain downloadable from the
+- The CLI update check expects the same asset names as v1.7.1, with the version bumped to
+  v1.7.2. Older releases remain downloadable from the
   [releases page](https://github.com/purelogiccode/CHDSharp/releases).

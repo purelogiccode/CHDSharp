@@ -9,6 +9,17 @@ namespace CHDSharp;
 /// </summary>
 internal static class ChdLogger
 {
+    /// <summary>
+    ///     Logging-scope property that marks a diagnostic as an expected input problem (a child CHD
+    ///     without its parent, a corrupt header/map, an unsupported version, ...) rather than an
+    ///     application defect. Host applications that forward warning-level events to a defect
+    ///     tracker should skip events carrying this property with a <see langword="true" /> value.
+    /// </summary>
+    internal const string UserErrorPropertyName = "UserError";
+
+    private static readonly KeyValuePair<string, object?>[] UserErrorScopeState =
+        [new(UserErrorPropertyName, true)];
+
     private static volatile ILoggerFactory? _factory;
 
     /// <summary>
@@ -36,6 +47,20 @@ internal static class ChdLogger
     internal static ILogger GetLogger<T>()
     {
         return GetLogger(typeof(T).FullName!);
+    }
+
+    /// <summary>
+    ///     Opens a scope that tags warning events written inside it with
+    ///     <see cref="UserErrorPropertyName" />. Serilog's Microsoft.Extensions.Logging bridge
+    ///     turns the scope state into event properties, so the CLI and Tester bug-report sinks can
+    ///     keep expected input problems out of the Bug Report API.
+    /// </summary>
+    /// <param name="logger">The logger whose scope to open.</param>
+    /// <returns>A disposable scope, or <see langword="null" /> when the logger does not support scopes.</returns>
+    internal static IDisposable? BeginUserErrorScope(ILogger logger)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        return logger.BeginScope(UserErrorScopeState);
     }
 
     private sealed class LazyLogger(string category) : ILogger
