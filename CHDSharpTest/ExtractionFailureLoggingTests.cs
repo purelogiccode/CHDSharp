@@ -10,6 +10,7 @@ public sealed class ExtractionFailureLoggingTests
     [Fact]
     public void ExtractToDirectoryWithReporting_UnwritableTarget_LogsRealException()
     {
+        using var gate = LoggingTestGate.Enter();
         var outputDir = Path.Combine(Path.GetTempPath(), $"chd_extract_fail_{Guid.NewGuid():N}");
         var previous = Chd.LoggerFactory;
         var capture = new CaptureLoggerFactory();

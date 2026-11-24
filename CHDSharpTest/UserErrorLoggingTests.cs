@@ -44,6 +44,7 @@ public sealed class UserErrorLoggingTests
 
     private static (ChdResult Result, List<Entry> Entries) CaptureCheck(string file)
     {
+        using var gate = LoggingTestGate.Enter();
         var path = Path.Combine(TestDataDir, file);
         if (!File.Exists(path))
             Assert.Skip("Test data missing: " + path);
