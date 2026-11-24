@@ -33,6 +33,9 @@ Regression tests: `CheckFile_ChildChd_TagsWarningAsUserError` and
 - `Meziantou.Analyzer` 3.0.341 -> 3.0.342.
 - GitHub Actions: `ruby/setup-ruby` 1.342.0, `actions/dependency-review-action` 5.0.1 and
   `ossf/scorecard-action` 2.6.0.
+- The Windows CLI bundle now has a winget manifest (`PureLogicCode.CHDSharp`) generated from
+  the release assets and submitted to `microsoft/winget-pkgs`.
+  `winget install PureLogicCode.CHDSharp` becomes available after Microsoft's review.
 
 ### Verification
 

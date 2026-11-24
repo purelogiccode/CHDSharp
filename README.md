@@ -145,7 +145,11 @@ See [docs/ReleaseNotes.md](docs/ReleaseNotes.md) for the full changelog.
 ## Installation
 
 ```bash
+# .NET library
 dotnet add package CHDSharp
+
+# Windows CLI via winget (manifest submitted with v1.7.2; available after review)
+winget install PureLogicCode.CHDSharp
 ```
 
 Targets `net8.0`, `net9.0`, `net10.0`, and `net11.0`. Zero native dependencies — every codec (zlib, lzma, huffman, flac, zstd, AVHuff) is implemented in pure C#.

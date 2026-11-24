@@ -31,7 +31,7 @@ Submit the generated directory to the community repository with
 [`wingetcreate`](https://github.com/microsoft/winget-create):
 
 ```powershell
-wingetcreate submit --token $env:GH_TOKEN .\packaging\winget\manifests\p\PureLogicCode\CHDSharp\<version>
+wingetcreate submit --prtitle "New package: PureLogicCode.CHDSharp version 1.7.2" --token $env:GH_TOKEN .\packaging\winget\manifests\p\PureLogicCode\CHDSharp\<version>
 ```
 
 Older version directories are kept in place, mirroring `winget-pkgs`.

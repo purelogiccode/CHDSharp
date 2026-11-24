@@ -24,6 +24,13 @@ build (the .NET runtime is **not** embedded) plus `LICENSE.txt`, `README.md`, `R
 and this document. The [.NET 11 runtime](https://dotnet.microsoft.com/download/dotnet/11.0)
 is required.
 
+Windows users can also install the CLI with winget. The v1.7.2 manifest is submitted to
+`microsoft/winget-pkgs`; the command becomes available once Microsoft has reviewed it:
+
+```powershell
+winget install PureLogicCode.CHDSharp
+```
+
 ---
 
 ## Expected input diagnostics stay out of the Bug Report API

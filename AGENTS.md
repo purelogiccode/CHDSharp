@@ -187,7 +187,7 @@ matches `Directory.Build.props`.
    ```powershell
    ./scripts/update-winget-manifests.ps1 -Version 1.7.2
    winget validate --manifest ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.2
-   wingetcreate submit --token $env:GH_TOKEN ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.2
+   wingetcreate submit --prtitle "New package: PureLogicCode.CHDSharp version 1.7.2" --token $env:GH_TOKEN ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.2
    ```
 
    The generated manifest set lives under `packaging/winget/manifests/p/PureLogicCode/CHDSharp/`
