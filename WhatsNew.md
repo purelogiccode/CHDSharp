@@ -46,13 +46,16 @@ winget install PureLogicCode.CHDSharp
 
 The `CHDSharp.Cli` package targets `net8.0`, `net9.0`, `net10.0` and `net11.0`, bundles every
 managed dependency under `tools/<tfm>/any`, and exposes the `chdsharp` command. The release
-workflow packs, pushes and attests it independently of the library package.
+workflow packs both packages, pushes each version independently, and attests both `.nupkg` files.
 
 ```bash
 dotnet tool install --global CHDSharp.Cli   # install
 dotnet tool update  --global CHDSharp.Cli   # update
 dotnet tool uninstall --global CHDSharp.Cli # remove
 ```
+
+> The earlier `CHDSharp.Cli` 1.7.2 package was a manual bootstrap publication; v1.7.3 is the
+> first CLI package packed, published and attested by the tagged release workflow.
 
 ## Windows winget manifest
 
@@ -67,7 +70,7 @@ published `.zip` assets and submitted to `microsoft/winget-pkgs`.
   `unzip` glob that matched both `CHDSharp.*.nupkg` and `CHDSharp.Cli.*.nupkg`.
 - The logger-capture tests run in a non-parallel xUnit collection behind a process-wide gate, so
   replacing `Chd.LoggerFactory` cannot race another test (the Ubuntu `net10.0` flake).
-- `InlineMethod.Fody` 0.8.7 -> 0.8.8.
+- The vendored codec projects stay frozen; the incidental `InlineMethod.Fody` bump is reverted.
 
 ## Verification
 

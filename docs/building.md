@@ -164,10 +164,20 @@ chdsharp help
 dotnet tool uninstall --global CHDSharp.Cli
 ```
 
-Test a locally packed tool without touching the global tool store:
+Test a locally packed tool without touching the global tool store. The temporary NuGet config
+clears the public sources so the install can only resolve the package from the local output:
 
 ```bash
-dotnet tool install --tool-path ./tool-test --add-source ./CHDSharpCli/bin/Release CHDSharp.Cli --version <version>
+cat > local-tool-nuget.config <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="local" value="./CHDSharpCli/bin/Release" />
+  </packageSources>
+</configuration>
+EOF
+dotnet tool install --tool-path ./tool-test --configfile local-tool-nuget.config CHDSharp.Cli --version <version>
 ./tool-test/chdsharp help
 ```
 

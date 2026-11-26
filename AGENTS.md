@@ -133,8 +133,10 @@ matches `Directory.Build.props`.
    - `docs/ReleaseNotes.md` — new `## CHDSharp v<version>` section at the top.
    - `README.md` and `CHDSharpLib/README.md` — new `## What's New in v<version>` block.
    - Per-project banners (`CHDSharpCli`, `CHDSharpTest`, `CHDSharpTestDataGeneration`).
-   - `CHDSharpLib/CHDSharpLib.csproj` — `<PackageReleaseNotes>`.
-   - `docs/building.md` — the "currently `<version>`" line and the example bundle name.
+   - `CHDSharpLib/CHDSharpLib.csproj` and `CHDSharpCli/CHDSharpCli.csproj` — `<PackageReleaseNotes>`.
+   - `docs/building.md` — the project-tree version, the "currently `<version>`" line and the example bundle name.
+   - `SECURITY.md` — the attestation example asset names.
+   - `AGENTS.md` — the tag/verify/winget commands in this checklist.
 3. **Verify**:
 
    ```bash
@@ -168,8 +170,9 @@ matches `Directory.Build.props`.
    git push origin main v1.7.3
    ```
 
-   `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles on
-   native runners (Windows `.zip`, Linux `.tar.gz`, macOS `.dmg`), creates the GitHub release
+   `release.yml` verifies the tag against `Directory.Build.props` and requires the `ci.yml` gate
+   for that commit to be green, rebuilds the six bundles on native runners (Windows `.zip`,
+   Linux `.tar.gz`, macOS `.dmg`), creates the GitHub release
    with `WhatsNew.md` as the body, uploads the assets, publishes the `CHDSharp` and `CHDSharp.Cli`
    NuGet packages (each skipped when its version already exists), syncs the wiki and deploys the
    documentation site (`pages.yml`).
