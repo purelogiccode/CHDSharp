@@ -2,7 +2,7 @@
 # Generate the winget manifest set for a published GitHub release.
 #
 # Usage:
-#   ./scripts/update-winget-manifests.ps1 -Version 1.7.2
+#   ./scripts/update-winget-manifests.ps1 -Version 1.7.3
 #
 # The script reads the Windows bundle URLs and SHA-256 digests from the GitHub
 # release API (gh CLI), then writes:

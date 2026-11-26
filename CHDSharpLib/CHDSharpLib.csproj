@@ -18,7 +18,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>v1.7.2: Bug-fix release. Library diagnostics for expected input problems (child CHD without its parent, corrupt/unsupported header or map, unknown version) are tagged with a UserError scope, so the CLI and Tester bug-report sinks no longer file them as application defects while the console/file logs keep the warning. Decompression and full-image hash failures remain reportable. No public API or encoder output changes: 4,223 library tests + 456 encoder tests on each target framework, jb inspectcode 0 findings, CI chdman parity smoke passed. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0/net11.0.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.7.3: Tooling release. The CLI is also published as the CHDSharp.Cli .NET tool, Windows bundles have winget manifests, and CI now packs and verifies both NuGet packages, checks the tool layout for net8.0/net9.0/net10.0/net11.0, and smoke-installs the tool. The logger-capture tests are serialized. No public API or encoder output changes: 4,223 library tests + 456 encoder tests on each target framework, jb inspectcode 0 findings, CI chdman parity smoke passed. Pure C# - zero native dependencies. Targets net8.0/net9.0/net10.0/net11.0.</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     </PropertyGroup>

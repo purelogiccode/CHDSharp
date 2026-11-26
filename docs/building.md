@@ -32,7 +32,7 @@ CSharp_CHDSharp.sln
 ├── VendoredLZMA/         LZMA SDK C# port
 ├── VendoredFlac/         Pure C# FLAC encoder/decoder
 ├── VendoredZSTD/         Pure C# zstd 1.5.5 encoder/decoder (MAME parity)
-└── Directory.Build.props Centralized versioning (1.7.2) and analyzer setup
+└── Directory.Build.props Centralized versioning (1.7.3) and analyzer setup
 ```
 
 ---
@@ -52,7 +52,7 @@ dotnet build CHDSharpLib/CHDSharpLib.csproj -c Release
 
 ### Centralized versioning
 
-`Directory.Build.props` defines a single `<Version>` (currently `1.7.2`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
+`Directory.Build.props` defines a single `<Version>` (currently `1.7.3`) that all projects inherit, so `AssemblyVersion`, `FileVersion`, and the NuGet package version stay in sync automatically.
 
 ### Code style & analyzers
 
@@ -214,7 +214,7 @@ single-file** binary (`--self-contained false -p:PublishSingleFile=true` — the
 runtime is *not* embedded), appends `LICENSE.txt`, `README.md`, `README.txt` and
 `WhatsNew.md`, and writes the platform-native bundle: `CHDSharp_<rid>_v<version>.zip` on
 Windows, `.tar.gz` on Linux and `.dmg` on macOS (the exact asset names the CLI's built-in
-update check looks up on GitHub releases, e.g. `CHDSharp_linux-x64_v1.7.2.tar.gz`).
+update check looks up on GitHub releases, e.g. `CHDSharp_linux-x64_v1.7.3.tar.gz`).
 Existing files in the output path are never deleted. macOS `.dmg` bundles must be built on
 macOS. The binary is named `CHDSharp` (`CHDSharp.exe` on Windows); bundles require the
 .NET 11 runtime.
@@ -261,7 +261,7 @@ The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`),
 - **`ci.yml`** - the build + test gatekeeper, on every push to `main`, every pull request, and manual dispatch. The `CI gate` job aggregates:
   - `build & test` across Ubuntu, macOS and Windows: builds the full solution on Windows and the cross-platform subset elsewhere with `-warnaserror` (NuGet audit covers direct and transitive packages), then runs both xUnit suites (`CHDSharpTest` - 4,223 tests per target framework - and `CHDSharpEncoderTest` - 456 tests) for all four TFMs.
   - `quality`: `jb inspectcode --severity=WARNING`, failing on any finding and uploading SARIF to code scanning.
-  - `package`: `dotnet pack` plus a `.nupkg` content check, uploaded as an artifact.
+  - `package`: `dotnet pack` for both NuGet packages, a `.nupkg` layout check for every target framework, and a smoke-install of the tool, uploaded as an artifact.
   - `coverage`: merged Cobertura coverage for both suites on `net11.0` (the wall-clock parallel-encode test is excluded because instrumentation invalidates its timing).
   - `docs build (Jekyll + DocFX)`: builds `docs/` with `--strict_front_matter`, then generates the DocFX API reference, so broken XML docs or a broken `docfx.json` fail the gate.
   - `chdman parity (smoke)`: the quick battle harness against the checked-in `CHDSharpTester/chdman.exe`.
@@ -271,6 +271,6 @@ The repository is set up for GitHub Actions (`ContinuousIntegrationBuild=true`),
 - **`codeql.yml`** - CodeQL C# analysis (`security-extended`) plus GitHub Actions analysis on `main`, pull requests, and a weekly schedule.
 - **`dependency-review.yml`** - fails pull requests that add moderate-or-higher vulnerable dependencies.
 - **`scorecard.yml`** - OpenSSF Scorecard, published to the public API and code scanning.
-- **`release.yml`** - the tag-triggered release pipeline: builds the six platform CLI bundles on native runners (Windows `.zip`, Linux `.tar.gz`, macOS `.dmg`), attests their provenance, creates the GitHub release, publishes the NuGet package, and syncs this documentation to the wiki. See [Publish the CLI](#publish-the-cli-release-bundles).
+- **`release.yml`** - the tag-triggered release pipeline: builds the six platform CLI bundles on native runners (Windows `.zip`, Linux `.tar.gz`, macOS `.dmg`), attests their provenance, creates the GitHub release, publishes the `CHDSharp` and `CHDSharp.Cli` NuGet packages, and syncs this documentation to the wiki. See [Publish the CLI](#publish-the-cli-release-bundles).
 
 Repository security settings (Dependabot alerts/security updates, secret scanning with push protection, private vulnerability reporting, read-only workflow permissions, and mandatory full-SHA action pinning) are described in [`SECURITY.md`](https://github.com/purelogiccode/CHDSharp/blob/main/SECURITY.md).

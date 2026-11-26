@@ -8,7 +8,7 @@ Generate the manifests from a published GitHub release (the release assets must
 already be uploaded so their SHA-256 digests are available):
 
 ```powershell
-./scripts/update-winget-manifests.ps1 -Version 1.7.2
+./scripts/update-winget-manifests.ps1 -Version <version>
 ```
 
 This writes:
@@ -31,7 +31,7 @@ Submit the generated directory to the community repository with
 [`wingetcreate`](https://github.com/microsoft/winget-create):
 
 ```powershell
-wingetcreate submit --prtitle "New package: PureLogicCode.CHDSharp version 1.7.2" --token $env:GH_TOKEN .\packaging\winget\manifests\p\PureLogicCode\CHDSharp\<version>
+wingetcreate submit --prtitle "New package: PureLogicCode.CHDSharp version <version>" --token $env:GH_TOKEN .\packaging\winget\manifests\p\PureLogicCode\CHDSharp\<version>
 ```
 
 Older version directories are kept in place, mirroring `winget-pkgs`.

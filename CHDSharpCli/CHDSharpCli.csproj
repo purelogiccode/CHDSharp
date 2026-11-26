@@ -22,7 +22,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
-        <PackageReleaseNotes>The CHDSharp command-line tool is now distributed as a .NET tool. Install with 'dotnet tool install --global CHDSharp.Cli' and run 'chdsharp help'. See https://github.com/purelogiccode/CHDSharp/blob/main/docs/ReleaseNotes.md for the full changelog.</PackageReleaseNotes>
+        <PackageReleaseNotes>v1.7.3: The CHDSharp command-line tool is distributed as a .NET tool. Install with 'dotnet tool install --global CHDSharp.Cli' and run 'chdsharp help'. Targets net8.0/net9.0/net10.0/net11.0 and bundles every managed dependency. See https://github.com/purelogiccode/CHDSharp/blob/main/docs/ReleaseNotes.md for the full changelog.</PackageReleaseNotes>
     </PropertyGroup>
     <PropertyGroup>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>

@@ -1,11 +1,64 @@
 # CHDSharp Release Notes
 
+## CHDSharp v1.7.3
+
+Tooling release on top of v1.7.2. No public API or encoder-output changes.
+
+**Released:** 2026-11-26 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.3) -
+[NuGet CLI](https://www.nuget.org/packages/CHDSharp.Cli/1.7.3) -
+[CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.7.3)
+
+### CLI as a .NET tool
+
+The CLI is also published as the `CHDSharp.Cli` .NET tool:
+
+```bash
+dotnet tool install --global CHDSharp.Cli
+chdsharp help
+```
+
+The package targets `net8.0`, `net9.0`, `net10.0` and `net11.0`, bundles every managed dependency
+under `tools/<tfm>/any`, and exposes the `chdsharp` command. Update or remove it with
+`dotnet tool update --global CHDSharp.Cli` and `dotnet tool uninstall --global CHDSharp.Cli`.
+The release workflow packs, pushes and attests it independently of the library package.
+
+### Windows winget manifest
+
+The Windows CLI bundle has a winget manifest (`PureLogicCode.CHDSharp`) generated from the
+release assets and submitted to `microsoft/winget-pkgs`.
+`winget install PureLogicCode.CHDSharp` becomes available after Microsoft's review.
+
+### CI and test stability
+
+- The package job verifies both NuGet packages, checks the tool layout for `net8.0`, `net9.0`,
+  `net10.0` and `net11.0`, and smoke-installs the freshly packed tool before uploading it.
+  This also fixes the `unzip` glob that matched both `CHDSharp.*.nupkg` and
+  `CHDSharp.Cli.*.nupkg`.
+- The logger-capture tests now run in a non-parallel xUnit collection behind a process-wide gate,
+  so replacing `Chd.LoggerFactory` cannot race another test (the Ubuntu `net10.0` flake).
+- `InlineMethod.Fody` 0.8.7 -> 0.8.8.
+
+### Verification
+
+- `dotnet build -c Release -warnaserror`: 0 warnings, 0 errors.
+- `jb inspectcode CSharp_CHDSharp.sln --severity=WARNING`: 0 findings.
+- Library tests: 4,223 passed and encoder tests: 456 passed on each of `net8.0`, `net9.0`,
+  `net10.0` and `net11.0` (18,716 total).
+- CI quick battle harness: passed, byte-identical `chdman` output.
+
+### Upgrade notes
+
+Use the bundle matching your platform: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on
+macOS. Linux users may need `chmod +x CHDSharp` after extracting; macOS users should copy
+`CHDSharp` out of the mounted disk image. The CLI update check expects the same asset names as
+v1.7.2, with the version bumped to v1.7.3. Existing `CHDSharp.Cli` installations can be updated
+with `dotnet tool update --global CHDSharp.Cli`.
+
 ## CHDSharp v1.7.2
 
 Bug-fix release on top of v1.7.1. No public API or encoder-output changes.
 
 **Released:** 2026-11-24 - [NuGet](https://www.nuget.org/packages/CHDSharp/1.7.2) -
-[NuGet CLI](https://www.nuget.org/packages/CHDSharp.Cli/1.7.2) -
 [CLI bundles](https://github.com/purelogiccode/CHDSharp/releases/tag/v1.7.2)
 
 ### Expected input diagnostics stay out of the Bug Report API
@@ -31,17 +84,9 @@ Regression tests: `CheckFile_ChildChd_TagsWarningAsUserError` and
 
 ### Tooling
 
-- The CLI is also published as the `CHDSharp.Cli` .NET tool
-  (`dotnet tool install --global CHDSharp.Cli`). The package targets `net8.0`, `net9.0`,
-  `net10.0` and `net11.0`, bundles every managed dependency under `tools/<tfm>/any`, and exposes
-  the `chdsharp` command. The release workflow packs, pushes and attests it independently of the
-  library package.
 - `Meziantou.Analyzer` 3.0.341 -> 3.0.342.
 - GitHub Actions: `ruby/setup-ruby` 1.342.0, `actions/dependency-review-action` 5.0.1 and
   `ossf/scorecard-action` 2.6.0.
-- The Windows CLI bundle now has a winget manifest (`PureLogicCode.CHDSharp`) generated from
-  the release assets and submitted to `microsoft/winget-pkgs`.
-  `winget install PureLogicCode.CHDSharp` becomes available after Microsoft's review.
 
 ### Verification
 
