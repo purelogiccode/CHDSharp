@@ -152,8 +152,13 @@ jobs:
         run: |
           set -euo pipefail
           ls -l artifacts/packages
-          unzip -l artifacts/packages/CHDSharp.*.nupkg
-          unzip -l artifacts/packages/CHDSharp.Cli.*.nupkg | grep -E 'tools/net(8|9|10|11)\.0/any/(DotnetToolSettings\.xml|CHDSharp\.dll)'
+          # The library glob must not match CHDSharp.Cli.*.nupkg: unzip takes a single archive.
+          unzip -l artifacts/packages/CHDSharp.[0-9]*.nupkg
+          for tfm in net8.0 net9.0 net10.0 net11.0; do
+            unzip -l artifacts/packages/CHDSharp.Cli.*.nupkg | grep -F "tools/$tfm/any/DotnetToolSettings.xml"
+            unzip -l artifacts/packages/CHDSharp.Cli.*.nupkg | grep -F "tools/$tfm/any/CHDSharp.dll"
+            unzip -l artifacts/packages/CHDSharp.Cli.*.nupkg | grep -F "tools/$tfm/any/CHDSharpLib.dll"
+          done
 
       - name: Smoke-test the CLI tool package
         run: |
