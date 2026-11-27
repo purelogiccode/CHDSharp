@@ -365,46 +365,89 @@ internal static class ChdBlockRead
             case CompressionType.Compressiontype2:
             case CompressionType.Compressiontype3:
             {
-                lock (mapEntry)
+                if (buffInOverride is null)
                 {
-                    if (mapEntry.BuffOutCache == null)
+                    lock (mapEntry)
                     {
-                        var buffIn = buffInOverride ?? mapEntry.BuffIn;
-                        if (buffIn is null)
+                        if (mapEntry.BuffOutCache == null)
                         {
-                            ChdDiagnostics.SetDetail(
-                                "compressed input buffer was not loaded for this hunk"
-                            );
-                            return ChdError.Chderrcodecerror;
+                            var ret = Decompress(mapEntry, mapEntry.BuffIn, buffOut, buffOutLength, compression[(int)mapEntry.Comptype], codec);
+
+                            if (ret != ChdError.Chderrnone)
+                                return ret;
+
+                            // if this block is re-used keep a copy of it.
+                            if (mapEntry.UseCount > 0)
+                            {
+                                mapEntry.BuffOutCache = arrPool.Rent();
+                                Array.Copy(buffOut, 0, mapEntry.BuffOutCache, 0, buffOutLength);
+                            }
+
+                            break;
                         }
 
-                        var ret = compression[(int)mapEntry.Comptype]
-                            .Invoke(buffIn, (int)mapEntry.Length, buffOut, buffOutLength, codec);
+                        Array.Copy(mapEntry.BuffOutCache, 0, buffOut, 0, buffOutLength);
 
-                        if (ret != ChdError.Chderrnone)
-                            return ret;
-
-                        // if this block is re-used keep a copy of it.
-                        if (mapEntry.UseCount > 0)
+                        if (Interlocked.Decrement(ref mapEntry.UseCount) == 0)
                         {
-                            mapEntry.BuffOutCache = arrPool.Rent();
-                            Array.Copy(buffOut, 0, mapEntry.BuffOutCache, 0, buffOutLength);
+                            ReleaseCache(mapEntry, arrPool);
                         }
 
-                        break;
+                        checkCrc = false;
                     }
 
-                    Array.Copy(mapEntry.BuffOutCache, 0, buffOut, 0, buffOutLength);
-
-                    Interlocked.Decrement(ref mapEntry.UseCount);
-                    if (mapEntry.UseCount == 0)
-                    {
-                        arrPool.Return(mapEntry.BuffOutCache);
-                        mapEntry.BuffOutCache = null!;
-                    }
-
-                    checkCrc = false;
+                    break; // Returns
                 }
+
+                var cache = Volatile.Read(ref mapEntry.BuffOutCache);
+                if (cache == null)
+                {
+                    var ret = Decompress(mapEntry, buffInOverride, buffOut, buffOutLength, compression[(int)mapEntry.Comptype], codec);
+
+                    if (ret != ChdError.Chderrnone)
+                        return ret;
+
+                    // if this block is re-used keep a copy of it.
+                    if (mapEntry.UseCount > 0)
+                    {
+                        lock (mapEntry)
+                        {
+                            if (mapEntry.BuffOutCache == null && mapEntry.UseCount > 0)
+                            {
+                                var pooled = arrPool.Rent();
+                                Array.Copy(buffOut, 0, pooled, 0, buffOutLength);
+                                Volatile.Write(ref mapEntry.BuffOutCache, pooled);
+                            }
+                            else
+                            {
+                                // Lost the race: another thread already published the cache.
+                                // This read still counts as one of the N consumers.
+                                if (Interlocked.Decrement(ref mapEntry.UseCount) == 0)
+                                {
+                                    ReleaseCache(mapEntry, arrPool);
+                                }
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                Array.Copy(cache, 0, buffOut, 0, buffOutLength);
+
+                var newUseCount = Interlocked.Decrement(ref mapEntry.UseCount);
+                if (newUseCount == 0)
+                {
+                    lock (mapEntry)
+                    {
+                        if (mapEntry.BuffOutCache != null)
+                        {
+                            ReleaseCache(mapEntry, arrPool);
+                        }
+                    }
+                }
+
+                checkCrc = false;
 
                 break;
             }
@@ -499,53 +542,91 @@ internal static class ChdBlockRead
                 if (mapEntry.SecondaryReader == null)
                     return ChdError.Chderrcodecerror;
 
-                lock (mapEntry)
-                {
-                    if (mapEntry.BuffOutCache == null)
+                    if (buffInOverride is null)
                     {
-                        var buffIn = buffInOverride ?? mapEntry.BuffIn;
-                        if (buffIn is null)
+                        lock (mapEntry)
                         {
-                            ChdDiagnostics.SetDetail(
-                                "compressed input buffer was not loaded for this hunk"
-                            );
-                            return ChdError.Chderrcodecerror;
-                        }
+                            if (mapEntry.BuffOutCache == null)
+                            {
+                                var ret = Decompress(mapEntry, mapEntry.BuffIn, buffOut, buffOutLength, mapEntry.SecondaryReader, codec);
+                                if (ret != ChdError.Chderrnone)
+                                    return ret;
 
-                        var ret = mapEntry.SecondaryReader.Invoke(
-                            buffIn,
-                            (int)mapEntry.Length,
-                            buffOut,
-                            buffOutLength,
-                            codec
-                        );
+                                if (mapEntry.UseCount > 0)
+                                {
+                                    mapEntry.BuffOutCache = arrPool.Rent();
+                                    Array.Copy(buffOut, 0, mapEntry.BuffOutCache, 0, buffOutLength);
+                                }
 
-                        if (ret != ChdError.Chderrnone)
-                            return ret;
+                                break;
+                            }
 
-                        if (mapEntry.UseCount > 0)
-                        {
-                            mapEntry.BuffOutCache = arrPool.Rent();
-                            Array.Copy(buffOut, 0, mapEntry.BuffOutCache, 0, buffOutLength);
+                            Array.Copy(mapEntry.BuffOutCache, 0, buffOut, 0, buffOutLength);
+
+                            if (Interlocked.Decrement(ref mapEntry.UseCount) == 0)
+                            {
+                                ReleaseCache(mapEntry, arrPool);
+                            }
+
+                            checkCrc = false;
                         }
 
                         break;
                     }
 
-                    Array.Copy(mapEntry.BuffOutCache, 0, buffOut, 0, buffOutLength);
 
-                    Interlocked.Decrement(ref mapEntry.UseCount);
-                    if (mapEntry.UseCount == 0)
+                    var cache = Volatile.Read(ref mapEntry.BuffOutCache);
+                    if (cache == null)
                     {
-                        arrPool.Return(mapEntry.BuffOutCache);
-                        mapEntry.BuffOutCache = null!;
+                        var ret = Decompress(mapEntry, buffInOverride, buffOut, buffOutLength, mapEntry.SecondaryReader, codec);
+
+                        if (ret != ChdError.Chderrnone)
+                            return ret;
+
+                        // if this block is re-used keep a copy of it.
+                        if (mapEntry.UseCount > 0)
+                        {
+                            lock (mapEntry)
+                            {
+                                if (mapEntry.BuffOutCache == null && mapEntry.UseCount > 0)
+                                {
+                                    var pooled = arrPool.Rent();
+                                    Array.Copy(buffOut, 0, pooled, 0, buffOutLength);
+                                    Volatile.Write(ref mapEntry.BuffOutCache, pooled);
+                                }
+                                else
+                                {
+                                    // Lost the race: another thread already published the cache.
+                                    // This read still counts as one of the N consumers.
+                                    if (Interlocked.Decrement(ref mapEntry.UseCount) == 0)
+                                    {
+                                        ReleaseCache(mapEntry, arrPool);
+                                    }
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+
+                    Array.Copy(cache, 0, buffOut, 0, buffOutLength);
+
+                    var newUseCount = Interlocked.Decrement(ref mapEntry.UseCount);
+                    if (newUseCount == 0)
+                    {
+                        lock (mapEntry)
+                        {
+                            if (mapEntry.BuffOutCache != null)
+                            {
+                                ReleaseCache(mapEntry, arrPool);
+                            }
+                        }
                     }
 
                     checkCrc = false;
-                }
 
-                break;
-            }
+                    break;
+                }
 
             default:
                 return ChdError.Chderrdecompressionerror;
@@ -579,5 +660,23 @@ internal static class ChdBlockRead
         }
 
         return ChdError.Chderrnone;
+    }
+
+    private static ChdError Decompress(MapEntry mapEntry, byte[]? buffIn, byte[] buffOut, int buffOutLength, ChdReader compression, ChdCodecState codec)
+    {
+        if (buffIn is null)
+        {
+            ChdDiagnostics.SetDetail("compressed input buffer was not loaded for this hunk");
+            return ChdError.Chderrcodecerror;
+        }
+
+        return compression
+            .Invoke(buffIn, (int)mapEntry.Length, buffOut, buffOutLength, codec);
+    }
+
+    private static void ReleaseCache(MapEntry mapEntry, ArrayPool arrPool)
+    {
+        arrPool.Return(mapEntry.BuffOutCache!);
+        mapEntry.BuffOutCache = null!;
     }
 }
