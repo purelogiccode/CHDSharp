@@ -39,8 +39,8 @@ Update or remove it with `dotnet tool update --global CHDSharp.Cli` and `dotnet 
 
 Every [release](https://github.com/purelogiccode/CHDSharp/releases/latest) attaches six CLI bundles for Windows, Linux and macOS on x64 and ARM64: `.zip` on Windows, `.tar.gz` on Linux and `.dmg` on macOS. Each bundle is a framework-dependent **single-file** binary (`CHDSharp` / `CHDSharp.exe`) alongside `LICENSE.txt`, `README.md`, `README.txt` and `WhatsNew.md`, and requires the [.NET 11 runtime](https://dotnet.microsoft.com/download/dotnet/11.0). On Windows expand the archive; on Linux extract with `tar -xzf` and run `chmod +x CHDSharp` if needed; on macOS open the disk image and copy `CHDSharp` out of it.
 
-Windows users can also install the CLI with winget. The v1.7.2 manifest is submitted to
-`microsoft/winget-pkgs`; the command becomes available once Microsoft has reviewed it:
+Windows users can also install the CLI with winget. The `PureLogicCode.CHDSharp` manifest is
+submitted to `microsoft/winget-pkgs`; the command becomes available once Microsoft has reviewed it:
 
 ```powershell
 winget install PureLogicCode.CHDSharp

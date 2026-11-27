@@ -151,15 +151,39 @@ jobs:
       - name: Inspect package contents
         run: |
           set -euo pipefail
-          ls -l artifacts/packages
-          unzip -l artifacts/packages/CHDSharp.*.nupkg
-          unzip -l artifacts/packages/CHDSharp.Cli.*.nupkg | grep -E 'tools/net(8|9|10|11)\.0/any/(DotnetToolSettings\.xml|CHDSharp\.dll)'
+          library_pkg=$(find artifacts/packages -maxdepth 1 -name 'CHDSharp.[0-9]*.nupkg' -print -quit)
+          cli_pkg=$(find artifacts/packages -maxdepth 1 -name 'CHDSharp.Cli.*.nupkg' -print -quit)
+          test -n "$library_pkg"
+          test -n "$cli_pkg"
+          ls -l "$library_pkg" "$cli_pkg"
+
+          unzip -Z1 "$library_pkg" | grep -Fx 'lib/net11.0/CHDSharpLib.dll'
+
+          cli_entries=$(unzip -Z1 "$cli_pkg")
+          for tfm in net8.0 net9.0 net10.0 net11.0; do
+            grep -Fx "tools/$tfm/any/DotnetToolSettings.xml" <<< "$cli_entries"
+            grep -Fx "tools/$tfm/any/CHDSharp.dll" <<< "$cli_entries"
+            grep -Fx "tools/$tfm/any/CHDSharpLib.dll" <<< "$cli_entries"
+          done
+          for root_file in README.md LICENSE.txt chd.png; do
+            grep -Fx "$root_file" <<< "$cli_entries"
+          done
+          unzip -p "$cli_pkg" tools/net11.0/any/DotnetToolSettings.xml | grep -F 'Command Name="chdsharp"'
 
       - name: Smoke-test the CLI tool package
         run: |
           set -euo pipefail
           version=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props | head -1)
-          dotnet tool install --tool-path artifacts/tool --add-source artifacts/packages CHDSharp.Cli --version "$version" --no-cache
+          cat > artifacts/local-tool-nuget.config <<EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="local" value="$PWD/artifacts/packages" />
+            </packageSources>
+          </configuration>
+          EOF
+          NUGET_PACKAGES="$PWD/artifacts/tool-packages" dotnet tool install --tool-path artifacts/tool --configfile artifacts/local-tool-nuget.config CHDSharp.Cli --version "$version"
           artifacts/tool/chdsharp help
 
       - name: Upload NuGet packages

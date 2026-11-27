@@ -2,7 +2,7 @@
 # Generate the winget manifest set for a published GitHub release.
 #
 # Usage:
-#   ./scripts/update-winget-manifests.ps1 -Version 1.7.2
+#   ./scripts/update-winget-manifests.ps1 -Version <version>
 #
 # The script reads the Windows bundle URLs and SHA-256 digests from the GitHub
 # release API (gh CLI), then writes:
@@ -97,7 +97,7 @@ PublisherSupportUrl: https://github.com/$Repo/issues
 Author: Peterson Fernandes
 PackageName: CHDSharp
 PackageUrl: https://github.com/$Repo
-License: MIT
+License: MIT (with LGPL-2.1 component)
 LicenseUrl: https://github.com/$Repo/blob/main/LICENSE.txt
 Copyright: Copyright (c) Peterson Fernandes
 ShortDescription: Pure C# CHD reader/writer and chdman-compatible CLI.

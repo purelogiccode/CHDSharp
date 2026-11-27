@@ -26,6 +26,13 @@ Supports every CHD format version (V1–V5), all 10 compression codecs, parent/c
 
 ---
 
+## What's New in v1.7.3
+
+- **CLI .NET tool** - the CLI is also published as `CHDSharp.Cli`: install it with `dotnet tool install --global CHDSharp.Cli` and run `chdsharp`. The package targets all four TFMs, bundles every managed dependency, and is packed, pushed and attested by the release workflow alongside `CHDSharp`.
+- **Windows winget manifests** - `PureLogicCode.CHDSharp` manifests are generated from the Windows bundles and submitted to `microsoft/winget-pkgs`; `winget install PureLogicCode.CHDSharp` becomes available after review.
+- **CI and test stability** - the package job verifies both packages, checks the tool layout for every TFM and smoke-installs the tool; the logger-capture tests are serialized, removing the Ubuntu `net10.0` flake.
+- **Verification** - 4,223 library tests + 456 encoder tests on each of the four target frameworks (18,716 total), `jb inspectcode` 0 findings, CI `chdman` parity smoke passed. No public API or encoder-output changes.
+
 ## What's New in v1.7.2
 
 - **Expected input diagnostics stay out of the Bug Report API** - a child CHD opened without its parent, a corrupt or unsupported header/map, and an unknown version are now tagged with the library's `UserError` scope. The CLI and Tester bug-report sinks skip them, so expected input problems no longer arrive as application defects, while the console and rolling file log keep the warning. Decompression and full-image hash failures remain reportable.
@@ -152,7 +159,7 @@ dotnet add package CHDSharp
 dotnet tool install --global CHDSharp.Cli
 chdsharp help
 
-# Windows CLI via winget (manifest submitted with v1.7.2; available after review)
+# Windows CLI via winget (manifest submitted; available after review)
 winget install PureLogicCode.CHDSharp
 ```
 

@@ -9,7 +9,7 @@ PublisherSupportUrl: https://github.com/purelogiccode/CHDSharp/issues
 Author: Peterson Fernandes
 PackageName: CHDSharp
 PackageUrl: https://github.com/purelogiccode/CHDSharp
-License: MIT
+License: MIT (with LGPL-2.1 component)
 LicenseUrl: https://github.com/purelogiccode/CHDSharp/blob/main/LICENSE.txt
 Copyright: Copyright (c) Peterson Fernandes
 ShortDescription: Pure C# CHD reader/writer and chdman-compatible CLI.

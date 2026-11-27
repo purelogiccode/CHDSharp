@@ -129,12 +129,14 @@ matches `Directory.Build.props`.
 
 1. **Bump the version** in `Directory.Build.props` (`Version`, `AssemblyVersion`, `FileVersion`).
 2. **Update the release notes**:
-   - `WhatsNew.md` — heading, release date, NuGet link and the six `v<version>` bundle links.
+   - `WhatsNew.md` - heading, release date, NuGet links (library and CLI) and the six `v<version>` bundle links.
    - `docs/ReleaseNotes.md` — new `## CHDSharp v<version>` section at the top.
    - `README.md` and `CHDSharpLib/README.md` — new `## What's New in v<version>` block.
    - Per-project banners (`CHDSharpCli`, `CHDSharpTest`, `CHDSharpTestDataGeneration`).
-   - `CHDSharpLib/CHDSharpLib.csproj` — `<PackageReleaseNotes>`.
-   - `docs/building.md` — the "currently `<version>`" line and the example bundle name.
+   - `CHDSharpLib/CHDSharpLib.csproj` and `CHDSharpCli/CHDSharpCli.csproj` — `<PackageReleaseNotes>`.
+   - `docs/building.md` — the project-tree version, the "currently `<version>`" line and the example bundle name.
+   - `SECURITY.md` — the attestation example asset names.
+   - `AGENTS.md` — the tag/verify/winget commands in this checklist.
 3. **Verify**:
 
    ```bash
@@ -164,12 +166,13 @@ matches `Directory.Build.props`.
 6. **Tag and push**:
 
    ```bash
-   git tag -a v1.7.2 -m "CHDSharp v1.7.2"
-   git push origin main v1.7.2
+   git tag -a v1.7.3 -m "CHDSharp v1.7.3"
+   git push origin main v1.7.3
    ```
 
-   `release.yml` verifies the tag against `Directory.Build.props`, rebuilds the six bundles on
-   native runners (Windows `.zip`, Linux `.tar.gz`, macOS `.dmg`), creates the GitHub release
+   `release.yml` verifies the tag against `Directory.Build.props` and requires the `ci.yml` gate
+   for that commit to be green, rebuilds the six bundles on native runners (Windows `.zip`,
+   Linux `.tar.gz`, macOS `.dmg`), creates the GitHub release
    with `WhatsNew.md` as the body, uploads the assets, publishes the `CHDSharp` and `CHDSharp.Cli`
    NuGet packages (each skipped when its version already exists), syncs the wiki and deploys the
    documentation site (`pages.yml`).
@@ -177,7 +180,7 @@ matches `Directory.Build.props`.
 7. **Verify the release**:
 
    ```bash
-   gh release view v1.7.2
+   gh release view v1.7.3
    gh run list --workflow=release.yml --limit 1
    (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp/index.json).versions
    (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/chdsharp.cli/index.json).versions
@@ -189,9 +192,9 @@ matches `Directory.Build.props`.
 8. **Submit the winget update** (after the Windows bundles exist):
 
    ```powershell
-   ./scripts/update-winget-manifests.ps1 -Version 1.7.2
-   winget validate --manifest ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.2
-   wingetcreate submit --prtitle "New package: PureLogicCode.CHDSharp version 1.7.2" --token $env:GH_TOKEN ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.2
+   ./scripts/update-winget-manifests.ps1 -Version 1.7.3
+   winget validate --manifest ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.3
+   wingetcreate submit --prtitle "New package: PureLogicCode.CHDSharp version 1.7.3" --token $env:GH_TOKEN ./packaging/winget/manifests/p/PureLogicCode/CHDSharp/1.7.3
    ```
 
    The generated manifest set lives under `packaging/winget/manifests/p/PureLogicCode/CHDSharp/`
@@ -212,7 +215,7 @@ Pages rebuild request; needs `repo` scope).
   the full solution (WPF tester, battle harness, benchmark).
 - **`quality`** - Windows; installs JetBrains ReSharper GlobalTools and fails on any
   `jb inspectcode --severity=WARNING` finding, uploading the SARIF to code scanning.
-- **`package`** - packs `CHDSharpLib`, checks the `.nupkg` contents, and uploads it as an artifact.
+- **`package`** - packs `CHDSharpLib` and `CHDSharpCli`, checks both `.nupkg` layouts, smoke-installs the `.NET tool`, and uploads both packages as an artifact.
 - **`coverage`** - collects merged Cobertura coverage for both suites on `net11.0`.
 - **`docs build (Jekyll + DocFX)`** - builds the Jekyll site with `--strict_front_matter`, then
   generates the DocFX API reference (`scripts/build-api-docs.ps1`).

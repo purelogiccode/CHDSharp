@@ -68,6 +68,7 @@ jobs:
       contents: write
       id-token: write
       attestations: write
+      actions: read
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "true"
@@ -77,6 +78,18 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Verify CI passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          conclusion=$(gh run list --workflow=ci.yml --commit "$GITHUB_SHA" --event push --branch main --limit 1 --json conclusion --jq '.[0].conclusion // "missing"')
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::CI for $GITHUB_SHA is '${conclusion:-in progress or missing}'; wait for ci.yml to succeed before tagging."
+            exit 1
+          fi
+          echo "CI passed for $GITHUB_SHA"
 
       - name: Verify tag matches Directory.Build.props
         shell: pwsh
@@ -141,7 +154,7 @@ jobs:
             10.0.x
             11.0.x
 
-      - name: Pack and push to NuGet
+      - name: Pack, smoke-test and push to NuGet
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
@@ -154,18 +167,27 @@ jobs:
           pending=0
           if ! is_published chdsharp; then pending=1; fi
           if ! is_published chdsharp.cli; then pending=1; fi
-          if [ "$pending" -eq 0 ]; then
-            echo "CHDSharp and CHDSharp.Cli $version are already published - skipping"
-            exit 0
-          fi
-
-          if [ -z "${NUGET_API_KEY:-}" ]; then
+          if [ "$pending" -eq 1 ] && [ -z "${NUGET_API_KEY:-}" ]; then
             echo "::error::NUGET_API_KEY secret is not set"
             exit 1
           fi
 
+          # Always pack both packages so a rerun can still attest them after a partial release.
           dotnet pack CHDSharpLib/CHDSharpLib.csproj -c Release -warnaserror
           dotnet pack CHDSharpCli/CHDSharpCli.csproj -c Release -warnaserror
+
+          # Smoke-test the freshly packed tool with a local-only NuGet source.
+          cat > "$RUNNER_TEMP/local-tool-nuget.config" <<EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="local" value="$PWD/CHDSharpCli/bin/Release" />
+            </packageSources>
+          </configuration>
+          EOF
+          NUGET_PACKAGES="$RUNNER_TEMP/tool-smoke-packages" dotnet tool install --tool-path "$RUNNER_TEMP/tool-smoke" --configfile "$RUNNER_TEMP/local-tool-nuget.config" CHDSharp.Cli --version "$version"
+          "$RUNNER_TEMP/tool-smoke/chdsharp" help
 
           push_package() {
             local id="$1" file="$2"
@@ -180,7 +202,6 @@ jobs:
           push_package chdsharp.cli "CHDSharpCli/bin/Release/CHDSharp.Cli.$version.nupkg"
 
       - name: Attest NuGet package provenance
-        if: hashFiles('CHDSharpLib/bin/Release/CHDSharp.*.nupkg', 'CHDSharpCli/bin/Release/CHDSharp.Cli.*.nupkg') != ''
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |

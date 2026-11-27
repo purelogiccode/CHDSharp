@@ -8,9 +8,9 @@
 [![NuGet CHDSharp](https://img.shields.io/nuget/v/CHDSharp?label=nuget%20chdsharp&color=blue)](https://www.nuget.org/packages/CHDSharp/)
 [![NuGet CHDSharp.Cli](https://img.shields.io/nuget/v/CHDSharp.Cli?label=nuget%20chdsharp.cli&color=blue)](https://www.nuget.org/packages/CHDSharp.Cli/)
 [![.NET](https://img.shields.io/badge/.NET-8.0_|_9.0_|_10.0_|_11.0-blueviolet)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](../README.md#building)
-[![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](../docs/chdman-parity.md)
-[![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](../LICENSE.txt)
+[![Platform](https://img.shields.io/badge/platform-Windows_|_Linux_|_macOS-lightgrey)](https://github.com/purelogiccode/CHDSharp#building)
+[![chdman parity](https://img.shields.io/badge/chdman%20parity-100%25%20byte--identical-brightgreen)](https://github.com/purelogiccode/CHDSharp/blob/main/docs/chdman-parity.md)
+[![License](https://img.shields.io/badge/license-MIT_%2B_LGPL--2.1_component-blue)](https://github.com/purelogiccode/CHDSharp/blob/main/LICENSE.txt)
 
 # CHDSharpLib
 
@@ -19,6 +19,12 @@
 > Fork of [RomVault/CHDSharp](https://github.com/RomVault/CHDSharp) by [Gordon Jefferyes](https://github.com/gjefferyes), extended with Zstd, AVHuff, V5 compressed map, random-access API, parent/child chaining, parallel verification, seekable stream, span reads, read-ahead decompression, and lazy parent resolution.
 
 ---
+
+## What's New in v1.7.3
+
+- **Companion CLI .NET tool** - the CLI is also published as `CHDSharp.Cli` (`dotnet tool install --global CHDSharp.Cli`), with Windows winget manifests. The library itself has no API or behavior changes.
+- **CI and test stability** - both NuGet packages are packed and verified in CI, the tool package is smoke-installed, and the logger-capture tests are serialized to remove a parallel-test flake.
+- **No public API changes** - 4,223 library tests + 456 encoder tests on each of the four target frameworks, `jb inspectcode` 0 findings, CI `chdman` parity smoke passed.
 
 ## What's New in v1.7.2
 
@@ -133,7 +139,7 @@ Complete `chdman` parity against MAME 0.289 — 16 discrepancies fixed and battl
 
 > **Parity tables:** the complete chdman-vs-CHDSharp comparison (encoder byte-identical
 > matrices, decoder, delta, copy, CLI suites — 2907/2907 checks) lives in
-> [docs/chdman-parity.md](../docs/chdman-parity.md).
+> [docs/chdman-parity.md](https://github.com/purelogiccode/CHDSharp/blob/main/docs/chdman-parity.md).
 
 ## What's New in v1.3.0
 
@@ -897,7 +903,7 @@ All codec implementations are vendored in-repo as project references (no externa
 
 ## License
 
-This is a combined work: the project code is **MIT**; `VendoredFlac` is **LGPL-2.1**; `VendoredZLib` is **zlib-licensed**; `VendoredLZMA` is **public domain**; `VendoredZSTD` is **MIT** (based on Facebook zstd, BSD-3-Clause). See [LICENSE.txt](LICENSE.txt) for the full third-party notice and obligations.
+This is a combined work: the project code is **MIT**; `VendoredFlac` is **LGPL-2.1**; `VendoredZLib` is **zlib-licensed**; `VendoredLZMA` is **public domain**; `VendoredZSTD` is **MIT** (based on Facebook zstd, BSD-3-Clause). See [LICENSE.txt](https://github.com/purelogiccode/CHDSharp/blob/main/LICENSE.txt) for the full third-party notice and obligations.
 
 ---
 
